@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Employees — mobile</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Noto+Sans:wght@400;500;600&display=swap">
+  <style>
+    body { margin: 0; font-family: 'Noto Sans', sans-serif; background: #f2f2f4; }
+    a { color: #2b4c78; }
+    a:hover { color: #1c2e48; }
+    button { font-family: inherit; }
+    a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid #006a6a; outline-offset: 2px; }
+  </style>
+</helmet>
+
+<div style="width: 390px; height: 844px; box-sizing: border-box; padding: 20px 16px; background: #f2f2f4; color: #121213; display: flex; flex-direction: column; gap: 14px; overflow: hidden;">
+
+  <div>
+    <div style="font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 600; font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #5a616e;">People · Workforce</div>
+    <h1 style="margin: 2px 0 0; font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 700; font-size: 30px; line-height: 1.1; color: #121213;">Employees</h1>
+  </div>
+
+  <label for="m-search" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0);">Search employees</label>
+  <input id="m-search" type="search" placeholder="Search employees…" style="width: 100%; box-sizing: border-box; height: 46px; padding: 0 14px; border: none; border-bottom: 2px solid #8a91a0; border-radius: 4px 4px 0 0; background: #e7e8eb; color: #121213; font-size: 15px; font-family: 'Noto Sans', sans-serif;">
+
+  <div style="display: flex; gap: 7px;">
+    <button type="button" aria-pressed="true" style="min-height: 36px; padding: 0 13px; border: none; border-radius: 4px; background: #2b4c78; color: #ffffff; font-size: 12.5px; font-weight: 600; cursor: pointer;">All</button>
+    <button type="button" aria-pressed="false" style="min-height: 36px; padding: 0 13px; border: none; border-radius: 4px; background: #e7e8eb; color: #444a55; font-size: 12.5px; font-weight: 600; cursor: pointer;">Active</button>
+    <button type="button" aria-pressed="false" style="min-height: 36px; padding: 0 13px; border: none; border-radius: 4px; background: #e7e8eb; color: #444a55; font-size: 12.5px; font-weight: 600; cursor: pointer;">Disabled</button>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 12px;">
+
+    <!-- Card: active -->
+    <div style="background: #ffffff; border-radius: 8px; padding: 14px 16px;">
+      <div style="display: flex; align-items: flex-start; gap: 10px;">
+        <div style="flex-grow: 1; min-width: 0;">
+          <a href="#" style="font-size: 16px; font-weight: 600; color: #2b4c78; text-decoration: none;">Albright, Renee</a>
+          <div style="margin-top: 2px; font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: #5a616e;">EMP-10428 · renee.albright</div>
+        </div>
+        <span style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 9999px; background: #e7f4e8; color: #1b5e20; font-size: 11.5px; font-weight: 600; flex-shrink: 0;"><span aria-hidden="true" style="width: 7px; height: 7px; border-radius: 50%; background: #2e7d32;"></span>Active</span>
+      </div>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 11px;">
+        <span style="padding: 2px 7px; border-radius: 4px; background: #e8eef6; color: #2b4c78; font-size: 10.5px; font-weight: 600;">SERVICE MANAGER · L</span>
+        <span style="padding: 2px 7px; border-radius: 4px; background: #e8eef6; color: #2b4c78; font-size: 10.5px; font-weight: 600;">TIME APPROVER · L</span>
+      </div>
+
+      <dl style="margin: 12px 0 0; display: grid; grid-template-columns: 76px 1fr; row-gap: 5px; font-size: 12.5px;">
+        <dt style="color: #5a616e;">Location</dt>
+        <dd style="margin: 0; color: #121213;">Charlotte Main <span style="color: #5a616e;">· +1</span></dd>
+        <dt style="color: #5a616e;">Job role</dt>
+        <dd style="margin: 0; color: #121213;">Service Manager</dd>
+        <dt style="color: #5a616e;">Email</dt>
+        <dd style="margin: 0; color: #121213; overflow: hidden; text-overflow: ellipsis;">renee.albright@durion.internal</dd>
+      </dl>
+
+      <div style="display: flex; gap: 7px; margin-top: 13px;">
+        <a href="#" style="flex-grow: 1; display: inline-flex; align-items: center; justify-content: center; min-height: 44px; border-radius: 4px; background: #eef0f2; color: #2b4c78; font-size: 12.5px; font-weight: 600; text-decoration: none;">Profile</a>
+        <a href="#" style="flex-grow: 1; display: inline-flex; align-items: center; justify-content: center; min-height: 44px; border-radius: 4px; background: #eef0f2; color: #2b4c78; font-size: 12.5px; font-weight: 600; text-decoration: none;">Time</a>
+        <a href="#" style="flex-grow: 1; display: inline-flex; align-items: center; justify-content: center; min-height: 44px; border-radius: 4px; background: #eef0f2; color: #2b4c78; font-size: 12.5px; font-weight: 600; text-decoration: none;">Roles</a>
+        <a href="#" style="flex-grow: 1; display: inline-flex; align-items: center; justify-content: center; min-height: 44px; border-radius: 4px; background: #eef0f2; color: #2b4c78; font-size: 12.5px; font-weight: 600; text-decoration: none;">Places</a>
+      </div>
+
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 12px; padding-top: 12px; box-shadow: inset 0 1px 0 rgba(195, 198, 208, 0.4);">
+        <span style="font-size: 12.5px; color: #444a55;">Account access</span>
+        <button type="button" role="switch" aria-checked="true" aria-label="Deactivate Renee Albright" style="display: inline-flex; align-items: center; gap: 9px; min-height: 44px; padding: 0; border: none; background: none; cursor: pointer;">
+          <span style="font-size: 12.5px; font-weight: 600; color: #10554e;">Enabled</span>
+          <span aria-hidden="true" style="display: inline-block; position: relative; width: 42px; height: 24px; border-radius: 9999px; background: #006a6a;"><span style="position: absolute; top: 3px; left: 21px; width: 18px; height: 18px; border-radius: 50%; background: #ffffff;"></span></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Card: disabled -->
+    <div style="background: #ffffff; border-radius: 8px; padding: 14px 16px; opacity: 0.86;">
+      <div style="display: flex; align-items: flex-start; gap: 10px;">
+        <div style="flex-grow: 1; min-width: 0;">
+          <a href="#" style="font-size: 16px; font-weight: 600; color: #2b4c78; text-decoration: none;">Benton, Curtis</a>
+          <div style="margin-top: 2px; font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: #5a616e;">EMP-10133 · no username</div>
+        </div>
+        <span style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 9999px; background: #eceff1; color: #37474f; font-size: 11.5px; font-weight: 600; flex-shrink: 0;"><span aria-hidden="true" style="width: 7px; height: 7px; border-radius: 50%; background: #707078;"></span>Disabled</span>
+      </div>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 11px;">
+        <span style="padding: 2px 7px; border-radius: 4px; background: #e7e8eb; color: #444a55; font-size: 10.5px; font-weight: 600;">NO ROLES</span>
+      </div>
+
+      <dl style="margin: 12px 0 0; display: grid; grid-template-columns: 76px 1fr; row-gap: 5px; font-size: 12.5px;">
+        <dt style="color: #5a616e;">Location</dt>
+        <dd style="margin: 0; color: #444a55;">Unassigned</dd>
+        <dt style="color: #5a616e;">Job role</dt>
+        <dd style="margin: 0; color: #121213;">Apprentice</dd>
+      </dl>
+
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 13px; padding-top: 12px; box-shadow: inset 0 1px 0 rgba(195, 198, 208, 0.4);">
+        <span style="font-size: 12.5px; color: #444a55;">Account access</span>
+        <button type="button" role="switch" aria-checked="false" aria-label="Activate Curtis Benton" style="display: inline-flex; align-items: center; gap: 9px; min-height: 44px; padding: 0; border: none; background: none; cursor: pointer;">
+          <span style="font-size: 12.5px; font-weight: 600; color: #444a55;">Disabled</span>
+          <span aria-hidden="true" style="display: inline-block; position: relative; width: 42px; height: 24px; border-radius: 9999px; background: #8a91a0;"><span style="position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #ffffff;"></span></span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+</x-dc>
+
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

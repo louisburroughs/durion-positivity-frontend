@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Employee Directory — access model</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Noto+Sans:wght@400;500;600&display=swap">
+  <style>
+    body { margin: 0; font-family: 'Noto Sans', sans-serif; background: #f2f2f4; }
+    a { color: #2b4c78; }
+    a:hover { color: #1c2e48; }
+  </style>
+</helmet>
+
+<div style="width: 1200px; height: 920px; box-sizing: border-box; padding: 30px 34px; background: #f2f2f4; color: #121213; display: flex; flex-direction: column; gap: 18px;">
+
+  <div style="display: flex; align-items: flex-end; gap: 24px;">
+    <div>
+      <div style="font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 600; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: #5a616e;">Gate by permission, never by role name</div>
+      <h1 style="margin: 2px 0 0; font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 700; font-size: 32px; line-height: 1.1; color: #121213;">Access model</h1>
+    </div>
+    <p style="margin: 0 0 3px; flex-grow: 1; max-width: 620px; font-size: 12.5px; line-height: 1.6; color: #444a55;">Every column and link on this page is gated on the same permission the destination route already declares in <code style="font-family: ui-monospace, Menlo, monospace; font-size: 11.5px; background: #e7e8eb; padding: 1px 5px; border-radius: 4px;">core/security/route-permissions.ts</code>. A link the viewer cannot follow is not rendered — it never renders disabled, and it never leads to a 403.</p>
+  </div>
+
+  <div style="background: #ffffff; border-radius: 8px; overflow: hidden;">
+    <div role="table" aria-label="Permission matrix">
+      <div role="row" style="display: grid; grid-template-columns: 250px 300px 190px 1fr 1fr 1fr; align-items: center; background: #e7e8eb; box-shadow: inset 0 -1px 0 rgba(195, 198, 208, 0.45);">
+        <div role="columnheader" style="padding: 12px 16px; font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 600; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #444a55;">Element</div>
+        <div role="columnheader" style="padding: 12px 16px; font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 600; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #444a55;">Permission</div>
+        <div role="columnheader" style="padding: 12px 16px; font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 600; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #444a55;">Destination</div>
+        <div role="columnheader" style="padding: 12px 10px; text-align: center; font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 600; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #444a55;">HR Admin</div>
+        <div role="columnheader" style="padding: 12px 10px; text-align: center; font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 600; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #444a55;">Shop Manager</div>
+        <div role="columnheader" style="padding: 12px 10px; text-align: center; font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 600; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #444a55;">Security Admin</div>
+      </div>
+
+      <sc-for list="{{rows}}" as="r" hint-placeholder-count="10">
+        <div role="row" style="{{r.rowStyle}}">
+          <div role="cell" style="padding: 11px 16px; font-size: 13px; font-weight: 600; color: #121213;">{{r.element}}</div>
+          <div role="cell" style="padding: 11px 16px;"><code style="font-family: ui-monospace, Menlo, monospace; font-size: 11.5px; color: #22385a; background: #e8eef6; padding: 2px 7px; border-radius: 4px;">{{r.perm}}</code></div>
+          <div role="cell" style="padding: 11px 16px; font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: #5a616e;">{{r.dest}}</div>
+          <div role="cell" style="padding: 11px 10px; text-align: center;"><span style="{{r.hrStyle}}">{{r.hr}}</span></div>
+          <div role="cell" style="padding: 11px 10px; text-align: center;"><span style="{{r.mgStyle}}">{{r.mg}}</span></div>
+          <div role="cell" style="padding: 11px 10px; text-align: center;"><span style="{{r.seStyle}}">{{r.se}}</span></div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px;">
+    <div style="background: #ffffff; border-radius: 8px; padding: 16px 18px;">
+      <div style="font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 600; font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: #5a616e; margin-bottom: 7px;">Two gates, not one</div>
+      <p style="margin: 0; font-size: 12.5px; line-height: 1.6; color: #3a3a3e;">The route guard keeps the page shut. The cell and link gates decide what a viewer who got in may see and reach. Both run — the page gate alone would let a Shop Manager read PII.</p>
+    </div>
+    <div style="background: #ffffff; border-radius: 8px; padding: 16px 18px;">
+      <div style="font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 600; font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: #5a616e; margin-bottom: 7px;">Hide links, mask cells</div>
+      <p style="margin: 0; font-size: 12.5px; line-height: 1.6; color: #3a3a3e;">An action the viewer cannot take is absent. A column they cannot read stays, showing “Restricted” — the grid keeps its shape, and a gate never reads as missing data.</p>
+    </div>
+    <div style="background: #ffffff; border-radius: 8px; padding: 16px 18px;">
+      <div style="font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 600; font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: #5a616e; margin-bottom: 7px;">The UI is not the policy</div>
+      <p style="margin: 0; font-size: 12.5px; line-height: 1.6; color: #3a3a3e;">Gates here are a courtesy, not enforcement — the backend refuses regardless. Where policy is conditional, read the server’s capability flags rather than inferring from a role name.</p>
+    </div>
+  </div>
+
+  <div style="margin-top: auto; display: flex; align-items: flex-start; gap: 10px; padding: 14px 16px; background: #e8eef6; border-radius: 4px;">
+    <span aria-hidden="true" style="width: 3px; align-self: stretch; background: #2b4c78; border-radius: 2px; flex-shrink: 0;"></span>
+    <p style="margin: 0; font-size: 12px; line-height: 1.65; color: #22385a;">The personas are illustrations of permission sets, not gates in their own right. A tenant can mint a role holding any subset of these codes, and the page must render correctly for all of them — which is why every row above names a permission, and why none of them names a role.</p>
+  </div>
+
+</div>
+</x-dc>
+
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1200,"height":920}}'>
+class Component extends DCLogic {
+  mark(v) {
+    if (v === 'yes') return { t: '✓', s: 'display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 4px; background: #e7f4e8; color: #1b5e20; font-size: 13px; font-weight: 700;' };
+    if (v === 'mask') return { t: '◐', s: 'display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 4px; background: #fff4e0; color: #7a5114; font-size: 13px; font-weight: 700;' };
+    return { t: '—', s: 'display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 4px; background: #eceff1; color: #5a616e; font-size: 13px; font-weight: 700;' };
+  }
+
+  renderVals() {
+    var self = this;
+    var data = [
+      ['Page itself', 'people:employee:view', '/app/people/employees', 'yes', 'yes', 'yes'],
+      ['Name, employee no., username', 'people:employee:view', 'column', 'yes', 'yes', 'yes'],
+      ['Email, phone', 'people:employee_pii:view', 'column · PII', 'yes', 'mask', 'mask'],
+      ['Job role, location', 'people:employee:view', 'column', 'yes', 'yes', 'yes'],
+      ['Application roles', 'people-contact:role:view', 'column', 'yes', 'mask', 'yes'],
+      ['Name link → profile', 'people:employee_pii:view', 'employees/:id', 'yes', 'no', 'no'],
+      ['“Time” link', 'people:timekeeping:view', 'timekeeping/approval', 'yes', 'yes', 'no'],
+      ['“Roles” link', 'people-contact:role:view', 'rbac/:personUuid', 'yes', 'no', 'yes'],
+      ['“Locations” link', 'people:employee:view', 'person/:id/locations', 'yes', 'yes', 'yes'],
+      ['Activate / deactivate switch', 'people:employee:deactivate', 'inline · confirmed', 'yes', 'no', 'no'],
+      ['“New employee”', 'people:employee:create', 'employees/new', 'yes', 'no', 'no'],
+    ];
+
+    var rows = data.map(function (d, i) {
+      var hr = self.mark(d[3]);
+      var mg = self.mark(d[4]);
+      var se = self.mark(d[5]);
+      return {
+        element: d[0], perm: d[1], dest: d[2],
+        hr: hr.t, hrStyle: hr.s,
+        mg: mg.t, mgStyle: mg.s,
+        se: se.t, seStyle: se.s,
+        rowStyle: 'display: grid; grid-template-columns: 250px 300px 190px 1fr 1fr 1fr; align-items: center; min-height: 46px; background: ' + (i % 2 === 1 ? '#fafafb' : '#ffffff') + ';',
+      };
+    });
+
+    return { rows: rows };
+  }
+}
+</script>
+</body>
+</html>

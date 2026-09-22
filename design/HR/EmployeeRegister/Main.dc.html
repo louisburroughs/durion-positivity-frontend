@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Employee Directory</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Noto+Sans:wght@400;500;600;700&display=swap">
+  <style>
+    body { margin: 0; font-family: 'Noto Sans', sans-serif; background: #f2f2f4; -webkit-font-smoothing: antialiased; }
+    a { color: #2b4c78; }
+    a:hover { color: #1c2e48; }
+    button { font-family: inherit; }
+    a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid #006a6a; outline-offset: 2px; }
+  </style>
+</helmet>
+
+<div style="position: relative; width: 1440px; height: 1000px; box-sizing: border-box; padding: 28px 32px 28px 48px; background: #f2f2f4; color: #121213; display: flex; flex-direction: column; gap: 18px;">
+
+  <!-- Prototype lever — not product chrome. Gates are named permissions, never role names (DECISION-PEOPLE-013). -->
+  <div style="display: flex; align-items: center; gap: 12px; padding: 7px 14px; background: #f8edd5; border-radius: 4px;">
+    <span style="font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 600; font-size: 11px; letter-spacing: 0.11em; text-transform: uppercase; color: #7a5114; white-space: nowrap;">Preview · granted permissions</span>
+    <sc-for list="{{roleOptions}}" as="opt" hint-placeholder-count="3">
+      <button type="button" onClick="{{opt.pick}}" aria-pressed="{{opt.on}}" style="{{opt.style}}">{{opt.label}}</button>
+    </sc-for>
+    <span style="flex-grow: 1;"></span>
+    <span style="font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 10.5px; color: #6b4a14;">{{permSummary}}</span>
+  </div>
+
+  <!-- Editorial header: overline + display headline, asymmetric left gutter -->
+  <div style="display: flex; align-items: flex-end; gap: 28px;">
+    <div style="flex-shrink: 0;">
+      <div style="font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 600; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: #5a616e; margin-bottom: 3px;">People · Workforce</div>
+      <h1 style="margin: 0; font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 700; font-size: 38px; line-height: 1.05; letter-spacing: -0.01em; color: #121213;">Employees</h1>
+    </div>
+
+    <div style="flex-grow: 1; max-width: 430px; padding-bottom: 3px;">
+      <label for="emp-search" style="display: block; font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 600; font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; color: #5a616e; margin-bottom: 4px;">Search</label>
+      <input id="emp-search" type="search" value="{{q}}" onChange="{{onSearch}}" placeholder="Name, email, username, employee number…" style="width: 100%; box-sizing: border-box; height: 40px; padding: 0 12px; border: none; border-bottom: 2px solid #8a91a0; border-radius: 4px 4px 0 0; background: #e7e8eb; color: #121213; font-size: 14px; font-family: 'Noto Sans', sans-serif;">
+    </div>
+
+    <span style="flex-grow: 1;"></span>
+
+    <sc-if value="{{canCreate}}" hint-placeholder-val="{{true}}">
+      <a href="#" style="display: inline-flex; align-items: center; gap: 8px; height: 42px; padding: 0 20px; border-radius: 4px; background: linear-gradient(135deg, #1c2e48 0%, #2b4c78 100%); color: #ffffff; font-size: 14px; font-weight: 600; text-decoration: none; box-shadow: 0 8px 32px rgba(18, 18, 19, 0.05);">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
+        New employee
+      </a>
+    </sc-if>
+  </div>
+
+  <!-- Stat tiles: tonal plinths, accent bar denotes the primary figure (no boxes) -->
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px;">
+    <div style="display: flex; background: #ffffff; border-radius: 8px; overflow: hidden;">
+      <span aria-hidden="true" style="width: 3px; background: #2b4c78; flex-shrink: 0;"></span>
+      <div style="padding: 14px 20px;">
+        <div style="font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 600; font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: #5a616e;">Total workforce</div>
+        <div style="font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 700; font-size: 34px; line-height: 1.15; color: #121213;">214</div>
+      </div>
+    </div>
+    <div style="background: #ffffff; border-radius: 8px; padding: 14px 20px;">
+      <div style="font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 600; font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: #5a616e;">Active</div>
+      <div style="display: flex; align-items: baseline; gap: 10px;">
+        <span style="font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 700; font-size: 34px; line-height: 1.15; color: #121213;">186</span>
+        <span style="font-size: 12px; font-weight: 600; color: #006a6a;">87% of workforce</span>
+      </div>
+    </div>
+    <div style="background: #ffffff; border-radius: 8px; padding: 14px 20px;">
+      <div style="font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 600; font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: #5a616e;">Needs attention</div>
+      <div style="display: flex; align-items: baseline; gap: 10px;">
+        <span style="font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 700; font-size: 34px; line-height: 1.15; color: #ba1a1a;">12</span>
+        <span style="font-size: 12px; color: #5a616e;">No location or no role</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div style="display: flex; align-items: center; gap: 8px;">
+    <span style="font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 600; font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; color: #5a616e; margin-right: 4px;">Status</span>
+    <sc-for list="{{statusFilters}}" as="f" hint-placeholder-count="4">
+      <button type="button" onClick="{{f.pick}}" aria-pressed="{{f.on}}" style="{{f.style}}">{{f.label}}</button>
+    </sc-for>
+  </div>
+
+  <!-- Register: tonal plinth, no container border, no row dividers -->
+  <div role="table" aria-label="Employees" style="flex-grow: 1; background: #ffffff; border-radius: 8px; overflow: hidden;">
+
+    <div role="row" style="display: grid; grid-template-columns: 172px 104px 188px 108px 196px 140px 128px 116px 208px; align-items: center; background: #e7e8eb; box-shadow: inset 0 -1px 0 rgba(195, 198, 208, 0.45);">
+      <div role="columnheader" aria-sort="{{nameSort}}" style="padding: 0 14px;">
+        <button type="button" onClick="{{sortName}}" style="display: inline-flex; align-items: center; gap: 5px; height: 44px; padding: 0; border: none; background: none; cursor: pointer; font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 600; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #444a55;">Name <span aria-hidden="true">{{sortGlyph}}</span></button>
+      </div>
+      <div role="columnheader" style="padding: 0 14px; font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 600; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #444a55;">Username</div>
+      <div role="columnheader" style="padding: 0 14px; font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 600; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #444a55;">Email</div>
+      <div role="columnheader" style="padding: 0 14px; font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 600; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #444a55;">Phone</div>
+      <div role="columnheader" style="padding: 0 14px; font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 600; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #444a55;">Application roles</div>
+      <div role="columnheader" style="padding: 0 14px; font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 600; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #444a55;">Location</div>
+      <div role="columnheader" style="padding: 0 14px; font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 600; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #444a55;">Job role</div>
+      <div role="columnheader" style="padding: 0 14px; font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 600; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #444a55;">Status</div>
+      <div role="columnheader" style="padding: 0 14px; text-align: right; font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 600; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #444a55;">Actions</div>
+    </div>
+
+    <sc-for list="{{rows}}" as="item" hint-placeholder-count="8">
+      <div role="row" style="{{item.rowStyle}}">
+
+        <div role="cell" style="padding: 10px 14px; min-width: 0;">
+          <sc-if value="{{item.linkName}}" hint-placeholder-val="{{true}}">
+            <a href="#" style="font-size: 13.5px; font-weight: 600; color: #2b4c78; text-decoration: none;">{{item.name}}</a>
+          </sc-if>
+          <sc-if value="{{item.plainName}}" hint-placeholder-val="{{false}}">
+            <span style="font-size: 13.5px; font-weight: 600; color: #121213;">{{item.name}}</span>
+          </sc-if>
+          <div style="margin-top: 2px; font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 10.5px; color: #5a616e;">{{item.employeeNumber}}</div>
+        </div>
+
+        <div role="cell" style="padding: 10px 14px; font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 11.5px; color: #444a55; min-width: 0; overflow: hidden; text-overflow: ellipsis;">{{item.username}}</div>
+
+        <div role="cell" style="padding: 10px 14px; min-width: 0; overflow: hidden;">
+          <span style="{{item.emailStyle}}">{{item.email}}</span>
+        </div>
+
+        <div role="cell" style="padding: 10px 14px; min-width: 0;">
+          <span style="{{item.phoneStyle}}">{{item.phone}}</span>
+        </div>
+
+        <div role="cell" style="padding: 10px 14px; min-width: 0;">
+          <sc-if value="{{item.showRoles}}" hint-placeholder-val="{{true}}">
+            <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+              <sc-for list="{{item.roleChips}}" as="chip" hint-placeholder-count="2">
+                <span style="{{chip.style}}">{{chip.label}}</span>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{item.hideRoles}}" hint-placeholder-val="{{false}}">
+            <span style="font-size: 12px; color: #5a616e; font-style: italic;">Restricted</span>
+          </sc-if>
+        </div>
+
+        <div role="cell" style="padding: 10px 14px; min-width: 0;">
+          <div style="{{item.locationStyle}}">{{item.location}}</div>
+          <div style="font-size: 10.5px; color: #5a616e; margin-top: 2px;">{{item.locationNote}}</div>
+        </div>
+
+        <div role="cell" style="padding: 10px 14px; font-size: 13px; color: #121213; min-width: 0;">{{item.jobRole}}</div>
+
+        <div role="cell" style="padding: 10px 14px; min-width: 0;">
+          <sc-if value="{{item.canToggle}}" hint-placeholder-val="{{true}}">
+            <button type="button" role="switch" aria-checked="{{item.isActive}}" aria-label="{{item.toggleLabel}}" onClick="{{item.toggle}}" style="display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 4px 2px; border: none; background: none; cursor: pointer;">
+              <span aria-hidden="true" style="{{item.trackStyle}}"><span style="{{item.knobStyle}}"></span></span>
+              <span style="{{item.switchTextStyle}}">{{item.statusLabel}}</span>
+            </button>
+          </sc-if>
+          <sc-if value="{{item.noToggle}}" hint-placeholder-val="{{false}}">
+            <span style="{{item.badgeStyle}}"><span aria-hidden="true" style="{{item.dotStyle}}"></span>{{item.statusLabel}}</span>
+          </sc-if>
+          <sc-if value="{{item.pending}}" hint-placeholder-val="{{false}}">
+            <div style="margin-top: 3px; font-size: 10.5px; font-weight: 600; letter-spacing: 0.03em; color: #8a5e0a;">Propagating…</div>
+          </sc-if>
+        </div>
+
+        <div role="cell" style="padding: 10px 14px; min-width: 0;">
+          <div style="display: flex; flex-wrap: wrap; gap: 5px; justify-content: flex-end;">
+            <sc-for list="{{item.actions}}" as="act" hint-placeholder-count="4">
+              <a href="{{act.href}}" style="display: inline-flex; align-items: center; min-height: 30px; padding: 0 10px; border-radius: 4px; background: #eef0f2; font-size: 11.5px; font-weight: 600; color: #2b4c78; text-decoration: none; white-space: nowrap;">{{act.label}}</a>
+            </sc-for>
+          </div>
+        </div>
+
+      </div>
+    </sc-for>
+  </div>
+
+  <!-- Pagination -->
+  <div style="display: flex; align-items: center; justify-content: space-between;">
+    <span style="font-size: 12.5px; color: #5a616e;">{{pageLabel}}</span>
+    <div style="display: flex; align-items: center; gap: 6px;">
+      <button type="button" aria-label="Previous page" disabled style="width: 34px; height: 34px; border: none; border-radius: 4px; background: #e7e8eb; color: #8a91a0; font-size: 16px; cursor: not-allowed;">‹</button>
+      <button type="button" aria-label="Page 1" aria-current="page" style="min-width: 34px; height: 34px; border: none; border-radius: 4px; background: #2b4c78; color: #ffffff; font-size: 13px; font-weight: 600; cursor: pointer;">1</button>
+      <button type="button" aria-label="Page 2" style="min-width: 34px; height: 34px; border: none; border-radius: 4px; background: #e7e8eb; color: #2b4c78; font-size: 13px; font-weight: 600; cursor: pointer;">2</button>
+      <button type="button" aria-label="Next page" style="width: 34px; height: 34px; border: none; border-radius: 4px; background: #e7e8eb; color: #2b4c78; font-size: 16px; cursor: pointer;">›</button>
+    </div>
+  </div>
+
+  <!-- Confirm — DECISION-PEOPLE-024 makes disable a privileged, explicitly confirmed action -->
+  <sc-if value="{{dialogOpen}}" hint-placeholder-val="{{false}}">
+    <div style="position: absolute; inset: 0; background: rgba(28, 46, 72, 0.32); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center;">
+      <div role="alertdialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-desc" style="width: 540px; box-sizing: border-box; padding: 28px 30px; border-radius: 8px; background: #ffffff; box-shadow: 0 12px 40px rgba(18, 18, 19, 0.05);">
+        <div style="font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 600; font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #5a616e; margin-bottom: 5px;">{{dialogOverline}}</div>
+        <h2 id="confirm-title" style="margin: 0 0 12px; font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 700; font-size: 26px; line-height: 1.1; color: #121213;">{{dialogTitle}}</h2>
+        <p id="confirm-desc" style="margin: 0 0 18px; font-size: 13.5px; line-height: 1.6; color: #3a3a3e;">{{dialogBody}}</p>
+
+        <sc-if value="{{dialogIsDisable}}" hint-placeholder-val="{{true}}">
+          <div style="margin-bottom: 20px;">
+            <div style="display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; border-radius: 4px; background: #fff4e0; color: #7a5114; font-size: 12.5px; line-height: 1.55; margin-bottom: 18px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="flex-shrink: 0; margin-top: 1px;"><path d="M12 9v4"></path><path d="M12 17h.01"></path><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"></path></svg>
+              <span>Sign-in is blocked immediately. Open role and location assignments end on this date, and downstream systems are updated asynchronously — a failure there does not re-enable the account.</span>
+            </div>
+            <label for="end-date" style="display: block; font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 600; font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; color: #5a616e; margin-bottom: 5px;">Assignment end date</label>
+            <input id="end-date" type="date" value="2026-09-22" style="width: 200px; box-sizing: border-box; height: 40px; padding: 0 12px; border: none; border-bottom: 2px solid #8a91a0; border-radius: 4px 4px 0 0; background: #e7e8eb; color: #121213; font-size: 13.5px; font-family: 'Noto Sans', sans-serif;">
+            <div style="margin-top: 6px; font-size: 11.5px; color: #5a616e;">End is exclusive — the last worked day is the day before.</div>
+          </div>
+        </sc-if>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px;">
+          <button type="button" onClick="{{closeDialog}}" style="min-height: 42px; padding: 0 18px; border: none; border-radius: 4px; background: #e7e8eb; color: #3a3a3e; font-size: 13.5px; font-weight: 600; cursor: pointer;">Cancel</button>
+          <button type="button" onClick="{{confirmDialog}}" style="{{dialogConfirmStyle}}">{{dialogConfirmLabel}}</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+</div>
+</x-dc>
+
+<script type="text/x-dc" data-dc-script data-props='{"viewAs":{"editor":"enum","options":["hr","manager","security"],"default":"hr","section":"Access"},"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { role: null, q: '', status: 'all', dir: 'asc', changed: {}, pending: {}, dialog: null };
+    this.timers = [];
+  }
+
+  componentWillUnmount() {
+    this.timers.forEach(function (t) { clearTimeout(t); });
+  }
+
+  grants() {
+    return {
+      hr: {
+        label: 'HR Admin', pii: true, deactivate: true, roles: true, time: true, loc: true, create: true,
+        summary: 'employee:view · employee_pii:view · employee:deactivate · employee:create · role:view · timekeeping:view',
+      },
+      manager: {
+        label: 'Shop Manager', pii: false, deactivate: false, roles: false, time: true, loc: true, create: false,
+        summary: 'people:employee:view · people:timekeeping:view',
+      },
+      security: {
+        label: 'Security Admin', pii: false, deactivate: false, roles: true, time: false, loc: true, create: false,
+        summary: 'people:employee:view · people-contact:role:view',
+      },
+    };
+  }
+
+  people() {
+    return [
+      { id: 'e1', last: 'Albright', first: 'Renee', num: 'EMP-10428', username: 'renee.albright', email: 'renee.albright@durion.internal', phone: '(704) 555-0142', roles: [['SERVICE MANAGER', 'L'], ['TIME APPROVER', 'L']], location: 'Charlotte Main', extraLoc: 1, job: 'Service Manager', status: 'ACTIVE' },
+      { id: 'e2', last: 'Alvarez', first: 'Hector', num: 'EMP-10455', username: 'hector.alvarez', email: 'hector.alvarez@durion.internal', phone: '(704) 555-0188', roles: [['TECHNICIAN', 'L']], location: 'Charlotte Main', extraLoc: 0, job: 'Lead Technician', status: 'ACTIVE' },
+      { id: 'e3', last: 'Bennett', first: 'Marcus', num: 'EMP-10502', username: 'marcus.bennett', email: 'marcus.bennett@durion.internal', phone: '(980) 555-0110', roles: [['TECHNICIAN', 'L']], location: 'Gastonia — Bay 3', extraLoc: 0, job: 'Technician', status: 'ON_LEAVE' },
+      { id: 'e4', last: 'Benton', first: 'Curtis', num: 'EMP-10133', username: null, email: 'curtis.benton@durion.internal', phone: null, roles: [], location: null, extraLoc: 0, job: 'Apprentice', status: 'DISABLED' },
+      { id: 'e5', last: 'Blake', first: 'Terrence', num: 'EMP-10377', username: 'terrence.blake', email: 'terrence.blake@durion.internal', phone: '(704) 555-0167', roles: [['PARTS CLERK', 'L']], location: 'Charlotte Main', extraLoc: 0, job: 'Parts Counter', status: 'ACTIVE' },
+      { id: 'e6', last: 'Boyd', first: 'Camille', num: 'EMP-10091', username: 'camille.boyd', email: 'camille.boyd@durion.internal', phone: '(704) 555-0193', roles: [['HR ADMIN', 'G'], ['TIME APPROVER', 'G'], ['AUDITOR', 'G']], location: 'Regional Office', extraLoc: 0, job: 'HR Generalist', status: 'ACTIVE' },
+      { id: 'e7', last: 'Brennan', first: 'Kyle', num: 'EMP-10514', username: 'kyle.brennan', email: 'kyle.brennan@durion.internal', phone: '(828) 555-0124', roles: [['DISPATCHER', 'L']], location: 'Hickory — Mobile', extraLoc: 2, job: 'Dispatcher', status: 'ACTIVE' },
+      { id: 'e8', last: 'Byrd', first: 'Monica', num: 'EMP-10240', username: 'monica.byrd', email: 'monica.byrd@durion.internal', phone: '(980) 555-0166', roles: [['TECHNICIAN', 'L']], location: 'Gastonia — Bay 1', extraLoc: 0, job: 'Technician', status: 'TERMINATED' },
+    ];
+  }
+
+  statusMeta(code) {
+    var map = {
+      ACTIVE: { label: 'Active', fg: '#1b5e20', bg: '#e7f4e8', dot: '#2e7d32', toggleable: true, on: true },
+      DISABLED: { label: 'Disabled', fg: '#37474f', bg: '#eceff1', dot: '#707078', toggleable: true, on: false },
+      ON_LEAVE: { label: 'On leave', fg: '#7a5114', bg: '#fff4e0', dot: '#cc9030', toggleable: false, on: false },
+      SUSPENDED: { label: 'Suspended', fg: '#7a5114', bg: '#fff4e0', dot: '#cc9030', toggleable: false, on: false },
+      TERMINATED: { label: 'Terminated', fg: '#ba1a1a', bg: '#fdecea', dot: '#ba1a1a', toggleable: false, on: false },
+    };
+    return map[code] || map.ACTIVE;
+  }
+
+  pillStyle(on) {
+    var base = 'min-height: 32px; padding: 0 13px; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; border: none;';
+    if (on) return base + ' background: #2b4c78; color: #ffffff;';
+    return base + ' background: #e7e8eb; color: #444a55;';
+  }
+
+  chipStyle(kind) {
+    var base = 'display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 10.5px; font-weight: 600; letter-spacing: 0.02em; white-space: nowrap;';
+    if (kind === 'global') return base + ' background: #d7f3f0; color: #10554e;';
+    if (kind === 'more') return base + ' background: #e7e8eb; color: #444a55;';
+    return base + ' background: #e8eef6; color: #2b4c78;';
+  }
+
+  openDialog(row) {
+    this.setState({ dialog: { id: row.id, name: row.first + ' ' + row.last, disable: row.statusCode === 'ACTIVE' } });
+  }
+
+  applyDialog() {
+    var self = this;
+    var d = this.state.dialog;
+    if (!d) return;
+    var next = d.disable ? 'DISABLED' : 'ACTIVE';
+    var pending = Object.assign({}, this.state.pending);
+    pending[d.id] = true;
+    this.setState({ dialog: null, pending: pending });
+    this.timers.push(setTimeout(function () {
+      var changed = Object.assign({}, self.state.changed);
+      var settled = Object.assign({}, self.state.pending);
+      changed[d.id] = next;
+      delete settled[d.id];
+      self.setState({ changed: changed, pending: settled });
+    }, 1400));
+  }
+
+  renderVals() {
+    var self = this;
+    var roleKey = this.state.role || this.props.viewAs || 'hr';
+    var grants = this.grants();
+    var g = grants[roleKey] || grants.hr;
+
+    var roleOptions = ['hr', 'manager', 'security'].map(function (key) {
+      return {
+        id: key, label: grants[key].label, on: key === roleKey,
+        style: self.pillStyle(key === roleKey),
+        pick: function () { self.setState({ role: key }); },
+      };
+    });
+
+    var statusFilters = [
+      { id: 'all', label: 'All' },
+      { id: 'ACTIVE', label: 'Active' },
+      { id: 'DISABLED', label: 'Disabled' },
+      { id: 'TERMINATED', label: 'Terminated' },
+    ].map(function (f) {
+      return {
+        id: f.id, label: f.label, on: f.id === self.state.status,
+        style: self.pillStyle(f.id === self.state.status),
+        pick: function () { self.setState({ status: f.id }); },
+      };
+    });
+
+    var q = (this.state.q || '').trim().toLowerCase();
+    var changed = this.state.changed;
+    var pendingMap = this.state.pending;
+
+    var list = this.people().map(function (p) {
+      return {
+        p: p,
+        statusCode: changed[p.id] || p.status,
+        haystack: (p.last + ' ' + p.first + ' ' + (p.username || '') + ' ' + p.email + ' ' + p.num).toLowerCase(),
+      };
+    }).filter(function (r) {
+      if (q && r.haystack.indexOf(q) === -1) return false;
+      if (self.state.status !== 'all' && r.statusCode !== self.state.status) return false;
+      return true;
+    });
+
+    list.sort(function (a, b) {
+      var cmp = a.p.last.localeCompare(b.p.last);
+      return self.state.dir === 'asc' ? cmp : -cmp;
+    });
+
+    var normal = 'font-size: 13px; color: #121213;';
+    var muted = 'font-size: 13px; color: #444a55;';
+    var restricted = 'font-size: 12px; color: #5a616e; font-style: italic;';
+
+    var rows = list.map(function (r, i) {
+      var p = r.p;
+      var meta = self.statusMeta(r.statusCode);
+      var isPending = !!pendingMap[p.id];
+
+      var chips = [];
+      if (p.roles.length === 0) {
+        chips.push({ label: 'No roles', style: self.chipStyle('more') });
+      } else {
+        p.roles.slice(0, 2).forEach(function (pair) {
+          chips.push({
+            label: pair[0] + ' · ' + pair[1],
+            style: self.chipStyle(pair[1] === 'G' ? 'global' : 'location'),
+          });
+        });
+        if (p.roles.length > 2) chips.push({ label: '+' + (p.roles.length - 2), style: self.chipStyle('more') });
+      }
+
+      var actions = [];
+      actions.push({ key: 'profile', label: g.pii ? 'Profile' : 'Summary', href: '#' });
+      if (g.time) actions.push({ key: 'time', label: 'Time', href: '#' });
+      if (g.roles) actions.push({ key: 'roles', label: 'Roles', href: '#' });
+      if (g.loc) actions.push({ key: 'loc', label: 'Locations', href: '#' });
+
+      var showSwitch = g.deactivate && meta.toggleable && !isPending;
+
+      return {
+        id: p.id,
+        name: p.last + ', ' + p.first,
+        employeeNumber: p.num,
+        username: p.username || '—',
+        email: g.pii ? p.email : 'Restricted',
+        emailStyle: g.pii ? normal : restricted,
+        phone: g.pii ? (p.phone || '—') : 'Restricted',
+        phoneStyle: g.pii ? muted : restricted,
+        showRoles: g.roles,
+        hideRoles: !g.roles,
+        roleChips: chips,
+        location: p.location || 'Unassigned',
+        locationStyle: p.location ? normal : muted,
+        locationNote: p.location ? (p.extraLoc ? 'Primary · +' + p.extraLoc + ' more' : 'Primary') : 'No assignment',
+        jobRole: p.job,
+        isActive: r.statusCode === 'ACTIVE',
+        statusLabel: meta.label,
+        toggleLabel: (r.statusCode === 'ACTIVE' ? 'Deactivate ' : 'Activate ') + p.first + ' ' + p.last,
+        canToggle: showSwitch,
+        noToggle: !showSwitch,
+        pending: isPending,
+        trackStyle: 'display: inline-block; position: relative; width: 38px; height: 21px; border-radius: 9999px; transition: background 140ms; background: ' + (meta.on ? '#006a6a' : '#8a91a0') + ';',
+        knobStyle: 'position: absolute; top: 2.5px; width: 16px; height: 16px; border-radius: 50%; background: #ffffff; transition: left 140ms; left: ' + (meta.on ? '19.5px' : '2.5px') + ';',
+        switchTextStyle: 'font-size: 12px; font-weight: 600; color: ' + (meta.on ? '#10554e' : '#444a55') + ';',
+        badgeStyle: 'display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 9999px; font-size: 11.5px; font-weight: 600; background: ' + meta.bg + '; color: ' + meta.fg + ';',
+        dotStyle: 'display: inline-block; width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; background: ' + meta.dot + ';',
+        actions: actions,
+        toggle: function () { self.openDialog({ id: p.id, first: p.first, last: p.last, statusCode: r.statusCode }); },
+        rowStyle: 'display: grid; grid-template-columns: 172px 104px 188px 108px 196px 140px 128px 116px 208px; align-items: center; min-height: 70px; background: ' + (i % 2 === 1 ? '#fafafb' : '#ffffff') + '; opacity: ' + (meta.on ? '1' : '0.8') + ';',
+      };
+    });
+
+    var d = this.state.dialog;
+
+    return {
+      roleOptions: roleOptions,
+      permSummary: g.summary,
+      statusFilters: statusFilters,
+      canCreate: g.create,
+      rows: rows,
+      q: this.state.q,
+      pageLabel: 'Showing ' + rows.length + ' of 214 employees',
+      nameSort: this.state.dir === 'asc' ? 'ascending' : 'descending',
+      sortGlyph: this.state.dir === 'asc' ? '↑' : '↓',
+      sortName: function () { self.setState({ dir: self.state.dir === 'asc' ? 'desc' : 'asc' }); },
+      onSearch: function (e) { self.setState({ q: e.target.value }); },
+      dialogOpen: !!d,
+      dialogIsDisable: !!(d && d.disable),
+      dialogOverline: d ? (d.disable ? 'Privileged action' : 'Reversible action') : '',
+      dialogTitle: d ? (d.disable ? 'Deactivate ' + d.name + '?' : 'Reactivate ' + d.name + '?') : '',
+      dialogBody: d
+        ? (d.disable
+            ? 'The account moves to DISABLED. Identity and work history are kept, and the change can be reversed.'
+            : 'The account returns to ACTIVE and sign-in is restored. Role and location assignments are not restored — add them again from this row.')
+        : '',
+      dialogConfirmLabel: d ? (d.disable ? 'Deactivate' : 'Reactivate') : '',
+      dialogConfirmStyle: 'min-height: 42px; padding: 0 20px; border: none; border-radius: 4px; color: #ffffff; font-size: 13.5px; font-weight: 600; cursor: pointer; background: ' + (d && d.disable ? '#ba1a1a' : 'linear-gradient(135deg, #00504f 0%, #006a6a 100%)') + ';',
+      closeDialog: function () { self.setState({ dialog: null }); },
+      confirmDialog: function () { self.applyDialog(); },
+    };
+  }
+}
+</script>
+</body>
+</html>
