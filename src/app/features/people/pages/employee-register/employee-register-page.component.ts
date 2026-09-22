@@ -398,6 +398,22 @@ export class EmployeeRegisterPageComponent implements OnInit {
     return !this.auth.permissionsKnown() || this.auth.hasAnyPermission(permissions);
   }
 
+  /**
+   * Closes an open confirm only when the read that just settled actually invalidated ITS row.
+   *
+   * Closing on every read start was the wider version of this guard: `load()` also runs after a
+   * successful write, so disabling row A tore down a dialog the user had since opened for row B.
+   * A read that leaves B switchable is no reason to interrupt them; one that disables or removes
+   * B is. `confirmDeactivate` re-checks the current row regardless, so this is about not
+   * interrupting the user rather than about safety.
+   */
+  private dismissConfirmIfInvalidated(): void {
+    const open = this.confirmRow();
+    if (!open) return;
+    const current = this.allRows().find(r => r.employeeId === open.employeeId);
+    if (!current || !this.canSwitch(current)) this.closeConfirm();
+  }
+
   private setWriteError(employeeId: string, key: string | null): void {
     const next = new Map(this.writeErrors());
     if (key) next.set(employeeId, key);
@@ -413,7 +429,6 @@ export class EmployeeRegisterPageComponent implements OnInit {
   }
 
   private load(): void {
-    if (this.confirmRow()) this.closeConfirm();
     this.loadSub?.unsubscribe();
     const seq = ++this.readSeq;
 
@@ -437,9 +452,13 @@ export class EmployeeRegisterPageComponent implements OnInit {
           if (this.pageIndex() > lastPage) this.pageIndex.set(lastPage);
           this.state.set(page.rows.length ? 'ready' : 'empty');
           this.errorKey.set(null);
+          this.dismissConfirmIfInvalidated();
         },
         error: (err: unknown) => {
           if (seq !== this.readSeq) return;
+          // A failed read replaces the table with a panel, so any open confirm is floating
+          // over rows that are no longer shown.
+          if (this.confirmRow()) this.closeConfirm();
           if (err instanceof HttpErrorResponse && err.status === 403) {
             this.state.set('forbidden');
             this.errorKey.set(null);

@@ -659,6 +659,23 @@ describe('EmployeeRegisterPageComponent', () => {
     expect(timeLink?.getAttribute('href')).toContain('personId=per-1');
   });
 
+  it('dismisses the confirm when the read invalidates its own row', async () => {
+    await setup();
+    component.openConfirm(STUB_ROWS[0]);
+    expect(component.confirmRow()?.employeeId).toBe('emp-1');
+
+    // Someone else disabled emp-1. The dialog is now offering an action the row cannot take,
+    // so it goes — asserted BEFORE confirmDeactivate, which closes it for its own reasons and
+    // would otherwise mask a dismissal that never happened.
+    stubService.searchEmployees.mockReturnValue(
+      of(page([row({ employeeId: 'emp-1', status: 'DISABLED', active: false })])),
+    );
+    component.reload();
+    fixture.detectChanges();
+
+    expect(component.confirmRow()).toBeNull();
+  });
+
   it('stands down if the row moved under an open confirm dialog', async () => {
     await setup();
     component.openConfirm(STUB_ROWS[0]);
@@ -674,6 +691,27 @@ describe('EmployeeRegisterPageComponent', () => {
 
     expect(stubService.disableEmployee).not.toHaveBeenCalled();
     expect(component.confirmRow()).toBeNull();
+  });
+
+  it("keeps one row's confirm open when another row's write reloads the page", async () => {
+    const other = row({ employeeId: 'emp-5', personId: 'per-5', lastName: 'Cole' });
+    await setup({ search: of(page([STUB_ROWS[0], other])) });
+
+    // Disable emp-1, then open the confirm for emp-5 while that write is settling.
+    const writing = new Subject<unknown>();
+    stubService.disableEmployee.mockReturnValue(writing);
+    component.openConfirm(STUB_ROWS[0]);
+    component.confirmDeactivate();
+    component.openConfirm(other);
+    expect(component.confirmRow()?.employeeId).toBe('emp-5');
+
+    // emp-1 settling re-reads the page. Closing on every read start tore emp-5's dialog away
+    // mid-interaction; a read that leaves emp-5 switchable is no reason to interrupt.
+    writing.next({});
+    writing.complete();
+    fixture.detectChanges();
+
+    expect(component.confirmRow()?.employeeId).toBe('emp-5');
   });
 
   it('stands down if the row vanished from the read under an open confirm dialog', async () => {
