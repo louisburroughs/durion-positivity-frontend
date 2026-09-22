@@ -722,3 +722,96 @@
     font-size: 1.85rem;
   }
 }
+
+/* ── Mobile card list ───────────────────────────────────────────────────── */
+
+/*
+ * Below 720px the nine-column grid stops being a grid. A horizontally scrolling
+ * table hides half the record behind a gesture and puts the row actions off-screen,
+ * so each row becomes the card `design/HR/EmployeeRegister/Mobile.dc.html` draws:
+ * name as the title, fields stacked and labelled, actions as the footer.
+ *
+ * `thead` is hidden in this mode, so the column name has to travel with the cell —
+ * it comes from `data-label`, bound through the `translate` pipe in the template
+ * (ADR-0030: no copy in the stylesheet), and rendered by the ::before below.
+ */
+@media (max-width: 720px) {
+  .register-table-wrap {
+    overflow-x: visible;
+    border-radius: 0;
+    background: none;
+  }
+
+  .register-table {
+    display: block;
+    font-size: 0.9rem;
+  }
+
+  .register-table thead {
+    display: none;
+  }
+
+  .register-table tbody {
+    display: block;
+  }
+
+  .register-row,
+  .register-row:nth-child(even) {
+    display: block;
+    margin-bottom: var(--space-3);
+    padding: var(--space-4);
+    border-radius: var(--radius-md);
+    background: var(--cardBackground);
+  }
+
+  .register-td {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-3);
+    padding: 3px 0;
+    text-align: left;
+  }
+
+  .register-td::before {
+    content: attr(data-label);
+    flex: 0 0 5.5rem;
+    font-family: var(--font-primary);
+    font-weight: var(--font-weight-heading);
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  /* The name titles the card and the actions close it: neither needs naming. */
+  .register-td--name,
+  .register-td--actions {
+    display: block;
+  }
+
+  .register-td--name::before,
+  .register-td--actions::before {
+    content: none;
+  }
+
+  .register-td--name {
+    padding-bottom: var(--space-2);
+  }
+
+  .register-td--actions {
+    padding-top: var(--space-3);
+    text-align: left;
+  }
+
+  .register-actions {
+    display: flex;
+    justify-content: flex-start;
+    gap: var(--space-2);
+  }
+
+  /* Touch targets, not pointer targets: 44px per design/HR/EmployeeRegister. */
+  .register-action,
+  .status-switch {
+    min-height: 44px;
+  }
+}

@@ -156,7 +156,9 @@
                 <span class="register-employee-no">{{ row.employeeNumber || '—' }}</span>
               </td>
 
-              <td class="register-td register-td--mono">
+              <td class="register-td register-td--mono"
+                [attr.data-label]="'PEOPLE.EMPLOYEE_REGISTER.COL.USERNAME' | translate"
+              >
                 @if (row.username === undefined) {
                   <span class="register-unavailable">{{ 'PEOPLE.EMPLOYEE_REGISTER.NOT_AVAILABLE' | translate }}</span>
                 } @else {
@@ -164,7 +166,9 @@
                 }
               </td>
 
-              <td class="register-td">
+              <td class="register-td"
+                [attr.data-label]="'PEOPLE.EMPLOYEE_REGISTER.COL.EMAIL' | translate"
+              >
                 @if (!canViewPiiFor(row)) {
                   <span class="register-restricted">{{ 'PEOPLE.EMPLOYEE_REGISTER.RESTRICTED' | translate }}</span>
                 } @else if (row.email === undefined) {
@@ -180,7 +184,9 @@
                 }
               </td>
 
-              <td class="register-td">
+              <td class="register-td"
+                [attr.data-label]="'PEOPLE.EMPLOYEE_REGISTER.COL.PHONE' | translate"
+              >
                 @if (!canViewPiiFor(row)) {
                   <span class="register-restricted">{{ 'PEOPLE.EMPLOYEE_REGISTER.RESTRICTED' | translate }}</span>
                 } @else if (row.phone === undefined) {
@@ -190,7 +196,9 @@
                 }
               </td>
 
-              <td class="register-td">
+              <td class="register-td"
+                [attr.data-label]="'PEOPLE.EMPLOYEE_REGISTER.COL.ROLES' | translate"
+              >
                 @if (!canViewRoles()) {
                   <span class="register-restricted">{{ 'PEOPLE.EMPLOYEE_REGISTER.RESTRICTED' | translate }}</span>
                 } @else if (row.roles === undefined) {
@@ -209,7 +217,9 @@
                 }
               </td>
 
-              <td class="register-td">
+              <td class="register-td"
+                [attr.data-label]="'PEOPLE.EMPLOYEE_REGISTER.COL.LOCATION' | translate"
+              >
                 @if (row.primaryLocation === undefined) {
                   <span class="register-unavailable">{{ 'PEOPLE.EMPLOYEE_REGISTER.NOT_AVAILABLE' | translate }}</span>
                 } @else if (row.primaryLocation) {
@@ -228,7 +238,9 @@
                 }
               </td>
 
-              <td class="register-td">
+              <td class="register-td"
+                [attr.data-label]="'PEOPLE.EMPLOYEE_REGISTER.COL.JOB_ROLE' | translate"
+              >
                 @if (row.jobRole === undefined) {
                   <span class="register-unavailable">{{ 'PEOPLE.EMPLOYEE_REGISTER.NOT_AVAILABLE' | translate }}</span>
                 } @else {
@@ -236,7 +248,9 @@
                 }
               </td>
 
-              <td class="register-td">
+              <td class="register-td"
+                [attr.data-label]="'PEOPLE.EMPLOYEE_REGISTER.COL.STATUS' | translate"
+              >
                 @if (isPending(row)) {
                   <span class="status-pending" role="status">
                     {{ 'PEOPLE.EMPLOYEE_REGISTER.SWITCH.BUSY' | translate }}

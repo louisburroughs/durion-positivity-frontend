@@ -9,7 +9,7 @@ Canvas: https://claude.ai/artifact/PA1Xk14WRbzb9KP8Pnrz2K
 | Artboard | What it fixes |
 | -------- | ------------- |
 | `Main.dc.html` | Desktop register, 1440×1000. Nine columns, per-row actions, the status switch, the confirm dialog. |
-| `Mobile.dc.html` | 390×844 card list. Every target ≥44px. |
+| `Mobile.dc.html` | 390×844 card list, above a target-state caveat band. Every target ≥44px. |
 | `Lifecycle.dc.html` | Which status transitions the switch owns, and what happens after confirm. |
 | `States.dc.html` | `loading` / `empty` / `error` / `forbidden`. |
 | `AccessModel.dc.html` | Every column and link mapped to the permission its destination route declares. |
@@ -36,6 +36,9 @@ What that means in practice:
   reactivate action; nothing else.
 - Stat tiles, tinted header well, chip treatment and pagination follow the `TechRegister` precedent
   in this pack.
+- **Below 720px the table becomes the card list.** `thead` is hidden and each cell carries its
+  column name in `data-label`, bound through the `translate` pipe so the label stays localised; the
+  row actions and the status switch grow to a 44px touch target.
 
 **Departure from the precedent:** `TechRegister` carries a right-hand watchlist rail. This table has
 four more columns and needs the full 1360px, so "needs attention" became the third stat tile instead.
@@ -60,7 +63,8 @@ renders two tiles — Total workforce and Active — and the artboards show the 
 > **Target state vs shipped.** These artboards draw the intended design, in which the switch works
 > both ways. Only `ACTIVE → DISABLED` is implementable today: pos-people publishes no enable
 > endpoint (backend issue **#2156**), so the shipped page renders a `DISABLED` row as a read-only
-> badge. `Main.dc.html` and `Lifecycle.dc.html` both carry that caveat on the artboard itself.
+> badge. `Main.dc.html`, `Mobile.dc.html` and `Lifecycle.dc.html` all carry that caveat on the
+> artboard itself.
 
 ## Access model
 

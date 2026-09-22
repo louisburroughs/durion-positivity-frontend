@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { DebugElement } from '@angular/core';
 import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -569,6 +570,33 @@ describe('EmployeeRegisterPageComponent', () => {
     expect(component.truncated()).toBe(true); // the cache is still there…
     expect(component.showTruncationNotice()).toBe(false); // …but it is not announced
     expect(text()).not.toContain(notice);
+  });
+
+  // ── Mobile card layout (round six) ──────────────────────────────────────────────────
+
+  it('carries its column name on every data cell so the mobile cards stay labelled', async () => {
+    await setup();
+    const headers = fixture.debugElement
+      .queryAll(By.css('.register-th'))
+      .map((h: DebugElement) => (h.nativeElement.textContent ?? '').replace(/[\u2191\u2193]/g, '').trim());
+    const cells = fixture.debugElement
+      .queryAll(By.css('.register-row:first-of-type .register-td'))
+      .map((c: DebugElement) => c.nativeElement as HTMLElement);
+
+    expect(cells.length).toBe(headers.length);
+
+    // Below 720px `thead` is display:none and each cell's `data-label` is the only
+    // thing naming the field, so a cell that loses it becomes an unlabelled value on
+    // a phone. Asserted against the header text, which comes from the shipped bundle.
+    for (let i = 1; i < cells.length - 1; i++) {
+      expect(cells[i].getAttribute('data-label')).toBe(headers[i]);
+      expect(cells[i].getAttribute('data-label')).not.toContain('EMPLOYEE_REGISTER.');
+    }
+
+    // The name titles the card and the actions close it — labelling those would read
+    // as "Name: Albright, Renee" above the card's own heading.
+    expect(cells[0].getAttribute('data-label')).toBeNull();
+    expect(cells[cells.length - 1].getAttribute('data-label')).toBeNull();
   });
 
   // ── i18n (ADR-0030) ─────────────────────────────────────────────────────────────────

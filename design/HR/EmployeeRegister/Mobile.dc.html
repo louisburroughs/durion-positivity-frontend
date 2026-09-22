@@ -18,6 +18,14 @@
   </style>
 </helmet>
 
+<div style="width: 390px; box-sizing: border-box; background: #ffffff; display: flex; flex-direction: column;">
+
+  <!-- Target state vs shipped: the reactivation half of the switch has no endpoint yet. -->
+  <div style="display: flex; align-items: center; gap: 8px; padding: 14px 16px; background: #fdf6e8;">
+    <span aria-hidden="true" style="width: 3px; align-self: stretch; background: #cc9030; border-radius: 2px;"></span>
+    <p style="margin: 0; font-size: 11.5px; line-height: 1.5; color: #7a5114;"><strong>Target state.</strong> The disabled card below is drawn with a working <em>Activate</em> switch because that is the intended design, but pos-people publishes no enable endpoint &mdash; backend issue #2156. Until it lands the shipped page renders a disabled row as the read-only badge at the top of that card, and no switch.</p>
+  </div>
+
 <div style="width: 390px; height: 844px; box-sizing: border-box; padding: 20px 16px; background: #f2f2f4; color: #121213; display: flex; flex-direction: column; gap: 14px; overflow: hidden;">
 
   <div>
@@ -109,9 +117,12 @@
   </div>
 
 </div>
+
+</div>
+
 </x-dc>
 
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":950}}'>
 class Component extends DCLogic {
   renderVals() { return {}; }
 }
