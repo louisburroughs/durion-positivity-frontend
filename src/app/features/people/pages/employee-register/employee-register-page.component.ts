@@ -343,10 +343,17 @@ export class EmployeeRegisterPageComponent implements OnInit {
   }
 
   confirmDeactivate(): void {
-    const row = this.confirmRow();
+    const snapshot = this.confirmRow();
     const endDate = this.assignmentEndDate();
-    if (!row || !endDate) return;
-    if (!this.canSwitch(row)) {
+    if (!snapshot || !endDate) return;
+
+    // The dialog holds a SNAPSHOT taken when it opened, and a debounced search issued before
+    // the click can settle while it is open — replacing the rows underneath it. Re-checking
+    // the snapshot would then let a disable go out against a row the latest read already
+    // shows as DISABLED, sending the write a second time. Gate on the current row instead,
+    // and stand down if the read no longer has it (ADR-0063).
+    const row = this.allRows().find(r => r.employeeId === snapshot.employeeId);
+    if (!row || !this.canSwitch(row)) {
       this.closeConfirm();
       return;
     }

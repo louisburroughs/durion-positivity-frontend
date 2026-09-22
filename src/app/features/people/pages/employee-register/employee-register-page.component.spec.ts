@@ -88,7 +88,10 @@ describe('EmployeeRegisterPageComponent', () => {
   const setup = async (
     options: { permissions?: string[] | null; search?: Observable<EmployeeRegisterPage> } = {},
   ) => {
-    vi.clearAllMocks();
+    // `clearAllMocks` clears CALLS but not queued `mockReturnValueOnce` values, so a test that
+    // queues two and consumes one hands the leftover to whichever test runs next — which is how
+    // a later test silently received a never-emitting Subject instead of its own `throwError`.
+    vi.resetAllMocks();
     // `?? ALL_PERMISSIONS` would convert an explicit `permissions: null` into the full list,
     // so the legacy-token test below would never reach the unknown-perm_bits branch and would
     // still pass if that fallback were deleted. Key presence is the test.
@@ -297,14 +300,17 @@ describe('EmployeeRegisterPageComponent', () => {
   });
 
   it("never lets one row's success erase another row's refusal", async () => {
-    await setup();
+    // Both rows must be in the loaded page: a confirm re-checks the CURRENT row, so acting on
+    // one the read does not contain would stand down and prove nothing.
+    const alsoActive = row({ employeeId: 'emp-5', personId: 'per-5', lastName: 'Cole' });
+    await setup({ search: of(page([STUB_ROWS[0], alsoActive])) });
     const failing = new Subject<unknown>();
     const succeeding = new Subject<unknown>();
     stubService.disableEmployee.mockReturnValueOnce(failing).mockReturnValueOnce(succeeding);
 
     component.openConfirm(STUB_ROWS[0]);
     component.confirmDeactivate();
-    component.openConfirm(row({ employeeId: 'emp-5', personId: 'per-5', lastName: 'Cole' }));
+    component.openConfirm(alsoActive);
     component.confirmDeactivate();
 
     failing.error(new HttpErrorResponse({ status: 409 }));
@@ -317,7 +323,7 @@ describe('EmployeeRegisterPageComponent', () => {
     fixture.detectChanges();
 
     expect(component.writeErrorFor(STUB_ROWS[0])).toBe('PEOPLE.EMPLOYEE_REGISTER.ERROR.CONFLICT');
-    expect(component.writeErrorFor(row({ employeeId: 'emp-5' }))).toBeNull();
+    expect(component.writeErrorFor(alsoActive)).toBeNull();
   });
 
   it('clears row refusals when the user asks for the page again', async () => {
@@ -443,14 +449,14 @@ describe('EmployeeRegisterPageComponent', () => {
   });
 
   it('settles both rows when two deactivations are confirmed concurrently', async () => {
-    await setup();
+    const other = row({ employeeId: 'emp-5', firstName: 'Terrence', lastName: 'Blake' });
+    await setup({ search: of(page([STUB_ROWS[0], other])) });
     const first = new Subject<unknown>();
     const second = new Subject<unknown>();
     stubService.disableEmployee.mockReturnValueOnce(first).mockReturnValueOnce(second);
 
     component.openConfirm(STUB_ROWS[0]);
     component.confirmDeactivate();
-    const other = row({ employeeId: 'emp-5', firstName: 'Terrence', lastName: 'Blake' });
     component.openConfirm(other);
     component.confirmDeactivate();
 
@@ -651,6 +657,35 @@ describe('EmployeeRegisterPageComponent', () => {
     // The action is named "Time for <employee>". Without the person on the URL it opens an
     // empty selection form, and the accessible name promises something the link cannot do.
     expect(timeLink?.getAttribute('href')).toContain('personId=per-1');
+  });
+
+  it('stands down if the row moved under an open confirm dialog', async () => {
+    await setup();
+    component.openConfirm(STUB_ROWS[0]);
+
+    // A debounced search issued before the click settles while the dialog is open, and the
+    // employee is DISABLED by then. The dialog still holds the ACTIVE snapshot; confirming
+    // against it would send the disable a second time.
+    const moved = row({ employeeId: 'emp-1', status: 'DISABLED', active: false });
+    stubService.searchEmployees.mockReturnValue(of(page([moved])));
+    component.reload();
+
+    component.confirmDeactivate();
+
+    expect(stubService.disableEmployee).not.toHaveBeenCalled();
+    expect(component.confirmRow()).toBeNull();
+  });
+
+  it('stands down if the row vanished from the read under an open confirm dialog', async () => {
+    await setup();
+    component.openConfirm(STUB_ROWS[0]);
+
+    stubService.searchEmployees.mockReturnValue(of(page([STUB_ROWS[1]])));
+    component.reload();
+
+    component.confirmDeactivate();
+
+    expect(stubService.disableEmployee).not.toHaveBeenCalled();
   });
 
   // ── Row identity (round seven) ──────────────────────────────────────────────────────

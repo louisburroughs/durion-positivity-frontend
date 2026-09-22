@@ -23,7 +23,8 @@ export type RoleScope = 'GLOBAL' | 'LOCATION';
 
 export interface EmployeeRoleChip {
   readonly code: string;
-  readonly scope: RoleScope;
+  /** null when the projection sent a scope this client does not recognise — see `toScope`. */
+  readonly scope: RoleScope | null;
 }
 
 /**
