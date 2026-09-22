@@ -1,0 +1,354 @@
+import { describe, it, expect, afterEach, vi } from 'vitest';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
+import { provideRouter } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { Observable, Subject, of, throwError } from 'rxjs';
+
+import enUS from '../../../../../assets/i18n/en-US.json';
+import { EmployeeRegisterPageComponent } from './employee-register-page.component';
+import { EmployeeRegisterService } from '../../services/employee-register.service';
+import { AuthService } from '../../../../core/services/auth.service';
+import {
+  EmployeeRegisterPage,
+  EmployeeRegisterRow,
+} from '../../models/employee-register.models';
+
+/**
+ * Pinned literals, not read from PEOPLE_SECTION: deriving the expected codes from the
+ * constant under test would pass under any namespace, including the neighbouring
+ * pos-people `people:person:view` that does not govern these reads.
+ */
+const PII_PERMISSION = 'people:employee_pii:view';
+const ROLE_PERMISSION = 'people-contact:role:view';
+const DEACTIVATE_PERMISSION = 'people:employee:deactivate';
+const TIME_PERMISSION = 'people:timekeeping:view';
+const VIEW_PERMISSION = 'people:employee:view';
+
+const ALL_PERMISSIONS = [
+  PII_PERMISSION,
+  ROLE_PERMISSION,
+  DEACTIVATE_PERMISSION,
+  TIME_PERMISSION,
+  VIEW_PERMISSION,
+];
+
+function row(overrides: Partial<EmployeeRegisterRow> = {}): EmployeeRegisterRow {
+  return {
+    employeeId: 'emp-1',
+    personId: 'per-1',
+    employeeNumber: 'EMP-10428',
+    firstName: 'Renee',
+    lastName: 'Albright',
+    status: 'ACTIVE',
+    active: true,
+    username: 'renee.albright',
+    email: 'renee.albright@durion.internal',
+    phone: '(704) 555-0142',
+    roles: [{ code: 'SERVICE_MANAGER', scope: 'LOCATION' }],
+    primaryLocation: 'Charlotte Main',
+    additionalLocationCount: 1,
+    jobRole: 'Service Manager',
+    ...overrides,
+  };
+}
+
+const STUB_ROWS: readonly EmployeeRegisterRow[] = [
+  row(),
+  row({ employeeId: 'emp-2', personId: 'per-2', firstName: 'Curtis', lastName: 'Benton', status: 'DISABLED', active: false }),
+  row({ employeeId: 'emp-3', personId: 'per-3', firstName: 'Monica', lastName: 'Byrd', status: 'TERMINATED', active: false }),
+  row({ employeeId: 'emp-4', personId: 'per-4', firstName: 'Marcus', lastName: 'Bennett', status: 'ON_LEAVE', active: false }),
+];
+
+function page(rows: readonly EmployeeRegisterRow[] = STUB_ROWS): EmployeeRegisterPage {
+  return { rows, page: 0, size: 200, totalElements: rows.length, totalPages: 1 };
+}
+
+/** `permissions: null` models a legacy token with no `perm_bits` claim. */
+const session: { permissions: string[] | null } = { permissions: null };
+
+const authStub = {
+  permissionsKnown: () => session.permissions !== null,
+  hasPermission: (permission: string) => session.permissions?.includes(permission) ?? false,
+  hasAnyPermission: (permissions: readonly string[]) =>
+    permissions.some(permission => session.permissions?.includes(permission) ?? false),
+};
+
+const stubService = {
+  searchEmployees: vi.fn(),
+  disableEmployee: vi.fn(),
+};
+
+describe('EmployeeRegisterPageComponent', () => {
+  let fixture: ComponentFixture<EmployeeRegisterPageComponent>;
+  let component: EmployeeRegisterPageComponent;
+
+  const setup = async (
+    options: { permissions?: string[] | null; search?: Observable<EmployeeRegisterPage> } = {},
+  ) => {
+    vi.clearAllMocks();
+    session.permissions = options.permissions ?? ALL_PERMISSIONS;
+    stubService.searchEmployees.mockReturnValue(options.search ?? of(page()));
+    stubService.disableEmployee.mockReturnValue(of({}));
+
+    await TestBed.configureTestingModule({
+      imports: [EmployeeRegisterPageComponent, TranslateModule.forRoot()],
+      providers: [
+        provideRouter([]),
+        { provide: EmployeeRegisterService, useValue: stubService },
+        { provide: AuthService, useValue: authStub },
+      ],
+    }).compileComponents();
+
+    // ADR-0035 §8: copy claims assert against the shipped bundle, never pasted strings.
+    const translate = TestBed.inject(TranslateService);
+    translate.setTranslation('en-US', enUS);
+    translate.use('en-US');
+
+    fixture = TestBed.createComponent(EmployeeRegisterPageComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  };
+
+  afterEach(() => {
+    fixture?.destroy();
+    session.permissions = null;
+  });
+
+  const text = () => fixture.nativeElement.textContent as string;
+
+  it('renders a row per employee once the read settles', async () => {
+    await setup();
+    expect(component.state()).toBe('ready');
+    expect(fixture.debugElement.queryAll(By.css('.register-row')).length).toBe(4);
+    expect(text()).toContain('Albright, Renee');
+    expect(text()).toContain('Charlotte Main');
+    expect(text()).toContain('Service Manager');
+  });
+
+  it('shows the empty state and keeps a way back when nothing matches', async () => {
+    await setup({ search: of(page([])) });
+    expect(component.state()).toBe('empty');
+    expect(text()).toContain(enUS.PEOPLE.EMPLOYEE_REGISTER.EMPTY);
+  });
+
+  // ── Lifecycle (DECISION-PEOPLE-001) ─────────────────────────────────────────────────
+
+  it('offers the switch only for ACTIVE, and a read-only badge for every other status', async () => {
+    await setup();
+    const switches = fixture.debugElement.queryAll(By.css('.status-switch'));
+    expect(switches.length).toBe(1);
+    expect(switches[0].attributes['aria-checked']).toBe('true');
+
+    // DISABLED has no enable endpoint (backend #2156); TERMINATED is irreversible;
+    // ON_LEAVE carries dates the switch cannot collect.
+    expect(component.canSwitch(STUB_ROWS[1])).toBe(false);
+    expect(component.canSwitch(STUB_ROWS[2])).toBe(false);
+    expect(component.canSwitch(STUB_ROWS[3])).toBe(false);
+    expect(fixture.debugElement.queryAll(By.css('.status-badge')).length).toBe(3);
+  });
+
+  it('prefers the backend capability flags over the status rules when they are present', async () => {
+    await setup();
+    // A DISABLED row the backend says may be enabled still offers no DISABLE action…
+    expect(component.canSwitch(row({ status: 'DISABLED', allowedActions: ['ENABLE'] }))).toBe(false);
+    // …and an ACTIVE row the backend refuses is not switchable despite the permission.
+    expect(component.canSwitch(row({ status: 'ACTIVE', allowedActions: ['UPDATE'] }))).toBe(false);
+    expect(component.canSwitch(row({ status: 'ACTIVE', allowedActions: ['DISABLE'] }))).toBe(true);
+  });
+
+  // ── Write-control gating (ADR-0040 §6a) ─────────────────────────────────────────────
+
+  it('hides the switch AND refuses the method without people:employee:deactivate', async () => {
+    await setup({ permissions: ALL_PERMISSIONS.filter(p => p !== DEACTIVATE_PERMISSION) });
+    expect(fixture.debugElement.queryAll(By.css('.status-switch')).length).toBe(0);
+
+    // The method re-checks at call time, not only at the control.
+    component.openConfirm(STUB_ROWS[0]);
+    expect(component.confirmRow()).toBeNull();
+    component.confirmDeactivate();
+    expect(stubService.disableEmployee).not.toHaveBeenCalled();
+  });
+
+  it('allows the control when the token carries no perm_bits claim', async () => {
+    await setup({ permissions: null });
+    expect(component.canDeactivate()).toBe(true);
+    expect(component.canViewPii()).toBe(true);
+  });
+
+  it('masks PII and unlinks the name without people:employee_pii:view', async () => {
+    await setup({ permissions: [VIEW_PERMISSION, ROLE_PERMISSION] });
+    expect(component.canViewPii()).toBe(false);
+    expect(text()).toContain(enUS.PEOPLE.EMPLOYEE_REGISTER.RESTRICTED);
+    expect(text()).not.toContain('renee.albright@durion.internal');
+    // The column stays; only its content is masked, so the grid keeps its shape.
+    expect(fixture.debugElement.queryAll(By.css('.register-name-link')).length).toBe(0);
+    expect(text()).toContain('Albright, Renee');
+  });
+
+  it('masks the roles column without people-contact:role:view', async () => {
+    await setup({ permissions: [VIEW_PERMISSION, PII_PERMISSION] });
+    expect(component.canViewRoles()).toBe(false);
+    expect(text()).not.toContain('SERVICE_MANAGER');
+  });
+
+  it('renders a row action only for the permission its destination route declares', async () => {
+    await setup({ permissions: [VIEW_PERMISSION] });
+    const actions = fixture.debugElement
+      .queryAll(By.css('.register-action'))
+      .map(a => (a.nativeElement.textContent as string).trim());
+    // employee:view carries the locations page and nothing else here.
+    expect(actions).toContain(enUS.PEOPLE.EMPLOYEE_REGISTER.ACTION.LOCATIONS);
+    expect(actions).not.toContain(enUS.PEOPLE.EMPLOYEE_REGISTER.ACTION.PROFILE);
+    expect(actions).not.toContain(enUS.PEOPLE.EMPLOYEE_REGISTER.ACTION.TIME);
+    expect(actions).not.toContain(enUS.PEOPLE.EMPLOYEE_REGISTER.ACTION.ROLES);
+  });
+
+  // ── Confirmed deactivate (DECISION-PEOPLE-024) ──────────────────────────────────────
+
+  it('never writes on the switch alone — it opens a confirm first', async () => {
+    await setup();
+    fixture.debugElement.query(By.css('.status-switch')).nativeElement.click();
+    fixture.detectChanges();
+    expect(stubService.disableEmployee).not.toHaveBeenCalled();
+    expect(component.confirmRow()?.employeeId).toBe('emp-1');
+    expect(fixture.debugElement.query(By.css('dialog.confirm-dialog'))).toBeTruthy();
+  });
+
+  it('sends the employee id and the assignment end date on confirm, then re-reads', async () => {
+    await setup();
+    component.openConfirm(STUB_ROWS[0]);
+    component.assignmentEndDate.set('2026-09-22');
+    component.confirmDeactivate();
+
+    expect(stubService.disableEmployee).toHaveBeenCalledWith('emp-1', '2026-09-22');
+    // The disable runs a saga (DECISION-PEOPLE-002); the server settles the status, not us.
+    expect(stubService.searchEmployees).toHaveBeenCalledTimes(2);
+    expect(component.confirmRow()).toBeNull();
+  });
+
+  it('routes a failed deactivate through state then errorKey (ADR-0031 §1)', async () => {
+    await setup();
+    stubService.disableEmployee.mockReturnValue(throwError(() => new Error('boom')));
+
+    component.openConfirm(STUB_ROWS[0]);
+    component.confirmDeactivate();
+
+    expect(component.state()).toBe('error');
+    expect(component.errorKey()).toBe('PEOPLE.EMPLOYEE_REGISTER.ERROR.DEACTIVATE');
+    expect(component.isPending(STUB_ROWS[0])).toBe(false);
+  });
+
+  it('names the concurrency conflict distinctly on a 409 (DECISION-PEOPLE-017)', async () => {
+    await setup();
+    stubService.disableEmployee.mockReturnValue(
+      throwError(() => new HttpErrorResponse({ status: 409 })),
+    );
+
+    component.openConfirm(STUB_ROWS[0]);
+    component.confirmDeactivate();
+
+    expect(component.errorKey()).toBe('PEOPLE.EMPLOYEE_REGISTER.ERROR.CONFLICT');
+  });
+
+  // ── Read outcomes ───────────────────────────────────────────────────────────────────
+
+  it('routes a 403 to the forbidden state, not the error state', async () => {
+    await setup({ search: throwError(() => new HttpErrorResponse({ status: 403 })) });
+    expect(component.state()).toBe('forbidden');
+    expect(component.errorKey()).toBeNull();
+    expect(text()).toContain(enUS.PEOPLE.EMPLOYEE_REGISTER.FORBIDDEN.TITLE);
+  });
+
+  it('routes any other read failure through state then errorKey', async () => {
+    await setup({ search: throwError(() => new Error('down')) });
+    expect(component.state()).toBe('error');
+    expect(component.errorKey()).toBe('PEOPLE.EMPLOYEE_REGISTER.ERROR.LOAD');
+  });
+
+  it('ignores a superseded read so a slow first response cannot overwrite a newer one', async () => {
+    const first = new Subject<EmployeeRegisterPage>();
+    const second = new Subject<EmployeeRegisterPage>();
+    await setup({ search: first });
+
+    stubService.searchEmployees.mockReturnValue(second);
+    component.reload();
+
+    const late = [row({ employeeId: 'stale', lastName: 'Stale' })];
+    first.next(page(late));
+    expect(component.allRows().some(r => r.employeeId === 'stale')).toBe(false);
+
+    second.next(page());
+    expect(component.allRows().length).toBe(4);
+  });
+
+  // ── Filtering and ordering ──────────────────────────────────────────────────────────
+
+  it('filters by status and reports truncation honestly', async () => {
+    await setup();
+    component.setStatusFilter('DISABLED');
+    expect(component.filtered().length).toBe(1);
+    expect(component.filtered()[0].employeeId).toBe('emp-2');
+    expect(component.truncated()).toBe(false);
+
+    stubService.searchEmployees.mockReturnValue(
+      of({ ...page(), totalElements: 900 }),
+    );
+    component.reload();
+    expect(component.truncated()).toBe(true);
+  });
+
+  it('sorts by last name in both directions', async () => {
+    await setup();
+    expect(component.filtered().map(r => r.lastName)).toEqual([
+      'Albright',
+      'Bennett',
+      'Benton',
+      'Byrd',
+    ]);
+    component.toggleSort();
+    expect(component.filtered()[0].lastName).toBe('Byrd');
+    expect(component.ariaSort()).toBe('descending');
+  });
+
+  // ── Pending contract (backend #2155) ────────────────────────────────────────────────
+
+  it('says a not-yet-served column is unavailable rather than showing it as empty', async () => {
+    await setup({
+      search: of(
+        page([
+          {
+            employeeId: 'emp-9',
+            personId: 'per-9',
+            employeeNumber: 'EMP-1',
+            firstName: 'Thin',
+            lastName: 'Payload',
+            status: 'ACTIVE',
+            active: true,
+          },
+        ]),
+      ),
+    });
+    expect(text()).toContain(enUS.PEOPLE.EMPLOYEE_REGISTER.NOT_AVAILABLE);
+    expect(text()).not.toContain(enUS.PEOPLE.EMPLOYEE_REGISTER.LOCATION.UNASSIGNED);
+  });
+
+  // ── i18n (ADR-0030) ─────────────────────────────────────────────────────────────────
+
+  it('resolves every key the template uses in the shipped bundle', () => {
+    const block = enUS.PEOPLE.EMPLOYEE_REGISTER;
+    for (const status of ['ACTIVE', 'ON_LEAVE', 'SUSPENDED', 'TERMINATED', 'DISABLED'] as const) {
+      expect(block.STATUS[status]).toBeTruthy();
+    }
+    for (const filter of ['ALL', 'ACTIVE', 'DISABLED', 'TERMINATED'] as const) {
+      expect(block.FILTER[filter]).toBeTruthy();
+    }
+    expect(block.SCOPE.GLOBAL).toBeTruthy();
+    expect(block.SCOPE.LOCATION).toBeTruthy();
+    expect(block.SWITCH.DEACTIVATE).toContain('{{name}}');
+    expect(block.CONFIRM.TITLE).toContain('{{name}}');
+    expect(block.LOCATION.MORE).toContain('{{count}}');
+    expect(block.TRUNCATED).toContain('{{loaded}}');
+  });
+});

@@ -887,6 +887,94 @@
         "END": "Failed to end assignment.",
         "OVERLAP": "An overlapping assignment exists."
       }
+    },
+    "EMPLOYEE_REGISTER": {
+      "OVERLINE": "People · Workforce",
+      "TITLE": "Employees",
+      "SEARCH_LABEL": "Search",
+      "SEARCH_PLACEHOLDER": "Name, email, username, employee number…",
+      "STAT": {
+        "TOTAL": "Total workforce",
+        "ACTIVE": "Active"
+      },
+      "FILTER": {
+        "LABEL": "Status",
+        "ALL": "All",
+        "ACTIVE": "Active",
+        "DISABLED": "Disabled",
+        "TERMINATED": "Terminated"
+      },
+      "COL": {
+        "NAME": "Name",
+        "USERNAME": "Username",
+        "EMAIL": "Email",
+        "PHONE": "Phone",
+        "ROLES": "Application roles",
+        "LOCATION": "Location",
+        "JOB_ROLE": "Job role",
+        "STATUS": "Status",
+        "ACTIONS": "Actions"
+      },
+      "STATUS": {
+        "ACTIVE": "Active",
+        "ON_LEAVE": "On leave",
+        "SUSPENDED": "Suspended",
+        "TERMINATED": "Terminated",
+        "DISABLED": "Disabled"
+      },
+      "SCOPE": {
+        "GLOBAL": "Global",
+        "LOCATION": "Location"
+      },
+      "ACTION": {
+        "PROFILE": "Profile",
+        "TIME": "Time",
+        "ROLES": "Roles",
+        "LOCATIONS": "Locations",
+        "NEW_EMPLOYEE": "New employee"
+      },
+      "SWITCH": {
+        "DEACTIVATE": "Deactivate {{name}}",
+        "BUSY": "Updating…"
+      },
+      "LOCATION": {
+        "PRIMARY": "Primary",
+        "MORE": "Primary · +{{count}} more",
+        "UNASSIGNED": "Unassigned"
+      },
+      "NO_ROLES": "No roles",
+      "RESTRICTED": "Restricted",
+      "NOT_AVAILABLE": "Not available yet",
+      "LOADING": "Loading employees…",
+      "EMPTY": "No employees match your filters.",
+      "CLEAR_FILTERS": "Clear filters",
+      "TRUNCATED": "Showing the first {{loaded}} of {{total}} employees. Search to narrow the list — filters and sorting apply to what is loaded.",
+      "FORBIDDEN": {
+        "TITLE": "You don’t have access to the employee register",
+        "BODY": "This page needs the employee view permission. The People directory is open to you and carries name, username, email and phone.",
+        "DIRECTORY_LINK": "Go to People directory"
+      },
+      "CONFIRM": {
+        "OVERLINE": "Privileged action",
+        "TITLE": "Deactivate {{name}}?",
+        "BODY": "The account moves to Disabled. Identity and work history are kept, and the change can be reversed.",
+        "WARNING": "Sign-in is blocked immediately. Open role and location assignments end on this date, and downstream systems are updated afterwards.",
+        "END_DATE_LABEL": "Assignment end date",
+        "END_DATE_HINT": "The end is exclusive — the last worked day is the day before.",
+        "CANCEL": "Cancel",
+        "ACCEPT": "Deactivate"
+      },
+      "PAGINATION": {
+        "PAGE_OF": "Page {{current}} of {{total}}",
+        "ARIA": "Pagination",
+        "PREVIOUS": "Previous page",
+        "NEXT": "Next page"
+      },
+      "ERROR": {
+        "LOAD": "Failed to load employees.",
+        "DEACTIVATE": "Failed to deactivate the employee. Please try again.",
+        "CONFLICT": "This employee changed while you were working. The list has been refreshed — check the status and try again."
+      }
     }
   },
   "CRM": {

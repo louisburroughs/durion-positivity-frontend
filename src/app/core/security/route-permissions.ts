@@ -362,6 +362,13 @@ export const PRODUCT_PAGE = {
 /** `/app/people/*` — directory, employees, RBAC, timekeeping. */
 export const PEOPLE_PAGE = {
   directory: ['people-contact:person:view'],
+  /**
+   * The employee register (`/app/people/employees`). `searchEmployees` in pos-people is
+   * guarded by `people:employee:view`, so the page gate is that same code. The register's
+   * PII columns, role column and status switch are gated separately inside the page —
+   * see ADR-0040 §6a and the `PEOPLE_SECTION` entries below.
+   */
+  employeeRegister: ['people:employee:view'],
   roleAssignment: ['people-contact:role:view'],
   timeApproval: ['people:timekeeping:view'],
   /** Both timekeeping reports are served by pos-accounting. */
@@ -390,6 +397,18 @@ export const PEOPLE_PAGE = {
  */
 export const PEOPLE_SECTION = {
   personLookup: PEOPLE_PAGE.directory,
+  /**
+   * Employee register column and control gates. Each is the authority the destination
+   * route already declares, so a rendered link can never lead to a 403:
+   * `registerPii` mirrors `employeeDetail`, `registerRoles` mirrors `roleAssignment`,
+   * `registerTime` mirrors `timeApproval`, `registerDeactivate` mirrors `employeeOffboard`.
+   */
+  registerPii: PEOPLE_PAGE.employeeDetail,
+  registerRoles: PEOPLE_PAGE.roleAssignment,
+  registerTime: PEOPLE_PAGE.timeApproval,
+  registerLocations: PEOPLE_PAGE.locationAssignments,
+  registerDeactivate: PEOPLE_PAGE.employeeOffboard,
+  registerCreate: PEOPLE_PAGE.employeeCreate,
 } as const satisfies Record<string, readonly string[]>;
 
 /** `/app/location/*` — sites, bays, mobile units, storage locations. */
