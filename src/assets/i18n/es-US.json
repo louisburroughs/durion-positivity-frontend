@@ -931,10 +931,14 @@
         "TIME": "Horario",
         "ROLES": "Roles",
         "LOCATIONS": "Ubicaciones",
-        "NEW_EMPLOYEE": "Nuevo empleado"
+        "NEW_EMPLOYEE": "Nuevo empleado",
+        "PROFILE_FOR": "Perfil de {{name}}",
+        "TIME_FOR": "Horario de {{name}}",
+        "ROLES_FOR": "Roles de {{name}}",
+        "LOCATIONS_FOR": "Ubicaciones de {{name}}"
       },
       "SWITCH": {
-        "DEACTIVATE": "Desactivar a {{name}}",
+        "DEACTIVATE": "Desactivar a {{name}} ({{status}})",
         "BUSY": "Actualizando…"
       },
       "LOCATION": {

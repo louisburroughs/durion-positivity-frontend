@@ -44,7 +44,7 @@
     </div>
   }
 
-  @if (truncated()) {
+  @if (showTruncationNotice()) {
     <p class="register-notice" role="status">
       {{ 'PEOPLE.EMPLOYEE_REGISTER.TRUNCATED' | translate: { loaded: (allRows().length | number), total: (totalElements() | number) } }}
     </p>
@@ -247,7 +247,7 @@
                     role="switch"
                     class="status-switch"
                     [attr.aria-checked]="row.status === 'ACTIVE'"
-                    [attr.aria-label]="'PEOPLE.EMPLOYEE_REGISTER.SWITCH.DEACTIVATE' | translate: { name: displayName(row) }"
+                    [attr.aria-label]="'PEOPLE.EMPLOYEE_REGISTER.SWITCH.DEACTIVATE' | translate: { name: displayName(row), status: ('PEOPLE.EMPLOYEE_REGISTER.STATUS.' + row.status | translate) }"
                     (click)="openConfirm(row)"
                   >
                     <span class="status-switch__track" aria-hidden="true">
@@ -269,22 +269,38 @@
               <td class="register-td register-td--actions">
                 <span class="register-actions">
                   @if (canViewPii()) {
-                    <a class="register-action" [routerLink]="['/app/people/employees', row.employeeId]">
+                    <a
+                      class="register-action"
+                      [routerLink]="['/app/people/employees', row.employeeId]"
+                      [attr.aria-label]="'PEOPLE.EMPLOYEE_REGISTER.ACTION.PROFILE_FOR' | translate: { name: displayName(row) }"
+                    >
                       {{ 'PEOPLE.EMPLOYEE_REGISTER.ACTION.PROFILE' | translate }}
                     </a>
                   }
                   @if (canApproveTime()) {
-                    <a class="register-action" routerLink="/app/people/timekeeping/approval">
+                    <a
+                      class="register-action"
+                      routerLink="/app/people/timekeeping/approval"
+                      [attr.aria-label]="'PEOPLE.EMPLOYEE_REGISTER.ACTION.TIME_FOR' | translate: { name: displayName(row) }"
+                    >
                       {{ 'PEOPLE.EMPLOYEE_REGISTER.ACTION.TIME' | translate }}
                     </a>
                   }
                   @if (canViewRoles()) {
-                    <a class="register-action" [routerLink]="['/app/people/rbac', row.personId]">
+                    <a
+                      class="register-action"
+                      [routerLink]="['/app/people/rbac', row.personId]"
+                      [attr.aria-label]="'PEOPLE.EMPLOYEE_REGISTER.ACTION.ROLES_FOR' | translate: { name: displayName(row) }"
+                    >
                       {{ 'PEOPLE.EMPLOYEE_REGISTER.ACTION.ROLES' | translate }}
                     </a>
                   }
                   @if (canViewLocations()) {
-                    <a class="register-action" [routerLink]="['/app/people/person', row.personId, 'locations']">
+                    <a
+                      class="register-action"
+                      [routerLink]="['/app/people/person', row.personId, 'locations']"
+                      [attr.aria-label]="'PEOPLE.EMPLOYEE_REGISTER.ACTION.LOCATIONS_FOR' | translate: { name: displayName(row) }"
+                    >
                       {{ 'PEOPLE.EMPLOYEE_REGISTER.ACTION.LOCATIONS' | translate }}
                     </a>
                   }

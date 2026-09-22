@@ -45,12 +45,17 @@ const STATUS_FILTERS: readonly StatusFilter[] = ['ALL', 'ACTIVE', 'DISABLED', 'T
 
 /**
  * A conservative address shape for building a `mailto:` target. Excludes whitespace and
- * control characters, the RFC separators that could smuggle a second recipient, and `?`/`&`
- * which would open mailto header injection (`a@b?bcc=...`).
+ * control characters, the RFC separators that could smuggle a second recipient, `?`/`&`
+ * which would open mailto header injection (`a@b?bcc=...`), and `%`.
+ *
+ * `%` matters on its own: without it `a@b.com%0d%0abcc=attacker%40evil.example` satisfies
+ * every other rule here and passes the scheme allowlist, and a mail client decodes the
+ * escapes back into CRLF plus a header — the injection this shape exists to stop. A real
+ * address never needs a percent sign once quoted local parts are already excluded.
  */
 const EMAIL_RE =
   // eslint-disable-next-line no-control-regex -- excluding control characters is the point
-  /^[^\s@,;:<>"'()[\]\\?&\u0000-\u001f\u007f]+@[^\s@,;:<>"'()[\]\\?&\u0000-\u001f\u007f]+\.[A-Za-z]{2,}$/;
+  /^[^\s@,;:<>"'()[\]\\?&%\u0000-\u001f\u007f]+@[^\s@,;:<>"'()[\]\\?&%\u0000-\u001f\u007f]+\.[A-Za-z]{2,}$/;
 
 function toLocalIsoDate(date: Date): string {
   const year = date.getFullYear();
@@ -159,6 +164,16 @@ export class EmployeeRegisterPageComponent implements OnInit {
 
   /** True when the tenant has more employees than one fetch returned — see #2158. */
   readonly truncated = computed(() => this.totalElements() > this.allRows().length);
+
+  /**
+   * `allRows` and `totalElements` keep the last successful response while a new read runs or
+   * fails, so the truncation notice is shown only alongside the data it describes. Otherwise a
+   * 403 or a failed search would carry stale counts above the panel explaining the failure
+   * (ADR-0064).
+   */
+  readonly showTruncationNotice = computed(
+    () => this.truncated() && (this.viewState() === 'ready' || this.viewState() === 'empty'),
+  );
 
   ngOnInit(): void {
     this.searchSubject

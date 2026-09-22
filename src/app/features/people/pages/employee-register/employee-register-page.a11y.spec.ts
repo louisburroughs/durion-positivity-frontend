@@ -165,14 +165,40 @@ describe('Employee register a11y (rendered DOM)', () => {
     expect(await violations(fixture.nativeElement)).toEqual([]);
   });
 
-  it('names the toggle by the action it performs, not the state it is in', () => {
+  it('names the toggle by its action while still containing the visible label', () => {
     const toggle: HTMLButtonElement = fixture.nativeElement.querySelector('.status-switch');
     const name = toggle.getAttribute('aria-label') ?? '';
-    // ADR-0029 §8: "toggle names describe the action, not the state".
+    // ADR-0029 §8: "toggle names describe the action, not the state" — so the name leads
+    // with the action and identifies the row.
     expect(name).toContain('Deactivate');
     expect(name).toContain('Albright');
     expect(toggle.getAttribute('role')).toBe('switch');
     expect(toggle.getAttribute('aria-checked')).toBe('true');
+
+    // …and WCAG 2.5.3 Label in Name: the visible text inside the control is the status, so
+    // the accessible name has to contain it or speech activation cannot target this switch.
+    const visible = (toggle.querySelector('.status-switch__text')?.textContent ?? '').trim();
+    expect(visible).toBe(enUS.PEOPLE.EMPLOYEE_REGISTER.STATUS.ACTIVE);
+    expect(name).toContain(visible);
+  });
+
+  it('gives every row action its own identity without breaking Label in Name', () => {
+    const actions = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLAnchorElement>(
+        '.register-row:first-of-type .register-action',
+      ),
+    );
+    expect(actions.length).toBeGreaterThan(0);
+
+    for (const action of actions) {
+      const visible = (action.textContent ?? '').trim();
+      const name = action.getAttribute('aria-label') ?? '';
+      // Identical "Profile" links in a screen reader's link list are indistinguishable
+      // without the row they belong to (ADR-0029 §8).
+      expect(name).toContain('Albright, Renee');
+      // The visible label still has to appear in the name (WCAG 2.5.3).
+      expect(name).toContain(visible);
+    }
   });
 
   it('exposes every interactive control to the keyboard as a native element', () => {

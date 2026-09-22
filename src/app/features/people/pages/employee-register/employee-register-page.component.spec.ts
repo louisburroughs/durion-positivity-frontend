@@ -433,6 +433,11 @@ describe('EmployeeRegisterPageComponent', () => {
     expect(component.mailtoHref('a@b.com?bcc=attacker@evil.example')).toBeNull();
     expect(component.mailtoHref('a@b.com,attacker@evil.example')).toBeNull();
     expect(component.mailtoHref('java\tscript:alert(1)')).toBeNull();
+    // Percent-encoding decodes back into CRLF + a header in the mail client, so the encoded
+    // forms have to be refused too — rejecting the plain separators alone is not enough.
+    expect(component.mailtoHref('a@b.com%0d%0abcc=attacker%40evil.example')).toBeNull();
+    expect(component.mailtoHref('a@b.com%3Fbcc=attacker@evil.example')).toBeNull();
+    expect(component.mailtoHref('a%40b.com')).toBeNull();
     expect(component.mailtoHref('not-an-email')).toBeNull();
   });
 
@@ -522,6 +527,26 @@ describe('EmployeeRegisterPageComponent', () => {
     expect(component.pageIndex()).toBe(0);
     expect(component.paged().length).toBe(25);
     expect(component.viewState()).toBe('ready');
+  });
+
+  it('never carries stale counts over a loading, error or forbidden panel', async () => {
+    // A truncated first read leaves allRows/totalElements cached…
+    await setup({ search: of({ ...page(), totalElements: 900 }) });
+    expect(component.showTruncationNotice()).toBe(true);
+    const notice = enUS.PEOPLE.EMPLOYEE_REGISTER.TRUNCATED.split('{{')[0].trim();
+    expect(text()).toContain(notice);
+
+    // …and a later failure must not describe them above the panel explaining the failure.
+    stubService.searchEmployees.mockReturnValue(
+      throwError(() => new HttpErrorResponse({ status: 403 })),
+    );
+    component.reload();
+    fixture.detectChanges();
+
+    expect(component.viewState()).toBe('forbidden');
+    expect(component.truncated()).toBe(true); // the cache is still there…
+    expect(component.showTruncationNotice()).toBe(false); // …but it is not announced
+    expect(text()).not.toContain(notice);
   });
 
   // ── i18n (ADR-0030) ─────────────────────────────────────────────────────────────────
