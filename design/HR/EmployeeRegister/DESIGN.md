@@ -53,7 +53,7 @@ renders two tiles — Total workforce and Active — and the artboards show the 
 | ---- | -------------- |
 | DECISION-PEOPLE-001 — `ACTIVE` / `ON_LEAVE` / `SUSPENDED` / `TERMINATED` / `DISABLED` | The switch owns only `ACTIVE ⇄ DISABLED`. The other three render as read-only badges; `TERMINATED` is irreversible and stays on the offboard page. |
 | DECISION-PEOPLE-024 — disable is privileged and explicitly confirmed | The switch opens a confirm dialog. It never writes optimistically. |
-| DECISION-PEOPLE-002 — disable propagates by saga, downstream failure does not roll back | Row shows `Propagating…` after confirm; `Lifecycle.dc.html` shows the partial-sync banner. |
+| DECISION-PEOPLE-002 — disable propagates by saga, downstream failure does not roll back | The row settles as soon as the local write returns and the page re-reads. `Propagating…` and the partial-sync banner are **target state**: pos-people publishes no saga-status signal, so the client cannot know when downstream propagation finishes or fails (backend **#2161**). The shipped row shows a busy label while the request is in flight and nothing after it. |
 | DECISION-PEOPLE-014 — effective dating is half-open | Confirm dialog collects `assignmentEndDate` and says the end is exclusive. |
 | DECISION-PEOPLE-003 — role assignments are scope-aware | Role chips carry `· G` (global) or `· L` (location). |
 | DECISION-PEOPLE-004 — one primary location per person | Location cell shows the primary, with `+N more`. |

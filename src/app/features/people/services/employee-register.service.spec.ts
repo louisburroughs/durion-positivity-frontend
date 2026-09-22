@@ -183,6 +183,34 @@ describe('EmployeeRegisterService', () => {
     expect(emitted.status).toBe(EmployeeProfileDtoStatusEnum.Disabled);
   });
 
+  it('reads absence at the nested level too, not just the group level', async () => {
+    employeeApi.searchEmployees.mockReturnValue(
+      of({
+        items: [
+          {
+            ...thin,
+            // A partial projection: the group is served, one field inside it is not.
+            contactInfo: { phone: '(704) 555-0142' },
+            primaryLocation: {},
+          },
+        ],
+        page: 0,
+        size: 200,
+        totalElements: 1,
+        totalPages: 1,
+      }),
+    );
+
+    const { rows } = await firstValueFrom(service.searchEmployees(undefined, 200));
+    const [mapped] = rows;
+
+    // `email` was never sent, so the cell must say "not available yet". Reading it as null
+    // would render "—" — the page asserting the employee has no email address.
+    expect(mapped.email).toBeUndefined();
+    expect(mapped.phone).toBe('(704) 555-0142');
+    expect(mapped.primaryLocation).toBeUndefined();
+  });
+
   it('keeps a served zero location count distinct from one that was never sent', async () => {
     employeeApi.searchEmployees.mockReturnValue(
       of({

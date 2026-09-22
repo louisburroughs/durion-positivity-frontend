@@ -44,6 +44,27 @@ function toRoleChips(
     .map(a => ({ code: a.roleCode, scope: toScope(a.scope) }));
 }
 
+/**
+ * Reads a field out of a nested projection object under the absent/null/value rule, at BOTH
+ * levels — the distinction this codebase keeps getting wrong one layer at a time.
+ *
+ * The outer key decides whether the projection serves this group at all; the inner key decides
+ * whether it serves this field. A `contactInfo` object that carries `phone` but omits `email`
+ * is a partial projection, and reading the missing one as null would render it as "—" — the
+ * page asserting the employee has no email when it was simply never sent (ADR-0064).
+ */
+function nested(
+  dto: EnrichedEmployeeSummaryDto,
+  outer: 'contactInfo' | 'primaryLocation',
+  field: string,
+): string | null | undefined {
+  if (!(outer in dto)) return undefined;
+  const group = (dto as unknown as Record<string, unknown>)[outer];
+  if (group === null || group === undefined) return null;
+  if (typeof group !== 'object' || !(field in group)) return undefined;
+  return ((group as Record<string, unknown>)[field] as string | null | undefined) ?? null;
+}
+
 function toActions(raw: readonly string[] | null | undefined): readonly EmployeeAction[] | undefined {
   // The same null-versus-undefined rule as the contact fields and roles, and the one place
   // where getting it wrong GRANTS rather than withholds: the page reads `undefined` as
@@ -120,10 +141,10 @@ export class EmployeeRegisterService {
       // served the field and the employee has none, which is null (renders as —), while an
       // absent key means it is not served yet, which is undefined ("not available yet").
       username: dto.username,
-      email: 'contactInfo' in dto ? (dto.contactInfo?.email ?? null) : undefined,
-      phone: 'contactInfo' in dto ? (dto.contactInfo?.phone ?? null) : undefined,
+      email: nested(dto, 'contactInfo', 'email'),
+      phone: nested(dto, 'contactInfo', 'phone'),
       roles: toRoleChips(dto.roleAssignments),
-      primaryLocation: 'primaryLocation' in dto ? (dto.primaryLocation?.name ?? null) : undefined,
+      primaryLocation: nested(dto, 'primaryLocation', 'name'),
       // Fourth field under the same rule, and the one the template reads as a claim: a served
       // null means "no other locations" and prints "Primary", while an absent key means the
       // count was not served and the page must not assert a number it does not have.

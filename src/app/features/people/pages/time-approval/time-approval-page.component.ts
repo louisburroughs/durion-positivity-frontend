@@ -10,6 +10,8 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { ActivatedRoute } from '@angular/router';
+
 import { PeopleService } from '../../services/people.service';
 
 type PeriodStatus = 'OPEN' | 'SUBMISSION_CLOSED' | 'PAYROLL_CLOSED';
@@ -26,6 +28,7 @@ export class TimeApprovalPageComponent {
   private readonly peopleService = inject(PeopleService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly translate = inject(TranslateService);
+  private readonly route = inject(ActivatedRoute);
 
   readonly people = signal<unknown[]>([]);
   readonly peopleLoading = signal(false);
@@ -74,6 +77,13 @@ export class TimeApprovalPageComponent {
   });
 
   constructor() {
+    // The employee register links here per row ("Time for <employee>"), so the person it names
+    // has to arrive selected — otherwise the link promises a row-specific destination and hands
+    // over an empty form. The value is patched before the option list loads; the select binds to
+    // it as soon as the matching option renders.
+    const personId = this.route.snapshot.queryParamMap.get('personId');
+    if (personId) this.selectionForm.controls.personId.setValue(personId);
+
     this.loadPeople();
     this.loadPeriods();
     this.selectionForm.valueChanges

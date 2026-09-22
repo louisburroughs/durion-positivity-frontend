@@ -641,6 +641,18 @@ describe('EmployeeRegisterPageComponent', () => {
     expect(text()).not.toContain(enUS.PEOPLE.EMPLOYEE_REGISTER.LOCATION.PRIMARY);
   });
 
+  it('carries the employee to the time approvals page the row action names', async () => {
+    await setup();
+    const timeLink = fixture.debugElement
+      .queryAll(By.css('.register-action'))
+      .map(a => a.nativeElement as HTMLAnchorElement)
+      .find(a => a.getAttribute('href')?.includes('timekeeping/approval'));
+
+    // The action is named "Time for <employee>". Without the person on the URL it opens an
+    // empty selection form, and the accessible name promises something the link cannot do.
+    expect(timeLink?.getAttribute('href')).toContain('personId=per-1');
+  });
+
   // ── Row identity (round seven) ──────────────────────────────────────────────────────
 
   it('never lets a nameless row produce a blank control name', async () => {

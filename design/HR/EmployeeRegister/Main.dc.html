@@ -162,7 +162,7 @@
             <span style="{{item.badgeStyle}}"><span aria-hidden="true" style="{{item.dotStyle}}"></span>{{item.statusLabel}}</span>
           </sc-if>
           <sc-if value="{{item.pending}}" hint-placeholder-val="{{false}}">
-            <div style="margin-top: 3px; font-size: 10.5px; font-weight: 600; letter-spacing: 0.03em; color: #8a5e0a;">Propagating…</div>
+            <div style="margin-top: 3px; font-size: 10.5px; font-weight: 600; letter-spacing: 0.03em; color: #8a5e0a;" title="Target state — pos-people publishes no saga-status signal (backend #2161); the shipped row shows a busy label only while the request is in flight.">Propagating…</div>
           </sc-if>
         </div>
 

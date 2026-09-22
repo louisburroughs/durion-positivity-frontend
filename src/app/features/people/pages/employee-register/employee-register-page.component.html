@@ -299,6 +299,7 @@
                     <a
                       class="register-action"
                       routerLink="/app/people/timekeeping/approval"
+                      [queryParams]="{ personId: row.personId }"
                       [attr.aria-label]="'PEOPLE.EMPLOYEE_REGISTER.ACTION.TIME_FOR' | translate: { name: displayName(row) }"
                     >
                       {{ 'PEOPLE.EMPLOYEE_REGISTER.ACTION.TIME' | translate }}
