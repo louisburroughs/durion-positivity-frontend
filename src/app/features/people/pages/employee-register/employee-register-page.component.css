@@ -424,8 +424,13 @@
   color: var(--status-ready-fg);
 }
 
+/*
+ * The scope suffix is subordinate to the role code, but `opacity` is the wrong way to
+ * say so: at 0.75 it dropped this text to 4.31:1 on the chip fill and failed WCAG AA.
+ * Weight carries the hierarchy instead, at full contrast.
+ */
 .role-chip__scope {
-  opacity: 0.75;
+  font-weight: var(--font-weight-medium);
 }
 
 /* ── Status switch and badges ───────────────────────────────────────────── */

@@ -57,7 +57,14 @@ function row(overrides: Partial<EmployeeRegisterRow> = {}): EmployeeRegisterRow 
     username: 'renee.albright',
     email: 'renee.albright@durion.internal',
     phone: '(704) 555-0142',
-    roles: [{ code: 'SERVICE_MANAGER', scope: 'LOCATION' }],
+    // Both chip variants: the GLOBAL fill is a different token pair, so a fixture
+    // carrying only LOCATION chips leaves half the chip palette unchecked by axe —
+    // which is how a 3.72:1 global chip survived until the card layout brought the
+    // column into axe's view.
+    roles: [
+      { code: 'SERVICE_MANAGER', scope: 'LOCATION' },
+      { code: 'HR_ADMIN', scope: 'GLOBAL' },
+    ],
     primaryLocation: 'Charlotte Main',
     additionalLocationCount: 1,
     jobRole: 'Service Manager',
