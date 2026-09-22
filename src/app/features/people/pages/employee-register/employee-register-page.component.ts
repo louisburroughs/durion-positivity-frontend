@@ -103,6 +103,15 @@ export class EmployeeRegisterPageComponent implements OnInit {
    */
   readonly writeErrors = signal<ReadonlyMap<string, string>>(new Map());
 
+  /**
+   * True while a read is in flight. `allRows` deliberately holds the PREVIOUS result until the
+   * new one settles, so during that window the row lookup in `confirmDeactivate` is looking at
+   * data that may already be stale — it would find an ACTIVE row the in-flight read is about to
+   * report as DISABLED. The confirm refuses in that window rather than writing on a guess
+   * (ADR-0063); the dialog stays open and the accept re-enables when the read settles.
+   */
+  readonly readInFlight = signal(false);
+
   /** The row awaiting deactivate confirmation, or null (DECISION-PEOPLE-024). */
   readonly confirmRow = signal<EmployeeRegisterRow | null>(null);
   /**
@@ -352,6 +361,11 @@ export class EmployeeRegisterPageComponent implements OnInit {
     // the snapshot would then let a disable go out against a row the latest read already
     // shows as DISABLED, sending the write a second time. Gate on the current row instead,
     // and stand down if the read no longer has it (ADR-0063).
+    // Refuse while a read is settling: the lookup below would be answered from the previous
+    // result. The dialog stays open and the accept button is disabled, so the click is not
+    // lost — it just waits for the page to agree with the server.
+    if (this.readInFlight()) return;
+
     const row = this.allRows().find(r => r.employeeId === snapshot.employeeId);
     if (!row || !this.canSwitch(row)) {
       this.closeConfirm();
@@ -432,6 +446,7 @@ export class EmployeeRegisterPageComponent implements OnInit {
     this.loadSub?.unsubscribe();
     const seq = ++this.readSeq;
 
+    this.readInFlight.set(true);
     this.state.set('loading');
     this.errorKey.set(null);
 
@@ -443,6 +458,7 @@ export class EmployeeRegisterPageComponent implements OnInit {
       .subscribe({
         next: page => {
           if (seq !== this.readSeq) return; // superseded read — never writes
+          this.readInFlight.set(false);
           this.allRows.set(page.rows);
           this.totalElements.set(page.totalElements);
           // A re-read after a write can return fewer rows than the current page starts at —
@@ -456,6 +472,7 @@ export class EmployeeRegisterPageComponent implements OnInit {
         },
         error: (err: unknown) => {
           if (seq !== this.readSeq) return;
+          this.readInFlight.set(false);
           // A failed read replaces the table with a panel, so any open confirm is floating
           // over rows that are no longer shown.
           if (this.confirmRow()) this.closeConfirm();

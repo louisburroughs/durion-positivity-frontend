@@ -676,21 +676,43 @@ describe('EmployeeRegisterPageComponent', () => {
     expect(component.confirmRow()).toBeNull();
   });
 
-  it('stands down if the row moved under an open confirm dialog', async () => {
+  it('confirms against the current row, not the snapshot the dialog captured', async () => {
     await setup();
     component.openConfirm(STUB_ROWS[0]);
 
-    // A debounced search issued before the click settles while the dialog is open, and the
-    // employee is DISABLED by then. The dialog still holds the ACTIVE snapshot; confirming
-    // against it would send the disable a second time.
-    const moved = row({ employeeId: 'emp-1', status: 'DISABLED', active: false });
-    stubService.searchEmployees.mockReturnValue(of(page([moved])));
-    component.reload();
+    // Deliberately NOT routed through reload(): a settled read dismisses the dialog itself, so
+    // driving this through `of(...)` would let the dismissal answer the test and it would pass
+    // with the snapshot re-check restored. Changing the cache directly leaves the dialog open
+    // and puts the question to `confirmDeactivate` alone.
+    component.allRows.set([row({ employeeId: 'emp-1', status: 'DISABLED', active: false })]);
+    expect(component.confirmRow()?.employeeId).toBe('emp-1');
 
     component.confirmDeactivate();
 
     expect(stubService.disableEmployee).not.toHaveBeenCalled();
     expect(component.confirmRow()).toBeNull();
+  });
+
+  it('refuses to write while a read that could invalidate the row is still settling', async () => {
+    await setup();
+    const pending = new Subject<EmployeeRegisterPage>();
+    stubService.searchEmployees.mockReturnValue(pending);
+
+    component.openConfirm(STUB_ROWS[0]);
+    component.reload();
+
+    // `allRows` still holds the previous result here, so the row lookup would find the stale
+    // ACTIVE row and write on it. The click is refused rather than answered from old data.
+    component.confirmDeactivate();
+    expect(stubService.disableEmployee).not.toHaveBeenCalled();
+    expect(component.confirmRow()?.employeeId).toBe('emp-1'); // the dialog is kept, not lost
+    expect(component.readInFlight()).toBe(true);
+
+    // Once the read agrees the row is still switchable, the same click goes through.
+    pending.next(page([STUB_ROWS[0]]));
+    expect(component.readInFlight()).toBe(false);
+    component.confirmDeactivate();
+    expect(stubService.disableEmployee).toHaveBeenCalledTimes(1);
   });
 
   it("keeps one row's confirm open when another row's write reloads the page", async () => {
@@ -724,6 +746,32 @@ describe('EmployeeRegisterPageComponent', () => {
     component.confirmDeactivate();
 
     expect(stubService.disableEmployee).not.toHaveBeenCalled();
+  });
+
+  it('renders a role chip with an unknown scope without a suffix, not with a wrong one', async () => {
+    const mixed = row({
+      employeeId: 'emp-c',
+      roles: [
+        { code: 'SERVICE_MANAGER', scope: null },
+        { code: 'HR_ADMIN', scope: 'GLOBAL' },
+      ],
+    });
+    await setup({ search: of(page([mixed])) });
+
+    const chips = fixture.debugElement.queryAll(By.css('.role-chip'));
+    expect(chips.length).toBe(2);
+
+    // The service test only proves the mapper returns null; it would still pass with the
+    // template's @if deleted, which would resolve `SCOPE.null` and print a raw key or an
+    // empty suffix. This asserts the rendered branch.
+    expect(chips[0].nativeElement.textContent).toContain('SERVICE_MANAGER');
+    expect(chips[0].query(By.css('.role-chip__scope'))).toBeNull();
+
+    const known = chips[1].query(By.css('.role-chip__scope'));
+    expect(known?.nativeElement.textContent.trim()).toBe(
+      enUS.PEOPLE.EMPLOYEE_REGISTER.SCOPE.GLOBAL,
+    );
+    expect(fixture.nativeElement.textContent).not.toContain('SCOPE.');
   });
 
   // ── Row identity (round seven) ──────────────────────────────────────────────────────
