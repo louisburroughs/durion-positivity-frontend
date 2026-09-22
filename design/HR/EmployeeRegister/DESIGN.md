@@ -40,6 +40,10 @@ What that means in practice:
 **Departure from the precedent:** `TechRegister` carries a right-hand watchlist rail. This table has
 four more columns and needs the full 1360px, so "needs attention" became the third stat tile instead.
 
+**Not shipped yet:** that third tile counts employees with no location or no application role, and
+both of those fields arrive with the register projection (backend **#2155**). Until then the page
+renders two tiles — Total workforce and Active — and the artboards show the target of three.
+
 ## Domain rules the design encodes
 
 | Rule | Where it shows |
@@ -51,7 +55,7 @@ four more columns and needs the full 1360px, so "needs attention" became the thi
 | DECISION-PEOPLE-003 — role assignments are scope-aware | Role chips carry `· G` (global) or `· L` (location). |
 | DECISION-PEOPLE-004 — one primary location per person | Location cell shows the primary, with `+N more`. |
 | DECISION-PEOPLE-013 — gate on named permissions, never role names | The preview switcher switches **permission sets**; `AccessModel.dc.html` names a code per row and no roles. |
-| DECISION-PEOPLE-017 — optimistic concurrency | On 409 the row refreshes and the switch returns to the server's value. |
+| DECISION-PEOPLE-017 — optimistic concurrency | A 409 puts the page in its conflict error state naming the cause; the re-read happens when the user selects Retry, not automatically. |
 
 > **Target state vs shipped.** These artboards draw the intended design, in which the switch works
 > both ways. Only `ACTIVE → DISABLED` is implementable today: pos-people publishes no enable

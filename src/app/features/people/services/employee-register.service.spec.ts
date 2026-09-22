@@ -1,7 +1,12 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom, of } from 'rxjs';
-import { EmployeeAPIService, EmployeeSummaryDto } from '@durion-sdk/people';
+import {
+  EmployeeAPIService,
+  EmployeeProfileDto,
+  EmployeeProfileDtoStatusEnum,
+  EmployeeSummaryDto,
+} from '@durion-sdk/people';
 
 import { EmployeeRegisterService } from './employee-register.service';
 import { EnrichedEmployeeSummaryDto } from '../models/employee-register.models';
@@ -156,11 +161,41 @@ describe('EmployeeRegisterService', () => {
     expect(mapped.primaryLocation).toBeNull();
   });
 
-  it('sends the assignment end date on disable', () => {
-    employeeApi.disableEmployee.mockReturnValue(of({}));
-    service.disableEmployee('emp-1', '2026-09-22').subscribe();
+  it('sends the assignment end date on disable and emits the profile it returns', async () => {
+    const disabled: EmployeeProfileDto = {
+      employeeNumber: 'EMP-10428',
+      firstName: 'Renee',
+      hireDate: '2021-03-01',
+      id: 'emp-1',
+      lastName: 'Albright',
+      status: EmployeeProfileDtoStatusEnum.Disabled,
+    };
+    employeeApi.disableEmployee.mockReturnValue(of(disabled));
+
+    // Asserting the emission too: argument-only coverage would still pass if the wrapper
+    // returned EMPTY or swapped the value (ADR-0035).
+    const emitted = await firstValueFrom(service.disableEmployee('emp-1', '2026-09-22'));
+
     expect(employeeApi.disableEmployee).toHaveBeenCalledWith('emp-1', {
       assignmentEndDate: '2026-09-22',
     });
+    expect(emitted).toEqual(disabled);
+    expect(emitted.status).toBe(EmployeeProfileDtoStatusEnum.Disabled);
+  });
+
+  it('treats null role assignments as "no roles", not "not available"', async () => {
+    employeeApi.searchEmployees.mockReturnValue(
+      of({
+        items: [{ ...thin, roleAssignments: null }],
+        page: 0,
+        size: 200,
+        totalElements: 1,
+        totalPages: 1,
+      }),
+    );
+
+    const { rows } = await firstValueFrom(service.searchEmployees(undefined, 200));
+    expect(rows[0].roles).toEqual([]);
+    expect(rows[0].roles).not.toBeUndefined();
   });
 });

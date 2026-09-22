@@ -10,6 +10,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
+import { DOCUMENT, DecimalPipe } from '@angular/common';
 import { TranslatePipe } from '@ngx-translate/core';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
@@ -62,7 +63,7 @@ function toLocalIsoDate(date: Date): string {
   selector: 'app-employee-register-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, TranslatePipe, ModalDialogDirective],
+  imports: [RouterLink, TranslatePipe, DecimalPipe, ModalDialogDirective],
   templateUrl: './employee-register-page.component.html',
   styleUrl: './employee-register-page.component.css',
 })
@@ -70,6 +71,7 @@ export class EmployeeRegisterPageComponent implements OnInit {
   private readonly registerService = inject(EmployeeRegisterService);
   private readonly auth = inject(AuthService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly document = inject(DOCUMENT);
 
   readonly state = signal<PageState>('idle');
   readonly errorKey = signal<string | null>(null);
@@ -87,6 +89,12 @@ export class EmployeeRegisterPageComponent implements OnInit {
 
   /** The row awaiting deactivate confirmation, or null (DECISION-PEOPLE-024). */
   readonly confirmRow = signal<EmployeeRegisterRow | null>(null);
+  /**
+   * The control that opened the confirm. Closing the dialog removes the focused element from
+   * the DOM, so focus would otherwise fall to <body> and strand a keyboard user behind the
+   * page (ADR-0029 §8.7). Captured on open, restored once the dialog has unmounted.
+   */
+  private confirmOpener: HTMLElement | null = null;
   readonly assignmentEndDate = signal(toLocalIsoDate(new Date()));
 
   readonly statusFilters = STATUS_FILTERS;
@@ -244,11 +252,32 @@ export class EmployeeRegisterPageComponent implements OnInit {
   openConfirm(row: EmployeeRegisterRow): void {
     if (!this.canSwitch(row)) return; // re-checked at click time, not only at the control
     this.assignmentEndDate.set(toLocalIsoDate(new Date()));
+    const active = this.document.activeElement;
+    this.confirmOpener = active instanceof HTMLElement ? active : null;
     this.confirmRow.set(row);
   }
 
   cancelConfirm(): void {
+    this.closeConfirm();
+  }
+
+  /**
+   * Closes the dialog and hands focus back. The `@if` removes the dialog during the next
+   * change detection, so the restore is deferred past it. After a confirm the row's switch is
+   * itself replaced by the pending label, so an opener that is no longer connected falls back
+   * to the search field — a stable control at the top of the page.
+   */
+  private closeConfirm(): void {
+    const opener = this.confirmOpener;
+    this.confirmOpener = null;
     this.confirmRow.set(null);
+    setTimeout(() => {
+      if (opener?.isConnected) {
+        opener.focus();
+        return;
+      }
+      this.document.getElementById('register-search-input')?.focus();
+    });
   }
 
   onEndDateInput(event: Event): void {
@@ -260,11 +289,11 @@ export class EmployeeRegisterPageComponent implements OnInit {
     const endDate = this.assignmentEndDate();
     if (!row || !endDate) return;
     if (!this.canSwitch(row)) {
-      this.confirmRow.set(null);
+      this.closeConfirm();
       return;
     }
 
-    this.confirmRow.set(null);
+    this.closeConfirm();
     this.markPending(row.employeeId, true);
 
     this.writeSubs.get(row.employeeId)?.unsubscribe();
@@ -321,6 +350,11 @@ export class EmployeeRegisterPageComponent implements OnInit {
           if (seq !== this.readSeq) return; // superseded read — never writes
           this.allRows.set(page.rows);
           this.totalElements.set(page.totalElements);
+          // A re-read after a write can return fewer rows than the current page starts at —
+          // disabling the only row on page 2 leaves pageIndex past the end, and `paged()`
+          // would slice an empty window out of a `ready` page.
+          const lastPage = this.totalPages() - 1;
+          if (this.pageIndex() > lastPage) this.pageIndex.set(lastPage);
           this.state.set(page.rows.length ? 'ready' : 'empty');
           this.errorKey.set(null);
         },

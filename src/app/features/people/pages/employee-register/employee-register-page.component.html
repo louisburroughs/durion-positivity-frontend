@@ -33,12 +33,12 @@
     <div class="register-stats">
       <div class="stat-tile stat-tile--featured">
         <span class="stat-tile__label">{{ 'PEOPLE.EMPLOYEE_REGISTER.STAT.TOTAL' | translate }}</span>
-        <span class="stat-tile__value">{{ totalElements() }}</span>
+        <span class="stat-tile__value">{{ totalElements() | number }}</span>
       </div>
       @if (!truncated()) {
         <div class="stat-tile">
           <span class="stat-tile__label">{{ 'PEOPLE.EMPLOYEE_REGISTER.STAT.ACTIVE' | translate }}</span>
-          <span class="stat-tile__value">{{ activeCount() }}</span>
+          <span class="stat-tile__value">{{ activeCount() | number }}</span>
         </div>
       }
     </div>
@@ -46,7 +46,7 @@
 
   @if (truncated()) {
     <p class="register-notice" role="status">
-      {{ 'PEOPLE.EMPLOYEE_REGISTER.TRUNCATED' | translate: { loaded: allRows().length, total: totalElements() } }}
+      {{ 'PEOPLE.EMPLOYEE_REGISTER.TRUNCATED' | translate: { loaded: (allRows().length | number), total: (totalElements() | number) } }}
     </p>
   }
 

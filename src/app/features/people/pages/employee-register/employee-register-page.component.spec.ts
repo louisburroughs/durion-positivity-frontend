@@ -88,7 +88,10 @@ describe('EmployeeRegisterPageComponent', () => {
     options: { permissions?: string[] | null; search?: Observable<EmployeeRegisterPage> } = {},
   ) => {
     vi.clearAllMocks();
-    session.permissions = options.permissions ?? ALL_PERMISSIONS;
+    // `?? ALL_PERMISSIONS` would convert an explicit `permissions: null` into the full list,
+    // so the legacy-token test below would never reach the unknown-perm_bits branch and would
+    // still pass if that fallback were deleted. Key presence is the test.
+    session.permissions = 'permissions' in options ? (options.permissions ?? null) : ALL_PERMISSIONS;
     stubService.searchEmployees.mockReturnValue(options.search ?? of(page()));
     stubService.disableEmployee.mockReturnValue(of({}));
 
@@ -173,8 +176,13 @@ describe('EmployeeRegisterPageComponent', () => {
 
   it('allows the control when the token carries no perm_bits claim', async () => {
     await setup({ permissions: null });
+    // ADR-0040 §6a.3: permissions unknown, so the control is offered and the backend refuses.
+    // Asserting the session really is unknown — the previous setup silently replaced an
+    // explicit null with the full permission list, which made this test vacuous.
+    expect(session.permissions).toBeNull();
     expect(component.canDeactivate()).toBe(true);
     expect(component.canViewPii()).toBe(true);
+    expect(fixture.debugElement.queryAll(By.css('.status-switch')).length).toBeGreaterThan(0);
   });
 
   it('masks PII and unlinks the name without people:employee_pii:view', async () => {
@@ -459,6 +467,61 @@ describe('EmployeeRegisterPageComponent', () => {
       .query(By.css('.register-state--error .register-state__btn'))
       .nativeElement.click();
     expect(stubService.searchEmployees.mock.calls.length).toBe(before + 1);
+  });
+
+  // ── Focus and pagination (round three) ──────────────────────────────────────────────
+
+  it('hands focus back to the opener when the confirm is cancelled', async () => {
+    await setup();
+    const toggle = fixture.debugElement.query(By.css('.status-switch')).nativeElement as HTMLElement;
+    toggle.focus();
+    toggle.click();
+    fixture.detectChanges();
+
+    component.cancelConfirm();
+    fixture.detectChanges();
+    await new Promise(resolve => setTimeout(resolve));
+
+    // Closing removes the focused dialog; without a restore, focus falls to <body> and the
+    // keyboard user is stranded behind the page (ADR-0029 §8.7).
+    expect(document.activeElement).toBe(toggle);
+  });
+
+  it('falls back to a stable control when the opener no longer exists after confirming', async () => {
+    await setup();
+    const toggle = fixture.debugElement.query(By.css('.status-switch')).nativeElement as HTMLElement;
+    toggle.focus();
+    component.openConfirm(STUB_ROWS[0]);
+    fixture.detectChanges();
+
+    // Confirming replaces the row's switch with the pending label, so the opener is gone.
+    stubService.disableEmployee.mockReturnValue(new Subject<unknown>());
+    component.confirmDeactivate();
+    fixture.detectChanges();
+    await new Promise(resolve => setTimeout(resolve));
+
+    expect(toggle.isConnected).toBe(false);
+    expect(document.activeElement).toBe(document.getElementById('register-search-input'));
+  });
+
+  it('clamps the page index when a re-read returns fewer rows', async () => {
+    const many = Array.from({ length: 26 }, (_, i) =>
+      row({ employeeId: `emp-${i}`, personId: `per-${i}`, lastName: `Name${`${i}`.padStart(2, '0')}` }),
+    );
+    await setup({ search: of(page(many)) });
+    component.nextPage();
+    expect(component.pageIndex()).toBe(1);
+    expect(component.paged().length).toBe(1);
+
+    // The 26th row disappears — totalPages drops to 1 while pageIndex still points at page 2,
+    // which would slice an empty window out of an otherwise ready page.
+    stubService.searchEmployees.mockReturnValue(of(page(many.slice(0, 25))));
+    component.reload();
+    fixture.detectChanges();
+
+    expect(component.pageIndex()).toBe(0);
+    expect(component.paged().length).toBe(25);
+    expect(component.viewState()).toBe('ready');
   });
 
   // ── i18n (ADR-0030) ─────────────────────────────────────────────────────────────────

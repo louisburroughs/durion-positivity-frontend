@@ -34,7 +34,11 @@ function toScope(raw: string | null | undefined): RoleScope {
 function toRoleChips(
   assignments: EnrichedEmployeeSummaryDto['roleAssignments'],
 ): readonly EmployeeRoleChip[] | undefined {
-  if (!assignments) return undefined;
+  // Same null-versus-undefined rule as the contact fields: an absent key means the projection
+  // does not serve roles yet, while an explicit null means served and the employee has none —
+  // which the template renders as "No roles", not "not available yet" (ADR-0064).
+  if (assignments === undefined) return undefined;
+  if (assignments === null) return [];
   return assignments
     .filter((a): a is { roleCode: string; scope?: string | null } => !!a.roleCode)
     .map(a => ({ code: a.roleCode, scope: toScope(a.scope) }));
