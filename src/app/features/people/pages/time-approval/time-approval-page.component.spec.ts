@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { ActivatedRoute, provideRouter } from '@angular/router';
+import { convertToParamMap } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 import { TimeApprovalPageComponent } from './time-approval-page.component';
@@ -42,6 +43,28 @@ describe('TimeApprovalPageComponent', () => {
     fixture = TestBed.createComponent(TimeApprovalPageComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
+  });
+
+  it('preselects the person the employee register linked here for', async () => {
+    // The register's row action is named "Time for <employee>". If this page ignores the
+    // person on the URL, that link opens an empty form and the name is a false promise.
+    TestBed.resetTestingModule();
+    await TestBed.configureTestingModule({
+      imports: [TimeApprovalPageComponent, TranslateModule.forRoot()],
+      providers: [
+        provideRouter([]),
+        { provide: PeopleService, useValue: peopleService },
+        {
+          provide: ActivatedRoute,
+          useValue: { snapshot: { queryParamMap: convertToParamMap({ personId: 'p1' }) } },
+        },
+      ],
+    }).compileComponents();
+
+    const linked = TestBed.createComponent(TimeApprovalPageComponent);
+    linked.detectChanges();
+
+    expect(linked.componentInstance.selectionForm.getRawValue().personId).toBe('p1');
   });
 
   it('T1: renders page heading with approval text', () => {

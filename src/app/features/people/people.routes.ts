@@ -56,6 +56,13 @@ export const PEOPLE_ROUTES: Routes = [
             .then(m => m.DiscrepancyReportPageComponent),
       },
       {
+        path: 'employees',
+        data: { permissions: PEOPLE_PAGE.employeeRegister },
+        loadComponent: () =>
+          import('./pages/employee-register/employee-register-page.component')
+            .then(m => m.EmployeeRegisterPageComponent),
+      },
+      {
         path: 'employees/new',
         data: { permissions: PEOPLE_PAGE.employeeCreate },
         loadComponent: () =>

@@ -1,0 +1,95 @@
+{
+  "v": 3,
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-09-22T00:00:00Z"
+  },
+  "title": "Employee Directory",
+  "launch": {
+    "view": "canvas"
+  },
+  "pages": [],
+  "designSystems": [],
+  "boards": {
+    "Main.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 1000,
+      "title": "Employee register — desktop",
+      "is_interactive": true
+    },
+    "Mobile.dc.html": {
+      "x": 0,
+      "y": 1420,
+      "w": 390,
+      "h": 950,
+      "title": "Employee register — mobile"
+    },
+    "Lifecycle.dc.html": {
+      "x": 470,
+      "y": 1420,
+      "w": 660,
+      "h": 700,
+      "title": "Status lifecycle"
+    },
+    "States.dc.html": {
+      "x": 1210,
+      "y": 1420,
+      "w": 760,
+      "h": 880,
+      "title": "Page states"
+    },
+    "AccessModel.dc.html": {
+      "x": 0,
+      "y": 2600,
+      "w": 1200,
+      "h": 920,
+      "title": "Access model"
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "Mobile.dc.html",
+    "Lifecycle.dc.html",
+    "States.dc.html",
+    "AccessModel.dc.html"
+  ],
+  "notes": {
+    "t1": {
+      "x": 0,
+      "y": -300,
+      "text": "Employee register",
+      "kind": "title1",
+      "maxW": 1440
+    },
+    "t2": {
+      "x": 0,
+      "y": 1120,
+      "text": "Mobile · lifecycle · page states",
+      "kind": "title1",
+      "maxW": 1970
+    },
+    "t3": {
+      "x": 0,
+      "y": 2340,
+      "text": "Access model",
+      "kind": "title1",
+      "maxW": 1200
+    },
+    "n1": {
+      "x": 1520,
+      "y": 0,
+      "w": 320,
+      "text": "The gold strip is a prototype lever, not product chrome. Switch the permission set to see the register as each viewer sees it — columns mask, links disappear, and the switch becomes a badge.",
+      "fill": "gray"
+    },
+    "n2": {
+      "x": 1520,
+      "y": 470,
+      "w": 320,
+      "text": "Try it: flip a row's switch. The confirm opens first, then the row shows \"Propagating…\" while the saga runs. Nothing is written optimistically.",
+      "fill": "blue"
+    }
+  }
+}

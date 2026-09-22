@@ -1,0 +1,410 @@
+<main class="employee-register" aria-labelledby="register-title">
+
+  <header class="register-header">
+    <div class="register-heading">
+      <p class="register-overline">{{ 'PEOPLE.EMPLOYEE_REGISTER.OVERLINE' | translate }}</p>
+      <h1 id="register-title" class="register-title">
+        {{ 'PEOPLE.EMPLOYEE_REGISTER.TITLE' | translate }}
+      </h1>
+    </div>
+
+    <div class="register-search">
+      <label class="register-search__label" for="register-search-input">
+        {{ 'PEOPLE.EMPLOYEE_REGISTER.SEARCH_LABEL' | translate }}
+      </label>
+      <input
+        id="register-search-input"
+        class="register-search__input"
+        type="search"
+        [value]="searchInputValue()"
+        (input)="onSearchInput($event)"
+        [placeholder]="'PEOPLE.EMPLOYEE_REGISTER.SEARCH_PLACEHOLDER' | translate"
+      />
+    </div>
+
+    @if (canCreate()) {
+      <a class="register-cta" routerLink="/app/people/employees/new">
+        {{ 'PEOPLE.EMPLOYEE_REGISTER.ACTION.NEW_EMPLOYEE' | translate }}
+      </a>
+    }
+  </header>
+
+  @if (viewState() === 'ready' || viewState() === 'empty') {
+    <div class="register-stats">
+      <div class="stat-tile stat-tile--featured">
+        <span class="stat-tile__label">{{ 'PEOPLE.EMPLOYEE_REGISTER.STAT.TOTAL' | translate }}</span>
+        <span class="stat-tile__value">{{ totalElements() | number }}</span>
+      </div>
+      @if (!truncated()) {
+        <div class="stat-tile">
+          <span class="stat-tile__label">{{ 'PEOPLE.EMPLOYEE_REGISTER.STAT.ACTIVE' | translate }}</span>
+          <span class="stat-tile__value">{{ activeCount() | number }}</span>
+        </div>
+      }
+    </div>
+  }
+
+  @if (showTruncationNotice()) {
+    <p class="register-notice" role="status">
+      {{ 'PEOPLE.EMPLOYEE_REGISTER.TRUNCATED' | translate: { loaded: (allRows().length | number), total: (totalElements() | number) } }}
+    </p>
+  }
+
+  @if (viewState() === 'ready' || viewState() === 'empty') {
+    <div class="register-filters">
+      <span id="status-filter-label" class="register-filters__label">
+        {{ 'PEOPLE.EMPLOYEE_REGISTER.FILTER.LABEL' | translate }}
+      </span>
+      <div class="register-filters__group" role="group" aria-labelledby="status-filter-label">
+        @for (option of statusFilters; track option) {
+          <button
+            type="button"
+            class="filter-chip"
+            [class.filter-chip--active]="statusFilter() === option"
+            [attr.aria-pressed]="statusFilter() === option"
+            (click)="setStatusFilter(option)"
+          >
+            {{ 'PEOPLE.EMPLOYEE_REGISTER.FILTER.' + option | translate }}
+          </button>
+        }
+      </div>
+    </div>
+  }
+
+  @if (viewState() === 'loading') {
+    <div class="register-state" aria-live="polite" aria-busy="true">
+      <span class="register-state__spinner" aria-hidden="true"></span>
+      {{ 'PEOPLE.EMPLOYEE_REGISTER.LOADING' | translate }}
+    </div>
+  }
+
+  @if (viewState() === 'error') {
+    <div class="register-state register-state--error" role="alert">
+      <span>{{ errorKey()! | translate }}</span>
+      <button type="button" class="register-state__btn" (click)="reload()">
+        {{ 'COMMON.RETRY' | translate }}
+      </button>
+    </div>
+  }
+
+  @if (viewState() === 'forbidden') {
+    <div class="register-state register-state--forbidden">
+      <div>
+        <p class="register-state__title">
+          {{ 'PEOPLE.EMPLOYEE_REGISTER.FORBIDDEN.TITLE' | translate }}
+        </p>
+        <p class="register-state__body">
+          @if (canViewDirectory()) {
+            {{ 'PEOPLE.EMPLOYEE_REGISTER.FORBIDDEN.BODY' | translate }}
+          } @else {
+            {{ 'PEOPLE.EMPLOYEE_REGISTER.FORBIDDEN.BODY_NO_DIRECTORY' | translate }}
+          }
+        </p>
+      </div>
+      @if (canViewDirectory()) {
+        <a class="register-state__btn" routerLink="/app/people/directory">
+          {{ 'PEOPLE.EMPLOYEE_REGISTER.FORBIDDEN.DIRECTORY_LINK' | translate }}
+        </a>
+      }
+    </div>
+  }
+
+  @if (viewState() === 'empty') {
+    <div class="register-state">
+      <span>{{ 'PEOPLE.EMPLOYEE_REGISTER.EMPTY' | translate }}</span>
+      <button type="button" class="register-state__btn" (click)="clearFilters()">
+        {{ 'PEOPLE.EMPLOYEE_REGISTER.CLEAR_FILTERS' | translate }}
+      </button>
+    </div>
+  }
+
+  @if (viewState() === 'ready') {
+    <div class="register-table-wrap">
+      <table class="register-table">
+        <caption class="sr-only">{{ 'PEOPLE.EMPLOYEE_REGISTER.TITLE' | translate }}</caption>
+        <thead>
+          <tr>
+            <th scope="col" class="register-th" [attr.aria-sort]="ariaSort()">
+              <button type="button" class="register-sort" (click)="toggleSort()">
+                {{ 'PEOPLE.EMPLOYEE_REGISTER.COL.NAME' | translate }}
+                <span class="register-sort__icon" aria-hidden="true">{{ sortDir() === 'asc' ? '↑' : '↓' }}</span>
+              </button>
+            </th>
+            <th scope="col" class="register-th">{{ 'PEOPLE.EMPLOYEE_REGISTER.COL.USERNAME' | translate }}</th>
+            <th scope="col" class="register-th">{{ 'PEOPLE.EMPLOYEE_REGISTER.COL.EMAIL' | translate }}</th>
+            <th scope="col" class="register-th">{{ 'PEOPLE.EMPLOYEE_REGISTER.COL.PHONE' | translate }}</th>
+            <th scope="col" class="register-th">{{ 'PEOPLE.EMPLOYEE_REGISTER.COL.ROLES' | translate }}</th>
+            <th scope="col" class="register-th">{{ 'PEOPLE.EMPLOYEE_REGISTER.COL.LOCATION' | translate }}</th>
+            <th scope="col" class="register-th">{{ 'PEOPLE.EMPLOYEE_REGISTER.COL.JOB_ROLE' | translate }}</th>
+            <th scope="col" class="register-th">{{ 'PEOPLE.EMPLOYEE_REGISTER.COL.STATUS' | translate }}</th>
+            <th scope="col" class="register-th register-th--actions">
+              {{ 'PEOPLE.EMPLOYEE_REGISTER.COL.ACTIONS' | translate }}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of paged(); track row.employeeId) {
+            <tr class="register-row" [class.register-row--inactive]="!row.active">
+              <td class="register-td register-td--name">
+                @if (canViewPiiFor(row)) {
+                  <a class="register-name-link" [routerLink]="['/app/people/employees', row.employeeId]">
+                    {{ displayName(row) }}
+                  </a>
+                } @else {
+                  <span class="register-name">{{ displayName(row) }}</span>
+                }
+                <span class="register-employee-no">{{ row.employeeNumber || '—' }}</span>
+              </td>
+
+              <td class="register-td register-td--mono"
+                [attr.data-label]="'PEOPLE.EMPLOYEE_REGISTER.COL.USERNAME' | translate"
+              >
+                @if (row.username === undefined) {
+                  <span class="register-unavailable">{{ 'PEOPLE.EMPLOYEE_REGISTER.NOT_AVAILABLE' | translate }}</span>
+                } @else {
+                  {{ row.username || '—' }}
+                }
+              </td>
+
+              <td class="register-td"
+                [attr.data-label]="'PEOPLE.EMPLOYEE_REGISTER.COL.EMAIL' | translate"
+              >
+                @if (!canViewPiiFor(row)) {
+                  <span class="register-restricted">{{ 'PEOPLE.EMPLOYEE_REGISTER.RESTRICTED' | translate }}</span>
+                } @else if (row.email === undefined) {
+                  <span class="register-unavailable">{{ 'PEOPLE.EMPLOYEE_REGISTER.NOT_AVAILABLE' | translate }}</span>
+                } @else if (row.email) {
+                  @if (mailtoHref(row.email); as safeMailto) {
+                    <a class="register-email-link" [href]="safeMailto">{{ row.email }}</a>
+                  } @else {
+                    <span class="register-email-plain">{{ row.email }}</span>
+                  }
+                } @else {
+                  —
+                }
+              </td>
+
+              <td class="register-td"
+                [attr.data-label]="'PEOPLE.EMPLOYEE_REGISTER.COL.PHONE' | translate"
+              >
+                @if (!canViewPiiFor(row)) {
+                  <span class="register-restricted">{{ 'PEOPLE.EMPLOYEE_REGISTER.RESTRICTED' | translate }}</span>
+                } @else if (row.phone === undefined) {
+                  <span class="register-unavailable">{{ 'PEOPLE.EMPLOYEE_REGISTER.NOT_AVAILABLE' | translate }}</span>
+                } @else {
+                  {{ row.phone || '—' }}
+                }
+              </td>
+
+              <td class="register-td"
+                [attr.data-label]="'PEOPLE.EMPLOYEE_REGISTER.COL.ROLES' | translate"
+              >
+                @if (!canViewRoles()) {
+                  <span class="register-restricted">{{ 'PEOPLE.EMPLOYEE_REGISTER.RESTRICTED' | translate }}</span>
+                } @else if (row.roles === undefined) {
+                  <span class="register-unavailable">{{ 'PEOPLE.EMPLOYEE_REGISTER.NOT_AVAILABLE' | translate }}</span>
+                } @else if (row.roles.length) {
+                  <span class="register-chips">
+                    @for (role of row.roles; track role.code) {
+                      <span class="role-chip" [class.role-chip--global]="role.scope === 'GLOBAL'">
+                        {{ role.code }}
+                        <span class="role-chip__scope">{{ 'PEOPLE.EMPLOYEE_REGISTER.SCOPE.' + role.scope | translate }}</span>
+                      </span>
+                    }
+                  </span>
+                } @else {
+                  <span class="register-muted">{{ 'PEOPLE.EMPLOYEE_REGISTER.NO_ROLES' | translate }}</span>
+                }
+              </td>
+
+              <td class="register-td"
+                [attr.data-label]="'PEOPLE.EMPLOYEE_REGISTER.COL.LOCATION' | translate"
+              >
+                @if (row.primaryLocation === undefined) {
+                  <span class="register-unavailable">{{ 'PEOPLE.EMPLOYEE_REGISTER.NOT_AVAILABLE' | translate }}</span>
+                } @else if (row.primaryLocation) {
+                  <span class="register-location">{{ row.primaryLocation }}</span>
+                  @if (row.otherLocationCount) {
+                    <span class="register-location__more">
+                      {{ 'PEOPLE.EMPLOYEE_REGISTER.LOCATION.MORE' | translate: { count: (row.otherLocationCount | number) } }}
+                    </span>
+                  } @else if (row.otherLocationCount !== undefined) {
+                    <span class="register-location__more">
+                      {{ 'PEOPLE.EMPLOYEE_REGISTER.LOCATION.PRIMARY' | translate }}
+                    </span>
+                  }
+                } @else {
+                  <span class="register-muted">{{ 'PEOPLE.EMPLOYEE_REGISTER.LOCATION.UNASSIGNED' | translate }}</span>
+                }
+              </td>
+
+              <td class="register-td"
+                [attr.data-label]="'PEOPLE.EMPLOYEE_REGISTER.COL.JOB_ROLE' | translate"
+              >
+                @if (row.jobRole === undefined) {
+                  <span class="register-unavailable">{{ 'PEOPLE.EMPLOYEE_REGISTER.NOT_AVAILABLE' | translate }}</span>
+                } @else {
+                  {{ row.jobRole || '—' }}
+                }
+              </td>
+
+              <td class="register-td"
+                [attr.data-label]="'PEOPLE.EMPLOYEE_REGISTER.COL.STATUS' | translate"
+              >
+                @if (isPending(row)) {
+                  <span class="status-pending" role="status">
+                    {{ 'PEOPLE.EMPLOYEE_REGISTER.SWITCH.BUSY' | translate }}
+                  </span>
+                } @else if (canSwitch(row)) {
+                  <button
+                    type="button"
+                    role="switch"
+                    class="status-switch"
+                    [attr.aria-checked]="row.status === 'ACTIVE'"
+                    [attr.aria-label]="'PEOPLE.EMPLOYEE_REGISTER.SWITCH.DEACTIVATE' | translate: { name: displayName(row), status: ('PEOPLE.EMPLOYEE_REGISTER.STATUS.' + row.status | translate) }"
+                    (click)="openConfirm(row)"
+                  >
+                    <span class="status-switch__track" aria-hidden="true">
+                      <span class="status-switch__knob"></span>
+                    </span>
+                    <span class="status-switch__text">
+                      {{ 'PEOPLE.EMPLOYEE_REGISTER.STATUS.' + row.status | translate }}
+                    </span>
+                  </button>
+                } @else if (row.status) {
+                  <span class="status-badge" [attr.data-status]="row.status">
+                    {{ 'PEOPLE.EMPLOYEE_REGISTER.STATUS.' + row.status | translate }}
+                  </span>
+                } @else {
+                  <span class="register-muted">—</span>
+                }
+
+                @if (writeErrorFor(row); as writeError) {
+                  <span class="row-error" role="alert">{{ writeError | translate }}</span>
+                }
+              </td>
+
+              <td class="register-td register-td--actions">
+                <span class="register-actions">
+                  @if (canViewPiiFor(row)) {
+                    <a
+                      class="register-action"
+                      [routerLink]="['/app/people/employees', row.employeeId]"
+                      [attr.aria-label]="'PEOPLE.EMPLOYEE_REGISTER.ACTION.PROFILE_FOR' | translate: { name: displayName(row) }"
+                    >
+                      {{ 'PEOPLE.EMPLOYEE_REGISTER.ACTION.PROFILE' | translate }}
+                    </a>
+                  }
+                  @if (canApproveTime()) {
+                    <a
+                      class="register-action"
+                      routerLink="/app/people/timekeeping/approval"
+                      [queryParams]="{ personId: row.personId }"
+                      [attr.aria-label]="'PEOPLE.EMPLOYEE_REGISTER.ACTION.TIME_FOR' | translate: { name: displayName(row) }"
+                    >
+                      {{ 'PEOPLE.EMPLOYEE_REGISTER.ACTION.TIME' | translate }}
+                    </a>
+                  }
+                  @if (canViewRoles()) {
+                    <a
+                      class="register-action"
+                      [routerLink]="['/app/people/rbac', row.personId]"
+                      [attr.aria-label]="'PEOPLE.EMPLOYEE_REGISTER.ACTION.ROLES_FOR' | translate: { name: displayName(row) }"
+                    >
+                      {{ 'PEOPLE.EMPLOYEE_REGISTER.ACTION.ROLES' | translate }}
+                    </a>
+                  }
+                  @if (canViewLocations()) {
+                    <a
+                      class="register-action"
+                      [routerLink]="['/app/people/person', row.personId, 'locations']"
+                      [attr.aria-label]="'PEOPLE.EMPLOYEE_REGISTER.ACTION.LOCATIONS_FOR' | translate: { name: displayName(row) }"
+                    >
+                      {{ 'PEOPLE.EMPLOYEE_REGISTER.ACTION.LOCATIONS' | translate }}
+                    </a>
+                  }
+                </span>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (totalPages() > 1) {
+      <nav class="register-pagination" [attr.aria-label]="'PEOPLE.EMPLOYEE_REGISTER.PAGINATION.ARIA' | translate">
+        <button
+          type="button"
+          class="pagination-btn"
+          [disabled]="pageIndex() === 0"
+          (click)="prevPage()"
+          [attr.aria-label]="'PEOPLE.EMPLOYEE_REGISTER.PAGINATION.PREVIOUS' | translate"
+        >‹</button>
+        <span class="pagination-label">
+          {{ 'PEOPLE.EMPLOYEE_REGISTER.PAGINATION.PAGE_OF' | translate: { current: (pageIndex() + 1 | number), total: (totalPages() | number) } }}
+        </span>
+        <button
+          type="button"
+          class="pagination-btn"
+          [disabled]="pageIndex() >= totalPages() - 1"
+          (click)="nextPage()"
+          [attr.aria-label]="'PEOPLE.EMPLOYEE_REGISTER.PAGINATION.NEXT' | translate"
+        >›</button>
+      </nav>
+    }
+  }
+
+  @if (confirmRow(); as row) {
+    <dialog
+      class="confirm-dialog"
+      appModalDialog
+      aria-labelledby="confirm-title"
+      aria-describedby="confirm-body"
+      (modalCancel)="cancelConfirm()"
+    >
+      <p class="confirm-dialog__overline">{{ 'PEOPLE.EMPLOYEE_REGISTER.CONFIRM.OVERLINE' | translate }}</p>
+      <h2 class="confirm-dialog__title" id="confirm-title">
+        {{ 'PEOPLE.EMPLOYEE_REGISTER.CONFIRM.TITLE' | translate: { name: displayName(row) } }}
+      </h2>
+      <p class="confirm-dialog__body" id="confirm-body">
+        {{ 'PEOPLE.EMPLOYEE_REGISTER.CONFIRM.BODY' | translate }}
+      </p>
+
+      <p class="confirm-dialog__warning">
+        {{ 'PEOPLE.EMPLOYEE_REGISTER.CONFIRM.WARNING' | translate }}
+      </p>
+
+      <div class="confirm-dialog__field">
+        <label class="confirm-dialog__label" for="assignment-end-date">
+          {{ 'PEOPLE.EMPLOYEE_REGISTER.CONFIRM.END_DATE_LABEL' | translate }}
+        </label>
+        <input
+          id="assignment-end-date"
+          class="confirm-dialog__input"
+          type="date"
+          [value]="assignmentEndDate()"
+          (input)="onEndDateInput($event)"
+          aria-describedby="assignment-end-date-hint"
+        />
+        <p class="confirm-dialog__hint" id="assignment-end-date-hint">
+          {{ 'PEOPLE.EMPLOYEE_REGISTER.CONFIRM.END_DATE_HINT' | translate }}
+        </p>
+      </div>
+
+      <div class="confirm-dialog__actions">
+        <button type="button" class="confirm-dialog__cancel" (click)="cancelConfirm()">
+          {{ 'PEOPLE.EMPLOYEE_REGISTER.CONFIRM.CANCEL' | translate }}
+        </button>
+        <button
+          type="button"
+          class="confirm-dialog__accept"
+          [disabled]="!assignmentEndDate()"
+          (click)="confirmDeactivate()"
+        >
+          {{ 'PEOPLE.EMPLOYEE_REGISTER.CONFIRM.ACCEPT' | translate }}
+        </button>
+      </div>
+    </dialog>
+  }
+
+</main>

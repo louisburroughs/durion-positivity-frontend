@@ -887,6 +887,100 @@
         "END": "Impossible de terminer l'affectation.",
         "OVERLAP": "Une affectation qui se chevauche existe déjà."
       }
+    },
+    "EMPLOYEE_REGISTER": {
+      "OVERLINE": "Personnel · Effectif",
+      "TITLE": "Employés",
+      "SEARCH_LABEL": "Rechercher",
+      "SEARCH_PLACEHOLDER": "Nom, e-mail, nom d’utilisateur, numéro d’employé…",
+      "STAT": {
+        "TOTAL": "Effectif total",
+        "ACTIVE": "Actifs"
+      },
+      "FILTER": {
+        "LABEL": "Statut",
+        "ALL": "Tous",
+        "ACTIVE": "Actifs",
+        "DISABLED": "Désactivés",
+        "TERMINATED": "Cessés"
+      },
+      "COL": {
+        "NAME": "Nom",
+        "USERNAME": "Nom d’utilisateur",
+        "EMAIL": "E-mail",
+        "PHONE": "Téléphone",
+        "ROLES": "Rôles applicatifs",
+        "LOCATION": "Emplacement",
+        "JOB_ROLE": "Poste",
+        "STATUS": "Statut",
+        "ACTIONS": "Actions"
+      },
+      "STATUS": {
+        "ACTIVE": "Actif",
+        "ON_LEAVE": "En congé",
+        "SUSPENDED": "Suspendu",
+        "TERMINATED": "Cessé",
+        "DISABLED": "Désactivé"
+      },
+      "SCOPE": {
+        "GLOBAL": "Global",
+        "LOCATION": "Emplacement"
+      },
+      "ACTION": {
+        "PROFILE": "Profil",
+        "TIME": "Temps",
+        "ROLES": "Rôles",
+        "LOCATIONS": "Emplacements",
+        "NEW_EMPLOYEE": "Nouvel employé",
+        "PROFILE_FOR": "Profil de {{name}}",
+        "TIME_FOR": "Temps de {{name}}",
+        "ROLES_FOR": "Rôles de {{name}}",
+        "LOCATIONS_FOR": "Emplacements de {{name}}"
+      },
+      "SWITCH": {
+        "DEACTIVATE": "Désactiver {{name}} ({{status}})",
+        "BUSY": "Mise à jour…"
+      },
+      "LOCATION": {
+        "PRIMARY": "Principal",
+        "MORE": "Principal · +{{count}} autres",
+        "UNASSIGNED": "Non assigné"
+      },
+      "NO_ROLES": "Aucun rôle",
+      "RESTRICTED": "Restreint",
+      "NOT_AVAILABLE": "Pas encore disponible",
+      "UNNAMED": "Employé sans nom",
+      "LOADING": "Chargement des employés…",
+      "EMPTY": "Aucun employé ne correspond aux filtres.",
+      "CLEAR_FILTERS": "Effacer les filtres",
+      "TRUNCATED": "Affichage des {{loaded}} premiers employés sur {{total}}. Affinez la recherche : les filtres et le tri portent sur ce qui est chargé.",
+      "FORBIDDEN": {
+        "TITLE": "Vous n’avez pas accès au registre des employés",
+        "BODY": "Cette page exige la permission de consultation des employés. L’annuaire des personnes vous est accessible et contient le nom, le nom d’utilisateur, l’e-mail et le téléphone.",
+        "DIRECTORY_LINK": "Aller à l’annuaire des personnes",
+        "BODY_NO_DIRECTORY": "Cette page exige la permission de consultation des employés. Demandez l’accès à un administrateur au besoin."
+      },
+      "CONFIRM": {
+        "OVERLINE": "Action privilégiée",
+        "TITLE": "Désactiver {{name}} ?",
+        "BODY": "Le compte passe à Désactivé. L’identité et l’historique de travail sont conservés, et le changement est réversible.",
+        "WARNING": "La connexion est bloquée immédiatement. Les affectations de rôle et d’emplacement en cours prennent fin à cette date, et les systèmes en aval sont mis à jour ensuite.",
+        "END_DATE_LABEL": "Date de fin d’affectation",
+        "END_DATE_HINT": "La fin est exclusive : le dernier jour travaillé est la veille.",
+        "CANCEL": "Annuler",
+        "ACCEPT": "Désactiver"
+      },
+      "PAGINATION": {
+        "PAGE_OF": "Page {{current}} sur {{total}}",
+        "ARIA": "Pagination",
+        "PREVIOUS": "Page précédente",
+        "NEXT": "Page suivante"
+      },
+      "ERROR": {
+        "LOAD": "Échec du chargement des employés.",
+        "DEACTIVATE": "Échec de la désactivation de l’employé. Veuillez réessayer.",
+        "CONFLICT": "Cet employé a changé pendant votre travail ; le changement a donc été refusé. La liste a été rechargée : vérifiez le statut actuel avant de réessayer."
+      }
     }
   },
   "CRM": {

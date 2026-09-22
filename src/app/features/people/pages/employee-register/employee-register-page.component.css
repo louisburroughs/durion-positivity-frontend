@@ -1,0 +1,836 @@
+/*
+ * Employee register — The Architectural Ledger (design/DESIGN.md).
+ * No 1px sectioning borders and no row dividers: boundaries come from tonal shifts between
+ * --brand-background, --cardBackground and --surface-inset, and rows separate by alternating
+ * tint. Controls sit at --radius-sm; only status chips take a pill, which design/HR/DESIGN.md
+ * exempts. Design source: design/HR/EmployeeRegister/.
+ */
+
+.employee-register {
+  display: grid;
+  gap: var(--space-5);
+  padding: var(--space-6) var(--space-5) var(--space-6) var(--space-8); /* asymmetric left gutter */
+  max-width: 1440px;
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────── */
+
+.register-header {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-6);
+  flex-wrap: wrap;
+}
+
+.register-heading {
+  flex-shrink: 0;
+}
+
+.register-overline {
+  margin: 0 0 var(--space-1);
+  font-family: var(--font-primary);
+  font-weight: var(--font-weight-heading);
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.register-title {
+  margin: 0;
+  font-family: var(--font-primary);
+  font-weight: var(--font-weight-display);
+  font-size: 2.25rem;
+  line-height: 1.05;
+  color: var(--currentTextColor);
+}
+
+.register-search {
+  flex: 1 1 260px;
+  max-width: 430px;
+}
+
+.register-search__label {
+  display: block;
+  margin-bottom: var(--space-1);
+  font-family: var(--font-primary);
+  font-weight: var(--font-weight-heading);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* Ledger input: tonal track, no box, weighted bottom stroke. */
+.register-search__input {
+  width: 100%;
+  box-sizing: border-box;
+  height: 40px;
+  padding: 0 var(--space-3);
+  border: none;
+  border-bottom: 2px solid var(--input-border);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  background: var(--input-background);
+  color: var(--currentTextColor);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+}
+
+.register-search__input:focus-visible {
+  outline: none;
+  border-bottom-color: var(--accent-strong);
+  box-shadow: 0 2px 0 0 var(--accent-strong);
+}
+
+.register-cta {
+  display: inline-flex;
+  align-items: center;
+  min-height: 42px;
+  padding: 0 var(--space-5);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, var(--durion-blue-800) 0%, var(--brand-primary) 100%);
+  color: var(--contrastTextColor);
+  font-weight: var(--font-weight-heading);
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+
+.register-cta:hover {
+  color: var(--contrastTextColor);
+  opacity: 0.92;
+}
+
+/* ── Stat tiles ─────────────────────────────────────────────────────────── */
+
+.register-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-4);
+  max-width: 720px;
+}
+
+.stat-tile {
+  display: grid;
+  gap: 2px;
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-md);
+  background: var(--cardBackground);
+}
+
+/* A vertical accent bar denotes importance instead of a box. */
+.stat-tile--featured {
+  border-left: 3px solid var(--primaryA400);
+}
+
+.stat-tile__label {
+  font-family: var(--font-primary);
+  font-weight: var(--font-weight-heading);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.stat-tile__value {
+  font-family: var(--font-primary);
+  font-weight: var(--font-weight-display);
+  font-size: 2rem;
+  line-height: 1.15;
+  color: var(--currentTextColor);
+}
+
+.register-notice {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  background: var(--status-info-bg);
+  color: var(--status-info-fg);
+  font-size: 0.8rem;
+}
+
+/* ── Filters ────────────────────────────────────────────────────────────── */
+
+.register-filters {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.register-filters__label {
+  font-family: var(--font-primary);
+  font-weight: var(--font-weight-heading);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.register-filters__group {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.filter-chip {
+  min-height: 32px;
+  padding: 0 var(--space-3);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--surface-inset);
+  color: var(--currentTextColor);
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  font-weight: var(--font-weight-heading);
+  cursor: pointer;
+}
+
+.filter-chip--active {
+  background: var(--brand-primary);
+  color: var(--contrastTextColor);
+}
+
+/* ── State panels ───────────────────────────────────────────────────────── */
+
+.register-state {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border-radius: var(--radius-md);
+  background: var(--cardBackground);
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.register-state--error {
+  background: var(--status-error-bg);
+  color: var(--status-error-fg);
+}
+
+.register-state--forbidden {
+  justify-content: space-between;
+  color: var(--currentTextColor);
+}
+
+.register-state__title {
+  margin: 0 0 var(--space-1);
+  font-weight: var(--font-weight-heading);
+}
+
+.register-state__body {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.register-state__btn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 0 var(--space-4);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--surface-inset);
+  color: var(--link-color);
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  font-weight: var(--font-weight-heading);
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.register-state__spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--link-color);
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: register-spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes register-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .register-state__spinner { animation: none; }
+}
+
+/* ── Table ──────────────────────────────────────────────────────────────── */
+
+.register-table-wrap {
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+  background: var(--cardBackground);
+}
+
+.register-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.register-th {
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  font-family: var(--font-primary);
+  font-weight: var(--font-weight-heading);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--currentTextColor);
+  background: var(--surface-inset);
+  white-space: nowrap;
+}
+
+.register-th--actions {
+  text-align: right;
+}
+
+.register-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  /* ADR-0029 §8: pointer targets are at least 24x24 CSS px. */
+  min-height: 24px;
+  padding: 0 2px;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+}
+
+.register-sort__icon {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+}
+
+/* No divider lines: rows separate by alternating tint (design/DESIGN.md §5). */
+.register-row:nth-child(even) {
+  background: var(--surface-hover);
+}
+
+.register-row--inactive .register-td {
+  color: var(--text-muted);
+}
+
+.register-td {
+  padding: var(--space-3) var(--space-4);
+  color: var(--currentTextColor);
+  vertical-align: middle;
+}
+
+.register-td--name {
+  display: grid;
+  gap: 2px;
+}
+
+.register-td--mono {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.register-td--actions {
+  text-align: right;
+}
+
+.register-name-link {
+  color: var(--link-color);
+  font-weight: var(--font-weight-heading);
+  text-decoration: none;
+}
+
+.register-name-link:hover {
+  text-decoration: underline;
+}
+
+.register-name {
+  font-weight: var(--font-weight-heading);
+}
+
+.register-employee-no {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+.register-email-link {
+  color: var(--currentTextColor);
+  text-decoration: none;
+}
+
+.register-email-link:hover {
+  text-decoration: underline;
+}
+
+/* An address that failed ADR-0065 validation renders as text, never as a link. */
+.register-email-plain {
+  color: var(--currentTextColor);
+}
+
+.register-muted,
+.register-restricted,
+.register-unavailable {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.register-restricted,
+.register-unavailable {
+  font-style: italic;
+}
+
+.register-location {
+  display: block;
+}
+
+.register-location__more {
+  display: block;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+/* ── Role chips ─────────────────────────────────────────────────────────── */
+
+.register-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.role-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--primary50);
+  color: var(--link-color);
+  font-size: 0.66rem;
+  font-weight: var(--font-weight-heading);
+  white-space: nowrap;
+}
+
+.role-chip--global {
+  background: var(--status-ready-bg);
+  color: var(--status-ready-fg);
+}
+
+/*
+ * The scope suffix is subordinate to the role code, but `opacity` is the wrong way to
+ * say so: at 0.75 it dropped this text to 4.31:1 on the chip fill and failed WCAG AA.
+ * Weight carries the hierarchy instead, at full contrast.
+ */
+.role-chip__scope {
+  font-weight: var(--font-weight-medium);
+}
+
+/* ── Status switch and badges ───────────────────────────────────────────── */
+
+.status-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 36px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.status-switch__track {
+  position: relative;
+  display: inline-block;
+  width: 38px;
+  height: 21px;
+  border-radius: 9999px;
+  background: var(--input-border);
+  transition: background 140ms ease;
+}
+
+.status-switch[aria-checked='true'] .status-switch__track {
+  background: var(--accent-strong);
+}
+
+.status-switch__knob {
+  position: absolute;
+  top: 2.5px;
+  left: 2.5px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--logo-plate);
+  transition: left 140ms ease;
+}
+
+.status-switch[aria-checked='true'] .status-switch__knob {
+  left: 19.5px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .status-switch__track,
+  .status-switch__knob { transition: none; }
+}
+
+.status-switch__text {
+  font-size: 0.78rem;
+  font-weight: var(--font-weight-heading);
+  color: var(--currentTextColor);
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 3px var(--space-3);
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: var(--font-weight-heading);
+  background: var(--status-neutral-bg);
+  color: var(--status-neutral-fg);
+}
+
+.status-badge[data-status='ACTIVE'] {
+  background: var(--status-success-bg);
+  color: var(--status-success-fg);
+}
+
+.status-badge[data-status='ON_LEAVE'],
+.status-badge[data-status='SUSPENDED'] {
+  background: var(--status-warning-bg);
+  color: var(--status-warning-fg);
+}
+
+.status-badge[data-status='TERMINATED'] {
+  background: var(--status-error-bg);
+  color: var(--status-error-fg);
+}
+
+.status-pending {
+  font-size: 0.72rem;
+  font-weight: var(--font-weight-heading);
+  color: var(--status-warning-fg);
+}
+
+/* ── Row actions ────────────────────────────────────────────────────────── */
+
+.register-actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  justify-content: flex-end;
+}
+
+.register-action {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--surface-inset);
+  color: var(--link-color);
+  font-size: 0.72rem;
+  font-weight: var(--font-weight-heading);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.register-action:hover {
+  background: var(--brand-primary);
+  color: var(--contrastTextColor);
+}
+
+/* ── Pagination ─────────────────────────────────────────────────────────── */
+
+.register-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}
+
+.pagination-btn {
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--surface-inset);
+  color: var(--link-color);
+  font-size: 1.05rem;
+  cursor: pointer;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pagination-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* ── Confirm dialog ─────────────────────────────────────────────────────── */
+
+.confirm-dialog {
+  width: min(540px, calc(100vw - 2rem));
+  box-sizing: border-box;
+  padding: var(--space-6);
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--cardBackground);
+  color: var(--currentTextColor);
+  /* Ambient occlusion, not a smudge: wide blur at low opacity (design/DESIGN.md §4). */
+  box-shadow: 0 12px 40px rgb(0 0 0 / 5%);
+}
+
+.confirm-dialog::backdrop {
+  background: rgb(28 46 72 / 32%);
+}
+
+.confirm-dialog__overline {
+  margin: 0 0 var(--space-1);
+  font-family: var(--font-primary);
+  font-weight: var(--font-weight-heading);
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.confirm-dialog__title {
+  margin: 0 0 var(--space-3);
+  font-family: var(--font-primary);
+  font-weight: var(--font-weight-display);
+  font-size: 1.6rem;
+  line-height: 1.1;
+}
+
+.confirm-dialog__body {
+  margin: 0 0 var(--space-4);
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.confirm-dialog__warning {
+  margin: 0 0 var(--space-5);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  background: var(--status-warning-bg);
+  color: var(--status-warning-fg);
+  font-size: 0.8rem;
+  line-height: 1.55;
+}
+
+.confirm-dialog__field {
+  margin-bottom: var(--space-5);
+}
+
+.confirm-dialog__label {
+  display: block;
+  margin-bottom: var(--space-1);
+  font-family: var(--font-primary);
+  font-weight: var(--font-weight-heading);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.confirm-dialog__input {
+  width: 200px;
+  box-sizing: border-box;
+  height: 40px;
+  padding: 0 var(--space-3);
+  border: none;
+  border-bottom: 2px solid var(--input-border);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  background: var(--input-background);
+  color: var(--currentTextColor);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+}
+
+.confirm-dialog__hint {
+  margin: var(--space-1) 0 0;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.confirm-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}
+
+.confirm-dialog__cancel,
+.confirm-dialog__accept {
+  min-height: 42px;
+  padding: 0 var(--space-5);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: var(--font-weight-heading);
+  cursor: pointer;
+}
+
+.confirm-dialog__cancel {
+  background: var(--surface-inset);
+  color: var(--currentTextColor);
+}
+
+/*
+ * Destructive fill follows the sibling offboard page: --functional-error-red is
+ * theme-stable (#ba1a1a both themes, 6.9:1 with --contrastTextColor). The Tier-3
+ * --status-error-fg is a TEXT colour and resolves to #ffb4ab in dark, which would
+ * put white text at ~1.5:1 here.
+ */
+.confirm-dialog__accept {
+  background: var(--functional-error-red);
+  color: var(--contrastTextColor);
+}
+
+.confirm-dialog__accept:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--functional-error-red) 85%, var(--currentTextColor));
+}
+
+.confirm-dialog__accept:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Focus ──────────────────────────────────────────────────────────────── */
+
+.employee-register a:focus-visible,
+.employee-register button:focus-visible,
+.employee-register input:focus-visible,
+.confirm-dialog a:focus-visible,
+.confirm-dialog button:focus-visible,
+.confirm-dialog input:focus-visible {
+  outline: 2px solid var(--accent-strong);
+  outline-offset: 2px;
+}
+
+@media (max-width: 900px) {
+  .employee-register {
+    padding: var(--space-5) var(--space-4);
+  }
+
+  .register-title {
+    font-size: 1.85rem;
+  }
+}
+
+/* ── Mobile card list ───────────────────────────────────────────────────── */
+
+/*
+ * Below 720px the nine-column grid stops being a grid. A horizontally scrolling
+ * table hides half the record behind a gesture and puts the row actions off-screen,
+ * so each row becomes the card `design/HR/EmployeeRegister/Mobile.dc.html` draws:
+ * name as the title, fields stacked and labelled, actions as the footer.
+ *
+ * `thead` is hidden in this mode, so the column name has to travel with the cell —
+ * it comes from `data-label`, bound through the `translate` pipe in the template
+ * (ADR-0030: no copy in the stylesheet), and rendered by the ::before below.
+ */
+@media (max-width: 720px) {
+  .register-table-wrap {
+    overflow-x: visible;
+    border-radius: 0;
+    background: none;
+  }
+
+  .register-table {
+    display: block;
+    font-size: 0.9rem;
+  }
+
+  .register-table thead {
+    display: none;
+  }
+
+  .register-table tbody {
+    display: block;
+  }
+
+  .register-row,
+  .register-row:nth-child(even) {
+    display: block;
+    margin-bottom: var(--space-3);
+    padding: var(--space-4);
+    border-radius: var(--radius-md);
+    background: var(--cardBackground);
+  }
+
+  .register-td {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-3);
+    padding: 3px 0;
+    text-align: left;
+  }
+
+  .register-td::before {
+    content: attr(data-label);
+    flex: 0 0 5.5rem;
+    font-family: var(--font-primary);
+    font-weight: var(--font-weight-heading);
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  /* The name titles the card and the actions close it: neither needs naming. */
+  .register-td--name,
+  .register-td--actions {
+    display: block;
+  }
+
+  .register-td--name::before,
+  .register-td--actions::before {
+    content: none;
+  }
+
+  .register-td--name {
+    padding-bottom: var(--space-2);
+  }
+
+  .register-td--actions {
+    padding-top: var(--space-3);
+    text-align: left;
+  }
+
+  .register-actions {
+    display: flex;
+    justify-content: flex-start;
+    gap: var(--space-2);
+  }
+
+  /* Touch targets, not pointer targets: 44px per design/HR/EmployeeRegister. */
+  .register-action,
+  .status-switch {
+    min-height: 44px;
+  }
+}
+
+/*
+ * A refused write is announced on the row that attempted it, not in the page-level panel —
+ * the page panel is the read outcome, and putting write failures there let one row's success
+ * erase another's refusal (ADR-0063).
+ */
+.row-error {
+  display: block;
+  margin-top: var(--space-1);
+  max-width: 22ch;
+  color: var(--status-error-fg);
+  font-size: 0.7rem;
+  line-height: 1.35;
+}

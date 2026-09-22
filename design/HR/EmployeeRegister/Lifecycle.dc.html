@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Employment status — lifecycle</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Noto+Sans:wght@400;500;600&display=swap">
+  <style>
+    body { margin: 0; font-family: 'Noto Sans', sans-serif; background: #f2f2f4; }
+    a { color: #2b4c78; }
+    a:hover { color: #1c2e48; }
+  </style>
+</helmet>
+
+<div style="width: 660px; height: 700px; box-sizing: border-box; padding: 26px 28px; background: #f2f2f4; color: #121213; display: flex; flex-direction: column; gap: 16px;">
+
+  <div>
+    <div style="font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 600; font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #5a616e;">DECISION-PEOPLE-001</div>
+    <h1 style="margin: 2px 0 0; font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 700; font-size: 28px; line-height: 1.1; color: #121213;">What the switch may do</h1>
+  </div>
+
+  <div style="background: #ffffff; border-radius: 8px; padding: 22px 20px;">
+    <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+      <div style="padding: 12px 16px; border-radius: 4px; background: #e7f4e8; text-align: center;">
+        <div style="font-family: ui-monospace, Menlo, monospace; font-size: 12px; font-weight: 600; color: #1b5e20;">ACTIVE</div>
+        <div style="font-size: 10.5px; color: #1b5e20; margin-top: 2px;">can sign in</div>
+      </div>
+      <div style="text-align: center; color: #006a6a;">
+        <div style="font-size: 17px; line-height: 1;" aria-hidden="true">⇄</div>
+        <div style="font-size: 9.5px; font-weight: 600; letter-spacing: 0.04em; margin-top: 3px;">THE SWITCH</div>
+      </div>
+      <div style="padding: 12px 16px; border-radius: 4px; background: #eceff1; text-align: center;">
+        <div style="font-family: ui-monospace, Menlo, monospace; font-size: 12px; font-weight: 600; color: #37474f;">DISABLED</div>
+        <div style="font-size: 10.5px; color: #37474f; margin-top: 2px;">reversible</div>
+      </div>
+      <div style="text-align: center; color: #8a91a0;">
+        <div style="font-size: 17px; line-height: 1;" aria-hidden="true">→</div>
+        <div style="font-size: 9.5px; font-weight: 600; letter-spacing: 0.04em; margin-top: 3px;">OFFBOARD</div>
+      </div>
+      <div style="padding: 12px 16px; border-radius: 4px; background: #fdecea; text-align: center;">
+        <div style="font-family: ui-monospace, Menlo, monospace; font-size: 12px; font-weight: 600; color: #ba1a1a;">TERMINATED</div>
+        <div style="font-size: 10.5px; color: #ba1a1a; margin-top: 2px;">irreversible</div>
+      </div>
+    </div>
+
+    <p style="margin: 18px 0 0; font-size: 12.5px; line-height: 1.65; color: #3a3a3e;">The switch owns one edge of this graph: <strong>ACTIVE ⇄ DISABLED</strong>. Termination is one-way and ends employment, so it stays on the offboarding page where an end date and a reason are collected. <code style="font-family: ui-monospace, Menlo, monospace; font-size: 11.5px; background: #e7e8eb; padding: 1px 5px; border-radius: 4px;">ON_LEAVE</code> and <code style="font-family: ui-monospace, Menlo, monospace; font-size: 11.5px; background: #e7e8eb; padding: 1px 5px; border-radius: 4px;">SUSPENDED</code> carry dates and a reason too — they render as a read-only badge here and are changed on the profile.</p>
+  </div>
+
+  <div style="background: #ffffff; border-radius: 8px; padding: 18px 20px;">
+    <div style="font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 600; font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: #5a616e; margin-bottom: 11px;">After confirm · DECISION-PEOPLE-002</div>
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 13px;">
+      <span style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 9999px; background: #eceff1; color: #37474f; font-size: 11.5px; font-weight: 600;"><span aria-hidden="true" style="width: 7px; height: 7px; border-radius: 50%; background: #707078;"></span>Disabled</span>
+      <span style="font-size: 11px; font-weight: 600; color: #8a5e0a;">Propagating…</span>
+      <span style="font-size: 12px; color: #5a616e;">row settles the moment the local write returns; the saga runs on</span>
+      <span style="font-size: 10.5px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: #7a5114; background: #fdf6e8; padding: 3px 8px; border-radius: 4px;">Target state &mdash; #2161</span>
+    </div>
+    <div role="alert" style="display: flex; align-items: flex-start; gap: 11px; padding: 13px 15px; background: #fff4e0; border-radius: 4px;">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#7a5114" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="flex-shrink: 0; margin-top: 1px;"><path d="M12 9v4"></path><path d="M12 17h.01"></path><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"></path></svg>
+      <div style="font-size: 12px; line-height: 1.6; color: #7a5114;"><strong>Downstream sync incomplete.</strong> Curtis Benton is disabled and cannot sign in. Dispatch has not yet dropped him from the roster. This does not reverse the disable — it is a retryable follow-up. <em>Neither this banner nor the Propagating… label ships yet: pos-people publishes no saga-status signal for the client to read (backend #2161).</em></div>
+    </div>
+  </div>
+
+  <div style="display: flex; align-items: flex-start; gap: 9px; padding: 13px 15px; background: #fff4e0; border-radius: 4px;">
+    <span aria-hidden="true" style="width: 3px; align-self: stretch; background: #cc9030; border-radius: 2px; flex-shrink: 0;"></span>
+    <p style="margin: 0; font-size: 12px; line-height: 1.6; color: #7a5114;"><strong>Implemented today: ACTIVE → DISABLED only.</strong> The return edge needs an enable endpoint that pos-people does not publish (backend issue #2156), so the shipped register shows a disabled row as a read-only badge rather than a control it cannot honour.</p>
+  </div>
+
+  <div style="display: flex; align-items: flex-start; gap: 9px; padding: 13px 15px; background: #e8eef6; border-radius: 4px;">
+    <span aria-hidden="true" style="width: 3px; align-self: stretch; background: #2b4c78; border-radius: 2px; flex-shrink: 0;"></span>
+    <p style="margin: 0; font-size: 12px; line-height: 1.6; color: #22385a;">The switch never writes optimistically. A disable blocks sign-in immediately and ends open assignments, so it is a privileged action behind an explicit confirm (DECISION-PEOPLE-024). On a 409 the refusal is reported on the row that attempted it &mdash; not in the page panel, which belongs to the read &mdash; and the page re-reads so the switch returns to the value the server holds.</p>
+  </div>
+
+</div>
+</x-dc>
+
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":660,"height":700}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
