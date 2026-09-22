@@ -378,7 +378,11 @@ class Component extends DCLogic {
       }
 
       var actions = [];
-      actions.push({ key: 'profile', label: g.pii ? 'Profile' : 'Summary', href: '#' });
+      // The profile action is absent without the PII permission, exactly as the shipped page
+      // has it. It used to relabel to "Summary" instead, which drew a link to a destination
+      // that does not exist and broke this pack's own rule: an action the viewer cannot take
+      // is absent, and only a COLUMN they cannot read stays and reads "Restricted".
+      if (g.pii) actions.push({ key: 'profile', label: 'Profile', href: '#' });
       if (g.time) actions.push({ key: 'time', label: 'Time', href: '#' });
       if (g.roles) actions.push({ key: 'roles', label: 'Roles', href: '#' });
       if (g.loc) actions.push({ key: 'loc', label: 'Locations', href: '#' });
