@@ -714,6 +714,60 @@ describe('EmployeeRegisterPageComponent', () => {
     expect(accept().disabled).toBe(false);
   });
 
+  it('parks focus on Cancel before a read disables the accept button, then hands it back', async () => {
+    await setup();
+    const toggle = fixture.debugElement.query(By.css('.status-switch')).nativeElement as HTMLElement;
+    toggle.focus();
+    toggle.click();
+    fixture.detectChanges();
+
+    const accept = fixture.debugElement.query(By.css('.confirm-dialog__accept'))
+      .nativeElement as HTMLButtonElement;
+    const cancel = fixture.debugElement.query(By.css('.confirm-dialog__cancel'))
+      .nativeElement as HTMLElement;
+    accept.focus();
+    expect(document.activeElement).toBe(accept);
+
+    // Row A's write settles and re-reads while row B's dialog is open and its accept focused.
+    // Disabling a focused control drops focus to <body>, and inside a modal that strands the
+    // keyboard user with nowhere to go (ADR-0029 §8.7).
+    const pending = new Subject<EmployeeRegisterPage>();
+    stubService.searchEmployees.mockReturnValue(pending);
+    component.reload();
+    fixture.detectChanges();
+
+    expect(document.activeElement).toBe(cancel);
+    expect(accept.disabled).toBe(true);
+
+    pending.next(page([STUB_ROWS[0]]));
+    fixture.detectChanges();
+    await new Promise(resolve => setTimeout(resolve));
+
+    expect(accept.disabled).toBe(false);
+    expect(document.activeElement).toBe(accept);
+  });
+
+  it('leaves focus alone when the read starts while the user is elsewhere in the dialog', async () => {
+    await setup();
+    const toggle = fixture.debugElement.query(By.css('.status-switch')).nativeElement as HTMLElement;
+    toggle.focus();
+    toggle.click();
+    fixture.detectChanges();
+
+    const dateInput = fixture.debugElement.query(By.css('.confirm-dialog__input'))
+      .nativeElement as HTMLElement;
+    dateInput.focus();
+
+    const pending = new Subject<EmployeeRegisterPage>();
+    stubService.searchEmployees.mockReturnValue(pending);
+    component.reload();
+    fixture.detectChanges();
+
+    // Only the button being disabled justifies moving focus. Someone mid-way through typing a
+    // date must not have the cursor yanked out from under them by a background refresh.
+    expect(document.activeElement).toBe(dateInput);
+  });
+
   it('closes an open confirm when the read behind it fails', async () => {
     await setup();
     component.openConfirm(STUB_ROWS[0]);

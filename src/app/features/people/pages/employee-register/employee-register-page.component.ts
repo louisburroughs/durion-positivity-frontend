@@ -120,6 +120,13 @@ export class EmployeeRegisterPageComponent implements OnInit {
    * page (ADR-0029 §8.7). Captured on open, restored once the dialog has unmounted.
    */
   private confirmOpener: HTMLElement | null = null;
+  /**
+   * Set when a read disables the accept button out from under the keyboard. Disabling a focused
+   * control drops focus to <body>, which inside a modal strands the user completely — so focus
+   * is parked on Cancel first and handed back once the button is live again (ADR-0029 §8.7,
+   * the same rule the dialog close obeys).
+   */
+  private acceptFocusParked = false;
   readonly assignmentEndDate = signal(toLocalIsoDate(new Date()));
 
   readonly statusFilters = STATUS_FILTERS;
@@ -335,6 +342,7 @@ export class EmployeeRegisterPageComponent implements OnInit {
    * to the search field — a stable control at the top of the page.
    */
   private closeConfirm(): void {
+    this.acceptFocusParked = false;
     const opener = this.confirmOpener;
     this.confirmOpener = null;
     this.confirmRow.set(null);
@@ -421,6 +429,32 @@ export class EmployeeRegisterPageComponent implements OnInit {
    * B is. `confirmDeactivate` re-checks the current row regardless, so this is about not
    * interrupting the user rather than about safety.
    */
+  /**
+   * Moves focus off the accept button before a read disables it. Only acts when that button is
+   * the focused element — a read while the user is typing a date, or not in the dialog at all,
+   * must not steal focus from where they are.
+   */
+  private parkAcceptFocus(): void {
+    if (!this.confirmRow()) return;
+    const accept = this.document.querySelector<HTMLElement>('.confirm-dialog__accept');
+    if (!accept || this.document.activeElement !== accept) return;
+    this.document.querySelector<HTMLElement>('.confirm-dialog__cancel')?.focus();
+    this.acceptFocusParked = true;
+  }
+
+  /** Hands focus back once the read has settled and the button is enabled again. */
+  private restoreAcceptFocus(): void {
+    if (!this.acceptFocusParked) return;
+    this.acceptFocusParked = false;
+    if (!this.confirmRow()) return;
+    // The binding re-enables on the next change detection, and focus() is a no-op on a
+    // disabled control, so the handback waits for it.
+    setTimeout(() => {
+      const accept = this.document.querySelector<HTMLButtonElement>('.confirm-dialog__accept');
+      if (accept && !accept.disabled) accept.focus();
+    });
+  }
+
   private dismissConfirmIfInvalidated(): void {
     const open = this.confirmRow();
     if (!open) return;
@@ -447,6 +481,7 @@ export class EmployeeRegisterPageComponent implements OnInit {
     const seq = ++this.readSeq;
 
     this.readInFlight.set(true);
+    this.parkAcceptFocus();
     this.state.set('loading');
     this.errorKey.set(null);
 
@@ -459,6 +494,7 @@ export class EmployeeRegisterPageComponent implements OnInit {
         next: page => {
           if (seq !== this.readSeq) return; // superseded read — never writes
           this.readInFlight.set(false);
+          this.restoreAcceptFocus();
           this.allRows.set(page.rows);
           this.totalElements.set(page.totalElements);
           // A re-read after a write can return fewer rows than the current page starts at —
