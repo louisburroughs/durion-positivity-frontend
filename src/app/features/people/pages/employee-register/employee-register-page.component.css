@@ -674,9 +674,19 @@
   color: var(--currentTextColor);
 }
 
+/*
+ * Destructive fill follows the sibling offboard page: --functional-error-red is
+ * theme-stable (#ba1a1a both themes, 6.9:1 with --contrastTextColor). The Tier-3
+ * --status-error-fg is a TEXT colour and resolves to #ffb4ab in dark, which would
+ * put white text at ~1.5:1 here.
+ */
 .confirm-dialog__accept {
-  background: var(--status-error-fg);
-  color: var(--logo-plate);
+  background: var(--functional-error-red);
+  color: var(--contrastTextColor);
+}
+
+.confirm-dialog__accept:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--functional-error-red) 85%, var(--currentTextColor));
 }
 
 .confirm-dialog__accept:disabled {
