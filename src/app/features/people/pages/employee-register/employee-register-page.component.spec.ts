@@ -747,6 +747,35 @@ describe('EmployeeRegisterPageComponent', () => {
     expect(document.activeElement).toBe(accept);
   });
 
+  it('does not pull focus back if the user moved while the read was in flight', async () => {
+    await setup();
+    const toggle = fixture.debugElement.query(By.css('.status-switch')).nativeElement as HTMLElement;
+    toggle.focus();
+    toggle.click();
+    fixture.detectChanges();
+
+    const accept = fixture.debugElement.query(By.css('.confirm-dialog__accept'))
+      .nativeElement as HTMLButtonElement;
+    const dateInput = fixture.debugElement.query(By.css('.confirm-dialog__input'))
+      .nativeElement as HTMLElement;
+    accept.focus();
+
+    const pending = new Subject<EmployeeRegisterPage>();
+    stubService.searchEmployees.mockReturnValue(pending);
+    component.reload();
+    fixture.detectChanges();
+
+    // Focus is parked on Cancel — and then the user tabs on to the date field while the read
+    // is still settling. The handback has to respect that, or it yanks the cursor back.
+    dateInput.focus();
+
+    pending.next(page([STUB_ROWS[0]]));
+    fixture.detectChanges();
+    await new Promise(resolve => setTimeout(resolve));
+
+    expect(document.activeElement).toBe(dateInput);
+  });
+
   it('leaves focus alone when the read starts while the user is elsewhere in the dialog', async () => {
     await setup();
     const toggle = fixture.debugElement.query(By.css('.status-switch')).nativeElement as HTMLElement;
@@ -827,16 +856,20 @@ describe('EmployeeRegisterPageComponent', () => {
     expect(component.confirmRow()?.employeeId).toBe('emp-5');
   });
 
-  it('stands down if the row vanished from the read under an open confirm dialog', async () => {
+  it('stands down if the row vanished from the cache under an open confirm dialog', async () => {
     await setup();
     component.openConfirm(STUB_ROWS[0]);
 
-    stubService.searchEmployees.mockReturnValue(of(page([STUB_ROWS[1]])));
-    component.reload();
+    // Same reason as the sibling test above: routed through `reload()` the dismissal clears the
+    // dialog first and `confirmDeactivate` returns at the empty-snapshot guard, so the missing-
+    // row branch of the lookup is never reached. The cache is changed directly instead.
+    component.allRows.set([STUB_ROWS[1]]);
+    expect(component.confirmRow()?.employeeId).toBe('emp-1');
 
     component.confirmDeactivate();
 
     expect(stubService.disableEmployee).not.toHaveBeenCalled();
+    expect(component.confirmRow()).toBeNull();
   });
 
   it('renders a role chip with an unknown scope without a suffix, not with a wrong one', async () => {

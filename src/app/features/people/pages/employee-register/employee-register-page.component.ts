@@ -421,15 +421,6 @@ export class EmployeeRegisterPageComponent implements OnInit {
   }
 
   /**
-   * Closes an open confirm only when the read that just settled actually invalidated ITS row.
-   *
-   * Closing on every read start was the wider version of this guard: `load()` also runs after a
-   * successful write, so disabling row A tore down a dialog the user had since opened for row B.
-   * A read that leaves B switchable is no reason to interrupt them; one that disables or removes
-   * B is. `confirmDeactivate` re-checks the current row regardless, so this is about not
-   * interrupting the user rather than about safety.
-   */
-  /**
    * Moves focus off the accept button before a read disables it. Only acts when that button is
    * the focused element — a read while the user is typing a date, or not in the dialog at all,
    * must not steal focus from where they are.
@@ -442,11 +433,19 @@ export class EmployeeRegisterPageComponent implements OnInit {
     this.acceptFocusParked = true;
   }
 
-  /** Hands focus back once the read has settled and the button is enabled again. */
+  /**
+   * Hands focus back once the read has settled and the button is enabled again — but only if
+   * the user has not moved in the meantime. The park is guarded on where focus is; the handback
+   * has to be too, or a reader who tabbed into the date field while the read was in flight gets
+   * the cursor pulled out from under them on settle (ADR-0029 §8.7).
+   */
   private restoreAcceptFocus(): void {
     if (!this.acceptFocusParked) return;
     this.acceptFocusParked = false;
     if (!this.confirmRow()) return;
+    const parkedOn = this.document.querySelector<HTMLElement>('.confirm-dialog__cancel');
+    const active = this.document.activeElement;
+    if (active !== parkedOn && active !== this.document.body && active !== null) return;
     // The binding re-enables on the next change detection, and focus() is a no-op on a
     // disabled control, so the handback waits for it.
     setTimeout(() => {
@@ -455,6 +454,15 @@ export class EmployeeRegisterPageComponent implements OnInit {
     });
   }
 
+  /**
+   * Closes an open confirm only when the read that just settled actually invalidated ITS row.
+   *
+   * Closing on every read start was the wider version of this guard: `load()` also runs after a
+   * successful write, so disabling row A tore down a dialog the user had since opened for row B.
+   * A read that leaves B switchable is no reason to interrupt them; one that disables or removes
+   * B is. `confirmDeactivate` re-checks the current row regardless, so this is about not
+   * interrupting the user rather than about safety.
+   */
   private dismissConfirmIfInvalidated(): void {
     const open = this.confirmRow();
     if (!open) return;
