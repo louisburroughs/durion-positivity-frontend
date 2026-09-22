@@ -952,7 +952,8 @@
       "FORBIDDEN": {
         "TITLE": "You don’t have access to the employee register",
         "BODY": "This page needs the employee view permission. The People directory is open to you and carries name, username, email and phone.",
-        "DIRECTORY_LINK": "Go to People directory"
+        "DIRECTORY_LINK": "Go to People directory",
+        "BODY_NO_DIRECTORY": "This page needs the employee view permission. Ask an administrator if you need access."
       },
       "CONFIRM": {
         "OVERLINE": "Privileged action",

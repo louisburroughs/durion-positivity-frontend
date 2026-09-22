@@ -29,7 +29,7 @@
     }
   </header>
 
-  @if (state() === 'ready' || state() === 'empty') {
+  @if (viewState() === 'ready' || viewState() === 'empty') {
     <div class="register-stats">
       <div class="stat-tile stat-tile--featured">
         <span class="stat-tile__label">{{ 'PEOPLE.EMPLOYEE_REGISTER.STAT.TOTAL' | translate }}</span>
@@ -50,7 +50,7 @@
     </p>
   }
 
-  @if (state() === 'ready' || state() === 'empty') {
+  @if (viewState() === 'ready' || viewState() === 'empty') {
     <div class="register-filters">
       <span id="status-filter-label" class="register-filters__label">
         {{ 'PEOPLE.EMPLOYEE_REGISTER.FILTER.LABEL' | translate }}
@@ -71,14 +71,14 @@
     </div>
   }
 
-  @if (state() === 'loading') {
+  @if (viewState() === 'loading') {
     <div class="register-state" aria-live="polite" aria-busy="true">
       <span class="register-state__spinner" aria-hidden="true"></span>
       {{ 'PEOPLE.EMPLOYEE_REGISTER.LOADING' | translate }}
     </div>
   }
 
-  @if (state() === 'error') {
+  @if (viewState() === 'error') {
     <div class="register-state register-state--error" role="alert">
       <span>{{ errorKey()! | translate }}</span>
       <button type="button" class="register-state__btn" (click)="reload()">
@@ -87,23 +87,29 @@
     </div>
   }
 
-  @if (state() === 'forbidden') {
+  @if (viewState() === 'forbidden') {
     <div class="register-state register-state--forbidden">
       <div>
         <p class="register-state__title">
           {{ 'PEOPLE.EMPLOYEE_REGISTER.FORBIDDEN.TITLE' | translate }}
         </p>
         <p class="register-state__body">
-          {{ 'PEOPLE.EMPLOYEE_REGISTER.FORBIDDEN.BODY' | translate }}
+          @if (canViewDirectory()) {
+            {{ 'PEOPLE.EMPLOYEE_REGISTER.FORBIDDEN.BODY' | translate }}
+          } @else {
+            {{ 'PEOPLE.EMPLOYEE_REGISTER.FORBIDDEN.BODY_NO_DIRECTORY' | translate }}
+          }
         </p>
       </div>
-      <a class="register-state__btn" routerLink="/app/people/directory">
-        {{ 'PEOPLE.EMPLOYEE_REGISTER.FORBIDDEN.DIRECTORY_LINK' | translate }}
-      </a>
+      @if (canViewDirectory()) {
+        <a class="register-state__btn" routerLink="/app/people/directory">
+          {{ 'PEOPLE.EMPLOYEE_REGISTER.FORBIDDEN.DIRECTORY_LINK' | translate }}
+        </a>
+      }
     </div>
   }
 
-  @if (state() === 'empty') {
+  @if (viewState() === 'empty') {
     <div class="register-state">
       <span>{{ 'PEOPLE.EMPLOYEE_REGISTER.EMPTY' | translate }}</span>
       <button type="button" class="register-state__btn" (click)="clearFilters()">
@@ -112,7 +118,7 @@
     </div>
   }
 
-  @if (state() === 'ready') {
+  @if (viewState() === 'ready') {
     <div class="register-table-wrap">
       <table class="register-table">
         <caption class="sr-only">{{ 'PEOPLE.EMPLOYEE_REGISTER.TITLE' | translate }}</caption>
@@ -164,7 +170,11 @@
                 } @else if (row.email === undefined) {
                   <span class="register-unavailable">{{ 'PEOPLE.EMPLOYEE_REGISTER.NOT_AVAILABLE' | translate }}</span>
                 } @else if (row.email) {
-                  <a class="register-email-link" [href]="'mailto:' + row.email">{{ row.email }}</a>
+                  @if (mailtoHref(row.email); as safeMailto) {
+                    <a class="register-email-link" [href]="safeMailto">{{ row.email }}</a>
+                  } @else {
+                    <span class="register-email-plain">{{ row.email }}</span>
+                  }
                 } @else {
                   —
                 }

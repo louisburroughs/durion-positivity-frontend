@@ -98,13 +98,19 @@ export class EmployeeRegisterService {
       lastName: dto.lastName ?? null,
       status: toStatus(dto.status),
       active: dto.active,
-      username: dto.username ?? undefined,
-      email: dto.contactInfo?.email ?? undefined,
-      phone: dto.contactInfo?.phone ?? undefined,
+      // `undefined` and `null` are NOT interchangeable here (ADR-0064): undefined means the
+      // projection does not serve this field yet (#2155) and the page says "not available";
+      // null means served and genuinely empty, which renders as — / Unassigned.
+      // Key PRESENCE is the test, not truthiness: `contactInfo: null` means the projection
+      // served the field and the employee has none, which is null (renders as —), while an
+      // absent key means it is not served yet, which is undefined ("not available yet").
+      username: dto.username,
+      email: 'contactInfo' in dto ? (dto.contactInfo?.email ?? null) : undefined,
+      phone: 'contactInfo' in dto ? (dto.contactInfo?.phone ?? null) : undefined,
       roles: toRoleChips(dto.roleAssignments),
-      primaryLocation: dto.primaryLocation?.name ?? undefined,
+      primaryLocation: 'primaryLocation' in dto ? (dto.primaryLocation?.name ?? null) : undefined,
       additionalLocationCount: dto.additionalLocationCount ?? undefined,
-      jobRole: dto.jobRole ?? undefined,
+      jobRole: dto.jobRole,
       allowedActions: toActions(dto.allowedActions),
     };
   }

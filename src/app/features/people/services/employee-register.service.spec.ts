@@ -123,6 +123,39 @@ describe('EmployeeRegisterService', () => {
     expect(mapped.status).toBeNull();
   });
 
+  it('keeps null distinct from undefined: served-but-empty is not "not available"', async () => {
+    employeeApi.searchEmployees.mockReturnValue(
+      of({
+        items: [
+          {
+            ...thin,
+            username: null,
+            contactInfo: { email: null, phone: null },
+            primaryLocation: null,
+            jobRole: null,
+          },
+        ],
+        page: 0,
+        size: 200,
+        totalElements: 1,
+        totalPages: 1,
+      }),
+    );
+
+    const { rows } = await firstValueFrom(service.searchEmployees(undefined, 200));
+    const [mapped] = rows;
+
+    // The projection served these and they are genuinely empty, so the page must render
+    // — / Unassigned, not "not available yet" (ADR-0064 read-outcome semantics).
+    expect(mapped.username).toBeNull();
+    expect(mapped.email).toBeNull();
+    expect(mapped.phone).toBeNull();
+    expect(mapped.jobRole).toBeNull();
+    // contactInfo was present, so the fields are served even though both are null.
+    expect(mapped.email).not.toBeUndefined();
+    expect(mapped.primaryLocation).toBeNull();
+  });
+
   it('sends the assignment end date on disable', () => {
     employeeApi.disableEmployee.mockReturnValue(of({}));
     service.disableEmployee('emp-1', '2026-09-22').subscribe();

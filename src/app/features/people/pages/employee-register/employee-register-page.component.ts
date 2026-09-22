@@ -15,7 +15,8 @@ import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
 import { AuthService } from '../../../../core/services/auth.service';
-import { PEOPLE_SECTION } from '../../../../core/security/route-permissions';
+import { PEOPLE_PAGE, PEOPLE_SECTION } from '../../../../core/security/route-permissions';
+import { isSafeHref, normaliseHref } from '../../../shell/util/markdown.util';
 import { ModalDialogDirective } from '../../../../shared/modal-dialog.directive';
 import { EmployeeRegisterService } from '../../services/employee-register.service';
 import {
@@ -40,6 +41,15 @@ const PAGE_SIZE = 25;
 const FETCH_SIZE = 200;
 
 const STATUS_FILTERS: readonly StatusFilter[] = ['ALL', 'ACTIVE', 'DISABLED', 'TERMINATED'];
+
+/**
+ * A conservative address shape for building a `mailto:` target. Excludes whitespace and
+ * control characters, the RFC separators that could smuggle a second recipient, and `?`/`&`
+ * which would open mailto header injection (`a@b?bcc=...`).
+ */
+const EMAIL_RE =
+  // eslint-disable-next-line no-control-regex -- excluding control characters is the point
+  /^[^\s@,;:<>"'()[\]\\?&\u0000-\u001f\u007f]+@[^\s@,;:<>"'()[\]\\?&\u0000-\u001f\u007f]+\.[A-Za-z]{2,}$/;
 
 function toLocalIsoDate(date: Date): string {
   const year = date.getFullYear();
@@ -83,7 +93,12 @@ export class EmployeeRegisterPageComponent implements OnInit {
 
   private readonly searchSubject = new Subject<string>();
   private loadSub: Subscription | null = null;
-  private writeSub: Subscription | null = null;
+  /**
+   * One subscription per employee. A single shared slot would let confirming a second row
+   * unsubscribe the first — its handlers would never run, leaving that row's pending id set
+   * and the switch busy forever (ADR-0063: one owner per independent writer).
+   */
+  private readonly writeSubs = new Map<string, Subscription>();
   /** ADR-0063: the read that owns the current result. Stale reads never write. */
   private readSeq = 0;
 
@@ -97,6 +112,12 @@ export class EmployeeRegisterPageComponent implements OnInit {
   readonly canViewLocations = computed(() => this.allows(PEOPLE_SECTION.registerLocations));
   readonly canDeactivate = computed(() => this.allows(PEOPLE_SECTION.registerDeactivate));
   readonly canCreate = computed(() => this.allows(PEOPLE_SECTION.registerCreate));
+  /**
+   * The forbidden state offers the People directory as a fallback, but that page declares a
+   * different authority (`people-contact:person:view`) than this one. Without this gate the
+   * fallback link leads straight to another refusal.
+   */
+  readonly canViewDirectory = computed(() => this.allows(PEOPLE_PAGE.directory));
 
   readonly filtered = computed<readonly EmployeeRegisterRow[]>(() => {
     const status = this.statusFilter();
@@ -106,6 +127,17 @@ export class EmployeeRegisterPageComponent implements OnInit {
       const cmp = (a.lastName ?? '').localeCompare(b.lastName ?? '');
       return dir === 'asc' ? cmp : -cmp;
     });
+  });
+
+  /**
+   * What the template renders. `state` is the READ outcome; the status filter runs
+   * client-side (backend #2158), so a filter matching nothing has to show the empty panel —
+   * and its clear-filters action — even though the read itself succeeded.
+   */
+  readonly viewState = computed<PageState>(() => {
+    const readState = this.state();
+    if (readState === 'ready' && this.filtered().length === 0) return 'empty';
+    return readState;
   });
 
   readonly totalPages = computed(() => Math.max(1, Math.ceil(this.filtered().length / PAGE_SIZE)));
@@ -177,6 +209,17 @@ export class EmployeeRegisterPageComponent implements OnInit {
     return last || first || '';
   }
 
+  /**
+   * ADR-0065 §2: an address that reached us from the server is normalised and validated
+   * before it is bound to an `href`. Returns null when it cannot be trusted, and the
+   * template then renders the address as plain text rather than a link.
+   */
+  mailtoHref(email: string | null | undefined): string | null {
+    if (!email || !EMAIL_RE.test(email)) return null;
+    const href = normaliseHref(`mailto:${email}`);
+    return isSafeHref(href) ? href : null;
+  }
+
   isPending(row: EmployeeRegisterRow): boolean {
     return this.pendingIds().has(row.employeeId);
   }
@@ -191,8 +234,11 @@ export class EmployeeRegisterPageComponent implements OnInit {
    */
   canSwitch(row: EmployeeRegisterRow): boolean {
     if (this.isPending(row)) return false;
+    // The permission gate is independent and always applies: `allowedActions` is a
+    // rendering hint from the server (backend #2159), never the authority (ADR-0040 §6a).
+    if (!this.canDeactivate()) return false;
     if (row.allowedActions) return row.allowedActions.includes('DISABLE');
-    return this.canDeactivate() && isSwitchableStatus(row.status) && row.status === 'ACTIVE';
+    return isSwitchableStatus(row.status) && row.status === 'ACTIVE';
   }
 
   openConfirm(row: EmployeeRegisterRow): void {
@@ -221,18 +267,20 @@ export class EmployeeRegisterPageComponent implements OnInit {
     this.confirmRow.set(null);
     this.markPending(row.employeeId, true);
 
-    this.writeSub?.unsubscribe();
-    this.writeSub = this.registerService
+    this.writeSubs.get(row.employeeId)?.unsubscribe();
+    const sub = this.registerService
       .disableEmployee(row.employeeId, endDate)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
+          this.writeSubs.delete(row.employeeId);
           this.markPending(row.employeeId, false);
           // Re-read rather than patching locally: the disable runs a saga
           // (DECISION-PEOPLE-002) and the server is the only authority on the settled status.
           this.load();
         },
         error: (err: unknown) => {
+          this.writeSubs.delete(row.employeeId);
           this.markPending(row.employeeId, false);
           this.state.set('error'); // ADR-0031 §1 — state always before errorKey
           this.errorKey.set(
@@ -242,6 +290,7 @@ export class EmployeeRegisterPageComponent implements OnInit {
           );
         },
       });
+    this.writeSubs.set(row.employeeId, sub);
   }
 
   private allows(permissions: readonly string[]): boolean {

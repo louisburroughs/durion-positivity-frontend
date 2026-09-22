@@ -334,6 +334,108 @@ describe('EmployeeRegisterPageComponent', () => {
     expect(text()).not.toContain(enUS.PEOPLE.EMPLOYEE_REGISTER.LOCATION.UNASSIGNED);
   });
 
+  // ── Regressions from the Copilot review on #304 ─────────────────────────────────────
+
+  it('never lets allowedActions bypass the deactivate permission', async () => {
+    await setup({ permissions: ALL_PERMISSIONS.filter(p => p !== DEACTIVATE_PERMISSION) });
+    // The server may say the action is available; the permission gate is independent and
+    // still refuses (ADR-0040 §6a). `allowedActions` is a rendering hint, never authority.
+    const permitted = row({ status: 'ACTIVE', allowedActions: ['DISABLE'] });
+    expect(component.canSwitch(permitted)).toBe(false);
+
+    component.openConfirm(permitted);
+    expect(component.confirmRow()).toBeNull();
+    component.confirmDeactivate();
+    expect(stubService.disableEmployee).not.toHaveBeenCalled();
+  });
+
+  it('settles both rows when two deactivations are confirmed concurrently', async () => {
+    await setup();
+    const first = new Subject<unknown>();
+    const second = new Subject<unknown>();
+    stubService.disableEmployee.mockReturnValueOnce(first).mockReturnValueOnce(second);
+
+    component.openConfirm(STUB_ROWS[0]);
+    component.confirmDeactivate();
+    const other = row({ employeeId: 'emp-5', firstName: 'Terrence', lastName: 'Blake' });
+    component.openConfirm(other);
+    component.confirmDeactivate();
+
+    expect(component.isPending(STUB_ROWS[0])).toBe(true);
+    expect(component.isPending(other)).toBe(true);
+
+    // The second confirm must not cancel the first: a shared subscription slot would leave
+    // row one pending forever, its handlers never run (ADR-0063).
+    second.next({});
+    second.complete();
+    expect(component.isPending(other)).toBe(false);
+    expect(component.isPending(STUB_ROWS[0])).toBe(true);
+
+    first.next({});
+    first.complete();
+    expect(component.isPending(STUB_ROWS[0])).toBe(false);
+  });
+
+  it('shows the empty state when the status filter matches nothing, and returns to ready', async () => {
+    await setup({ search: of(page([row({ status: 'ACTIVE' })])) });
+    expect(component.viewState()).toBe('ready');
+
+    component.setStatusFilter('TERMINATED');
+    fixture.detectChanges();
+    // The read succeeded, but the client-side filter (backend #2158) matched nothing, so the
+    // page must offer the empty panel and its clear-filters action rather than a blank table.
+    expect(component.viewState()).toBe('empty');
+    expect(text()).toContain(enUS.PEOPLE.EMPLOYEE_REGISTER.EMPTY);
+
+    component.setStatusFilter('ACTIVE');
+    fixture.detectChanges();
+    expect(component.viewState()).toBe('ready');
+  });
+
+  it('does not offer the directory fallback to a viewer who cannot open the directory', async () => {
+    await setup({
+      permissions: [VIEW_PERMISSION],
+      search: throwError(() => new HttpErrorResponse({ status: 403 })),
+    });
+    expect(component.viewState()).toBe('forbidden');
+    expect(component.canViewDirectory()).toBe(false);
+    // A rendered link must never lead to another refusal — the directory declares
+    // people-contact:person:view, which this viewer lacks.
+    expect(fixture.debugElement.queryAll(By.css('a[href="/app/people/directory"]')).length).toBe(0);
+    expect(text()).toContain(enUS.PEOPLE.EMPLOYEE_REGISTER.FORBIDDEN.BODY_NO_DIRECTORY);
+  });
+
+  it('offers the directory fallback when the viewer holds its permission', async () => {
+    await setup({
+      permissions: [VIEW_PERMISSION, 'people-contact:person:view'],
+      search: throwError(() => new HttpErrorResponse({ status: 403 })),
+    });
+    expect(component.canViewDirectory()).toBe(true);
+    expect(fixture.debugElement.queryAll(By.css('a[href="/app/people/directory"]')).length).toBe(1);
+  });
+
+  it('refuses to build a mailto target from an untrustworthy address (ADR-0065)', async () => {
+    await setup();
+    expect(component.mailtoHref('renee.albright@durion.internal')).toBe(
+      'mailto:renee.albright@durion.internal',
+    );
+    expect(component.mailtoHref(null)).toBeNull();
+    expect(component.mailtoHref('')).toBeNull();
+    // Header injection, a smuggled second recipient, and control-character tricks.
+    expect(component.mailtoHref('a@b.com?bcc=attacker@evil.example')).toBeNull();
+    expect(component.mailtoHref('a@b.com,attacker@evil.example')).toBeNull();
+    expect(component.mailtoHref('java\tscript:alert(1)')).toBeNull();
+    expect(component.mailtoHref('not-an-email')).toBeNull();
+  });
+
+  it('renders an unsafe address as plain text instead of a link', async () => {
+    await setup({
+      search: of(page([row({ email: 'a@b.com?bcc=attacker@evil.example' })])),
+    });
+    expect(fixture.debugElement.queryAll(By.css('.register-email-link')).length).toBe(0);
+    expect(fixture.debugElement.queryAll(By.css('.register-email-plain')).length).toBe(1);
+  });
+
   // ── i18n (ADR-0030) ─────────────────────────────────────────────────────────────────
 
   it('resolves every key the template uses in the shipped bundle', () => {

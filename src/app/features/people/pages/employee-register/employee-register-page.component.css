@@ -295,7 +295,9 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
-  padding: 0;
+  /* ADR-0029 §8: pointer targets are at least 24x24 CSS px. */
+  min-height: 24px;
+  padding: 0 2px;
   border: none;
   background: none;
   color: inherit;
@@ -367,6 +369,11 @@
 
 .register-email-link:hover {
   text-decoration: underline;
+}
+
+/* An address that failed ADR-0065 validation renders as text, never as a link. */
+.register-email-plain {
+  color: var(--currentTextColor);
 }
 
 .register-muted,

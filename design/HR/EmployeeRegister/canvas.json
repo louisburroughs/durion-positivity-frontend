@@ -1,8 +1,13 @@
 {
   "v": 3,
-  "createdOnFiles": { "v": 1, "at": "2026-09-22T00:00:00Z" },
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-09-22T00:00:00Z"
+  },
   "title": "Employee Directory",
-  "launch": { "view": "canvas" },
+  "launch": {
+    "view": "canvas"
+  },
   "pages": [],
   "designSystems": [],
   "boards": {
@@ -25,7 +30,7 @@
       "x": 470,
       "y": 1420,
       "w": 660,
-      "h": 600,
+      "h": 700,
       "title": "Status lifecycle"
     },
     "States.dc.html": {

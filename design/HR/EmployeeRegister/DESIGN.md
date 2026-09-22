@@ -53,6 +53,11 @@ four more columns and needs the full 1360px, so "needs attention" became the thi
 | DECISION-PEOPLE-013 — gate on named permissions, never role names | The preview switcher switches **permission sets**; `AccessModel.dc.html` names a code per row and no roles. |
 | DECISION-PEOPLE-017 — optimistic concurrency | On 409 the row refreshes and the switch returns to the server's value. |
 
+> **Target state vs shipped.** These artboards draw the intended design, in which the switch works
+> both ways. Only `ACTIVE → DISABLED` is implementable today: pos-people publishes no enable
+> endpoint (backend issue **#2156**), so the shipped page renders a `DISABLED` row as a read-only
+> badge. `Main.dc.html` and `Lifecycle.dc.html` both carry that caveat on the artboard itself.
+
 ## Access model
 
 Two gates, both required: the route guard on the page, and per-cell / per-link gates inside it.

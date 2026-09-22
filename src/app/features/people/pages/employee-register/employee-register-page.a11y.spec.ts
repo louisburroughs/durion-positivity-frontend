@@ -104,10 +104,38 @@ describe('Employee register a11y (rendered DOM)', () => {
     expect(await violations(fixture.nativeElement)).toEqual([]);
   });
 
+  it('promotes the confirm to a real modal, not just a rendered dialog element', () => {
+    // A real showModal() is what makes this modal: the focus trap and the implicit
+    // aria-modal come from the top layer, and an aria-modal attribute on a div implements
+    // none of it (ADR-0029 §8.1). axe cannot check that, so it is asserted here by
+    // observing the call — `:modal` itself is unobservable under jsdom, which does not
+    // implement showModal at all, and the directive feature-detects and skips it there.
+    const original = HTMLDialogElement.prototype.showModal;
+    const showModal = vi.fn(function (this: HTMLDialogElement) {
+      this.setAttribute('open', '');
+    });
+    HTMLDialogElement.prototype.showModal = showModal;
+
+    try {
+      fixture.componentInstance.openConfirm(ROWS[0]);
+      fixture.detectChanges();
+
+      const dialog = (fixture.nativeElement as HTMLElement).querySelector<HTMLDialogElement>(
+        'dialog.confirm-dialog',
+      )!;
+      expect(showModal).toHaveBeenCalledTimes(1);
+      expect(showModal.mock.instances[0]).toBe(dialog);
+      expect(dialog.open).toBe(true);
+      expect(dialog.getAttribute('aria-labelledby')).toBe('confirm-title');
+      expect(dialog.getAttribute('aria-describedby')).toBe('confirm-body');
+    } finally {
+      HTMLDialogElement.prototype.showModal = original;
+    }
+  });
+
   it('has no WCAG A/AA violations with the confirm dialog open', async () => {
     fixture.componentInstance.openConfirm(ROWS[0]);
     fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('dialog.confirm-dialog')).toBeTruthy();
     expect(await violations(fixture.nativeElement)).toEqual([]);
   });
 

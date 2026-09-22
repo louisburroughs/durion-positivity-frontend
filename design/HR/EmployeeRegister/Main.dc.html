@@ -30,6 +30,12 @@
     <span style="font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 10.5px; color: #6b4a14;">{{permSummary}}</span>
   </div>
 
+  <!-- Target state vs shipped: the reactivation half of the switch has no endpoint yet. -->
+  <div style="display: flex; align-items: center; gap: 8px; margin-top: -6px;">
+    <span aria-hidden="true" style="width: 3px; align-self: stretch; background: #cc9030; border-radius: 2px;"></span>
+    <p style="margin: 0; font-size: 11.5px; line-height: 1.5; color: #7a5114;"><strong>Target state.</strong> Flipping a DISABLED row back to ACTIVE is drawn here as the intended design, but pos-people publishes no enable endpoint — backend issue #2156. Until it lands the shipped page renders a disabled row as a read-only badge, never a switch.</p>
+  </div>
+
   <!-- Editorial header: overline + display headline, asymmetric left gutter -->
   <div style="display: flex; align-items: flex-end; gap: 28px;">
     <div style="flex-shrink: 0;">

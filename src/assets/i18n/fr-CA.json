@@ -952,7 +952,8 @@
       "FORBIDDEN": {
         "TITLE": "Vous n’avez pas accès au registre des employés",
         "BODY": "Cette page exige la permission de consultation des employés. Le répertoire des personnes vous est accessible et contient le nom, le nom d’utilisateur, le courriel et le téléphone.",
-        "DIRECTORY_LINK": "Aller au répertoire des personnes"
+        "DIRECTORY_LINK": "Aller au répertoire des personnes",
+        "BODY_NO_DIRECTORY": "Cette page exige la permission de consultation des employés. Demandez l’accès à un administrateur au besoin."
       },
       "CONFIRM": {
         "OVERLINE": "Action privilégiée",

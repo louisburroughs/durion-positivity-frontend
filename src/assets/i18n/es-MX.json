@@ -952,7 +952,8 @@
       "FORBIDDEN": {
         "TITLE": "No tiene acceso al registro de empleados",
         "BODY": "Esta página requiere el permiso de consulta de empleados. El directorio de personas sí está disponible e incluye nombre, usuario, correo y teléfono.",
-        "DIRECTORY_LINK": "Ir al directorio de personas"
+        "DIRECTORY_LINK": "Ir al directorio de personas",
+        "BODY_NO_DIRECTORY": "Esta página requiere el permiso de consulta de empleados. Solicite acceso a un administrador si lo necesita."
       },
       "CONFIRM": {
         "OVERLINE": "Acción privilegiada",
