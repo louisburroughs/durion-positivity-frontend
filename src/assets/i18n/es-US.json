@@ -949,6 +949,7 @@
       "NO_ROLES": "Sin roles",
       "RESTRICTED": "Restringido",
       "NOT_AVAILABLE": "Aún no disponible",
+      "UNNAMED": "Empleado sin nombre",
       "LOADING": "Cargando empleados…",
       "EMPTY": "Ningún empleado coincide con los filtros.",
       "CLEAR_FILTERS": "Borrar filtros",
@@ -978,7 +979,7 @@
       "ERROR": {
         "LOAD": "No se pudieron cargar los empleados.",
         "DEACTIVATE": "No se pudo desactivar al empleado. Inténtelo de nuevo.",
-        "CONFLICT": "Este empleado cambió mientras usted trabajaba, por lo que el cambio fue rechazado. Seleccione Reintentar para cargar el estado actual e inténtelo de nuevo."
+        "CONFLICT": "Este empleado cambió mientras usted trabajaba, por lo que el cambio fue rechazado. La lista se recargó; revise el estado actual antes de intentarlo de nuevo."
       }
     }
   },

@@ -56,7 +56,7 @@ export interface EmployeeRegisterRow {
   readonly phone?: string | null;
   readonly roles?: readonly EmployeeRoleChip[];
   readonly primaryLocation?: string | null;
-  readonly additionalLocationCount?: number;
+  readonly otherLocationCount?: number;
   readonly jobRole?: string | null;
   readonly allowedActions?: readonly EmployeeAction[];
 }
@@ -85,7 +85,7 @@ export interface EnrichedEmployeeSummaryDto extends EmployeeSummaryDto {
     readonly scope?: string | null;
   }> | null;
   readonly primaryLocation?: { readonly name?: string | null } | null;
-  readonly additionalLocationCount?: number | null;
+  readonly otherLocationCount?: number | null;
   readonly jobRole?: string | null;
   readonly allowedActions?: readonly string[] | null;
 }

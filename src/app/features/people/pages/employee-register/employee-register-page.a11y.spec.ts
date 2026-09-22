@@ -66,7 +66,7 @@ function row(overrides: Partial<EmployeeRegisterRow> = {}): EmployeeRegisterRow 
       { code: 'HR_ADMIN', scope: 'GLOBAL' },
     ],
     primaryLocation: 'Charlotte Main',
-    additionalLocationCount: 1,
+    otherLocationCount: 1,
     jobRole: 'Service Manager',
     ...overrides,
   };

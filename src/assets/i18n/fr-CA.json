@@ -949,6 +949,7 @@
       "NO_ROLES": "Aucun rôle",
       "RESTRICTED": "Restreint",
       "NOT_AVAILABLE": "Pas encore disponible",
+      "UNNAMED": "Employé sans nom",
       "LOADING": "Chargement des employés…",
       "EMPTY": "Aucun employé ne correspond aux filtres.",
       "CLEAR_FILTERS": "Effacer les filtres",
@@ -978,7 +979,7 @@
       "ERROR": {
         "LOAD": "Échec du chargement des employés.",
         "DEACTIVATE": "Échec de la désactivation de l’employé. Veuillez réessayer.",
-        "CONFLICT": "Cet employé a changé pendant votre travail; le changement a donc été refusé. Sélectionnez Réessayer pour charger le statut actuel et recommencer."
+        "CONFLICT": "Cet employé a changé pendant votre travail; le changement a donc été refusé. La liste a été rechargée : vérifiez le statut actuel avant de réessayer."
       }
     }
   },

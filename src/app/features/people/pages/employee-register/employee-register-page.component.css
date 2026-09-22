@@ -820,3 +820,17 @@
     min-height: 44px;
   }
 }
+
+/*
+ * A refused write is announced on the row that attempted it, not in the page-level panel —
+ * the page panel is the read outcome, and putting write failures there let one row's success
+ * erase another's refusal (ADR-0063).
+ */
+.row-error {
+  display: block;
+  margin-top: var(--space-1);
+  max-width: 22ch;
+  color: var(--status-error-fg);
+  font-size: 0.7rem;
+  line-height: 1.35;
+}

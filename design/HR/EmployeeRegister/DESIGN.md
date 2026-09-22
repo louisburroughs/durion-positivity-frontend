@@ -58,7 +58,7 @@ renders two tiles — Total workforce and Active — and the artboards show the 
 | DECISION-PEOPLE-003 — role assignments are scope-aware | Role chips carry `· G` (global) or `· L` (location). |
 | DECISION-PEOPLE-004 — one primary location per person | Location cell shows the primary, with `+N more`. |
 | DECISION-PEOPLE-013 — gate on named permissions, never role names | The preview switcher switches **permission sets**; `AccessModel.dc.html` names a code per row and no roles. |
-| DECISION-PEOPLE-017 — optimistic concurrency | A 409 puts the page in its conflict error state naming the cause; the re-read happens when the user selects Retry, not automatically. |
+| DECISION-PEOPLE-017 — optimistic concurrency | A 409 is reported on the row that attempted the write, and the page re-reads so the switch shows what the server holds. The refusal survives that read because it belongs to the row, not to the page panel. |
 
 > **Target state vs shipped.** These artboards draw the intended design, in which the switch works
 > both ways. Only `ACTIVE → DISABLED` is implementable today: pos-people publishes no enable

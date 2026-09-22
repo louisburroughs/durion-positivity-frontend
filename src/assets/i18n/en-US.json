@@ -949,6 +949,7 @@
       "NO_ROLES": "No roles",
       "RESTRICTED": "Restricted",
       "NOT_AVAILABLE": "Not available yet",
+      "UNNAMED": "Unnamed employee",
       "LOADING": "Loading employees…",
       "EMPTY": "No employees match your filters.",
       "CLEAR_FILTERS": "Clear filters",
@@ -978,7 +979,7 @@
       "ERROR": {
         "LOAD": "Failed to load employees.",
         "DEACTIVATE": "Failed to deactivate the employee. Please try again.",
-        "CONFLICT": "This employee changed while you were working, so the change was refused. Select Retry to load the current status and try again."
+        "CONFLICT": "This employee changed while you were working, so the change was refused. The list has been reloaded — check the current status before trying again."
       }
     }
   },

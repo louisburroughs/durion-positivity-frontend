@@ -224,9 +224,9 @@
                   <span class="register-unavailable">{{ 'PEOPLE.EMPLOYEE_REGISTER.NOT_AVAILABLE' | translate }}</span>
                 } @else if (row.primaryLocation) {
                   <span class="register-location">{{ row.primaryLocation }}</span>
-                  @if (row.additionalLocationCount) {
+                  @if (row.otherLocationCount) {
                     <span class="register-location__more">
-                      {{ 'PEOPLE.EMPLOYEE_REGISTER.LOCATION.MORE' | translate: { count: row.additionalLocationCount } }}
+                      {{ 'PEOPLE.EMPLOYEE_REGISTER.LOCATION.MORE' | translate: { count: (row.otherLocationCount | number) } }}
                     </span>
                   } @else {
                     <span class="register-location__more">
@@ -277,6 +277,10 @@
                   </span>
                 } @else {
                   <span class="register-muted">—</span>
+                }
+
+                @if (writeErrorFor(row); as writeError) {
+                  <span class="row-error" role="alert">{{ writeError | translate }}</span>
                 }
               </td>
 
@@ -336,7 +340,7 @@
           [attr.aria-label]="'PEOPLE.EMPLOYEE_REGISTER.PAGINATION.PREVIOUS' | translate"
         >‹</button>
         <span class="pagination-label">
-          {{ 'PEOPLE.EMPLOYEE_REGISTER.PAGINATION.PAGE_OF' | translate: { current: pageIndex() + 1, total: totalPages() } }}
+          {{ 'PEOPLE.EMPLOYEE_REGISTER.PAGINATION.PAGE_OF' | translate: { current: (pageIndex() + 1 | number), total: (totalPages() | number) } }}
         </span>
         <button
           type="button"

@@ -11,7 +11,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { DOCUMENT, DecimalPipe } from '@angular/common';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
@@ -77,6 +77,7 @@ export class EmployeeRegisterPageComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly document = inject(DOCUMENT);
+  private readonly translate = inject(TranslateService);
 
   readonly state = signal<PageState>('idle');
   readonly errorKey = signal<string | null>(null);
@@ -91,6 +92,16 @@ export class EmployeeRegisterPageComponent implements OnInit {
 
   /** Employee ids with a status write in flight; their switch is replaced by a busy label. */
   readonly pendingIds = signal<ReadonlySet<string>>(new Set());
+
+  /**
+   * A refused write belongs to the row that attempted it, not to the page (ADR-0063).
+   *
+   * Page-level `state`/`errorKey` is the READ outcome. Routing write failures through it let a
+   * sibling row erase an unresolved refusal: a 409 on row A set the page to `error`, then a
+   * success on row B re-read and settled it back to `ready` with `errorKey` null, so the
+   * refusal for A vanished and its switch looked ordinary again.
+   */
+  readonly writeErrors = signal<ReadonlyMap<string, string>>(new Map());
 
   /** The row awaiting deactivate confirmation, or null (DECISION-PEOPLE-024). */
   readonly confirmRow = signal<EmployeeRegisterRow | null>(null);
@@ -214,6 +225,9 @@ export class EmployeeRegisterPageComponent implements OnInit {
   }
 
   reload(): void {
+    // A user-initiated reload is a fresh look at everything, so stale per-row refusals go with
+    // it. A read triggered by a write does NOT clear them — that is the bug above.
+    this.writeErrors.set(new Map());
     this.load();
   }
 
@@ -225,11 +239,19 @@ export class EmployeeRegisterPageComponent implements OnInit {
     if (this.pageIndex() < this.totalPages() - 1) this.pageIndex.update(p => p + 1);
   }
 
+  /**
+   * Both name fields are nullable, and an empty string here does not just leave the cell blank:
+   * it is interpolated into every one of the row's accessible names, giving "Profile for " and
+   * "Deactivate  (Active)" — controls a screen-reader user cannot tell apart (ADR-0029 §8).
+   * The employee number identifies the row when the name cannot; the localized fallback covers
+   * a row that has neither.
+   */
   displayName(row: EmployeeRegisterRow): string {
     const last = row.lastName?.trim();
     const first = row.firstName?.trim();
     if (last && first) return `${last}, ${first}`;
-    return last || first || '';
+    const name = last || first || row.employeeNumber?.trim();
+    return name || this.translate.instant('PEOPLE.EMPLOYEE_REGISTER.UNNAMED');
   }
 
   /**
@@ -247,13 +269,20 @@ export class EmployeeRegisterPageComponent implements OnInit {
     return this.pendingIds().has(row.employeeId);
   }
 
+  /** The i18n key for this row's last refused write, or null. */
+  writeErrorFor(row: EmployeeRegisterRow): string | null {
+    return this.writeErrors().get(row.employeeId) ?? null;
+  }
+
   /**
    * The switch is offered only for a row the viewer may change *and* whose status it can
    * legally move (DECISION-PEOPLE-001). `ENABLE` has no endpoint yet (backend issue #2156),
    * so a DISABLED row renders a read-only badge rather than a control that cannot work.
    *
-   * When the backend publishes `allowedActions` (#2159) that list wins outright, and this
-   * status reasoning drops out.
+   * When the backend publishes `allowedActions` (#2159) that list NARROWS this — it never
+   * replaces the status reasoning. The lifecycle guard below is load-bearing: without it a
+   * stale or malformed `['DISABLE']` on a DISABLED row would offer the switch again and send
+   * a second disable. Do not remove it when the capability list lands.
    */
   canSwitch(row: EmployeeRegisterRow): boolean {
     if (this.isPending(row)) return false;
@@ -333,6 +362,7 @@ export class EmployeeRegisterPageComponent implements OnInit {
         next: () => {
           this.writeSubs.delete(row.employeeId);
           this.markPending(row.employeeId, false);
+          this.setWriteError(row.employeeId, null);
           // Re-read rather than patching locally: the disable runs a saga
           // (DECISION-PEOPLE-002) and the server is the only authority on the settled status.
           this.load();
@@ -340,12 +370,18 @@ export class EmployeeRegisterPageComponent implements OnInit {
         error: (err: unknown) => {
           this.writeSubs.delete(row.employeeId);
           this.markPending(row.employeeId, false);
-          this.state.set('error'); // ADR-0031 §1 — state always before errorKey
-          this.errorKey.set(
-            err instanceof HttpErrorResponse && err.status === 409
+          const conflict = err instanceof HttpErrorResponse && err.status === 409;
+          this.setWriteError(
+            row.employeeId,
+            conflict
               ? 'PEOPLE.EMPLOYEE_REGISTER.ERROR.CONFLICT'
               : 'PEOPLE.EMPLOYEE_REGISTER.ERROR.DEACTIVATE',
           );
+          // DECISION-PEOPLE-017: a conflict means this row moved under us, so re-read to show
+          // what the server actually holds. Safe to do now that the refusal lives on the row —
+          // when it was page-level, a re-read settled the page back to `ready` and took the
+          // explanation with it, which is why this used to wait for the user to select Retry.
+          if (conflict) this.load();
         },
       });
     this.writeSubs.set(row.employeeId, sub);
@@ -353,6 +389,13 @@ export class EmployeeRegisterPageComponent implements OnInit {
 
   private allows(permissions: readonly string[]): boolean {
     return !this.auth.permissionsKnown() || this.auth.hasAnyPermission(permissions);
+  }
+
+  private setWriteError(employeeId: string, key: string | null): void {
+    const next = new Map(this.writeErrors());
+    if (key) next.set(employeeId, key);
+    else next.delete(employeeId);
+    this.writeErrors.set(next);
   }
 
   private markPending(employeeId: string, pending: boolean): void {

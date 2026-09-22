@@ -45,7 +45,13 @@ function toRoleChips(
 }
 
 function toActions(raw: readonly string[] | null | undefined): readonly EmployeeAction[] | undefined {
-  if (!raw) return undefined;
+  // The same null-versus-undefined rule as the contact fields and roles, and the one place
+  // where getting it wrong GRANTS rather than withholds: the page reads `undefined` as
+  // "capabilities not served" and falls back to the caller's permissions, so collapsing an
+  // explicit null into it would turn "this viewer may do nothing to this row" into
+  // "no opinion" and re-expose the PII cells and the disable switch (ADR-0064, ADR-0040 §6a).
+  if (raw === undefined) return undefined;
+  if (raw === null) return [];
   return raw.filter((value): value is EmployeeAction =>
     EMPLOYEE_ACTIONS.includes(value as EmployeeAction),
   );
@@ -70,6 +76,11 @@ export class EmployeeRegisterService {
    * can tell the user when the tenant is larger than one fetch.
    */
   searchEmployees(query: string | undefined, size: number): Observable<EmployeeRegisterPage> {
+    // NOTE on #2155: the enriched projection is served behind an `include=` query parameter so
+    // existing callers keep the thin payload. The generated signature is `(q, page, size)` today
+    // and carries no such parameter, so it cannot be passed yet — when the SDK is regenerated
+    // this call must add it, or the register will keep receiving the thin rows and every
+    // enrichment column will stay on "not available yet" with nothing failing to say so.
     return this.employeeApi.searchEmployees(query || undefined, 0, size).pipe(
       map(response => ({
         rows: (response.items ?? []).map(item => this.toRow(item as EnrichedEmployeeSummaryDto)),
@@ -113,7 +124,7 @@ export class EmployeeRegisterService {
       phone: 'contactInfo' in dto ? (dto.contactInfo?.phone ?? null) : undefined,
       roles: toRoleChips(dto.roleAssignments),
       primaryLocation: 'primaryLocation' in dto ? (dto.primaryLocation?.name ?? null) : undefined,
-      additionalLocationCount: dto.additionalLocationCount ?? undefined,
+      otherLocationCount: dto.otherLocationCount ?? undefined,
       jobRole: dto.jobRole,
       allowedActions: toActions(dto.allowedActions),
     };

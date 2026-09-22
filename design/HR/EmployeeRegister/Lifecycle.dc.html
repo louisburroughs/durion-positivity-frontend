@@ -70,7 +70,7 @@
 
   <div style="display: flex; align-items: flex-start; gap: 9px; padding: 13px 15px; background: #e8eef6; border-radius: 4px;">
     <span aria-hidden="true" style="width: 3px; align-self: stretch; background: #2b4c78; border-radius: 2px; flex-shrink: 0;"></span>
-    <p style="margin: 0; font-size: 12px; line-height: 1.6; color: #22385a;">The switch never writes optimistically. A disable blocks sign-in immediately and ends open assignments, so it is a privileged action behind an explicit confirm (DECISION-PEOPLE-024). On a 409 the row refreshes from the server and the switch returns to the value the server holds.</p>
+    <p style="margin: 0; font-size: 12px; line-height: 1.6; color: #22385a;">The switch never writes optimistically. A disable blocks sign-in immediately and ends open assignments, so it is a privileged action behind an explicit confirm (DECISION-PEOPLE-024). On a 409 the refusal is reported on the row that attempted it &mdash; not in the page panel, which belongs to the read &mdash; and the page re-reads so the switch returns to the value the server holds.</p>
   </div>
 
 </div>

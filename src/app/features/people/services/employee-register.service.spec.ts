@@ -33,7 +33,7 @@ const enriched: EnrichedEmployeeSummaryDto = {
     { roleCode: null, scope: 'GLOBAL' },
   ],
   primaryLocation: { name: 'Charlotte Main' },
-  additionalLocationCount: 1,
+  otherLocationCount: 1,
   jobRole: 'Service Manager',
   allowedActions: ['DISABLE', 'NOT_A_REAL_ACTION'],
 };
@@ -102,7 +102,7 @@ describe('EmployeeRegisterService', () => {
     expect(mapped.username).toBe('renee.albright');
     expect(mapped.email).toBe('renee.albright@durion.internal');
     expect(mapped.primaryLocation).toBe('Charlotte Main');
-    expect(mapped.additionalLocationCount).toBe(1);
+    expect(mapped.otherLocationCount).toBe(1);
     // A role assignment with no code is dropped, not rendered as a blank chip.
     expect(mapped.roles).toEqual([
       { code: 'SERVICE_MANAGER', scope: 'LOCATION' },
@@ -181,6 +181,26 @@ describe('EmployeeRegisterService', () => {
     });
     expect(emitted).toEqual(disabled);
     expect(emitted.status).toBe(EmployeeProfileDtoStatusEnum.Disabled);
+  });
+
+  it('treats null allowedActions as "no capabilities", never as "not served"', async () => {
+    employeeApi.searchEmployees.mockReturnValue(
+      of({
+        items: [{ ...thin, allowedActions: null }],
+        page: 0,
+        size: 200,
+        totalElements: 1,
+        totalPages: 1,
+      }),
+    );
+
+    const { rows } = await firstValueFrom(service.searchEmployees(undefined, 200));
+
+    // undefined would mean "the projection does not publish capabilities", and the page then
+    // falls back to the caller's permissions — so collapsing null into it would GRANT the
+    // PII cells and the disable switch on a row the server said nothing may be done to.
+    expect(rows[0].allowedActions).toEqual([]);
+    expect(rows[0].allowedActions).not.toBeUndefined();
   });
 
   it('treats null role assignments as "no roles", not "not available"', async () => {

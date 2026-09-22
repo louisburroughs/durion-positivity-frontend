@@ -49,7 +49,7 @@ function row(overrides: Partial<EmployeeRegisterRow> = {}): EmployeeRegisterRow 
     phone: '(704) 555-0142',
     roles: [{ code: 'SERVICE_MANAGER', scope: 'LOCATION' }],
     primaryLocation: 'Charlotte Main',
-    additionalLocationCount: 1,
+    otherLocationCount: 1,
     jobRole: 'Service Manager',
     ...overrides,
   };
@@ -259,28 +259,76 @@ describe('EmployeeRegisterPageComponent', () => {
     expect(component.confirmRow()).toBeNull();
   });
 
-  it('routes a failed deactivate through state then errorKey (ADR-0031 §1)', async () => {
+  it('reports a failed deactivate on the row that attempted it, not on the page', async () => {
     await setup();
     stubService.disableEmployee.mockReturnValue(throwError(() => new Error('boom')));
 
     component.openConfirm(STUB_ROWS[0]);
     component.confirmDeactivate();
+    fixture.detectChanges();
 
-    expect(component.state()).toBe('error');
-    expect(component.errorKey()).toBe('PEOPLE.EMPLOYEE_REGISTER.ERROR.DEACTIVATE');
+    // ADR-0063: the write outcome belongs to its writer. The page's state/errorKey is the READ
+    // outcome and must be left alone, or the table disappears and the other rows go with it.
+    expect(component.writeErrorFor(STUB_ROWS[0])).toBe('PEOPLE.EMPLOYEE_REGISTER.ERROR.DEACTIVATE');
+    expect(component.viewState()).toBe('ready');
+    expect(component.errorKey()).toBeNull();
     expect(component.isPending(STUB_ROWS[0])).toBe(false);
+    expect(text()).toContain(enUS.PEOPLE.EMPLOYEE_REGISTER.ERROR.DEACTIVATE);
   });
 
-  it('names the concurrency conflict distinctly on a 409 (DECISION-PEOPLE-017)', async () => {
+  it('names the concurrency conflict distinctly on a 409, and re-reads (DECISION-PEOPLE-017)', async () => {
     await setup();
     stubService.disableEmployee.mockReturnValue(
       throwError(() => new HttpErrorResponse({ status: 409 })),
     );
+    const readsBefore = stubService.searchEmployees.mock.calls.length;
 
     component.openConfirm(STUB_ROWS[0]);
     component.confirmDeactivate();
+    fixture.detectChanges();
 
-    expect(component.errorKey()).toBe('PEOPLE.EMPLOYEE_REGISTER.ERROR.CONFLICT');
+    expect(component.writeErrorFor(STUB_ROWS[0])).toBe('PEOPLE.EMPLOYEE_REGISTER.ERROR.CONFLICT');
+    // The row moved under us, so the page re-reads to show what the server holds — and the
+    // refusal survives it, because it lives on the row rather than in the page panel the
+    // read settles. That is what makes the automatic reload safe here.
+    expect(stubService.searchEmployees.mock.calls.length).toBe(readsBefore + 1);
+    expect(component.viewState()).toBe('ready');
+    expect(text()).toContain(enUS.PEOPLE.EMPLOYEE_REGISTER.ERROR.CONFLICT.split('.')[0]);
+  });
+
+  it("never lets one row's success erase another row's refusal", async () => {
+    await setup();
+    const failing = new Subject<unknown>();
+    const succeeding = new Subject<unknown>();
+    stubService.disableEmployee.mockReturnValueOnce(failing).mockReturnValueOnce(succeeding);
+
+    component.openConfirm(STUB_ROWS[0]);
+    component.confirmDeactivate();
+    component.openConfirm(row({ employeeId: 'emp-5', personId: 'per-5', lastName: 'Cole' }));
+    component.confirmDeactivate();
+
+    failing.error(new HttpErrorResponse({ status: 409 }));
+    expect(component.writeErrorFor(STUB_ROWS[0])).toBe('PEOPLE.EMPLOYEE_REGISTER.ERROR.CONFLICT');
+
+    // emp-5 settling re-reads the page. With a page-level errorKey that read cleared emp-1's
+    // refusal and left its switch looking ordinary — the failure vanished with no retry path.
+    succeeding.next({});
+    succeeding.complete();
+    fixture.detectChanges();
+
+    expect(component.writeErrorFor(STUB_ROWS[0])).toBe('PEOPLE.EMPLOYEE_REGISTER.ERROR.CONFLICT');
+    expect(component.writeErrorFor(row({ employeeId: 'emp-5' }))).toBeNull();
+  });
+
+  it('clears row refusals when the user asks for the page again', async () => {
+    await setup();
+    stubService.disableEmployee.mockReturnValue(throwError(() => new Error('boom')));
+    component.openConfirm(STUB_ROWS[0]);
+    component.confirmDeactivate();
+    expect(component.writeErrorFor(STUB_ROWS[0])).not.toBeNull();
+
+    component.reload();
+    expect(component.writeErrorFor(STUB_ROWS[0])).toBeNull();
   });
 
   // ── Read outcomes ───────────────────────────────────────────────────────────────────
@@ -298,7 +346,7 @@ describe('EmployeeRegisterPageComponent', () => {
     expect(component.errorKey()).toBe('PEOPLE.EMPLOYEE_REGISTER.ERROR.LOAD');
   });
 
-  it('ignores a superseded read so a slow first response cannot overwrite a newer one', async () => {
+  it('never lets a slow first response overwrite a newer one', async () => {
     const first = new Subject<EmployeeRegisterPage>();
     const second = new Subject<EmployeeRegisterPage>();
     await setup({ search: first });
@@ -313,6 +361,20 @@ describe('EmployeeRegisterPageComponent', () => {
     second.next(page());
     expect(component.allRows().length).toBe(4);
   });
+
+  /*
+   * What the test above does and does not prove, since the distinction was got wrong once.
+   *
+   * `load()` unsubscribes the previous read before starting the next, so the late emission is
+   * never delivered at all: this passes with the `seq` guard deleted. It is real coverage of
+   * the guarantee — a superseded response cannot land — but it is NOT coverage of the guard.
+   *
+   * No source-based test can be: RxJS closes the subscriber on unsubscribe, so a stale `next`
+   * cannot reach the handler through any observable the service could return. The guard stays
+   * as defence for a source that outlives its subscription (a shared/replayed stream, a
+   * non-cancellable promise adapter) — a refactor away, not reachable today. It is not claimed
+   * as tested anywhere.
+   */
 
   // ── Filtering and ordering ──────────────────────────────────────────────────────────
 
@@ -472,29 +534,13 @@ describe('EmployeeRegisterPageComponent', () => {
     expect(fixture.debugElement.queryAll(By.css('.register-email-plain')).length).toBe(1);
   });
 
-  it('offers a real way back after a 409 rather than claiming a refresh that never happened', async () => {
-    await setup();
-    stubService.disableEmployee.mockReturnValue(
-      throwError(() => new HttpErrorResponse({ status: 409 })),
-    );
-
-    component.openConfirm(STUB_ROWS[0]);
-    component.confirmDeactivate();
-    fixture.detectChanges();
-
-    expect(component.errorKey()).toBe('PEOPLE.EMPLOYEE_REGISTER.ERROR.CONFLICT');
-    // The page does not re-read by itself here — the error panel replaces the table, so an
-    // automatic reload would flash the explanation away before it could be read. The copy
-    // must therefore not claim a refresh, and must point at the control that performs one.
+  it('describes the 409 outcome the page actually produces', async () => {
+    // The copy claimed a refresh that never happened for two rounds, then pointed at a Retry
+    // button; the page now really does re-read, so it must say that and must not send the
+    // user to a control that is no longer part of this path.
     const copy = enUS.PEOPLE.EMPLOYEE_REGISTER.ERROR.CONFLICT;
-    expect(copy).not.toMatch(/refreshed/i);
-    expect(copy).toContain(enUS.COMMON.RETRY);
-
-    const before = stubService.searchEmployees.mock.calls.length;
-    fixture.debugElement
-      .query(By.css('.register-state--error .register-state__btn'))
-      .nativeElement.click();
-    expect(stubService.searchEmployees.mock.calls.length).toBe(before + 1);
+    expect(copy).toMatch(/reloaded/i);
+    expect(copy).not.toContain(enUS.COMMON.RETRY);
   });
 
   // ── Focus and pagination (round three) ──────────────────────────────────────────────
@@ -570,6 +616,42 @@ describe('EmployeeRegisterPageComponent', () => {
     expect(component.truncated()).toBe(true); // the cache is still there…
     expect(component.showTruncationNotice()).toBe(false); // …but it is not announced
     expect(text()).not.toContain(notice);
+  });
+
+  // ── Row identity (round seven) ──────────────────────────────────────────────────────
+
+  it('never lets a nameless row produce a blank control name', async () => {
+    const nameless = row({
+      employeeId: 'emp-7',
+      personId: 'per-7',
+      firstName: null,
+      lastName: null,
+      employeeNumber: 'EMP-99001',
+    });
+    await setup({ search: of(page([nameless])) });
+
+    // An empty displayName is interpolated into every one of the row's accessible names,
+    // giving "Profile for " and "Deactivate  (Active)" — indistinguishable in a links list.
+    expect(component.displayName(nameless)).toBe('EMP-99001');
+    const action = fixture.debugElement.query(By.css('.register-action'));
+    expect(action.nativeElement.getAttribute('aria-label')).toContain('EMP-99001');
+  });
+
+  it('falls back to localized copy when a row has neither a name nor a number', async () => {
+    const anonymous = row({
+      employeeId: 'emp-8',
+      personId: 'per-8',
+      firstName: null,
+      lastName: null,
+      employeeNumber: null,
+    });
+    await setup({ search: of(page([anonymous])) });
+
+    expect(component.displayName(anonymous)).toBe(enUS.PEOPLE.EMPLOYEE_REGISTER.UNNAMED);
+    const action = fixture.debugElement.query(By.css('.register-action'));
+    expect(action.nativeElement.getAttribute('aria-label')).toContain(
+      enUS.PEOPLE.EMPLOYEE_REGISTER.UNNAMED,
+    );
   });
 
   // ── Mobile card layout (round six) ──────────────────────────────────────────────────
