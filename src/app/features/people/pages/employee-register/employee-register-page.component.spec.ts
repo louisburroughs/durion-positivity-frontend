@@ -693,6 +693,43 @@ describe('EmployeeRegisterPageComponent', () => {
     expect(component.confirmRow()).toBeNull();
   });
 
+  it('disables the accept button in the rendered dialog while a read is settling', async () => {
+    await setup();
+    const pending = new Subject<EmployeeRegisterPage>();
+    stubService.searchEmployees.mockReturnValue(pending);
+
+    component.openConfirm(STUB_ROWS[0]);
+    component.reload();
+    fixture.detectChanges();
+
+    // The method guard refuses regardless, so asserting through confirmDeactivate() would pass
+    // with this binding deleted — and the user would be looking at a live button that does
+    // nothing when clicked. This asserts the rendered control.
+    const accept = () =>
+      fixture.debugElement.query(By.css('.confirm-dialog__accept')).nativeElement as HTMLButtonElement;
+    expect(accept().disabled).toBe(true);
+
+    pending.next(page([STUB_ROWS[0]]));
+    fixture.detectChanges();
+    expect(accept().disabled).toBe(false);
+  });
+
+  it('closes an open confirm when the read behind it fails', async () => {
+    await setup();
+    component.openConfirm(STUB_ROWS[0]);
+    expect(component.confirmRow()?.employeeId).toBe('emp-1');
+
+    // A failed read replaces the table with a panel, so the dialog would be left floating over
+    // rows that are no longer shown. The existing read-error tests start with no dialog open,
+    // so none of them would notice if this dismissal were removed.
+    stubService.searchEmployees.mockReturnValue(throwError(() => new Error('down')));
+    component.reload();
+    fixture.detectChanges();
+
+    expect(component.confirmRow()).toBeNull();
+    expect(component.viewState()).toBe('error');
+  });
+
   it('refuses to write while a read that could invalidate the row is still settling', async () => {
     await setup();
     const pending = new Subject<EmployeeRegisterPage>();
