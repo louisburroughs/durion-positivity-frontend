@@ -413,6 +413,7 @@ export class EmployeeRegisterPageComponent implements OnInit {
   }
 
   private load(): void {
+    if (this.confirmRow()) this.closeConfirm();
     this.loadSub?.unsubscribe();
     const seq = ++this.readSeq;
 
