@@ -146,7 +146,7 @@
           @for (row of paged(); track row.employeeId) {
             <tr class="register-row" [class.register-row--inactive]="!row.active">
               <td class="register-td register-td--name">
-                @if (canViewPii()) {
+                @if (canViewPiiFor(row)) {
                   <a class="register-name-link" [routerLink]="['/app/people/employees', row.employeeId]">
                     {{ displayName(row) }}
                   </a>
@@ -165,7 +165,7 @@
               </td>
 
               <td class="register-td">
-                @if (!canViewPii()) {
+                @if (!canViewPiiFor(row)) {
                   <span class="register-restricted">{{ 'PEOPLE.EMPLOYEE_REGISTER.RESTRICTED' | translate }}</span>
                 } @else if (row.email === undefined) {
                   <span class="register-unavailable">{{ 'PEOPLE.EMPLOYEE_REGISTER.NOT_AVAILABLE' | translate }}</span>
@@ -181,7 +181,7 @@
               </td>
 
               <td class="register-td">
-                @if (!canViewPii()) {
+                @if (!canViewPiiFor(row)) {
                   <span class="register-restricted">{{ 'PEOPLE.EMPLOYEE_REGISTER.RESTRICTED' | translate }}</span>
                 } @else if (row.phone === undefined) {
                   <span class="register-unavailable">{{ 'PEOPLE.EMPLOYEE_REGISTER.NOT_AVAILABLE' | translate }}</span>
@@ -268,7 +268,7 @@
 
               <td class="register-td register-td--actions">
                 <span class="register-actions">
-                  @if (canViewPii()) {
+                  @if (canViewPiiFor(row)) {
                     <a
                       class="register-action"
                       [routerLink]="['/app/people/employees', row.employeeId]"

@@ -1,11 +1,33 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslateModule, TranslateService, TranslationObject } from '@ngx-translate/core';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import axe from 'axe-core';
 import { of } from 'rxjs';
 
 import enUS from '../../../../../assets/i18n/en-US.json';
+import esUS from '../../../../../assets/i18n/es-US.json';
+import esMX from '../../../../../assets/i18n/es-MX.json';
+import frCA from '../../../../../assets/i18n/fr-CA.json';
+import frFR from '../../../../../assets/i18n/fr-FR.json';
+import qpsPloc from '../../../../../assets/i18n/qps-ploc.json';
+
+/**
+ * The hand-maintained bundles — a name that loses its visible label in any one of them fails.
+ *
+ * `qps-ploc` is deliberately excluded from the substring assertion and checked separately
+ * below: the generator wraps every string in `[!! … !!]` decoration and places interpolated
+ * values outside it, so the visible label is never a literal substring of the accessible name
+ * there. That is an artefact of pseudo-localisation, not a translation defect, and asserting
+ * containment against it would only teach the suite to accept a weaker rule.
+ */
+const LOCALES: ReadonlyArray<readonly [string, TranslationObject]> = [
+  ['en-US', enUS],
+  ['es-US', esUS],
+  ['es-MX', esMX],
+  ['fr-CA', frCA],
+  ['fr-FR', frFR],
+];
 import { EmployeeRegisterPageComponent } from './employee-register-page.component';
 import { EmployeeRegisterService } from '../../services/employee-register.service';
 import { AuthService } from '../../../../core/services/auth.service';
@@ -167,37 +189,76 @@ describe('Employee register a11y (rendered DOM)', () => {
 
   it('names the toggle by its action while still containing the visible label', () => {
     const toggle: HTMLButtonElement = fixture.nativeElement.querySelector('.status-switch');
-    const name = toggle.getAttribute('aria-label') ?? '';
-    // ADR-0029 §8: "toggle names describe the action, not the state" — so the name leads
-    // with the action and identifies the row.
-    expect(name).toContain('Deactivate');
-    expect(name).toContain('Albright');
+    // ADR-0029 §8: "toggle names describe the action, not the state" — the name leads with
+    // the action and identifies the row.
+    expect(toggle.getAttribute('aria-label') ?? '').toContain('Deactivate');
+    expect(toggle.getAttribute('aria-label') ?? '').toContain('Albright');
     expect(toggle.getAttribute('role')).toBe('switch');
     expect(toggle.getAttribute('aria-checked')).toBe('true');
-
-    // …and WCAG 2.5.3 Label in Name: the visible text inside the control is the status, so
-    // the accessible name has to contain it or speech activation cannot target this switch.
-    const visible = (toggle.querySelector('.status-switch__text')?.textContent ?? '').trim();
-    expect(visible).toBe(enUS.PEOPLE.EMPLOYEE_REGISTER.STATUS.ACTIVE);
-    expect(name).toContain(visible);
   });
 
-  it('gives every row action its own identity without breaking Label in Name', () => {
+  // WCAG 2.5.3 Label in Name holds per locale, not just in English: a translation that drops
+  // the status or the action would break speech activation for those users only, and an
+  // en-US-only assertion cannot see it (ADR-0029 §8.6, ADR-0035 §8).
+  for (const [locale, bundle] of LOCALES) {
+    it(`keeps the visible label inside every accessible name in ${locale}`, () => {
+      const translate = TestBed.inject(TranslateService);
+      translate.setTranslation(locale, bundle);
+      translate.use(locale);
+      fixture.detectChanges();
+
+      const host = fixture.nativeElement as HTMLElement;
+
+      const toggle = host.querySelector<HTMLButtonElement>('.status-switch')!;
+      const toggleVisible = (toggle.querySelector('.status-switch__text')?.textContent ?? '').trim();
+      expect(toggleVisible.length).toBeGreaterThan(0);
+      expect(toggle.getAttribute('aria-label') ?? '').toContain(toggleVisible);
+
+      const actions = Array.from(
+        host.querySelectorAll<HTMLAnchorElement>('.register-row:first-of-type .register-action'),
+      );
+      expect(actions.length).toBeGreaterThan(0);
+      for (const action of actions) {
+        const visible = (action.textContent ?? '').trim();
+        expect(visible.length).toBeGreaterThan(0);
+        expect(action.getAttribute('aria-label') ?? '').toContain(visible);
+      }
+    });
+  }
+
+  it('still names every control in the pseudo-locale', () => {
+    const translate = TestBed.inject(TranslateService);
+    translate.setTranslation('qps-ploc', qpsPloc);
+    translate.use('qps-ploc');
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    const toggle = host.querySelector<HTMLButtonElement>('.status-switch')!;
+    const actions = Array.from(
+      host.querySelectorAll<HTMLAnchorElement>('.register-row:first-of-type .register-action'),
+    );
+
+    // Containment cannot hold here (see LOCALES above), but every control must still resolve
+    // a real name and carry its row — a missing key would surface as an empty or raw name.
+    expect(toggle.getAttribute('aria-label') ?? '').toContain('Albright, Renee');
+    expect(toggle.getAttribute('aria-label') ?? '').not.toContain('EMPLOYEE_REGISTER.');
+    for (const action of actions) {
+      expect(action.getAttribute('aria-label') ?? '').toContain('Albright, Renee');
+      expect(action.getAttribute('aria-label') ?? '').not.toContain('EMPLOYEE_REGISTER.');
+    }
+  });
+
+  it('gives every row action its own identity', () => {
     const actions = Array.from(
       (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLAnchorElement>(
         '.register-row:first-of-type .register-action',
       ),
     );
     expect(actions.length).toBeGreaterThan(0);
-
     for (const action of actions) {
-      const visible = (action.textContent ?? '').trim();
-      const name = action.getAttribute('aria-label') ?? '';
       // Identical "Profile" links in a screen reader's link list are indistinguishable
       // without the row they belong to (ADR-0029 §8).
-      expect(name).toContain('Albright, Renee');
-      // The visible label still has to appear in the name (WCAG 2.5.3).
-      expect(name).toContain(visible);
+      expect(action.getAttribute('aria-label') ?? '').toContain('Albright, Renee');
     }
   });
 

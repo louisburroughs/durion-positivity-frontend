@@ -152,13 +152,35 @@ describe('EmployeeRegisterPageComponent', () => {
     expect(fixture.debugElement.queryAll(By.css('.status-badge')).length).toBe(3);
   });
 
-  it('prefers the backend capability flags over the status rules when they are present', async () => {
+  it('lets the backend capability flags narrow the gates but never widen them', async () => {
     await setup();
     // A DISABLED row the backend says may be enabled still offers no DISABLE action…
     expect(component.canSwitch(row({ status: 'DISABLED', allowedActions: ['ENABLE'] }))).toBe(false);
-    // …and an ACTIVE row the backend refuses is not switchable despite the permission.
+    // …an ACTIVE row the backend refuses is not switchable despite the permission…
     expect(component.canSwitch(row({ status: 'ACTIVE', allowedActions: ['UPDATE'] }))).toBe(false);
     expect(component.canSwitch(row({ status: 'ACTIVE', allowedActions: ['DISABLE'] }))).toBe(true);
+    // …and a stale or malformed DISABLE on a row the lifecycle forbids does not resurrect
+    // the switch, which would send the disable a second time.
+    expect(component.canSwitch(row({ status: 'DISABLED', allowedActions: ['DISABLE'] }))).toBe(false);
+    expect(component.canSwitch(row({ status: 'TERMINATED', allowedActions: ['DISABLE'] }))).toBe(false);
+    expect(component.canSwitch(row({ status: 'ON_LEAVE', allowedActions: ['DISABLE'] }))).toBe(false);
+  });
+
+  it('withholds a row\'s PII when the projection omits VIEW_PII for it', async () => {
+    const withheld = row({ employeeId: 'emp-9', personId: 'per-9', allowedActions: ['UPDATE'] });
+    await setup({ search: of(page([withheld])) });
+
+    // The permission is held page-wide, but this row's capability list does not grant it.
+    expect(component.canViewPii()).toBe(true);
+    expect(component.canViewPiiFor(withheld)).toBe(false);
+    expect(text()).not.toContain('renee.albright@durion.internal');
+    expect(text()).toContain(enUS.PEOPLE.EMPLOYEE_REGISTER.RESTRICTED);
+    expect(fixture.debugElement.queryAll(By.css('.register-name-link')).length).toBe(0);
+
+    // A row that does grant it still renders normally.
+    expect(component.canViewPiiFor(row({ allowedActions: ['VIEW_PII'] }))).toBe(true);
+    // …and no capability list at all falls back to the permission alone.
+    expect(component.canViewPiiFor(row())).toBe(true);
   });
 
   // ── Write-control gating (ADR-0040 §6a) ─────────────────────────────────────────────

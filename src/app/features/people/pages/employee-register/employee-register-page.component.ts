@@ -257,11 +257,25 @@ export class EmployeeRegisterPageComponent implements OnInit {
    */
   canSwitch(row: EmployeeRegisterRow): boolean {
     if (this.isPending(row)) return false;
-    // The permission gate is independent and always applies: `allowedActions` is a
-    // rendering hint from the server (backend #2159), never the authority (ADR-0040 §6a).
+    // Every gate below only ever NARROWS. The permission is independent and always applies
+    // (ADR-0040 §6a), and so is the lifecycle rule: a stale or malformed `['DISABLE']` on a
+    // DISABLED row must not resurrect a deactivate switch and send the request again.
+    // `allowedActions` is a rendering hint from the server (backend #2159), not authority.
     if (!this.canDeactivate()) return false;
+    if (!isSwitchableStatus(row.status) || row.status !== 'ACTIVE') return false;
     if (row.allowedActions) return row.allowedActions.includes('DISABLE');
-    return isSwitchableStatus(row.status) && row.status === 'ACTIVE';
+    return true;
+  }
+
+  /**
+   * PII is gated per row, not only per caller. The permission is still required, and where
+   * the projection publishes `allowedActions` (backend #2159) an absent `VIEW_PII` withholds
+   * this row's contact details and profile link — the server list narrows, never widens.
+   */
+  canViewPiiFor(row: EmployeeRegisterRow): boolean {
+    if (!this.canViewPii()) return false;
+    if (row.allowedActions) return row.allowedActions.includes('VIEW_PII');
+    return true;
   }
 
   openConfirm(row: EmployeeRegisterRow): void {
