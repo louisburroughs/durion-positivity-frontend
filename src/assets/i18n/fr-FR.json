@@ -974,7 +974,7 @@
       "ERROR": {
         "LOAD": "Échec du chargement des employés.",
         "DEACTIVATE": "Échec de la désactivation de l’employé. Veuillez réessayer.",
-        "CONFLICT": "Cet employé a changé pendant votre travail. La liste a été actualisée : vérifiez le statut et réessayez."
+        "CONFLICT": "Cet employé a changé pendant votre travail ; le changement a donc été refusé. Sélectionnez Réessayer pour charger le statut actuel et recommencer."
       }
     }
   },

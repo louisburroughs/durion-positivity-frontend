@@ -974,7 +974,7 @@
       "ERROR": {
         "LOAD": "No se pudieron cargar los empleados.",
         "DEACTIVATE": "No se pudo desactivar al empleado. Inténtelo de nuevo.",
-        "CONFLICT": "Este empleado cambió mientras trabajaba. La lista se ha actualizado: revise el estado e inténtelo de nuevo."
+        "CONFLICT": "Este empleado cambió mientras usted trabajaba, por lo que el cambio fue rechazado. Seleccione Reintentar para cargar el estado actual e inténtelo de nuevo."
       }
     }
   },

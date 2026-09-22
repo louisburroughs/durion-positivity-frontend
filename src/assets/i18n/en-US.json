@@ -974,7 +974,7 @@
       "ERROR": {
         "LOAD": "Failed to load employees.",
         "DEACTIVATE": "Failed to deactivate the employee. Please try again.",
-        "CONFLICT": "This employee changed while you were working. The list has been refreshed — check the status and try again."
+        "CONFLICT": "This employee changed while you were working, so the change was refused. Select Retry to load the current status and try again."
       }
     }
   },

@@ -436,6 +436,31 @@ describe('EmployeeRegisterPageComponent', () => {
     expect(fixture.debugElement.queryAll(By.css('.register-email-plain')).length).toBe(1);
   });
 
+  it('offers a real way back after a 409 rather than claiming a refresh that never happened', async () => {
+    await setup();
+    stubService.disableEmployee.mockReturnValue(
+      throwError(() => new HttpErrorResponse({ status: 409 })),
+    );
+
+    component.openConfirm(STUB_ROWS[0]);
+    component.confirmDeactivate();
+    fixture.detectChanges();
+
+    expect(component.errorKey()).toBe('PEOPLE.EMPLOYEE_REGISTER.ERROR.CONFLICT');
+    // The page does not re-read by itself here — the error panel replaces the table, so an
+    // automatic reload would flash the explanation away before it could be read. The copy
+    // must therefore not claim a refresh, and must point at the control that performs one.
+    const copy = enUS.PEOPLE.EMPLOYEE_REGISTER.ERROR.CONFLICT;
+    expect(copy).not.toMatch(/refreshed/i);
+    expect(copy).toContain(enUS.COMMON.RETRY);
+
+    const before = stubService.searchEmployees.mock.calls.length;
+    fixture.debugElement
+      .query(By.css('.register-state--error .register-state__btn'))
+      .nativeElement.click();
+    expect(stubService.searchEmployees.mock.calls.length).toBe(before + 1);
+  });
+
   // ── i18n (ADR-0030) ─────────────────────────────────────────────────────────────────
 
   it('resolves every key the template uses in the shipped bundle', () => {
