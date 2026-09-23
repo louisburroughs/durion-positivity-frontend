@@ -9,6 +9,10 @@ import {
   PostalAddressDto,
 } from '@durion-sdk/people-contact';
 import enUS from '../../../../../assets/i18n/en-US.json';
+import esUS from '../../../../../assets/i18n/es-US.json';
+import esMX from '../../../../../assets/i18n/es-MX.json';
+import frCA from '../../../../../assets/i18n/fr-CA.json';
+import frFR from '../../../../../assets/i18n/fr-FR.json';
 import { PersonProfilePageComponent } from './person-profile-page.component';
 import { PeopleService } from '../../services/people.service';
 import { AuthService } from '../../../../core/services/auth.service';
@@ -434,6 +438,27 @@ describe('PersonProfilePageComponent', () => {
     expect(removes[2].getAttribute('aria-label')).toBe(fill(enUS.PEOPLE.PERSON_PROFILE.REMOVE_CONTACT_ARIA, 3, types.PHONE_MOBILE));
     // Label in Name: the visible "Remove" text starts the accessible name.
     expect(removes[2].getAttribute('aria-label')?.startsWith(enUS.PEOPLE.PERSON_PROFILE.REMOVE_CONTACT)).toBe(true);
+  });
+
+  // WCAG 2.5.3 Label in Name holds per shipped locale (ADR-0029 §8.6). qps-ploc is excluded
+  // as in employee-register-page.a11y.spec.ts: its decoration keeps the visible text from
+  // being a literal prefix of the accessible name.
+  for (const [locale, bundle] of [['en-US', enUS], ['es-US', esUS], ['es-MX', esMX], ['fr-CA', frCA], ['fr-FR', frFR]] as const) {
+    it(`keeps the visible Remove label at the start of the remove button's name in ${locale}`, () => {
+      const copy = bundle.PEOPLE.PERSON_PROFILE;
+      const name = copy.REMOVE_CONTACT_ARIA.replace('{{index}}', '1').replace('{{type}}', copy.CONTACT_TYPE.EMAIL);
+
+      expect(name.startsWith(copy.REMOVE_CONTACT)).toBe(true);
+    });
+  }
+
+  it('describes every address control with the address-wide hint (ADR-0029 §8.3)', async () => {
+    await setup();
+
+    for (const id of ['line1', 'line2', 'city', 'region', 'postalCode', 'countryCode']) {
+      expect(el.querySelector(`#address-${id}`)?.getAttribute('aria-describedby')).toBe('address-hint');
+    }
+    expect(el.querySelector('#address-hint')).not.toBeNull();
   });
 
   it('moves focus to the add button after removing a contact point', async () => {

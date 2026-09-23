@@ -134,20 +134,20 @@
         </div>
         <div class="field-row">
           <label for="address-line2">{{ 'PEOPLE.PERSON_PROFILE.FIELD_LINE2' | translate }}</label>
-          <input id="address-line2" type="text" formControlName="line2" autocomplete="off" />
+          <input id="address-line2" type="text" formControlName="line2" aria-describedby="address-hint" autocomplete="off" />
         </div>
         <div class="field-grid">
           <div class="field-row">
             <label for="address-city">{{ 'PEOPLE.PERSON_PROFILE.FIELD_CITY' | translate }}</label>
-            <input id="address-city" type="text" formControlName="city" autocomplete="off" />
+            <input id="address-city" type="text" formControlName="city" aria-describedby="address-hint" autocomplete="off" />
           </div>
           <div class="field-row">
             <label for="address-region">{{ 'PEOPLE.PERSON_PROFILE.FIELD_REGION' | translate }}</label>
-            <input id="address-region" type="text" formControlName="region" autocomplete="off" />
+            <input id="address-region" type="text" formControlName="region" aria-describedby="address-hint" autocomplete="off" />
           </div>
           <div class="field-row">
             <label for="address-postalCode">{{ 'PEOPLE.PERSON_PROFILE.FIELD_POSTAL_CODE' | translate }}</label>
-            <input id="address-postalCode" type="text" formControlName="postalCode" autocomplete="off" />
+            <input id="address-postalCode" type="text" formControlName="postalCode" aria-describedby="address-hint" autocomplete="off" />
           </div>
           <div class="field-row" [class.field-error--visible]="form.controls.address.controls.countryCode.invalid">
             <label for="address-countryCode">{{ 'PEOPLE.PERSON_PROFILE.FIELD_COUNTRY' | translate }}</label>
