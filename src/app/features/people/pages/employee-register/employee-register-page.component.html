@@ -208,7 +208,9 @@
                     @for (role of row.roles; track role.code) {
                       <span class="role-chip" [class.role-chip--global]="role.scope === 'GLOBAL'">
                         {{ role.code }}
-                        <span class="role-chip__scope">{{ 'PEOPLE.EMPLOYEE_REGISTER.SCOPE.' + role.scope | translate }}</span>
+                        @if (role.scope) {
+                          <span class="role-chip__scope">{{ 'PEOPLE.EMPLOYEE_REGISTER.SCOPE.' + role.scope | translate }}</span>
+                        }
                       </span>
                     }
                   </span>
@@ -398,7 +400,7 @@
         <button
           type="button"
           class="confirm-dialog__accept"
-          [disabled]="!assignmentEndDate()"
+          [disabled]="!assignmentEndDate() || readInFlight()"
           (click)="confirmDeactivate()"
         >
           {{ 'PEOPLE.EMPLOYEE_REGISTER.CONFIRM.ACCEPT' | translate }}

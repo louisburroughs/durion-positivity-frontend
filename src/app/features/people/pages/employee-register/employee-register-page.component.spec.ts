@@ -88,7 +88,10 @@ describe('EmployeeRegisterPageComponent', () => {
   const setup = async (
     options: { permissions?: string[] | null; search?: Observable<EmployeeRegisterPage> } = {},
   ) => {
-    vi.clearAllMocks();
+    // `clearAllMocks` clears CALLS but not queued `mockReturnValueOnce` values, so a test that
+    // queues two and consumes one hands the leftover to whichever test runs next — which is how
+    // a later test silently received a never-emitting Subject instead of its own `throwError`.
+    vi.resetAllMocks();
     // `?? ALL_PERMISSIONS` would convert an explicit `permissions: null` into the full list,
     // so the legacy-token test below would never reach the unknown-perm_bits branch and would
     // still pass if that fallback were deleted. Key presence is the test.
@@ -297,14 +300,17 @@ describe('EmployeeRegisterPageComponent', () => {
   });
 
   it("never lets one row's success erase another row's refusal", async () => {
-    await setup();
+    // Both rows must be in the loaded page: a confirm re-checks the CURRENT row, so acting on
+    // one the read does not contain would stand down and prove nothing.
+    const alsoActive = row({ employeeId: 'emp-5', personId: 'per-5', lastName: 'Cole' });
+    await setup({ search: of(page([STUB_ROWS[0], alsoActive])) });
     const failing = new Subject<unknown>();
     const succeeding = new Subject<unknown>();
     stubService.disableEmployee.mockReturnValueOnce(failing).mockReturnValueOnce(succeeding);
 
     component.openConfirm(STUB_ROWS[0]);
     component.confirmDeactivate();
-    component.openConfirm(row({ employeeId: 'emp-5', personId: 'per-5', lastName: 'Cole' }));
+    component.openConfirm(alsoActive);
     component.confirmDeactivate();
 
     failing.error(new HttpErrorResponse({ status: 409 }));
@@ -317,7 +323,7 @@ describe('EmployeeRegisterPageComponent', () => {
     fixture.detectChanges();
 
     expect(component.writeErrorFor(STUB_ROWS[0])).toBe('PEOPLE.EMPLOYEE_REGISTER.ERROR.CONFLICT');
-    expect(component.writeErrorFor(row({ employeeId: 'emp-5' }))).toBeNull();
+    expect(component.writeErrorFor(alsoActive)).toBeNull();
   });
 
   it('clears row refusals when the user asks for the page again', async () => {
@@ -443,14 +449,14 @@ describe('EmployeeRegisterPageComponent', () => {
   });
 
   it('settles both rows when two deactivations are confirmed concurrently', async () => {
-    await setup();
+    const other = row({ employeeId: 'emp-5', firstName: 'Terrence', lastName: 'Blake' });
+    await setup({ search: of(page([STUB_ROWS[0], other])) });
     const first = new Subject<unknown>();
     const second = new Subject<unknown>();
     stubService.disableEmployee.mockReturnValueOnce(first).mockReturnValueOnce(second);
 
     component.openConfirm(STUB_ROWS[0]);
     component.confirmDeactivate();
-    const other = row({ employeeId: 'emp-5', firstName: 'Terrence', lastName: 'Blake' });
     component.openConfirm(other);
     component.confirmDeactivate();
 
@@ -651,6 +657,245 @@ describe('EmployeeRegisterPageComponent', () => {
     // The action is named "Time for <employee>". Without the person on the URL it opens an
     // empty selection form, and the accessible name promises something the link cannot do.
     expect(timeLink?.getAttribute('href')).toContain('personId=per-1');
+  });
+
+  it('dismisses the confirm when the read invalidates its own row', async () => {
+    await setup();
+    component.openConfirm(STUB_ROWS[0]);
+    expect(component.confirmRow()?.employeeId).toBe('emp-1');
+
+    // Someone else disabled emp-1. The dialog is now offering an action the row cannot take,
+    // so it goes — asserted BEFORE confirmDeactivate, which closes it for its own reasons and
+    // would otherwise mask a dismissal that never happened.
+    stubService.searchEmployees.mockReturnValue(
+      of(page([row({ employeeId: 'emp-1', status: 'DISABLED', active: false })])),
+    );
+    component.reload();
+    fixture.detectChanges();
+
+    expect(component.confirmRow()).toBeNull();
+  });
+
+  it('confirms against the current row, not the snapshot the dialog captured', async () => {
+    await setup();
+    component.openConfirm(STUB_ROWS[0]);
+
+    // Deliberately NOT routed through reload(): a settled read dismisses the dialog itself, so
+    // driving this through `of(...)` would let the dismissal answer the test and it would pass
+    // with the snapshot re-check restored. Changing the cache directly leaves the dialog open
+    // and puts the question to `confirmDeactivate` alone.
+    component.allRows.set([row({ employeeId: 'emp-1', status: 'DISABLED', active: false })]);
+    expect(component.confirmRow()?.employeeId).toBe('emp-1');
+
+    component.confirmDeactivate();
+
+    expect(stubService.disableEmployee).not.toHaveBeenCalled();
+    expect(component.confirmRow()).toBeNull();
+  });
+
+  it('disables the accept button in the rendered dialog while a read is settling', async () => {
+    await setup();
+    const pending = new Subject<EmployeeRegisterPage>();
+    stubService.searchEmployees.mockReturnValue(pending);
+
+    component.openConfirm(STUB_ROWS[0]);
+    component.reload();
+    fixture.detectChanges();
+
+    // The method guard refuses regardless, so asserting through confirmDeactivate() would pass
+    // with this binding deleted — and the user would be looking at a live button that does
+    // nothing when clicked. This asserts the rendered control.
+    const accept = () =>
+      fixture.debugElement.query(By.css('.confirm-dialog__accept')).nativeElement as HTMLButtonElement;
+    expect(accept().disabled).toBe(true);
+
+    pending.next(page([STUB_ROWS[0]]));
+    fixture.detectChanges();
+    expect(accept().disabled).toBe(false);
+  });
+
+  it('parks focus on Cancel before a read disables the accept button, then hands it back', async () => {
+    await setup();
+    const toggle = fixture.debugElement.query(By.css('.status-switch')).nativeElement as HTMLElement;
+    toggle.focus();
+    toggle.click();
+    fixture.detectChanges();
+
+    const accept = fixture.debugElement.query(By.css('.confirm-dialog__accept'))
+      .nativeElement as HTMLButtonElement;
+    const cancel = fixture.debugElement.query(By.css('.confirm-dialog__cancel'))
+      .nativeElement as HTMLElement;
+    accept.focus();
+    expect(document.activeElement).toBe(accept);
+
+    // Row A's write settles and re-reads while row B's dialog is open and its accept focused.
+    // Disabling a focused control drops focus to <body>, and inside a modal that strands the
+    // keyboard user with nowhere to go (ADR-0029 §8.7).
+    const pending = new Subject<EmployeeRegisterPage>();
+    stubService.searchEmployees.mockReturnValue(pending);
+    component.reload();
+    fixture.detectChanges();
+
+    expect(document.activeElement).toBe(cancel);
+    expect(accept.disabled).toBe(true);
+
+    pending.next(page([STUB_ROWS[0]]));
+    fixture.detectChanges();
+    await new Promise(resolve => setTimeout(resolve));
+
+    expect(accept.disabled).toBe(false);
+    expect(document.activeElement).toBe(accept);
+  });
+
+  it('does not pull focus back if the user moved while the read was in flight', async () => {
+    await setup();
+    const toggle = fixture.debugElement.query(By.css('.status-switch')).nativeElement as HTMLElement;
+    toggle.focus();
+    toggle.click();
+    fixture.detectChanges();
+
+    const accept = fixture.debugElement.query(By.css('.confirm-dialog__accept'))
+      .nativeElement as HTMLButtonElement;
+    const dateInput = fixture.debugElement.query(By.css('.confirm-dialog__input'))
+      .nativeElement as HTMLElement;
+    accept.focus();
+
+    const pending = new Subject<EmployeeRegisterPage>();
+    stubService.searchEmployees.mockReturnValue(pending);
+    component.reload();
+    fixture.detectChanges();
+
+    // Focus is parked on Cancel — and then the user tabs on to the date field while the read
+    // is still settling. The handback has to respect that, or it yanks the cursor back.
+    dateInput.focus();
+
+    pending.next(page([STUB_ROWS[0]]));
+    fixture.detectChanges();
+    await new Promise(resolve => setTimeout(resolve));
+
+    expect(document.activeElement).toBe(dateInput);
+  });
+
+  it('leaves focus alone when the read starts while the user is elsewhere in the dialog', async () => {
+    await setup();
+    const toggle = fixture.debugElement.query(By.css('.status-switch')).nativeElement as HTMLElement;
+    toggle.focus();
+    toggle.click();
+    fixture.detectChanges();
+
+    const dateInput = fixture.debugElement.query(By.css('.confirm-dialog__input'))
+      .nativeElement as HTMLElement;
+    dateInput.focus();
+
+    const pending = new Subject<EmployeeRegisterPage>();
+    stubService.searchEmployees.mockReturnValue(pending);
+    component.reload();
+    fixture.detectChanges();
+
+    // Only the button being disabled justifies moving focus. Someone mid-way through typing a
+    // date must not have the cursor yanked out from under them by a background refresh.
+    expect(document.activeElement).toBe(dateInput);
+  });
+
+  it('closes an open confirm when the read behind it fails', async () => {
+    await setup();
+    component.openConfirm(STUB_ROWS[0]);
+    expect(component.confirmRow()?.employeeId).toBe('emp-1');
+
+    // A failed read replaces the table with a panel, so the dialog would be left floating over
+    // rows that are no longer shown. The existing read-error tests start with no dialog open,
+    // so none of them would notice if this dismissal were removed.
+    stubService.searchEmployees.mockReturnValue(throwError(() => new Error('down')));
+    component.reload();
+    fixture.detectChanges();
+
+    expect(component.confirmRow()).toBeNull();
+    expect(component.viewState()).toBe('error');
+  });
+
+  it('refuses to write while a read that could invalidate the row is still settling', async () => {
+    await setup();
+    const pending = new Subject<EmployeeRegisterPage>();
+    stubService.searchEmployees.mockReturnValue(pending);
+
+    component.openConfirm(STUB_ROWS[0]);
+    component.reload();
+
+    // `allRows` still holds the previous result here, so the row lookup would find the stale
+    // ACTIVE row and write on it. The click is refused rather than answered from old data.
+    component.confirmDeactivate();
+    expect(stubService.disableEmployee).not.toHaveBeenCalled();
+    expect(component.confirmRow()?.employeeId).toBe('emp-1'); // the dialog is kept, not lost
+    expect(component.readInFlight()).toBe(true);
+
+    // Once the read agrees the row is still switchable, the same click goes through.
+    pending.next(page([STUB_ROWS[0]]));
+    expect(component.readInFlight()).toBe(false);
+    component.confirmDeactivate();
+    expect(stubService.disableEmployee).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps one row's confirm open when another row's write reloads the page", async () => {
+    const other = row({ employeeId: 'emp-5', personId: 'per-5', lastName: 'Cole' });
+    await setup({ search: of(page([STUB_ROWS[0], other])) });
+
+    // Disable emp-1, then open the confirm for emp-5 while that write is settling.
+    const writing = new Subject<unknown>();
+    stubService.disableEmployee.mockReturnValue(writing);
+    component.openConfirm(STUB_ROWS[0]);
+    component.confirmDeactivate();
+    component.openConfirm(other);
+    expect(component.confirmRow()?.employeeId).toBe('emp-5');
+
+    // emp-1 settling re-reads the page. Closing on every read start tore emp-5's dialog away
+    // mid-interaction; a read that leaves emp-5 switchable is no reason to interrupt.
+    writing.next({});
+    writing.complete();
+    fixture.detectChanges();
+
+    expect(component.confirmRow()?.employeeId).toBe('emp-5');
+  });
+
+  it('stands down if the row vanished from the cache under an open confirm dialog', async () => {
+    await setup();
+    component.openConfirm(STUB_ROWS[0]);
+
+    // Same reason as the sibling test above: routed through `reload()` the dismissal clears the
+    // dialog first and `confirmDeactivate` returns at the empty-snapshot guard, so the missing-
+    // row branch of the lookup is never reached. The cache is changed directly instead.
+    component.allRows.set([STUB_ROWS[1]]);
+    expect(component.confirmRow()?.employeeId).toBe('emp-1');
+
+    component.confirmDeactivate();
+
+    expect(stubService.disableEmployee).not.toHaveBeenCalled();
+    expect(component.confirmRow()).toBeNull();
+  });
+
+  it('renders a role chip with an unknown scope without a suffix, not with a wrong one', async () => {
+    const mixed = row({
+      employeeId: 'emp-c',
+      roles: [
+        { code: 'SERVICE_MANAGER', scope: null },
+        { code: 'HR_ADMIN', scope: 'GLOBAL' },
+      ],
+    });
+    await setup({ search: of(page([mixed])) });
+
+    const chips = fixture.debugElement.queryAll(By.css('.role-chip'));
+    expect(chips.length).toBe(2);
+
+    // The service test only proves the mapper returns null; it would still pass with the
+    // template's @if deleted, which would resolve `SCOPE.null` and print a raw key or an
+    // empty suffix. This asserts the rendered branch.
+    expect(chips[0].nativeElement.textContent).toContain('SERVICE_MANAGER');
+    expect(chips[0].query(By.css('.role-chip__scope'))).toBeNull();
+
+    const known = chips[1].query(By.css('.role-chip__scope'));
+    expect(known?.nativeElement.textContent.trim()).toBe(
+      enUS.PEOPLE.EMPLOYEE_REGISTER.SCOPE.GLOBAL,
+    );
+    expect(fixture.nativeElement.textContent).not.toContain('SCOPE.');
   });
 
   // ── Row identity (round seven) ──────────────────────────────────────────────────────

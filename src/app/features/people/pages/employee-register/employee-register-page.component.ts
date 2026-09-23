@@ -103,6 +103,15 @@ export class EmployeeRegisterPageComponent implements OnInit {
    */
   readonly writeErrors = signal<ReadonlyMap<string, string>>(new Map());
 
+  /**
+   * True while a read is in flight. `allRows` deliberately holds the PREVIOUS result until the
+   * new one settles, so during that window the row lookup in `confirmDeactivate` is looking at
+   * data that may already be stale — it would find an ACTIVE row the in-flight read is about to
+   * report as DISABLED. The confirm refuses in that window rather than writing on a guess
+   * (ADR-0063); the dialog stays open and the accept re-enables when the read settles.
+   */
+  readonly readInFlight = signal(false);
+
   /** The row awaiting deactivate confirmation, or null (DECISION-PEOPLE-024). */
   readonly confirmRow = signal<EmployeeRegisterRow | null>(null);
   /**
@@ -111,6 +120,13 @@ export class EmployeeRegisterPageComponent implements OnInit {
    * page (ADR-0029 §8.7). Captured on open, restored once the dialog has unmounted.
    */
   private confirmOpener: HTMLElement | null = null;
+  /**
+   * Set when a read disables the accept button out from under the keyboard. Disabling a focused
+   * control drops focus to <body>, which inside a modal strands the user completely — so focus
+   * is parked on Cancel first and handed back once the button is live again (ADR-0029 §8.7,
+   * the same rule the dialog close obeys).
+   */
+  private acceptFocusParked = false;
   readonly assignmentEndDate = signal(toLocalIsoDate(new Date()));
 
   readonly statusFilters = STATUS_FILTERS;
@@ -326,6 +342,7 @@ export class EmployeeRegisterPageComponent implements OnInit {
    * to the search field — a stable control at the top of the page.
    */
   private closeConfirm(): void {
+    this.acceptFocusParked = false;
     const opener = this.confirmOpener;
     this.confirmOpener = null;
     this.confirmRow.set(null);
@@ -343,10 +360,22 @@ export class EmployeeRegisterPageComponent implements OnInit {
   }
 
   confirmDeactivate(): void {
-    const row = this.confirmRow();
+    const snapshot = this.confirmRow();
     const endDate = this.assignmentEndDate();
-    if (!row || !endDate) return;
-    if (!this.canSwitch(row)) {
+    if (!snapshot || !endDate) return;
+
+    // The dialog holds a SNAPSHOT taken when it opened, and a debounced search issued before
+    // the click can settle while it is open — replacing the rows underneath it. Re-checking
+    // the snapshot would then let a disable go out against a row the latest read already
+    // shows as DISABLED, sending the write a second time. Gate on the current row instead,
+    // and stand down if the read no longer has it (ADR-0063).
+    // Refuse while a read is settling: the lookup below would be answered from the previous
+    // result. The dialog stays open and the accept button is disabled, so the click is not
+    // lost — it just waits for the page to agree with the server.
+    if (this.readInFlight()) return;
+
+    const row = this.allRows().find(r => r.employeeId === snapshot.employeeId);
+    if (!row || !this.canSwitch(row)) {
       this.closeConfirm();
       return;
     }
@@ -391,6 +420,56 @@ export class EmployeeRegisterPageComponent implements OnInit {
     return !this.auth.permissionsKnown() || this.auth.hasAnyPermission(permissions);
   }
 
+  /**
+   * Moves focus off the accept button before a read disables it. Only acts when that button is
+   * the focused element — a read while the user is typing a date, or not in the dialog at all,
+   * must not steal focus from where they are.
+   */
+  private parkAcceptFocus(): void {
+    if (!this.confirmRow()) return;
+    const accept = this.document.querySelector<HTMLElement>('.confirm-dialog__accept');
+    if (!accept || this.document.activeElement !== accept) return;
+    this.document.querySelector<HTMLElement>('.confirm-dialog__cancel')?.focus();
+    this.acceptFocusParked = true;
+  }
+
+  /**
+   * Hands focus back once the read has settled and the button is enabled again — but only if
+   * the user has not moved in the meantime. The park is guarded on where focus is; the handback
+   * has to be too, or a reader who tabbed into the date field while the read was in flight gets
+   * the cursor pulled out from under them on settle (ADR-0029 §8.7).
+   */
+  private restoreAcceptFocus(): void {
+    if (!this.acceptFocusParked) return;
+    this.acceptFocusParked = false;
+    if (!this.confirmRow()) return;
+    const parkedOn = this.document.querySelector<HTMLElement>('.confirm-dialog__cancel');
+    const active = this.document.activeElement;
+    if (active !== parkedOn && active !== this.document.body && active !== null) return;
+    // The binding re-enables on the next change detection, and focus() is a no-op on a
+    // disabled control, so the handback waits for it.
+    setTimeout(() => {
+      const accept = this.document.querySelector<HTMLButtonElement>('.confirm-dialog__accept');
+      if (accept && !accept.disabled) accept.focus();
+    });
+  }
+
+  /**
+   * Closes an open confirm only when the read that just settled actually invalidated ITS row.
+   *
+   * Closing on every read start was the wider version of this guard: `load()` also runs after a
+   * successful write, so disabling row A tore down a dialog the user had since opened for row B.
+   * A read that leaves B switchable is no reason to interrupt them; one that disables or removes
+   * B is. `confirmDeactivate` re-checks the current row regardless, so this is about not
+   * interrupting the user rather than about safety.
+   */
+  private dismissConfirmIfInvalidated(): void {
+    const open = this.confirmRow();
+    if (!open) return;
+    const current = this.allRows().find(r => r.employeeId === open.employeeId);
+    if (!current || !this.canSwitch(current)) this.closeConfirm();
+  }
+
   private setWriteError(employeeId: string, key: string | null): void {
     const next = new Map(this.writeErrors());
     if (key) next.set(employeeId, key);
@@ -406,10 +485,11 @@ export class EmployeeRegisterPageComponent implements OnInit {
   }
 
   private load(): void {
-    if (this.confirmRow()) this.closeConfirm();
     this.loadSub?.unsubscribe();
     const seq = ++this.readSeq;
 
+    this.readInFlight.set(true);
+    this.parkAcceptFocus();
     this.state.set('loading');
     this.errorKey.set(null);
 
@@ -421,6 +501,8 @@ export class EmployeeRegisterPageComponent implements OnInit {
       .subscribe({
         next: page => {
           if (seq !== this.readSeq) return; // superseded read — never writes
+          this.readInFlight.set(false);
+          this.restoreAcceptFocus();
           this.allRows.set(page.rows);
           this.totalElements.set(page.totalElements);
           // A re-read after a write can return fewer rows than the current page starts at —
@@ -430,9 +512,14 @@ export class EmployeeRegisterPageComponent implements OnInit {
           if (this.pageIndex() > lastPage) this.pageIndex.set(lastPage);
           this.state.set(page.rows.length ? 'ready' : 'empty');
           this.errorKey.set(null);
+          this.dismissConfirmIfInvalidated();
         },
         error: (err: unknown) => {
           if (seq !== this.readSeq) return;
+          this.readInFlight.set(false);
+          // A failed read replaces the table with a panel, so any open confirm is floating
+          // over rows that are no longer shown.
+          if (this.confirmRow()) this.closeConfirm();
           if (err instanceof HttpErrorResponse && err.status === 403) {
             this.state.set('forbidden');
             this.errorKey.set(null);

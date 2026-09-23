@@ -183,6 +183,38 @@ describe('EmployeeRegisterService', () => {
     expect(emitted.status).toBe(EmployeeProfileDtoStatusEnum.Disabled);
   });
 
+  it('withholds the scope suffix rather than asserting LOCATION for an unknown scope', async () => {
+    employeeApi.searchEmployees.mockReturnValue(
+      of({
+        items: [
+          {
+            ...thin,
+            roleAssignments: [
+              { roleCode: 'SERVICE_MANAGER', scope: 'REGION' },
+              { roleCode: 'HR_ADMIN', scope: null },
+              { roleCode: 'DISPATCHER', scope: 'GLOBAL' },
+            ],
+          },
+        ],
+        page: 0,
+        size: 200,
+        totalElements: 1,
+        totalPages: 1,
+      }),
+    );
+
+    const { rows } = await firstValueFrom(service.searchEmployees(undefined, 200));
+
+    // Defaulting an unrecognised scope to LOCATION rendered "· L" — the page asserting a
+    // scope check it never made (DECISION-PEOPLE-003). The role is real, so it is kept;
+    // only the claim about its scope is withheld.
+    expect(rows[0].roles).toEqual([
+      { code: 'SERVICE_MANAGER', scope: null },
+      { code: 'HR_ADMIN', scope: null },
+      { code: 'DISPATCHER', scope: 'GLOBAL' },
+    ]);
+  });
+
   it('reads absence at the nested level too, not just the group level', async () => {
     employeeApi.searchEmployees.mockReturnValue(
       of({

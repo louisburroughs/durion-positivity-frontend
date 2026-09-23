@@ -27,8 +27,18 @@ function toStatus(raw: string | undefined): EmploymentStatus | null {
   return found ?? null;
 }
 
-function toScope(raw: string | null | undefined): RoleScope {
-  return raw === 'GLOBAL' ? 'GLOBAL' : 'LOCATION';
+/**
+ * An unrecognised scope is NOT location-scoped. Defaulting it there turned a malformed or
+ * partial assignment into an asserted location role — the chip would read `· L` and the
+ * viewer would believe the scope had been checked (DECISION-PEOPLE-003).
+ *
+ * Dropping the assignment would hide a role the employee genuinely holds, so the role is
+ * kept and only the scope suffix is withheld.
+ */
+function toScope(raw: string | null | undefined): RoleScope | null {
+  if (raw === 'GLOBAL') return 'GLOBAL';
+  if (raw === 'LOCATION') return 'LOCATION';
+  return null;
 }
 
 function toRoleChips(
