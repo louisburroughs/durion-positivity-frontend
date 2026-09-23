@@ -333,6 +333,22 @@ describe('PeopleService', () => {
       expect(result).toBeNull();
     });
 
+    it('getPersonPostalAddress() no longer reads a 404 as "no address"', () => {
+      postalAddressApiStub.getPersonPostalAddress.mockReturnValue(
+        throwError(() => new HttpErrorResponse({ status: 404 })),
+      );
+      let result: PostalAddressDto | null | undefined;
+      let status: number | undefined;
+
+      service.getPersonPostalAddress(personId).subscribe({
+        next: r => (result = r),
+        error: (e: HttpErrorResponse) => (status = e.status),
+      });
+
+      expect(result).toBeUndefined();
+      expect(status).toBe(404);
+    });
+
     it('getPersonPostalAddress() passes a failure through', () => {
       postalAddressApiStub.getPersonPostalAddress.mockReturnValue(
         throwError(() => new HttpErrorResponse({ status: 500 })),
