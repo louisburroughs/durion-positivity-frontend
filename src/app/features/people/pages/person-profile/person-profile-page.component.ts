@@ -14,7 +14,7 @@ import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
-import { Observable, concatMap, forkJoin, map, of } from 'rxjs';
+import { Observable, Subscription, concatMap, forkJoin, map, of } from 'rxjs';
 import {
   ContactPointDto,
   ContactPointDtoContactTypeEnum,
@@ -78,6 +78,8 @@ export class PersonProfilePageComponent {
   readonly saveSuccess = signal(false);
   /** ADR-0063: bumped per save and on a route change, so a superseded save cannot land. */
   private saveSeq = 0;
+  /** The in-flight write chain; a route change unsubscribes it so no later step is issued. */
+  private saveSub: Subscription | null = null;
 
   /** ADR-0040 §6a: a read permission never enables a write; unknown perm_bits fall back to allow. */
   readonly canEdit = computed(() =>
@@ -117,6 +119,8 @@ export class PersonProfilePageComponent {
       if (untracked(this.profile)?.person.id !== personId) {
         this.profile.set(null);
         this.saveSeq++;
+        this.saveSub?.unsubscribe();
+        this.saveSub = null;
         this.saving.set(false);
         this.saveSuccess.set(false);
       }
@@ -232,7 +236,7 @@ export class PersonProfilePageComponent {
     const seq = ++this.saveSeq;
     this.saving.set(true);
     this.saveSuccess.set(false);
-    this.peopleService.updatePerson(personId, identity).pipe(
+    this.saveSub = this.peopleService.updatePerson(personId, identity).pipe(
       concatMap(() => this.peopleService.replaceContactPoints(personId, contactPoints)),
       concatMap(() => this.writeAddress(personId, address, current.address !== null)),
       takeUntilDestroyed(this.destroyRef),

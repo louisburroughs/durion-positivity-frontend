@@ -1013,7 +1013,7 @@
       },
       "ADD_CONTACT": "Add contact point",
       "REMOVE_CONTACT": "Remove",
-      "REMOVE_CONTACT_ARIA": "Remove contact point {{index}}",
+      "REMOVE_CONTACT_ARIA": "Remove contact point {{index}} ({{type}})",
       "ADDRESS_LEGEND": "Postal address",
       "ADDRESS_HINT": "Optional. If you enter an address, line 1 and a two-letter country code are required.",
       "FIELD_LINE1": "Address line 1",
@@ -1034,7 +1034,8 @@
         "CONTACT_VALUE_REQUIRED": "Enter a value or remove this contact point.",
         "COUNTRY_INVALID": "Use a two-letter country code, such as US.",
         "ADDRESS_INCOMPLETE": "Address line 1 and country code are required when an address is entered."
-      }
+      },
+      "CONTACT_ROW_ARIA": "Contact point {{index}}: {{type}}"
     }
   },
   "CRM": {

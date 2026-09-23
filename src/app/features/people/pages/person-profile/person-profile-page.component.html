@@ -83,7 +83,8 @@
 
         <ul class="contact-list">
           @for (cp of contactPoints.controls; track cp; let i = $index) {
-            <li class="contact-row" [formGroupName]="i" data-testid="contact-point-row">
+            <li class="contact-row" [formGroupName]="i" data-testid="contact-point-row" role="group"
+              [attr.aria-label]="'PEOPLE.PERSON_PROFILE.CONTACT_ROW_ARIA' | translate: { index: i + 1, type: ('PEOPLE.PERSON_PROFILE.CONTACT_TYPE.' + cp.controls.contactType.value | translate) }">
               <div class="field-row">
                 <label [for]="'contact-type-' + i">{{ 'PEOPLE.PERSON_PROFILE.FIELD_CONTACT_TYPE' | translate }}</label>
                 <select [id]="'contact-type-' + i" formControlName="contactType" (change)="onPrimaryChange(i)">
@@ -106,7 +107,7 @@
               </div>
               @if (canEdit()) {
                 <button type="button" class="btn btn--ghost" data-testid="remove-contact-point" [disabled]="!editable()" (click)="removeContactPoint(i)"
-                  [attr.aria-label]="'PEOPLE.PERSON_PROFILE.REMOVE_CONTACT_ARIA' | translate: { index: i + 1 }">
+                  [attr.aria-label]="'PEOPLE.PERSON_PROFILE.REMOVE_CONTACT_ARIA' | translate: { index: i + 1, type: ('PEOPLE.PERSON_PROFILE.CONTACT_TYPE.' + cp.controls.contactType.value | translate) }">
                   {{ 'PEOPLE.PERSON_PROFILE.REMOVE_CONTACT' | translate }}
                 </button>
               }

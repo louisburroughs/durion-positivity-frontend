@@ -271,6 +271,23 @@ describe('PersonProfilePageComponent', () => {
       expect(stubService.updatePerson).not.toHaveBeenCalled();
     });
 
+    it('cancels the in-flight write chain when navigating to another person', async () => {
+      await setup();
+      const identity$ = new Subject<Person>();
+      stubService.updatePerson.mockReturnValue(identity$);
+      component.save();
+      stubService.getPersonWithContactPoints.mockReturnValue(new Subject<Person | null>());
+
+      params$.next(convertToParamMap({ personId: OTHER_ID }));
+      fixture.detectChanges();
+      expect(identity$.observed).toBe(false);
+      identity$.next(person);
+      identity$.complete();
+
+      expect(stubService.replaceContactPoints).not.toHaveBeenCalled();
+      expect(stubService.putPersonPostalAddress).not.toHaveBeenCalled();
+    });
+
     it('discards a save that completes after navigating to another person', async () => {
       await setup();
       const identity$ = new Subject<Person>();
@@ -401,6 +418,22 @@ describe('PersonProfilePageComponent', () => {
 
     expect(component.contactPoints.at(0).controls.primary.value).toBe(false);
     expect(component.contactPoints.at(1).controls.primary.value).toBe(true);
+  });
+
+  it('names each contact row and its remove button by index and type (ADR-0029 §8.12)', async () => {
+    await setup();
+    const fill = (key: string, index: number, type: string) =>
+      key.replace('{{index}}', String(index)).replace('{{type}}', type);
+    const types = enUS.PEOPLE.PERSON_PROFILE.CONTACT_TYPE;
+    const rows = el.querySelectorAll('[data-testid="contact-point-row"]');
+    const removes = el.querySelectorAll('[data-testid="remove-contact-point"]');
+
+    expect(rows[0].getAttribute('role')).toBe('group');
+    expect(rows[0].getAttribute('aria-label')).toBe(fill(enUS.PEOPLE.PERSON_PROFILE.CONTACT_ROW_ARIA, 1, types.EMAIL));
+    expect(rows[1].getAttribute('aria-label')).toBe(fill(enUS.PEOPLE.PERSON_PROFILE.CONTACT_ROW_ARIA, 2, types.PHONE_WORK));
+    expect(removes[2].getAttribute('aria-label')).toBe(fill(enUS.PEOPLE.PERSON_PROFILE.REMOVE_CONTACT_ARIA, 3, types.PHONE_MOBILE));
+    // Label in Name: the visible "Remove" text starts the accessible name.
+    expect(removes[2].getAttribute('aria-label')?.startsWith(enUS.PEOPLE.PERSON_PROFILE.REMOVE_CONTACT)).toBe(true);
   });
 
   it('moves focus to the add button after removing a contact point', async () => {
