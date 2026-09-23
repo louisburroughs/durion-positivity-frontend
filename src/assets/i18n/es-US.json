@@ -7013,7 +7013,8 @@
       "VOID_REFUND": "Anular reembolso",
       "WIP_STATUS": "Estado de trabajo en curso",
       "WORKORDERS": "Órdenes de trabajo",
-      "WORK_SESSION": "Sesión de trabajo"
+      "WORK_SESSION": "Sesión de trabajo",
+      "PERSON": "Persona"
     }
   },
   "POSITIVITY": {

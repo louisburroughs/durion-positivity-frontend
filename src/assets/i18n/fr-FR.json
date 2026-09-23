@@ -7013,7 +7013,8 @@
       "VOID_REFUND": "Annuler le remboursement",
       "WIP_STATUS": "État des travaux en cours",
       "WORKORDERS": "Ordres de travail",
-      "WORK_SESSION": "Séance de travail"
+      "WORK_SESSION": "Séance de travail",
+      "PERSON": "Personne"
     }
   },
   "POSITIVITY": {

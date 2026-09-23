@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach, vi } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { Observable, Subject, of, throwError } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, of, throwError } from 'rxjs';
 import {
   ContactPointDtoContactTypeEnum,
   Person,
@@ -62,6 +62,7 @@ describe('PersonProfilePageComponent', () => {
   let fixture: ComponentFixture<PersonProfilePageComponent>;
   let component: PersonProfilePageComponent;
   let el: HTMLElement;
+  let params$: BehaviorSubject<ReturnType<typeof convertToParamMap>>;
 
   const setup = async (
     options: {
@@ -71,6 +72,7 @@ describe('PersonProfilePageComponent', () => {
     } = {},
   ) => {
     vi.resetAllMocks();
+    params$ = new BehaviorSubject(convertToParamMap({ personId: PERSON_ID }));
     session.permissions = 'permissions' in options
       ? (options.permissions ?? null)
       : [VIEW_PERMISSION, EDIT_PERMISSION];
@@ -90,7 +92,7 @@ describe('PersonProfilePageComponent', () => {
         {
           provide: ActivatedRoute,
           useValue: {
-            paramMap: of(convertToParamMap({ personId: PERSON_ID })),
+            paramMap: params$,
             snapshot: { paramMap: convertToParamMap({ personId: PERSON_ID }) },
           },
         },
@@ -215,6 +217,79 @@ describe('PersonProfilePageComponent', () => {
     expect(stubService.replaceContactPoints).toHaveBeenCalled();
   });
 
+  it('does not start the address write until the contact-point write lands', async () => {
+    await setup();
+    const contacts$ = new Subject<void>();
+    stubService.replaceContactPoints.mockReturnValue(contacts$);
+
+    component.save();
+    expect(stubService.replaceContactPoints).toHaveBeenCalled();
+    expect(stubService.putPersonPostalAddress).not.toHaveBeenCalled();
+
+    contacts$.next();
+    contacts$.complete();
+    expect(stubService.putPersonPostalAddress).toHaveBeenCalled();
+  });
+
+  it('refuses a whitespace-only name, since the payload is trimmed', async () => {
+    await setup();
+    component.form.controls.lastName.setValue('   ');
+
+    component.save();
+    fixture.detectChanges();
+
+    expect(stubService.updatePerson).not.toHaveBeenCalled();
+    expect(q('validation-last-name')?.textContent?.trim()).toBe(enUS.PEOPLE.PERSON_PROFILE.ERROR.LAST_NAME_REQUIRED);
+  });
+
+  it('clears a success banner when the readback after a save fails', async () => {
+    await setup();
+    stubService.getPersonWithContactPoints.mockReturnValue(throwError(() => new Error('boom')));
+
+    component.save();
+    fixture.detectChanges();
+
+    expect(component.saveSuccess()).toBe(false);
+    expect(component.errorKey()).toBe('PEOPLE.PERSON_PROFILE.ERROR.LOAD');
+  });
+
+  describe('route change (ADR-0063)', () => {
+    const OTHER_ID = '01960011-0000-7000-8000-000000000020';
+
+    it('drops the previous person before the new read lands', async () => {
+      await setup();
+      const next$ = new Subject<Person | null>();
+      stubService.getPersonWithContactPoints.mockReturnValue(next$);
+
+      params$.next(convertToParamMap({ personId: OTHER_ID }));
+      fixture.detectChanges();
+
+      expect(stubService.getPersonWithContactPoints).toHaveBeenLastCalledWith(OTHER_ID);
+      expect(component.profile()).toBeNull();
+      expect(el.querySelector('form')).toBeNull();
+      component.save();
+      expect(stubService.updatePerson).not.toHaveBeenCalled();
+    });
+
+    it('discards a save that completes after navigating to another person', async () => {
+      await setup();
+      const identity$ = new Subject<Person>();
+      stubService.updatePerson.mockReturnValue(identity$);
+      component.save();
+      stubService.getPersonWithContactPoints.mockReturnValue(new Subject<Person | null>());
+
+      params$.next(convertToParamMap({ personId: OTHER_ID }));
+      fixture.detectChanges();
+      identity$.next(person);
+      identity$.complete();
+      fixture.detectChanges();
+
+      expect(component.saveSuccess()).toBe(false);
+      expect(component.saving()).toBe(false);
+      expect(stubService.getPersonWithContactPoints).toHaveBeenCalledTimes(2);
+    });
+  });
+
   it('deletes the address when every address field is cleared', async () => {
     await setup();
     component.form.controls.address.setValue({
@@ -322,6 +397,10 @@ describe('PersonProfilePageComponent', () => {
       component.save();
       component.addContactPoint();
       component.removeContactPoint(0);
+      component.contactPoints.at(2).controls.primary.setValue(true, { emitEvent: false });
+      component.contactPoints.at(2).controls.contactType.setValue(ContactPointDtoContactTypeEnum.Email);
+      component.onPrimaryChange(2);
+      expect(component.contactPoints.at(0).controls.primary.value).toBe(true);
 
       expect(stubService.updatePerson).not.toHaveBeenCalled();
       expect(component.contactPoints.length).toBe(3);

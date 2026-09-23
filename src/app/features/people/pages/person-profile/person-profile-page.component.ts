@@ -7,6 +7,7 @@ import {
   effect,
   inject,
   signal,
+  untracked,
   viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
@@ -26,6 +27,9 @@ import { PEOPLE_SECTION } from '../../../../core/security/route-permissions';
 import { PeopleService } from '../../services/people.service';
 
 type PageState = 'idle' | 'loading' | 'ready' | 'error';
+
+/** `Validators.required` passes whitespace, but the payload is trimmed, so blank must fail here. */
+const NOT_BLANK = Validators.pattern(/\S/);
 
 type ContactPointForm = FormGroup<{
   contactType: FormControl<ContactPointDtoContactTypeEnum>;
@@ -72,6 +76,8 @@ export class PersonProfilePageComponent {
   readonly hasCachedData = computed(() => this.profile() !== null);
   readonly saving = signal(false);
   readonly saveSuccess = signal(false);
+  /** ADR-0063: bumped per save and on a route change, so a superseded save cannot land. */
+  private saveSeq = 0;
 
   /** ADR-0040 §6a: a read permission never enables a write; unknown perm_bits fall back to allow. */
   readonly canEdit = computed(() =>
@@ -80,8 +86,8 @@ export class PersonProfilePageComponent {
   private readonly addContactButton = viewChild<ElementRef<HTMLButtonElement>>('addContactButton');
 
   readonly form = new FormGroup({
-    firstName: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    lastName: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    firstName: new FormControl('', { nonNullable: true, validators: [Validators.required, NOT_BLANK] }),
+    lastName: new FormControl('', { nonNullable: true, validators: [Validators.required, NOT_BLANK] }),
     contactPoints: new FormArray<ContactPointForm>([]),
     address: new FormGroup({
       line1: new FormControl('', { nonNullable: true }),
@@ -100,6 +106,14 @@ export class PersonProfilePageComponent {
     effect((onCleanup) => {
       const personId = this.personId();
       this.reloadTick();
+      // ADR-0063 §7: a new route key drops the previous person's data and any save
+      // still in flight for them before the new read is issued.
+      if (untracked(this.profile)?.person.id !== personId) {
+        this.profile.set(null);
+        this.saveSeq++;
+        this.saving.set(false);
+        this.saveSuccess.set(false);
+      }
       if (!personId) {
         this.state.set('error');
         this.errorKey.set('PEOPLE.PERSON_PROFILE.ERROR.NOT_FOUND');
@@ -123,6 +137,7 @@ export class PersonProfilePageComponent {
           this.errorKey.set(null);
         },
         error: () => {
+          this.saveSuccess.set(false);
           this.state.set('error');
           this.errorKey.set('PEOPLE.PERSON_PROFILE.ERROR.LOAD');
         },
@@ -166,6 +181,7 @@ export class PersonProfilePageComponent {
 
   /** Only one primary per contact type: checking one clears the others of the same type. */
   onPrimaryChange(index: number): void {
+    if (!this.canEdit()) return;
     const changed = this.contactPoints.at(index);
     if (!changed.controls.primary.value) return;
     const type = changed.controls.contactType.value;
@@ -202,6 +218,7 @@ export class PersonProfilePageComponent {
       phoneNumbers: orderPrimaryFirst(contactPoints, ContactPointDtoContactTypeEnum.PhoneWork),
     };
 
+    const seq = ++this.saveSeq;
     this.saving.set(true);
     this.saveSuccess.set(false);
     this.peopleService.updatePerson(personId, identity).pipe(
@@ -210,6 +227,7 @@ export class PersonProfilePageComponent {
       takeUntilDestroyed(this.destroyRef),
     ).subscribe({
       next: () => {
+        if (seq !== this.saveSeq) return;
         this.saving.set(false);
         this.saveSuccess.set(true);
         this.state.set('ready');
@@ -218,6 +236,7 @@ export class PersonProfilePageComponent {
         this.reload();
       },
       error: () => {
+        if (seq !== this.saveSeq) return;
         this.saving.set(false);
         this.state.set('error');
         this.errorKey.set('PEOPLE.PERSON_PROFILE.ERROR.SAVE');

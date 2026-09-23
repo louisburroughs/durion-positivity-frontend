@@ -7013,7 +7013,8 @@
       "VOID_REFUND": "Void Refund",
       "WIP_STATUS": "Wip Status",
       "WORKORDERS": "Workorders",
-      "WORK_SESSION": "Work Session"
+      "WORK_SESSION": "Work Session",
+      "PERSON": "Person"
     }
   },
   "POSITIVITY": {
