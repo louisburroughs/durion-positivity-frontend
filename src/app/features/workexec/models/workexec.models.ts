@@ -382,13 +382,18 @@ export interface WorkorderTransition {
 }
 
 /** operationId: getOperationalContext */
+/** Mirrors the SDK `OperationalContextResponse` that `getOperationalContext` returns. */
 export interface OperationalContextResponse {
-  workorderId?: string;
+  assignedMechanics?: string[];
+  assignedResources?: string[];
+  constraints?: string[];
+  locationId?: string;
+  locked?: boolean;
+  resourceId?: string;
+  resourceType?: 'BAY' | 'MOBILE_UNIT' | 'HOLD' | string;
+  scheduledEndAt?: string;
+  scheduledStartAt?: string;
   version?: string;
-  shopId?: string;
-  technicianId?: string;
-  authorities?: string[];
-  startedAt?: string;
 }
 
 // ── CAP-004/005: Technician assignment (Stories 225, 231) ────────────────────

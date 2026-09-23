@@ -1,11 +1,13 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { OperationalContextPageComponent } from './operational-context-page.component';
 import { WorkexecService } from '../../services/workexec.service';
+import { OperationalContextResponse } from '../../models/workexec.models';
+import enUS from '../../../../../assets/i18n/en-US.json';
 
 const stubWorkexecService = {
   getOperationalContext: vi.fn(),
@@ -95,5 +97,57 @@ describe('OperationalContextPageComponent [CAP-140]', () => {
 
     const banner = fixture.debugElement.query(By.css('.success-banner'));
     expect(banner).toBeTruthy();
+  });
+
+  describe('related-entity ids are never rendered (issue #285)', () => {
+    const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+    const context: OperationalContextResponse = {
+      locationId: '01a0a459-65b0-7609-b8a2-58332d3af186',
+      resourceId: '01a0a459-65b0-7609-b8a2-58332d3af187',
+      resourceType: 'BAY',
+      assignedMechanics: ['01a0a459-65b0-7609-b8a2-58332d3af188', '01a0a459-65b0-7609-b8a2-58332d3af189'],
+      assignedResources: [],
+      constraints: ['LIFT_REQUIRED'],
+      locked: true,
+      scheduledStartAt: '2026-09-23T14:00:00Z',
+      version: '01a0a459-65b0-7609-b8a2-58332d3af190',
+    };
+
+    const setupWithBundle = async () => {
+      await setup();
+      stubWorkexecService.getOperationalContext.mockReturnValue(of(context));
+      // ADR-0035 §8: copy asserted against the shipped bundle.
+      const translate = TestBed.inject(TranslateService);
+      translate.setTranslation('en-US', enUS);
+      translate.use('en-US');
+      component.loadContext();
+      fixture.detectChanges();
+    };
+
+    it('renders translated labels and counts instead of ids', async () => {
+      await setupWithBundle();
+      const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+      const ops = enUS.WORKEXEC.OPS_CONTEXT;
+
+      expect(text).not.toMatch(UUID);
+      expect(text).toContain(ops.FIELD.ASSIGNED_MECHANICS);
+      expect(text).toContain(ops.ASSIGNED_COUNT.replace('{{count}}', '2'));
+      expect(text).toContain(ops.RESOURCE_TYPE.BAY);
+      expect(text).toContain(ops.LOCKED_YES);
+      expect(text).toContain('LIFT_REQUIRED');
+      // Raw DTO keys are no longer echoed as labels.
+      expect(text).not.toContain('locationId');
+    });
+
+    it('shows the empty placeholder for an unknown resource type and a missing date', async () => {
+      await setupWithBundle();
+      stubWorkexecService.getOperationalContext.mockReturnValue(of({ ...context, resourceType: 'SOMETHING_NEW', scheduledStartAt: undefined }));
+      component.loadContext();
+      fixture.detectChanges();
+      const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+
+      expect(text).not.toContain('SOMETHING_NEW');
+      expect(text).toContain(enUS.COMMON.EMPTY_VALUE);
+    });
   });
 });

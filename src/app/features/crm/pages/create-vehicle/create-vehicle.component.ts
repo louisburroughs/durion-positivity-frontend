@@ -1,4 +1,5 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, DestroyRef, inject, signal, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
@@ -20,10 +21,16 @@ export class CreateVehicleComponent implements OnInit {
   private readonly crm    = inject(CrmService);
   private readonly route  = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly state            = signal<PageState>('idle');
   readonly createdVehicleId = signal<string | null>(null);
   readonly serverError      = signal<string | null>(null);
+  /**
+   * Display name for the subtitle (issue #285: never the route UUID). An enrichment
+   * read: when it fails the subtitle names "this party" instead, true either way.
+   */
+  readonly partyName        = signal<string | null>(null);
 
   readonly form = this.fb.nonNullable.group({
     vin:        ['', Validators.required],
@@ -38,7 +45,16 @@ export class CreateVehicleComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    if (!this.partyId) this.router.navigate(['/app/crm']);
+    if (!this.partyId) {
+      this.router.navigate(['/app/crm']);
+      return;
+    }
+    this.crm.getParty(this.partyId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: party => this.partyName.set(party.dba?.trim() || party.legalName?.trim() || null),
+        error: () => this.partyName.set(null),
+      });
   }
 
   submit(): void {

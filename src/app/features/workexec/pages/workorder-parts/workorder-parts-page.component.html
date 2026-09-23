@@ -7,7 +7,7 @@
 
   @if (pageState() === 'ready') {
     <header class="page-header">
-      <p class="page-overline">{{ 'WORKEXEC.WORKORDER_COMMON.WO_OVERLINE' | translate: { id: workorderId() } }}</p>
+      <p class="page-overline" data-testid="wo-overline">@if (workorder()?.workorderNumber; as workorderNumber) { {{ 'WORKEXEC.WORKORDER_COMMON.WO_OVERLINE' | translate: { id: workorderNumber } }} } @else { {{ 'WORKEXEC.WORKORDER_COMMON.WORK_ORDER' | translate }} }</p>
       <h1 id="parts-heading">{{ 'WORKEXEC.WORKORDER_PARTS.TITLE' | translate }}</h1>
     </header>
 

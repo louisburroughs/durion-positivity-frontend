@@ -13,7 +13,7 @@
     <header class="page-header">
       <button class="btn btn--ghost btn--sm" type="button" (click)="backToParty()">{{ 'CRM.CREATE_VEHICLE.BACK_TO_PARTY_ARROW' | translate }}</button>
       <h1 id="page-heading">{{ 'CRM.CREATE_VEHICLE.TITLE' | translate }}</h1>
-      <p class="page-subtitle">{{ 'CRM.CREATE_VEHICLE.SUBTITLE' | translate }} <code>{{ partyId }}</code></p>
+      <p class="page-subtitle" data-testid="page-subtitle">@if (partyName(); as name) { {{ 'CRM.CREATE_VEHICLE.SUBTITLE_FOR' | translate: { name } }} } @else { {{ 'CRM.CREATE_VEHICLE.SUBTITLE' | translate }} }</p>
     </header>
 
     @if (isError && serverError()) {

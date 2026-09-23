@@ -1348,7 +1348,7 @@
       "BACK_TO_PARTY": "Volver a la parte",
       "BACK_TO_PARTY_ARROW": "← Volver a la parte",
       "TITLE": "Agregar vehículo",
-      "SUBTITLE": "Asocie un vehículo con la parte",
+      "SUBTITLE": "Asocie un vehículo con esta parte",
       "FORM_ARIA": "Formulario para agregar un vehículo",
       "DETAILS_LEGEND": "Datos del vehículo",
       "FIELD_VIN": "VIN",
@@ -1370,7 +1370,8 @@
       "ERROR": {
         "VIN_REQUIRED": "El VIN es obligatorio.",
         "CREATE_FAILED": "No se pudo agregar el vehículo ({{status}})."
-      }
+      },
+      "SUBTITLE_FOR": "Asocie un vehículo con {{name}}"
     },
     "CUSTOMER_LIST": {
       "TITLE": "Cuentas y partes",
@@ -4929,7 +4930,24 @@
       "REASON": "Motivo",
       "SUBMIT": "Enviar anulación",
       "CLOSE": "Cerrar",
-      "SAVED": "Anulación guardada."
+      "SAVED": "Anulación guardada.",
+      "FIELD": {
+        "RESOURCE_TYPE": "Tipo de recurso",
+        "SCHEDULED_START": "Inicio programado",
+        "SCHEDULED_END": "Fin programado",
+        "LOCKED": "Bloqueado",
+        "CONSTRAINTS": "Restricciones",
+        "ASSIGNED_MECHANICS": "Mecánicos asignados",
+        "ASSIGNED_RESOURCES": "Recursos asignados"
+      },
+      "RESOURCE_TYPE": {
+        "BAY": "Bahía",
+        "MOBILE_UNIT": "Unidad móvil",
+        "HOLD": "En espera"
+      },
+      "LOCKED_YES": "Sí",
+      "LOCKED_NO": "No",
+      "ASSIGNED_COUNT": "{{count}} asignados"
     },
     "ERROR": {
       "ESTIMATE_OR_APPROVAL_NOT_FOUND": "No se encontró el presupuesto o la aprobación.",

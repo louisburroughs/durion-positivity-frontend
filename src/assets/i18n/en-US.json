@@ -1348,7 +1348,7 @@
       "BACK_TO_PARTY": "Back to Party",
       "BACK_TO_PARTY_ARROW": "← Back to Party",
       "TITLE": "Add Vehicle",
-      "SUBTITLE": "Associate a vehicle with party",
+      "SUBTITLE": "Associate a vehicle with this party",
       "FORM_ARIA": "Add vehicle form",
       "DETAILS_LEGEND": "Vehicle Details",
       "FIELD_VIN": "VIN",
@@ -1370,7 +1370,8 @@
       "ERROR": {
         "VIN_REQUIRED": "VIN is required.",
         "CREATE_FAILED": "Vehicle creation failed ({{status}})."
-      }
+      },
+      "SUBTITLE_FOR": "Associate a vehicle with {{name}}"
     },
     "CUSTOMER_LIST": {
       "TITLE": "Accounts & Parties",
@@ -4929,7 +4930,24 @@
       "REASON": "Reason",
       "SUBMIT": "Submit override",
       "CLOSE": "Close",
-      "SAVED": "Override saved."
+      "SAVED": "Override saved.",
+      "FIELD": {
+        "RESOURCE_TYPE": "Resource type",
+        "SCHEDULED_START": "Scheduled start",
+        "SCHEDULED_END": "Scheduled end",
+        "LOCKED": "Locked",
+        "CONSTRAINTS": "Constraints",
+        "ASSIGNED_MECHANICS": "Assigned mechanics",
+        "ASSIGNED_RESOURCES": "Assigned resources"
+      },
+      "RESOURCE_TYPE": {
+        "BAY": "Bay",
+        "MOBILE_UNIT": "Mobile unit",
+        "HOLD": "Hold"
+      },
+      "LOCKED_YES": "Yes",
+      "LOCKED_NO": "No",
+      "ASSIGNED_COUNT": "{{count}} assigned"
     },
     "ERROR": {
       "ESTIMATE_OR_APPROVAL_NOT_FOUND": "Estimate or approval not found.",

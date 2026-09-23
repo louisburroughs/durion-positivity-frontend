@@ -1348,7 +1348,7 @@
       "BACK_TO_PARTY": "Retour à la partie",
       "BACK_TO_PARTY_ARROW": "← Retour à la partie",
       "TITLE": "Ajouter un véhicule",
-      "SUBTITLE": "Associez un véhicule à la partie",
+      "SUBTITLE": "Associez un véhicule à cette partie",
       "FORM_ARIA": "Formulaire d'ajout de véhicule",
       "DETAILS_LEGEND": "Détails du véhicule",
       "FIELD_VIN": "NIV",
@@ -1370,7 +1370,8 @@
       "ERROR": {
         "VIN_REQUIRED": "Le NIV est requis.",
         "CREATE_FAILED": "Échec de l'ajout du véhicule ({{status}})."
-      }
+      },
+      "SUBTITLE_FOR": "Associez un véhicule à {{name}}"
     },
     "CUSTOMER_LIST": {
       "TITLE": "Comptes et parties",
@@ -4929,7 +4930,24 @@
       "REASON": "Motif",
       "SUBMIT": "Soumettre le remplacement",
       "CLOSE": "Fermer",
-      "SAVED": "Remplacement enregistré."
+      "SAVED": "Remplacement enregistré.",
+      "FIELD": {
+        "RESOURCE_TYPE": "Type de ressource",
+        "SCHEDULED_START": "Début planifié",
+        "SCHEDULED_END": "Fin planifiée",
+        "LOCKED": "Verrouillé",
+        "CONSTRAINTS": "Contraintes",
+        "ASSIGNED_MECHANICS": "Mécaniciens affectés",
+        "ASSIGNED_RESOURCES": "Ressources affectées"
+      },
+      "RESOURCE_TYPE": {
+        "BAY": "Baie",
+        "MOBILE_UNIT": "Unité mobile",
+        "HOLD": "En attente"
+      },
+      "LOCKED_YES": "Oui",
+      "LOCKED_NO": "Non",
+      "ASSIGNED_COUNT": "{{count}} affecté(s)"
     },
     "ERROR": {
       "ESTIMATE_OR_APPROVAL_NOT_FOUND": "Estimation ou approbation introuvable.",
