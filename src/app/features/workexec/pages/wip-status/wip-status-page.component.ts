@@ -1,16 +1,16 @@
 import { CommonModule } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Component, DestroyRef, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
+import { LocationPickerComponent } from '../../../location/components/location-picker/location-picker.component';
 import { WorkorderWipView } from '../../models/workexec.models';
 import { WorkexecService } from '../../services/workexec.service';
 
 @Component({
   selector: 'app-wip-status-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe],
+  imports: [CommonModule, TranslatePipe, LocationPickerComponent],
   templateUrl: './wip-status-page.component.html',
   styleUrl: './wip-status-page.component.css',
 })
@@ -26,6 +26,7 @@ export class WipStatusPageComponent {
   readonly selectedWorkorderId = signal<string | null>(null);
   readonly locationId = signal('');
 
+  /** Picking a location loads it straight away; clearing the picker returns to idle. */
   loadLocation(value: string): void {
     this.locationId.set(value.trim());
     this.load();

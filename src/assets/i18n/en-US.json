@@ -4111,9 +4111,8 @@
       },
       "LOCATION": {
         "LABEL": "Location",
-        "PLACEHOLDER": "Enter a location ID",
-        "LOAD": "Load",
-        "HINT": "Enter a location ID to view work in progress."
+        "PLACEHOLDER": "Search locations by name",
+        "HINT": "Choose a location to view work in progress."
       },
       "COLUMN": {
         "WORKORDER": "Work Order",

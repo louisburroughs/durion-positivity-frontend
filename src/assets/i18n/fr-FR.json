@@ -4111,9 +4111,8 @@
       },
       "LOCATION": {
         "LABEL": "Emplacement",
-        "PLACEHOLDER": "Entrez un ID d'emplacement",
-        "LOAD": "Charger",
-        "HINT": "Entrez un ID d'emplacement pour voir les travaux en cours."
+        "PLACEHOLDER": "Rechercher un emplacement par nom",
+        "HINT": "Choisissez un emplacement pour voir le travail en cours."
       },
       "COLUMN": {
         "WORKORDER": "Ordre de travail",
