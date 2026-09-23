@@ -1,4 +1,4 @@
-import { isSafeHref, normaliseHref } from '../../features/shell/util/markdown.util';
+import { isSafeHref, normaliseHref } from './markdown.util';
 
 /**
  * A conservative address shape for building a `mailto:` target. Excludes whitespace and

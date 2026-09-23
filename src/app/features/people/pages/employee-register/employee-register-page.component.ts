@@ -17,7 +17,7 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
 import { AuthService } from '../../../../core/services/auth.service';
 import { PEOPLE_PAGE, PEOPLE_SECTION } from '../../../../core/security/route-permissions';
-import { safeMailtoHref } from '../../../../core/util/mailto-href';
+import { safeMailtoHref } from '../../../shell/util/mailto-href.util';
 import { ModalDialogDirective } from '../../../../shared/modal-dialog.directive';
 import { EmployeeRegisterService } from '../../services/employee-register.service';
 import {

@@ -5,7 +5,7 @@
  * got through, so the encoded cases below are the load-bearing ones.
  */
 import { describe, expect, it } from 'vitest';
-import { safeMailtoHref } from './mailto-href';
+import { safeMailtoHref } from './mailto-href.util';
 
 describe('safeMailtoHref', () => {
   it('builds a mailto target from a plain address', () => {
