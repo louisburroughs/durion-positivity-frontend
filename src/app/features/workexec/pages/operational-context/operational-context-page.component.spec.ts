@@ -139,6 +139,17 @@ describe('OperationalContextPageComponent [CAP-140]', () => {
       expect(text).not.toContain('locationId');
     });
 
+    it('does not report an omitted locked flag as "No"', async () => {
+      await setupWithBundle();
+      stubWorkexecService.getOperationalContext.mockReturnValue(of({ ...context, locked: undefined }));
+      component.loadContext();
+      fixture.detectChanges();
+      const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+
+      expect(text).not.toContain(enUS.WORKEXEC.OPS_CONTEXT.LOCKED_NO);
+      expect(text).not.toContain(enUS.WORKEXEC.OPS_CONTEXT.LOCKED_YES);
+    });
+
     it('shows the empty placeholder for an unknown resource type and a missing date', async () => {
       await setupWithBundle();
       stubWorkexecService.getOperationalContext.mockReturnValue(of({ ...context, resourceType: 'SOMETHING_NEW', scheduledStartAt: undefined }));

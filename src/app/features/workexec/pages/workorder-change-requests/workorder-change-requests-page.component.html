@@ -85,10 +85,10 @@
     @if (changeRequests().length === 0) {
       <p class="hint-text">{{ 'WORKEXEC.WORKORDER_CR.NONE' | translate }}</p>
     } @else {
-      @for (cr of changeRequests(); track cr.id; let even = $even) {
+      @for (cr of changeRequests(); track cr.id; let even = $even; let i = $index) {
         <div class="cr-card" [class.cr-card--alt]="even">
           <div class="cr-card__header">
-            <span class="cr-id">{{ cr.id }}</span>
+            <span class="cr-id">{{ 'WORKEXEC.WORKORDER_CR.REQUEST_LABEL' | translate: { n: i + 1 } }}</span>
             <span class="status-chip status-chip--{{ crStatusClass(cr.status) }}">{{ cr.status }}</span>
             <span class="cr-date hint-text">{{ cr.createdAt | date:'shortDate' }}</span>
           </div>

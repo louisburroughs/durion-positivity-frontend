@@ -14,7 +14,7 @@
     @if (currentAssignment()) {
       <div class="current-assignment" [attr.aria-label]="'WORKEXEC.WORKORDER_ASSIGN.CURRENT_ARIA' | translate">
         <p class="section-overline">{{ 'WORKEXEC.WORKORDER_ASSIGN.CURRENT' | translate }}</p>
-        <p><strong>{{ currentAssignment()!.technicianName ?? currentAssignment()!.technicianId }}</strong></p>
+        <p><strong data-testid="current-technician">{{ currentAssignment()!.technicianName || ('COMMON.NOT_AVAILABLE' | translate) }}</strong></p>
         <p class="hint-text">{{ 'WORKEXEC.WORKORDER_ASSIGN.ASSIGNED_AT' | translate: { at: (currentAssignment()!.assignedAt | date:'medium') } }}</p>
       </div>
     }

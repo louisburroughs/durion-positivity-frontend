@@ -48,10 +48,15 @@
     @if (activeAction()) {
       <form class="action-form" [attr.aria-label]="'WORKEXEC.WORKORDER_PARTS.ACTION_ARIA' | translate" (ngSubmit)="submitAction()">
         <p class="section-overline">{{ 'WORKEXEC.WORKORDER_PARTS.ACTION_TITLE' | translate: { action: (activeAction() | titlecase) } }}</p>
-        <div class="field">
-          <label class="field__label" for="action-part-id">{{ 'WORKEXEC.WORKORDER_PARTS.PART_ID' | translate }} <span aria-hidden="true">*</span></label>
-          <input id="action-part-id" class="field__input" type="text" [value]="actionPartId()" (input)="actionPartId.set($any($event.target).value)" [placeholder]="'WORKEXEC.WORKORDER_PARTS.PART_UUID_PH' | translate" />
-        </div>
+        @if (actionPartFromRow()) {
+          <p class="field__label">{{ 'WORKEXEC.WORKORDER_PARTS.COL_PART_ID' | translate }}</p>
+          <p data-testid="action-part-label">{{ partLabel(actionPartId()) ?? ('COMMON.NOT_AVAILABLE' | translate) }}</p>
+        } @else {
+          <div class="field">
+            <label class="field__label" for="action-part-id">{{ 'WORKEXEC.WORKORDER_PARTS.PART_ID' | translate }} <span aria-hidden="true">*</span></label>
+            <input id="action-part-id" class="field__input" type="text" [value]="actionPartId()" (input)="actionPartId.set($any($event.target).value)" [placeholder]="'WORKEXEC.WORKORDER_PARTS.PART_UUID_PH' | translate" />
+          </div>
+        }
         <div class="field">
           <label class="field__label" for="action-quantity">{{ 'WORKEXEC.WORKORDER_COMMON.QUANTITY' | translate }}</label>
           <input id="action-quantity" class="field__input" type="number" min="1" [value]="actionQuantity()" (input)="actionQuantity.set(+$any($event.target).value)" />
@@ -84,7 +89,7 @@
           </div>
           @for (entry of usageHistory(); track entry.id; let even = $even) {
             <div class="ledger__row" [class.ledger__row--alt]="even">
-              <span class="ledger__cell usage-part-id">{{ entry.partId }}</span>
+              <span class="ledger__cell usage-part-id" data-testid="usage-part">{{ partLabel(entry.partId) ?? ('COMMON.NOT_AVAILABLE' | translate) }}</span>
               <span class="ledger__cell">{{ entry.quantityIssued }}</span>
               <span class="ledger__cell">{{ entry.quantityConsumed }}</span>
               <span class="ledger__cell">{{ entry.quantityReturned }}</span>
@@ -106,7 +111,7 @@
         <h2 id="subst-panel-title" class="subst-panel__title">{{ 'WORKEXEC.WORKORDER_PARTS.SUBST_TITLE' | translate }}</h2>
         <button class="btn-icon" (click)="closeSubstPanel()" [attr.aria-label]="'WORKEXEC.WORKORDER_PARTS.SUBST_CLOSE_ARIA' | translate">✕</button>
       </div>
-      <p class="hint-text subst-part-id">{{ 'WORKEXEC.WORKORDER_PARTS.SUBST_PART' | translate: { id: substSourcePartId() } }}</p>
+      <p class="hint-text subst-part-id">{{ 'WORKEXEC.WORKORDER_PARTS.SUBST_PART' | translate: { name: partLabel(substSourcePartId()) ?? ('COMMON.NOT_AVAILABLE' | translate) } }}</p>
 
       @if (substLoadState() === 'loading') { <p class="hint-text" aria-busy="true">{{ 'WORKEXEC.WORKORDER_PARTS.SUBST_LOADING' | translate }}</p> }
       @if (substLoadState() === 'error') { <div class="alert alert--error">{{ 'WORKEXEC.WORKORDER_PARTS.SUBST_LOAD_ERROR' | translate }}</div> }
@@ -117,7 +122,7 @@
 
       @if (substSuggestions().length > 0) {
         <div class="subst-list">
-          @for (sub of substSuggestions(); track sub.id) {
+          @for (sub of substSuggestions(); track sub.id; let i = $index) {
             <label class="subst-option" [class.subst-option--selected]="substSelectedId() === sub.substitutePartId">
               <input
                 type="radio"
@@ -126,7 +131,7 @@
                 [checked]="substSelectedId() === sub.substitutePartId"
                 (change)="substSelectedId.set(sub.substitutePartId ?? '')"
               />
-              <span class="subst-option__id">{{ sub.substitutePartId }}</span>
+              <span class="subst-option__id">{{ 'WORKEXEC.WORKORDER_PARTS.SUBST_OPTION' | translate: { n: i + 1 } }}</span>
               <span class="subst-type-badge subst-type-badge--{{ sub.substituteType?.toLowerCase() }}">{{ sub.substituteType }}</span>
               <span class="subst-priority">{{ 'WORKEXEC.WORKORDER_PARTS.SUBST_PRIORITY' | translate: { priority: sub.priority } }}</span>
             </label>

@@ -52,6 +52,8 @@ export class WorkorderPartsPageComponent implements OnInit {
   /** Part action form */
   readonly activeAction = signal<PartAction | null>(null);
   readonly actionPartId = signal<string>('');
+  /** Opened from a scope row: the part is known, so its description shows instead of an id input. */
+  readonly actionPartFromRow = signal(false);
   readonly actionQuantity = signal<number>(1);
   readonly actionNotes = signal<string>('');
   readonly actionState = signal<'idle' | 'loading' | 'error'>('idle');
@@ -110,6 +112,7 @@ export class WorkorderPartsPageComponent implements OnInit {
   openAction(action: PartAction, partId?: string): void {
     this.activeAction.set(action);
     this.actionPartId.set(partId ?? '');
+    this.actionPartFromRow.set(!!partId);
     this.actionQuantity.set(1);
     this.actionNotes.set('');
     this.actionError.set(null);
@@ -165,6 +168,11 @@ export class WorkorderPartsPageComponent implements OnInit {
   }
 
   // ── Story 221: Substitution panel ─────────────────────────────────────────
+
+  /** Description of the scope part line with this id; null when the line is not on this work order. */
+  partLabel(partId: string | undefined): string | null {
+    return this.partItems().find(item => item.id === partId)?.description?.trim() || null;
+  }
 
   openSubstPanel(partId: string): void {
     this.substSourcePartId.set(partId);

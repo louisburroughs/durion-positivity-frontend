@@ -123,7 +123,9 @@ export class OperationalContextPageComponent implements OnInit {
     const constraints: ContextValue = c.constraints?.length
       ? { kind: 'text', value: c.constraints.join(', ') }
       : empty;
-    const locked: ContextValue = { kind: 'key', valueKey: c.locked ? 'WORKEXEC.OPS_CONTEXT.LOCKED_YES' : 'WORKEXEC.OPS_CONTEXT.LOCKED_NO' };
+    const locked: ContextValue = typeof c.locked === 'boolean'
+      ? { kind: 'key', valueKey: c.locked ? 'WORKEXEC.OPS_CONTEXT.LOCKED_YES' : 'WORKEXEC.OPS_CONTEXT.LOCKED_NO' }
+      : empty;
     return [
       { labelKey: F + 'RESOURCE_TYPE', ...resourceType },
       { labelKey: F + 'SCHEDULED_START', ...date(c.scheduledStartAt) },

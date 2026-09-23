@@ -25,6 +25,8 @@ export class CreateVehicleComponent implements OnInit {
 
   readonly state            = signal<PageState>('idle');
   readonly createdVehicleId = signal<string | null>(null);
+  /** Echoed on success instead of the registry id (issue #285). */
+  readonly createdVin       = signal<string | null>(null);
   readonly serverError      = signal<string | null>(null);
   /**
    * Display name for the subtitle (issue #285: never the route UUID). An enrichment
@@ -72,6 +74,7 @@ export class CreateVehicleComponent implements OnInit {
     }).subscribe({
       next: res => {
         this.createdVehicleId.set(res.vehicleId);
+        this.createdVin.set(raw.vin);
         this.state.set('success');
       },
       error: err => {
@@ -90,6 +93,7 @@ export class CreateVehicleComponent implements OnInit {
   addAnother(): void {
     this.form.reset();
     this.createdVehicleId.set(null);
+    this.createdVin.set(null);
     this.serverError.set(null);
     this.state.set('idle');
   }

@@ -4,7 +4,7 @@ import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/route
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Observable, of, throwError } from 'rxjs';
 import enUS from '../../../../../assets/i18n/en-US.json';
-import { WorkorderDetailResponse } from '../../models/workexec.models';
+import { ChangeRequestResponse, WorkorderDetailResponse } from '../../models/workexec.models';
 import { WorkexecService } from '../../services/workexec.service';
 import { WorkorderChangeRequestsPageComponent } from './workorder-change-requests-page.component';
 
@@ -12,6 +12,16 @@ const WORKORDER_ID = '01a0a459-65b0-7609-b8a2-58332d3af186';
 const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
 
 const detail: WorkorderDetailResponse = { id: WORKORDER_ID, workorderNumber: 'WO-2026-1041' };
+const requests: ChangeRequestResponse[] = [
+  { id: '01a0a459-65b0-7609-b8a2-58332d3af194', workorderId: WORKORDER_ID, description: 'Add wiper blades', status: 'APPROVED', createdAt: '2026-09-20T10:00:00Z' },
+];
+/** Everything the audit's uuid-on-screen rule reads: text, input values and picker option values. */
+const visibleText = (el: HTMLElement): string => [
+  el.textContent ?? '',
+  ...Array.from(el.querySelectorAll('input:not([type=checkbox]):not([type=radio]):not([type=hidden])')).map(i => (i as HTMLInputElement).value),
+  ...Array.from(el.querySelectorAll('option')).map(o => o.value),
+].join(' ');
+
 
 const serviceMock = {
   getChangeRequestsByWorkorder: vi.fn(),
@@ -24,7 +34,7 @@ describe('WorkorderChangeRequestsPageComponent', () => {
 
   const setup = async (detail$: Observable<WorkorderDetailResponse> = of(detail)) => {
     vi.resetAllMocks();
-    serviceMock.getChangeRequestsByWorkorder.mockReturnValue(of([]));
+    serviceMock.getChangeRequestsByWorkorder.mockReturnValue(of(requests));
     serviceMock.getWorkorderDetail.mockReturnValue(detail$);
 
     await TestBed.configureTestingModule({
@@ -57,7 +67,16 @@ describe('WorkorderChangeRequestsPageComponent', () => {
 
     expect(serviceMock.getWorkorderDetail).toHaveBeenCalledWith(WORKORDER_ID);
     expect(overline()).toBe(enUS.WORKEXEC.WORKORDER_COMMON.WO_OVERLINE.replace('{{id}}', 'WO-2026-1041'));
-    expect((fixture.nativeElement as HTMLElement).textContent).not.toMatch(UUID);
+    expect(visibleText(fixture.nativeElement as HTMLElement)).not.toMatch(UUID);
+  });
+
+  it('labels each request by position, not by its id', async () => {
+    await setup();
+    const el = fixture.nativeElement as HTMLElement;
+
+    expect(el.querySelector('.cr-id')?.textContent?.trim()).toBe(enUS.WORKEXEC.WORKORDER_CR.REQUEST_LABEL.replace('{{n}}', '1'));
+    expect(el.textContent).toContain('Add wiper blades');
+    expect(visibleText(el)).not.toMatch(UUID);
   });
 
   it('keeps the page usable and falls back to the plain label when the number read fails', async () => {
@@ -65,6 +84,6 @@ describe('WorkorderChangeRequestsPageComponent', () => {
 
     expect(component.pageState()).toBe('ready');
     expect(overline()).toBe(enUS.WORKEXEC.WORKORDER_COMMON.WORK_ORDER);
-    expect((fixture.nativeElement as HTMLElement).textContent).not.toMatch(UUID);
+    expect(visibleText(fixture.nativeElement as HTMLElement)).not.toMatch(UUID);
   });
 });

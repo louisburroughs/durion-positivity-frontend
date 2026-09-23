@@ -32,13 +32,13 @@
           @if (serviceItems().length > 0) {
             <select
               class="field__input"
-              [value]="selectedServiceId()"
-              (change)="selectedServiceId.set($any($event.target).value)"
+              [value]="serviceIndex(selectedServiceId())"
+              (change)="selectedServiceId.set(serviceIdAt($any($event.target).value))"
               [attr.aria-label]="'WORKEXEC.WORKORDER_LABOR.SELECT_SERVICE_ARIA' | translate"
             >
               <option value="">{{ 'WORKEXEC.WORKORDER_LABOR.SELECT_SERVICE' | translate }}</option>
-              @for (item of serviceItems(); track item.id) {
-                <option [value]="item.id">{{ item.description }}</option>
+              @for (item of serviceItems(); track item.id; let i = $index) {
+                <option [value]="i">{{ item.description }}</option>
               }
             </select>
           }
@@ -70,10 +70,10 @@
         <div class="field-row">
           <div class="field">
             <label class="field__label" for="manual-service-line">{{ 'WORKEXEC.WORKORDER_LABOR.SERVICE_LINE' | translate }}</label>
-            <select id="manual-service-line" class="field__input" [value]="manualServiceId()" (change)="manualServiceId.set($any($event.target).value)">
+            <select id="manual-service-line" class="field__input" [value]="serviceIndex(manualServiceId())" (change)="manualServiceId.set(serviceIdAt($any($event.target).value))">
               <option value="">{{ 'WORKEXEC.WORKORDER_LABOR.OPTIONAL_OPT' | translate }}</option>
-              @for (item of serviceItems(); track item.id) {
-                <option [value]="item.id">{{ item.description }}</option>
+              @for (item of serviceItems(); track item.id; let i = $index) {
+                <option [value]="i">{{ item.description }}</option>
               }
             </select>
           </div>

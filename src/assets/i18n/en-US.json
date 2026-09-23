@@ -1365,13 +1365,13 @@
       "SUBMIT": "Add Vehicle",
       "CANCEL": "Cancel",
       "SUCCESS_TITLE": "Vehicle Added",
-      "SUCCESS_ID_LABEL": "Vehicle ID:",
       "ADD_ANOTHER": "Add Another",
       "ERROR": {
         "VIN_REQUIRED": "VIN is required.",
         "CREATE_FAILED": "Vehicle creation failed ({{status}})."
       },
-      "SUBTITLE_FOR": "Associate a vehicle with {{name}}"
+      "SUBTITLE_FOR": "Associate a vehicle with {{name}}",
+      "SUCCESS_VIN_LABEL": "VIN:"
     },
     "CUSTOMER_LIST": {
       "TITLE": "Accounts & Parties",
@@ -4803,7 +4803,8 @@
       "NONE": "No change requests for this work order.",
       "ITEMS_REQUESTED": "{{count}} item(s) requested",
       "APPROVE": "Approve",
-      "DECLINE": "Decline"
+      "DECLINE": "Decline",
+      "REQUEST_LABEL": "Request #{{n}}"
     },
     "WORKORDER_FINALIZE": {
       "CHIP": "Finalize for Billing",
@@ -4870,13 +4871,13 @@
       "PART_UUID_PH": "Part UUID",
       "USAGE_COUNT": "Usage History ({{count}})",
       "USAGE_EMPTY": "No usage recorded yet.",
-      "COL_PART_ID": "Part ID",
+      "COL_PART_ID": "Part",
       "COL_ISSUED": "Issued",
       "COL_CONSUMED": "Consumed",
       "COL_RETURNED": "Returned",
       "SUBST_TITLE": "Find Substitute for Part",
       "SUBST_CLOSE_ARIA": "Close substitution panel",
-      "SUBST_PART": "Part: {{id}}",
+      "SUBST_PART": "Part: {{name}}",
       "SUBST_LOADING": "Loading suggestions…",
       "SUBST_LOAD_ERROR": "Failed to load suggestions.",
       "SUBST_EMPTY": "No substitutes found for this part.",
@@ -4884,7 +4885,8 @@
       "REASON": "Reason",
       "SUBST_REASON_PH": "Why substituting?",
       "SUBSTITUTING": "Substituting…",
-      "CONFIRM_SUBST": "Confirm Substitution"
+      "CONFIRM_SUBST": "Confirm Substitution",
+      "SUBST_OPTION": "Option {{n}}"
     },
     "TRAVEL": {
       "TITLE": "Travel Time",

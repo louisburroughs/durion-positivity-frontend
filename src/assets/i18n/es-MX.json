@@ -1365,13 +1365,13 @@
       "SUBMIT": "Agregar vehículo",
       "CANCEL": "Cancelar",
       "SUCCESS_TITLE": "Vehículo agregado",
-      "SUCCESS_ID_LABEL": "ID del vehículo:",
       "ADD_ANOTHER": "Agregar otro",
       "ERROR": {
         "VIN_REQUIRED": "El VIN es obligatorio.",
         "CREATE_FAILED": "No se pudo agregar el vehículo ({{status}})."
       },
-      "SUBTITLE_FOR": "Asocie un vehículo con {{name}}"
+      "SUBTITLE_FOR": "Asocie un vehículo con {{name}}",
+      "SUCCESS_VIN_LABEL": "VIN:"
     },
     "CUSTOMER_LIST": {
       "TITLE": "Cuentas y partes",
@@ -4803,7 +4803,8 @@
       "NONE": "No hay solicitudes de cambio para esta orden de trabajo.",
       "ITEMS_REQUESTED": "{{count}} artículo(s) solicitado(s)",
       "APPROVE": "Aprobar",
-      "DECLINE": "Rechazar"
+      "DECLINE": "Rechazar",
+      "REQUEST_LABEL": "Solicitud n.º {{n}}"
     },
     "WORKORDER_FINALIZE": {
       "CHIP": "Finalizar para facturación",
@@ -4870,13 +4871,13 @@
       "PART_UUID_PH": "UUID de pieza",
       "USAGE_COUNT": "Historial de uso ({{count}})",
       "USAGE_EMPTY": "Aún no hay uso registrado.",
-      "COL_PART_ID": "ID de pieza",
+      "COL_PART_ID": "Pieza",
       "COL_ISSUED": "Entregado",
       "COL_CONSUMED": "Consumido",
       "COL_RETURNED": "Devuelto",
       "SUBST_TITLE": "Buscar sustituto para la pieza",
       "SUBST_CLOSE_ARIA": "Cerrar panel de sustitución",
-      "SUBST_PART": "Pieza: {{id}}",
+      "SUBST_PART": "Pieza: {{name}}",
       "SUBST_LOADING": "Cargando sugerencias…",
       "SUBST_LOAD_ERROR": "No se pudieron cargar las sugerencias.",
       "SUBST_EMPTY": "No se encontraron sustitutos para esta pieza.",
@@ -4884,7 +4885,8 @@
       "REASON": "Motivo",
       "SUBST_REASON_PH": "¿Por qué sustituye?",
       "SUBSTITUTING": "Sustituyendo…",
-      "CONFIRM_SUBST": "Confirmar sustitución"
+      "CONFIRM_SUBST": "Confirmar sustitución",
+      "SUBST_OPTION": "Opción {{n}}"
     },
     "TRAVEL": {
       "TITLE": "Tiempo de viaje",

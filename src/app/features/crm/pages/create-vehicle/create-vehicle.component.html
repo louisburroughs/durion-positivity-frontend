@@ -87,7 +87,7 @@
     <section class="state-panel state-panel--success" aria-live="polite" aria-labelledby="vehicle-success">
       <span class="state-icon state-icon--success" aria-hidden="true">✓</span>
       <h2 id="vehicle-success">{{ 'CRM.CREATE_VEHICLE.SUCCESS_TITLE' | translate }}</h2>
-      <p class="hint-text">{{ 'CRM.CREATE_VEHICLE.SUCCESS_ID_LABEL' | translate }} <code>{{ createdVehicleId() }}</code></p>
+      <p class="hint-text">{{ 'CRM.CREATE_VEHICLE.SUCCESS_VIN_LABEL' | translate }} <code data-testid="created-vin">{{ createdVin() }}</code></p>
       <div class="form-actions form-actions--center">
         <button class="btn btn--primary" type="button" (click)="backToParty()">{{ 'CRM.CREATE_VEHICLE.BACK_TO_PARTY' | translate }}</button>
         <button class="btn btn--secondary" type="button" (click)="addAnother()">{{ 'CRM.CREATE_VEHICLE.ADD_ANOTHER' | translate }}</button>

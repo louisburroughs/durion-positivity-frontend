@@ -4,7 +4,7 @@ import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/route
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Observable, of, throwError } from 'rxjs';
 import enUS from '../../../../../assets/i18n/en-US.json';
-import { PartyDetail } from '../../models/crm.models';
+import { PartyDetail, VehicleRef } from '../../models/crm.models';
 import { CrmService } from '../../services/crm.service';
 import { CreateVehicleComponent } from './create-vehicle.component';
 
@@ -59,6 +59,21 @@ describe('CreateVehicleComponent', () => {
 
     expect(crmServiceStub.getParty).toHaveBeenCalledWith(PARTY_ID);
     expect(subtitle()).toBe(enUS.CRM.CREATE_VEHICLE.SUBTITLE_FOR.replace('{{name}}', party.legalName));
+    expect(visibleText()).not.toMatch(UUID);
+  });
+
+  it('echoes the VIN on success, never the new vehicle id', async () => {
+    await setup();
+    const created: VehicleRef = { vehicleId: '01a0a459-65b0-7609-b8a2-58332d3af196', vin: '1FTFW1E50MFA12345' };
+    crmServiceStub.createVehicleForParty.mockReturnValue(of(created));
+    const component = fixture.componentInstance;
+    component.form.controls.vin.setValue('1FTFW1E50MFA12345');
+
+    component.submit();
+    fixture.detectChanges();
+
+    expect(component.state()).toBe('success');
+    expect((fixture.nativeElement as HTMLElement).querySelector('[data-testid="created-vin"]')?.textContent?.trim()).toBe('1FTFW1E50MFA12345');
     expect(visibleText()).not.toMatch(UUID);
   });
 
