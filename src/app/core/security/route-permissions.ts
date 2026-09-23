@@ -363,6 +363,12 @@ export const PRODUCT_PAGE = {
 export const PEOPLE_PAGE = {
   directory: ['people-contact:person:view'],
   /**
+   * The person profile (`/app/people/person/:personId`) — the identity record every
+   * directory row links to, employee or not. Its reads (`getPeopleByIds`,
+   * `getPersonPostalAddress`) are guarded by `people-contact:person:view` in pos-people-contact.
+   */
+  personDetail: ['people-contact:person:view'],
+  /**
    * The employee register (`/app/people/employees`). `searchEmployees` in pos-people is
    * guarded by `people:employee:view`, so the page gate is that same code. The register's
    * PII columns, role column and status switch are gated separately inside the page —
@@ -397,6 +403,11 @@ export const PEOPLE_PAGE = {
  */
 export const PEOPLE_SECTION = {
   personLookup: PEOPLE_PAGE.directory,
+  /**
+   * Person profile writes: `updatePerson`, `replaceContactPoints`, and the person
+   * postal-address put/delete all require `people-contact:person:edit`.
+   */
+  personEdit: ['people-contact:person:edit'],
   /**
    * Employee register column and control gates. Each is the authority the destination
    * route already declares, so a rendered link can never lead to a 403:

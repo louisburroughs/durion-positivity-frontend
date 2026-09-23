@@ -36,9 +36,9 @@ repo alone sees none of them, and this repo defines no skills of its own. Open
 ```bash
 npm start                            # dev server → localhost:4200 (proxies API to :8080, mockAuth on)
 npm run build                        # prod build → dist/
-npm test                             # Vitest suite (watch mode)
-npx ng test --no-watch               # single CI pass
-npx ng test --include="src/app/features/<domain>/**/*.spec.ts" --no-watch   # one domain suite
+npm test                             # what CI runs: contract tests + full suite in headless Chromium
+npx ng test --no-watch --browsers=ChromiumHeadless --runner-config vitest.config.ts   # single CI pass (real Chromium, as CI runs it)
+npx ng test --include="src/app/features/<domain>/**/*.spec.ts" --no-watch --browsers=ChromiumHeadless --runner-config vitest.config.ts   # one domain suite
 npm run lint                         # ESLint via @angular-eslint
 npm run lint:css                     # stylelint src/**/*.css
 npm run i18n:check                   # missing-keys + pseudo-locale check
@@ -46,6 +46,9 @@ npm run a11y:smoke                   # axe-core route scan (a11y:smoke:strict fa
 npm run audit:site                   # Playwright crawl+audit of deployed site (docs/testing/frontend-audit-test-plan.md)
 npm run serve:ssr:durion-positivity-frontend   # run SSR server locally → :4000
 ```
+
+Without `--browsers`, `ng test` falls back to jsdom, which lacks `matchMedia`, `DragEvent`, `CSS.escape`,
+`Blob.text()` and native `<dialog>` modality — ~22 shell/dispatch-board specs then fail spuriously.
 
 `npm run lint` runs ESLint via @angular-eslint (same as `npx ng lint`); CI runs it in `frontend-checks.yml`.
 

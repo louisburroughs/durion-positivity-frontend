@@ -50,4 +50,11 @@ describe('PEOPLE_ROUTES', () => {
 
     expect(complianceRoute?.data?.['permissions']).toEqual(['people:compliance:view']);
   });
+
+  it('gates the person profile on the identity-directory read the directory links from', () => {
+    const personRoute = rootRoute?.children?.find(child => child.path === 'person/:personId');
+
+    expect(typeof personRoute?.loadComponent).toBe('function');
+    expect(personRoute?.data?.['permissions']).toEqual(['people-contact:person:view']);
+  });
 });

@@ -92,7 +92,7 @@
             <tr class="directory-row">
               <td class="directory-td directory-td--name">
                 @if (person.id) {
-                  <a class="directory-name-link" [routerLink]="['/app/people/employees', person.id]">
+                  <a class="directory-name-link" [routerLink]="['/app/people/person', person.id]">
                     {{ person.lastName }}, {{ person.firstName }}
                   </a>
                 } @else {
@@ -118,7 +118,7 @@
                 @if (person.id) {
                   <a
                     class="directory-action-link"
-                    [routerLink]="['/app/people/employees', person.id]"
+                    [routerLink]="['/app/people/person', person.id]"
                   >
                     {{ 'PEOPLE.DIRECTORY.ACTION.VIEW_PROFILE' | translate }}
                   </a>

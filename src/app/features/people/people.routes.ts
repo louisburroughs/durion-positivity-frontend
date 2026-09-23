@@ -84,6 +84,13 @@ export const PEOPLE_ROUTES: Routes = [
             .then(m => m.EmployeeOffboardPageComponent),
       },
       {
+        path: 'person/:personId',
+        data: { permissions: PEOPLE_PAGE.personDetail },
+        loadComponent: () =>
+          import('./pages/person-profile/person-profile-page.component')
+            .then(m => m.PersonProfilePageComponent),
+      },
+      {
         path: 'person/:personId/locations',
         data: { permissions: PEOPLE_PAGE.locationAssignments },
         loadComponent: () =>

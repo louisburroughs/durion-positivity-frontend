@@ -491,6 +491,10 @@
         "IDENTITY_COMPLIANCE": {
           "TITLE": "Identity Compliance",
           "DESCRIPTION": "Review active user accounts linked to inactive persons."
+        },
+        "EMPLOYEE_REGISTER": {
+          "TITLE": "Employee Register",
+          "DESCRIPTION": "Browse, filter and manage every employee in one table."
         }
       },
       "FIELD": {
@@ -981,6 +985,57 @@
         "DEACTIVATE": "Failed to deactivate the employee. Please try again.",
         "CONFLICT": "This employee changed while you were working, so the change was refused. The list has been reloaded — check the current status before trying again."
       }
+    },
+    "PERSON_PROFILE": {
+      "OVERLINE": "People Directory",
+      "TITLE": "Person Profile",
+      "BACK_TO_DIRECTORY": "Back to directory",
+      "LOADING": "Loading person profile...",
+      "SAVED": "Person profile saved.",
+      "IDENTIFIERS_ARIA": "Identifiers",
+      "IDENTIFIERS_TITLE": "Identifiers",
+      "FIELD_PERSON_ID": "Person ID",
+      "FIELD_USERNAME": "Username",
+      "NO_USERNAME": "No linked user",
+      "PERSON_LEGEND": "Person",
+      "FIELD_FIRST_NAME": "First Name",
+      "FIELD_LAST_NAME": "Last Name",
+      "CONTACT_LEGEND": "Contact points",
+      "NO_CONTACT_POINTS": "No contact points on file.",
+      "FIELD_CONTACT_TYPE": "Type",
+      "FIELD_CONTACT_VALUE": "Value",
+      "FIELD_CONTACT_PRIMARY": "Primary",
+      "CONTACT_TYPE": {
+        "EMAIL": "Email",
+        "PHONE_MOBILE": "Mobile phone",
+        "PHONE_HOME": "Home phone",
+        "PHONE_WORK": "Work phone"
+      },
+      "ADD_CONTACT": "Add contact point",
+      "REMOVE_CONTACT": "Remove",
+      "REMOVE_CONTACT_ARIA": "Remove contact point {{index}} ({{type}})",
+      "ADDRESS_LEGEND": "Postal address",
+      "ADDRESS_HINT": "Optional. If you enter an address, line 1 and a two-letter country code are required.",
+      "FIELD_LINE1": "Address line 1",
+      "FIELD_LINE2": "Address line 2",
+      "FIELD_CITY": "City",
+      "FIELD_REGION": "State / Province / Region",
+      "FIELD_POSTAL_CODE": "Postal code",
+      "FIELD_COUNTRY": "Country code",
+      "SAVE": "Save Person",
+      "SAVING": "Saving...",
+      "READ_ONLY": "You have read-only access to this person.",
+      "ERROR": {
+        "LOAD": "Failed to load person.",
+        "SAVE": "Failed to save person.",
+        "NOT_FOUND": "Person not found.",
+        "FIRST_NAME_REQUIRED": "First name is required.",
+        "LAST_NAME_REQUIRED": "Last name is required.",
+        "CONTACT_VALUE_REQUIRED": "Enter a value or remove this contact point.",
+        "COUNTRY_INVALID": "Use a two-letter country code, such as US.",
+        "ADDRESS_INCOMPLETE": "Address line 1 and country code are required when an address is entered."
+      },
+      "CONTACT_ROW_ARIA": "Contact point {{index}}: {{type}}"
     }
   },
   "CRM": {
@@ -6959,7 +7014,8 @@
       "VOID_REFUND": "Void Refund",
       "WIP_STATUS": "Wip Status",
       "WORKORDERS": "Workorders",
-      "WORK_SESSION": "Work Session"
+      "WORK_SESSION": "Work Session",
+      "PERSON": "Person"
     }
   },
   "POSITIVITY": {

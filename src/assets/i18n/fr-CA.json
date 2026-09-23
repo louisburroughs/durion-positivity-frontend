@@ -491,6 +491,10 @@
         "IDENTITY_COMPLIANCE": {
           "TITLE": "Conformité des identités",
           "DESCRIPTION": "Examinez les comptes d'utilisateur actifs liés à des personnes inactives."
+        },
+        "EMPLOYEE_REGISTER": {
+          "TITLE": "Registre des employés",
+          "DESCRIPTION": "Parcourez, filtrez et gérez tous les employés dans un seul tableau."
         }
       },
       "FIELD": {
@@ -981,6 +985,57 @@
         "DEACTIVATE": "Échec de la désactivation de l’employé. Veuillez réessayer.",
         "CONFLICT": "Cet employé a changé pendant votre travail; le changement a donc été refusé. La liste a été rechargée : vérifiez le statut actuel avant de réessayer."
       }
+    },
+    "PERSON_PROFILE": {
+      "OVERLINE": "Répertoire des personnes",
+      "TITLE": "Profil de la personne",
+      "BACK_TO_DIRECTORY": "Retour au répertoire",
+      "LOADING": "Chargement du profil de la personne...",
+      "SAVED": "Profil de la personne enregistré.",
+      "IDENTIFIERS_ARIA": "Identifiants",
+      "IDENTIFIERS_TITLE": "Identifiants",
+      "FIELD_PERSON_ID": "ID de la personne",
+      "FIELD_USERNAME": "Nom d'utilisateur",
+      "NO_USERNAME": "Aucun utilisateur lié",
+      "PERSON_LEGEND": "Personne",
+      "FIELD_FIRST_NAME": "Prénom",
+      "FIELD_LAST_NAME": "Nom",
+      "CONTACT_LEGEND": "Points de contact",
+      "NO_CONTACT_POINTS": "Aucun point de contact enregistré.",
+      "FIELD_CONTACT_TYPE": "Type",
+      "FIELD_CONTACT_VALUE": "Valeur",
+      "FIELD_CONTACT_PRIMARY": "Principal",
+      "CONTACT_TYPE": {
+        "EMAIL": "Courriel",
+        "PHONE_MOBILE": "Téléphone mobile",
+        "PHONE_HOME": "Téléphone domicile",
+        "PHONE_WORK": "Téléphone professionnel"
+      },
+      "ADD_CONTACT": "Ajouter un point de contact",
+      "REMOVE_CONTACT": "Supprimer",
+      "REMOVE_CONTACT_ARIA": "Supprimer le point de contact {{index}} ({{type}})",
+      "ADDRESS_LEGEND": "Adresse postale",
+      "ADDRESS_HINT": "Facultatif. Si vous saisissez une adresse, la ligne 1 et un code de pays à deux lettres sont obligatoires.",
+      "FIELD_LINE1": "Ligne d'adresse 1",
+      "FIELD_LINE2": "Ligne d'adresse 2",
+      "FIELD_CITY": "Ville",
+      "FIELD_REGION": "État / Province / Région",
+      "FIELD_POSTAL_CODE": "Code postal",
+      "FIELD_COUNTRY": "Code de pays",
+      "SAVE": "Enregistrer la personne",
+      "SAVING": "Enregistrement...",
+      "READ_ONLY": "Vous avez un accès en lecture seule à cette personne.",
+      "ERROR": {
+        "LOAD": "Échec du chargement de la personne.",
+        "SAVE": "Échec de l'enregistrement de la personne.",
+        "NOT_FOUND": "Personne introuvable.",
+        "FIRST_NAME_REQUIRED": "Le prénom est obligatoire.",
+        "LAST_NAME_REQUIRED": "Le nom est obligatoire.",
+        "CONTACT_VALUE_REQUIRED": "Saisissez une valeur ou supprimez ce point de contact.",
+        "COUNTRY_INVALID": "Utilisez un code de pays à deux lettres, par exemple US.",
+        "ADDRESS_INCOMPLETE": "La ligne d'adresse 1 et le code de pays sont obligatoires lorsqu'une adresse est saisie."
+      },
+      "CONTACT_ROW_ARIA": "Point de contact {{index}} : {{type}}"
     }
   },
   "CRM": {
@@ -6959,7 +7014,8 @@
       "VOID_REFUND": "Annuler le remboursement",
       "WIP_STATUS": "État des travaux en cours",
       "WORKORDERS": "Ordres de travail",
-      "WORK_SESSION": "Séance de travail"
+      "WORK_SESSION": "Séance de travail",
+      "PERSON": "Personne"
     }
   },
   "POSITIVITY": {

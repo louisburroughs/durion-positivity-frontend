@@ -102,6 +102,7 @@ export const SITE_MAP_ROUTES: readonly SiteMapRouteEntry[] = [
   { route: '/app/people/employees/:id/offboard', label: "Offboard", labelKey: "SITEMAP.LABEL.OFFBOARD", dynamic: true, permissions: ['people:employee:deactivate'] },
   { route: '/app/people/employees/new', label: "New", labelKey: "SITEMAP.LABEL.NEW", dynamic: false, permissions: ['people:employee:create'] },
   { route: '/app/people/identity-compliance', label: "Identity Compliance", labelKey: "SITEMAP.LABEL.IDENTITY_COMPLIANCE", dynamic: false, permissions: ['people:compliance:view'] },
+  { route: '/app/people/person/:personId', label: "Person", labelKey: "SITEMAP.LABEL.PERSON", dynamic: true, permissions: ['people-contact:person:view'] },
   { route: '/app/people/person/:personId/locations', label: "Locations", labelKey: "SITEMAP.LABEL.LOCATIONS", dynamic: true, permissions: ['people:employee:view'] },
   { route: '/app/people/rbac/:personUuid', label: "Rbac", labelKey: "SITEMAP.LABEL.RBAC", dynamic: true, permissions: ['people-contact:role:view'] },
   { route: '/app/people/timekeeping/approval', label: "Approval", labelKey: "SITEMAP.LABEL.APPROVAL", dynamic: false, permissions: ['people:timekeeping:view'] },

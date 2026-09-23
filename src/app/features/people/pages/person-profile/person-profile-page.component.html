@@ -1,0 +1,179 @@
+<main class="people-page person-profile-layout" aria-labelledby="person-profile-heading">
+  <header class="page-header">
+    <a class="back-link" routerLink="/app/people/directory">{{ 'PEOPLE.PERSON_PROFILE.BACK_TO_DIRECTORY' | translate }}</a>
+    <p class="page-overline">{{ 'PEOPLE.PERSON_PROFILE.OVERLINE' | translate }}</p>
+    <h1 id="person-profile-heading">
+      @if (profile(); as p) {
+        {{ p.person.firstName }} {{ p.person.lastName }}
+      } @else {
+        {{ 'PEOPLE.PERSON_PROFILE.TITLE' | translate }}
+      }
+    </h1>
+  </header>
+
+  <div class="sr-only" role="status" aria-live="polite" data-testid="save-status">
+    @if (saveSuccess()) {
+      {{ 'PEOPLE.PERSON_PROFILE.SAVED' | translate }}
+    }
+  </div>
+
+  @if (state() === 'loading' && !hasCachedData()) {
+    <section class="state-panel" data-testid="loading-indicator" aria-live="polite" aria-busy="true">
+      {{ 'PEOPLE.PERSON_PROFILE.LOADING' | translate }}
+    </section>
+  }
+
+  @if (state() === 'error' && errorKey(); as key) {
+    <section class="state-panel state-panel--error" role="alert" data-testid="error-panel">
+      <span>{{ key | translate }}</span>
+      @if (!readOk()) {
+        <button type="button" class="btn btn--secondary" data-testid="retry-button" (click)="reload()">{{ 'COMMON.RETRY' | translate }}</button>
+      }
+    </section>
+  }
+
+  @if (saveSuccess()) {
+    <section class="alert alert--success" data-testid="save-success">
+      {{ 'PEOPLE.PERSON_PROFILE.SAVED' | translate }}
+    </section>
+  }
+
+  @if (profile(); as p) {
+    <section class="identifiers" data-testid="identifiers" [attr.aria-label]="'PEOPLE.PERSON_PROFILE.IDENTIFIERS_ARIA' | translate">
+      <h2>{{ 'PEOPLE.PERSON_PROFILE.IDENTIFIERS_TITLE' | translate }}</h2>
+      <dl>
+        <dt>{{ 'PEOPLE.PERSON_PROFILE.FIELD_PERSON_ID' | translate }}</dt>
+        <dd class="mono" data-testid="person-id">{{ p.person.id }}</dd>
+        <dt>{{ 'PEOPLE.PERSON_PROFILE.FIELD_USERNAME' | translate }}</dt>
+        <dd class="mono" data-testid="person-username">{{ p.person.username || ('PEOPLE.PERSON_PROFILE.NO_USERNAME' | translate) }}</dd>
+      </dl>
+    </section>
+
+    <form [formGroup]="form" (ngSubmit)="save()" novalidate class="profile-form">
+      <fieldset class="form-section">
+        <legend>{{ 'PEOPLE.PERSON_PROFILE.PERSON_LEGEND' | translate }}</legend>
+
+        <div class="field-row" [class.field-error--visible]="form.controls.firstName.invalid && form.controls.firstName.touched">
+          <label for="person-firstName">{{ 'PEOPLE.PERSON_PROFILE.FIELD_FIRST_NAME' | translate }}</label>
+          <input id="person-firstName" type="text" formControlName="firstName" data-testid="first-name-input" autocomplete="off" />
+          @if (form.controls.firstName.touched && form.controls.firstName.invalid) {
+            <span class="field-error" role="alert" data-testid="validation-first-name">
+              {{ 'PEOPLE.PERSON_PROFILE.ERROR.FIRST_NAME_REQUIRED' | translate }}
+            </span>
+          }
+        </div>
+
+        <div class="field-row" [class.field-error--visible]="form.controls.lastName.invalid && form.controls.lastName.touched">
+          <label for="person-lastName">{{ 'PEOPLE.PERSON_PROFILE.FIELD_LAST_NAME' | translate }}</label>
+          <input id="person-lastName" type="text" formControlName="lastName" data-testid="last-name-input" autocomplete="off" />
+          @if (form.controls.lastName.touched && form.controls.lastName.invalid) {
+            <span class="field-error" role="alert" data-testid="validation-last-name">
+              {{ 'PEOPLE.PERSON_PROFILE.ERROR.LAST_NAME_REQUIRED' | translate }}
+            </span>
+          }
+        </div>
+      </fieldset>
+
+      <fieldset class="form-section" formArrayName="contactPoints">
+        <legend>{{ 'PEOPLE.PERSON_PROFILE.CONTACT_LEGEND' | translate }}</legend>
+
+        @if (contactPoints.length === 0) {
+          <p class="empty-note" data-testid="no-contact-points">{{ 'PEOPLE.PERSON_PROFILE.NO_CONTACT_POINTS' | translate }}</p>
+        }
+
+        <ul class="contact-list">
+          @for (cp of contactPoints.controls; track cp; let i = $index) {
+            <li class="contact-row" [formGroupName]="i" data-testid="contact-point-row" role="group"
+              [attr.aria-label]="'PEOPLE.PERSON_PROFILE.CONTACT_ROW_ARIA' | translate: { index: i + 1, type: ('PEOPLE.PERSON_PROFILE.CONTACT_TYPE.' + cp.controls.contactType.value | translate) }">
+              <div class="field-row">
+                <label [for]="'contact-type-' + i">{{ 'PEOPLE.PERSON_PROFILE.FIELD_CONTACT_TYPE' | translate }}</label>
+                <select [id]="'contact-type-' + i" formControlName="contactType" (change)="onPrimaryChange(i)">
+                  @for (type of contactTypes; track type) {
+                    <option [value]="type">{{ 'PEOPLE.PERSON_PROFILE.CONTACT_TYPE.' + type | translate }}</option>
+                  }
+                </select>
+              </div>
+              <div class="field-row field-row--grow" [class.field-error--visible]="cp.controls.value.invalid && cp.controls.value.touched">
+                <label [for]="'contact-value-' + i">{{ 'PEOPLE.PERSON_PROFILE.FIELD_CONTACT_VALUE' | translate }}</label>
+                <input [id]="'contact-value-' + i" [type]="cp.controls.contactType.value === 'EMAIL' ? 'email' : 'tel'"
+                  formControlName="value" data-testid="contact-value-input" />
+                @if (cp.controls.value.touched && cp.controls.value.invalid) {
+                  <span class="field-error" role="alert">{{ 'PEOPLE.PERSON_PROFILE.ERROR.CONTACT_VALUE_REQUIRED' | translate }}</span>
+                }
+              </div>
+              <div class="field-row field-row--inline">
+                <input [id]="'contact-primary-' + i" type="checkbox" formControlName="primary" (change)="onPrimaryChange(i)" />
+                <label [for]="'contact-primary-' + i">{{ 'PEOPLE.PERSON_PROFILE.FIELD_CONTACT_PRIMARY' | translate }}</label>
+              </div>
+              @if (canEdit()) {
+                <button type="button" class="btn btn--ghost" data-testid="remove-contact-point" [disabled]="!editable()" (click)="removeContactPoint(i)"
+                  [attr.aria-label]="'PEOPLE.PERSON_PROFILE.REMOVE_CONTACT_ARIA' | translate: { index: i + 1, type: ('PEOPLE.PERSON_PROFILE.CONTACT_TYPE.' + cp.controls.contactType.value | translate) }">
+                  {{ 'PEOPLE.PERSON_PROFILE.REMOVE_CONTACT' | translate }}
+                </button>
+              }
+            </li>
+          }
+        </ul>
+
+        @if (canEdit()) {
+          <button #addContactButton type="button" class="btn btn--secondary add-contact" data-testid="add-contact-point"
+            [disabled]="!editable()" (click)="addContactPoint()">
+            {{ 'PEOPLE.PERSON_PROFILE.ADD_CONTACT' | translate }}
+          </button>
+        }
+      </fieldset>
+
+      <fieldset class="form-section" formGroupName="address">
+        <legend>{{ 'PEOPLE.PERSON_PROFILE.ADDRESS_LEGEND' | translate }}</legend>
+        <p class="hint" id="address-hint">{{ 'PEOPLE.PERSON_PROFILE.ADDRESS_HINT' | translate }}</p>
+
+        <div class="field-row">
+          <label for="address-line1">{{ 'PEOPLE.PERSON_PROFILE.FIELD_LINE1' | translate }}</label>
+          <input id="address-line1" type="text" formControlName="line1" aria-describedby="address-hint"
+            data-testid="address-line1-input" autocomplete="off" />
+        </div>
+        <div class="field-row">
+          <label for="address-line2">{{ 'PEOPLE.PERSON_PROFILE.FIELD_LINE2' | translate }}</label>
+          <input id="address-line2" type="text" formControlName="line2" aria-describedby="address-hint" autocomplete="off" />
+        </div>
+        <div class="field-grid">
+          <div class="field-row">
+            <label for="address-city">{{ 'PEOPLE.PERSON_PROFILE.FIELD_CITY' | translate }}</label>
+            <input id="address-city" type="text" formControlName="city" aria-describedby="address-hint" autocomplete="off" />
+          </div>
+          <div class="field-row">
+            <label for="address-region">{{ 'PEOPLE.PERSON_PROFILE.FIELD_REGION' | translate }}</label>
+            <input id="address-region" type="text" formControlName="region" aria-describedby="address-hint" autocomplete="off" />
+          </div>
+          <div class="field-row">
+            <label for="address-postalCode">{{ 'PEOPLE.PERSON_PROFILE.FIELD_POSTAL_CODE' | translate }}</label>
+            <input id="address-postalCode" type="text" formControlName="postalCode" aria-describedby="address-hint" autocomplete="off" />
+          </div>
+          <div class="field-row" [class.field-error--visible]="form.controls.address.controls.countryCode.invalid">
+            <label for="address-countryCode">{{ 'PEOPLE.PERSON_PROFILE.FIELD_COUNTRY' | translate }}</label>
+            <input id="address-countryCode" type="text" formControlName="countryCode" maxlength="2"
+              aria-describedby="address-hint" data-testid="address-country-input" autocomplete="off" />
+            @if (form.controls.address.controls.countryCode.invalid) {
+              <span class="field-error" role="alert">{{ 'PEOPLE.PERSON_PROFILE.ERROR.COUNTRY_INVALID' | translate }}</span>
+            }
+          </div>
+        </div>
+        @if (addressIncomplete()) {
+          <span class="field-error" role="alert" data-testid="address-incomplete">
+            {{ 'PEOPLE.PERSON_PROFILE.ERROR.ADDRESS_INCOMPLETE' | translate }}
+          </span>
+        }
+      </fieldset>
+
+      @if (canEdit()) {
+        <footer class="form-footer">
+          <button type="submit" class="btn btn--primary" data-testid="save-button" [disabled]="!editable()">
+            {{ (saving() ? 'PEOPLE.PERSON_PROFILE.SAVING' : 'PEOPLE.PERSON_PROFILE.SAVE') | translate }}
+          </button>
+        </footer>
+      } @else {
+        <p class="hint" data-testid="read-only-note">{{ 'PEOPLE.PERSON_PROFILE.READ_ONLY' | translate }}</p>
+      }
+    </form>
+  }
+</main>

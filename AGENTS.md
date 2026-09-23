@@ -18,7 +18,7 @@ npm test
 npm run lint                          # ESLint via @angular-eslint
 npm run lint:css                      # stylelint src/**/*.css
 npm run i18n:check                    # missing-keys + pseudo-locale check
-npx ng test --no-watch                # single CI pass (Vitest)
+npx ng test --no-watch --browsers=ChromiumHeadless --runner-config vitest.config.ts   # single CI pass (Vitest in Chromium; jsdom fails ~22 specs)
 ```
 
 ## Critical Rules
@@ -289,7 +289,7 @@ locale-sensitive values. Assert copy claims against the real `src/assets/i18n/*.
 
 ### Validation commands run locally
 
-- [ ] `npm run build`, `npx ng test --no-watch`, `npx ng lint`, `npm run lint:css`, `npm run i18n:check`
+- [ ] `npm run build`, `npx ng test --no-watch --browsers=ChromiumHeadless --runner-config vitest.config.ts`, `npx ng lint`, `npm run lint:css`, `npm run i18n:check`
 
 CI now runs the same set in `.github/workflows/frontend-checks.yml` (plus `.github/workflows/accessibility-gate.yml`) — a local pass before pushing catches failures before the gate does; it does not replace it.
 
