@@ -7,14 +7,14 @@
 
   @if (pageState() === 'ready') {
     <header class="page-header">
-      <p class="page-overline">{{ 'WORKEXEC.WORKORDER_COMMON.WO_OVERLINE' | translate: { id: workorderId() } }}</p>
+      <p class="page-overline" data-testid="wo-overline">@if (workorderNumber(); as workorderNumber) { {{ 'WORKEXEC.WORKORDER_COMMON.WO_OVERLINE' | translate: { id: workorderNumber } }} } @else { {{ 'WORKEXEC.WORKORDER_COMMON.WORK_ORDER' | translate }} }</p>
       <h1 id="assign-heading">{{ (formMode() === 'reassign' ? 'WORKEXEC.WORKORDER_ASSIGN.REASSIGN_TITLE' : 'WORKEXEC.WORKORDER_ASSIGN.ASSIGN_TITLE') | translate }}</h1>
     </header>
 
     @if (currentAssignment()) {
       <div class="current-assignment" [attr.aria-label]="'WORKEXEC.WORKORDER_ASSIGN.CURRENT_ARIA' | translate">
         <p class="section-overline">{{ 'WORKEXEC.WORKORDER_ASSIGN.CURRENT' | translate }}</p>
-        <p><strong>{{ currentAssignment()!.technicianName ?? currentAssignment()!.technicianId }}</strong></p>
+        <p><strong data-testid="current-technician">{{ currentAssignment()!.technicianName || ('COMMON.NOT_AVAILABLE' | translate) }}</strong></p>
         <p class="hint-text">{{ 'WORKEXEC.WORKORDER_ASSIGN.ASSIGNED_AT' | translate: { at: (currentAssignment()!.assignedAt | date:'medium') } }}</p>
       </div>
     }

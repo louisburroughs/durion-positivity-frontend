@@ -37,6 +37,12 @@ export class WorkorderChangeRequestsPageComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
 
   readonly workorderId = signal<string>('');
+  /**
+   * Human-readable number for the overline (issue #285: never the route UUID). An
+   * enrichment read: when it fails the overline falls back to the plain "Work Order"
+   * label, which is true whatever the cause (ADR-0064 §4).
+   */
+  readonly workorderNumber = signal<string | null>(null);
   readonly pageState = signal<PageState>('loading');
   readonly changeRequests = signal<ChangeRequestResponse[]>([]);
   readonly errorMessage = signal<string | null>(null);
@@ -57,7 +63,18 @@ export class WorkorderChangeRequestsPageComponent implements OnInit {
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('workorderId') ?? '';
     this.workorderId.set(id);
+    this.loadWorkorderNumber(id);
     this.loadChangeRequests(id);
+  }
+
+  private loadWorkorderNumber(id: string): void {
+    this.service
+      .getWorkorderDetail(id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (detail) => this.workorderNumber.set(detail.workorderNumber ?? null),
+        error: () => this.workorderNumber.set(null),
+      });
   }
 
   loadChangeRequests(id: string): void {

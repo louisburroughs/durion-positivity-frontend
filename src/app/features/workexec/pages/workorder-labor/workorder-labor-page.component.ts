@@ -62,6 +62,16 @@ export class WorkorderLaborPageComponent implements OnInit {
     this.workorder()?.items?.filter(i => i.itemType === 'LABOR') ?? [],
   );
 
+  /** Pickers carry a position, not the line UUID, as their option value (issue #285). */
+  serviceIndex(id: string): string {
+    const i = this.serviceItems().findIndex(item => item.id === id);
+    return i < 0 ? '' : String(i);
+  }
+
+  serviceIdAt(value: string): string {
+    return value === '' ? '' : (this.serviceItems()[Number(value)]?.id ?? '');
+  }
+
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('workorderId') ?? '';
     this.workorderId.set(id);

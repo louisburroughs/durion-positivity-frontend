@@ -1,15 +1,26 @@
 
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { WorkexecService } from '../../services/workexec.service';
 import { OperationalContextResponse } from '../../models/workexec.models';
 
+const RESOURCE_TYPES: ReadonlySet<string> = new Set(['BAY', 'MOBILE_UNIT', 'HOLD']);
+
+/** `key` values translate, `date` values format through DatePipe, `text` values render as-is. */
+type ContextValue =
+  | { kind: 'text'; value: string }
+  | { kind: 'date'; value: string }
+  | { kind: 'key'; valueKey: string; params?: Record<string, unknown> };
+
+export type ContextRow = { labelKey: string } & ContextValue;
+
 @Component({
   selector: 'app-operational-context-page',
   standalone: true,
-  imports: [ReactiveFormsModule, TranslatePipe],
+  imports: [ReactiveFormsModule, TranslatePipe, DatePipe],
   templateUrl: './operational-context-page.component.html',
   styleUrl: './operational-context-page.component.css',
 })
@@ -94,14 +105,35 @@ export class OperationalContextPageComponent implements OnInit {
     });
   }
 
-  contextEntries(): Array<{ key: string; value: string }> {
-    const value = this.context();
-    if (!value || typeof value !== 'object') {
-      return [];
-    }
-    return Object.entries(value as Record<string, unknown>).map(([key, rawValue]) => ({
-      key,
-      value: String(rawValue),
-    }));
-  }
+  /**
+   * Curated, translated rows. Related-entity ids (location, resource, mechanics) are
+   * never rendered (issue #285); mechanics and resources show as counts instead.
+   */
+  readonly contextRows = computed<ContextRow[]>(() => {
+    const c = this.context();
+    if (!c) return [];
+    const F = 'WORKEXEC.OPS_CONTEXT.FIELD.';
+    const empty: ContextValue = { kind: 'key', valueKey: 'COMMON.EMPTY_VALUE' };
+    const date = (value: string | undefined): ContextValue => (value ? { kind: 'date', value } : empty);
+    const count = (items: readonly string[] | undefined): ContextValue =>
+      ({ kind: 'key', valueKey: 'WORKEXEC.OPS_CONTEXT.ASSIGNED_COUNT', params: { count: items?.length ?? 0 } });
+    const resourceType: ContextValue = c.resourceType && RESOURCE_TYPES.has(c.resourceType)
+      ? { kind: 'key', valueKey: 'WORKEXEC.OPS_CONTEXT.RESOURCE_TYPE.' + c.resourceType }
+      : empty;
+    const constraints: ContextValue = c.constraints?.length
+      ? { kind: 'text', value: c.constraints.join(', ') }
+      : empty;
+    const locked: ContextValue = typeof c.locked === 'boolean'
+      ? { kind: 'key', valueKey: c.locked ? 'WORKEXEC.OPS_CONTEXT.LOCKED_YES' : 'WORKEXEC.OPS_CONTEXT.LOCKED_NO' }
+      : empty;
+    return [
+      { labelKey: F + 'RESOURCE_TYPE', ...resourceType },
+      { labelKey: F + 'SCHEDULED_START', ...date(c.scheduledStartAt) },
+      { labelKey: F + 'SCHEDULED_END', ...date(c.scheduledEndAt) },
+      { labelKey: F + 'LOCKED', ...locked },
+      { labelKey: F + 'CONSTRAINTS', ...constraints },
+      { labelKey: F + 'ASSIGNED_MECHANICS', ...count(c.assignedMechanics) },
+      { labelKey: F + 'ASSIGNED_RESOURCES', ...count(c.assignedResources) },
+    ];
+  });
 }

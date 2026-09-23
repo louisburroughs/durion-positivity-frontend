@@ -1348,7 +1348,7 @@
       "BACK_TO_PARTY": "Retour à la partie",
       "BACK_TO_PARTY_ARROW": "← Retour à la partie",
       "TITLE": "Ajouter un véhicule",
-      "SUBTITLE": "Associez un véhicule à la partie",
+      "SUBTITLE": "Associez un véhicule à cette partie",
       "FORM_ARIA": "Formulaire d'ajout de véhicule",
       "DETAILS_LEGEND": "Détails du véhicule",
       "FIELD_VIN": "NIV",
@@ -1365,12 +1365,13 @@
       "SUBMIT": "Ajouter le véhicule",
       "CANCEL": "Annuler",
       "SUCCESS_TITLE": "Véhicule ajouté",
-      "SUCCESS_ID_LABEL": "Identifiant du véhicule :",
       "ADD_ANOTHER": "En ajouter un autre",
       "ERROR": {
         "VIN_REQUIRED": "Le NIV est requis.",
         "CREATE_FAILED": "Échec de l'ajout du véhicule ({{status}})."
-      }
+      },
+      "SUBTITLE_FOR": "Associez un véhicule à {{name}}",
+      "SUCCESS_VIN_LABEL": "NIV :"
     },
     "CUSTOMER_LIST": {
       "TITLE": "Comptes et parties",
@@ -4802,7 +4803,8 @@
       "NONE": "Aucune demande de modification pour ce bon de travail.",
       "ITEMS_REQUESTED": "{{count}} élément(s) demandé(s)",
       "APPROVE": "Approuver",
-      "DECLINE": "Refuser"
+      "DECLINE": "Refuser",
+      "REQUEST_LABEL": "Demande nº {{n}}"
     },
     "WORKORDER_FINALIZE": {
       "CHIP": "Finaliser pour facturation",
@@ -4869,13 +4871,13 @@
       "PART_UUID_PH": "UUID de pièce",
       "USAGE_COUNT": "Historique d’utilisation ({{count}})",
       "USAGE_EMPTY": "Aucune utilisation enregistrée pour l’instant.",
-      "COL_PART_ID": "ID de pièce",
+      "COL_PART_ID": "Pièce",
       "COL_ISSUED": "Délivré",
       "COL_CONSUMED": "Consommé",
       "COL_RETURNED": "Retourné",
       "SUBST_TITLE": "Trouver un substitut pour la pièce",
       "SUBST_CLOSE_ARIA": "Fermer le panneau de substitution",
-      "SUBST_PART": "Pièce : {{id}}",
+      "SUBST_PART": "Pièce : {{name}}",
       "SUBST_LOADING": "Chargement des suggestions…",
       "SUBST_LOAD_ERROR": "Échec du chargement des suggestions.",
       "SUBST_EMPTY": "Aucun substitut trouvé pour cette pièce.",
@@ -4883,7 +4885,8 @@
       "REASON": "Motif",
       "SUBST_REASON_PH": "Pourquoi substituer ?",
       "SUBSTITUTING": "Substitution…",
-      "CONFIRM_SUBST": "Confirmer la substitution"
+      "CONFIRM_SUBST": "Confirmer la substitution",
+      "SUBST_OPTION": "Option {{n}}"
     },
     "TRAVEL": {
       "TITLE": "Temps de déplacement",
@@ -4929,7 +4932,24 @@
       "REASON": "Motif",
       "SUBMIT": "Soumettre le remplacement",
       "CLOSE": "Fermer",
-      "SAVED": "Remplacement enregistré."
+      "SAVED": "Remplacement enregistré.",
+      "FIELD": {
+        "RESOURCE_TYPE": "Type de ressource",
+        "SCHEDULED_START": "Début planifié",
+        "SCHEDULED_END": "Fin planifiée",
+        "LOCKED": "Verrouillé",
+        "CONSTRAINTS": "Contraintes",
+        "ASSIGNED_MECHANICS": "Mécaniciens affectés",
+        "ASSIGNED_RESOURCES": "Ressources affectées"
+      },
+      "RESOURCE_TYPE": {
+        "BAY": "Baie",
+        "MOBILE_UNIT": "Unité mobile",
+        "HOLD": "En attente"
+      },
+      "LOCKED_YES": "Oui",
+      "LOCKED_NO": "Non",
+      "ASSIGNED_COUNT": "{{count}} affecté(s)"
     },
     "ERROR": {
       "ESTIMATE_OR_APPROVAL_NOT_FOUND": "Estimation ou approbation introuvable.",

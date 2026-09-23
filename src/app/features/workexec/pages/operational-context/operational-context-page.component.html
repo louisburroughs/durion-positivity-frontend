@@ -5,10 +5,16 @@
 
   @if (context()) {
     <div class="context-panel">
-      @for (item of contextEntries(); track item.key) {
-        <div class="context-item">
-          <span class="context-key">{{ item.key }}</span>
-          <span class="context-value">{{ item.value }}</span>
+      @for (row of contextRows(); track row.labelKey) {
+        <div class="context-item" data-testid="context-row">
+          <span class="context-key">{{ row.labelKey | translate }}</span>
+          <span class="context-value">
+            @switch (row.kind) {
+              @case ('date') { {{ row.value | date: 'medium' }} }
+              @case ('key') { {{ row.valueKey | translate: row.params }} }
+              @default { {{ row.value }} }
+            }
+          </span>
         </div>
       }
     </div>
