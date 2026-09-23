@@ -491,6 +491,10 @@
         "IDENTITY_COMPLIANCE": {
           "TITLE": "Identity Compliance",
           "DESCRIPTION": "Review active user accounts linked to inactive persons."
+        },
+        "EMPLOYEE_REGISTER": {
+          "TITLE": "Employee Register",
+          "DESCRIPTION": "Browse, filter and manage every employee in one table."
         }
       },
       "FIELD": {

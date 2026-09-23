@@ -491,6 +491,10 @@
         "IDENTITY_COMPLIANCE": {
           "TITLE": "Conformité des identités",
           "DESCRIPTION": "Examinez les comptes d'utilisateur actifs liés à des personnes inactives."
+        },
+        "EMPLOYEE_REGISTER": {
+          "TITLE": "Registre des employés",
+          "DESCRIPTION": "Parcourez, filtrez et gérez tous les employés dans un seul tableau."
         }
       },
       "FIELD": {

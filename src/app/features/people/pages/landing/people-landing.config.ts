@@ -91,6 +91,15 @@ export const PEOPLE_LANDING_CONFIG: LandingPageConfig = {
       cards: [
         {
           kind: 'direct',
+          icon: 'list_alt',
+          titleKey: 'PEOPLE.LANDING.CARD.EMPLOYEE_REGISTER.TITLE',
+          descriptionKey: 'PEOPLE.LANDING.CARD.EMPLOYEE_REGISTER.DESCRIPTION',
+          ctaKey: 'PEOPLE.LANDING.ACTION.OPEN_PAGE',
+          route: '/app/people/employees',
+          permissions: PEOPLE_PAGE.employeeRegister,
+        },
+        {
+          kind: 'direct',
           icon: 'person_add',
           titleKey: 'PEOPLE.LANDING.CARD.EMPLOYEE_NEW.TITLE',
           descriptionKey: 'PEOPLE.LANDING.CARD.EMPLOYEE_NEW.DESCRIPTION',
