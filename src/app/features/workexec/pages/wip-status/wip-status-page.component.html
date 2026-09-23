@@ -7,16 +7,14 @@
     </button>
   </header>
 
-  <form class="wip__location" (ngSubmit)="loadLocation(locationInput.value)">
-    <label class="wip__location-label" for="wip-location">
-      {{ 'WORKEXEC.WIP.LOCATION.LABEL' | translate }}
-    </label>
-    <input id="wip-location" #locationInput type="text" class="wip__location-input"
-      [placeholder]="'WORKEXEC.WIP.LOCATION.PLACEHOLDER' | translate" data-testid="wip-location-input" />
-    <button type="submit" class="wip__location-load" data-testid="wip-location-load">
-      {{ 'WORKEXEC.WIP.LOCATION.LOAD' | translate }}
-    </button>
-  </form>
+  <div class="wip__location" data-testid="wip-location-picker">
+    <app-location-picker
+      [label]="'WORKEXEC.WIP.LOCATION.LABEL' | translate"
+      [placeholder]="'WORKEXEC.WIP.LOCATION.PLACEHOLDER' | translate"
+      [selectedId]="locationId()"
+      (locationSelected)="loadLocation($event)"
+    ></app-location-picker>
+  </div>
 
   @if (state() === 'idle') {
   <p class="wip__hint">{{ 'WORKEXEC.WIP.LOCATION.HINT' | translate }}</p>
