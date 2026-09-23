@@ -1,6 +1,6 @@
-import { HttpParams } from '@angular/common/http';
+import { HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, catchError, map, of, throwError } from 'rxjs';
 import {
   AttendanceDiscrepancyReportResponse,
   CreateEmployeeRequest,
@@ -15,10 +15,13 @@ import {
   UpdateEmployeeRequest,
 } from '@durion-sdk/people';
 import {
+  ContactPointDto,
   PeopleAPIService,
   PeopleAccessControlService,
   Person,
   PersonRoleAssignmentRequest,
+  PostalAddressAPIService,
+  PostalAddressDto,
   RoleDto,
   UserRoleDto,
 } from '@durion-sdk/people-contact';
@@ -40,6 +43,7 @@ export class PeopleService {
   private readonly staffingApi = inject(PeopleStaffingAssignmentsService);
   private readonly accessControlApi = inject(PeopleAccessControlService);
   private readonly peopleApi = inject(PeopleAPIService);
+  private readonly postalAddressApi = inject(PostalAddressAPIService);
   private readonly workSessionsApi = inject(WorkSessionsAPIService);
 
   getEmployee(employeeId: string): Observable<EmployeeProfileDto> {
@@ -90,6 +94,42 @@ export class PeopleService {
 
   getPerson(personUuid: string): Observable<Person> {
     return this.peopleApi.getPersonById(personUuid);
+  }
+
+  /**
+   * Reads one person with their typed contact points. `getPersonById` leaves
+   * `contactPoints` unpopulated, so this goes through the batch by-id read, which
+   * attaches them; an unknown id is dropped from that result, surfaced here as `null`.
+   */
+  getPersonWithContactPoints(personId: string): Observable<Person | null> {
+    return this.peopleApi.getPeopleByIds([personId]).pipe(
+      map(people => people.find(person => person.id === personId) ?? null),
+    );
+  }
+
+  updatePerson(personId: string, person: Person): Observable<Person> {
+    return this.peopleApi.updatePerson(personId, person);
+  }
+
+  replaceContactPoints(personId: string, contactPoints: ContactPointDto[]): Observable<void> {
+    return this.peopleApi.replaceContactPoints(personId, contactPoints);
+  }
+
+  /** The endpoint documents 404 as "no address on file", so that one status maps to `null`. */
+  getPersonPostalAddress(personId: string): Observable<PostalAddressDto | null> {
+    return this.postalAddressApi.getPersonPostalAddress(personId).pipe(
+      catchError((err: unknown) =>
+        err instanceof HttpErrorResponse && err.status === 404 ? of(null) : throwError(() => err),
+      ),
+    );
+  }
+
+  putPersonPostalAddress(personId: string, address: PostalAddressDto): Observable<PostalAddressDto> {
+    return this.postalAddressApi.putPersonPostalAddress(personId, address);
+  }
+
+  deletePersonPostalAddress(personId: string): Observable<void> {
+    return this.postalAddressApi.deletePersonPostalAddress(personId);
   }
 
   getRoleAssignments(personUuid: string, includeHistory: boolean): Observable<UserRoleDto[]> {

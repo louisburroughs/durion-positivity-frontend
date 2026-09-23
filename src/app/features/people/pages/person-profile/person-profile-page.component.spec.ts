@@ -1,0 +1,346 @@
+import { describe, it, expect, afterEach, vi } from 'vitest';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { Observable, Subject, of, throwError } from 'rxjs';
+import {
+  ContactPointDtoContactTypeEnum,
+  Person,
+  PostalAddressDto,
+} from '@durion-sdk/people-contact';
+import enUS from '../../../../../assets/i18n/en-US.json';
+import { PersonProfilePageComponent } from './person-profile-page.component';
+import { PeopleService } from '../../services/people.service';
+import { AuthService } from '../../../../core/services/auth.service';
+
+/** Pinned literals, not read from PEOPLE_SECTION, so a repointed code fails here. */
+const VIEW_PERMISSION = 'people-contact:person:view';
+const EDIT_PERMISSION = 'people-contact:person:edit';
+
+const PERSON_ID = '01960011-0000-7000-8000-000000000010';
+
+const person: Person = {
+  id: PERSON_ID,
+  firstName: 'Dana',
+  lastName: 'Okafor',
+  username: 'dokafor',
+  primaryEmail: 'dana@example.com',
+  phoneNumbers: ['+15550100'],
+  contactPoints: [
+    { contactType: ContactPointDtoContactTypeEnum.Email, value: 'dana@example.com', primary: true },
+    { contactType: ContactPointDtoContactTypeEnum.PhoneWork, value: '+15550100', primary: true },
+    { contactType: ContactPointDtoContactTypeEnum.PhoneMobile, value: '+15550199', primary: false },
+  ],
+};
+
+const address: PostalAddressDto = {
+  line1: '1 Main St',
+  city: 'Springfield',
+  region: 'IL',
+  postalCode: '62701',
+  countryCode: 'US',
+};
+
+/** `permissions: null` models a legacy token with no `perm_bits` claim. */
+const session: { permissions: string[] | null } = { permissions: null };
+const authStub = {
+  permissionsKnown: () => session.permissions !== null,
+  hasAnyPermission: (permissions: readonly string[]) =>
+    permissions.some(permission => session.permissions?.includes(permission) ?? false),
+};
+
+const stubService = {
+  getPersonWithContactPoints: vi.fn(),
+  getPersonPostalAddress: vi.fn(),
+  updatePerson: vi.fn(),
+  replaceContactPoints: vi.fn(),
+  putPersonPostalAddress: vi.fn(),
+  deletePersonPostalAddress: vi.fn(),
+};
+
+describe('PersonProfilePageComponent', () => {
+  let fixture: ComponentFixture<PersonProfilePageComponent>;
+  let component: PersonProfilePageComponent;
+  let el: HTMLElement;
+
+  const setup = async (
+    options: {
+      permissions?: string[] | null;
+      person?: Observable<Person | null>;
+      address?: Observable<PostalAddressDto | null>;
+    } = {},
+  ) => {
+    vi.resetAllMocks();
+    session.permissions = 'permissions' in options
+      ? (options.permissions ?? null)
+      : [VIEW_PERMISSION, EDIT_PERMISSION];
+    stubService.getPersonWithContactPoints.mockReturnValue(options.person ?? of(person));
+    stubService.getPersonPostalAddress.mockReturnValue(options.address ?? of(address));
+    stubService.updatePerson.mockReturnValue(of(person));
+    stubService.replaceContactPoints.mockReturnValue(of(undefined));
+    stubService.putPersonPostalAddress.mockReturnValue(of(address));
+    stubService.deletePersonPostalAddress.mockReturnValue(of(undefined));
+
+    await TestBed.configureTestingModule({
+      imports: [PersonProfilePageComponent, TranslateModule.forRoot()],
+      providers: [
+        provideRouter([]),
+        { provide: PeopleService, useValue: stubService },
+        { provide: AuthService, useValue: authStub },
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            paramMap: of(convertToParamMap({ personId: PERSON_ID })),
+            snapshot: { paramMap: convertToParamMap({ personId: PERSON_ID }) },
+          },
+        },
+      ],
+    }).compileComponents();
+
+    const translate = TestBed.inject(TranslateService);
+    translate.setTranslation('en-US', enUS);
+    translate.use('en-US');
+
+    fixture = TestBed.createComponent(PersonProfilePageComponent);
+    component = fixture.componentInstance;
+    el = fixture.nativeElement as HTMLElement;
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+  };
+
+  const q = (testId: string) => el.querySelector(`[data-testid="${testId}"]`);
+
+  afterEach(() => {
+    fixture?.destroy();
+    session.permissions = null;
+  });
+
+  it('loads the person, contact points and address into the form', async () => {
+    await setup();
+
+    expect(stubService.getPersonWithContactPoints).toHaveBeenCalledWith(PERSON_ID);
+    expect(stubService.getPersonPostalAddress).toHaveBeenCalledWith(PERSON_ID);
+    expect(component.state()).toBe('ready');
+    expect(component.form.controls.firstName.value).toBe('Dana');
+    expect(component.contactPoints.length).toBe(3);
+    expect(component.form.controls.address.controls.line1.value).toBe('1 Main St');
+    expect(el.querySelectorAll('[data-testid="contact-point-row"]').length).toBe(3);
+  });
+
+  it('renders identifiers read-only, outside the editable form', async () => {
+    await setup();
+
+    expect(q('person-id')?.textContent?.trim()).toBe(PERSON_ID);
+    expect(q('person-username')?.textContent?.trim()).toBe('dokafor');
+    const form = el.querySelector('form');
+    expect(form?.querySelector('[data-testid="person-id"]')).toBeNull();
+    expect(Object.keys(component.form.controls)).not.toContain('id');
+    expect(Object.keys(component.form.controls)).not.toContain('username');
+  });
+
+  it('shows the no-linked-user copy from the shipped bundle when username is absent', async () => {
+    await setup({ person: of({ ...person, username: undefined }) });
+
+    expect(q('person-username')?.textContent?.trim()).toBe(enUS.PEOPLE.PERSON_PROFILE.NO_USERNAME);
+  });
+
+  it('keeps an empty address blank when the person has none on file', async () => {
+    await setup({ address: of(null) });
+
+    expect(component.state()).toBe('ready');
+    expect(component.form.controls.address.controls.line1.value).toBe('');
+  });
+
+  it('routes a missing person to the not-found error, state before key', async () => {
+    await setup({ person: of(null) });
+
+    expect(component.state()).toBe('error');
+    expect(component.errorKey()).toBe('PEOPLE.PERSON_PROFILE.ERROR.NOT_FOUND');
+    expect(el.querySelector('form')).toBeNull();
+  });
+
+  it('routes a failed read to the load error', async () => {
+    await setup({ person: throwError(() => new Error('boom')) });
+
+    expect(component.state()).toBe('error');
+    expect(component.errorKey()).toBe('PEOPLE.PERSON_PROFILE.ERROR.LOAD');
+    expect(q('error-panel')?.textContent).toContain(enUS.PEOPLE.PERSON_PROFILE.ERROR.LOAD);
+  });
+
+  it('saves names, the full contact-point set and the address in order', async () => {
+    await setup();
+    component.form.controls.firstName.setValue(' Danielle ');
+    component.contactPoints.at(2).controls.value.setValue('+15550200');
+
+    component.save();
+
+    expect(stubService.updatePerson).toHaveBeenCalledWith(PERSON_ID, {
+      firstName: 'Danielle',
+      lastName: 'Okafor',
+      primaryEmail: 'dana@example.com',
+      secondaryEmail: undefined,
+      phoneNumbers: ['+15550100'],
+    });
+    expect(stubService.replaceContactPoints).toHaveBeenCalledWith(PERSON_ID, [
+      { contactType: ContactPointDtoContactTypeEnum.Email, value: 'dana@example.com', primary: true },
+      { contactType: ContactPointDtoContactTypeEnum.PhoneWork, value: '+15550100', primary: true },
+      { contactType: ContactPointDtoContactTypeEnum.PhoneMobile, value: '+15550200', primary: false },
+    ]);
+    expect(stubService.putPersonPostalAddress).toHaveBeenCalledWith(PERSON_ID, {
+      line1: '1 Main St',
+      line2: undefined,
+      city: 'Springfield',
+      region: 'IL',
+      postalCode: '62701',
+      countryCode: 'US',
+    });
+    expect(component.saveSuccess()).toBe(true);
+    fixture.detectChanges();
+    // Readback after the write refreshes every signal the initial load populated.
+    expect(stubService.getPersonWithContactPoints).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not start the contact write until the identity write lands', async () => {
+    await setup();
+    const identity$ = new Subject<Person>();
+    stubService.updatePerson.mockReturnValue(identity$);
+
+    component.save();
+    expect(stubService.replaceContactPoints).not.toHaveBeenCalled();
+    expect(component.saving()).toBe(true);
+
+    identity$.next(person);
+    identity$.complete();
+    expect(stubService.replaceContactPoints).toHaveBeenCalled();
+  });
+
+  it('deletes the address when every address field is cleared', async () => {
+    await setup();
+    component.form.controls.address.setValue({
+      line1: '', line2: '', city: '', region: '', postalCode: '', countryCode: '',
+    });
+
+    component.save();
+
+    expect(stubService.deletePersonPostalAddress).toHaveBeenCalledWith(PERSON_ID);
+    expect(stubService.putPersonPostalAddress).not.toHaveBeenCalled();
+  });
+
+  it('writes no address when none was on file and none was entered', async () => {
+    await setup({ address: of(null) });
+
+    component.save();
+
+    expect(stubService.deletePersonPostalAddress).not.toHaveBeenCalled();
+    expect(stubService.putPersonPostalAddress).not.toHaveBeenCalled();
+    expect(stubService.replaceContactPoints).toHaveBeenCalled();
+  });
+
+  it('refuses a partial address without line 1 and country', async () => {
+    await setup({ address: of(null) });
+    component.form.controls.address.controls.city.setValue('Springfield');
+
+    component.save();
+    fixture.detectChanges();
+
+    expect(stubService.updatePerson).not.toHaveBeenCalled();
+    expect(q('address-incomplete')?.textContent?.trim()).toBe(enUS.PEOPLE.PERSON_PROFILE.ERROR.ADDRESS_INCOMPLETE);
+  });
+
+  it('refuses to save without a first name', async () => {
+    await setup();
+    component.form.controls.firstName.setValue('');
+
+    component.save();
+
+    expect(stubService.updatePerson).not.toHaveBeenCalled();
+  });
+
+  it('drops blank contact rows from the payload', async () => {
+    await setup();
+    component.addContactPoint();
+    component.contactPoints.at(3).controls.value.setValue('   ');
+    component.contactPoints.at(3).controls.value.clearValidators();
+    component.contactPoints.at(3).controls.value.updateValueAndValidity();
+
+    component.save();
+
+    const [, sent] = stubService.replaceContactPoints.mock.calls[0];
+    expect(sent).toHaveLength(3);
+  });
+
+  it('keeps one primary per contact type', async () => {
+    await setup();
+    component.addContactPoint();
+    const added = component.contactPoints.at(3);
+    added.controls.value.setValue('alt@example.com');
+    added.controls.primary.setValue(true);
+
+    component.onPrimaryChange(3);
+
+    expect(component.contactPoints.at(0).controls.primary.value).toBe(false);
+    expect(component.contactPoints.at(1).controls.primary.value).toBe(true);
+  });
+
+  it('moves focus to the add button after removing a contact point', async () => {
+    await setup();
+    const remove = el.querySelector<HTMLButtonElement>('[data-testid="remove-contact-point"]');
+    remove?.focus();
+
+    remove?.click();
+    fixture.detectChanges();
+
+    expect(component.contactPoints.length).toBe(2);
+    expect(document.activeElement).toBe(q('add-contact-point'));
+  });
+
+  it('routes a failed save to the save error and keeps the form on screen', async () => {
+    await setup();
+    stubService.replaceContactPoints.mockReturnValue(throwError(() => new Error('boom')));
+
+    component.save();
+    fixture.detectChanges();
+
+    expect(component.state()).toBe('error');
+    expect(component.errorKey()).toBe('PEOPLE.PERSON_PROFILE.ERROR.SAVE');
+    expect(component.saving()).toBe(false);
+    expect(el.querySelector('form')).not.toBeNull();
+  });
+
+  describe('write gating (people-contact:person:edit)', () => {
+    it('view-only: form disabled, no save or add controls, and save() refuses', async () => {
+      await setup({ permissions: [VIEW_PERMISSION] });
+
+      expect(component.canEdit()).toBe(false);
+      expect(component.form.disabled).toBe(true);
+      expect(q('save-button')).toBeNull();
+      expect(q('add-contact-point')).toBeNull();
+      expect(q('remove-contact-point')).toBeNull();
+      expect(q('read-only-note')?.textContent?.trim()).toBe(enUS.PEOPLE.PERSON_PROFILE.READ_ONLY);
+
+      component.save();
+      component.addContactPoint();
+      component.removeContactPoint(0);
+
+      expect(stubService.updatePerson).not.toHaveBeenCalled();
+      expect(component.contactPoints.length).toBe(3);
+    });
+
+    it('edit granted: save control renders and writes go out', async () => {
+      await setup({ permissions: [VIEW_PERMISSION, EDIT_PERMISSION] });
+
+      expect(component.form.enabled).toBe(true);
+      expect(q('save-button')).not.toBeNull();
+      component.save();
+      expect(stubService.updatePerson).toHaveBeenCalled();
+    });
+
+    it('legacy token with unknown perm_bits falls back to allowing edits', async () => {
+      await setup({ permissions: null });
+
+      expect(component.canEdit()).toBe(true);
+      expect(q('save-button')).not.toBeNull();
+    });
+  });
+});

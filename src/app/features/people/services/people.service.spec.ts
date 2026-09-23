@@ -1,5 +1,6 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import {
   AttendanceDiscrepancyReportResponse,
   CreateEmployeeRequest,
@@ -18,10 +19,14 @@ import {
   WorkSessionsAPIService,
 } from '@durion-sdk/people';
 import {
+  ContactPointDto,
+  ContactPointDtoContactTypeEnum,
   PeopleAPIService,
   PeopleAccessControlService,
   Person,
   PersonRoleAssignmentRequest,
+  PostalAddressAPIService,
+  PostalAddressDto,
   RoleDto,
   UserRoleDto,
 } from '@durion-sdk/people-contact';
@@ -47,6 +52,9 @@ describe('PeopleService', () => {
   };
   const peopleApiStub = {
     getPersonById: vi.fn(),
+    getPeopleByIds: vi.fn(),
+    updatePerson: vi.fn(),
+    replaceContactPoints: vi.fn(),
   };
   const accessControlApiStub = {
     listRoleAssignments: vi.fn(),
@@ -59,6 +67,11 @@ describe('PeopleService', () => {
     stopWorkSession: vi.fn(),
     startWorkSessionBreak: vi.fn(),
     stopWorkSessionBreak: vi.fn(),
+  };
+  const postalAddressApiStub = {
+    getPersonPostalAddress: vi.fn(),
+    putPersonPostalAddress: vi.fn(),
+    deletePersonPostalAddress: vi.fn(),
   };
   const apiBaseStub = {
     get: vi.fn(),
@@ -76,6 +89,7 @@ describe('PeopleService', () => {
         { provide: PeopleStaffingAssignmentsService, useValue: staffingApiStub },
         { provide: PeopleAccessControlService, useValue: accessControlApiStub },
         { provide: PeopleAPIService, useValue: peopleApiStub },
+        { provide: PostalAddressAPIService, useValue: postalAddressApiStub },
         { provide: WorkSessionsAPIService, useValue: workSessionsApiStub },
         { provide: ApiBaseService, useValue: apiBaseStub },
       ],
@@ -249,6 +263,107 @@ describe('PeopleService', () => {
     expect(peopleApiStub.getPersonById).toHaveBeenCalledWith(
       '01960011-0000-7000-8000-000000000010',
     );
+  });
+
+  describe('person identity and contact', () => {
+    const personId = '01960011-0000-7000-8000-000000000010';
+    const contactPoints: ContactPointDto[] = [
+      { contactType: ContactPointDtoContactTypeEnum.Email, value: 'dana@example.com', primary: true },
+      { contactType: ContactPointDtoContactTypeEnum.PhoneMobile, value: '+15550100', primary: false },
+    ];
+    const person: Person = { id: personId, firstName: 'Dana', lastName: 'Okafor', contactPoints };
+    const address: PostalAddressDto = { line1: '1 Main St', city: 'Springfield', region: 'IL', postalCode: '62701', countryCode: 'US' };
+
+    it('getPersonWithContactPoints() reads through getPeopleByIds with a one-id batch', () => {
+      peopleApiStub.getPeopleByIds.mockReturnValue(of([person]));
+      let result: Person | null | undefined;
+
+      service.getPersonWithContactPoints(personId).subscribe(r => (result = r));
+
+      expect(peopleApiStub.getPeopleByIds).toHaveBeenCalledWith([personId]);
+      expect(result).toEqual(person);
+    });
+
+    it('getPersonWithContactPoints() emits null when the batch drops an unknown id', () => {
+      peopleApiStub.getPeopleByIds.mockReturnValue(of([]));
+      let result: Person | null | undefined;
+
+      service.getPersonWithContactPoints(personId).subscribe(r => (result = r));
+
+      expect(result).toBeNull();
+    });
+
+    it('updatePerson() delegates to PeopleAPIService.updatePerson', () => {
+      peopleApiStub.updatePerson.mockReturnValue(of(person));
+      let result: Person | undefined;
+
+      service.updatePerson(personId, person).subscribe(r => (result = r));
+
+      expect(peopleApiStub.updatePerson).toHaveBeenCalledWith(personId, person);
+      expect(result).toEqual(person);
+    });
+
+    it('replaceContactPoints() delegates to PeopleAPIService.replaceContactPoints', () => {
+      peopleApiStub.replaceContactPoints.mockReturnValue(of(undefined));
+      let completed = false;
+
+      service.replaceContactPoints(personId, contactPoints).subscribe({ complete: () => (completed = true) });
+
+      expect(peopleApiStub.replaceContactPoints).toHaveBeenCalledWith(personId, contactPoints);
+      expect(completed).toBe(true);
+    });
+
+    it('getPersonPostalAddress() emits the address on file', () => {
+      postalAddressApiStub.getPersonPostalAddress.mockReturnValue(of(address));
+      let result: PostalAddressDto | null | undefined;
+
+      service.getPersonPostalAddress(personId).subscribe(r => (result = r));
+
+      expect(postalAddressApiStub.getPersonPostalAddress).toHaveBeenCalledWith(personId);
+      expect(result).toEqual(address);
+    });
+
+    it('getPersonPostalAddress() maps the documented 404 to null', () => {
+      postalAddressApiStub.getPersonPostalAddress.mockReturnValue(
+        throwError(() => new HttpErrorResponse({ status: 404 })),
+      );
+      let result: PostalAddressDto | null | undefined;
+
+      service.getPersonPostalAddress(personId).subscribe(r => (result = r));
+
+      expect(result).toBeNull();
+    });
+
+    it('getPersonPostalAddress() rethrows any other failure', () => {
+      postalAddressApiStub.getPersonPostalAddress.mockReturnValue(
+        throwError(() => new HttpErrorResponse({ status: 500 })),
+      );
+      let status: number | undefined;
+
+      service.getPersonPostalAddress(personId).subscribe({ error: (e: HttpErrorResponse) => (status = e.status) });
+
+      expect(status).toBe(500);
+    });
+
+    it('putPersonPostalAddress() delegates to PostalAddressAPIService.putPersonPostalAddress', () => {
+      postalAddressApiStub.putPersonPostalAddress.mockReturnValue(of(address));
+      let result: PostalAddressDto | undefined;
+
+      service.putPersonPostalAddress(personId, address).subscribe(r => (result = r));
+
+      expect(postalAddressApiStub.putPersonPostalAddress).toHaveBeenCalledWith(personId, address);
+      expect(result).toEqual(address);
+    });
+
+    it('deletePersonPostalAddress() delegates to PostalAddressAPIService.deletePersonPostalAddress', () => {
+      postalAddressApiStub.deletePersonPostalAddress.mockReturnValue(of(undefined));
+      let completed = false;
+
+      service.deletePersonPostalAddress(personId).subscribe({ complete: () => (completed = true) });
+
+      expect(postalAddressApiStub.deletePersonPostalAddress).toHaveBeenCalledWith(personId);
+      expect(completed).toBe(true);
+    });
   });
 
   it('getRoleAssignments() delegates to PeopleAccessControlService.getAssignments', () => {
