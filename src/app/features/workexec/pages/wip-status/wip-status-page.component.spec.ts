@@ -3,7 +3,7 @@ import { ActivatedRoute, provideRouter } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import enUS from '../../../../../assets/i18n/en-US.json';
 import { LocationService } from '../../../location/services/location.service';
-import { of, throwError } from 'rxjs';
+import { Subject, of, throwError } from 'rxjs';
 import { WorkorderWipView } from '../../models/workexec.models';
 import { WorkexecService } from '../../services/workexec.service';
 import { WipStatusPageComponent } from './wip-status-page.component';
@@ -134,6 +134,63 @@ describe('WipStatusPageComponent', () => {
     const stateOrder = stateSetSpy.mock.invocationCallOrder.at(-1) ?? 0;
     const errorKeyOrder = errorKeySetSpy.mock.invocationCallOrder.at(-1) ?? 0;
     expect(stateOrder).toBeLessThan(errorKeyOrder);
+  });
+
+  describe('superseded reads (ADR-0063)', () => {
+    const rowFor = (locationId: string): WorkorderWipView => ({
+      workorderId: `wo-${locationId}`, status: 'WORK_IN_PROGRESS', locationId,
+    });
+
+    it('ignores a slow response for a location that is no longer selected', () => {
+      const first$ = new Subject<WorkorderWipView[]>();
+      const second$ = new Subject<WorkorderWipView[]>();
+      serviceMock.listActiveWorkorders.mockReturnValueOnce(first$).mockReturnValueOnce(second$);
+
+      component.loadLocation('loc-1');
+      component.loadLocation('loc-2');
+      second$.next([rowFor('loc-2')]);
+      second$.complete();
+      first$.next([rowFor('loc-1')]);
+      first$.complete();
+
+      expect(component.state()).toBe('ready');
+      expect(component.wipItems()).toEqual([rowFor('loc-2')]);
+    });
+
+    it('ignores a late failure from a superseded read', () => {
+      const first$ = new Subject<WorkorderWipView[]>();
+      serviceMock.listActiveWorkorders.mockReturnValueOnce(first$).mockReturnValueOnce(of([rowFor('loc-2')]));
+
+      component.loadLocation('loc-1');
+      component.loadLocation('loc-2');
+      first$.error(new Error('late'));
+
+      expect(component.state()).toBe('ready');
+      expect(component.errorKey()).toBeNull();
+    });
+
+    it('ignores a read that lands after the picker was cleared', () => {
+      const first$ = new Subject<WorkorderWipView[]>();
+      serviceMock.listActiveWorkorders.mockReturnValueOnce(first$);
+
+      component.loadLocation('loc-1');
+      component.loadLocation('');
+      first$.next([rowFor('loc-1')]);
+
+      expect(component.state()).toBe('idle');
+      expect(component.wipItems()).toEqual([]);
+    });
+  });
+
+  it('clears a stale error key when the picker is cleared (ADR-0031)', () => {
+    serviceMock.listActiveWorkorders.mockReturnValue(throwError(() => new Error('boom')));
+    component.loadLocation('loc-1');
+    expect(component.errorKey()).toBe('WORKEXEC.WIP.ERROR.LOAD');
+
+    component.loadLocation('');
+
+    expect(component.state()).toBe('idle');
+    expect(component.errorKey()).toBeNull();
   });
 
   it('sets error state before errorKey when refresh() fails', () => {

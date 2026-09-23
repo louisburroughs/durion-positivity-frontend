@@ -25,6 +25,8 @@ export class WipStatusPageComponent {
   readonly wipItems = signal<WorkorderWipView[]>([]);
   readonly selectedWorkorderId = signal<string | null>(null);
   readonly locationId = signal('');
+  /** ADR-0063: one counter for the single writer to `wipItems`/`state`; a superseded read never lands. */
+  private loadSeq = 0;
 
   /** Picking a location loads it straight away; clearing the picker returns to idle. */
   loadLocation(value: string): void {
@@ -38,8 +40,10 @@ export class WipStatusPageComponent {
 
   private load(): void {
     const locationId = this.locationId();
+    const seq = ++this.loadSeq; // any read still in flight is now stale
     if (!locationId) {
       this.state.set('idle');
+      this.errorKey.set(null); // ADR-0031: leaving 'error' clears the key with it
       this.wipItems.set([]);
       return;
     }
@@ -52,10 +56,12 @@ export class WipStatusPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: items => {
+          if (seq !== this.loadSeq) return;
           this.wipItems.set(items);
           this.state.set(items.length > 0 ? 'ready' : 'empty');
         },
         error: () => {
+          if (seq !== this.loadSeq) return;
           this.state.set('error');
           this.errorKey.set('WORKEXEC.WIP.ERROR.LOAD');
         },
