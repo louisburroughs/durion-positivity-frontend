@@ -167,7 +167,15 @@ export class DispatchBoardPageComponent implements OnInit {
    * timekeeping gate downstream of `isViewingToday` would still be writing
    * against what is now yesterday's board.
    */
-  readonly todayIso = signal(isoDateLocal(new Date()));
+  /**
+   * The one clock read behind "today". A method rather than a bare `new Date()` so a
+   * spec can pin it (ADR-0038 §7) — the poll-tick test would otherwise race midnight (#300).
+   */
+  now(): Date {
+    return new Date();
+  }
+
+  readonly todayIso = signal(isoDateLocal(this.now()));
   readonly selectedDate = signal(this.todayIso());
   readonly selectedLocationId = signal('');
 
@@ -1875,7 +1883,7 @@ export class DispatchBoardPageComponent implements OnInit {
           // tick. `selectedDate` is deliberately left alone — advancing the
           // board under the dispatcher is worse than showing them that the day
           // they are looking at is no longer today.
-          this.todayIso.set(isoDateLocal(new Date()));
+          this.todayIso.set(isoDateLocal(this.now()));
           const locationId = this.selectedLocationId().trim();
           // A cleared picker is not a location. Asking for '' either errors —
           // and the retry button then names a different problem — or answers a
