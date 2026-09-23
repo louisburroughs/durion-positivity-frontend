@@ -104,9 +104,13 @@
               </td>
               <td class="directory-td">
                 @if (person.primaryEmail) {
-                  <a [href]="'mailto:' + person.primaryEmail" class="directory-email-link">
-                    {{ person.primaryEmail }}
-                  </a>
+                  @if (mailtoHref(person.primaryEmail); as safeMailto) {
+                    <a [href]="safeMailto" class="directory-email-link">
+                      {{ person.primaryEmail }}
+                    </a>
+                  } @else {
+                    <span class="directory-email-plain">{{ person.primaryEmail }}</span>
+                  }
                 } @else {
                   <span class="directory-empty-cell">—</span>
                 }

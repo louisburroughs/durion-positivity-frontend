@@ -14,6 +14,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { PeopleAPIService, Person } from '@durion-sdk/people-contact';
+import { safeMailtoHref } from '../../../../core/util/mailto-href';
 
 type SortColumn = 'lastName' | 'firstName' | 'username' | 'primaryEmail';
 type SortDir = 'asc' | 'desc';
@@ -88,6 +89,11 @@ export class PeopleDirectoryPageComponent implements OnInit {
     this.searchInputValue.set('');
     this.pageIndex.set(0);
     this.loadPeople();
+  }
+
+  /** ADR-0065 §2 — shared with the employee register (#306); null renders as plain text. */
+  mailtoHref(email: string | null | undefined): string | null {
+    return safeMailtoHref(email);
   }
 
   reload(): void {
