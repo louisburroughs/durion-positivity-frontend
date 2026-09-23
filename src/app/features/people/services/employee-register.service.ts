@@ -5,6 +5,7 @@ import { EmployeeAPIService, EmployeeProfileDto, EmployeeSummaryDto } from '@dur
 import {
   EmployeeAction,
   EmployeeRegisterPage,
+  EmployeeRegisterQuery,
   EmployeeRegisterRow,
   EmployeeRoleChip,
   EmploymentStatus,
@@ -106,24 +107,41 @@ export class EmployeeRegisterService {
   private readonly employeeApi = inject(EmployeeAPIService);
 
   /**
-   * Fetches a single generous page and filters, sorts and paginates client-side — the same
-   * shape the sibling People directory uses. `totalElements` is carried through so the page
-   * can tell the user when the tenant is larger than one fetch.
+   * One server page of the register. Status filtering, last-name ordering and paging all run
+   * on the server (backend #2158), so `totalElements`/`totalPages` describe the whole filtered
+   * set, not just the rows returned.
    */
-  searchEmployees(query: string | undefined, size: number): Observable<EmployeeRegisterPage> {
+  searchEmployees(query: EmployeeRegisterQuery): Observable<EmployeeRegisterPage> {
     // Without `include=` the endpoint returns the thin row and every enrichment column would sit
     // on "not available yet" with nothing failing to say so.
     return this.employeeApi
-      .searchEmployees(query || undefined, undefined, undefined, 0, size, REGISTER_INCLUDES)
+      .searchEmployees(
+        query.q || undefined,
+        query.status ? [query.status] : undefined,
+        `lastName,${query.sortDir}`,
+        query.page,
+        query.size,
+        REGISTER_INCLUDES,
+      )
       .pipe(
         map(response => ({
           rows: (response.items ?? []).map(item => this.toRow(item)),
-          page: response.page ?? 0,
-          size: response.size ?? size,
+          page: response.page ?? query.page,
+          size: response.size ?? query.size,
           totalElements: response.totalElements ?? (response.items ?? []).length,
           totalPages: response.totalPages ?? 1,
         })),
       );
+  }
+
+  /**
+   * Employee count per status over the `q`-filtered set, before any status filter — what the
+   * stat tiles show. Keys are status names plus `UNKNOWN` for a row with no status recorded.
+   */
+  getStatusCounts(q: string | undefined): Observable<Readonly<Record<string, number>>> {
+    return this.employeeApi
+      .getEmployeeStatusCounts(q || undefined)
+      .pipe(map(response => response.counts ?? {}));
   }
 
   /**

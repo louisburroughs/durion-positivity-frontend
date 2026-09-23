@@ -957,7 +957,6 @@
       "LOADING": "Chargement des employés…",
       "EMPTY": "Aucun employé ne correspond aux filtres.",
       "CLEAR_FILTERS": "Effacer les filtres",
-      "TRUNCATED": "Affichage des {{loaded}} premiers employés sur {{total}}. Affinez la recherche : les filtres et le tri portent sur ce qui est chargé.",
       "FORBIDDEN": {
         "TITLE": "Vous n’avez pas accès au registre des employés",
         "BODY": "Cette page exige la permission de consultation des employés. L’annuaire des personnes vous est accessible et contient le nom, le nom d’utilisateur, l’e-mail et le téléphone.",

@@ -62,8 +62,11 @@ const REGISTER_INCLUDES = [
   'ALLOWED_ACTIONS',
 ];
 
+const QUERY = { sortDir: 'asc', page: 0, size: 25 } as const;
+
 const employeeApi = {
   searchEmployees: vi.fn(),
+  getEmployeeStatusCounts: vi.fn(),
   disableEmployee: vi.fn(),
 };
 
@@ -81,34 +84,54 @@ describe('EmployeeRegisterService', () => {
     service = TestBed.inject(EmployeeRegisterService);
   });
 
-  it('passes the query, a single generous page and every register include to the SDK', () => {
+  it('passes the query, status, sort, page and every register include to the SDK', () => {
     employeeApi.searchEmployees.mockReturnValue(
-      of({ items: [], page: 0, size: 100, totalElements: 0, totalPages: 0 }),
+      of({ items: [], page: 2, size: 25, totalElements: 0, totalPages: 0 }),
     );
-    service.searchEmployees('albright', 100).subscribe();
+    service
+      .searchEmployees({ q: 'albright', status: 'DISABLED', sortDir: 'desc', page: 2, size: 25 })
+      .subscribe();
     expect(employeeApi.searchEmployees).toHaveBeenCalledWith(
       'albright',
-      undefined,
-      undefined,
-      0,
-      100,
+      ['DISABLED'],
+      'lastName,desc',
+      2,
+      25,
       REGISTER_INCLUDES,
     );
   });
 
-  it('sends undefined rather than an empty query string', () => {
+  it('sends undefined rather than an empty query string or an absent status', () => {
     employeeApi.searchEmployees.mockReturnValue(
-      of({ items: [], page: 0, size: 100, totalElements: 0, totalPages: 0 }),
+      of({ items: [], page: 0, size: 25, totalElements: 0, totalPages: 0 }),
     );
-    service.searchEmployees('', 100).subscribe();
+    service.searchEmployees({ ...QUERY, q: '' }).subscribe();
     expect(employeeApi.searchEmployees).toHaveBeenCalledWith(
       undefined,
       undefined,
-      undefined,
+      'lastName,asc',
       0,
-      100,
+      25,
       REGISTER_INCLUDES,
     );
+  });
+
+  it('carries the server totals through, not the length of the page', async () => {
+    employeeApi.searchEmployees.mockReturnValue(
+      of({ items: [thin], page: 3, size: 25, totalElements: 76, totalPages: 4 }),
+    );
+    const result = await firstValueFrom(service.searchEmployees({ ...QUERY, page: 3 }));
+    expect(result).toEqual(
+      expect.objectContaining({ page: 3, size: 25, totalElements: 76, totalPages: 4 }),
+    );
+  });
+
+  it('reads the status counts for the search, sending undefined for a blank one', async () => {
+    employeeApi.getEmployeeStatusCounts.mockReturnValue(of({ counts: { ACTIVE: 3, DISABLED: 1 } }));
+    expect(await firstValueFrom(service.getStatusCounts(''))).toEqual({ ACTIVE: 3, DISABLED: 1 });
+    expect(employeeApi.getEmployeeStatusCounts).toHaveBeenCalledWith(undefined);
+    await firstValueFrom(service.getStatusCounts('byrd'));
+    expect(employeeApi.getEmployeeStatusCounts).toHaveBeenLastCalledWith('byrd');
   });
 
   it('leaves not-yet-served fields undefined so the page can say "not available"', async () => {
@@ -116,7 +139,7 @@ describe('EmployeeRegisterService', () => {
       of({ items: [thin], page: 0, size: 100, totalElements: 1, totalPages: 1 }),
     );
 
-    const { rows } = await firstValueFrom(service.searchEmployees(undefined, 100));
+    const { rows } = await firstValueFrom(service.searchEmployees(QUERY));
     const [mapped] = rows;
 
     expect(mapped.username).toBeUndefined();
@@ -134,7 +157,7 @@ describe('EmployeeRegisterService', () => {
       of({ items: [enriched], page: 0, size: 100, totalElements: 1, totalPages: 1 }),
     );
 
-    const { rows } = await firstValueFrom(service.searchEmployees(undefined, 100));
+    const { rows } = await firstValueFrom(service.searchEmployees(QUERY));
     const [mapped] = rows;
 
     expect(mapped.username).toBe('renee.albright');
@@ -162,7 +185,7 @@ describe('EmployeeRegisterService', () => {
       }),
     );
 
-    const { rows } = await firstValueFrom(service.searchEmployees(undefined, 100));
+    const { rows } = await firstValueFrom(service.searchEmployees(QUERY));
     const [mapped] = rows;
     expect(mapped.status).toBeNull();
   });
@@ -186,7 +209,7 @@ describe('EmployeeRegisterService', () => {
       }),
     );
 
-    const { rows } = await firstValueFrom(service.searchEmployees(undefined, 100));
+    const { rows } = await firstValueFrom(service.searchEmployees(QUERY));
     const [mapped] = rows;
 
     // The projection served these and they are genuinely empty, so the page must render
@@ -243,7 +266,7 @@ describe('EmployeeRegisterService', () => {
       }),
     );
 
-    const { rows } = await firstValueFrom(service.searchEmployees(undefined, 100));
+    const { rows } = await firstValueFrom(service.searchEmployees(QUERY));
 
     // Defaulting an unrecognised scope to LOCATION rendered "· L" — the page asserting a
     // scope check it never made (DECISION-PEOPLE-003). The role is real, so it is kept;
@@ -273,7 +296,7 @@ describe('EmployeeRegisterService', () => {
       }),
     );
 
-    const { rows } = await firstValueFrom(service.searchEmployees(undefined, 100));
+    const { rows } = await firstValueFrom(service.searchEmployees(QUERY));
     const [mapped] = rows;
 
     // `email` was never sent, so the cell must say "not available yet". Reading it as null
@@ -297,7 +320,7 @@ describe('EmployeeRegisterService', () => {
       }),
     );
 
-    const { rows } = await firstValueFrom(service.searchEmployees(undefined, 100));
+    const { rows } = await firstValueFrom(service.searchEmployees(QUERY));
 
     // Served and empty: the employee really has no other locations, so the cell may say
     // "Primary". Absent: the count was never sent, and claiming "Primary" would assert a
@@ -317,7 +340,7 @@ describe('EmployeeRegisterService', () => {
       }),
     );
 
-    const { rows } = await firstValueFrom(service.searchEmployees(undefined, 100));
+    const { rows } = await firstValueFrom(service.searchEmployees(QUERY));
 
     // undefined would mean "the projection does not publish capabilities", and the page then
     // falls back to the caller's permissions — so collapsing null into it would GRANT the
@@ -337,7 +360,7 @@ describe('EmployeeRegisterService', () => {
       }),
     );
 
-    const { rows } = await firstValueFrom(service.searchEmployees(undefined, 100));
+    const { rows } = await firstValueFrom(service.searchEmployees(QUERY));
     expect(rows[0].roles).toEqual([]);
     expect(rows[0].roles).not.toBeUndefined();
   });

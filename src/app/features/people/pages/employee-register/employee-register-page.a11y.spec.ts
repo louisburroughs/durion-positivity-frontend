@@ -81,7 +81,7 @@ const ROWS: readonly EmployeeRegisterRow[] = [
 const PAGE: EmployeeRegisterPage = {
   rows: ROWS,
   page: 0,
-  size: 200,
+  size: 25,
   totalElements: 3,
   totalPages: 1,
 };
@@ -94,6 +94,7 @@ const authStub = {
 
 const stubService = {
   searchEmployees: vi.fn(),
+  getStatusCounts: vi.fn(),
   disableEmployee: vi.fn(),
 };
 
@@ -110,6 +111,7 @@ describe('Employee register a11y (rendered DOM)', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     stubService.searchEmployees.mockReturnValue(of(PAGE));
+    stubService.getStatusCounts.mockReturnValue(of({ ACTIVE: 2, DISABLED: 1 }));
     stubService.disableEmployee.mockReturnValue(of({}));
 
     await TestBed.configureTestingModule({

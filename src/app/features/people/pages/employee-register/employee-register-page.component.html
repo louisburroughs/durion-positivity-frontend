@@ -29,13 +29,15 @@
     }
   </header>
 
-  @if (viewState() === 'ready' || viewState() === 'empty') {
+  @if (state() === 'ready' || state() === 'empty') {
     <div class="register-stats">
-      <div class="stat-tile stat-tile--featured">
-        <span class="stat-tile__label">{{ 'PEOPLE.EMPLOYEE_REGISTER.STAT.TOTAL' | translate }}</span>
-        <span class="stat-tile__value">{{ totalElements() | number }}</span>
-      </div>
-      @if (!truncated()) {
+      @if (totalTile() !== null) {
+        <div class="stat-tile stat-tile--featured">
+          <span class="stat-tile__label">{{ 'PEOPLE.EMPLOYEE_REGISTER.STAT.TOTAL' | translate }}</span>
+          <span class="stat-tile__value">{{ totalTile() | number }}</span>
+        </div>
+      }
+      @if (activeCount() !== null) {
         <div class="stat-tile">
           <span class="stat-tile__label">{{ 'PEOPLE.EMPLOYEE_REGISTER.STAT.ACTIVE' | translate }}</span>
           <span class="stat-tile__value">{{ activeCount() | number }}</span>
@@ -44,13 +46,7 @@
     </div>
   }
 
-  @if (showTruncationNotice()) {
-    <p class="register-notice" role="status">
-      {{ 'PEOPLE.EMPLOYEE_REGISTER.TRUNCATED' | translate: { loaded: (allRows().length | number), total: (totalElements() | number) } }}
-    </p>
-  }
-
-  @if (viewState() === 'ready' || viewState() === 'empty') {
+  @if (state() === 'ready' || state() === 'empty') {
     <div class="register-filters">
       <span id="status-filter-label" class="register-filters__label">
         {{ 'PEOPLE.EMPLOYEE_REGISTER.FILTER.LABEL' | translate }}
@@ -71,14 +67,14 @@
     </div>
   }
 
-  @if (viewState() === 'loading') {
+  @if (state() === 'loading') {
     <div class="register-state" aria-live="polite" aria-busy="true">
       <span class="register-state__spinner" aria-hidden="true"></span>
       {{ 'PEOPLE.EMPLOYEE_REGISTER.LOADING' | translate }}
     </div>
   }
 
-  @if (viewState() === 'error') {
+  @if (state() === 'error') {
     <div class="register-state register-state--error" role="alert">
       <span>{{ errorKey()! | translate }}</span>
       <button type="button" class="register-state__btn" (click)="reload()">
@@ -87,7 +83,7 @@
     </div>
   }
 
-  @if (viewState() === 'forbidden') {
+  @if (state() === 'forbidden') {
     <div class="register-state register-state--forbidden">
       <div>
         <p class="register-state__title">
@@ -109,7 +105,7 @@
     </div>
   }
 
-  @if (viewState() === 'empty') {
+  @if (state() === 'empty') {
     <div class="register-state">
       <span>{{ 'PEOPLE.EMPLOYEE_REGISTER.EMPTY' | translate }}</span>
       <button type="button" class="register-state__btn" (click)="clearFilters()">
@@ -118,8 +114,8 @@
     </div>
   }
 
-  @if (viewState() === 'ready') {
-    <div class="register-table-wrap">
+  @if (state() === 'ready') {
+    <div class="register-table-wrap" [attr.aria-busy]="readInFlight() || null">
       <table class="register-table">
         <caption class="sr-only">{{ 'PEOPLE.EMPLOYEE_REGISTER.TITLE' | translate }}</caption>
         <thead>
@@ -143,7 +139,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (row of paged(); track row.employeeId) {
+          @for (row of rows(); track row.employeeId) {
             <tr class="register-row" [class.register-row--inactive]="!row.active">
               <td class="register-td register-td--name">
                 @if (canViewPiiFor(row)) {

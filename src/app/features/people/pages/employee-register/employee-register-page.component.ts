@@ -30,19 +30,23 @@ type PageState = 'idle' | 'loading' | 'ready' | 'empty' | 'error' | 'forbidden';
 type StatusFilter = 'ALL' | EmploymentStatus;
 type SortDir = 'asc' | 'desc';
 
+/**
+ * Rows per server page. Status filter, last-name sort and paging all run on the server
+ * (backend #2158), so each page, filter or sort change is its own read. The endpoint rejects a
+ * `size` above 100 with a 400.
+ */
 const PAGE_SIZE = 25;
 
-/**
- * One fetch backs the whole register. `searchEmployees` offers no status filter and no sort
- * (backend issue #2158), so filtering and ordering a *page* of results would silently describe
- * only that page. Fetching a generous slice and working over it client-side — the shape the
- * sibling People directory already uses — keeps the filter honest, and `truncated()` tells the
- * user when the tenant outgrew it.
- *
- * 100 is the endpoint's `size` ceiling — anything larger is rejected with a 400 rather than
- * clamped, which fails the whole register.
- */
-const FETCH_SIZE = 100;
+interface LoadOptions {
+  /**
+   * Keep the table, filter chips and pager on screen while the read runs. Paging, filtering and
+   * sorting are triggered from controls inside that content, and swapping it for the loading
+   * panel would unmount the focused control and drop a keyboard user to <body> (ADR-0029 §8.7).
+   */
+  readonly keepContent?: boolean;
+  /** Re-read the stat-tile counts too — only a search or a write can change them. */
+  readonly refreshCounts?: boolean;
+}
 
 const STATUS_FILTERS: readonly StatusFilter[] = ['ALL', 'ACTIVE', 'DISABLED', 'TERMINATED'];
 
@@ -76,8 +80,18 @@ export class EmployeeRegisterPageComponent implements OnInit {
   readonly sortDir = signal<SortDir>('asc');
   readonly pageIndex = signal(0);
 
-  readonly allRows = signal<readonly EmployeeRegisterRow[]>([]);
+  /** The current server page. */
+  readonly rows = signal<readonly EmployeeRegisterRow[]>([]);
+  /** Size of the whole filtered set, from the server — not just this page. */
   readonly totalElements = signal(0);
+  readonly totalPages = signal(1);
+
+  /**
+   * Per-status counts over the searched set, before the status filter, for the stat tiles.
+   * null while unknown — being read, or the read failed — and the tiles then show only what the
+   * row read itself can vouch for rather than a stale or guessed count (ADR-0064).
+   */
+  readonly statusCounts = signal<Readonly<Record<string, number>> | null>(null);
 
   /** Employee ids with a status write in flight; their switch is replaced by a busy label. */
   readonly pendingIds = signal<ReadonlySet<string>>(new Set());
@@ -93,7 +107,7 @@ export class EmployeeRegisterPageComponent implements OnInit {
   readonly writeErrors = signal<ReadonlyMap<string, string>>(new Map());
 
   /**
-   * True while a read is in flight. `allRows` deliberately holds the PREVIOUS result until the
+   * True while a read is in flight. `rows` deliberately holds the PREVIOUS result until the
    * new one settles, so during that window the row lookup in `confirmDeactivate` is looking at
    * data that may already be stale — it would find an ACTIVE row the in-flight read is about to
    * report as DISABLED. The confirm refuses in that window rather than writing on a guess
@@ -122,6 +136,7 @@ export class EmployeeRegisterPageComponent implements OnInit {
 
   private readonly searchSubject = new Subject<string>();
   private loadSub: Subscription | null = null;
+  private countsSub: Subscription | null = null;
   /**
    * One subscription per employee. A single shared slot would let confirming a second row
    * unsubscribe the first — its handlers would never run, leaving that row's pending id set
@@ -130,6 +145,7 @@ export class EmployeeRegisterPageComponent implements OnInit {
   private readonly writeSubs = new Map<string, Subscription>();
   /** ADR-0063: the read that owns the current result. Stale reads never write. */
   private readSeq = 0;
+  private countsSeq = 0;
 
   // ── Write-control gating (ADR-0040 §6a) ─────────────────────────────────────────────
   // An unknown permission set (legacy token without `perm_bits`) allows the control; the
@@ -148,47 +164,23 @@ export class EmployeeRegisterPageComponent implements OnInit {
    */
   readonly canViewDirectory = computed(() => this.allows(PEOPLE_PAGE.directory));
 
-  readonly filtered = computed<readonly EmployeeRegisterRow[]>(() => {
-    const status = this.statusFilter();
-    const rows = status === 'ALL' ? this.allRows() : this.allRows().filter(r => r.status === status);
-    const dir = this.sortDir();
-    return [...rows].sort((a, b) => {
-      const cmp = (a.lastName ?? '').localeCompare(b.lastName ?? '');
-      return dir === 'asc' ? cmp : -cmp;
-    });
+  /** The whole searched set across every status; null until the counts read settles. */
+  readonly totalCount = computed(() => {
+    const counts = this.statusCounts();
+    return counts ? Object.values(counts).reduce((sum, n) => sum + n, 0) : null;
+  });
+
+  readonly activeCount = computed(() => {
+    const counts = this.statusCounts();
+    return counts ? (counts['ACTIVE'] ?? 0) : null;
   });
 
   /**
-   * What the template renders. `state` is the READ outcome; the status filter runs
-   * client-side (backend #2158), so a filter matching nothing has to show the empty panel —
-   * and its clear-filters action — even though the read itself succeeded.
+   * The total tile falls back to the row read's own total only when that total means the same
+   * thing — with no status filter applied. Filtered, it counts one status, not the register.
    */
-  readonly viewState = computed<PageState>(() => {
-    const readState = this.state();
-    if (readState === 'ready' && this.filtered().length === 0) return 'empty';
-    return readState;
-  });
-
-  readonly totalPages = computed(() => Math.max(1, Math.ceil(this.filtered().length / PAGE_SIZE)));
-
-  readonly paged = computed<readonly EmployeeRegisterRow[]>(() => {
-    const start = this.pageIndex() * PAGE_SIZE;
-    return this.filtered().slice(start, start + PAGE_SIZE);
-  });
-
-  readonly activeCount = computed(() => this.allRows().filter(r => r.status === 'ACTIVE').length);
-
-  /** True when the tenant has more employees than one fetch returned — see #2158. */
-  readonly truncated = computed(() => this.totalElements() > this.allRows().length);
-
-  /**
-   * `allRows` and `totalElements` keep the last successful response while a new read runs or
-   * fails, so the truncation notice is shown only alongside the data it describes. Otherwise a
-   * 403 or a failed search would carry stale counts above the panel explaining the failure
-   * (ADR-0064).
-   */
-  readonly showTruncationNotice = computed(
-    () => this.truncated() && (this.viewState() === 'ready' || this.viewState() === 'empty'),
+  readonly totalTile = computed(() =>
+    this.totalCount() ?? (this.statusFilter() === 'ALL' ? this.totalElements() : null),
   );
 
   ngOnInit(): void {
@@ -196,10 +188,10 @@ export class EmployeeRegisterPageComponent implements OnInit {
       .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
       .subscribe(() => {
         this.pageIndex.set(0);
-        this.load();
+        this.load({ refreshCounts: true });
       });
 
-    this.load();
+    this.load({ refreshCounts: true });
   }
 
   onSearchInput(event: Event): void {
@@ -212,17 +204,20 @@ export class EmployeeRegisterPageComponent implements OnInit {
     this.searchInputValue.set('');
     this.statusFilter.set('ALL');
     this.pageIndex.set(0);
-    this.load();
+    this.load({ refreshCounts: true });
   }
 
   setStatusFilter(status: StatusFilter): void {
+    if (status === this.statusFilter()) return;
     this.statusFilter.set(status);
     this.pageIndex.set(0);
+    this.load({ keepContent: true });
   }
 
   toggleSort(): void {
     this.sortDir.set(this.sortDir() === 'asc' ? 'desc' : 'asc');
     this.pageIndex.set(0);
+    this.load({ keepContent: true });
   }
 
   ariaSort(): 'ascending' | 'descending' {
@@ -233,15 +228,19 @@ export class EmployeeRegisterPageComponent implements OnInit {
     // A user-initiated reload is a fresh look at everything, so stale per-row refusals go with
     // it. A read triggered by a write does NOT clear them — that is the bug above.
     this.writeErrors.set(new Map());
-    this.load();
+    this.load({ refreshCounts: true });
   }
 
   prevPage(): void {
-    if (this.pageIndex() > 0) this.pageIndex.update(p => p - 1);
+    if (this.pageIndex() <= 0) return;
+    this.pageIndex.update(p => p - 1);
+    this.load({ keepContent: true });
   }
 
   nextPage(): void {
-    if (this.pageIndex() < this.totalPages() - 1) this.pageIndex.update(p => p + 1);
+    if (this.pageIndex() >= this.totalPages() - 1) return;
+    this.pageIndex.update(p => p + 1);
+    this.load({ keepContent: true });
   }
 
   /**
@@ -357,7 +356,7 @@ export class EmployeeRegisterPageComponent implements OnInit {
     // lost — it just waits for the page to agree with the server.
     if (this.readInFlight()) return;
 
-    const row = this.allRows().find(r => r.employeeId === snapshot.employeeId);
+    const row = this.rows().find(r => r.employeeId === snapshot.employeeId);
     if (!row || !this.canSwitch(row)) {
       this.closeConfirm();
       return;
@@ -377,7 +376,8 @@ export class EmployeeRegisterPageComponent implements OnInit {
           this.setWriteError(row.employeeId, null);
           // Re-read rather than patching locally: the disable runs a saga
           // (DECISION-PEOPLE-002) and the server is the only authority on the settled status.
-          this.load();
+          // The status moved, so the tiles' counts did too.
+          this.load({ refreshCounts: true });
         },
         error: (err: unknown) => {
           this.writeSubs.delete(row.employeeId);
@@ -393,7 +393,7 @@ export class EmployeeRegisterPageComponent implements OnInit {
           // what the server actually holds. Safe to do now that the refusal lives on the row —
           // when it was page-level, a re-read settled the page back to `ready` and took the
           // explanation with it, which is why this used to wait for the user to select Retry.
-          if (conflict) this.load();
+          if (conflict) this.load({ refreshCounts: true });
         },
       });
     this.writeSubs.set(row.employeeId, sub);
@@ -449,7 +449,7 @@ export class EmployeeRegisterPageComponent implements OnInit {
   private dismissConfirmIfInvalidated(): void {
     const open = this.confirmRow();
     if (!open) return;
-    const current = this.allRows().find(r => r.employeeId === open.employeeId);
+    const current = this.rows().find(r => r.employeeId === open.employeeId);
     if (!current || !this.canSwitch(current)) this.closeConfirm();
   }
 
@@ -467,32 +467,47 @@ export class EmployeeRegisterPageComponent implements OnInit {
     this.pendingIds.set(next);
   }
 
-  private load(): void {
+  private load(options: LoadOptions = {}): void {
     this.loadSub?.unsubscribe();
     const seq = ++this.readSeq;
 
     this.readInFlight.set(true);
     this.parkAcceptFocus();
-    this.state.set('loading');
-    this.errorKey.set(null);
+    const showing = this.state() === 'ready' || this.state() === 'empty';
+    if (!options.keepContent || !showing) {
+      this.state.set('loading');
+      this.errorKey.set(null);
+    }
 
-    const query = this.searchInputValue().trim();
+    const q = this.searchInputValue().trim() || undefined;
+    if (options.refreshCounts) this.loadCounts(q);
 
+    const status = this.statusFilter();
     this.loadSub = this.registerService
-      .searchEmployees(query || undefined, FETCH_SIZE)
+      .searchEmployees({
+        q,
+        status: status === 'ALL' ? undefined : status,
+        sortDir: this.sortDir(),
+        page: this.pageIndex(),
+        size: PAGE_SIZE,
+      })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: page => {
           if (seq !== this.readSeq) return; // superseded read — never writes
+          // A re-read after a write can leave the current page past the end — disabling the
+          // only row on the last page of the ACTIVE filter empties it. Step back to the new last
+          // page and read that, rather than showing "no employees" over a set that has some.
+          if (page.rows.length === 0 && page.totalPages > 0 && this.pageIndex() >= page.totalPages) {
+            this.pageIndex.set(page.totalPages - 1);
+            this.load({ keepContent: true });
+            return;
+          }
           this.readInFlight.set(false);
           this.restoreAcceptFocus();
-          this.allRows.set(page.rows);
+          this.rows.set(page.rows);
           this.totalElements.set(page.totalElements);
-          // A re-read after a write can return fewer rows than the current page starts at —
-          // disabling the only row on page 2 leaves pageIndex past the end, and `paged()`
-          // would slice an empty window out of a `ready` page.
-          const lastPage = this.totalPages() - 1;
-          if (this.pageIndex() > lastPage) this.pageIndex.set(lastPage);
+          this.totalPages.set(Math.max(1, page.totalPages));
           this.state.set(page.rows.length ? 'ready' : 'empty');
           this.errorKey.set(null);
           this.dismissConfirmIfInvalidated();
@@ -510,6 +525,27 @@ export class EmployeeRegisterPageComponent implements OnInit {
           }
           this.state.set('error'); // ADR-0031 §1 — state always before errorKey
           this.errorKey.set('PEOPLE.EMPLOYEE_REGISTER.ERROR.LOAD');
+        },
+      });
+  }
+
+  /**
+   * The tiles are secondary to the table: a failed counts read leaves them unknown (null)
+   * instead of failing the page, and a superseded one never writes (ADR-0063).
+   */
+  private loadCounts(q: string | undefined): void {
+    this.countsSub?.unsubscribe();
+    const seq = ++this.countsSeq;
+    this.statusCounts.set(null);
+    this.countsSub = this.registerService
+      .getStatusCounts(q)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: counts => {
+          if (seq === this.countsSeq) this.statusCounts.set(counts);
+        },
+        error: () => {
+          if (seq === this.countsSeq) this.statusCounts.set(null);
         },
       });
   }

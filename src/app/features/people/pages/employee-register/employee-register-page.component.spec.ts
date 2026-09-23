@@ -63,7 +63,7 @@ const STUB_ROWS: readonly EmployeeRegisterRow[] = [
 ];
 
 function page(rows: readonly EmployeeRegisterRow[] = STUB_ROWS): EmployeeRegisterPage {
-  return { rows, page: 0, size: 100, totalElements: rows.length, totalPages: 1 };
+  return { rows, page: 0, size: 25, totalElements: rows.length, totalPages: rows.length ? 1 : 0 };
 }
 
 /** `permissions: null` models a legacy token with no `perm_bits` claim. */
@@ -76,8 +76,12 @@ const authStub = {
     permissions.some(permission => session.permissions?.includes(permission) ?? false),
 };
 
+/** The status histogram behind STUB_ROWS: 4 employees, 1 active. */
+const STUB_COUNTS = { ACTIVE: 1, DISABLED: 1, TERMINATED: 1, ON_LEAVE: 1 };
+
 const stubService = {
   searchEmployees: vi.fn(),
+  getStatusCounts: vi.fn(),
   disableEmployee: vi.fn(),
 };
 
@@ -86,7 +90,11 @@ describe('EmployeeRegisterPageComponent', () => {
   let component: EmployeeRegisterPageComponent;
 
   const setup = async (
-    options: { permissions?: string[] | null; search?: Observable<EmployeeRegisterPage> } = {},
+    options: {
+      permissions?: string[] | null;
+      search?: Observable<EmployeeRegisterPage>;
+      counts?: Observable<Readonly<Record<string, number>>>;
+    } = {},
   ) => {
     // `clearAllMocks` clears CALLS but not queued `mockReturnValueOnce` values, so a test that
     // queues two and consumes one hands the leftover to whichever test runs next — which is how
@@ -97,6 +105,7 @@ describe('EmployeeRegisterPageComponent', () => {
     // still pass if that fallback were deleted. Key presence is the test.
     session.permissions = 'permissions' in options ? (options.permissions ?? null) : ALL_PERMISSIONS;
     stubService.searchEmployees.mockReturnValue(options.search ?? of(page()));
+    stubService.getStatusCounts.mockReturnValue(options.counts ?? of(STUB_COUNTS));
     stubService.disableEmployee.mockReturnValue(of({}));
 
     await TestBed.configureTestingModule({
@@ -273,7 +282,7 @@ describe('EmployeeRegisterPageComponent', () => {
     // ADR-0063: the write outcome belongs to its writer. The page's state/errorKey is the READ
     // outcome and must be left alone, or the table disappears and the other rows go with it.
     expect(component.writeErrorFor(STUB_ROWS[0])).toBe('PEOPLE.EMPLOYEE_REGISTER.ERROR.DEACTIVATE');
-    expect(component.viewState()).toBe('ready');
+    expect(component.state()).toBe('ready');
     expect(component.errorKey()).toBeNull();
     expect(component.isPending(STUB_ROWS[0])).toBe(false);
     expect(text()).toContain(enUS.PEOPLE.EMPLOYEE_REGISTER.ERROR.DEACTIVATE);
@@ -295,7 +304,7 @@ describe('EmployeeRegisterPageComponent', () => {
     // refusal survives it, because it lives on the row rather than in the page panel the
     // read settles. That is what makes the automatic reload safe here.
     expect(stubService.searchEmployees.mock.calls.length).toBe(readsBefore + 1);
-    expect(component.viewState()).toBe('ready');
+    expect(component.state()).toBe('ready');
     expect(text()).toContain(enUS.PEOPLE.EMPLOYEE_REGISTER.ERROR.CONFLICT.split('.')[0]);
   });
 
@@ -362,10 +371,10 @@ describe('EmployeeRegisterPageComponent', () => {
 
     const late = [row({ employeeId: 'stale', lastName: 'Stale' })];
     first.next(page(late));
-    expect(component.allRows().some(r => r.employeeId === 'stale')).toBe(false);
+    expect(component.rows().some(r => r.employeeId === 'stale')).toBe(false);
 
     second.next(page());
-    expect(component.allRows().length).toBe(4);
+    expect(component.rows().length).toBe(4);
   });
 
   /*
@@ -384,38 +393,89 @@ describe('EmployeeRegisterPageComponent', () => {
 
   // ── Filtering and ordering ──────────────────────────────────────────────────────────
 
-  it('never asks for more rows than the endpoint accepts', async () => {
-    // searchEmployees rejects size > 100 with a 400, which failed the whole register.
+  /** The query of the most recent read. */
+  const lastQuery = () => stubService.searchEmployees.mock.lastCall![0];
+
+  it('reads one server page of 25, first page, ascending, every status', async () => {
     await setup();
-    const [, size] = stubService.searchEmployees.mock.calls[0];
-    expect(size).toBe(100);
+    expect(lastQuery()).toEqual({ q: undefined, status: undefined, sortDir: 'asc', page: 0, size: 25 });
   });
 
-  it('filters by status and reports truncation honestly', async () => {
-    await setup();
+  it('asks the server for the selected status and starts again from the first page', async () => {
+    await setup({ search: of({ ...page(), totalElements: 60, totalPages: 3 }) });
+    component.nextPage();
+    expect(lastQuery().page).toBe(1);
+
     component.setStatusFilter('DISABLED');
-    expect(component.filtered().length).toBe(1);
-    expect(component.filtered()[0].employeeId).toBe('emp-2');
-    expect(component.truncated()).toBe(false);
+    expect(lastQuery()).toEqual(expect.objectContaining({ status: 'DISABLED', page: 0 }));
+    expect(component.pageIndex()).toBe(0);
 
-    stubService.searchEmployees.mockReturnValue(
-      of({ ...page(), totalElements: 900 }),
-    );
-    component.reload();
-    expect(component.truncated()).toBe(true);
+    component.setStatusFilter('ALL');
+    expect(lastQuery().status).toBeUndefined();
   });
 
-  it('sorts by last name in both directions', async () => {
+  it('does not re-read when the selected status is chosen again', async () => {
     await setup();
-    expect(component.filtered().map(r => r.lastName)).toEqual([
-      'Albright',
-      'Bennett',
-      'Benton',
-      'Byrd',
-    ]);
+    const reads = stubService.searchEmployees.mock.calls.length;
+    component.setStatusFilter('ALL');
+    expect(stubService.searchEmployees.mock.calls.length).toBe(reads);
+  });
+
+  it('asks the server to sort by last name in the toggled direction', async () => {
+    await setup();
     component.toggleSort();
-    expect(component.filtered()[0].lastName).toBe('Byrd');
+    expect(lastQuery()).toEqual(expect.objectContaining({ sortDir: 'desc', page: 0 }));
     expect(component.ariaSort()).toBe('descending');
+    component.toggleSort();
+    expect(lastQuery().sortDir).toBe('asc');
+  });
+
+  it('pages through the server total, not just the rows in hand', async () => {
+    await setup({ search: of({ ...page(), totalElements: 60, totalPages: 3 }) });
+    fixture.detectChanges();
+    expect(component.totalPages()).toBe(3);
+    expect(text()).toContain('1 of 3');
+
+    component.nextPage();
+    component.nextPage();
+    expect(lastQuery().page).toBe(2);
+    const reads = stubService.searchEmployees.mock.calls.length;
+    component.nextPage(); // already on the last page
+    expect(stubService.searchEmployees.mock.calls.length).toBe(reads);
+
+    component.prevPage();
+    expect(lastQuery().page).toBe(1);
+  });
+
+  it('keeps the table and the focused control on screen while a page, filter or sort reads', async () => {
+    await setup({ search: of({ ...page(), totalElements: 60, totalPages: 3 }) });
+    fixture.detectChanges();
+    const pending = new Subject<EmployeeRegisterPage>();
+    stubService.searchEmployees.mockReturnValue(pending);
+
+    const next = fixture.debugElement
+      .queryAll(By.css('.pagination-btn'))[1].nativeElement as HTMLButtonElement;
+    next.focus();
+    next.click();
+    fixture.detectChanges();
+
+    // Swapping in the loading panel would unmount the pager and drop focus to <body>.
+    expect(component.state()).toBe('ready');
+    expect(next.isConnected).toBe(true);
+    expect(document.activeElement).toBe(next);
+    const wrap = fixture.debugElement.query(By.css('.register-table-wrap')).nativeElement as HTMLElement;
+    expect(wrap.getAttribute('aria-busy')).toBe('true');
+
+    pending.next({ ...page(), page: 1, totalElements: 60, totalPages: 3 });
+    fixture.detectChanges();
+    expect(wrap.getAttribute('aria-busy')).toBeNull();
+  });
+
+  it('shows the loading panel for a new search, which the table does not own', async () => {
+    await setup();
+    stubService.searchEmployees.mockReturnValue(new Subject<EmployeeRegisterPage>());
+    component.reload();
+    expect(component.state()).toBe('loading');
   });
 
   // ── Pending contract (backend #2155) ────────────────────────────────────────────────
@@ -484,18 +544,20 @@ describe('EmployeeRegisterPageComponent', () => {
 
   it('shows the empty state when the status filter matches nothing, and returns to ready', async () => {
     await setup({ search: of(page([row({ status: 'ACTIVE' })])) });
-    expect(component.viewState()).toBe('ready');
+    expect(component.state()).toBe('ready');
 
+    stubService.searchEmployees.mockReturnValue(of(page([])));
     component.setStatusFilter('TERMINATED');
     fixture.detectChanges();
-    // The read succeeded, but the client-side filter (backend #2158) matched nothing, so the
-    // page must offer the empty panel and its clear-filters action rather than a blank table.
-    expect(component.viewState()).toBe('empty');
+    expect(component.state()).toBe('empty');
     expect(text()).toContain(enUS.PEOPLE.EMPLOYEE_REGISTER.EMPTY);
+    // The chips stay, so the user can pick another status without clearing everything.
+    expect(fixture.debugElement.queryAll(By.css('.filter-chip')).length).toBe(4);
 
+    stubService.searchEmployees.mockReturnValue(of(page([row({ status: 'ACTIVE' })])));
     component.setStatusFilter('ACTIVE');
     fixture.detectChanges();
-    expect(component.viewState()).toBe('ready');
+    expect(component.state()).toBe('ready');
   });
 
   it('does not offer the directory fallback to a viewer who cannot open the directory', async () => {
@@ -503,7 +565,7 @@ describe('EmployeeRegisterPageComponent', () => {
       permissions: [VIEW_PERMISSION],
       search: throwError(() => new HttpErrorResponse({ status: 403 })),
     });
-    expect(component.viewState()).toBe('forbidden');
+    expect(component.state()).toBe('forbidden');
     expect(component.canViewDirectory()).toBe(false);
     // A rendered link must never lead to another refusal — the directory declares
     // people-contact:person:view, which this viewer lacks.
@@ -591,44 +653,90 @@ describe('EmployeeRegisterPageComponent', () => {
     expect(document.activeElement).toBe(document.getElementById('register-search-input'));
   });
 
-  it('clamps the page index when a re-read returns fewer rows', async () => {
-    const many = Array.from({ length: 26 }, (_, i) =>
-      row({ employeeId: `emp-${i}`, personId: `per-${i}`, lastName: `Name${`${i}`.padStart(2, '0')}` }),
+  it('steps back to the new last page when a re-read leaves the current one past the end', async () => {
+    await setup({ search: of({ ...page(), totalElements: 26, totalPages: 2 }) });
+    stubService.searchEmployees.mockReturnValue(
+      of({ ...page([STUB_ROWS[0]]), page: 1, totalElements: 26, totalPages: 2 }),
     );
-    await setup({ search: of(page(many)) });
     component.nextPage();
     expect(component.pageIndex()).toBe(1);
-    expect(component.paged().length).toBe(1);
 
-    // The 26th row disappears — totalPages drops to 1 while pageIndex still points at page 2,
-    // which would slice an empty window out of an otherwise ready page.
-    stubService.searchEmployees.mockReturnValue(of(page(many.slice(0, 25))));
+    // The only row on page 2 is disabled out of the filtered set: page 2 comes back empty
+    // with one page left, so the page reads page 1 rather than claiming there is nobody.
+    stubService.searchEmployees.mockReturnValueOnce(
+      of({ ...page([]), page: 1, totalElements: 25, totalPages: 1 }),
+    );
+    stubService.searchEmployees.mockReturnValueOnce(of({ ...page(), totalElements: 25, totalPages: 1 }));
     component.reload();
     fixture.detectChanges();
 
+    expect(lastQuery().page).toBe(0);
     expect(component.pageIndex()).toBe(0);
-    expect(component.paged().length).toBe(25);
-    expect(component.viewState()).toBe('ready');
+    expect(component.state()).toBe('ready');
+    expect(component.rows().length).toBe(4);
   });
 
-  it('never carries stale counts over a loading, error or forbidden panel', async () => {
-    // A truncated first read leaves allRows/totalElements cached…
-    await setup({ search: of({ ...page(), totalElements: 900 }) });
-    expect(component.showTruncationNotice()).toBe(true);
-    const notice = enUS.PEOPLE.EMPLOYEE_REGISTER.TRUNCATED.split('{{')[0].trim();
-    expect(text()).toContain(notice);
+  it('fills the stat tiles from the server counts, not from the page in hand', async () => {
+    await setup({
+      search: of({ ...page(), totalElements: 60, totalPages: 3 }),
+      counts: of({ ACTIVE: 41, DISABLED: 12, TERMINATED: 7, UNKNOWN: 2 }),
+    });
+    fixture.detectChanges();
+    const tiles = () =>
+      fixture.debugElement.queryAll(By.css('.stat-tile__value')).map(e => e.nativeElement.textContent.trim());
+    expect(tiles()).toEqual(['62', '41']);
 
-    // …and a later failure must not describe them above the panel explaining the failure.
+    // A status filter narrows the rows, not the tiles: they still describe the whole search.
+    stubService.searchEmployees.mockReturnValue(of({ ...page(), totalElements: 12, totalPages: 1 }));
+    component.setStatusFilter('DISABLED');
+    fixture.detectChanges();
+    expect(tiles()).toEqual(['62', '41']);
+    expect(stubService.getStatusCounts).toHaveBeenCalledTimes(1);
+  });
+
+  it('re-reads the counts when the search or a status changes', async () => {
+    await setup();
+    component.onSearchInput({ target: { value: 'byrd' } } as unknown as Event);
+    await new Promise(resolve => setTimeout(resolve, 350));
+    expect(stubService.getStatusCounts).toHaveBeenLastCalledWith('byrd');
+
+    component.openConfirm(component.rows()[0]);
+    component.confirmDeactivate();
+    expect(stubService.getStatusCounts).toHaveBeenCalledTimes(3);
+  });
+
+  it('withholds a tile it cannot vouch for when the counts read fails', async () => {
+    await setup({
+      search: of({ ...page(), totalElements: 60, totalPages: 3 }),
+      counts: throwError(() => new Error('down')),
+    });
+    fixture.detectChanges();
+    // The table still loads; the total falls back to the unfiltered row total…
+    expect(component.state()).toBe('ready');
+    const tiles = () =>
+      fixture.debugElement.queryAll(By.css('.stat-tile__value')).map(e => e.nativeElement.textContent.trim());
+    expect(tiles()).toEqual(['60']);
+
+    // …which stops being the register total once a status filter applies.
+    stubService.searchEmployees.mockReturnValue(of({ ...page(), totalElements: 12, totalPages: 1 }));
+    component.setStatusFilter('DISABLED');
+    fixture.detectChanges();
+    expect(tiles()).toEqual([]);
+  });
+
+  it('never carries tiles over a loading, error or forbidden panel', async () => {
+    await setup();
+    fixture.detectChanges();
+    expect(fixture.debugElement.queryAll(By.css('.stat-tile')).length).toBe(2);
+
     stubService.searchEmployees.mockReturnValue(
       throwError(() => new HttpErrorResponse({ status: 403 })),
     );
     component.reload();
     fixture.detectChanges();
 
-    expect(component.viewState()).toBe('forbidden');
-    expect(component.truncated()).toBe(true); // the cache is still there…
-    expect(component.showTruncationNotice()).toBe(false); // …but it is not announced
-    expect(text()).not.toContain(notice);
+    expect(component.state()).toBe('forbidden');
+    expect(fixture.debugElement.queryAll(By.css('.stat-tile')).length).toBe(0);
   });
 
   it('says "Primary" when the projection served a zero location count', async () => {
@@ -691,7 +799,7 @@ describe('EmployeeRegisterPageComponent', () => {
     // driving this through `of(...)` would let the dismissal answer the test and it would pass
     // with the snapshot re-check restored. Changing the cache directly leaves the dialog open
     // and puts the question to `confirmDeactivate` alone.
-    component.allRows.set([row({ employeeId: 'emp-1', status: 'DISABLED', active: false })]);
+    component.rows.set([row({ employeeId: 'emp-1', status: 'DISABLED', active: false })]);
     expect(component.confirmRow()?.employeeId).toBe('emp-1');
 
     component.confirmDeactivate();
@@ -817,7 +925,7 @@ describe('EmployeeRegisterPageComponent', () => {
     fixture.detectChanges();
 
     expect(component.confirmRow()).toBeNull();
-    expect(component.viewState()).toBe('error');
+    expect(component.state()).toBe('error');
   });
 
   it('refuses to write while a read that could invalidate the row is still settling', async () => {
@@ -828,7 +936,7 @@ describe('EmployeeRegisterPageComponent', () => {
     component.openConfirm(STUB_ROWS[0]);
     component.reload();
 
-    // `allRows` still holds the previous result here, so the row lookup would find the stale
+    // `rows` still holds the previous result here, so the row lookup would find the stale
     // ACTIVE row and write on it. The click is refused rather than answered from old data.
     component.confirmDeactivate();
     expect(stubService.disableEmployee).not.toHaveBeenCalled();
@@ -870,7 +978,7 @@ describe('EmployeeRegisterPageComponent', () => {
     // Same reason as the sibling test above: routed through `reload()` the dismissal clears the
     // dialog first and `confirmDeactivate` returns at the empty-snapshot guard, so the missing-
     // row branch of the lookup is never reached. The cache is changed directly instead.
-    component.allRows.set([STUB_ROWS[1]]);
+    component.rows.set([STUB_ROWS[1]]);
     expect(component.confirmRow()?.employeeId).toBe('emp-1');
 
     component.confirmDeactivate();
@@ -983,6 +1091,5 @@ describe('EmployeeRegisterPageComponent', () => {
     expect(block.SWITCH.DEACTIVATE).toContain('{{name}}');
     expect(block.CONFIRM.TITLE).toContain('{{name}}');
     expect(block.LOCATION.MORE).toContain('{{count}}');
-    expect(block.TRUNCATED).toContain('{{loaded}}');
   });
 });
