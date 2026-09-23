@@ -957,7 +957,6 @@
       "LOADING": "Loading employees…",
       "EMPTY": "No employees match your filters.",
       "CLEAR_FILTERS": "Clear filters",
-      "TRUNCATED": "Showing the first {{loaded}} of {{total}} employees. Search to narrow the list — filters and sorting apply to what is loaded.",
       "FORBIDDEN": {
         "TITLE": "You don’t have access to the employee register",
         "BODY": "This page needs the employee view permission. The People directory is open to you and carries name, username, email and phone.",

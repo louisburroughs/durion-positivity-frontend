@@ -957,7 +957,6 @@
       "LOADING": "Cargando empleados…",
       "EMPTY": "Ningún empleado coincide con los filtros.",
       "CLEAR_FILTERS": "Borrar filtros",
-      "TRUNCATED": "Mostrando los primeros {{loaded}} de {{total}} empleados. Busque para acotar la lista: los filtros y el orden se aplican a lo cargado.",
       "FORBIDDEN": {
         "TITLE": "No tiene acceso al registro de empleados",
         "BODY": "Esta página requiere el permiso de consulta de empleados. El directorio de personas sí está disponible e incluye nombre, usuario, correo y teléfono.",

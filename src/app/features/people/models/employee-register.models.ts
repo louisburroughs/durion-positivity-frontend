@@ -66,3 +66,13 @@ export interface EmployeeRegisterPage {
   readonly totalElements: number;
   readonly totalPages: number;
 }
+
+/** One server-side read of the register; `size` may not exceed the endpoint's cap of 100. */
+export interface EmployeeRegisterQuery {
+  readonly q?: string;
+  /** Omitted means every status. */
+  readonly status?: EmploymentStatus;
+  readonly sortDir: 'asc' | 'desc';
+  readonly page: number;
+  readonly size: number;
+}
