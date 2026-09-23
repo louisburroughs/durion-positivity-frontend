@@ -9,7 +9,9 @@ describe('RoleDetailPageComponent', () => {
   let fixture: ComponentFixture<RoleDetailPageComponent>;
   let component: RoleDetailPageComponent;
 
+  const ROLE_ID = '018f0a1b-2c3d-7e4f-8a9b-0c1d2e3f4a5b';
   const mockRole = {
+    id: ROLE_ID,
     name: 'ROLE_ADMIN',
     description: 'Admin role',
     grantedPermissions: [
@@ -169,6 +171,18 @@ describe('RoleDetailPageComponent', () => {
   describe('confirmRevoke() / cancelRevoke()', () => {
     beforeEach(() => fixture.detectChanges());
 
+    it('refuses to write when the loaded role carries no id (the endpoint keys on the UUID)', () => {
+      securityServiceStub.getRoleByName.mockReturnValueOnce(of({ name: 'ROLE_ADMIN', grantedPermissions: [{ permissionKey: 'PERM_READ' }] }));
+      component.loadRole();
+      component.confirmRevoke('PERM_READ');
+
+      component.executeRevoke();
+      component.openGrantModal();
+      component.submitGrantPermissions();
+
+      expect(securityServiceStub.updateRolePermissions).not.toHaveBeenCalled();
+    });
+
     it('confirmRevoke(key) sets confirmRevokeKey() to that key', () => {
       component.confirmRevoke('PERM_READ');
       expect(component.confirmRevokeKey()).toBe('PERM_READ');
@@ -189,7 +203,7 @@ describe('RoleDetailPageComponent', () => {
       component.executeRevoke();
 
       expect(securityServiceStub.updateRolePermissions).toHaveBeenCalledWith({
-        roleName: 'ROLE_ADMIN',
+        roleId: ROLE_ID,
         permissionKeys: ['PERM_READ'],
       });
       // reload triggers another getRoleByName call
@@ -239,7 +253,7 @@ describe('RoleDetailPageComponent', () => {
       component.submitGrantPermissions();
 
       expect(securityServiceStub.updateRolePermissions).toHaveBeenCalledWith({
-        roleName: 'ROLE_ADMIN',
+        roleId: ROLE_ID,
         permissionKeys: ['PERM_READ'],
       });
       expect(component.showGrantModal()).toBe(false);

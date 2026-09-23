@@ -1,4 +1,6 @@
 export interface SecurityRole {
+  /** Role UUID — what the permission-replacement endpoint keys on (`roleId`). */
+  id?: string;
   name: string;
   description?: string;
   status?: string;
@@ -18,7 +20,8 @@ export interface CreateRoleRequest {
 }
 
 export interface UpdateRolePermissionsRequest {
-  roleName: string;
+  /** The role's UUID, not its name: `PUT /v1/roles/permissions` looks the role up by id. */
+  roleId: string;
   permissionKeys: string[];
 }
 

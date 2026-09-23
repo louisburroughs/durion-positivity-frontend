@@ -90,14 +90,14 @@ export class RoleDetailPageComponent implements OnInit {
 
   submitGrantPermissions(): void {
     const currentRole = this.role();
-    if (!currentRole) {
+    if (!currentRole?.id) {
       return;
     }
 
     this.loading.set(true);
     this.securityService
       .updateRolePermissions({
-        roleName: currentRole.name,
+        roleId: currentRole.id,
         permissionKeys: this.selectedPermKeys(),
       })
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -125,7 +125,7 @@ export class RoleDetailPageComponent implements OnInit {
   executeRevoke(): void {
     const keyToRemove = this.confirmRevokeKey();
     const currentRole = this.role();
-    if (!keyToRemove || !currentRole) {
+    if (!keyToRemove || !currentRole?.id) {
       return;
     }
 
@@ -135,7 +135,7 @@ export class RoleDetailPageComponent implements OnInit {
 
     this.loading.set(true);
     this.securityService
-      .updateRolePermissions({ roleName: currentRole.name, permissionKeys: updatedKeys })
+      .updateRolePermissions({ roleId: currentRole.id, permissionKeys: updatedKeys })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {

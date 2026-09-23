@@ -111,15 +111,35 @@ describe('SecurityService', () => {
   });
 
   describe('getRoleByName()', () => {
-    it('calls roleManagementSdk.getRoleByName with the role name', () => {
-      const role: SecurityRole = { name: 'ROLE_ADMIN' };
-      roleManagementStub.getRoleByName.mockReturnValueOnce(of(role));
+    it('maps the SDK RoleDto — id, permissions and lastModifiedAt — into a SecurityRole', () => {
+      // Shaped after the SDK's RoleDto: `permissions` is typed as a Set but arrives as a JSON array.
+      roleManagementStub.getRoleByName.mockReturnValueOnce(of({
+        id: '018f0a1b-2c3d-7e4f-8a9b-0c1d2e3f4a5b',
+        name: 'INVENTORY_LEAD',
+        description: 'Runs the parts room',
+        permissions: [
+          { id: 'p-1', name: 'inventory:item:view', domain: 'inventory', deprecated: false, description: 'See items' },
+          { id: 'p-2', name: 'inventory:item:edit', domain: 'inventory', deprecated: false },
+        ],
+        createdAt: '2026-09-01T00:00:00Z',
+        lastModifiedAt: '2026-09-20T00:00:00Z',
+      }));
 
       let result: SecurityRole | undefined;
-      service.getRoleByName('ROLE_ADMIN').subscribe(r => (result = r));
+      service.getRoleByName('INVENTORY_LEAD').subscribe(r => (result = r));
 
-      expect(roleManagementStub.getRoleByName).toHaveBeenCalledWith('ROLE_ADMIN');
-      expect(result).toEqual(role);
+      expect(roleManagementStub.getRoleByName).toHaveBeenCalledWith('INVENTORY_LEAD');
+      expect(result).toEqual({
+        id: '018f0a1b-2c3d-7e4f-8a9b-0c1d2e3f4a5b',
+        name: 'INVENTORY_LEAD',
+        description: 'Runs the parts room',
+        grantedPermissions: [
+          { permissionKey: 'inventory:item:view', description: 'See items' },
+          { permissionKey: 'inventory:item:edit', description: undefined },
+        ],
+        createdAt: '2026-09-01T00:00:00Z',
+        updatedAt: '2026-09-20T00:00:00Z',
+      } satisfies SecurityRole);
     });
 
     it('passes role name as-is to the SDK', () => {
@@ -156,22 +176,23 @@ describe('SecurityService', () => {
   });
 
   describe('updateRolePermissions()', () => {
-    it('maps roleName to roleId and permissionKeys to a permissionNames Set', () => {
+    it('sends the role UUID and a JSON-serializable, de-duplicated permissionNames list', () => {
       const req: UpdateRolePermissionsRequest = {
-        roleName: 'ROLE_ADMIN',
-        permissionKeys: ['PERM_READ', 'PERM_WRITE'],
+        roleId: '018f0a1b-2c3d-7e4f-8a9b-0c1d2e3f4a5b',
+        permissionKeys: ['PERM_READ', 'PERM_WRITE', 'PERM_READ'],
       };
       roleManagementStub.updateRolePermissions.mockReturnValueOnce(of(undefined));
 
       service.updateRolePermissions(req).subscribe();
 
       const sdkReq = roleManagementStub.updateRolePermissions.mock.calls[0]?.[0];
-      expect(sdkReq).toEqual({
-        roleId: 'ROLE_ADMIN',
-        permissionNames: new Set(['PERM_READ', 'PERM_WRITE']),
+      expect(sdkReq.roleId).toBe('018f0a1b-2c3d-7e4f-8a9b-0c1d2e3f4a5b');
+      // The SDK types this as a Set, but HttpClient JSON-encodes the body as-is and a Set
+      // encodes to `{}` — the wire shape must be an array or the backend gets no names.
+      expect(JSON.parse(JSON.stringify(sdkReq))).toEqual({
+        roleId: '018f0a1b-2c3d-7e4f-8a9b-0c1d2e3f4a5b',
+        permissionNames: ['PERM_READ', 'PERM_WRITE'],
       });
-      expect(sdkReq.permissionNames).toBeInstanceOf(Set);
-      expect(Array.from(sdkReq.permissionNames)).toEqual(['PERM_READ', 'PERM_WRITE']);
     });
   });
 
