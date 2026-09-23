@@ -63,7 +63,7 @@ const STUB_ROWS: readonly EmployeeRegisterRow[] = [
 ];
 
 function page(rows: readonly EmployeeRegisterRow[] = STUB_ROWS): EmployeeRegisterPage {
-  return { rows, page: 0, size: 200, totalElements: rows.length, totalPages: 1 };
+  return { rows, page: 0, size: 100, totalElements: rows.length, totalPages: 1 };
 }
 
 /** `permissions: null` models a legacy token with no `perm_bits` claim. */
@@ -383,6 +383,13 @@ describe('EmployeeRegisterPageComponent', () => {
    */
 
   // ── Filtering and ordering ──────────────────────────────────────────────────────────
+
+  it('never asks for more rows than the endpoint accepts', async () => {
+    // searchEmployees rejects size > 100 with a 400, which failed the whole register.
+    await setup();
+    const [, size] = stubService.searchEmployees.mock.calls[0];
+    expect(size).toBe(100);
+  });
 
   it('filters by status and reports truncation honestly', async () => {
     await setup();
