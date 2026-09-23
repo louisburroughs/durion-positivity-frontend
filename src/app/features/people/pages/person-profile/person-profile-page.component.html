@@ -26,8 +26,8 @@
   @if (state() === 'error' && errorKey(); as key) {
     <section class="state-panel state-panel--error" role="alert" data-testid="error-panel">
       <span>{{ key | translate }}</span>
-      @if (!hasCachedData()) {
-        <button type="button" class="btn btn--secondary" (click)="reload()">{{ 'COMMON.RETRY' | translate }}</button>
+      @if (!readOk()) {
+        <button type="button" class="btn btn--secondary" data-testid="retry-button" (click)="reload()">{{ 'COMMON.RETRY' | translate }}</button>
       }
     </section>
   }
@@ -105,7 +105,7 @@
                 <label [for]="'contact-primary-' + i">{{ 'PEOPLE.PERSON_PROFILE.FIELD_CONTACT_PRIMARY' | translate }}</label>
               </div>
               @if (canEdit()) {
-                <button type="button" class="btn btn--ghost" data-testid="remove-contact-point" (click)="removeContactPoint(i)"
+                <button type="button" class="btn btn--ghost" data-testid="remove-contact-point" [disabled]="!editable()" (click)="removeContactPoint(i)"
                   [attr.aria-label]="'PEOPLE.PERSON_PROFILE.REMOVE_CONTACT_ARIA' | translate: { index: i + 1 }">
                   {{ 'PEOPLE.PERSON_PROFILE.REMOVE_CONTACT' | translate }}
                 </button>
@@ -116,7 +116,7 @@
 
         @if (canEdit()) {
           <button #addContactButton type="button" class="btn btn--secondary add-contact" data-testid="add-contact-point"
-            (click)="addContactPoint()">
+            [disabled]="!editable()" (click)="addContactPoint()">
             {{ 'PEOPLE.PERSON_PROFILE.ADD_CONTACT' | translate }}
           </button>
         }
@@ -166,7 +166,7 @@
 
       @if (canEdit()) {
         <footer class="form-footer">
-          <button type="submit" class="btn btn--primary" data-testid="save-button" [disabled]="saving()">
+          <button type="submit" class="btn btn--primary" data-testid="save-button" [disabled]="!editable()">
             {{ (saving() ? 'PEOPLE.PERSON_PROFILE.SAVING' : 'PEOPLE.PERSON_PROFILE.SAVE') | translate }}
           </button>
         </footer>

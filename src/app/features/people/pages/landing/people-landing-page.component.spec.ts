@@ -35,6 +35,20 @@ describe('PeopleLandingPageComponent', () => {
     expect(byTitle('PEOPLE.LANDING.SECTION.TIMEKEEPING.TITLE')?.recordKind).toBe('session');
   });
 
+  it('links the employee register, gated on the permission its route declares', () => {
+    const employees = component.config.sections.find(
+      s => s.titleKey === 'PEOPLE.LANDING.SECTION.EMPLOYEES.TITLE',
+    );
+    const card = employees?.cards.find(c => c.titleKey === 'PEOPLE.LANDING.CARD.EMPLOYEE_REGISTER.TITLE');
+
+    expect(card).toMatchObject({
+      kind: 'direct',
+      route: '/app/people/employees',
+      descriptionKey: 'PEOPLE.LANDING.CARD.EMPLOYEE_REGISTER.DESCRIPTION',
+      permissions: ['people:employee:view'],
+    });
+  });
+
   it('searches employees scoped to EMPLOYEE and adapts to finder hits', () => {
     let hits: ReadonlyArray<{ id: string; primary: string; secondary?: string }> = [];
     component.searchFns.employee!('ada').subscribe(r => (hits = r));

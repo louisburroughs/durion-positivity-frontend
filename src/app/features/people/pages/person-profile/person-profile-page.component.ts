@@ -83,6 +83,12 @@ export class PersonProfilePageComponent {
   readonly canEdit = computed(() =>
     !this.auth.permissionsKnown() || this.auth.hasAnyPermission(PEOPLE_SECTION.personEdit));
 
+  /** ADR-0064: retained data is shown, but only actionable once the current read succeeded. */
+  readonly readOk = signal(false);
+
+  /** Edits are live only with the permission, a good current read, and no save in flight (ADR-0063). */
+  readonly editable = computed(() => this.canEdit() && this.readOk() && !this.saving());
+
   private readonly addContactButton = viewChild<ElementRef<HTMLButtonElement>>('addContactButton');
 
   readonly form = new FormGroup({
@@ -119,11 +125,14 @@ export class PersonProfilePageComponent {
         this.errorKey.set('PEOPLE.PERSON_PROFILE.ERROR.NOT_FOUND');
         return;
       }
+      this.readOk.set(false);
       this.state.set('loading');
       const sub = forkJoin({
         person: this.peopleService.getPersonWithContactPoints(personId),
         address: this.peopleService.getPersonPostalAddress(personId),
       }).subscribe({
+        // An `of()`-backed read lands synchronously inside this effect, so nothing in these
+        // callbacks may read a signal: `readOk` is written here, and tracking it would loop.
         next: ({ person, address }) => {
           if (!person) {
             this.profile.set(null);
@@ -133,6 +142,7 @@ export class PersonProfilePageComponent {
           }
           this.profile.set({ person, address });
           this.patchForm(person, address);
+          this.readOk.set(true);
           this.state.set('ready');
           this.errorKey.set(null);
         },
@@ -146,7 +156,7 @@ export class PersonProfilePageComponent {
     });
 
     effect(() => {
-      if (this.canEdit()) {
+      if (this.editable()) {
         this.form.enable({ emitEvent: false });
       } else {
         this.form.disable({ emitEvent: false });
@@ -163,7 +173,7 @@ export class PersonProfilePageComponent {
   }
 
   addContactPoint(): void {
-    if (!this.canEdit()) return;
+    if (!this.editable()) return;
     this.contactPoints.push(this.buildContactPoint({
       contactType: ContactPointDtoContactTypeEnum.Email,
       value: '',
@@ -172,7 +182,7 @@ export class PersonProfilePageComponent {
   }
 
   removeContactPoint(index: number): void {
-    if (!this.canEdit()) return;
+    if (!this.editable()) return;
     this.contactPoints.removeAt(index);
     this.contactPoints.markAsDirty();
     // ADR-0029 §8.7: the focused remove button is gone; hand focus to a stable control.
@@ -181,7 +191,7 @@ export class PersonProfilePageComponent {
 
   /** Only one primary per contact type: checking one clears the others of the same type. */
   onPrimaryChange(index: number): void {
-    if (!this.canEdit()) return;
+    if (!this.editable()) return;
     const changed = this.contactPoints.at(index);
     if (!changed.controls.primary.value) return;
     const type = changed.controls.contactType.value;
@@ -193,7 +203,8 @@ export class PersonProfilePageComponent {
   }
 
   save(): void {
-    if (!this.canEdit()) return;
+    // Also refuses a second submit (e.g. Enter) while a non-atomic write chain is in flight.
+    if (!this.editable()) return;
     const personId = this.personId();
     const current = this.profile();
     if (!personId || !current) return;
@@ -293,7 +304,6 @@ export class PersonProfilePageComponent {
         countryCode: address?.countryCode ?? '',
       },
     });
-    if (!this.canEdit()) this.form.disable({ emitEvent: false });
     this.addressIncomplete.set(false);
     this.form.markAsPristine();
     this.form.markAsUntouched();
@@ -302,7 +312,7 @@ export class PersonProfilePageComponent {
   private buildContactPoint(cp: ContactPointDto): ContactPointForm {
     return new FormGroup({
       contactType: new FormControl(cp.contactType, { nonNullable: true }),
-      value: new FormControl(cp.value, { nonNullable: true, validators: [Validators.required] }),
+      value: new FormControl(cp.value, { nonNullable: true, validators: [Validators.required, NOT_BLANK] }),
       primary: new FormControl(cp.primary, { nonNullable: true }),
     });
   }

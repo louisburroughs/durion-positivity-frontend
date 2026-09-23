@@ -332,17 +332,62 @@ describe('PersonProfilePageComponent', () => {
     expect(stubService.updatePerson).not.toHaveBeenCalled();
   });
 
-  it('drops blank contact rows from the payload', async () => {
+  it('refuses a whitespace-only contact value instead of silently dropping the row', async () => {
     await setup();
     component.addContactPoint();
     component.contactPoints.at(3).controls.value.setValue('   ');
-    component.contactPoints.at(3).controls.value.clearValidators();
-    component.contactPoints.at(3).controls.value.updateValueAndValidity();
 
     component.save();
 
-    const [, sent] = stubService.replaceContactPoints.mock.calls[0];
-    expect(sent).toHaveLength(3);
+    expect(stubService.updatePerson).not.toHaveBeenCalled();
+  });
+
+  describe('save in flight (ADR-0063)', () => {
+    it('refuses a second submit while the write chain is pending', async () => {
+      await setup();
+      const identity$ = new Subject<Person>();
+      stubService.updatePerson.mockReturnValue(identity$);
+
+      component.save();
+      component.save();
+
+      expect(stubService.updatePerson).toHaveBeenCalledTimes(1);
+    });
+
+    it('locks the form while saving so edits cannot be lost to the readback', async () => {
+      await setup();
+      const identity$ = new Subject<Person>();
+      stubService.updatePerson.mockReturnValue(identity$);
+
+      component.save();
+      fixture.detectChanges();
+
+      expect(component.form.disabled).toBe(true);
+      expect((q('save-button') as HTMLButtonElement).disabled).toBe(true);
+      expect((q('add-contact-point') as HTMLButtonElement).disabled).toBe(true);
+
+      identity$.next(person);
+      identity$.complete();
+      fixture.detectChanges();
+
+      expect(component.form.enabled).toBe(true);
+    });
+  });
+
+  it('makes retained data non-actionable after a failed readback (ADR-0064)', async () => {
+    await setup();
+    stubService.getPersonWithContactPoints.mockReturnValue(throwError(() => new Error('boom')));
+    component.reload();
+    fixture.detectChanges();
+
+    expect(component.profile()).not.toBeNull();
+    expect(component.form.disabled).toBe(true);
+    expect(q('retry-button')).not.toBeNull();
+
+    component.save();
+    component.addContactPoint();
+    expect(stubService.updatePerson).not.toHaveBeenCalled();
+    expect(component.contactPoints.length).toBe(3);
   });
 
   it('keeps one primary per contact type', async () => {
