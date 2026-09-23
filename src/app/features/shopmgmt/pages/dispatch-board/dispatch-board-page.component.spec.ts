@@ -25,7 +25,8 @@ import { isoDateLocal } from '../../models/capacity-calendar.models';
 // Fixtures only — never an expectation. `TODAY` is fixed at module load, while the
 // component re-reads the day at construction and on every poll tick, so a suite that
 // crosses local midnight would fail any assertion pinned to this value (#300).
-// Assertions about "today" call `isoDateLocal(new Date())` at the moment they run.
+// Assertions about "today" read the component-held value (`selectedDate()` /
+// `todayIso()`, ADR-0038 §7); the poll-tick test pins the component's `now()`.
 const TODAY = isoDateLocal(new Date());
 
 const emptyDashboard: DashboardResponse = {
@@ -246,7 +247,7 @@ describe('DispatchBoardPageComponent', () => {
     it('calls getDashboard with the primary location on init', () => {
       fixture.detectChanges();
 
-      expect(dispatchBoardServiceStub.getDashboard).toHaveBeenCalledWith('LOC-1', isoDateLocal(new Date()));
+      expect(dispatchBoardServiceStub.getDashboard).toHaveBeenCalledWith('LOC-1', component.selectedDate());
     });
 
     it('does not call getDashboard when no location can be resolved', () => {
@@ -293,7 +294,7 @@ describe('DispatchBoardPageComponent', () => {
     it('renders a date input whose value defaults to today ISO date', () => {
       fixture.detectChanges();
       expect(fixture.nativeElement.querySelector('input[type="date"]')).toBeTruthy();
-      expect(component.selectedDate()).toBe(isoDateLocal(new Date()));
+      expect(component.selectedDate()).toBe(component.todayIso());
     });
 
     it('disables the refresh button when location is blank', () => {
@@ -2274,7 +2275,7 @@ describe('DispatchBoardPageComponent', () => {
       component.onLocationPicked('LOC-2');
       fixture.detectChanges();
 
-      expect(dispatchBoardServiceStub.getDashboard).toHaveBeenLastCalledWith('LOC-2', isoDateLocal(new Date()));
+      expect(dispatchBoardServiceStub.getDashboard).toHaveBeenLastCalledWith('LOC-2', component.selectedDate());
     });
 
     // The poll never blanks the board; a manual refresh over the same selection
@@ -3757,7 +3758,7 @@ describe('DispatchBoardPageComponent', () => {
       dispatchBoardServiceStub.getDashboard.mockClear();
       tick(30_000);
       expect(dispatchBoardServiceStub.getDashboard).toHaveBeenCalledTimes(1);
-      expect(dispatchBoardServiceStub.getDashboard).toHaveBeenCalledWith('LOC-2', isoDateLocal(new Date()));
+      expect(dispatchBoardServiceStub.getDashboard).toHaveBeenCalledWith('LOC-2', component.selectedDate());
       fixture.destroy();
     }));
 
@@ -3793,8 +3794,8 @@ describe('DispatchBoardPageComponent', () => {
       input.dispatchEvent(new Event('input'));
       fixture.detectChanges();
 
-      expect(component.selectedDate()).toBe(isoDateLocal(new Date()));
-      expect(dispatchBoardServiceStub.getDashboard).toHaveBeenLastCalledWith('LOC-1', isoDateLocal(new Date()));
+      expect(component.selectedDate()).toBe(component.todayIso());
+      expect(dispatchBoardServiceStub.getDashboard).toHaveBeenLastCalledWith('LOC-1', component.selectedDate());
       fixture.destroy();
     }));
   });
@@ -3945,10 +3946,13 @@ describe('DispatchBoardPageComponent', () => {
       // Stand in for a board left open across midnight: the signal now holds a
       // day that is no longer today, exactly as it would at 00:01.
       component.todayIso.set('2020-01-01');
+      // Pin the component's clock (ADR-0038 §7) so the re-read is deterministic and
+      // cannot race local midnight (#300). Global `Date` is left alone: fakeAsync owns it.
+      vi.spyOn(component, 'now').mockReturnValue(new Date(2026, 2, 15, 12, 0, 0));
 
       tick(30_000);
 
-      expect(component.todayIso()).toBe(isoDateLocal(new Date()));
+      expect(component.todayIso()).toBe('2026-03-15');
       discardPeriodicTasks();
     }));
 
@@ -3958,18 +3962,19 @@ describe('DispatchBoardPageComponent', () => {
       );
       renderWith(fullDashboard);
       expect(component.isViewingToday()).toBe(true);
+      const boardDay = component.selectedDate();
 
       // The day turns; the dispatcher's chosen date does not move with it.
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      component.todayIso.set(isoDateLocal(tomorrow));
+      // Tomorrow is derived from the board's own day (ADR-0038 §7), local arithmetic.
+      const [y, m, d] = boardDay.split('-').map(Number);
+      component.todayIso.set(isoDateLocal(new Date(y, m - 1, d + 1)));
       fixture.detectChanges();
 
       expect(component.isViewingToday()).toBe(false);
       expect(component.canClock(component.mechanics()[0])).toBe(false);
       expect(component.canStartBreak(component.mechanics()[0])).toBe(false);
       // The board does not advance under them; it stops offering to write.
-      expect(component.selectedDate()).toBe(isoDateLocal(new Date()));
+      expect(component.selectedDate()).toBe(boardDay);
       expect(component.clockHintKey(component.mechanics()[0])).toBe(
         'SHOPMGMT.DISPATCH_BOARD.CLOCK_TODAY_ONLY',
       );
