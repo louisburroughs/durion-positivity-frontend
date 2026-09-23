@@ -17,7 +17,7 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
 import { AuthService } from '../../../../core/services/auth.service';
 import { PEOPLE_PAGE, PEOPLE_SECTION } from '../../../../core/security/route-permissions';
-import { isSafeHref, normaliseHref } from '../../../shell/util/markdown.util';
+import { safeMailtoHref } from '../../../shell/util/mailto-href.util';
 import { ModalDialogDirective } from '../../../../shared/modal-dialog.directive';
 import { EmployeeRegisterService } from '../../services/employee-register.service';
 import {
@@ -42,20 +42,6 @@ const PAGE_SIZE = 25;
 const FETCH_SIZE = 200;
 
 const STATUS_FILTERS: readonly StatusFilter[] = ['ALL', 'ACTIVE', 'DISABLED', 'TERMINATED'];
-
-/**
- * A conservative address shape for building a `mailto:` target. Excludes whitespace and
- * control characters, the RFC separators that could smuggle a second recipient, `?`/`&`
- * which would open mailto header injection (`a@b?bcc=...`), and `%`.
- *
- * `%` matters on its own: without it `a@b.com%0d%0abcc=attacker%40evil.example` satisfies
- * every other rule here and passes the scheme allowlist, and a mail client decodes the
- * escapes back into CRLF plus a header — the injection this shape exists to stop. A real
- * address never needs a percent sign once quoted local parts are already excluded.
- */
-const EMAIL_RE =
-  // eslint-disable-next-line no-control-regex -- excluding control characters is the point
-  /^[^\s@,;:<>"'()[\]\\?&%\u0000-\u001f\u007f]+@[^\s@,;:<>"'()[\]\\?&%\u0000-\u001f\u007f]+\.[A-Za-z]{2,}$/;
 
 function toLocalIsoDate(date: Date): string {
   const year = date.getFullYear();
@@ -270,15 +256,9 @@ export class EmployeeRegisterPageComponent implements OnInit {
     return name || this.translate.instant('PEOPLE.EMPLOYEE_REGISTER.UNNAMED');
   }
 
-  /**
-   * ADR-0065 §2: an address that reached us from the server is normalised and validated
-   * before it is bound to an `href`. Returns null when it cannot be trusted, and the
-   * template then renders the address as plain text rather than a link.
-   */
+  /** ADR-0065 §2 — shared with the people directory (#306); null renders as plain text. */
   mailtoHref(email: string | null | undefined): string | null {
-    if (!email || !EMAIL_RE.test(email)) return null;
-    const href = normaliseHref(`mailto:${email}`);
-    return isSafeHref(href) ? href : null;
+    return safeMailtoHref(email);
   }
 
   isPending(row: EmployeeRegisterRow): boolean {
