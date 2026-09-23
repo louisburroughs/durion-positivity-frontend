@@ -464,6 +464,16 @@ export const SECURITY_PAGE = {
   shopAudit: ['shop:schedule:view', 'appointments:view'],
 } as const satisfies Record<string, readonly string[]>;
 
+/**
+ * Write gates inside Security pages (ADR-0040 §6a). The role page is admitted on
+ * `security:role:view`; replacing a role's permission set (`PUT /v1/roles/permissions`,
+ * `RoleController`) is enforced on `security:role:edit`, so the controls and methods gate on
+ * that separately.
+ */
+export const SECURITY_SECTION = {
+  roleEdit: ['security:role:edit'],
+} as const satisfies Record<string, readonly string[]>;
+
 /** `/app/positivity/*` — supplier profiles, exchange audit, manual review. */
 export const POSITIVITY_PAGE = {
   profiles: ['supplier:profile:read'],

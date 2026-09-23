@@ -47,9 +47,11 @@
         <h2>{{ 'SECURITY.ROLE_DETAIL.PERMISSIONS' | translate }}</h2>
         <p>{{ 'SECURITY.ROLE_DETAIL.PERMISSIONS_HELP' | translate }}</p>
       </div>
-      <button type="button" class="btn-primary" (click)="openGrantModal()">
+      @if (canEdit()) {
+      <button type="button" class="btn-primary" data-testid="edit-permissions" (click)="openGrantModal()">
         {{ 'SECURITY.ROLE_DETAIL.EDIT_PERMISSIONS' | translate }}
       </button>
+      }
     </header>
 
     @if (permissions().length === 0) {
@@ -75,7 +77,9 @@
             <td>{{ permission.permissionKey }}</td>
             <td>{{ permission.description || ('SECURITY.ROLE_DETAIL.NO_DESCRIPTION_AVAILABLE' | translate) }}</td>
             <td class="action-col">
-              @if (confirmRevokeKey() === permission.permissionKey) {
+              @if (!canEdit()) {
+              <span class="text-muted">—</span>
+              } @else if (confirmRevokeKey() === permission.permissionKey) {
               <div class="confirm-inline" aria-live="polite">
                 <span>{{ 'SECURITY.ROLE_DETAIL.CONFIRM_REVOKE' | translate }}</span>
                 <button type="button" class="btn-text text-error" (click)="executeRevoke()"
@@ -87,7 +91,7 @@
                 </button>
               </div>
               } @else {
-              <button type="button" class="btn-text text-error" (click)="confirmRevoke(permission.permissionKey)"
+              <button type="button" class="btn-text text-error" data-testid="revoke-permission" (click)="confirmRevoke(permission.permissionKey)"
                 [attr.aria-label]="'SECURITY.ROLE_DETAIL.REVOKE_ASSIGNMENT_ARIA' | translate: { key: permission.permissionKey }">
                 {{ 'SECURITY.ROLE_DETAIL.REVOKE' | translate }}
               </button>

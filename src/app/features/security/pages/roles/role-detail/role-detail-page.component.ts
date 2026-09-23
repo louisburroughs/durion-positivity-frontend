@@ -1,9 +1,11 @@
-import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { SecurityPermission, SecurityRole } from '../../../models/security.models';
 import { SecurityService } from '../../../services/security.service';
+import { AuthService } from '../../../../../core/services/auth.service';
+import { SECURITY_SECTION } from '../../../../../core/security/route-permissions';
 
 @Component({
   selector: 'app-role-detail-page',
@@ -16,6 +18,11 @@ export class RoleDetailPageComponent implements OnInit {
   private readonly securityService = inject(SecurityService);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly auth = inject(AuthService);
+
+  /** ADR-0040 §6a: the page's read permission never enables a write; unknown perm_bits fall back to allow. */
+  readonly canEdit = computed(() =>
+    !this.auth.permissionsKnown() || this.auth.hasAnyPermission(SECURITY_SECTION.roleEdit));
 
   readonly role = signal<SecurityRole | null>(null);
   readonly permissions = signal<SecurityPermission[]>([]);
@@ -75,6 +82,7 @@ export class RoleDetailPageComponent implements OnInit {
   }
 
   openGrantModal(): void {
+    if (!this.canEdit()) return;
     this.showGrantModal.set(true);
     this.selectedPermKeys.set(this.permissions().map((permission) => permission.permissionKey));
   }
@@ -90,7 +98,7 @@ export class RoleDetailPageComponent implements OnInit {
 
   submitGrantPermissions(): void {
     const currentRole = this.role();
-    if (!currentRole?.id) {
+    if (!this.canEdit() || !currentRole?.id) {
       return;
     }
 
@@ -115,6 +123,7 @@ export class RoleDetailPageComponent implements OnInit {
   }
 
   confirmRevoke(permissionKey: string): void {
+    if (!this.canEdit()) return;
     this.confirmRevokeKey.set(permissionKey);
   }
 
@@ -125,7 +134,7 @@ export class RoleDetailPageComponent implements OnInit {
   executeRevoke(): void {
     const keyToRemove = this.confirmRevokeKey();
     const currentRole = this.role();
-    if (!keyToRemove || !currentRole?.id) {
+    if (!this.canEdit() || !keyToRemove || !currentRole?.id) {
       return;
     }
 
