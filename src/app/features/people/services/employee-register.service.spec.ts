@@ -83,40 +83,40 @@ describe('EmployeeRegisterService', () => {
 
   it('passes the query, a single generous page and every register include to the SDK', () => {
     employeeApi.searchEmployees.mockReturnValue(
-      of({ items: [], page: 0, size: 200, totalElements: 0, totalPages: 0 }),
+      of({ items: [], page: 0, size: 100, totalElements: 0, totalPages: 0 }),
     );
-    service.searchEmployees('albright', 200).subscribe();
+    service.searchEmployees('albright', 100).subscribe();
     expect(employeeApi.searchEmployees).toHaveBeenCalledWith(
       'albright',
       undefined,
       undefined,
       0,
-      200,
+      100,
       REGISTER_INCLUDES,
     );
   });
 
   it('sends undefined rather than an empty query string', () => {
     employeeApi.searchEmployees.mockReturnValue(
-      of({ items: [], page: 0, size: 200, totalElements: 0, totalPages: 0 }),
+      of({ items: [], page: 0, size: 100, totalElements: 0, totalPages: 0 }),
     );
-    service.searchEmployees('', 200).subscribe();
+    service.searchEmployees('', 100).subscribe();
     expect(employeeApi.searchEmployees).toHaveBeenCalledWith(
       undefined,
       undefined,
       undefined,
       0,
-      200,
+      100,
       REGISTER_INCLUDES,
     );
   });
 
   it('leaves not-yet-served fields undefined so the page can say "not available"', async () => {
     employeeApi.searchEmployees.mockReturnValue(
-      of({ items: [thin], page: 0, size: 200, totalElements: 1, totalPages: 1 }),
+      of({ items: [thin], page: 0, size: 100, totalElements: 1, totalPages: 1 }),
     );
 
-    const { rows } = await firstValueFrom(service.searchEmployees(undefined, 200));
+    const { rows } = await firstValueFrom(service.searchEmployees(undefined, 100));
     const [mapped] = rows;
 
     expect(mapped.username).toBeUndefined();
@@ -131,10 +131,10 @@ describe('EmployeeRegisterService', () => {
 
   it('maps the register projection when it arrives, dropping malformed members', async () => {
     employeeApi.searchEmployees.mockReturnValue(
-      of({ items: [enriched], page: 0, size: 200, totalElements: 1, totalPages: 1 }),
+      of({ items: [enriched], page: 0, size: 100, totalElements: 1, totalPages: 1 }),
     );
 
-    const { rows } = await firstValueFrom(service.searchEmployees(undefined, 200));
+    const { rows } = await firstValueFrom(service.searchEmployees(undefined, 100));
     const [mapped] = rows;
 
     expect(mapped.username).toBe('renee.albright');
@@ -156,13 +156,13 @@ describe('EmployeeRegisterService', () => {
       of({
         items: [{ ...thin, status: 'RETIRED' }],
         page: 0,
-        size: 200,
+        size: 100,
         totalElements: 1,
         totalPages: 1,
       }),
     );
 
-    const { rows } = await firstValueFrom(service.searchEmployees(undefined, 200));
+    const { rows } = await firstValueFrom(service.searchEmployees(undefined, 100));
     const [mapped] = rows;
     expect(mapped.status).toBeNull();
   });
@@ -180,13 +180,13 @@ describe('EmployeeRegisterService', () => {
           },
         ],
         page: 0,
-        size: 200,
+        size: 100,
         totalElements: 1,
         totalPages: 1,
       }),
     );
 
-    const { rows } = await firstValueFrom(service.searchEmployees(undefined, 200));
+    const { rows } = await firstValueFrom(service.searchEmployees(undefined, 100));
     const [mapped] = rows;
 
     // The projection served these and they are genuinely empty, so the page must render
@@ -237,13 +237,13 @@ describe('EmployeeRegisterService', () => {
           },
         ],
         page: 0,
-        size: 200,
+        size: 100,
         totalElements: 1,
         totalPages: 1,
       }),
     );
 
-    const { rows } = await firstValueFrom(service.searchEmployees(undefined, 200));
+    const { rows } = await firstValueFrom(service.searchEmployees(undefined, 100));
 
     // Defaulting an unrecognised scope to LOCATION rendered "· L" — the page asserting a
     // scope check it never made (DECISION-PEOPLE-003). The role is real, so it is kept;
@@ -267,13 +267,13 @@ describe('EmployeeRegisterService', () => {
           },
         ],
         page: 0,
-        size: 200,
+        size: 100,
         totalElements: 1,
         totalPages: 1,
       }),
     );
 
-    const { rows } = await firstValueFrom(service.searchEmployees(undefined, 200));
+    const { rows } = await firstValueFrom(service.searchEmployees(undefined, 100));
     const [mapped] = rows;
 
     // `email` was never sent, so the cell must say "not available yet". Reading it as null
@@ -291,13 +291,13 @@ describe('EmployeeRegisterService', () => {
           { ...thin, employeeId: 'emp-3', primaryLocation: { name: 'Charlotte Main' } },
         ],
         page: 0,
-        size: 200,
+        size: 100,
         totalElements: 2,
         totalPages: 2,
       }),
     );
 
-    const { rows } = await firstValueFrom(service.searchEmployees(undefined, 200));
+    const { rows } = await firstValueFrom(service.searchEmployees(undefined, 100));
 
     // Served and empty: the employee really has no other locations, so the cell may say
     // "Primary". Absent: the count was never sent, and claiming "Primary" would assert a
@@ -311,13 +311,13 @@ describe('EmployeeRegisterService', () => {
       of({
         items: [{ ...thin, allowedActions: null }],
         page: 0,
-        size: 200,
+        size: 100,
         totalElements: 1,
         totalPages: 1,
       }),
     );
 
-    const { rows } = await firstValueFrom(service.searchEmployees(undefined, 200));
+    const { rows } = await firstValueFrom(service.searchEmployees(undefined, 100));
 
     // undefined would mean "the projection does not publish capabilities", and the page then
     // falls back to the caller's permissions — so collapsing null into it would GRANT the
@@ -331,13 +331,13 @@ describe('EmployeeRegisterService', () => {
       of({
         items: [{ ...thin, roleAssignments: null }],
         page: 0,
-        size: 200,
+        size: 100,
         totalElements: 1,
         totalPages: 1,
       }),
     );
 
-    const { rows } = await firstValueFrom(service.searchEmployees(undefined, 200));
+    const { rows } = await firstValueFrom(service.searchEmployees(undefined, 100));
     expect(rows[0].roles).toEqual([]);
     expect(rows[0].roles).not.toBeUndefined();
   });

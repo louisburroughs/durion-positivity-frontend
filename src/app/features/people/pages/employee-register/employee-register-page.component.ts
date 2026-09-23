@@ -38,8 +38,11 @@ const PAGE_SIZE = 25;
  * only that page. Fetching a generous slice and working over it client-side — the shape the
  * sibling People directory already uses — keeps the filter honest, and `truncated()` tells the
  * user when the tenant outgrew it.
+ *
+ * 100 is the endpoint's `size` ceiling — anything larger is rejected with a 400 rather than
+ * clamped, which fails the whole register.
  */
-const FETCH_SIZE = 200;
+const FETCH_SIZE = 100;
 
 const STATUS_FILTERS: readonly StatusFilter[] = ['ALL', 'ACTIVE', 'DISABLED', 'TERMINATED'];
 
