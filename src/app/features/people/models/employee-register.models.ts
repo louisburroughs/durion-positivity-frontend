@@ -1,5 +1,3 @@
-import { EmployeeSummaryDto } from '@durion-sdk/people';
-
 /**
  * Employment lifecycle (DECISION-PEOPLE-001). `DISABLED` is a reversible soft-offboard;
  * `TERMINATED` is terminal. `ON_LEAVE` and `SUSPENDED` carry an effective date and a reason,
@@ -37,10 +35,9 @@ export type EmployeeAction = 'VIEW_PII' | 'UPDATE' | 'DISABLE' | 'ENABLE';
 /**
  * One row of the employee register.
  *
- * The first block comes from `EmployeeSummaryDto`, which pos-people serves today. The
- * enrichment block is `undefined` until the register projection ships (backend issue #2155);
- * the page renders those cells as "not available" rather than guessing, and lights up with
- * no further frontend change once the fields arrive.
+ * The first block is the thin `EmployeeSummaryDto` row. The enrichment block is requested with
+ * `include=` (backend #2155) and is `undefined` whenever the projection did not serve a field;
+ * the page renders those cells as "not available" rather than guessing.
  */
 export interface EmployeeRegisterRow {
   readonly employeeId: string;
@@ -51,7 +48,7 @@ export interface EmployeeRegisterRow {
   readonly status: EmploymentStatus | null;
   readonly active: boolean;
 
-  // ── Enrichment — pending backend #2155 ──────────────────────────────────────────────
+  // ── Enrichment — served via include= (backend #2155) ────────────────────────────────
   readonly username?: string | null;
   readonly email?: string | null;
   readonly phone?: string | null;
@@ -68,25 +65,4 @@ export interface EmployeeRegisterPage {
   readonly size: number;
   readonly totalElements: number;
   readonly totalPages: number;
-}
-
-/**
- * The register projection's forward contract (backend issue #2155).
- *
- * `EmployeeSummaryDto` as generated carries only the identity and status block. These optional
- * members are what #2155 adds; declaring them here keeps the mapping in
- * `employee-register.service.ts` typed instead of casting through `any`, and gives the
- * contract one place to change when the SDK is regenerated.
- */
-export interface EnrichedEmployeeSummaryDto extends EmployeeSummaryDto {
-  readonly username?: string | null;
-  readonly contactInfo?: { readonly email?: string | null; readonly phone?: string | null } | null;
-  readonly roleAssignments?: ReadonlyArray<{
-    readonly roleCode?: string | null;
-    readonly scope?: string | null;
-  }> | null;
-  readonly primaryLocation?: { readonly name?: string | null } | null;
-  readonly otherLocationCount?: number | null;
-  readonly jobRole?: string | null;
-  readonly allowedActions?: readonly string[] | null;
 }

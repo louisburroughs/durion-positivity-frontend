@@ -5,11 +5,22 @@ import {
   EmployeeAPIService,
   EmployeeProfileDto,
   EmployeeProfileDtoStatusEnum,
+  EmployeeRoleAssignmentDto,
   EmployeeSummaryDto,
+  EmployeeSummaryDtoAllowedActionsEnum,
 } from '@durion-sdk/people';
 
 import { EmployeeRegisterService } from './employee-register.service';
-import { EnrichedEmployeeSummaryDto } from '../models/employee-register.models';
+
+function assignment(roleName: string, roleLocationScope: string | null): EmployeeRoleAssignmentDto {
+  return {
+    assignmentId: `asg-${roleName}`,
+    effectiveStartDate: '2021-03-01',
+    roleId: `role-${roleName}`,
+    roleLocationScope: roleLocationScope as string,
+    roleName,
+  };
+}
 
 const thin: EmployeeSummaryDto = {
   active: true,
@@ -21,22 +32,35 @@ const thin: EmployeeSummaryDto = {
   status: 'ACTIVE',
 };
 
-const enriched: EnrichedEmployeeSummaryDto = {
+const enriched: EmployeeSummaryDto = {
   ...thin,
   employeeId: 'emp-2',
   personId: 'per-2',
   username: 'renee.albright',
-  contactInfo: { email: 'renee.albright@durion.internal', phone: '(704) 555-0142' },
+  contactInfo: { primaryEmail: 'renee.albright@durion.internal', primaryPhone: '(704) 555-0142' },
   roleAssignments: [
-    { roleCode: 'SERVICE_MANAGER', scope: 'LOCATION' },
-    { roleCode: 'HR_ADMIN', scope: 'GLOBAL' },
-    { roleCode: null, scope: 'GLOBAL' },
+    assignment('SERVICE_MANAGER', 'LOCATION'),
+    assignment('HR_ADMIN', 'ALL'),
+    assignment('', 'ALL'),
   ],
-  primaryLocation: { name: 'Charlotte Main' },
+  primaryLocation: { id: 'loc-1', name: 'Charlotte Main' },
   otherLocationCount: 1,
-  jobRole: 'Service Manager',
-  allowedActions: ['DISABLE', 'NOT_A_REAL_ACTION'],
+  jobRole: { id: 'jr-1', code: 'SERVICE_MANAGER', name: 'Service Manager' },
+  // An action the SDK enum does not model, as a newer backend could send.
+  allowedActions: [
+    EmployeeSummaryDtoAllowedActionsEnum.Disable,
+    'NOT_A_REAL_ACTION' as EmployeeSummaryDtoAllowedActionsEnum,
+  ],
 };
+
+const REGISTER_INCLUDES = [
+  'USERNAME',
+  'CONTACT_INFO',
+  'ROLE_ASSIGNMENTS',
+  'LOCATION',
+  'JOB_ROLE',
+  'ALLOWED_ACTIONS',
+];
 
 const employeeApi = {
   searchEmployees: vi.fn(),
@@ -57,12 +81,19 @@ describe('EmployeeRegisterService', () => {
     service = TestBed.inject(EmployeeRegisterService);
   });
 
-  it('passes the query and a single generous page to the SDK', () => {
+  it('passes the query, a single generous page and every register include to the SDK', () => {
     employeeApi.searchEmployees.mockReturnValue(
       of({ items: [], page: 0, size: 200, totalElements: 0, totalPages: 0 }),
     );
     service.searchEmployees('albright', 200).subscribe();
-    expect(employeeApi.searchEmployees).toHaveBeenCalledWith('albright', 0, 200);
+    expect(employeeApi.searchEmployees).toHaveBeenCalledWith(
+      'albright',
+      undefined,
+      undefined,
+      0,
+      200,
+      REGISTER_INCLUDES,
+    );
   });
 
   it('sends undefined rather than an empty query string', () => {
@@ -70,7 +101,14 @@ describe('EmployeeRegisterService', () => {
       of({ items: [], page: 0, size: 200, totalElements: 0, totalPages: 0 }),
     );
     service.searchEmployees('', 200).subscribe();
-    expect(employeeApi.searchEmployees).toHaveBeenCalledWith(undefined, 0, 200);
+    expect(employeeApi.searchEmployees).toHaveBeenCalledWith(
+      undefined,
+      undefined,
+      undefined,
+      0,
+      200,
+      REGISTER_INCLUDES,
+    );
   });
 
   it('leaves not-yet-served fields undefined so the page can say "not available"', async () => {
@@ -103,7 +141,8 @@ describe('EmployeeRegisterService', () => {
     expect(mapped.email).toBe('renee.albright@durion.internal');
     expect(mapped.primaryLocation).toBe('Charlotte Main');
     expect(mapped.otherLocationCount).toBe(1);
-    // A role assignment with no code is dropped, not rendered as a blank chip.
+    expect(mapped.jobRole).toBe('Service Manager');
+    // A role assignment with no name is dropped, not rendered as a blank chip.
     expect(mapped.roles).toEqual([
       { code: 'SERVICE_MANAGER', scope: 'LOCATION' },
       { code: 'HR_ADMIN', scope: 'GLOBAL' },
@@ -135,7 +174,7 @@ describe('EmployeeRegisterService', () => {
           {
             ...thin,
             username: null,
-            contactInfo: { email: null, phone: null },
+            contactInfo: { primaryEmail: null, primaryPhone: null },
             primaryLocation: null,
             jobRole: null,
           },
@@ -169,6 +208,7 @@ describe('EmployeeRegisterService', () => {
       id: 'emp-1',
       lastName: 'Albright',
       status: EmployeeProfileDtoStatusEnum.Disabled,
+      allowedActions: [],
     };
     employeeApi.disableEmployee.mockReturnValue(of(disabled));
 
@@ -190,9 +230,9 @@ describe('EmployeeRegisterService', () => {
           {
             ...thin,
             roleAssignments: [
-              { roleCode: 'SERVICE_MANAGER', scope: 'REGION' },
-              { roleCode: 'HR_ADMIN', scope: null },
-              { roleCode: 'DISPATCHER', scope: 'GLOBAL' },
+              assignment('SERVICE_MANAGER', 'REGION'),
+              assignment('HR_ADMIN', null),
+              assignment('DISPATCHER', 'ALL'),
             ],
           },
         ],
@@ -222,7 +262,7 @@ describe('EmployeeRegisterService', () => {
           {
             ...thin,
             // A partial projection: the group is served, one field inside it is not.
-            contactInfo: { phone: '(704) 555-0142' },
+            contactInfo: { primaryPhone: '(704) 555-0142' },
             primaryLocation: {},
           },
         ],

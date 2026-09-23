@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
-import { EmployeeAPIService, EmployeeProfileDto } from '@durion-sdk/people';
+import { EmployeeAPIService, EmployeeProfileDto, EmployeeSummaryDto } from '@durion-sdk/people';
 
 import {
   EmployeeAction,
@@ -8,9 +8,13 @@ import {
   EmployeeRegisterRow,
   EmployeeRoleChip,
   EmploymentStatus,
-  EnrichedEmployeeSummaryDto,
   RoleScope,
 } from '../models/employee-register.models';
+
+/** Every enrichment group the register renders (backend #2155, plus ALLOWED_ACTIONS from #2159). */
+const REGISTER_INCLUDES: Array<
+  'USERNAME' | 'CONTACT_INFO' | 'ROLE_ASSIGNMENTS' | 'LOCATION' | 'JOB_ROLE' | 'ALLOWED_ACTIONS'
+> = ['USERNAME', 'CONTACT_INFO', 'ROLE_ASSIGNMENTS', 'LOCATION', 'JOB_ROLE', 'ALLOWED_ACTIONS'];
 
 const EMPLOYMENT_STATUSES: readonly EmploymentStatus[] = [
   'ACTIVE',
@@ -36,13 +40,14 @@ function toStatus(raw: string | undefined): EmploymentStatus | null {
  * kept and only the scope suffix is withheld.
  */
 function toScope(raw: string | null | undefined): RoleScope | null {
-  if (raw === 'GLOBAL') return 'GLOBAL';
+  // pos-people serves `Role.locationScope`, whose tenant-wide value is `ALL` (ADR-0061 §1).
+  if (raw === 'ALL') return 'GLOBAL';
   if (raw === 'LOCATION') return 'LOCATION';
   return null;
 }
 
 function toRoleChips(
-  assignments: EnrichedEmployeeSummaryDto['roleAssignments'],
+  assignments: EmployeeSummaryDto['roleAssignments'],
 ): readonly EmployeeRoleChip[] | undefined {
   // Same null-versus-undefined rule as the contact fields: an absent key means the projection
   // does not serve roles yet, while an explicit null means served and the employee has none —
@@ -50,8 +55,8 @@ function toRoleChips(
   if (assignments === undefined) return undefined;
   if (assignments === null) return [];
   return assignments
-    .filter((a): a is { roleCode: string; scope?: string | null } => !!a.roleCode)
-    .map(a => ({ code: a.roleCode, scope: toScope(a.scope) }));
+    .filter(a => !!a.roleName)
+    .map(a => ({ code: a.roleName, scope: toScope(a.roleLocationScope) }));
 }
 
 /**
@@ -64,8 +69,8 @@ function toRoleChips(
  * page asserting the employee has no email when it was simply never sent (ADR-0064).
  */
 function nested(
-  dto: EnrichedEmployeeSummaryDto,
-  outer: 'contactInfo' | 'primaryLocation',
+  dto: EmployeeSummaryDto,
+  outer: 'contactInfo' | 'primaryLocation' | 'jobRole',
   field: string,
 ): string | null | undefined {
   if (!(outer in dto)) return undefined;
@@ -91,36 +96,34 @@ function toActions(raw: readonly string[] | null | undefined): readonly Employee
 /**
  * Reads for the employee register (`/app/people/employees`).
  *
- * Transport is the generated `@durion-sdk/people` facade (ADR-0041). The register's row shape
- * is wider than `EmployeeSummaryDto` currently serves — roles, location, job role and contact
- * details arrive with backend issue #2155 — so `toRow` maps them defensively and leaves them
- * `undefined` until then.
+ * Transport is the generated `@durion-sdk/people` facade (ADR-0041). Roles, location, job role,
+ * contact details and allowed actions are served only when requested with `include=` (backend
+ * #2155/#2159), so `toRow` maps them defensively and leaves any group the projection did not
+ * serve `undefined`.
  */
 @Injectable({ providedIn: 'root' })
 export class EmployeeRegisterService {
   private readonly employeeApi = inject(EmployeeAPIService);
 
   /**
-   * `searchEmployees` takes no status filter and no sort (backend issue #2158), so the page
-   * fetches a single generous page and filters, sorts and paginates client-side — the same
+   * Fetches a single generous page and filters, sorts and paginates client-side — the same
    * shape the sibling People directory uses. `totalElements` is carried through so the page
    * can tell the user when the tenant is larger than one fetch.
    */
   searchEmployees(query: string | undefined, size: number): Observable<EmployeeRegisterPage> {
-    // NOTE on #2155: the enriched projection is served behind an `include=` query parameter so
-    // existing callers keep the thin payload. The generated signature is `(q, page, size)` today
-    // and carries no such parameter, so it cannot be passed yet — when the SDK is regenerated
-    // this call must add it, or the register will keep receiving the thin rows and every
-    // enrichment column will stay on "not available yet" with nothing failing to say so.
-    return this.employeeApi.searchEmployees(query || undefined, 0, size).pipe(
-      map(response => ({
-        rows: (response.items ?? []).map(item => this.toRow(item as EnrichedEmployeeSummaryDto)),
-        page: response.page ?? 0,
-        size: response.size ?? size,
-        totalElements: response.totalElements ?? (response.items ?? []).length,
-        totalPages: response.totalPages ?? 1,
-      })),
-    );
+    // Without `include=` the endpoint returns the thin row and every enrichment column would sit
+    // on "not available yet" with nothing failing to say so.
+    return this.employeeApi
+      .searchEmployees(query || undefined, undefined, undefined, 0, size, REGISTER_INCLUDES)
+      .pipe(
+        map(response => ({
+          rows: (response.items ?? []).map(item => this.toRow(item)),
+          page: response.page ?? 0,
+          size: response.size ?? size,
+          totalElements: response.totalElements ?? (response.items ?? []).length,
+          totalPages: response.totalPages ?? 1,
+        })),
+      );
   }
 
   /**
@@ -135,7 +138,7 @@ export class EmployeeRegisterService {
     return this.employeeApi.disableEmployee(employeeId, { assignmentEndDate });
   }
 
-  private toRow(dto: EnrichedEmployeeSummaryDto): EmployeeRegisterRow {
+  private toRow(dto: EmployeeSummaryDto): EmployeeRegisterRow {
     return {
       employeeId: dto.employeeId,
       personId: dto.personId,
@@ -151,8 +154,8 @@ export class EmployeeRegisterService {
       // served the field and the employee has none, which is null (renders as —), while an
       // absent key means it is not served yet, which is undefined ("not available yet").
       username: dto.username,
-      email: nested(dto, 'contactInfo', 'email'),
-      phone: nested(dto, 'contactInfo', 'phone'),
+      email: nested(dto, 'contactInfo', 'primaryEmail'),
+      phone: nested(dto, 'contactInfo', 'primaryPhone'),
       roles: toRoleChips(dto.roleAssignments),
       primaryLocation: nested(dto, 'primaryLocation', 'name'),
       // Fourth field under the same rule, and the one the template reads as a claim: a served
@@ -160,7 +163,7 @@ export class EmployeeRegisterService {
       // count was not served and the page must not assert a number it does not have.
       otherLocationCount:
         'otherLocationCount' in dto ? (dto.otherLocationCount ?? null) : undefined,
-      jobRole: dto.jobRole,
+      jobRole: nested(dto, 'jobRole', 'name'),
       allowedActions: toActions(dto.allowedActions),
     };
   }

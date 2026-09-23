@@ -92,6 +92,7 @@ describe('PeopleService', () => {
       employeeNumber: 'EMP-1',
       status: EmployeeProfileDtoStatusEnum.Active,
       hireDate: '2026-05-01',
+      allowedActions: [],
     };
     employeeApiStub.getEmployee.mockReturnValue(of(response));
 
@@ -115,6 +116,7 @@ describe('PeopleService', () => {
       employeeNumber: 'EMP-1',
       status: EmployeeProfileDtoStatusEnum.Active,
       hireDate: '2026-05-01',
+      allowedActions: [],
     };
     employeeApiStub.createEmployee.mockReturnValue(of(response));
 
@@ -138,6 +140,7 @@ describe('PeopleService', () => {
       employeeNumber: 'EMP-1',
       status: EmployeeProfileDtoStatusEnum.Active,
       hireDate: '2026-05-01',
+      allowedActions: [],
     };
     employeeApiStub.updateEmployee.mockReturnValue(of(response));
 
