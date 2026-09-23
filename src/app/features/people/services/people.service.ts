@@ -1,6 +1,6 @@
-import { HttpErrorResponse, HttpParams } from '@angular/common/http';
+import { HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, catchError, map, of, throwError } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import {
   AttendanceDiscrepancyReportResponse,
   CreateEmployeeRequest,
@@ -115,13 +115,12 @@ export class PeopleService {
     return this.peopleApi.replaceContactPoints(personId, contactPoints);
   }
 
-  /** The endpoint documents 404 as "no address on file", so that one status maps to `null`. */
+  /**
+   * The endpoint answers "no address on file" with a 204 and no body, which HttpClient emits as
+   * `null`; the generated signature types only the 200 body, so the absent case is made explicit.
+   */
   getPersonPostalAddress(personId: string): Observable<PostalAddressDto | null> {
-    return this.postalAddressApi.getPersonPostalAddress(personId).pipe(
-      catchError((err: unknown) =>
-        err instanceof HttpErrorResponse && err.status === 404 ? of(null) : throwError(() => err),
-      ),
-    );
+    return this.postalAddressApi.getPersonPostalAddress(personId).pipe(map(address => address ?? null));
   }
 
   putPersonPostalAddress(personId: string, address: PostalAddressDto): Observable<PostalAddressDto> {
