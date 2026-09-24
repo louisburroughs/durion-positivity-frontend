@@ -2,6 +2,6 @@
   {
     "key": "src/app/features/shell/services/chat-blob.service.ts :: URL.revokeObjectURL not inside setTimeout(",
     "reason": "discard() revokes every cached object URL synchronously on identity change/teardown; a click-triggered download elsewhere in the file already defers correctly. Needs a setTimeout wrap here too so an in-flight <a download> read of the blob URL can't be invalidated mid-use (ADR-0065 §3).",
-    "tracking": "TBD"
+    "tracking": "#338"
   }
 ]

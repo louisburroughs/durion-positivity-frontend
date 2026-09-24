@@ -2,21 +2,21 @@
   {
     "key": "src/app/core/services/auth.service.ts :: setItem not wrapped in try: localStorage.setItem(",
     "reason": "storeTokens() writes access/refresh tokens guarded only by isPlatformBrowser, not try/catch; a quota-exceeded or private-mode write failure throws uncaught out of login (ADR-0065 §6).",
-    "tracking": "TBD"
+    "tracking": "#337"
   },
   {
     "key": "src/app/core/services/auth.service.ts :: setItem not wrapped in try: sessionStorage.setItem(",
     "reason": "syncTenant()/session-role caching writes sessionStorage guarded only by isPlatformBrowser, not try/catch (ADR-0065 §6).",
-    "tracking": "TBD"
+    "tracking": "#337"
   },
   {
     "key": "src/app/core/services/locale.service.ts :: setItem not wrapped in try: localStorage.setItem(",
     "reason": "persistLocale() writes the locale preference without a try/catch; a quota failure throws out of the locale switch (ADR-0065 §6).",
-    "tracking": "TBD"
+    "tracking": "#337"
   },
   {
     "key": "src/app/core/services/theme.service.ts :: setItem not wrapped in try: localStorage.setItem(",
     "reason": "the theme-sync effect() writes localStorage without a try/catch; a quota failure throws inside the effect (ADR-0065 §6).",
-    "tracking": "TBD"
+    "tracking": "#337"
   }
 ]
