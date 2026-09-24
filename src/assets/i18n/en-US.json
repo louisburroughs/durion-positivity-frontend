@@ -1095,7 +1095,6 @@
         "INVALID_RANGE": "That date range is not valid.",
         "CREATE_FORBIDDEN": "You do not have permission to create pay periods.",
         "END_BEFORE_START": "The end date must be on or after the start date.",
-        "NO_TENANT": "Your session has no tenant, so a pay period cannot be created.",
         "TRANSITION": "Could not change the period status.",
         "TRANSITION_NOT_ALLOWED": "That status change is no longer allowed; the list has been refreshed.",
         "NOT_FOUND": "That pay period no longer exists; the list has been refreshed.",

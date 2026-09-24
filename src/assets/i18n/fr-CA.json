@@ -1095,7 +1095,6 @@
         "INVALID_RANGE": "Cette plage de dates n'est pas valide.",
         "CREATE_FORBIDDEN": "Vous n'avez pas l'autorisation de créer des périodes de paie.",
         "END_BEFORE_START": "La date de fin doit être égale ou postérieure à la date de début.",
-        "NO_TENANT": "Votre session n'a pas de locataire; impossible de créer une période de paie.",
         "TRANSITION": "Impossible de modifier le statut de la période.",
         "TRANSITION_NOT_ALLOWED": "Ce changement de statut n'est plus permis; la liste a été actualisée.",
         "NOT_FOUND": "Cette période de paie n'existe plus; la liste a été actualisée.",
