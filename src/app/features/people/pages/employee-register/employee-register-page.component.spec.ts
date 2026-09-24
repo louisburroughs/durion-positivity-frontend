@@ -259,13 +259,13 @@ describe('EmployeeRegisterPageComponent', () => {
     expect(fixture.debugElement.query(By.css('dialog.confirm-dialog'))).toBeTruthy();
   });
 
-  it('sends the employee id and the assignment end date on confirm, then re-reads', async () => {
+  it('sends the person id (the path the server resolves) and the assignment end date on confirm, then re-reads', async () => {
     await setup();
     component.openConfirm(STUB_ROWS[0]);
     component.assignmentEndDate.set('2026-09-22');
     component.confirmDeactivate();
 
-    expect(stubService.disableEmployee).toHaveBeenCalledWith('emp-1', '2026-09-22');
+    expect(stubService.disableEmployee).toHaveBeenCalledWith('per-1', '2026-09-22');
     // The disable runs a saga (DECISION-PEOPLE-002); the server settles the status, not us.
     expect(stubService.searchEmployees).toHaveBeenCalledTimes(2);
     expect(component.confirmRow()).toBeNull();
@@ -772,6 +772,19 @@ describe('EmployeeRegisterPageComponent', () => {
     // The action is named "Time for <employee>". Without the person on the URL it opens an
     // empty selection form, and the accessible name promises something the link cannot do.
     expect(timeLink?.getAttribute('href')).toContain('personId=per-1');
+  });
+
+  it('opens the profile by person id, the id getEmployee resolves', async () => {
+    await setup();
+    const nameLink = fixture.debugElement.query(By.css('.register-name-link')).nativeElement as HTMLAnchorElement;
+    const profileAction = fixture.debugElement
+      .queryAll(By.css('.register-action'))
+      .map(a => a.nativeElement as HTMLAnchorElement)
+      .find(a => a.getAttribute('href')?.startsWith('/app/people/employees/'));
+
+    // The profile path parameter is the person id; the employee row id 404s as "Person not found".
+    expect(nameLink.getAttribute('href')).toBe('/app/people/employees/per-1');
+    expect(profileAction?.getAttribute('href')).toBe('/app/people/employees/per-1');
   });
 
   it('dismisses the confirm when the read invalidates its own row', async () => {
