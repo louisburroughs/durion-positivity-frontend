@@ -12,8 +12,18 @@
         <select id="person-select" formControlName="personId" data-testid="person-select"
           aria-describedby="person-help">
           <option value="">{{ 'PEOPLE.TIME_APPROVAL.SELECT_EMPLOYEE' | translate }}</option>
-          @for (person of people(); track $index) {
-          <option [value]="$any(person).personId">{{ $any(person).displayName }} ({{ $any(person).employeeNumber }})
+          @for (person of people(); track person.personId) {
+          <option [value]="person.personId">
+            {{ person.displayName }}@if (person.employeeNumber) { ({{ person.employeeNumber }})}
+          </option>
+          }
+          @if (requestedPerson(); as requested) {
+          <option [value]="requested.personId" data-testid="requested-person-option">
+            @if (requested.name) {
+            {{ 'PEOPLE.TIME_APPROVAL.REQUESTED_EMPLOYEE_OPTION' | translate: { name: requested.name } }}
+            } @else {
+            {{ 'PEOPLE.TIME_APPROVAL.REQUESTED_EMPLOYEE_FALLBACK' | translate }}
+            }
           </option>
           }
         </select>
@@ -25,10 +35,10 @@
         <select id="period-select" formControlName="timePeriodId" data-testid="period-select"
           aria-describedby="period-help">
           <option value="">{{ 'PEOPLE.TIME_APPROVAL.SELECT_PERIOD' | translate }}</option>
-          @for (period of periods(); track $index) {
-          <option [value]="$any(period).timePeriodId">
+          @for (period of periods(); track period.timePeriodId) {
+          <option [value]="period.timePeriodId">
             {{ 'PEOPLE.TIME_APPROVAL.PERIOD_OPTION' | translate: {
-              status: $any(period).status, start: $any(period).startDate, end: $any(period).endDate } }}
+              status: period.status, start: period.startDate, end: period.endDate } }}
           </option>
           }
         </select>
@@ -50,6 +60,10 @@
 
     @if (periodsError()) {
     <p class="error-text" role="alert">{{ periodsError() }}</p>
+    }
+
+    @if (!periodsLoading() && !periodsError() && periods().length === 0) {
+    <p class="help-text" data-testid="periods-empty">{{ 'PEOPLE.TIME_APPROVAL.PERIODS_EMPTY' | translate }}</p>
     }
 
     @if (periodStatusMessage()) {
@@ -89,13 +103,13 @@
           </tr>
         </thead>
         <tbody>
-          @for (entry of entries(); track $index) {
+          @for (entry of entries(); track entry.timekeepingEntryId) {
           <tr data-testid="entry-row">
-            <td>{{ $any(entry).timekeepingEntryId ?? '-' }}</td>
-            <td>{{ $any(entry).approvalStatus ?? '-' }}</td>
-            <td>{{ $any(entry).sessionStartTime ?? '-' }}</td>
-            <td>{{ $any(entry).sessionEndTime ?? '-' }}</td>
-            <td>{{ $any(entry).associatedWorkOrderId ?? '-' }}</td>
+            <td>{{ entry.timekeepingEntryId }}</td>
+            <td>{{ entry.approvalStatus }}</td>
+            <td>{{ entry.sessionStartTime }}</td>
+            <td>{{ entry.sessionEndTime ?? '-' }}</td>
+            <td>{{ entry.associatedWorkOrderId ?? '-' }}</td>
           </tr>
           }
         </tbody>
@@ -147,13 +161,13 @@
           </tr>
         </thead>
         <tbody>
-          @for (history of approvalHistory(); track $index) {
+          @for (history of approvalHistory(); track history.timePeriodId) {
           <tr data-testid="history-row">
-            <td>{{ $any(history).overallStatus ?? '-' }}</td>
-            <td>{{ $any(history).totalCount ?? '-' }}</td>
-            <td>{{ $any(history).pendingCount ?? '-' }}</td>
-            <td>{{ $any(history).approvedCount ?? '-' }}</td>
-            <td>{{ $any(history).rejectedCount ?? '-' }}</td>
+            <td>{{ history.overallStatus }}</td>
+            <td>{{ history.totalCount }}</td>
+            <td>{{ history.pendingCount }}</td>
+            <td>{{ history.approvedCount }}</td>
+            <td>{{ history.rejectedCount }}</td>
           </tr>
           }
         </tbody>

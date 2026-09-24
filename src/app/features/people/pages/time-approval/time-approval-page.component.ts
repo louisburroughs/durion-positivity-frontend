@@ -11,10 +11,29 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ActivatedRoute } from '@angular/router';
+import type {
+  ApprovalPersonDto,
+  TimePeriodApprovalDto,
+  TimePeriodDto,
+  TimekeepingEntryDto,
+} from '@durion-sdk/people';
 
+import { AuthService } from '../../../../core/services/auth.service';
+import { PEOPLE_SECTION } from '../../../../core/security/route-permissions';
 import { PeopleService } from '../../services/people.service';
 
-type PeriodStatus = 'OPEN' | 'SUBMISSION_CLOSED' | 'PAYROLL_CLOSED';
+type PeriodStatus = TimePeriodDto['status'];
+
+/**
+ * The person named by `?personId=` when the approval-people list omits them. That list only
+ * holds employees with at least one timekeeping entry, so an employee opened from the
+ * register before logging any time would otherwise leave the select silently blank.
+ * `name` is null until (or unless) the person lookup resolves.
+ */
+interface RequestedPerson {
+  personId: string;
+  name: string | null;
+}
 
 @Component({
   selector: 'app-time-approval-page',
@@ -29,20 +48,22 @@ export class TimeApprovalPageComponent {
   private readonly destroyRef = inject(DestroyRef);
   private readonly translate = inject(TranslateService);
   private readonly route = inject(ActivatedRoute);
+  private readonly auth = inject(AuthService);
 
-  readonly people = signal<unknown[]>([]);
+  readonly people = signal<ApprovalPersonDto[]>([]);
+  readonly requestedPerson = signal<RequestedPerson | null>(null);
   readonly peopleLoading = signal(false);
   readonly peopleError = signal<string | null>(null);
 
-  readonly periods = signal<unknown[]>([]);
+  readonly periods = signal<TimePeriodDto[]>([]);
   readonly periodsLoading = signal(false);
   readonly periodsError = signal<string | null>(null);
 
-  readonly entries = signal<unknown[]>([]);
+  readonly entries = signal<TimekeepingEntryDto[]>([]);
   readonly detailLoading = signal(false);
   readonly detailError = signal<string | null>(null);
 
-  readonly approvalHistory = signal<unknown[]>([]);
+  readonly approvalHistory = signal<TimePeriodApprovalDto[]>([]);
   readonly historyLoading = signal(false);
 
   readonly actionInFlight = signal(false);
@@ -62,8 +83,7 @@ export class TimeApprovalPageComponent {
 
   readonly selectedPeriodStatus = computed<PeriodStatus | null>(() => {
     const periodId = this.selectionForm.getRawValue().timePeriodId;
-    const period = (this.periods() as Array<Record<string, unknown>>).find((p) => p['timePeriodId'] === periodId);
-    return (period?.['status'] as PeriodStatus) ?? null;
+    return this.periods().find(p => p.timePeriodId === periodId)?.status ?? null;
   });
 
   readonly canDecide = computed<boolean>(() => {
@@ -72,7 +92,7 @@ export class TimeApprovalPageComponent {
     if (this.detailLoading() || this.actionInFlight()) return false;
     if (this.entries().length === 0) return false;
     if (status === 'OPEN' || status === 'PAYROLL_CLOSED') return false;
-    const allPending = (this.entries() as Array<Record<string, unknown>>).every(e => e['approvalStatus'] === 'PENDING_APPROVAL');
+    const allPending = this.entries().every(e => e.approvalStatus === 'PENDING_APPROVAL');
     return allPending;
   });
 
@@ -97,13 +117,39 @@ export class TimeApprovalPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (r) => {
-          this.people.set(Array.isArray(r) ? r : []);
+          const people = Array.isArray(r) ? r : [];
+          this.people.set(people);
           this.peopleLoading.set(false);
+          this.includeRequestedPerson(people);
         },
         error: () => {
           this.peopleError.set(this.translate.instant('PEOPLE.TIME_APPROVAL.ERROR.LOAD_EMPLOYEES'));
           this.peopleLoading.set(false);
         },
+      });
+  }
+
+  /** Adds the `?personId=` employee as an option when the entries-based list does not hold them. */
+  private includeRequestedPerson(people: readonly ApprovalPersonDto[]): void {
+    const personId = this.route.snapshot.queryParamMap.get('personId');
+    if (!personId || people.some(p => p.personId === personId)) {
+      this.requestedPerson.set(null);
+      return;
+    }
+    this.requestedPerson.set({ personId, name: null });
+    // Name lookup is best-effort: without people-contact:person:view the option keeps its
+    // generic label rather than provoking a 403 (issue #255).
+    if (this.auth.permissionsKnown() && !this.auth.hasAnyPermission(PEOPLE_SECTION.personLookup)) {
+      return;
+    }
+    this.peopleService.getPerson(personId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (person) => {
+          const name = [person.firstName, person.lastName].filter(Boolean).join(' ');
+          this.requestedPerson.set({ personId, name: name || null });
+        },
+        error: () => { /* keep the generic label */ },
       });
   }
 
@@ -151,7 +197,7 @@ export class TimeApprovalPageComponent {
       });
 
     this.historyLoading.set(true);
-    this.peopleService.listTimePeriodApprovals(personId, timePeriodId)
+    this.peopleService.getTimePeriodApproval(personId, timePeriodId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (r) => {
@@ -202,8 +248,7 @@ export class TimeApprovalPageComponent {
     this.actionError.set(null);
     this.actionSuccess.set(null);
     const { comments } = this.rejectForm.getRawValue();
-    const body: Record<string, string> = { reason: comments.trim() };
-    this.peopleService.rejectTimePeriod(timePeriodId, personId, body)
+    this.peopleService.rejectTimePeriod(timePeriodId, personId, { reason: comments.trim() })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {

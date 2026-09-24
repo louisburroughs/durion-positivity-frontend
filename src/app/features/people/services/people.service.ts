@@ -1,7 +1,7 @@
-import { HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import {
+  ApprovalPersonDto,
   AttendanceDiscrepancyReportResponse,
   CreateEmployeeRequest,
   CreateStaffingAssignmentRequest,
@@ -9,7 +9,13 @@ import {
   EmployeeProfileDto,
   PeopleReportsAPIService,
   PeopleStaffingAssignmentsService,
+  RejectTimePeriodRequest,
   StaffingAssignmentResponse,
+  TimePeriodApprovalDto,
+  TimePeriodDecisionResponse,
+  TimePeriodDto,
+  TimekeepingApprovalAPIService,
+  TimekeepingEntryDto,
   WorkSessionDto,
   WorkSessionsAPIService,
   UpdateEmployeeRequest,
@@ -45,6 +51,7 @@ export class PeopleService {
   private readonly peopleApi = inject(PeopleAPIService);
   private readonly postalAddressApi = inject(PostalAddressAPIService);
   private readonly workSessionsApi = inject(WorkSessionsAPIService);
+  private readonly timekeepingApi = inject(TimekeepingApprovalAPIService);
 
   getEmployee(employeeId: string): Observable<EmployeeProfileDto> {
     return this.employeeApi.getEmployee(employeeId);
@@ -147,40 +154,32 @@ export class PeopleService {
     return this.accessControlApi.revokePersonRoleAssignment(personUuid, roleCode);
   }
 
-  listApprovalPeople(): Observable<unknown[]> {
-    return this.api.get<unknown[]>('/people/v1/people/timekeeping/approvals/people');
+  listApprovalPeople(): Observable<ApprovalPersonDto[]> {
+    return this.timekeepingApi.listTimekeepingApprovalPeople();
   }
 
-  listTimePeriods(): Observable<unknown[]> {
-    return this.api.get<unknown[]>('/people/v1/people/timekeeping/time-periods');
+  listTimePeriods(): Observable<TimePeriodDto[]> {
+    return this.timekeepingApi.listTimePeriods();
   }
 
-  listTimekeepingEntries(personId: string, timePeriodId: string): Observable<unknown[]> {
-    return this.api.get<unknown[]>(
-      '/people/v1/people/timekeeping/timekeeping-entries',
-      this.timekeepingParams(personId, timePeriodId),
-    );
+  listTimekeepingEntries(personId: string, timePeriodId: string): Observable<TimekeepingEntryDto[]> {
+    return this.timekeepingApi.listTimekeepingEntries(personId, timePeriodId);
   }
 
-  listTimePeriodApprovals(personId: string, timePeriodId: string): Observable<Record<string, unknown>> {
-    return this.api.get<Record<string, unknown>>(
-      '/people/v1/people/timekeeping/time-period-approvals',
-      this.timekeepingParams(personId, timePeriodId),
-    );
+  getTimePeriodApproval(personId: string, timePeriodId: string): Observable<TimePeriodApprovalDto> {
+    return this.timekeepingApi.getTimePeriodApproval(personId, timePeriodId);
   }
 
-  approveTimePeriod(timePeriodId: string, personId: string): Observable<void> {
-    return this.api.post<void>(
-      `/people/v1/people/timekeeping/time-periods/${encodeURIComponent(timePeriodId)}/people/${encodeURIComponent(personId)}/approve`,
-      {},
-    );
+  approveTimePeriod(timePeriodId: string, personId: string): Observable<TimePeriodDecisionResponse> {
+    return this.timekeepingApi.approveTimePeriod(timePeriodId, personId);
   }
 
-  rejectTimePeriod(timePeriodId: string, personId: string, request: Record<string, string>): Observable<void> {
-    return this.api.post<void>(
-      `/people/v1/people/timekeeping/time-periods/${encodeURIComponent(timePeriodId)}/people/${encodeURIComponent(personId)}/reject`,
-      request,
-    );
+  rejectTimePeriod(
+    timePeriodId: string,
+    personId: string,
+    request: RejectTimePeriodRequest,
+  ): Observable<TimePeriodDecisionResponse> {
+    return this.timekeepingApi.rejectTimePeriod(timePeriodId, personId, request);
   }
 
   startSession(personId: string): Observable<WorkSessionDto> {
@@ -204,11 +203,5 @@ export class PeopleService {
       `/people/v1/people/workSessions/${encodeURIComponent(sessionId)}/submit`,
       request,
     );
-  }
-
-  private timekeepingParams(personId: string, timePeriodId: string): HttpParams {
-    return new HttpParams()
-      .set('personId', personId)
-      .set('timePeriodId', timePeriodId);
   }
 }
