@@ -36,7 +36,8 @@ repo alone sees none of them, and this repo defines no skills of its own. Open
 ```bash
 npm start                            # dev server → localhost:4200 (proxies API to :8080, mockAuth on)
 npm run build                        # prod build → dist/
-npm test                             # what CI runs: contract tests + full suite in headless Chromium
+npm test                             # what CI runs: contract tests + arch suite + full suite in headless Chromium
+npm run test:arch                    # architecture rules (ArchUnitTS, plain node) — arch/README.md
 npx ng test --no-watch --browsers=ChromiumHeadless --runner-config vitest.config.ts   # single CI pass (real Chromium, as CI runs it)
 npx ng test --include="src/app/features/<domain>/**/*.spec.ts" --no-watch --browsers=ChromiumHeadless --runner-config vitest.config.ts   # one domain suite
 npm run lint                         # ESLint via @angular-eslint

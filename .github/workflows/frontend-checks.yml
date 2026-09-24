@@ -86,3 +86,13 @@ jobs:
 
       - name: Unit tests (contracts + Angular/Vitest suite)
         run: npm test
+
+      # Non-gating architecture-suite reports (arch/rules/reports.arch.spec.ts): the
+      # feature dependency graph, size/cohesion metrics and the baseline burndown.
+      - name: Upload architecture reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arch-reports
+          path: reports/arch/**
+          if-no-files-found: ignore
