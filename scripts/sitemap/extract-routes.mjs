@@ -246,9 +246,16 @@ function paramsOf(route) {
  * actions rather than page names, which trips the audit's anchor-as-action
  * check (ADR-0037) on the sitemap page and are poor UX regardless — a link
  * just called "Submit" doesn't say what it submits.
+ *
+ * Also for a route whose last segment is shared with another section's page:
+ * labels are keyed by their text, so two "Periods" pages would share one
+ * translation, and whichever wording it carries is wrong for the other.
  */
 const LABEL_OVERRIDES = {
   '/app/accounting/events/submit': 'Event Submission',
+  // `periods` alone would share SITEMAP.LABEL.PERIODS with the pay-period page at
+  // /app/people/timekeeping/periods, whose translation says "Pay periods".
+  '/app/accounting/periods': 'Accounting Periods',
 };
 
 /**
