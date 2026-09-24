@@ -3,9 +3,10 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { convertToParamMap, ActivatedRoute, Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
-import { Observable, of, throwError } from 'rxjs';
+import { Observable, Subject, of, throwError } from 'rxjs';
 import { PartyDetailComponent } from './party-detail.component';
 import { CrmService } from '../../services/crm.service';
+import { PartyDetail } from '../../models/crm.models';
 import { AuthService } from '../../../../core/services/auth.service';
 import { CRM_SECTION } from '../../../../core/security/route-permissions';
 
@@ -44,13 +45,14 @@ describe('PartyDetailComponent', () => {
   let fixture: ComponentFixture<PartyDetailComponent>;
 
   type SetupOptions = {
+    partyResult?: Observable<PartyDetail>;
     contactsResult?: Observable<unknown>;
     prefsResult?: Observable<unknown>;
   };
 
   const setup = async (permissions: string[] | null = null, options: SetupOptions = {}) => {
     session.permissions = permissions;
-    crmServiceStub.getParty.mockReturnValue(of({ partyId: PARTY_ID, legalName: 'Albert Rogers' }));
+    crmServiceStub.getParty.mockReturnValue(options.partyResult ?? of({ partyId: PARTY_ID, legalName: 'Albert Rogers' }));
     crmServiceStub.getContactsWithRoles.mockReturnValue(options.contactsResult ?? of([]));
     crmServiceStub.getCommunicationPreferences.mockReturnValue(options.prefsResult ?? of(null));
 
@@ -166,5 +168,65 @@ describe('PartyDetailComponent', () => {
 
     expect(fixture.componentInstance.contactsState()).toBe('access-denied');
     expect(fixture.componentInstance.prefsState()).toBe('access-denied');
+  });
+
+  describe('by party type', () => {
+    const q = (sel: string) => fixture.nativeElement.querySelector(sel) as HTMLElement | null;
+    const commercial: PartyDetail = { partyId: PARTY_ID, partyType: 'COMMERCIAL', legalName: 'Acme Fleet', dba: 'Acme', taxId: '12-3456789' };
+    const person: PartyDetail = { partyId: PARTY_ID, partyType: 'PERSON', legalName: 'Albert Rogers', dba: 'stale', taxId: 'stale' };
+
+    it('shows the commercial account layout: badge, DBA, tax id, billing rules and contacts', async () => {
+      await setup(null, { partyResult: of(commercial) });
+
+      expect(q('[data-testid="party-type"]')?.dataset['type']).toBe('COMMERCIAL');
+      expect(q('.party-dba')).not.toBeNull();
+      expect(q('.party-meta')?.textContent).toContain('12-3456789');
+      expect(q('.party-header-actions')).not.toBeNull();
+      expect(q('[data-testid="contacts-section"]')).not.toBeNull();
+      expect(crmServiceStub.getContactsWithRoles).toHaveBeenCalledWith(PARTY_ID);
+    });
+
+    it('drops the commercial-only panels for an individual and never requests contacts', async () => {
+      await setup(null, { partyResult: of(person) });
+
+      expect(q('[data-testid="party-type"]')?.dataset['type']).toBe('PERSON');
+      expect(q('#party-heading')?.textContent).toContain('Albert Rogers');
+      expect(q('.party-dba')).toBeNull();
+      expect(q('.party-meta')?.textContent).not.toContain('stale');
+      expect(q('.party-header-actions')).toBeNull();
+      expect(q('[data-testid="contacts-section"]')).toBeNull();
+      expect(crmServiceStub.getContactsWithRoles).not.toHaveBeenCalled();
+      // Communication preferences apply to both party types.
+      expect(crmServiceStub.getCommunicationPreferences).toHaveBeenCalledWith(PARTY_ID);
+    });
+
+    it('keeps the commercial layout when the party type is absent', async () => {
+      await setup(null);
+
+      expect(q('[data-testid="party-type"]')?.dataset['type']).toBe('COMMERCIAL');
+      expect(crmServiceStub.getContactsWithRoles).toHaveBeenCalledWith(PARTY_ID);
+    });
+
+    it('holds the contacts request until the party read resolves as commercial', async () => {
+      const party$ = new Subject<PartyDetail>();
+      await setup(null, { partyResult: party$ });
+
+      // Party read still in flight: the type is unknown, so contacts must not go out yet.
+      expect(crmServiceStub.getContactsWithRoles).not.toHaveBeenCalled();
+      expect(q('[data-testid="contacts-section"]')).toBeNull();
+
+      party$.next(commercial);
+      fixture.detectChanges();
+
+      expect(crmServiceStub.getContactsWithRoles).toHaveBeenCalledTimes(1);
+      expect(q('[data-testid="contacts-section"]')).not.toBeNull();
+    });
+
+    it('skips contacts when the party read fails', async () => {
+      await setup(null, { partyResult: throwError(() => ({ status: 500 })) });
+
+      expect(crmServiceStub.getContactsWithRoles).not.toHaveBeenCalled();
+      expect(q('[data-testid="contacts-section"]')).toBeNull();
+    });
   });
 });

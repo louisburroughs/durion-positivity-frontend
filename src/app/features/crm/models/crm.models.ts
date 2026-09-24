@@ -177,8 +177,13 @@ export interface VehicleRef {
 
 // ── Party Detail (snapshot) ───────────────────────────────────────────────────
 
+/** Party kinds `getParty` resolves: a commercial account or an individual person. */
+export type PartyType = 'COMMERCIAL' | 'PERSON';
+
 export interface PartyDetail {
   partyId: string;
+  /** Set by `getParty`; browse/search rows may omit it. */
+  partyType?: PartyType;
   legalName: string;
   dba?: string;
   /** Human-readable customer/account number, supplied by browse/search responses. */

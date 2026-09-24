@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, signal, OnInit } from '@angular/core';
+import { Component, DestroyRef, computed, inject, signal, OnInit } from '@angular/core';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 import { ActivatedRoute, Router } from '@angular/router';
@@ -36,6 +36,12 @@ export class PartyDetailComponent implements OnInit {
   // ── Party ───────────────────────────────────────────────────────────────
   readonly partyState  = signal<SectionState>('loading');
   readonly party       = signal<PartyDetail | null>(null);
+  /**
+   * Individuals have no contacts-with-roles and no configurable billing rules
+   * (both are commercial-only on the backend), so the page drops those panels.
+   * Anything not explicitly PERSON keeps the commercial layout.
+   */
+  readonly isPerson    = computed(() => this.party()?.partyType === 'PERSON');
   // Human-readable account number so we never publish the raw partyId UUID on
   // screen (UI rule). The party detail endpoint omits it; the snapshot's
   // account block carries it, so we fetch it best-effort.
@@ -67,7 +73,6 @@ export class PartyDetailComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadParty();
-    this.loadContacts();
     this.loadPrefs();
     this.loadCustomerNumber();
   }
@@ -97,7 +102,14 @@ export class PartyDetailComponent implements OnInit {
   loadParty(): void {
     this.partyState.set('loading');
     this.crm.getParty(this.partyId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: p => { this.party.set(p); this.partyState.set('ready'); },
+      next: p => {
+        this.party.set(p);
+        this.partyState.set('ready');
+        // Contacts need the party type first: contacts-with-roles is commercial-only.
+        if (!this.isPerson()) {
+          this.loadContacts();
+        }
+      },
       error: err => {
         this.partyState.set(err?.status === 403 ? 'access-denied' : 'error');
       },
