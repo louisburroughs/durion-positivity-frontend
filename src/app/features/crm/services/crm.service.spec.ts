@@ -9,6 +9,11 @@ import {
   CRMPersonsService,
   CRMSnapshotsService,
 } from '@durion-sdk/customer';
+import {
+  ContactPointDtoContactTypeEnum,
+  GetPersonResponsePreferredContactMethodEnum,
+  type GetPersonResponse,
+} from '@durion-sdk/customer';
 import { VehicleRegistryAPIService } from '@durion-sdk/vehicle-inventory';
 import { CrmService, PartyPage } from './crm.service';
 import type { BillingRules, CommunicationPreferences, CrmSnapshot, PartyDetail, PersonDetail } from '../models/crm.models';
@@ -236,13 +241,18 @@ describe('CrmService', () => {
   describe('getPerson()', () => {
     it('reads the SDK person by its canonical person id and emits it as PersonDetail', () => {
       const personId = '01960020-0000-7000-8000-0000000000aa';
-      const sdkPerson = {
+      const sdkPerson: GetPersonResponse = {
         personId,
         firstName: 'Pat',
         lastName: 'Person',
         displayName: 'Pat Person',
-        preferredContactMethod: 'SMS',
-        contactPoints: [{ contactPointId: 'cp-1', contactType: 'EMAIL', value: 'pat@example.com', primary: true }],
+        preferredContactMethod: GetPersonResponsePreferredContactMethodEnum.Sms,
+        contactPoints: [{
+          contactPointId: 'cp-1',
+          contactType: ContactPointDtoContactTypeEnum.Email,
+          value: 'pat@example.com',
+          primary: true,
+        }],
         individualCustomer: true,
         commercialContact: false,
         commercialAccountCount: 0,
