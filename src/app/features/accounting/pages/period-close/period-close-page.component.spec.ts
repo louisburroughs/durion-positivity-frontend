@@ -368,6 +368,16 @@ describe('PeriodClosePageComponent', () => {
       expect(component.dialog()).toBeNull();
     });
 
+    it('refuses a listed month whose status was not read, as the row itself offers no action', () => {
+      setup([period({ status: 'UNKNOWN' })]);
+      component.monthControl.setValue('2026-07');
+
+      component.submitMonth();
+
+      expect(component.dialog()).toBeNull();
+      expect(component.monthErrorKey()).toBe('ACCOUNTING.PERIOD_CLOSE.CLOSE_MONTH.ERROR.STATUS_UNKNOWN');
+    });
+
     it('clears the field error once the month is edited', () => {
       setup();
       component.monthControl.setValue('');

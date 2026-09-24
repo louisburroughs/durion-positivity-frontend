@@ -3662,7 +3662,8 @@
         "ERROR": {
           "INVALID": "Choose a month to close.",
           "FUTURE": "{{period}} hasn't started yet, so it can't be closed.",
-          "ALREADY_CLOSED": "{{period}} is already closed."
+          "ALREADY_CLOSED": "{{period}} is already closed.",
+          "STATUS_UNKNOWN": "{{period}}'s status couldn't be read, so it can't be closed from here. Reload the page and try again."
         }
       },
       "CONFIRM_CLOSE": {

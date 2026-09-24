@@ -200,6 +200,11 @@ export class PeriodClosePageComponent {
       this.monthErrorKey.set('ACCOUNTING.PERIOD_CLOSE.CLOSE_MONTH.ERROR.ALREADY_CLOSED');
       return;
     }
+    // A listed row whose status was not read offers no row action; the form must not bypass that.
+    if (row?.status === 'UNKNOWN') {
+      this.monthErrorKey.set('ACCOUNTING.PERIOD_CLOSE.CLOSE_MONTH.ERROR.STATUS_UNKNOWN');
+      return;
+    }
     this.monthErrorKey.set(null);
     this.openDialog('close', periodCode);
   }

@@ -3662,7 +3662,8 @@
         "ERROR": {
           "INVALID": "Elija un mes para cerrar.",
           "FUTURE": "{{period}} todavía no ha comenzado, así que no se puede cerrar.",
-          "ALREADY_CLOSED": "{{period}} ya está cerrado."
+          "ALREADY_CLOSED": "{{period}} ya está cerrado.",
+          "STATUS_UNKNOWN": "No se pudo leer el estado de {{period}}, así que no se puede cerrar desde aquí. Vuelva a cargar la página e inténtelo de nuevo."
         }
       },
       "CONFIRM_CLOSE": {
