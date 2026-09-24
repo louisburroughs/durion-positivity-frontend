@@ -73,10 +73,6 @@
       <h2 id="create-heading">{{ 'PEOPLE.PAY_PERIODS.CREATE_TITLE' | translate }}</h2>
       <p class="hint-text">{{ 'PEOPLE.PAY_PERIODS.CREATE_HINT' | translate }}</p>
 
-      @if (!tenantId()) {
-        <p class="error-text" role="alert" data-testid="no-tenant">{{ 'PEOPLE.PAY_PERIODS.ERROR.NO_TENANT' | translate }}</p>
-      }
-
       <form class="form-grid" [formGroup]="createForm" (ngSubmit)="create()" novalidate>
         <div class="field">
           <label for="period-start">{{ 'PEOPLE.PAY_PERIODS.FIELD.START' | translate }}</label>
@@ -109,7 +105,7 @@
 
         <div class="form-actions">
           <button class="btn btn--primary" type="submit" data-testid="create-submit"
-            [disabled]="creating() || !tenantId()" [attr.aria-busy]="creating()">
+            [disabled]="creating()" [attr.aria-busy]="creating()">
             {{ (creating() ? 'PEOPLE.PAY_PERIODS.CREATING' : 'PEOPLE.PAY_PERIODS.CREATE') | translate }}
           </button>
         </div>

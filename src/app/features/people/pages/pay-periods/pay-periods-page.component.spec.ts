@@ -1,5 +1,4 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { signal } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Observable, Subject, of, throwError } from 'rxjs';
@@ -39,12 +38,10 @@ const CLOSED = period({
 
 /** `null` = token with no permission claim (permissions unknown), as in AuthService. */
 const session: { permissions: string[] | null } = { permissions: null };
-const tenantSignal = signal<string | null>(TENANT);
 const authStub = {
   permissionsKnown: () => session.permissions !== null,
   hasAnyPermission: (permissions: readonly string[]) =>
     permissions.some(p => session.permissions?.includes(p) ?? false),
-  tenantId: tenantSignal,
 };
 
 const peopleStub = {
@@ -63,10 +60,9 @@ describe('PayPeriodsPageComponent', () => {
     row(id)?.querySelector(`button[data-target="${target}"]`) as HTMLButtonElement | null;
 
   const setup = async (
-    opts: { periods?: Observable<TimePeriodDto[]>; permissions?: string[] | null; tenantId?: string | null } = {},
+    opts: { periods?: Observable<TimePeriodDto[]>; permissions?: string[] | null } = {},
   ) => {
     session.permissions = opts.permissions === undefined ? null : opts.permissions;
-    tenantSignal.set(opts.tenantId === undefined ? TENANT : opts.tenantId);
     peopleStub.listTimePeriods.mockReturnValue(opts.periods ?? of([SUBMITTED, OPEN, CLOSED]));
 
     await TestBed.configureTestingModule({
@@ -146,8 +142,9 @@ describe('PayPeriodsPageComponent', () => {
       (q('[data-testid="create-submit"]') as HTMLButtonElement).click();
       fixture.detectChanges();
 
+      // No tenant in the body: the backend binds the caller's own from the token (ADR-0062).
       expect(peopleStub.createTimePeriod).toHaveBeenCalledExactlyOnceWith({
-        tenantId: TENANT, startDate: '2026-10-01', endDate: '2026-10-14', status: 'OPEN',
+        startDate: '2026-10-01', endDate: '2026-10-14', status: 'OPEN',
       });
       expect(q('[data-testid="create-success"]')?.textContent?.trim()).toBe(enUS.PEOPLE.PAY_PERIODS.CREATE_SUCCESS);
       expect(peopleStub.listTimePeriods).toHaveBeenCalledTimes(2);
@@ -176,15 +173,6 @@ describe('PayPeriodsPageComponent', () => {
 
       expect(peopleStub.createTimePeriod).not.toHaveBeenCalled();
       expect(fixture.nativeElement.textContent).toContain(enUS.PEOPLE.PAY_PERIODS.ERROR.END_BEFORE_START);
-    });
-
-    it('blocks create when the session carries no tenant', async () => {
-      await setup({ tenantId: null });
-
-      expect(q('[data-testid="no-tenant"]')?.textContent?.trim()).toBe(enUS.PEOPLE.PAY_PERIODS.ERROR.NO_TENANT);
-      expect((q('[data-testid="create-submit"]') as HTMLButtonElement).disabled).toBe(true);
-      component.create();
-      expect(peopleStub.createTimePeriod).not.toHaveBeenCalled();
     });
 
     it('shows the form and allows create for a session holding people:timePeriod:create', async () => {

@@ -83,7 +83,6 @@ export class PayPeriodsPageComponent {
   // ── Permissions: each control and its handler share one predicate (EXEMPLARS §5) ──
   readonly canCreate = computed(() => this.allows(PEOPLE_SECTION.payPeriodCreate));
   readonly canTransition = computed(() => this.allows(PEOPLE_SECTION.payPeriodTransition));
-  readonly tenantId = computed(() => this.auth.tenantId());
 
   // ── Create ──────────────────────────────────────────────────────────────
   readonly createForm = new FormGroup(
@@ -157,15 +156,15 @@ export class PayPeriodsPageComponent {
 
   create(): void {
     if (!this.canCreate() || this.creating()) return;
-    const tenantId = this.tenantId();
     this.createForm.markAllAsTouched();
-    if (!tenantId || this.createForm.invalid) return;
+    if (this.createForm.invalid) return;
 
     const { startDate, endDate, status } = this.createForm.getRawValue();
     this.creating.set(true);
     this.createErrorKey.set(null);
     this.createSuccess.set(false);
-    this.peopleService.createTimePeriod({ tenantId, startDate, endDate, status })
+    // The tenant is the caller's own, bound server-side from the token (ADR-0062); never sent.
+    this.peopleService.createTimePeriod({ startDate, endDate, status })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
