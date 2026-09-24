@@ -2,16 +2,16 @@
   {
     "key": "src/app/features/shell/services/chat-state.service.ts :: constructor :: catchError returns EMPTY",
     "reason": "queue-worker catchError: intentionally swallows to keep the write queue alive (ADR-0065 \u00a76 comment in code), but still returns EMPTY silently per ADR-0064 \u00a71 \u2014 human review requested by the plan.",
-    "tracking": "#343"
+    "tracking": "#352"
   },
   {
     "key": "src/app/features/shell/services/chat-state.service.ts :: refresh :: catchError returns EMPTY",
     "reason": "list-load catchError: sets state/errorKey before returning EMPTY, so the failure is surfaced in the UI, but the literal EMPTY return still trips ADR-0064 \u00a71 \u2014 human review requested by the plan.",
-    "tracking": "#343"
+    "tracking": "#352"
   },
   {
     "key": "src/app/features/shell/services/chat-state.service.ts :: selectConversation :: catchError returns EMPTY",
     "reason": "selection-load catchError: sets state/errorKey before returning EMPTY, so the failure is surfaced in the UI, but the literal EMPTY return still trips ADR-0064 \u00a71 \u2014 human review requested by the plan.",
-    "tracking": "#343"
+    "tracking": "#352"
   }
 ]
