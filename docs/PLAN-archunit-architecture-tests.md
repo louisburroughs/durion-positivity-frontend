@@ -503,7 +503,7 @@ graph cache. Without it the run took 64 s.
 - **ArchUnitTS paths are relative to the tsconfig's directory**, and `FileInfo.content` is empty
   for a tsconfig outside the repo root. `Project` therefore has a `root`, and `app`/`src` are
   relative to it. Content and template rules read from disk through `onDisk()`. A harness
-  self-test guards this. The upstream issue is worth filing next to §11.3.1.
+  self-test guards this. Reported upstream as LukasNiessen/ArchUnitTS#109; the interior-`**` glob from §11.3.1 is LukasNiessen/ArchUnitTS#108.
 - **The TEN-06 classification** lives in `tenancy.rules.ts`, not `support/projects.ts`.
 - **Keys collapse repeated identical findings** in one file (for example SDK-05's 44 literals
   become 30 keys, and TEN-07's 7 calls became 4). That keeps keys free of line numbers.
