@@ -1,0 +1,17 @@
+[
+  {
+    "key": "src/app/features/accounting/pages/reports/labor-overhead/labor-overhead-report-page.component.ts :: Math.abs(rounded).toLocaleString(…)",
+    "reason": "Pre-existing debt surfaced by the ArchUnitTS I18N-07 spike (PLAN-archunit-architecture-tests.md §5.7): manual locale-sensitive formatting call in a page/component instead of the number/date pipes or an allowlisted core formatter. Needs migrating to the framework pipes (ADR-0030).",
+    "tracking": "TBD"
+  },
+  {
+    "key": "src/app/features/people/pages/pay-periods/pay-periods-page.component.ts :: parseIsoDateLocal(iso).toLocaleDateString(…)",
+    "reason": "Pre-existing debt surfaced by the ArchUnitTS I18N-07 spike (PLAN-archunit-architecture-tests.md §5.7): manual locale-sensitive formatting call in a page/component instead of the number/date pipes or an allowlisted core formatter. Needs migrating to the framework pipes (ADR-0030).",
+    "tracking": "TBD"
+  },
+  {
+    "key": "src/app/features/workexec/pages/approval-detail/approval-detail-page.component.ts :: new Date(est.expiresAt).toLocaleDateString(…)",
+    "reason": "Pre-existing debt surfaced by the ArchUnitTS I18N-07 spike (PLAN-archunit-architecture-tests.md §5.7): manual locale-sensitive formatting call in a page/component instead of the number/date pipes or an allowlisted core formatter. Needs migrating to the framework pipes (ADR-0030).",
+    "tracking": "TBD"
+  }
+]

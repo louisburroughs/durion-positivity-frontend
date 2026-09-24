@@ -1,8 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-
-const args = new Set(process.argv.slice(2));
-const checkOnly = args.has('--check');
+import { pathToFileURL } from 'node:url';
 
 const repoRoot = process.cwd();
 const basePath = path.join(repoRoot, 'src', 'assets', 'i18n', 'en-US.json');
@@ -55,26 +53,51 @@ function pseudoValue(value) {
   return value;
 }
 
-const baseJson = JSON.parse(fs.readFileSync(basePath, 'utf8'));
-const pseudoJson = pseudoValue(baseJson);
-const nextContent = `${JSON.stringify(pseudoJson, null, 2)}\n`;
-
-if (checkOnly) {
-  if (!fs.existsSync(outputPath)) {
-    console.error('FAIL pseudo-locale check: qps-ploc.json is missing.');
-    console.error('Run: npm run i18n:pseudo:generate');
-    process.exit(1);
-  }
-  const currentContent = fs.readFileSync(outputPath, 'utf8');
-  if (currentContent !== nextContent) {
-    console.error('FAIL pseudo-locale check: qps-ploc.json is stale.');
-    console.error('Run: npm run i18n:pseudo:generate');
-    process.exit(1);
-  }
-  console.log('PASS pseudo-locale check: qps-ploc.json is up to date.');
-  process.exit(0);
+/** Pure: the pseudo-locale content generate-pseudo-locale would write, from `en-US.json`. */
+export function computePseudoLocale() {
+  const baseJson = JSON.parse(fs.readFileSync(basePath, 'utf8'));
+  const pseudoJson = pseudoValue(baseJson);
+  return `${JSON.stringify(pseudoJson, null, 2)}\n`;
 }
 
-fs.mkdirSync(path.dirname(outputPath), { recursive: true });
-fs.writeFileSync(outputPath, nextContent, 'utf8');
-console.log(`Generated ${path.relative(repoRoot, outputPath)} from en-US.json.`);
+/**
+ * Pure check: is `qps-ploc.json` up to date with `en-US.json`? No printing, no `process.exit`.
+ * Mirrors `--check`'s two failure shapes so the CLI shim can reproduce its messages exactly.
+ */
+export function checkPseudoLocale() {
+  if (!fs.existsSync(outputPath)) {
+    return { ok: false, reason: 'missing' };
+  }
+  const currentContent = fs.readFileSync(outputPath, 'utf8');
+  if (currentContent !== computePseudoLocale()) {
+    return { ok: false, reason: 'stale' };
+  }
+  return { ok: true, reason: null };
+}
+
+function main() {
+  const checkOnly = new Set(process.argv.slice(2)).has('--check');
+
+  if (checkOnly) {
+    const result = checkPseudoLocale();
+    if (!result.ok) {
+      console.error(
+        result.reason === 'missing'
+          ? 'FAIL pseudo-locale check: qps-ploc.json is missing.'
+          : 'FAIL pseudo-locale check: qps-ploc.json is stale.',
+      );
+      console.error('Run: npm run i18n:pseudo:generate');
+      process.exit(1);
+    }
+    console.log('PASS pseudo-locale check: qps-ploc.json is up to date.');
+    process.exit(0);
+  }
+
+  fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+  fs.writeFileSync(outputPath, computePseudoLocale(), 'utf8');
+  console.log(`Generated ${path.relative(repoRoot, outputPath)} from en-US.json.`);
+}
+
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main();
+}

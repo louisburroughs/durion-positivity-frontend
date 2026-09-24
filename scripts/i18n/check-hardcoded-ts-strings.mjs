@@ -49,6 +49,7 @@
  */
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 const DEFAULT_ROOT = 'src/app';
 const SKIP_DIRS = new Set(['testing', 'node_modules']);
@@ -229,79 +230,97 @@ function* literals(src) {
   }
 }
 
-const targets = process.argv.slice(2);
-const files = [...new Set(targets.length ? targets.flatMap(collect) : collect(DEFAULT_ROOT))].sort();
-const findings = [];
-let suppressed = 0;
+/**
+ * Pure scan: collect hardcoded-literal findings for a set of targets, with no printing and no
+ * `process.exit`. `options.targets` mirrors the CLI's positional args; an empty/absent list scans
+ * the whole `src/app` tree, exactly like running the CLI with no args.
+ */
+export function scan(options = {}) {
+  const targets = options.targets ?? [];
+  const files = [...new Set(targets.length ? targets.flatMap(collect) : collect(DEFAULT_ROOT))].sort();
+  const findings = [];
+  let suppressed = 0;
 
-for (const file of files) {
-  const raw = readFileSync(file, 'utf8');
-  const { coverage, markers } = parseSuppressions(file, raw);
-  const meta = blankComponentMetadata(stripComments(raw));
-  const scanned = blankDevSinks(meta.src);
-  const candidates = [];
+  for (const file of files) {
+    const raw = readFileSync(file, 'utf8');
+    const { coverage, markers } = parseSuppressions(file, raw);
+    const meta = blankComponentMetadata(stripComments(raw));
+    const scanned = blankDevSinks(meta.src);
+    const candidates = [];
 
-  for (const t of meta.inlineTemplates) {
-    candidates.push({ file, lineNo: t.lineNo, kind: 'inline-template', text: t.copy });
-  }
+    for (const t of meta.inlineTemplates) {
+      candidates.push({ file, lineNo: t.lineNo, kind: 'inline-template', text: t.copy });
+    }
 
-  for (const [lineNo, text] of literals(scanned)) {
-    if (isProse(text)) {
-      candidates.push({ file, lineNo, kind: 'string', text: text.trim().replace(/\s+/g, ' ').slice(0, 90) });
+    for (const [lineNo, text] of literals(scanned)) {
+      if (isProse(text)) {
+        candidates.push({ file, lineNo, kind: 'string', text: text.trim().replace(/\s+/g, ' ').slice(0, 90) });
+      }
+    }
+
+    for (const c of candidates) {
+      const marker = coverage.get(c.lineNo);
+      if (marker) { marker.used = true; suppressed++; } else { findings.push(c); }
+    }
+
+    for (const marker of markers) {
+      if (marker.unterminated) {
+        findings.push({ file, lineNo: marker.lineNo, kind: 'i18n-ignore', text: 'i18n-ignore-start without a matching i18n-ignore-end' });
+      } else if (!marker.reason) {
+        findings.push({ file, lineNo: marker.lineNo, kind: 'i18n-ignore', text: `${marker.kind} needs a reason: // ${marker.kind}: why this is not UI copy` });
+      } else if (!marker.used) {
+        findings.push({ file, lineNo: marker.lineNo, kind: 'i18n-ignore', text: `${marker.kind} suppresses nothing — delete it` });
+      }
     }
   }
 
-  for (const c of candidates) {
-    const marker = coverage.get(c.lineNo);
-    if (marker) { marker.used = true; suppressed++; } else { findings.push(c); }
-  }
-
-  for (const marker of markers) {
-    if (marker.unterminated) {
-      findings.push({ file, lineNo: marker.lineNo, kind: 'i18n-ignore', text: 'i18n-ignore-start without a matching i18n-ignore-end' });
-    } else if (!marker.reason) {
-      findings.push({ file, lineNo: marker.lineNo, kind: 'i18n-ignore', text: `${marker.kind} needs a reason: // ${marker.kind}: why this is not UI copy` });
-    } else if (!marker.used) {
-      findings.push({ file, lineNo: marker.lineNo, kind: 'i18n-ignore', text: `${marker.kind} suppresses nothing — delete it` });
-    }
-  }
+  return { targets, files, findings, suppressed };
 }
 
-const scope = targets.length ? targets.join(', ') : `${DEFAULT_ROOT} (all modules)`;
-const suppressedNote = suppressed ? `  (${suppressed} literal(s) suppressed by i18n-ignore markers)` : '';
+function main() {
+  const targets = process.argv.slice(2);
+  const { files, findings, suppressed } = scan({ targets });
 
-if (findings.length) {
-  const byModule = new Map();
-  for (const f of findings) {
-    const mod = moduleOf(f.file);
-    if (!byModule.has(mod)) byModule.set(mod, []);
-    byModule.get(mod).push(f);
-  }
-  const ranked = [...byModule].sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0]));
+  const scope = targets.length ? targets.join(', ') : `${DEFAULT_ROOT} (all modules)`;
+  const suppressedNote = suppressed ? `  (${suppressed} literal(s) suppressed by i18n-ignore markers)` : '';
 
-  console.error(
-    `FAIL hardcoded-ts-string check: ${findings.length} user-visible literal(s) ` +
-    `across ${byModule.size} module(s) in ${scope}.\n`,
-  );
-  for (const [mod, list] of ranked) {
-    const fileCount = new Set(list.map((f) => f.file)).size;
-    console.error(`  ${mod}: ${list.length} literal(s) in ${fileCount} file(s)`);
-  }
-  console.error('');
-  for (const [mod, list] of ranked) {
-    console.error(`${mod}`);
-    for (const f of list) console.error(`  ${f.file}:${f.lineNo}  [${f.kind}]  "${f.text}"`);
+  if (findings.length) {
+    const byModule = new Map();
+    for (const f of findings) {
+      const mod = moduleOf(f.file);
+      if (!byModule.has(mod)) byModule.set(mod, []);
+      byModule.get(mod).push(f);
+    }
+    const ranked = [...byModule].sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0]));
+
+    console.error(
+      `FAIL hardcoded-ts-string check: ${findings.length} user-visible literal(s) ` +
+      `across ${byModule.size} module(s) in ${scope}.\n`,
+    );
+    for (const [mod, list] of ranked) {
+      const fileCount = new Set(list.map((f) => f.file)).size;
+      console.error(`  ${mod}: ${list.length} literal(s) in ${fileCount} file(s)`);
+    }
     console.error('');
+    for (const [mod, list] of ranked) {
+      console.error(`${mod}`);
+      for (const f of list) console.error(`  ${f.file}:${f.lineNo}  [${f.kind}]  "${f.text}"`);
+      console.error('');
+    }
+    if (suppressedNote) console.error(`${suppressedNote.trim()}\n`);
+    console.error('Replace each with a translation key in src/assets/i18n/*.json (ADR-0030):');
+    console.error('  - a signal that only ever holds a key  -> rename to `errorKey` and pipe it in the template');
+    console.error('  - a fallback a server message can replace -> `this.translate.instant(\'KEY\')`');
+    console.error('  - genuinely not UI copy -> // i18n-ignore-next-line: <reason>');
+    process.exit(1);
   }
-  if (suppressedNote) console.error(`${suppressedNote.trim()}\n`);
-  console.error('Replace each with a translation key in src/assets/i18n/*.json (ADR-0030):');
-  console.error('  - a signal that only ever holds a key  -> rename to `errorKey` and pipe it in the template');
-  console.error('  - a fallback a server message can replace -> `this.translate.instant(\'KEY\')`');
-  console.error('  - genuinely not UI copy -> // i18n-ignore-next-line: <reason>');
-  process.exit(1);
+
+  console.log(
+    `PASS hardcoded-ts-string check: no user-visible literals in ${scope} ` +
+    `(${files.length} files scanned).${suppressedNote}`,
+  );
 }
 
-console.log(
-  `PASS hardcoded-ts-string check: no user-visible literals in ${scope} ` +
-  `(${files.length} files scanned).${suppressedNote}`,
-);
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main();
+}
