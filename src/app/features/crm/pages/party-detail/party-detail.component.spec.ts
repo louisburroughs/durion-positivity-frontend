@@ -2,7 +2,8 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { convertToParamMap, ActivatedRoute, Router } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import enUS from '../../../../../assets/i18n/en-US.json';
 import { Observable, Subject, of, throwError } from 'rxjs';
 import { PartyDetailComponent } from './party-detail.component';
 import { CrmService } from '../../services/crm.service';
@@ -70,6 +71,11 @@ describe('PartyDetailComponent', () => {
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ partyId: PARTY_ID }) } } },
       ],
     }).compileComponents();
+
+    // Real en-US bundle: assertions read the user-visible strings, so a missing key fails.
+    const translate = TestBed.inject(TranslateService);
+    translate.setTranslation('en-US', enUS);
+    translate.use('en-US');
 
     fixture = TestBed.createComponent(PartyDetailComponent);
     fixture.detectChanges();
@@ -151,8 +157,8 @@ describe('PartyDetailComponent', () => {
     await setup([]);
 
     expect(fixture.debugElement.query(By.css('[data-testid="contacts-error"]'))).toBeNull();
-    expect(fixture.nativeElement.textContent).toContain('CRM.PARTY_DETAIL.CONTACTS_FORBIDDEN');
-    expect(fixture.nativeElement.textContent).toContain('CRM.PARTY_DETAIL.PREFS_FORBIDDEN');
+    expect(fixture.nativeElement.textContent).toContain(enUS.CRM.PARTY_DETAIL.CONTACTS_FORBIDDEN);
+    expect(fixture.nativeElement.textContent).toContain(enUS.CRM.PARTY_DETAIL.PREFS_FORBIDDEN);
   });
 
   it('still requests both sections when the token carries no permission claim', async () => {
@@ -263,7 +269,7 @@ describe('PartyDetailComponent', () => {
       expect(q('[data-testid="person-first-name"]')?.textContent?.trim()).toBe('Pat');
       expect(q('[data-testid="person-last-name"]')?.textContent?.trim()).toBe('Person');
       expect(q('[data-testid="person-preferred-contact"]')?.textContent?.trim())
-        .toBe('CRM.PARTY_DETAIL.PERSON.METHOD.SMS');
+        .toBe(enUS.CRM.PARTY_DETAIL.PERSON.METHOD.SMS);
       const points = Array.from(q('[data-testid="person-contact-points"]')?.querySelectorAll('li') ?? []);
       expect(points.map(li => li.querySelector('.contact-point__value')?.textContent?.trim()))
         .toEqual(['pat@example.com', '+1-555-0100']);
@@ -282,7 +288,7 @@ describe('PartyDetailComponent', () => {
       await setup(null, { partyResult: of({ ...individual, personId: undefined }) });
 
       expect(crmServiceStub.getPerson).not.toHaveBeenCalled();
-      expect(q('[data-testid="person-section"]')?.textContent).toContain('CRM.PARTY_DETAIL.PERSON.UNAVAILABLE');
+      expect(q('[data-testid="person-section"]')?.textContent).toContain(enUS.CRM.PARTY_DETAIL.PERSON.UNAVAILABLE);
     });
 
     it('skips the request and shows the denied state without crm:person:read', async () => {
@@ -296,6 +302,16 @@ describe('PartyDetailComponent', () => {
       await setup([PERSON_PERMISSION], { partyResult: of(individual), personResult: of(pat) });
 
       expect(crmServiceStub.getPerson).toHaveBeenCalledWith(PERSON_ID);
+    });
+
+    it('lands in the denied state, not a retryable error, when a permitted read gets 403', async () => {
+      // Backstop for a permission mapped wrongly: the server still says no.
+      await setup([PERSON_PERMISSION], { partyResult: of(individual), personResult: throwError(() => ({ status: 403 })) });
+
+      expect(crmServiceStub.getPerson).toHaveBeenCalledWith(PERSON_ID);
+      expect(fixture.componentInstance.personState()).toBe('access-denied');
+      expect(q('[data-testid="person-section"]')?.textContent).toContain(enUS.CRM.PARTY_DETAIL.PERSON.FORBIDDEN);
+      expect(q('[data-testid="person-section"] .inline-error')).toBeNull();
     });
 
     it('offers a retry when the person read fails', async () => {
@@ -313,8 +329,8 @@ describe('PartyDetailComponent', () => {
     it('falls back to the raw value for an unrecognized contact type or method', async () => {
       await setup(null, { partyResult: of(individual), personResult: of({
         ...pat,
-        preferredContactMethod: 'PIGEON' as PersonDetail['preferredContactMethod'],
-        contactPoints: [{ contactPointId: 'cp-9', contactType: 'TELEX' as 'EMAIL', value: 'x' }],
+        preferredContactMethod: 'PIGEON',
+        contactPoints: [{ contactPointId: 'cp-9', contactType: 'TELEX', value: 'x' }],
       }) });
 
       expect(q('[data-testid="person-preferred-contact"]')?.textContent?.trim()).toBe('PIGEON');

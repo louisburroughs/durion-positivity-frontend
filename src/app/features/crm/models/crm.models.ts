@@ -78,8 +78,15 @@ export interface CreatePersonRequest {
   defaultBillingTermsId?: string;
 }
 
-export type PersonContactType = 'EMAIL' | 'PHONE_MOBILE' | 'PHONE_HOME' | 'PHONE_WORK' | 'FAX';
-export type PreferredContactMethod = 'EMAIL' | 'PHONE_CALL' | 'SMS' | 'NONE';
+export type PersonContactType =
+  | 'EMAIL'
+  | 'PHONE_MOBILE'
+  | 'PHONE_HOME'
+  | 'PHONE_WORK'
+  | 'FAX'
+  | (string & {});
+
+export type PreferredContactMethod = 'EMAIL' | 'PHONE_CALL' | 'SMS' | 'NONE' | (string & {});
 
 export interface PersonContactPoint {
   contactPointId: string;

@@ -11,7 +11,7 @@ import {
 } from '@durion-sdk/customer';
 import { VehicleRegistryAPIService } from '@durion-sdk/vehicle-inventory';
 import { CrmService, PartyPage } from './crm.service';
-import type { BillingRules, CommunicationPreferences, CrmSnapshot, PartyDetail } from '../models/crm.models';
+import type { BillingRules, CommunicationPreferences, CrmSnapshot, PartyDetail, PersonDetail } from '../models/crm.models';
 
 describe('CrmService', () => {
   let service: CrmService;
@@ -22,6 +22,10 @@ describe('CrmService', () => {
     put: vi.fn(),
     patch: vi.fn(),
     delete: vi.fn(),
+  };
+
+  const personsApiStub = {
+    getPerson: vi.fn(),
   };
 
   const snapshotsApiStub = {
@@ -63,7 +67,7 @@ describe('CrmService', () => {
         { provide: CRMCommunicationPreferencesService, useValue: commPrefsStub },
         { provide: CRMContactsService, useValue: {} },
         { provide: CRMPartyRelationshipsService, useValue: relationshipsStub },
-        { provide: CRMPersonsService, useValue: {} },
+        { provide: CRMPersonsService, useValue: personsApiStub },
         { provide: CRMSnapshotsService, useValue: snapshotsApiStub },
         { provide: VehicleRegistryAPIService, useValue: {} },
       ],
@@ -226,6 +230,37 @@ describe('CrmService', () => {
       service.checkCommercialAccountDuplicates('Acme').subscribe(r => (result = r));
 
       expect(result).toEqual({ duplicates: [{ partyId: 'p1', legalName: 'Acme', matchReasons: ['LEGAL_NAME'] }] });
+    });
+  });
+
+  describe('getPerson()', () => {
+    it('reads the SDK person by its canonical person id and emits it as PersonDetail', () => {
+      const personId = '01960020-0000-7000-8000-0000000000aa';
+      const sdkPerson = {
+        personId,
+        firstName: 'Pat',
+        lastName: 'Person',
+        displayName: 'Pat Person',
+        preferredContactMethod: 'SMS',
+        contactPoints: [{ contactPointId: 'cp-1', contactType: 'EMAIL', value: 'pat@example.com', primary: true }],
+        individualCustomer: true,
+        commercialContact: false,
+        commercialAccountCount: 0,
+        createdAt: '2026-09-24T12:00:00Z',
+      };
+      personsApiStub.getPerson.mockReturnValueOnce(of(sdkPerson));
+
+      let result: PersonDetail | undefined;
+      service.getPerson(personId).subscribe(r => (result = r));
+
+      expect(personsApiStub.getPerson).toHaveBeenCalledExactlyOnceWith(personId);
+      expect(result).toEqual(expect.objectContaining({
+        personId,
+        firstName: 'Pat',
+        lastName: 'Person',
+        preferredContactMethod: 'SMS',
+        contactPoints: [{ contactPointId: 'cp-1', contactType: 'EMAIL', value: 'pat@example.com', primary: true }],
+      }));
     });
   });
 
