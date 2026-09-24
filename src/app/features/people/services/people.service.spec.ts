@@ -323,10 +323,9 @@ describe('PeopleService', () => {
       expect(result).toEqual(address);
     });
 
-    it('getPersonPostalAddress() maps the documented 404 to null', () => {
-      postalAddressApiStub.getPersonPostalAddress.mockReturnValue(
-        throwError(() => new HttpErrorResponse({ status: 404 })),
-      );
+    it('getPersonPostalAddress() emits null for the documented 204 (no address on file)', () => {
+      // HttpClient emits a 204's empty body as null.
+      postalAddressApiStub.getPersonPostalAddress.mockReturnValue(of(null));
       let result: PostalAddressDto | null | undefined;
 
       service.getPersonPostalAddress(personId).subscribe(r => (result = r));
@@ -334,7 +333,23 @@ describe('PeopleService', () => {
       expect(result).toBeNull();
     });
 
-    it('getPersonPostalAddress() rethrows any other failure', () => {
+    it('getPersonPostalAddress() no longer reads a 404 as "no address"', () => {
+      postalAddressApiStub.getPersonPostalAddress.mockReturnValue(
+        throwError(() => new HttpErrorResponse({ status: 404 })),
+      );
+      let result: PostalAddressDto | null | undefined;
+      let status: number | undefined;
+
+      service.getPersonPostalAddress(personId).subscribe({
+        next: r => (result = r),
+        error: (e: HttpErrorResponse) => (status = e.status),
+      });
+
+      expect(result).toBeUndefined();
+      expect(status).toBe(404);
+    });
+
+    it('getPersonPostalAddress() passes a failure through', () => {
       postalAddressApiStub.getPersonPostalAddress.mockReturnValue(
         throwError(() => new HttpErrorResponse({ status: 500 })),
       );
