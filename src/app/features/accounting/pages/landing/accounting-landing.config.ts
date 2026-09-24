@@ -245,6 +245,25 @@ export const ACCOUNTING_LANDING_CONFIG: LandingPageConfig = {
         },
       ],
     },
+    /**
+     * Month-end close. A direct card: the page lists every period with its own
+     * close and reopen controls, so there is no record id to ask for first.
+     */
+    {
+      titleKey: 'ACCOUNTING.LANDING.SECTION.PERIOD_CLOSE.TITLE',
+      descriptionKey: 'ACCOUNTING.LANDING.SECTION.PERIOD_CLOSE.DESCRIPTION',
+      cards: [
+        {
+          kind: 'direct',
+          icon: 'event_available',
+          titleKey: 'ACCOUNTING.LANDING.CARD.PERIOD_CLOSE.TITLE',
+          descriptionKey: 'ACCOUNTING.LANDING.CARD.PERIOD_CLOSE.DESCRIPTION',
+          ctaKey: 'ACCOUNTING.LANDING.ACTION.OPEN_PAGE',
+          route: '/app/accounting/periods',
+          permissions: ACCOUNTING_PAGE.periodClose,
+        },
+      ],
+    },
     {
       titleKey: 'ACCOUNTING.LANDING.SECTION.REPORTS.TITLE',
       descriptionKey: 'ACCOUNTING.LANDING.SECTION.REPORTS.DESCRIPTION',

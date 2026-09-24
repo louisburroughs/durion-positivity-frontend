@@ -1,0 +1,228 @@
+<main class="accounting-page" aria-labelledby="period-close-heading">
+  <header class="page-header">
+    <p class="section-overline">{{ 'ACCOUNTING.PERIOD_CLOSE.OVERLINE' | translate }}</p>
+    <h1 id="period-close-heading">{{ 'ACCOUNTING.PERIOD_CLOSE.TITLE' | translate }}</h1>
+    <p class="page-subtitle">{{ 'ACCOUNTING.PERIOD_CLOSE.SUBTITLE' | translate }}</p>
+  </header>
+
+  <!-- Both live regions stay in the DOM so a rebuild never drops an announcement (ADR-0029 §8.8). -->
+  <div class="outcome-region" role="status" aria-live="polite">
+    @if (outcome(); as result) {
+      @if (result.tone === 'success') {
+        <p #outcomeSuccess class="alert alert-success" tabindex="-1" data-testid="outcome-success">
+          {{ result.key | translate: { period: (monthOf(result.periodCode) | date: 'MMMM y') } }}
+        </p>
+      }
+    }
+  </div>
+  <div class="outcome-region" role="alert" aria-live="assertive">
+    @if (outcome(); as result) {
+      @if (result.tone === 'error') {
+        <p #outcomeError class="alert alert-error" tabindex="-1" data-testid="outcome-error">
+          {{ result.key | translate: { period: (monthOf(result.periodCode) | date: 'MMMM y'), count: (result.count | number) } }}
+        </p>
+      }
+    }
+  </div>
+
+  @if (state() === 'loading') {
+    <section class="state-panel" aria-live="polite" aria-busy="true" data-testid="loading-state">
+      {{ 'ACCOUNTING.PERIOD_CLOSE.LOADING' | translate }}
+    </section>
+  }
+
+  @if (state() === 'error' && errorKey(); as key) {
+    <section class="state-panel state-panel--error" role="alert" data-testid="error-state">
+      {{ key | translate }}
+      <button type="button" class="link-button" (click)="load()">{{ 'ACCOUNTING.COMMON.RETRY' | translate }}</button>
+    </section>
+  }
+
+  @if (state() === 'ready') {
+    @if (isViewOnly()) {
+      <p class="alert alert-info" data-testid="view-only-note">{{ 'ACCOUNTING.PERIOD_CLOSE.VIEW_ONLY' | translate }}</p>
+    }
+
+    @if (pendingCode(); as code) {
+      <p #pendingNote class="pending-note" tabindex="-1" aria-live="polite" aria-busy="true" data-testid="pending-note">
+        {{ (pendingAction() === 'close' ? 'ACCOUNTING.PERIOD_CLOSE.PENDING.CLOSING' : 'ACCOUNTING.PERIOD_CLOSE.PENDING.REOPENING')
+          | translate: { period: (monthOf(code) | date: 'MMMM y') } }}
+      </p>
+    }
+
+    <section class="periods" aria-labelledby="periods-heading">
+      <h2 id="periods-heading">{{ 'ACCOUNTING.PERIOD_CLOSE.LIST.HEADING' | translate }}</h2>
+
+      @if (periods().length === 0) {
+        <p class="state-panel state-panel--empty" data-testid="empty-state">{{ 'ACCOUNTING.PERIOD_CLOSE.LIST.EMPTY' | translate }}</p>
+      } @else {
+        <div class="table-scroll-container">
+          <table class="ledger-table">
+            <caption class="sr-only">{{ 'ACCOUNTING.PERIOD_CLOSE.LIST.CAPTION' | translate }}</caption>
+            <thead>
+              <tr>
+                <th scope="col">{{ 'ACCOUNTING.PERIOD_CLOSE.LIST.COL_PERIOD' | translate }}</th>
+                <th scope="col">{{ 'ACCOUNTING.PERIOD_CLOSE.LIST.COL_STATUS' | translate }}</th>
+                <th scope="col">{{ 'ACCOUNTING.PERIOD_CLOSE.LIST.COL_CLOSED' | translate }}</th>
+                <th scope="col">{{ 'ACCOUNTING.PERIOD_CLOSE.LIST.COL_REOPENED' | translate }}</th>
+                <th scope="col">{{ 'ACCOUNTING.PERIOD_CLOSE.LIST.COL_ACTIONS' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (period of periods(); track period.periodCode) {
+                <tr data-testid="period-row" [attr.data-period]="period.periodCode">
+                  <th scope="row" class="period-cell">
+                    <span class="period-name">{{ monthOf(period.periodCode) | date: 'MMMM y' }}</span>
+                    @if (period.startDate && period.endDate) {
+                      <span class="period-dates">
+                        {{ 'ACCOUNTING.PERIOD_CLOSE.LIST.DATE_RANGE' | translate: {
+                          start: (dateOnly(period.startDate) | date: 'mediumDate'),
+                          end: (dateOnly(period.endDate) | date: 'mediumDate')
+                        } }}
+                      </span>
+                    }
+                  </th>
+                  <td>
+                    @switch (period.status) {
+                      @case ('OPEN') {
+                        <span class="status-badge status-badge--open">{{ 'ACCOUNTING.PERIOD_CLOSE.STATUS.OPEN' | translate }}</span>
+                      }
+                      @case ('CLOSED') {
+                        <span class="status-badge status-badge--closed">{{ 'ACCOUNTING.PERIOD_CLOSE.STATUS.CLOSED' | translate }}</span>
+                      }
+                      @default {
+                        <span class="status-badge">{{ 'ACCOUNTING.PERIOD_CLOSE.STATUS.UNKNOWN' | translate }}</span>
+                      }
+                    }
+                  </td>
+                  <td>
+                    @if (period.closedAt) {
+                      <span class="audit-line">{{ period.closedAt | date: 'medium' }}</span>
+                      @if (period.closedBy) {
+                        <span class="audit-line audit-line--muted">{{ 'ACCOUNTING.PERIOD_CLOSE.LIST.BY' | translate: { actor: period.closedBy } }}</span>
+                      }
+                    } @else {
+                      <span aria-hidden="true">{{ 'COMMON.EMPTY_VALUE' | translate }}</span>
+                      <span class="sr-only">{{ 'COMMON.NOT_AVAILABLE' | translate }}</span>
+                    }
+                  </td>
+                  <td>
+                    @if (period.reopenedAt) {
+                      <span class="audit-line">{{ period.reopenedAt | date: 'medium' }}</span>
+                      @if (period.reopenedBy) {
+                        <span class="audit-line audit-line--muted">{{ 'ACCOUNTING.PERIOD_CLOSE.LIST.BY' | translate: { actor: period.reopenedBy } }}</span>
+                      }
+                      @if (period.reopenJustification) {
+                        <span class="audit-line audit-line--muted">{{ 'ACCOUNTING.PERIOD_CLOSE.LIST.REASON' | translate: { reason: period.reopenJustification } }}</span>
+                      }
+                    } @else {
+                      <span aria-hidden="true">{{ 'COMMON.EMPTY_VALUE' | translate }}</span>
+                      <span class="sr-only">{{ 'COMMON.NOT_AVAILABLE' | translate }}</span>
+                    }
+                  </td>
+                  <td class="actions-cell">
+                    @if (period.status === 'OPEN') {
+                      <button type="button" class="btn btn--accent" data-testid="close-button"
+                        [disabled]="!canClose() || pendingCode() !== null"
+                        (click)="requestClose(period.periodCode)">
+                        {{ 'ACCOUNTING.PERIOD_CLOSE.ACTION.CLOSE' | translate }}<span class="sr-only">&nbsp;{{ monthOf(period.periodCode) | date: 'MMMM y' }}</span>
+                      </button>
+                    } @else if (period.status === 'CLOSED') {
+                      <button type="button" class="btn btn--outline" data-testid="reopen-button"
+                        [disabled]="!canReopen() || pendingCode() !== null"
+                        (click)="requestReopen(period.periodCode)">
+                        {{ 'ACCOUNTING.PERIOD_CLOSE.ACTION.REOPEN' | translate }}<span class="sr-only">&nbsp;{{ monthOf(period.periodCode) | date: 'MMMM y' }}</span>
+                      </button>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+
+    @if (canClose()) {
+      <section class="close-month" aria-labelledby="close-month-heading">
+        <h2 id="close-month-heading">{{ 'ACCOUNTING.PERIOD_CLOSE.CLOSE_MONTH.HEADING' | translate }}</h2>
+        <p id="close-month-hint" class="hint-text">{{ 'ACCOUNTING.PERIOD_CLOSE.CLOSE_MONTH.HINT' | translate }}</p>
+        <form class="close-month-form" [formGroup]="monthForm" (ngSubmit)="submitMonth()" novalidate>
+          <div class="form-field">
+            <label for="close-month-input">{{ 'ACCOUNTING.PERIOD_CLOSE.CLOSE_MONTH.LABEL' | translate }}</label>
+            <input id="close-month-input" type="month" data-testid="close-month-input"
+              formControlName="month"
+              [attr.aria-invalid]="monthErrorKey() ? 'true' : null"
+              [attr.aria-describedby]="monthErrorKey() ? 'close-month-hint close-month-error' : 'close-month-hint'" />
+          </div>
+          <button type="submit" class="btn btn--accent" data-testid="close-month-submit" [disabled]="pendingCode() !== null">
+            {{ 'ACCOUNTING.PERIOD_CLOSE.CLOSE_MONTH.SUBMIT' | translate }}
+          </button>
+        </form>
+        @if (monthErrorKey(); as key) {
+          <p id="close-month-error" class="field-error" data-testid="close-month-error">
+            {{ key | translate: { period: (monthOf(monthControl.value) | date: 'MMMM y') } }}
+          </p>
+        }
+      </section>
+    }
+  }
+
+  @if (dialog(); as pending) {
+    @if (pending.action === 'close') {
+      <dialog class="confirm-panel" appModalDialog (modalCancel)="cancelDialog()"
+        aria-labelledby="confirm-close-title" aria-describedby="confirm-close-body" data-testid="confirm-close-dialog">
+        <h2 id="confirm-close-title" class="confirm-heading">
+          {{ 'ACCOUNTING.PERIOD_CLOSE.CONFIRM_CLOSE.TITLE' | translate: { period: (monthOf(pending.periodCode) | date: 'MMMM y') } }}
+        </h2>
+        <p id="confirm-close-body">
+          {{ 'ACCOUNTING.PERIOD_CLOSE.CONFIRM_CLOSE.BODY' | translate: { period: (monthOf(pending.periodCode) | date: 'MMMM y') } }}
+        </p>
+        <div class="form-actions">
+          <button type="button" class="btn btn--accent" data-testid="confirm-close" (click)="confirmClose()">
+            {{ 'ACCOUNTING.PERIOD_CLOSE.CONFIRM_CLOSE.CONFIRM' | translate }}
+          </button>
+          <button type="button" class="btn btn--outline" data-testid="cancel-dialog" (click)="cancelDialog()">
+            {{ 'COMMON.CANCEL' | translate }}
+          </button>
+        </div>
+      </dialog>
+    } @else {
+      <dialog class="confirm-panel" appModalDialog (modalCancel)="cancelDialog()"
+        aria-labelledby="confirm-reopen-title" aria-describedby="confirm-reopen-body" data-testid="confirm-reopen-dialog">
+        <h2 id="confirm-reopen-title" class="confirm-heading">
+          {{ 'ACCOUNTING.PERIOD_CLOSE.CONFIRM_REOPEN.TITLE' | translate: { period: (monthOf(pending.periodCode) | date: 'MMMM y') } }}
+        </h2>
+        <p id="confirm-reopen-body">
+          {{ 'ACCOUNTING.PERIOD_CLOSE.CONFIRM_REOPEN.BODY' | translate: { period: (monthOf(pending.periodCode) | date: 'MMMM y') } }}
+        </p>
+        <form class="reopen-form" [formGroup]="reopenForm" (ngSubmit)="confirmReopen()" novalidate>
+          <div class="form-field">
+            <label for="reopen-justification">{{ 'ACCOUNTING.PERIOD_CLOSE.CONFIRM_REOPEN.LABEL' | translate }}</label>
+            <textarea id="reopen-justification" rows="4" data-testid="reopen-justification"
+              formControlName="justification"
+              [attr.maxlength]="justificationMax"
+              [attr.aria-invalid]="justificationErrorKey() ? 'true' : null"
+              [attr.aria-describedby]="justificationErrorKey() ? 'reopen-hint reopen-error' : 'reopen-hint'"></textarea>
+            <p id="reopen-hint" class="hint-text">
+              {{ 'ACCOUNTING.PERIOD_CLOSE.CONFIRM_REOPEN.HINT' | translate: { max: (justificationMax | number) } }}
+            </p>
+            @if (justificationErrorKey(); as key) {
+              <p id="reopen-error" class="field-error" data-testid="reopen-error">
+                {{ key | translate: { max: (justificationMax | number) } }}
+              </p>
+            }
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn--accent" data-testid="confirm-reopen">
+              {{ 'ACCOUNTING.PERIOD_CLOSE.CONFIRM_REOPEN.CONFIRM' | translate }}
+            </button>
+            <button type="button" class="btn btn--outline" data-testid="cancel-dialog" (click)="cancelDialog()">
+              {{ 'COMMON.CANCEL' | translate }}
+            </button>
+          </div>
+        </form>
+      </dialog>
+    }
+  }
+</main>

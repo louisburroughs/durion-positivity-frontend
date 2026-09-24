@@ -3068,6 +3068,10 @@
         "PAYABLES": {
           "TITLE": "Comptes fournisseurs",
           "DESCRIPTION": "Factures fournisseurs reçues électroniquement, leur lien vers la pièce comptable et les exceptions à régler avant un cycle de paiement."
+        },
+        "PERIOD_CLOSE": {
+          "TITLE": "Clôture des périodes",
+          "DESCRIPTION": "Clôturez chaque mois une fois ses écritures comptabilisées, et rouvrez un mois clôturé pour des ajustements tardifs."
         }
       },
       "CARD": {
@@ -3146,6 +3150,10 @@
         "PAYABLES_DETAIL": {
           "TITLE": "Détail de facture fournisseur",
           "DESCRIPTION": "Ouvrez une facture fournisseur par son identifiant."
+        },
+        "PERIOD_CLOSE": {
+          "TITLE": "Périodes comptables",
+          "DESCRIPTION": "Voyez quels mois sont ouverts ou clôturés, clôturez un mois ou rouvrez-en un avec un motif consigné."
         }
       },
       "FIELD": {
@@ -3546,6 +3554,86 @@
           "ORIGIN_EVENT": "Événement d'origine",
           "CREATED_AT": "Créée"
         }
+      }
+    },
+    "PERIOD_CLOSE": {
+      "OVERLINE": "Comptabilité",
+      "TITLE": "Périodes comptables",
+      "SUBTITLE": "Clôturez un mois une fois toutes ses écritures comptabilisées. Les écritures datées d'un mois clôturé sont refusées, sauf si une personne autorisée à déroger fournit une justification.",
+      "LOADING": "Chargement des périodes comptables…",
+      "VIEW_ONLY": "Vous pouvez consulter les périodes comptables. Clôturer ou rouvrir une période exige des autorisations supplémentaires.",
+      "PENDING": {
+        "CLOSING": "Clôture de {{period}} en cours…",
+        "REOPENING": "Réouverture de {{period}} en cours…"
+      },
+      "LIST": {
+        "HEADING": "Périodes",
+        "CAPTION": "Périodes comptables, de la plus récente à la plus ancienne",
+        "EMPTY": "Aucune période comptable n'a encore été enregistrée. Un mois est ajouté la première fois qu'une écriture y est comptabilisée.",
+        "COL_PERIOD": "Période",
+        "COL_STATUS": "Statut",
+        "COL_CLOSED": "Clôture",
+        "COL_REOPENED": "Dernière réouverture",
+        "COL_ACTIONS": "Actions",
+        "DATE_RANGE": "Du {{start}} au {{end}}",
+        "BY": "par {{actor}}",
+        "REASON": "Motif : {{reason}}"
+      },
+      "STATUS": {
+        "OPEN": "Ouverte",
+        "CLOSED": "Clôturée",
+        "UNKNOWN": "Inconnu"
+      },
+      "ACTION": {
+        "CLOSE": "Clôturer la période",
+        "REOPEN": "Rouvrir la période"
+      },
+      "CLOSE_MONTH": {
+        "HEADING": "Clôturer un mois",
+        "HINT": "Utilisez ceci pour un mois absent de la liste. Tout mois déjà commencé peut être clôturé : il est ajouté puis clôturé en une seule étape.",
+        "LABEL": "Mois",
+        "SUBMIT": "Clôturer le mois",
+        "ERROR": {
+          "INVALID": "Choisissez un mois à clôturer.",
+          "FUTURE": "{{period}} n'a pas encore commencé et ne peut donc pas être clôturé.",
+          "ALREADY_CLOSED": "{{period}} est déjà clôturé."
+        }
+      },
+      "CONFIRM_CLOSE": {
+        "TITLE": "Clôturer {{period}} ?",
+        "BODY": "Les écritures datées de {{period}} seront refusées, sauf si une personne autorisée à déroger fournit une justification. La période pourra être rouverte plus tard avec un motif consigné.",
+        "CONFIRM": "Clôturer la période"
+      },
+      "CONFIRM_REOPEN": {
+        "TITLE": "Rouvrir {{period}} ?",
+        "BODY": "Des écritures pourront de nouveau être comptabilisées dans {{period}} jusqu'à sa clôture. Votre motif est consigné dans la piste d'audit.",
+        "LABEL": "Motif de la réouverture",
+        "HINT": "Obligatoire, jusqu'à {{max}} caractères.",
+        "CONFIRM": "Rouvrir la période",
+        "ERROR": {
+          "REQUIRED": "Indiquez un motif pour rouvrir la période.",
+          "TOO_LONG": "Le motif ne doit pas dépasser {{max}} caractères."
+        }
+      },
+      "OUTCOME": {
+        "CLOSED": "{{period}} est clôturé.",
+        "REOPENED": "{{period}} est de nouveau ouvert."
+      },
+      "ERROR": {
+        "LOAD": "Impossible de charger les périodes comptables.",
+        "FORBIDDEN": "Vous n'êtes pas autorisé à consulter les périodes comptables.",
+        "DRAFT_ENTRIES": "{{period}} ne peut pas être clôturé tant qu'il contient des écritures en brouillon (total : {{count}}). Comptabilisez-les ou supprimez-les, puis clôturez de nouveau la période.",
+        "DRAFT_ENTRIES_UNCOUNTED": "{{period}} ne peut pas être clôturé tant qu'il contient des écritures en brouillon. Comptabilisez-les ou supprimez-les, puis clôturez de nouveau la période.",
+        "ALREADY_CLOSED": "{{period}} était déjà clôturé. La liste a été actualisée.",
+        "ALREADY_OPEN": "{{period}} était déjà ouvert. La liste a été actualisée.",
+        "NOT_FOUND_CLOSE": "{{period}} n'a pas encore commencé et ne peut donc pas être clôturé.",
+        "NOT_FOUND_REOPEN": "Aucun enregistrement de {{period}} n'a été trouvé. La liste a été actualisée.",
+        "INVALID_CLOSE": "La période a été refusée comme non valide. Vérifiez le mois et réessayez.",
+        "INVALID_REOPEN": "Le motif a été refusé. Indiquez un motif et réessayez.",
+        "FORBIDDEN_CLOSE": "Vous n'êtes pas autorisé à clôturer les périodes comptables.",
+        "FORBIDDEN_REOPEN": "Vous n'êtes pas autorisé à rouvrir les périodes comptables.",
+        "OTHER_CLOSE": "Impossible de clôturer {{period}}. Réessayez.",
+        "OTHER_REOPEN": "Impossible de rouvrir {{period}}. Réessayez."
       }
     }
   },
@@ -7058,7 +7146,8 @@
       "WIP_STATUS": "État des travaux en cours",
       "WORKORDERS": "Ordres de travail",
       "WORK_SESSION": "Séance de travail",
-      "PERSON": "Personne"
+      "PERSON": "Personne",
+      "PERIODS": "Périodes"
     }
   },
   "POSITIVITY": {
