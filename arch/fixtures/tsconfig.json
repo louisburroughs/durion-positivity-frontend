@@ -1,0 +1,10 @@
+/*
+ * Fixture program for the rule self-tests (arch/rules/__self__). Mirrors the `src/app` layout so
+ * rule factories run against it unchanged via the FIXTURES project. Files here plant violations on
+ * purpose; nothing imports them from the app.
+ */
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": { "noEmit": true, "rootDir": "./src" },
+  "include": ["src/**/*.ts"]
+}
