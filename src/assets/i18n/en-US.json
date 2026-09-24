@@ -495,6 +495,10 @@
         "EMPLOYEE_REGISTER": {
           "TITLE": "Employee Register",
           "DESCRIPTION": "Browse, filter and manage every employee in one table."
+        },
+        "PAY_PERIODS": {
+          "TITLE": "Pay periods",
+          "DESCRIPTION": "Create pay periods and move them through submission and payroll close."
         }
       },
       "FIELD": {
@@ -681,7 +685,8 @@
       },
       "REQUESTED_EMPLOYEE_OPTION": "{{name}} (no time entries yet)",
       "REQUESTED_EMPLOYEE_FALLBACK": "Selected employee (no time entries yet)",
-      "PERIODS_EMPTY": "No pay periods have been created yet."
+      "PERIODS_EMPTY": "No pay periods have been created yet.",
+      "MANAGE_PERIODS": "Manage pay periods"
     },
     "DIRECTORY": {
       "TITLE": "People Directory",
@@ -1038,6 +1043,64 @@
         "ADDRESS_INCOMPLETE": "Address line 1 and country code are required when an address is entered."
       },
       "CONTACT_ROW_ARIA": "Contact point {{index}}: {{type}}"
+    },
+    "PAY_PERIODS": {
+      "TITLE": "Pay periods",
+      "INTRO": "Pay periods group time entries for approval and payroll. The daily rollover opens routine periods once a tenant has timekeeping activity; use this page to seed the first period or make corrections.",
+      "OPEN_APPROVAL": "Go to time approval",
+      "LIST_TITLE": "Periods",
+      "LOADING": "Loading pay periods…",
+      "RETRY": "Retry",
+      "EMPTY": "No pay periods have been created yet.",
+      "TABLE_ARIA": "Pay periods",
+      "FINAL": "Final",
+      "COL": {
+        "START": "Start",
+        "END": "End",
+        "STATUS": "Status",
+        "ACTIONS": "Actions"
+      },
+      "STATUS": {
+        "OPEN": "Open",
+        "SUBMISSION_CLOSED": "Submissions closed",
+        "PAYROLL_CLOSED": "Payroll closed"
+      },
+      "ACTION": {
+        "CLOSE_SUBMISSIONS": "Close submissions",
+        "CLOSE_PAYROLL": "Close payroll",
+        "CLOSE_PAYROLL_NOW": "Close payroll now",
+        "REOPEN": "Reopen"
+      },
+      "CREATE_TITLE": "Create a pay period",
+      "CREATE_HINT": "Dates are inclusive. The range must not overlap an existing period.",
+      "FIELD": {
+        "START": "Start date",
+        "END": "End date",
+        "STATUS": "Initial status"
+      },
+      "CREATE": "Create period",
+      "CREATING": "Creating…",
+      "CREATE_SUCCESS": "Pay period created.",
+      "CONFIRM": {
+        "TITLE": "Close payroll?",
+        "BODY": "Closing payroll for {{start}} to {{end}} is final. Its time entries can no longer be approved or changed.",
+        "YES": "Close payroll",
+        "CANCEL": "Cancel"
+      },
+      "ERROR": {
+        "LOAD": "Could not load pay periods.",
+        "FORBIDDEN": "You do not have permission to view pay periods.",
+        "CREATE": "Could not create the pay period.",
+        "OVERLAP": "That range overlaps an existing pay period.",
+        "INVALID_RANGE": "That date range is not valid.",
+        "CREATE_FORBIDDEN": "You do not have permission to create pay periods.",
+        "END_BEFORE_START": "The end date must be on or after the start date.",
+        "NO_TENANT": "Your session has no tenant, so a pay period cannot be created.",
+        "TRANSITION": "Could not change the period status.",
+        "TRANSITION_NOT_ALLOWED": "That status change is no longer allowed; the list has been refreshed.",
+        "NOT_FOUND": "That pay period no longer exists; the list has been refreshed.",
+        "TRANSITION_FORBIDDEN": "You do not have permission to change pay period status."
+      }
     }
   },
   "CRM": {
@@ -7061,7 +7124,8 @@
       "WIP_STATUS": "Wip Status",
       "WORKORDERS": "Workorders",
       "WORK_SESSION": "Work Session",
-      "PERSON": "Person"
+      "PERSON": "Person",
+      "PERIODS": "Pay periods"
     }
   },
   "POSITIVITY": {

@@ -1,0 +1,134 @@
+<main class="pay-periods">
+  <header class="page-header">
+    <h1>{{ 'PEOPLE.PAY_PERIODS.TITLE' | translate }}</h1>
+    <p class="page-intro">{{ 'PEOPLE.PAY_PERIODS.INTRO' | translate }}</p>
+    <a class="page-link" routerLink="/app/people/timekeeping/approval">{{ 'PEOPLE.PAY_PERIODS.OPEN_APPROVAL' | translate }}</a>
+  </header>
+
+  <!-- ── Periods ──────────────────────────────────────────────────────── -->
+  <section class="panel" aria-labelledby="periods-heading">
+    <h2 id="periods-heading">{{ 'PEOPLE.PAY_PERIODS.LIST_TITLE' | translate }}</h2>
+
+    @if (state() === 'loading') {
+      <p aria-live="polite" aria-busy="true">{{ 'PEOPLE.PAY_PERIODS.LOADING' | translate }}</p>
+    }
+    @if (state() === 'error') {
+      <div class="state-panel" role="alert" data-testid="periods-error">
+        <p>{{ errorKey()! | translate }}</p>
+        <button class="btn btn--secondary" type="button" (click)="load()">{{ 'PEOPLE.PAY_PERIODS.RETRY' | translate }}</button>
+      </div>
+    }
+    @if (state() === 'ready') {
+      @if (sortedPeriods().length === 0) {
+        <p class="hint-text" data-testid="periods-empty">{{ 'PEOPLE.PAY_PERIODS.EMPTY' | translate }}</p>
+      } @else {
+        @if (transitionErrorKey(); as key) {
+          <p class="error-text" role="alert" data-testid="transition-error">{{ key | translate }}</p>
+        }
+        <div class="table-wrap">
+          <table class="periods-table" [attr.aria-label]="'PEOPLE.PAY_PERIODS.TABLE_ARIA' | translate">
+            <thead>
+              <tr>
+                <th scope="col">{{ 'PEOPLE.PAY_PERIODS.COL.START' | translate }}</th>
+                <th scope="col">{{ 'PEOPLE.PAY_PERIODS.COL.END' | translate }}</th>
+                <th scope="col">{{ 'PEOPLE.PAY_PERIODS.COL.STATUS' | translate }}</th>
+                <th scope="col">{{ 'PEOPLE.PAY_PERIODS.COL.ACTIONS' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (period of sortedPeriods(); track period.timePeriodId) {
+                <tr data-testid="period-row" [attr.data-period-id]="period.timePeriodId">
+                  <th scope="row">{{ period.startDate }}</th>
+                  <td>{{ period.endDate }}</td>
+                  <td>
+                    <span class="status-badge" [attr.data-status]="period.status">{{ statusKey(period.status) | translate }}</span>
+                  </td>
+                  <td class="actions">
+                    @if (allowedTransitions(period).length === 0) {
+                      <span class="hint-text">{{ 'PEOPLE.PAY_PERIODS.FINAL' | translate }}</span>
+                    } @else if (canTransition()) {
+                      @for (target of allowedTransitions(period); track target) {
+                        <button class="btn btn--ghost btn--sm" type="button"
+                          [attr.data-target]="target"
+                          [disabled]="transitioningId() !== null"
+                          [attr.aria-busy]="transitioningId() === period.timePeriodId"
+                          (click)="requestTransition(period, target)">
+                          {{ transitionKey(period.status, target) | translate }}
+                        </button>
+                      }
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    }
+  </section>
+
+  <!-- ── Create ───────────────────────────────────────────────────────── -->
+  @if (canCreate()) {
+    <section class="panel" aria-labelledby="create-heading" data-testid="create-section">
+      <h2 id="create-heading">{{ 'PEOPLE.PAY_PERIODS.CREATE_TITLE' | translate }}</h2>
+      <p class="hint-text">{{ 'PEOPLE.PAY_PERIODS.CREATE_HINT' | translate }}</p>
+
+      @if (!tenantId()) {
+        <p class="error-text" role="alert" data-testid="no-tenant">{{ 'PEOPLE.PAY_PERIODS.ERROR.NO_TENANT' | translate }}</p>
+      }
+
+      <form class="form-grid" [formGroup]="createForm" (ngSubmit)="create()" novalidate>
+        <div class="field">
+          <label for="period-start">{{ 'PEOPLE.PAY_PERIODS.FIELD.START' | translate }}</label>
+          <input id="period-start" type="date" formControlName="startDate" data-testid="start-date" />
+        </div>
+        <div class="field">
+          <label for="period-end">{{ 'PEOPLE.PAY_PERIODS.FIELD.END' | translate }}</label>
+          <input id="period-end" type="date" formControlName="endDate" data-testid="end-date"
+            [attr.aria-invalid]="createForm.hasError('endBeforeStart') && createForm.touched"
+            [attr.aria-describedby]="createForm.hasError('endBeforeStart') && createForm.touched ? 'period-range-error' : null" />
+        </div>
+        <div class="field">
+          <label for="period-status">{{ 'PEOPLE.PAY_PERIODS.FIELD.STATUS' | translate }}</label>
+          <select id="period-status" formControlName="status" data-testid="initial-status">
+            @for (option of statusOptions; track option) {
+              <option [value]="option">{{ statusKey(option) | translate }}</option>
+            }
+          </select>
+        </div>
+
+        @if (createForm.hasError('endBeforeStart') && createForm.touched) {
+          <p id="period-range-error" class="error-text" role="alert">{{ 'PEOPLE.PAY_PERIODS.ERROR.END_BEFORE_START' | translate }}</p>
+        }
+        @if (createErrorKey(); as key) {
+          <p class="error-text" role="alert" data-testid="create-error">{{ key | translate }}</p>
+        }
+        @if (createSuccess()) {
+          <p class="success-text" aria-live="polite" data-testid="create-success">{{ 'PEOPLE.PAY_PERIODS.CREATE_SUCCESS' | translate }}</p>
+        }
+
+        <div class="form-actions">
+          <button class="btn btn--primary" type="submit" data-testid="create-submit"
+            [disabled]="creating() || !tenantId()" [attr.aria-busy]="creating()">
+            {{ (creating() ? 'PEOPLE.PAY_PERIODS.CREATING' : 'PEOPLE.PAY_PERIODS.CREATE') | translate }}
+          </button>
+        </div>
+      </form>
+    </section>
+  }
+
+  <!-- ── Irreversible transition confirm ──────────────────────────────── -->
+  @if (pendingConfirm(); as pending) {
+    <dialog class="confirm-panel" appModalDialog (modalCancel)="cancelTransition()" aria-labelledby="confirm-heading"
+      data-testid="confirm-dialog">
+      <h2 id="confirm-heading">{{ 'PEOPLE.PAY_PERIODS.CONFIRM.TITLE' | translate }}</h2>
+      <p>{{ 'PEOPLE.PAY_PERIODS.CONFIRM.BODY' | translate: { start: pending.period.startDate, end: pending.period.endDate } }}</p>
+      <div class="form-actions">
+        <button class="btn btn--primary" type="button" data-testid="confirm-yes" (click)="confirmTransition()">
+          {{ 'PEOPLE.PAY_PERIODS.CONFIRM.YES' | translate }}
+        </button>
+        <button class="btn btn--ghost" type="button" (click)="cancelTransition()">{{ 'PEOPLE.PAY_PERIODS.CONFIRM.CANCEL' | translate }}</button>
+      </div>
+    </dialog>
+  }
+</main>

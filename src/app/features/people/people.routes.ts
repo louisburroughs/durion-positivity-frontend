@@ -33,6 +33,11 @@ export const PEOPLE_ROUTES: Routes = [
         loadComponent: () => import('./pages/time-approval/time-approval-page.component').then(m => m.TimeApprovalPageComponent),
       },
       {
+        path: 'timekeeping/periods',
+        data: { permissions: PEOPLE_PAGE.payPeriods },
+        loadComponent: () => import('./pages/pay-periods/pay-periods-page.component').then(m => m.PayPeriodsPageComponent),
+      },
+      {
         path: 'timekeeping/work-session/:sessionId/submit',
         loadComponent: () =>
           import('./pages/work-session-submit/work-session-submit-page.component').then(

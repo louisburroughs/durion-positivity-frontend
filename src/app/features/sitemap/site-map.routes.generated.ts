@@ -108,6 +108,7 @@ export const SITE_MAP_ROUTES: readonly SiteMapRouteEntry[] = [
   { route: '/app/people/timekeeping/approval', label: "Approval", labelKey: "SITEMAP.LABEL.APPROVAL", dynamic: false, permissions: ['people:timekeeping:view'] },
   { route: '/app/people/timekeeping/discrepancy', label: "Discrepancy", labelKey: "SITEMAP.LABEL.DISCREPANCY", dynamic: false, permissions: ['accounting:time:export'] },
   { route: '/app/people/timekeeping/export', label: "Export", labelKey: "SITEMAP.LABEL.EXPORT", dynamic: false, permissions: ['accounting:export:view'] },
+  { route: '/app/people/timekeeping/periods', label: "Periods", labelKey: "SITEMAP.LABEL.PERIODS", dynamic: false, permissions: ['people:timekeeping:view'] },
   { route: '/app/people/timekeeping/work-session', label: "Work Session", labelKey: "SITEMAP.LABEL.WORK_SESSION", dynamic: false },
   { route: '/app/people/timekeeping/work-session/:sessionId/submit', label: "Submit", labelKey: "SITEMAP.LABEL.SUBMIT", dynamic: true },
   { route: '/app/platform/tenants', label: "Tenants", labelKey: "SITEMAP.LABEL.TENANTS", dynamic: false, roles: ['ROLE_PLATFORM_ADMIN'], permissions: ['platform:tenant:read'] },

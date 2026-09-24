@@ -63,7 +63,10 @@
     }
 
     @if (!periodsLoading() && !periodsError() && periods().length === 0) {
-    <p class="help-text" data-testid="periods-empty">{{ 'PEOPLE.TIME_APPROVAL.PERIODS_EMPTY' | translate }}</p>
+    <p class="help-text" data-testid="periods-empty">
+      {{ 'PEOPLE.TIME_APPROVAL.PERIODS_EMPTY' | translate }}
+      <a routerLink="/app/people/timekeeping/periods" data-testid="manage-periods-link">{{ 'PEOPLE.TIME_APPROVAL.MANAGE_PERIODS' | translate }}</a>
+    </p>
     }
 
     @if (periodStatusMessage()) {

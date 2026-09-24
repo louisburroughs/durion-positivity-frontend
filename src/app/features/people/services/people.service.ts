@@ -14,6 +14,9 @@ import {
   TimePeriodApprovalDto,
   TimePeriodDecisionResponse,
   TimePeriodDto,
+  TimePeriodManagementAPIService,
+  TransitionTimePeriodRequestStatusEnum,
+  CreateTimePeriodRequest,
   TimekeepingApprovalAPIService,
   TimekeepingEntryDto,
   WorkSessionDto,
@@ -52,6 +55,7 @@ export class PeopleService {
   private readonly postalAddressApi = inject(PostalAddressAPIService);
   private readonly workSessionsApi = inject(WorkSessionsAPIService);
   private readonly timekeepingApi = inject(TimekeepingApprovalAPIService);
+  private readonly timePeriodApi = inject(TimePeriodManagementAPIService);
 
   getEmployee(employeeId: string): Observable<EmployeeProfileDto> {
     return this.employeeApi.getEmployee(employeeId);
@@ -160,6 +164,19 @@ export class PeopleService {
 
   listTimePeriods(): Observable<TimePeriodDto[]> {
     return this.timekeepingApi.listTimePeriods();
+  }
+
+  /** Creates a pay period; 400 = invalid range, 409 = overlaps an existing period. */
+  createTimePeriod(request: CreateTimePeriodRequest): Observable<TimePeriodDto> {
+    return this.timePeriodApi.createTimePeriod(request);
+  }
+
+  /** Moves a period along the allowed lifecycle; 409 = transition not allowed, 404 = no such period. */
+  transitionTimePeriod(
+    timePeriodId: string,
+    status: TransitionTimePeriodRequestStatusEnum,
+  ): Observable<TimePeriodDto> {
+    return this.timePeriodApi.transitionTimePeriod(timePeriodId, { status });
   }
 
   listTimekeepingEntries(personId: string, timePeriodId: string): Observable<TimekeepingEntryDto[]> {
