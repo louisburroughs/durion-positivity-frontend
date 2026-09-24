@@ -777,9 +777,14 @@ describe('EmployeeRegisterPageComponent', () => {
   it('opens the profile by person id, the id getEmployee resolves', async () => {
     await setup();
     const nameLink = fixture.debugElement.query(By.css('.register-name-link')).nativeElement as HTMLAnchorElement;
+    const profileAction = fixture.debugElement
+      .queryAll(By.css('.register-action'))
+      .map(a => a.nativeElement as HTMLAnchorElement)
+      .find(a => a.getAttribute('href')?.startsWith('/app/people/employees/'));
 
     // The profile path parameter is the person id; the employee row id 404s as "Person not found".
     expect(nameLink.getAttribute('href')).toBe('/app/people/employees/per-1');
+    expect(profileAction?.getAttribute('href')).toBe('/app/people/employees/per-1');
   });
 
   it('dismisses the confirm when the read invalidates its own row', async () => {
