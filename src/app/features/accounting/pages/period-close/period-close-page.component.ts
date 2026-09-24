@@ -323,9 +323,7 @@ export class PeriodClosePageComponent {
     this.announce({ tone: 'error', periodCode, ...failureMessage(action, failure) });
     // These refusals mean the list no longer matches the server: re-read it.
     const listIsStale =
-      failure.kind === 'ALREADY_CLOSED' ||
-      failure.kind === 'ALREADY_OPEN' ||
-      (failure.kind === 'NOT_FOUND' && action === 'reopen');
+      failure.kind === 'ALREADY_CLOSED' || failure.kind === 'ALREADY_OPEN' || failure.kind === 'NOT_FOUND';
     if (listIsStale) {
       this.load();
     }

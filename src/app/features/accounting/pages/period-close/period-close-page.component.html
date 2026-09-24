@@ -164,7 +164,7 @@
           </button>
         </form>
         @if (monthErrorKey(); as key) {
-          <p id="close-month-error" class="field-error" data-testid="close-month-error">
+          <p id="close-month-error" class="field-error" role="alert" data-testid="close-month-error">
             {{ key | translate: { period: (monthOf(monthControl.value) | date: 'MMMM y') } }}
           </p>
         }
@@ -212,7 +212,7 @@
               {{ 'ACCOUNTING.PERIOD_CLOSE.CONFIRM_REOPEN.HINT' | translate: { max: (justificationMax | number) } }}
             </p>
             @if (justificationErrorKey(); as key) {
-              <p id="reopen-error" class="field-error" data-testid="reopen-error">
+              <p id="reopen-error" class="field-error" role="alert" data-testid="reopen-error">
                 {{ key | translate: { max: (justificationMax | number) } }}
               </p>
             }

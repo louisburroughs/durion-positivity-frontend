@@ -311,6 +311,17 @@ describe('PeriodClosePageComponent', () => {
       expect(serviceStub.listPeriods).toHaveBeenCalledTimes(2);
     });
 
+    it('re-reads the list when the server has no such period to close', () => {
+      setup();
+      serviceStub.closePeriod.mockReturnValue(throwError(() => httpError(404, { code: 'PERIOD_NOT_FOUND' })));
+
+      click(buttonIn('2026-07', 'close-button'));
+      click(query('confirm-close'));
+
+      expect(component.outcome()?.key).toBe('ACCOUNTING.PERIOD_CLOSE.ERROR.NOT_FOUND_CLOSE');
+      expect(serviceStub.listPeriods).toHaveBeenCalledTimes(2);
+    });
+
     it('names a 403 on close as the close permission, not the view permission', () => {
       setup();
       serviceStub.closePeriod.mockReturnValue(throwError(() => httpError(403)));
@@ -353,6 +364,8 @@ describe('PeriodClosePageComponent', () => {
       const input = query('close-month-input') as HTMLInputElement;
       expect(input.getAttribute('aria-invalid')).toBe('true');
       expect(input.getAttribute('aria-describedby')).toContain('close-month-error');
+      // Focus stays on the submit button, so the message must announce itself.
+      expect(query('close-month-error')?.getAttribute('role')).toBe('alert');
     });
 
     it('refuses a blank month and a month already listed as closed', () => {
@@ -402,6 +415,7 @@ describe('PeriodClosePageComponent', () => {
       expect(query('confirm-reopen-dialog')).not.toBeNull();
       const textarea = query('reopen-justification') as HTMLTextAreaElement;
       expect(textarea.getAttribute('aria-describedby')).toBe('reopen-hint reopen-error');
+      expect(query('reopen-error')?.getAttribute('role')).toBe('alert');
     });
 
     it('refuses a justification longer than the backend accepts', () => {
