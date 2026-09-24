@@ -297,7 +297,7 @@ PR by diffing CLI output before and after on `master`.
 | I18N-02 | `qps-ploc` is in sync with `en-US` (regenerated, never hand-edited) | 0030 | wraps pseudo-locale `--check` | 0 | Enforce |
 | I18N-03 | No hardcoded copy in templates | 0030 §1 | wraps `check-hardcoded-strings` `scan()` | 0 (post-remediation) | Enforce |
 | I18N-04 | No hardcoded prose in TS, including prose-bearing inline `template:` | 0030 §1 | wraps `check-hardcoded-ts-strings` `scan()` | 0 | Enforce |
-| I18N-05 | **New: referenced keys exist.** Every static key used in code or templates exists in `en-US.json`. Static keys are: literal `'A.B' \| translate` pipes in templates; literal args to `translate.instant/get/stream`; `errorKey.set('A.B')`; and literals typed as a key. Today's `check-missing-keys` only checks locale **parity**, so a typo'd key renders raw in production (ADR-0030 "no raw key leakage"). Dynamic keys (template literals) are skipped and counted. | 0030 | suite-hosted: template AST + `ast.ts` | **58 distinct keys missing from `en-US.json`, used 68 times in 8 templates**, plus 4 in TS. These render as raw keys today. | Ratchet |
+| I18N-05 | **New: referenced keys exist.** Every static key used in code or templates exists in `en-US.json`. Static keys are: literal `'A.B' \| translate` pipes in templates; literal args to `translate.instant/get/stream`; `errorKey.set('A.B')`; and literals typed as a key. Today's `check-missing-keys` only checks locale **parity**, so a typo'd key renders raw in production (ADR-0030 "no raw key leakage"). Dynamic keys (template literals) are skipped and counted. | 0030 | suite-hosted: template AST + `ast.ts` | 0. All 58 template keys and 4 TS keys were missing from **every** locale (not just `en-US`); fixed before Phase 1, see §11.5 | Enforce |
 | I18N-06 | No `translate.instant(` inside a `computed(` callback, a class field initializer, or a memoised `effect(` (the locale isn't a signal dependency, so the value freezes) | 0030 (AGENTS.md Common Mistakes) | `adhereTo` + `enclosing` | 0 | Enforce |
 | I18N-07 | No manual locale formatting (`toLocaleString`/`toLocaleDateString`/`toLocaleTimeString`, `new Intl.*`, `.toFixed(` feeding display) in `pages/**`/`components/**`. Use the `number`/`date`/`currency` pipes or a single allowlisted core formatter. | 0030 (Intl/CLDR only via the framework) | `adhereTo` | 2 in 2 files | Ratchet |
 | I18N-08 | No hardcoded `dir="ltr"`/`dir="rtl"` in templates | 0030 (direction is locale-driven) | suite-hosted template rule | 0 | Enforce |
@@ -465,12 +465,18 @@ The whole suite should land well under the 30 s budget (§10). No CI split is ne
 
 ### 11.5 Real defects the spike surfaced (not fixed in Phase 0)
 
-- **58 translation keys used in 8 templates don't exist in `en-US.json`** and render as raw keys.
-  Examples: `COMMON.SAVE`, `COMMON.ADD`, `COMMON.APPROVE`, and the whole
-  `SHOPMGMT.APPOINTMENT_EDIT.*` block. Also 4 in TS, `SHOPMGMT.APPOINTMENT_EDIT.ERROR.*` and
-  `SHOPMGMT.APPOINTMENT_RESCHEDULE.*`. `i18n:check` can't see these because it only checks parity
-  *between* locale files. This is the strongest argument for I18N-05; fix it in its own PR before
-  or with Phase 3.
+- **58 translation keys used in 8 templates, and 4 used in TS, rendered as raw keys.** They were
+  missing from **all six** locale files, not just `en-US`, which is why `i18n:check` stayed green:
+  it only checks parity *between* locale files, and they were consistently absent. **Fixed after
+  Phase 0, before Phase 1:**
+  - `INVENTORY.LEDGER.LIST.STATE.EMPTY` → the template now uses the existing, already-translated
+    and previously orphaned `INVENTORY.LEDGER.LIST.EMPTY`;
+  - 61 new keys in every hand-maintained locale, with `qps-ploc` regenerated:
+    - `COMMON.{ADD, ALL, APPROVE, BREADCRUMB, DEACTIVATE, END, NEW, REASON, REJECT, SAVE, UPDATE}`
+    - `PRODUCT.PRICING.LOCATION_OVERRIDES.STATE.EMPTY`
+    - the `SHOPMGMT.APPOINTMENT_EDIT` and `SHOPMGMT.APPOINTMENT_RESCHEDULE` blocks.
+
+  I18N-05 therefore starts at zero and ships as Enforce.
 - **4 `<dialog open>` without `appModalDialog`** (storage-locations, person-location-assignments,
   role-detail, roles-list), plus **7 `role="dialog"`/`aria-modal` on `div`/`section`**
   (ADR-0029 §8.1).

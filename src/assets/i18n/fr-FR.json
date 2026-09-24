@@ -2527,6 +2527,67 @@
       "OVERRIDDEN": "Dérogation accordée",
       "HARD_NOT_OVERRIDABLE": "Ces conflits ont bloqué la modification et ne peuvent pas faire l’objet d’une dérogation ; choisissez un autre créneau."
     },
+    "APPOINTMENT_EDIT": {
+      "TITLE": "Modifier le rendez-vous",
+      "LOADING": "Chargement du rendez-vous…",
+      "RESCHEDULE_SUCCESS": "Rendez-vous replanifié avec succès.",
+      "CANCEL_SUCCESS": "Rendez-vous annulé avec succès.",
+      "STATUS": "Statut",
+      "SCHEDULED_START": "Début planifié",
+      "SCHEDULED_END": "Fin planifiée",
+      "FACILITY": "Installation",
+      "RESCHEDULE": "Replanifier",
+      "CANCEL_APPOINTMENT": "Annuler le rendez-vous",
+      "CANNOT_MODIFY": "Ce rendez-vous ne peut pas être modifié tant que son statut est {{status}}.",
+      "AUDIT_HISTORY": "Historique d'audit",
+      "AUDIT_UNAVAILABLE": "L'historique d'audit n'est pas disponible pour le moment.",
+      "AUDIT_EMPTY": "Aucune entrée d'audit pour ce rendez-vous.",
+      "RESCHEDULE_APPOINTMENT": "Replanifier le rendez-vous",
+      "CLOSE": "Fermer",
+      "NEW_START": "Nouveau début",
+      "NEW_END": "Nouvelle fin",
+      "REASON": "Raison",
+      "CANCEL": "Annuler",
+      "SAVE": "Enregistrer",
+      "CANCELLATION_REASON": "Raison de l'annulation",
+      "REASONS": {
+        "CUSTOMER_REQUEST": "Demande du client",
+        "TECHNICIAN_UNAVAILABLE": "Technicien non disponible",
+        "WEATHER": "Météo",
+        "VEHICLE_NOT_READY": "Véhicule non prêt",
+        "OTHER": "Autre"
+      },
+      "NOTES_OPTIONAL": "Notes (facultatif)",
+      "BACK": "Retour",
+      "CONFIRM_CANCEL": "Confirmer l'annulation",
+      "ERROR": {
+        "RESCHEDULE_FAILED": "Impossible de replanifier le rendez-vous.",
+        "CANCELLATION_FAILED": "Impossible d'annuler le rendez-vous."
+      }
+    },
+    "APPOINTMENT_RESCHEDULE": {
+      "TITLE": "Replanifier le rendez-vous",
+      "LOADING": "Chargement du rendez-vous…",
+      "VERSION_MISMATCH": "Ce rendez-vous a été modifié par quelqu'un d'autre. Rechargez-le et réessayez.",
+      "NEW_START": "Nouveau début",
+      "NEW_END": "Nouvelle fin",
+      "RESCHEDULE_REASON": "Raison de la replanification",
+      "SELECT_REASON": "Sélectionnez une raison",
+      "REASONS": {
+        "CUSTOMER_REQUEST": "Demande du client",
+        "FACILITY_UNAVAILABLE": "Installation non disponible",
+        "TECHNICIAN_UNAVAILABLE": "Technicien non disponible",
+        "OTHER": "Autre"
+      },
+      "NOTES": "Notes",
+      "OVERRIDE_REASON": "Raison de l'outrepassement",
+      "APPROVAL_REASON": "Raison de l'approbation",
+      "RESCHEDULE": "Replanifier",
+      "SUCCESS": "Rendez-vous replanifié avec succès.",
+      "ERROR": {
+        "LOAD_DETAILS": "Impossible de charger les détails du rendez-vous."
+      }
+    },
     "LANDING": {
       "TITLE": "Gestion de l'atelier",
       "SUBTITLE": "Gérez le tableau d'expédition, l'horaire, les rendez-vous et la disponibilité des mécaniciens depuis un seul endroit.",
@@ -3985,6 +4046,9 @@
         },
         "EFFECTIVE_PRICE": {
           "TITLE": "Prix en vigueur"
+        },
+        "STATE": {
+          "EMPTY": "Aucune dérogation de prix par emplacement trouvée."
         },
         "ERROR": {
           "LOAD": "Échec du chargement des dérogations de prix par emplacement.",
@@ -6546,7 +6610,18 @@
     "CLOSE": "Fermer",
     "EMPTY_VALUE": "—",
     "NOT_AVAILABLE": "Non disponible",
-    "ERROR": "Une erreur est survenue"
+    "ERROR": "Une erreur est survenue",
+    "ADD": "Ajouter",
+    "ALL": "Tous",
+    "APPROVE": "Approuver",
+    "BREADCRUMB": "Fil d'Ariane",
+    "DEACTIVATE": "Désactiver",
+    "END": "Fin",
+    "NEW": "Nouveau",
+    "REASON": "Raison",
+    "REJECT": "Rejeter",
+    "SAVE": "Enregistrer",
+    "UPDATE": "Mettre à jour"
   },
   "STATUS": {
     "INITIATED": "Initié",
