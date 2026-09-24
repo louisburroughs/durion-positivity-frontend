@@ -65,7 +65,7 @@ interface ActionOutcome {
  * and reports the refusal in an assertive live region, the same split as the
  * payables resolve action: the list is still true, only the write failed. A
  * refusal that means the list is stale (already closed, already open, no such
- * period) re-reads it.
+ * period) re-reads it in the background, keeping the rows on screen.
  */
 @Component({
   selector: 'app-period-close-page',
@@ -96,6 +96,8 @@ export class PeriodClosePageComponent {
   readonly pendingCode = signal<string | null>(null);
   readonly pendingAction = signal<PeriodAction | null>(null);
   readonly outcome = signal<ActionOutcome | null>(null);
+  /** A background re-read is in flight; the rows on screen may be stale, so writes wait. */
+  readonly refreshing = signal(false);
 
   readonly monthControl = new FormControl(previousPeriodCode(new Date()), { nonNullable: true });
   /** Bound with `[formGroup]` so `ngSubmit` is handled and the native submit never reloads the page. */
@@ -142,10 +144,27 @@ export class PeriodClosePageComponent {
   }
 
   load(): void {
+    this.read(false);
+  }
+
+  /**
+   * Reads the list. A foreground read replaces the page with the loading
+   * panel; a background refresh (after a refusal that means the list is
+   * stale) keeps the current rows on screen, with every write control
+   * disabled, until the answer lands. Both share `readSeq`: they write the
+   * same signal and a newer read always supersedes an older one (ADR-0063).
+   * A failed refresh drops to the error panel, because the rows it would
+   * leave behind are known to be stale.
+   */
+  private read(background: boolean): void {
     const seq = ++this.readSeq;
     this.today.set(new Date());
-    this.state.set('loading');
-    this.errorKey.set(null);
+    if (background) {
+      this.refreshing.set(true);
+    } else {
+      this.state.set('loading');
+      this.errorKey.set(null);
+    }
 
     this.periodCloseService
       .listPeriods()
@@ -154,11 +173,13 @@ export class PeriodClosePageComponent {
         next: periods => {
           if (seq !== this.readSeq) return;
           this.periods.set(periods);
+          this.refreshing.set(false);
           this.state.set('ready');
           this.errorKey.set(null);
         },
         error: (error: unknown) => {
           if (seq !== this.readSeq) return;
+          this.refreshing.set(false);
           // ADR-0031: state first, then the key.
           this.state.set('error');
           this.errorKey.set(
@@ -172,7 +193,7 @@ export class PeriodClosePageComponent {
 
   /** Opens the close confirmation for a listed OPEN period. */
   requestClose(periodCode: string): void {
-    if (!this.canClose() || this.pendingCode()) return;
+    if (!this.canClose() || this.pendingCode() || this.refreshing()) return;
     const row = this.periods().find(period => period.periodCode === periodCode);
     if (row?.status !== 'OPEN') return;
     this.openDialog('close', periodCode);
@@ -183,7 +204,7 @@ export class PeriodClosePageComponent {
    * asking: a future month would only answer 404, and a closed one 409.
    */
   submitMonth(): void {
-    if (!this.canClose() || this.pendingCode()) return;
+    if (!this.canClose() || this.pendingCode() || this.refreshing()) return;
     this.today.set(new Date());
     const periodCode = this.monthControl.value.trim();
 
@@ -211,7 +232,7 @@ export class PeriodClosePageComponent {
 
   /** Opens the reopen dialog for a listed CLOSED period. */
   requestReopen(periodCode: string): void {
-    if (!this.canReopen() || this.pendingCode()) return;
+    if (!this.canReopen() || this.pendingCode() || this.refreshing()) return;
     const row = this.periods().find(period => period.periodCode === periodCode);
     if (row?.status !== 'CLOSED') return;
     this.justificationControl.setValue('');
@@ -233,7 +254,7 @@ export class PeriodClosePageComponent {
   confirmClose(): void {
     const pending = this.dialog();
     // Re-checked at click time: the dialog may have opened under a grant that has since changed.
-    if (pending?.action !== 'close' || !this.canClose() || this.pendingCode()) return;
+    if (pending?.action !== 'close' || !this.canClose() || this.pendingCode() || this.refreshing()) return;
 
     this.dialog.set(null);
     this.startAction('close', pending.periodCode);
@@ -248,7 +269,7 @@ export class PeriodClosePageComponent {
 
   confirmReopen(): void {
     const pending = this.dialog();
-    if (pending?.action !== 'reopen' || !this.canReopen() || this.pendingCode()) return;
+    if (pending?.action !== 'reopen' || !this.canReopen() || this.pendingCode() || this.refreshing()) return;
 
     const justification = this.justificationControl.value.trim();
     if (!justification) {
@@ -325,7 +346,7 @@ export class PeriodClosePageComponent {
     const listIsStale =
       failure.kind === 'ALREADY_CLOSED' || failure.kind === 'ALREADY_OPEN' || failure.kind === 'NOT_FOUND';
     if (listIsStale) {
-      this.load();
+      this.read(true);
     }
   }
 

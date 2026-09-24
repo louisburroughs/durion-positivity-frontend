@@ -311,6 +311,44 @@ describe('PeriodClosePageComponent', () => {
       expect(serviceStub.listPeriods).toHaveBeenCalledTimes(2);
     });
 
+    it('keeps the rows on screen, with writes disabled, while the stale list is re-read', () => {
+      setup();
+      const reread = new Subject<AccountingPeriod[]>();
+      serviceStub.listPeriods.mockReturnValueOnce(reread);
+      serviceStub.closePeriod.mockReturnValue(throwError(() => httpError(409, { code: 'PERIOD_ALREADY_CLOSED' })));
+
+      click(buttonIn('2026-07', 'close-button'));
+      click(query('confirm-close'));
+
+      expect(component.state()).toBe('ready');
+      expect(query('loading-state')).toBeNull();
+      expect(el.querySelectorAll('[data-testid="period-row"]')).toHaveLength(2);
+      expect(buttonIn('2026-07', 'close-button').disabled).toBe(true);
+      expect(buttonIn('2026-06', 'reopen-button').disabled).toBe(true);
+      expect((query('close-month-submit') as HTMLButtonElement).disabled).toBe(true);
+      component.requestReopen('2026-06');
+      expect(component.dialog()).toBeNull();
+
+      reread.next([{ ...OPEN_JULY, status: 'CLOSED' }, CLOSED_JUNE]);
+      fixture.detectChanges();
+
+      expect(buttonIn('2026-07', 'reopen-button').disabled).toBe(false);
+      expect(component.refreshing()).toBe(false);
+    });
+
+    it('drops to the error panel when the background re-read fails, since the rows are stale', () => {
+      setup();
+      serviceStub.listPeriods.mockReturnValueOnce(throwError(() => httpError(503)));
+      serviceStub.closePeriod.mockReturnValue(throwError(() => httpError(409, { code: 'PERIOD_ALREADY_CLOSED' })));
+
+      click(buttonIn('2026-07', 'close-button'));
+      click(query('confirm-close'));
+
+      expect(component.state()).toBe('error');
+      expect(component.errorKey()).toBe('ACCOUNTING.PERIOD_CLOSE.ERROR.LOAD');
+      expect(component.refreshing()).toBe(false);
+    });
+
     it('re-reads the list when the server has no such period to close', () => {
       setup();
       serviceStub.closePeriod.mockReturnValue(throwError(() => httpError(404, { code: 'PERIOD_NOT_FOUND' })));

@@ -50,7 +50,7 @@
       </p>
     }
 
-    <section class="periods" aria-labelledby="periods-heading">
+    <section class="periods" aria-labelledby="periods-heading" [attr.aria-busy]="refreshing() ? 'true' : null">
       <h2 id="periods-heading">{{ 'ACCOUNTING.PERIOD_CLOSE.LIST.HEADING' | translate }}</h2>
 
       @if (periods().length === 0) {
@@ -127,13 +127,13 @@
                   <td class="actions-cell">
                     @if (period.status === 'OPEN') {
                       <button type="button" class="btn btn--accent" data-testid="close-button"
-                        [disabled]="!canClose() || pendingCode() !== null"
+                        [disabled]="!canClose() || pendingCode() !== null || refreshing()"
                         (click)="requestClose(period.periodCode)">
                         {{ 'ACCOUNTING.PERIOD_CLOSE.ACTION.CLOSE' | translate }}<span class="sr-only">&nbsp;{{ monthOf(period.periodCode) | date: 'MMMM y' }}</span>
                       </button>
                     } @else if (period.status === 'CLOSED') {
                       <button type="button" class="btn btn--outline" data-testid="reopen-button"
-                        [disabled]="!canReopen() || pendingCode() !== null"
+                        [disabled]="!canReopen() || pendingCode() !== null || refreshing()"
                         (click)="requestReopen(period.periodCode)">
                         {{ 'ACCOUNTING.PERIOD_CLOSE.ACTION.REOPEN' | translate }}<span class="sr-only">&nbsp;{{ monthOf(period.periodCode) | date: 'MMMM y' }}</span>
                       </button>
@@ -159,7 +159,7 @@
               [attr.aria-invalid]="monthErrorKey() ? 'true' : null"
               [attr.aria-describedby]="monthErrorKey() ? 'close-month-hint close-month-error' : 'close-month-hint'" />
           </div>
-          <button type="submit" class="btn btn--accent" data-testid="close-month-submit" [disabled]="pendingCode() !== null">
+          <button type="submit" class="btn btn--accent" data-testid="close-month-submit" [disabled]="pendingCode() !== null || refreshing()">
             {{ 'ACCOUNTING.PERIOD_CLOSE.CLOSE_MONTH.SUBMIT' | translate }}
           </button>
         </form>
