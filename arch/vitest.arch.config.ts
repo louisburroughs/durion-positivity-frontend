@@ -10,6 +10,8 @@ export default defineConfig({
     environment: 'node',
     globals: true,
     include: ['arch/**/*.arch.spec.ts'],
+    // Share ArchUnitTS's graph cache and the AST caches across spec files: halves the run (§11.2).
+    isolate: false,
     testTimeout: 60_000,
     hookTimeout: 60_000,
   },
