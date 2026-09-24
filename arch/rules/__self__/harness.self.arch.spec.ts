@@ -1,9 +1,9 @@
-import { globSync } from 'node:fs';
 import { projectFiles } from 'archunit';
 import ts from 'typescript';
 import { compare, formatFailure } from '../../support/baseline';
 import { APP, SPEC, selectors, type Project } from '../../support/projects';
 import type { ArchRule } from '../../support/rule';
+import { listFiles } from '../../support/templates';
 import { violationKey } from '../../support/violation-key';
 
 /** Files ArchUnitTS sees for a project (via `adhereTo`, which visits every node). */
@@ -35,17 +35,17 @@ describe('[harness] ArchUnitTS file set and selectors (plan §11.1, §11.3)', ()
     expect(expected.length).toBeGreaterThan(100);
   });
 
-  const fsCount = (glob: string, re: RegExp) =>
-    globSync(glob).filter((f) => f.endsWith('.ts') && !f.endsWith('.spec.ts') && !f.endsWith('.d.ts') && re.test(f)).length;
+  const fsCount = (dir: string, re: RegExp) =>
+    listFiles(dir, '.ts').filter((f) => f.endsWith('.ts') && !f.endsWith('.spec.ts') && !f.endsWith('.d.ts') && re.test(f)).length;
 
   it.each([
-    ['core', selectors.core(APP), 'src/app/core/**'],
-    ['shared', selectors.shared(APP), 'src/app/shared/**'],
-    ['features', selectors.features(APP), 'src/app/features/**'],
-    ['ui', selectors.ui(APP), 'src/app/**'],
-    ['pages', selectors.pages(APP), 'src/app/**'],
-    ['services', selectors.services(APP), 'src/app/**'],
-    ['models', selectors.models(APP), 'src/app/**'],
+    ['core', selectors.core(APP), 'src/app/core'],
+    ['shared', selectors.shared(APP), 'src/app/shared'],
+    ['features', selectors.features(APP), 'src/app/features'],
+    ['ui', selectors.ui(APP), 'src/app'],
+    ['pages', selectors.pages(APP), 'src/app'],
+    ['services', selectors.services(APP), 'src/app'],
+    ['models', selectors.models(APP), 'src/app'],
   ] as const)('selector %s matches the same files ArchUnitTS and the filesystem see', async (_n, re, glob) => {
     const viaArch = (await archunitFiles(APP, re)).filter((f) => f.endsWith('.ts')).length;
     expect(viaArch).toBeGreaterThan(0);

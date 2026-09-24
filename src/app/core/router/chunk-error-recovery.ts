@@ -21,6 +21,7 @@ import { NavigationError } from '@angular/router';
  * unavailable we cannot prevent a loop, so we fail safe and do NOT reload.
  */
 
+// arch: non-tenant storage — reload-loop guard counter, not keyed by tenant or user (ADR-0065 §6)
 const CHUNK_ERROR_PATTERNS: readonly RegExp[] = [
   /ChunkLoadError/i,
   /Loading chunk \d+ failed/i,

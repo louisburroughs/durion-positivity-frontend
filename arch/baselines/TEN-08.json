@@ -1,0 +1,32 @@
+[
+  {
+    "key": "src/app/features/accounting/models/accounting.models.ts :: identifier: organizationId",
+    "reason": "AccountingEvent list-item model carries the backend's organizationId field verbatim; pre-dates ADR-0062 §4's ban on new organizationId fields and is display-only (event list), not a request input.",
+    "tracking": "TBD"
+  },
+  {
+    "key": "src/app/features/accounting/services/accounting.service.ts :: identifier: organizationId",
+    "reason": "toListItem() maps the SDK's AccountingEvent.organizationId onto the local list-item shape for display; pre-dates ADR-0062 §4.",
+    "tracking": "TBD"
+  },
+  {
+    "key": "src/app/features/accounting/services/accounting.service.ts :: property key: organizationId",
+    "reason": "same mapping as the identifier finding above, seen as the destination object-literal key; pre-dates ADR-0062 §4.",
+    "tracking": "TBD"
+  },
+  {
+    "key": "src/app/features/crm/models/crm-integration.models.ts :: identifier: organizationId",
+    "reason": "CRM integration event model carries the backend's organizationId field verbatim; pre-dates ADR-0062 §4 and is display-only.",
+    "tracking": "TBD"
+  },
+  {
+    "key": "src/app/features/crm/services/crm-integration.service.ts :: identifier: organizationId",
+    "reason": "toListItem() maps the SDK's organizationId onto the local list-item shape for display; pre-dates ADR-0062 §4.",
+    "tracking": "TBD"
+  },
+  {
+    "key": "src/app/features/crm/services/crm-integration.service.ts :: property key: organizationId",
+    "reason": "same mapping as the identifier finding above, seen as the destination object-literal key; pre-dates ADR-0062 §4.",
+    "tracking": "TBD"
+  }
+]

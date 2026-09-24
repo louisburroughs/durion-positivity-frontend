@@ -1,4 +1,5 @@
-import { globSync, readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
+import path from 'node:path';
 import {
   parseTemplate,
   TmplAstBoundAttribute,
@@ -14,9 +15,15 @@ import type { Source } from './ast';
 
 /** `*.html` files under the project's app tree (plan §3.4: suite-hosted template rules). */
 export function templateFiles(p: Project): Source[] {
-  return globSync(`${p.app}/**/*.html`)
-    .sort()
-    .map((path) => ({ path, content: readFileSync(path, 'utf8') }));
+  return listFiles(p.app, '.html').map((f) => ({ path: f, content: readFileSync(f, 'utf8') }));
+}
+
+/** Repo-relative files under `dir` with the given extension, sorted. */
+export function listFiles(dir: string, ext: string): string[] {
+  return (readdirSync(dir, { recursive: true }) as string[])
+    .filter((f) => f.endsWith(ext))
+    .map((f) => path.join(dir, f).split(path.sep).join('/'))
+    .sort();
 }
 
 export interface TemplateElement {

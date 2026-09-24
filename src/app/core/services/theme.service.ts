@@ -5,6 +5,8 @@ export type Theme = 'light' | 'dark';
 
 const STORAGE_KEY = 'durion-theme';
 
+// arch: non-tenant storage — UI theme preference, not keyed by tenant or user (ADR-0065 §6)
+
 /**
  * ThemeService
  * -----------

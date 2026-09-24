@@ -9,6 +9,9 @@ export interface RememberedTenant {
 
 const STORAGE_KEY = 'durion.login.tenant';
 
+// arch: non-tenant storage — remembered login form value, browser-only convenience, never an
+// authorization input (ADR-0065 §6; see class doc below)
+
 /**
  * LastTenantService
  * -----------------

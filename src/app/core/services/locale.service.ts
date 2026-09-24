@@ -17,6 +17,7 @@ const SUPPORTED_LOCALES = LOCALE_OPTIONS.map((locale) => locale.code) as [
 ];
 type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];
 
+// arch: non-tenant storage — UI locale preference, not keyed by tenant or user (ADR-0065 §6)
 @Injectable({ providedIn: 'root' })
 export class LocaleService {
   private readonly platformId = inject(PLATFORM_ID);
