@@ -23,6 +23,15 @@ describe('AccountingLandingPageComponent', () => {
     expect(component.config.titleKey).toBe('ACCOUNTING.LANDING.TITLE');
   });
 
+  it('offers the period-close page from a direct card gated like its route', () => {
+    const card = component.config.sections
+      .flatMap(section => section.cards)
+      .find(candidate => candidate.kind === 'direct' && candidate.route === '/app/accounting/periods');
+
+    expect(card?.titleKey).toBe('ACCOUNTING.LANDING.CARD.PERIOD_CLOSE.TITLE');
+    expect(card?.permissions).toEqual(['accounting:period:view']);
+  });
+
   it('gives every section a single record kind or none', () => {
     for (const section of component.config.sections) {
       // recordKind is a single scalar value or undefined — never a multi-kind concept.

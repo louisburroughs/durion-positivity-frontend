@@ -1,0 +1,291 @@
+.accounting-page {
+  display: grid;
+  gap: var(--space-5);
+  padding: var(--space-6);
+  max-width: 72rem;
+}
+
+.page-header {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.page-header h1 {
+  color: var(--link-color);
+  margin: 0;
+}
+
+.section-overline {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0;
+}
+
+.page-subtitle {
+  margin: 0;
+  max-width: 48rem;
+  color: var(--text-muted);
+}
+
+.outcome-region:empty {
+  display: none;
+}
+
+.outcome-region .alert {
+  margin: 0;
+}
+
+.state-panel {
+  margin: 0;
+  padding: var(--space-4);
+  background: color-mix(in srgb, var(--brand-primary) 5%, transparent);
+}
+
+.state-panel--error {
+  background: var(--status-error-bg);
+  color: var(--status-error-fg);
+}
+
+.state-panel--empty {
+  background: color-mix(in srgb, var(--brand-primary) 3%, transparent);
+}
+
+.pending-note {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.periods,
+.close-month {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.periods h2,
+.close-month h2 {
+  margin: 0;
+  font-size: 1.125rem;
+}
+
+.table-scroll-container {
+  overflow-x: auto;
+}
+
+.ledger-table {
+  width: 100%;
+  min-width: 44rem;
+  border-collapse: collapse;
+}
+
+.ledger-table th,
+.ledger-table td {
+  text-align: left;
+  vertical-align: top;
+  padding: var(--space-2) var(--space-3);
+}
+
+.ledger-table thead th {
+  border-bottom: 2px solid var(--border-color);
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.ledger-table tbody th,
+.ledger-table tbody td {
+  border-bottom: 1px solid var(--border-color);
+}
+
+.period-cell {
+  font-weight: normal;
+}
+
+.period-name {
+  display: block;
+  font-weight: 600;
+}
+
+.period-dates,
+.audit-line {
+  display: block;
+  font-size: 0.8125rem;
+}
+
+.period-dates,
+.audit-line--muted {
+  color: var(--text-muted);
+}
+
+.audit-line--muted {
+  overflow-wrap: anywhere;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-sm);
+  background: var(--status-neutral-bg);
+  color: var(--status-neutral-fg);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.status-badge--open {
+  background: var(--status-success-bg);
+  color: var(--status-success-fg);
+}
+
+.status-badge--closed {
+  background: var(--status-warning-bg);
+  color: var(--status-warning-fg);
+}
+
+.actions-cell {
+  white-space: nowrap;
+}
+
+.btn {
+  min-height: 2.25rem;
+  padding: var(--space-2) var(--space-4);
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 0.125rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+}
+
+.btn--accent {
+  border: 1px solid var(--accent-strong);
+  background: var(--accent-strong);
+  color: var(--contrastTextColor);
+}
+
+.btn--outline {
+  /* A control boundary: --input-border meets 3:1 (WCAG 1.4.11); --border-color is the decorative edge. */
+  border: 1px solid var(--input-border);
+  background: transparent;
+  color: var(--link-color);
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.link-button {
+  border: none;
+  background: transparent;
+  color: var(--link-color);
+  text-decoration: underline;
+  padding: 0 var(--space-1);
+  min-height: 1.5rem;
+  cursor: pointer;
+}
+
+.btn:focus-visible,
+.link-button:focus-visible,
+.close-month-form input:focus-visible,
+.reopen-form textarea:focus-visible,
+.outcome-region .alert:focus-visible,
+.pending-note:focus-visible {
+  outline: 2px solid var(--input-focus-border);
+  outline-offset: 2px;
+}
+
+.hint-text {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.field-error {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--status-error-fg);
+}
+
+.close-month-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3);
+}
+
+.form-field {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.form-field label {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.close-month-form input,
+.reopen-form textarea {
+  min-height: 2.25rem;
+  padding: var(--space-2);
+  border: 1px solid var(--input-border);
+  border-radius: 0.125rem;
+  background: var(--input-background);
+  color: var(--currentTextColor);
+  font: inherit;
+}
+
+.reopen-form {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.reopen-form textarea {
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+}
+
+/*
+ * Native <dialog> opened via showModal() — centred card with a dimmed ::backdrop.
+ * `margin: auto` puts back the UA centring that the global `* { margin: 0 }` reset removes.
+ */
+.confirm-panel {
+  margin: auto;
+  background: var(--themeBackground);
+  color: var(--currentTextColor);
+  padding: var(--space-5);
+  border: 0;
+  border-radius: 0.25rem;
+  width: min(32rem, calc(100vw - 2rem));
+  box-sizing: border-box;
+}
+
+.confirm-panel[open] {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.confirm-panel::backdrop {
+  background: rgb(15 53 96 / 40%);
+}
+
+.confirm-heading {
+  margin: 0;
+  font-size: 1.0625rem;
+}
+
+.confirm-panel p {
+  margin: 0;
+}
+
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+@media (width <= 767px) {
+  .accounting-page {
+    padding: var(--space-4);
+  }
+}

@@ -2218,7 +2218,6 @@
       "CLEAR_JOB_ARIA": "Effacer le filtre de type de travaux",
       "JOB_SEARCH_ARIA": "Rechercher un type de travaux",
       "JOB_SEARCH_EMPTY": "Aucun type de travaux correspondant.",
-      "JOB_SEARCH_ERROR": "Impossible de rechercher les types de travaux. Veuillez réessayer.",
       "PREVIOUS_ARIA": "Période précédente",
       "NEXT_ARIA": "Période suivante",
       "TODAY": "Aujourd'hui",
@@ -2265,7 +2264,8 @@
       "TECH_LANE": "Couloir technicien — la seconde moitié de la capacité",
       "TECH_LANE_NOTE": "une baie sans technicien certifié n’est pas de la capacité",
       "HOURS_ASSIGNED": "{{count}} h affectées",
-      "NO_TECHNICIANS": "Aucun technicien dans l’effectif de ce site."
+      "NO_TECHNICIANS": "Aucun technicien dans l’effectif de ce site.",
+      "JOB_SEARCH_ERROR": "Impossible de rechercher les types de travaux. Veuillez réessayer."
     },
     "APPOINTMENT_ASSIGNMENT": {
       "TITLE": "Affectation de rendez-vous",
@@ -2594,18 +2594,28 @@
       "HARD_NOT_OVERRIDABLE": "Ces conflits ont bloqué la modification et ne peuvent pas faire l’objet d’une dérogation ; choisissez un autre créneau."
     },
     "APPOINTMENT_EDIT": {
-      "TITLE": "Détails du rendez-vous",
-      "RESCHEDULE_SUCCESS": "Rendez-vous reporté avec succès.",
+      "TITLE": "Modifier le rendez-vous",
+      "LOADING": "Chargement du rendez-vous…",
+      "RESCHEDULE_SUCCESS": "Rendez-vous replanifié avec succès.",
       "CANCEL_SUCCESS": "Rendez-vous annulé avec succès.",
-      "CANNOT_MODIFY": "Ce rendez-vous ne peut pas être modifié tant qu’il est {{status}}.",
-      "AUDIT_HISTORY": "Historique d’audit",
-      "AUDIT_UNAVAILABLE": "L’historique d’audit n’est pas disponible.",
-      "AUDIT_EMPTY": "Aucun historique d’audit.",
-      "RESCHEDULE_APPOINTMENT": "Reporter le rendez-vous",
+      "STATUS": "Statut",
+      "SCHEDULED_START": "Début planifié",
+      "SCHEDULED_END": "Fin planifiée",
+      "FACILITY": "Installation",
+      "RESCHEDULE": "Replanifier",
+      "CANCEL_APPOINTMENT": "Annuler le rendez-vous",
+      "CANNOT_MODIFY": "Ce rendez-vous ne peut pas être modifié tant que son statut est {{status}}.",
+      "AUDIT_HISTORY": "Historique d'audit",
+      "AUDIT_UNAVAILABLE": "L'historique d'audit n'est pas disponible pour le moment.",
+      "AUDIT_EMPTY": "Aucune entrée d'audit pour ce rendez-vous.",
+      "RESCHEDULE_APPOINTMENT": "Replanifier le rendez-vous",
+      "CLOSE": "Fermer",
       "NEW_START": "Nouveau début",
       "NEW_END": "Nouvelle fin",
-      "CANCEL_APPOINTMENT": "Annuler le rendez-vous",
-      "CANCELLATION_REASON": "Motif d’annulation",
+      "REASON": "Raison",
+      "CANCEL": "Annuler",
+      "SAVE": "Enregistrer",
+      "CANCELLATION_REASON": "Raison de l'annulation",
       "REASONS": {
         "CUSTOMER_REQUEST": "Demande du client",
         "TECHNICIAN_UNAVAILABLE": "Technicien non disponible",
@@ -2613,18 +2623,22 @@
         "VEHICLE_NOT_READY": "Véhicule non prêt",
         "OTHER": "Autre"
       },
-      "CONFIRM_CANCEL": "Confirmer l’annulation",
+      "NOTES_OPTIONAL": "Notes (facultatif)",
+      "BACK": "Retour",
+      "CONFIRM_CANCEL": "Confirmer l'annulation",
       "ERROR": {
-        "CANCELLATION_FAILED": "Échec de l’annulation du rendez-vous.",
-        "RESCHEDULE_FAILED": "Échec du report du rendez-vous."
+        "RESCHEDULE_FAILED": "Impossible de replanifier le rendez-vous.",
+        "CANCELLATION_FAILED": "Impossible d'annuler le rendez-vous."
       }
     },
     "APPOINTMENT_RESCHEDULE": {
-      "TITLE": "Reporter le rendez-vous",
+      "TITLE": "Replanifier le rendez-vous",
+      "LOADING": "Chargement du rendez-vous…",
+      "VERSION_MISMATCH": "Ce rendez-vous a été modifié par quelqu'un d'autre. Rechargez-le et réessayez.",
       "NEW_START": "Nouveau début",
       "NEW_END": "Nouvelle fin",
-      "RESCHEDULE_REASON": "Motif du report",
-      "SELECT_REASON": "Sélectionnez un motif",
+      "RESCHEDULE_REASON": "Raison de la replanification",
+      "SELECT_REASON": "Sélectionnez une raison",
       "REASONS": {
         "CUSTOMER_REQUEST": "Demande du client",
         "FACILITY_UNAVAILABLE": "Installation non disponible",
@@ -2632,12 +2646,13 @@
         "OTHER": "Autre"
       },
       "NOTES": "Notes",
-      "APPROVAL_REASON": "Motif d’approbation",
-      "VERSION_MISMATCH": "Ce rendez-vous a été mis à jour ailleurs. Rechargez pour voir les derniers détails avant de réessayer.",
+      "OVERRIDE_REASON": "Raison de l'outrepassement",
+      "APPROVAL_REASON": "Raison de l'approbation",
+      "RESCHEDULE": "Replanifier",
+      "SUCCESS": "Rendez-vous replanifié avec succès.",
       "ERROR": {
-        "LOAD_DETAILS": "Échec du chargement des détails du rendez-vous."
-      },
-      "SUCCESS": "Rendez-vous reporté avec succès."
+        "LOAD_DETAILS": "Impossible de charger les détails du rendez-vous."
+      }
     },
     "LANDING": {
       "TITLE": "Gestion de l'atelier",
@@ -3180,6 +3195,10 @@
         "PAYABLES": {
           "TITLE": "Comptes fournisseurs",
           "DESCRIPTION": "Factures fournisseurs reçues électroniquement, leur lien vers la pièce comptable et les exceptions à régler avant un cycle de paiement."
+        },
+        "PERIOD_CLOSE": {
+          "TITLE": "Clôture des périodes",
+          "DESCRIPTION": "Clôturez chaque mois une fois ses écritures comptabilisées, et rouvrez un mois clôturé pour des ajustements tardifs."
         }
       },
       "CARD": {
@@ -3258,6 +3277,10 @@
         "PAYABLES_DETAIL": {
           "TITLE": "Détail de facture fournisseur",
           "DESCRIPTION": "Ouvrez une facture fournisseur par son identifiant."
+        },
+        "PERIOD_CLOSE": {
+          "TITLE": "Périodes comptables",
+          "DESCRIPTION": "Voyez quels mois sont ouverts ou clôturés, clôturez un mois ou rouvrez-en un avec un motif consigné."
         }
       },
       "FIELD": {
@@ -3658,6 +3681,88 @@
           "ORIGIN_EVENT": "Événement d'origine",
           "CREATED_AT": "Créée"
         }
+      }
+    },
+    "PERIOD_CLOSE": {
+      "OVERLINE": "Comptabilité",
+      "TITLE": "Périodes comptables",
+      "SUBTITLE": "Clôturez un mois une fois toutes ses écritures comptabilisées. Les écritures datées d'un mois clôturé sont refusées, sauf si une personne autorisée à déroger fournit une justification.",
+      "LOADING": "Chargement des périodes comptables…",
+      "VIEW_ONLY": "Vous pouvez consulter les périodes comptables. Clôturer ou rouvrir une période exige des autorisations supplémentaires.",
+      "PENDING": {
+        "CLOSING": "Clôture de {{period}} en cours…",
+        "REOPENING": "Réouverture de {{period}} en cours…"
+      },
+      "LIST": {
+        "HEADING": "Périodes",
+        "CAPTION": "Périodes comptables, de la plus récente à la plus ancienne",
+        "EMPTY": "Aucune période comptable n'a encore été enregistrée. Un mois est ajouté la première fois qu'une écriture y est comptabilisée ou lorsqu'il est clôturé.",
+        "COL_PERIOD": "Période",
+        "COL_STATUS": "Statut",
+        "COL_CLOSED": "Clôture",
+        "COL_REOPENED": "Dernière réouverture",
+        "COL_ACTIONS": "Actions",
+        "DATE_RANGE": "Du {{start}} au {{end}}",
+        "BY": "par {{actor}}",
+        "REASON": "Motif : {{reason}}",
+        "ACTOR_UNAVAILABLE": "Utilisateur non disponible"
+      },
+      "STATUS": {
+        "OPEN": "Ouverte",
+        "CLOSED": "Clôturée",
+        "UNKNOWN": "Inconnu"
+      },
+      "ACTION": {
+        "CLOSE": "Clôturer la période",
+        "REOPEN": "Rouvrir la période"
+      },
+      "CLOSE_MONTH": {
+        "HEADING": "Clôturer un mois",
+        "HINT": "Utilisez ceci pour un mois absent de la liste. Tout mois déjà commencé peut être clôturé : il est ajouté puis clôturé en une seule étape.",
+        "LABEL": "Mois",
+        "SUBMIT": "Clôturer le mois",
+        "ERROR": {
+          "INVALID": "Choisissez un mois à clôturer.",
+          "FUTURE": "{{period}} n'a pas encore commencé et ne peut donc pas être clôturé.",
+          "ALREADY_CLOSED": "{{period}} est déjà clôturé.",
+          "STATUS_UNKNOWN": "Le statut de {{period}} n'a pas pu être lu : il ne peut donc pas être clôturé ici. Rechargez la page et réessayez."
+        }
+      },
+      "CONFIRM_CLOSE": {
+        "TITLE": "Clôturer {{period}} ?",
+        "BODY": "Les écritures datées de {{period}} seront refusées, sauf si une personne autorisée à déroger fournit une justification. La période pourra être rouverte plus tard avec un motif consigné.",
+        "CONFIRM": "Clôturer la période"
+      },
+      "CONFIRM_REOPEN": {
+        "TITLE": "Rouvrir {{period}} ?",
+        "BODY": "Des écritures pourront de nouveau être comptabilisées dans {{period}} jusqu'à sa clôture. Votre motif est consigné dans la piste d'audit.",
+        "LABEL": "Motif de la réouverture",
+        "HINT": "Obligatoire, jusqu'à {{max}} caractères.",
+        "CONFIRM": "Rouvrir la période",
+        "ERROR": {
+          "REQUIRED": "Indiquez un motif pour rouvrir la période.",
+          "TOO_LONG": "Le motif ne doit pas dépasser {{max}} caractères."
+        }
+      },
+      "OUTCOME": {
+        "CLOSED": "{{period}} est clôturé.",
+        "REOPENED": "{{period}} est de nouveau ouvert."
+      },
+      "ERROR": {
+        "LOAD": "Impossible de charger les périodes comptables.",
+        "FORBIDDEN": "Vous n'êtes pas autorisé à consulter les périodes comptables.",
+        "DRAFT_ENTRIES": "{{period}} ne peut pas être clôturé tant qu'il contient des écritures en brouillon (total : {{count}}). Comptabilisez-les ou supprimez-les, puis clôturez de nouveau la période.",
+        "DRAFT_ENTRIES_UNCOUNTED": "{{period}} ne peut pas être clôturé tant qu'il contient des écritures en brouillon. Comptabilisez-les ou supprimez-les, puis clôturez de nouveau la période.",
+        "ALREADY_CLOSED": "{{period}} était déjà clôturé.",
+        "ALREADY_OPEN": "{{period}} était déjà ouvert.",
+        "NOT_FOUND_CLOSE": "{{period}} n'a pas encore commencé et ne peut donc pas être clôturé.",
+        "NOT_FOUND_REOPEN": "Aucun enregistrement de {{period}} n'a été trouvé.",
+        "INVALID_CLOSE": "La période a été refusée comme non valide. Vérifiez le mois et réessayez.",
+        "INVALID_REOPEN": "Le motif a été refusé. Indiquez un motif et réessayez.",
+        "FORBIDDEN_CLOSE": "Vous n'êtes pas autorisé à clôturer les périodes comptables.",
+        "FORBIDDEN_REOPEN": "Vous n'êtes pas autorisé à rouvrir les périodes comptables.",
+        "OTHER_CLOSE": "Impossible de clôturer {{period}}. Réessayez.",
+        "OTHER_REOPEN": "Impossible de rouvrir {{period}}. Réessayez."
       }
     }
   },
@@ -4071,9 +4176,6 @@
       },
       "LOCATION_OVERRIDES": {
         "TITLE": "Dérogations de prix par emplacement",
-        "STATE": {
-          "EMPTY": "Aucune dérogation en attente."
-        },
         "PENDING": {
           "TITLE": "Dérogations en attente",
           "LOCATION": "Emplacement",
@@ -4100,6 +4202,9 @@
         },
         "EFFECTIVE_PRICE": {
           "TITLE": "Prix en vigueur"
+        },
+        "STATE": {
+          "EMPTY": "Aucune dérogation de prix par emplacement trouvée."
         },
         "ERROR": {
           "LOAD": "Échec du chargement des dérogations de prix par emplacement.",
@@ -6663,16 +6768,16 @@
     "NOT_AVAILABLE": "Non disponible",
     "ERROR": "Une erreur est survenue",
     "ADD": "Ajouter",
-    "SAVE": "Enregistrer",
-    "UPDATE": "Actualiser",
-    "DEACTIVATE": "Désactiver",
-    "NEW": "Nouveau",
     "ALL": "Tous",
     "APPROVE": "Approuver",
+    "BREADCRUMB": "Fil d'Ariane",
+    "DEACTIVATE": "Désactiver",
+    "END": "Fin",
+    "NEW": "Nouveau",
     "REASON": "Raison",
     "REJECT": "Rejeter",
-    "BREADCRUMB": "Fil d’Ariane",
-    "END": "Fin"
+    "SAVE": "Enregistrer",
+    "UPDATE": "Mettre à jour"
   },
   "STATUS": {
     "INITIATED": "Initié",
@@ -7185,7 +7290,8 @@
       "WORKORDERS": "Ordres de travail",
       "WORK_SESSION": "Séance de travail",
       "PERSON": "Personne",
-      "PERIODS": "Périodes de paie"
+      "PERIODS": "Périodes de paie",
+      "ACCOUNTING_PERIODS": "Périodes comptables"
     }
   },
   "POSITIVITY": {

@@ -175,6 +175,12 @@ export const ACCOUNTING_ROUTES: Routes = [
           ),
       },
       {
+        path: 'periods',
+        data: { permissions: ACCOUNTING_PAGE.periodClose },
+        loadComponent: () =>
+          import('./pages/period-close/period-close-page.component').then(m => m.PeriodClosePageComponent),
+      },
+      {
         path: 'invoices/:invoiceId/payment-status',
         data: { permissions: ACCOUNTING_PAGE.invoicePaymentStatus },
         loadComponent: () =>

@@ -2218,7 +2218,6 @@
       "CLEAR_JOB_ARIA": "Quitar el filtro de tipo de trabajo",
       "JOB_SEARCH_ARIA": "Buscar tipos de trabajo",
       "JOB_SEARCH_EMPTY": "No hay tipos de trabajo que coincidan.",
-      "JOB_SEARCH_ERROR": "No se pudieron buscar los tipos de trabajo. Vuelve a intentarlo.",
       "PREVIOUS_ARIA": "Periodo anterior",
       "NEXT_ARIA": "Periodo siguiente",
       "TODAY": "Hoy",
@@ -2265,7 +2264,8 @@
       "TECH_LANE": "Carril de técnicos — la otra mitad de la capacidad",
       "TECH_LANE_NOTE": "una bahía sin técnico certificado no es capacidad",
       "HOURS_ASSIGNED": "{{count}} h asignadas",
-      "NO_TECHNICIANS": "No hay técnicos en la plantilla de esta ubicación."
+      "NO_TECHNICIANS": "No hay técnicos en la plantilla de esta ubicación.",
+      "JOB_SEARCH_ERROR": "No se pudieron buscar los tipos de trabajo. Vuelve a intentarlo."
     },
     "APPOINTMENT_ASSIGNMENT": {
       "TITLE": "Asignación de cita",
@@ -2594,17 +2594,27 @@
       "HARD_NOT_OVERRIDABLE": "Estos conflictos bloquearon el cambio y no se pueden anular; elija otro horario."
     },
     "APPOINTMENT_EDIT": {
-      "TITLE": "Detalles de la cita",
+      "TITLE": "Editar cita",
+      "LOADING": "Cargando cita…",
       "RESCHEDULE_SUCCESS": "Cita reprogramada correctamente.",
       "CANCEL_SUCCESS": "Cita cancelada correctamente.",
-      "CANNOT_MODIFY": "Esta cita no se puede modificar mientras esté {{status}}.",
+      "STATUS": "Estado",
+      "SCHEDULED_START": "Inicio programado",
+      "SCHEDULED_END": "Fin programado",
+      "FACILITY": "Instalación",
+      "RESCHEDULE": "Reprogramar",
+      "CANCEL_APPOINTMENT": "Cancelar cita",
+      "CANNOT_MODIFY": "Esta cita no se puede modificar mientras su estado sea {{status}}.",
       "AUDIT_HISTORY": "Historial de auditoría",
-      "AUDIT_UNAVAILABLE": "El historial de auditoría no está disponible.",
-      "AUDIT_EMPTY": "No hay historial de auditoría.",
+      "AUDIT_UNAVAILABLE": "El historial de auditoría no está disponible en este momento.",
+      "AUDIT_EMPTY": "No hay entradas de auditoría para esta cita.",
       "RESCHEDULE_APPOINTMENT": "Reprogramar cita",
+      "CLOSE": "Cerrar",
       "NEW_START": "Nuevo inicio",
       "NEW_END": "Nuevo fin",
-      "CANCEL_APPOINTMENT": "Cancelar cita",
+      "REASON": "Motivo",
+      "CANCEL": "Cancelar",
+      "SAVE": "Guardar",
       "CANCELLATION_REASON": "Motivo de cancelación",
       "REASONS": {
         "CUSTOMER_REQUEST": "Solicitud del cliente",
@@ -2613,14 +2623,18 @@
         "VEHICLE_NOT_READY": "Vehículo no listo",
         "OTHER": "Otro"
       },
+      "NOTES_OPTIONAL": "Notas (opcional)",
+      "BACK": "Atrás",
       "CONFIRM_CANCEL": "Confirmar cancelación",
       "ERROR": {
-        "CANCELLATION_FAILED": "Error al cancelar la cita.",
-        "RESCHEDULE_FAILED": "Error al reprogramar la cita."
+        "RESCHEDULE_FAILED": "No se pudo reprogramar la cita.",
+        "CANCELLATION_FAILED": "No se pudo cancelar la cita."
       }
     },
     "APPOINTMENT_RESCHEDULE": {
       "TITLE": "Reprogramar cita",
+      "LOADING": "Cargando cita…",
+      "VERSION_MISMATCH": "Otra persona modificó esta cita. Vuelva a cargarla e inténtelo de nuevo.",
       "NEW_START": "Nuevo inicio",
       "NEW_END": "Nuevo fin",
       "RESCHEDULE_REASON": "Motivo de reprogramación",
@@ -2632,12 +2646,13 @@
         "OTHER": "Otro"
       },
       "NOTES": "Notas",
+      "OVERRIDE_REASON": "Motivo de sobrescritura",
       "APPROVAL_REASON": "Motivo de aprobación",
-      "VERSION_MISMATCH": "Esta cita se actualizó en otro lugar. Recargue para ver los detalles más recientes antes de volver a intentarlo.",
+      "RESCHEDULE": "Reprogramar",
+      "SUCCESS": "Cita reprogramada correctamente.",
       "ERROR": {
-        "LOAD_DETAILS": "Error al cargar los detalles de la cita."
-      },
-      "SUCCESS": "Cita reprogramada correctamente."
+        "LOAD_DETAILS": "No se pudieron cargar los detalles de la cita."
+      }
     },
     "LANDING": {
       "TITLE": "Gestión del Taller",
@@ -3180,6 +3195,10 @@
         "PAYABLES": {
           "TITLE": "Cuentas por pagar",
           "DESCRIPTION": "Facturas de proveedores recibidas electrónicamente, su vínculo al comprobante y las excepciones que resolver antes de un pago."
+        },
+        "PERIOD_CLOSE": {
+          "TITLE": "Cierre de períodos",
+          "DESCRIPTION": "Cierre cada mes cuando sus asientos contables estén contabilizados y reabra un mes cerrado para ajustes tardíos."
         }
       },
       "CARD": {
@@ -3258,6 +3277,10 @@
         "PAYABLES_DETAIL": {
           "TITLE": "Detalle de factura de proveedor",
           "DESCRIPTION": "Abra una factura de proveedor por su identificador."
+        },
+        "PERIOD_CLOSE": {
+          "TITLE": "Períodos contables",
+          "DESCRIPTION": "Vea qué meses están abiertos o cerrados, cierre un mes o reabra uno con un motivo registrado."
         }
       },
       "FIELD": {
@@ -3658,6 +3681,88 @@
           "ORIGIN_EVENT": "Evento de origen",
           "CREATED_AT": "Creada"
         }
+      }
+    },
+    "PERIOD_CLOSE": {
+      "OVERLINE": "Contabilidad",
+      "TITLE": "Períodos contables",
+      "SUBTITLE": "Cierre un mes cuando todos sus asientos contables estén contabilizados. Los asientos con fecha en un mes cerrado se rechazan, salvo que alguien con permiso de excepción aporte una justificación.",
+      "LOADING": "Cargando períodos contables…",
+      "VIEW_ONLY": "Puede ver los períodos contables. Para cerrar o reabrir un período se necesitan permisos adicionales.",
+      "PENDING": {
+        "CLOSING": "Cerrando {{period}}…",
+        "REOPENING": "Reabriendo {{period}}…"
+      },
+      "LIST": {
+        "HEADING": "Períodos",
+        "CAPTION": "Períodos contables, del más reciente al más antiguo",
+        "EMPTY": "Todavía no se ha registrado ningún período contable. Un mes se agrega la primera vez que se contabiliza un asiento en él o cuando se cierra.",
+        "COL_PERIOD": "Período",
+        "COL_STATUS": "Estado",
+        "COL_CLOSED": "Cerrado",
+        "COL_REOPENED": "Última reapertura",
+        "COL_ACTIONS": "Acciones",
+        "DATE_RANGE": "Del {{start}} al {{end}}",
+        "BY": "por {{actor}}",
+        "REASON": "Motivo: {{reason}}",
+        "ACTOR_UNAVAILABLE": "Usuario no disponible"
+      },
+      "STATUS": {
+        "OPEN": "Abierto",
+        "CLOSED": "Cerrado",
+        "UNKNOWN": "Desconocido"
+      },
+      "ACTION": {
+        "CLOSE": "Cerrar período",
+        "REOPEN": "Reabrir período"
+      },
+      "CLOSE_MONTH": {
+        "HEADING": "Cerrar un mes",
+        "HINT": "Úselo para un mes que no aparece en la lista. Se puede cerrar cualquier mes que ya haya comenzado; se agrega y se cierra en un solo paso.",
+        "LABEL": "Mes",
+        "SUBMIT": "Cerrar mes",
+        "ERROR": {
+          "INVALID": "Elija un mes para cerrar.",
+          "FUTURE": "{{period}} todavía no ha comenzado, así que no se puede cerrar.",
+          "ALREADY_CLOSED": "{{period}} ya está cerrado.",
+          "STATUS_UNKNOWN": "No se pudo leer el estado de {{period}}, así que no se puede cerrar desde aquí. Vuelva a cargar la página e inténtelo de nuevo."
+        }
+      },
+      "CONFIRM_CLOSE": {
+        "TITLE": "¿Cerrar {{period}}?",
+        "BODY": "Los asientos con fecha en {{period}} se rechazarán, salvo que alguien con permiso de excepción aporte una justificación. El período se puede reabrir más adelante con un motivo registrado.",
+        "CONFIRM": "Cerrar período"
+      },
+      "CONFIRM_REOPEN": {
+        "TITLE": "¿Reabrir {{period}}?",
+        "BODY": "Se podrán volver a contabilizar asientos en {{period}} hasta que se cierre. Su motivo queda anotado en el registro de auditoría.",
+        "LABEL": "Motivo de la reapertura",
+        "HINT": "Obligatorio, hasta {{max}} caracteres.",
+        "CONFIRM": "Reabrir período",
+        "ERROR": {
+          "REQUIRED": "Escriba un motivo para reabrir el período.",
+          "TOO_LONG": "El motivo no puede superar los {{max}} caracteres."
+        }
+      },
+      "OUTCOME": {
+        "CLOSED": "{{period}} está cerrado.",
+        "REOPENED": "{{period}} está abierto de nuevo."
+      },
+      "ERROR": {
+        "LOAD": "No se pudieron cargar los períodos contables.",
+        "FORBIDDEN": "No tiene permiso para ver los períodos contables.",
+        "DRAFT_ENTRIES": "{{period}} no se puede cerrar mientras tenga asientos contables en borrador (total: {{count}}). Contabilícelos o elimínelos y vuelva a cerrar el período.",
+        "DRAFT_ENTRIES_UNCOUNTED": "{{period}} no se puede cerrar mientras tenga asientos contables en borrador. Contabilícelos o elimínelos y vuelva a cerrar el período.",
+        "ALREADY_CLOSED": "{{period}} ya estaba cerrado.",
+        "ALREADY_OPEN": "{{period}} ya estaba abierto.",
+        "NOT_FOUND_CLOSE": "{{period}} todavía no ha comenzado, así que no se puede cerrar.",
+        "NOT_FOUND_REOPEN": "No se encontró ningún registro de {{period}}.",
+        "INVALID_CLOSE": "El período se rechazó por no ser válido. Revise el mes e inténtelo de nuevo.",
+        "INVALID_REOPEN": "Se rechazó el motivo. Escriba un motivo e inténtelo de nuevo.",
+        "FORBIDDEN_CLOSE": "No tiene permiso para cerrar períodos contables.",
+        "FORBIDDEN_REOPEN": "No tiene permiso para reabrir períodos contables.",
+        "OTHER_CLOSE": "No se pudo cerrar {{period}}. Inténtelo de nuevo.",
+        "OTHER_REOPEN": "No se pudo reabrir {{period}}. Inténtelo de nuevo."
       }
     }
   },
@@ -4071,9 +4176,6 @@
       },
       "LOCATION_OVERRIDES": {
         "TITLE": "Sobrecargos de precio por ubicación",
-        "STATE": {
-          "EMPTY": "No hay sobrecargos pendientes."
-        },
         "PENDING": {
           "TITLE": "Sobrecargos pendientes",
           "LOCATION": "Ubicación",
@@ -4100,6 +4202,9 @@
         },
         "EFFECTIVE_PRICE": {
           "TITLE": "Precios vigentes"
+        },
+        "STATE": {
+          "EMPTY": "No se encontraron sobrecargos de precio por ubicación."
         },
         "ERROR": {
           "LOAD": "Error al cargar los sobrecargos de precio por ubicación.",
@@ -6663,16 +6768,16 @@
     "NOT_AVAILABLE": "No disponible",
     "ERROR": "Se produjo un error",
     "ADD": "Agregar",
-    "SAVE": "Guardar",
-    "UPDATE": "Actualizar",
-    "DEACTIVATE": "Desactivar",
-    "NEW": "Nuevo",
     "ALL": "Todos",
     "APPROVE": "Aprobar",
+    "BREADCRUMB": "Ruta de navegación",
+    "DEACTIVATE": "Desactivar",
+    "END": "Fin",
+    "NEW": "Nuevo",
     "REASON": "Motivo",
     "REJECT": "Rechazar",
-    "BREADCRUMB": "Ruta de navegación",
-    "END": "Fin"
+    "SAVE": "Guardar",
+    "UPDATE": "Actualizar"
   },
   "STATUS": {
     "INITIATED": "Iniciado",
@@ -7185,7 +7290,8 @@
       "WORKORDERS": "Órdenes de trabajo",
       "WORK_SESSION": "Sesión de trabajo",
       "PERSON": "Persona",
-      "PERIODS": "Períodos de pago"
+      "PERIODS": "Períodos de pago",
+      "ACCOUNTING_PERIODS": "Períodos contables"
     }
   },
   "POSITIVITY": {
