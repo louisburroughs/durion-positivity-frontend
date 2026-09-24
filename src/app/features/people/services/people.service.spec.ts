@@ -537,7 +537,6 @@ describe('PeopleService', () => {
 
   it('createTimePeriod() passes the request through to TimePeriodManagementAPIService', () => {
     const request: CreateTimePeriodRequest = {
-      tenantId: 't-1',
       startDate: '2026-10-01',
       endDate: '2026-10-14',
       status: CreateTimePeriodRequestStatusEnum.Open,

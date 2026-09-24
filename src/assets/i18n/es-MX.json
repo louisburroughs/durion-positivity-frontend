@@ -1095,7 +1095,6 @@
         "INVALID_RANGE": "Ese rango de fechas no es válido.",
         "CREATE_FORBIDDEN": "No tiene permiso para crear períodos de pago.",
         "END_BEFORE_START": "La fecha de fin debe ser igual o posterior a la fecha de inicio.",
-        "NO_TENANT": "Su sesión no tiene inquilino, por lo que no se puede crear un período de pago.",
         "TRANSITION": "No se pudo cambiar el estado del período.",
         "TRANSITION_NOT_ALLOWED": "Ese cambio de estado ya no está permitido; la lista se actualizó.",
         "NOT_FOUND": "Ese período de pago ya no existe; la lista se actualizó.",
