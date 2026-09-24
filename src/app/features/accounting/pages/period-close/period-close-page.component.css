@@ -163,7 +163,8 @@
 }
 
 .btn--outline {
-  border: 1px solid var(--border-color);
+  /* A control boundary: --input-border meets 3:1 (WCAG 1.4.11); --border-color is the decorative edge. */
+  border: 1px solid var(--input-border);
   background: transparent;
   color: var(--link-color);
 }
@@ -226,9 +227,9 @@
 .reopen-form textarea {
   min-height: 2.25rem;
   padding: var(--space-2);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--input-border);
   border-radius: 0.125rem;
-  background: var(--themeBackground);
+  background: var(--input-background);
   color: var(--currentTextColor);
   font: inherit;
 }

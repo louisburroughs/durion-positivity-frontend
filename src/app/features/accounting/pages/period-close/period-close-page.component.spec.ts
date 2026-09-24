@@ -112,6 +112,26 @@ describe('PeriodClosePageComponent', () => {
       expect(buttonIn('2026-06', 'close-button')).toBeNull();
     });
 
+    it('says the user is not available when the actor was withheld, rather than dropping the line', () => {
+      // The service maps a UUID-shaped or blank actor to null (ADR-0064 §5).
+      setup([
+        { ...CLOSED_JUNE, closedBy: null, reopenedAt: '2026-07-05T10:00:00Z', reopenedBy: null, reopenJustification: 'Late bill' },
+      ]);
+
+      const lines = row('2026-06').querySelectorAll('[data-testid="actor-unavailable"]');
+      expect(lines).toHaveLength(2);
+      for (const line of Array.from(lines)) {
+        expect(line.textContent?.trim()).toBe('ACCOUNTING.PERIOD_CLOSE.LIST.ACTOR_UNAVAILABLE');
+      }
+    });
+
+    it('names a known actor and shows no not-available line', () => {
+      setup();
+
+      expect(row('2026-06').textContent).toContain('ACCOUNTING.PERIOD_CLOSE.LIST.BY');
+      expect(row('2026-06').querySelector('[data-testid="actor-unavailable"]')).toBeNull();
+    });
+
     it('offers no action on a row whose status is unknown', () => {
       setup([period({ status: 'UNKNOWN' })]);
 
@@ -519,6 +539,12 @@ describe('PeriodClosePageComponent', () => {
         }
       });
     }
+
+    it('en-US: the empty state says a month is also added by closing it', () => {
+      const text = (lookup(enUS, 'ACCOUNTING.PERIOD_CLOSE.LIST.EMPTY') as string).toLowerCase();
+      expect(text).toContain('posts');
+      expect(text).toContain('closed');
+    });
 
     it('en-US: the draft-entries refusal says what blocks the close and how to clear it', () => {
       const text = lookup(enUS, 'ACCOUNTING.PERIOD_CLOSE.ERROR.DRAFT_ENTRIES') as string;

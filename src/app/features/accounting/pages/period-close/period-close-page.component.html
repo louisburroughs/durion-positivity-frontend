@@ -100,6 +100,8 @@
                       <span class="audit-line">{{ period.closedAt | date: 'medium' }}</span>
                       @if (period.closedBy) {
                         <span class="audit-line audit-line--muted">{{ 'ACCOUNTING.PERIOD_CLOSE.LIST.BY' | translate: { actor: period.closedBy } }}</span>
+                      } @else {
+                        <span class="audit-line audit-line--muted" data-testid="actor-unavailable">{{ 'ACCOUNTING.PERIOD_CLOSE.LIST.ACTOR_UNAVAILABLE' | translate }}</span>
                       }
                     } @else {
                       <span aria-hidden="true">{{ 'COMMON.EMPTY_VALUE' | translate }}</span>
@@ -111,6 +113,8 @@
                       <span class="audit-line">{{ period.reopenedAt | date: 'medium' }}</span>
                       @if (period.reopenedBy) {
                         <span class="audit-line audit-line--muted">{{ 'ACCOUNTING.PERIOD_CLOSE.LIST.BY' | translate: { actor: period.reopenedBy } }}</span>
+                      } @else {
+                        <span class="audit-line audit-line--muted" data-testid="actor-unavailable">{{ 'ACCOUNTING.PERIOD_CLOSE.LIST.ACTOR_UNAVAILABLE' | translate }}</span>
                       }
                       @if (period.reopenJustification) {
                         <span class="audit-line audit-line--muted">{{ 'ACCOUNTING.PERIOD_CLOSE.LIST.REASON' | translate: { reason: period.reopenJustification } }}</span>

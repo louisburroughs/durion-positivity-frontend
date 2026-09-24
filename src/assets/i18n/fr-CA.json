@@ -3634,7 +3634,7 @@
       "LIST": {
         "HEADING": "Périodes",
         "CAPTION": "Périodes comptables, de la plus récente à la plus ancienne",
-        "EMPTY": "Aucune période comptable n'a encore été enregistrée. Un mois est ajouté la première fois qu'une écriture y est comptabilisée.",
+        "EMPTY": "Aucune période comptable n'a encore été enregistrée. Un mois est ajouté la première fois qu'une écriture y est comptabilisée ou lorsqu'il est clôturé.",
         "COL_PERIOD": "Période",
         "COL_STATUS": "Statut",
         "COL_CLOSED": "Clôture",
@@ -3642,7 +3642,8 @@
         "COL_ACTIONS": "Actions",
         "DATE_RANGE": "Du {{start}} au {{end}}",
         "BY": "par {{actor}}",
-        "REASON": "Motif : {{reason}}"
+        "REASON": "Motif : {{reason}}",
+        "ACTOR_UNAVAILABLE": "Utilisateur non disponible"
       },
       "STATUS": {
         "OPEN": "Ouverte",

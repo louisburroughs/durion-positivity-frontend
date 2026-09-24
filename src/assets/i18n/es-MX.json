@@ -3634,7 +3634,7 @@
       "LIST": {
         "HEADING": "Períodos",
         "CAPTION": "Períodos contables, del más reciente al más antiguo",
-        "EMPTY": "Todavía no se ha registrado ningún período contable. Un mes se agrega la primera vez que se contabiliza un asiento en él.",
+        "EMPTY": "Todavía no se ha registrado ningún período contable. Un mes se agrega la primera vez que se contabiliza un asiento en él o cuando se cierra.",
         "COL_PERIOD": "Período",
         "COL_STATUS": "Estado",
         "COL_CLOSED": "Cerrado",
@@ -3642,7 +3642,8 @@
         "COL_ACTIONS": "Acciones",
         "DATE_RANGE": "Del {{start}} al {{end}}",
         "BY": "por {{actor}}",
-        "REASON": "Motivo: {{reason}}"
+        "REASON": "Motivo: {{reason}}",
+        "ACTOR_UNAVAILABLE": "Usuario no disponible"
       },
       "STATUS": {
         "OPEN": "Abierto",

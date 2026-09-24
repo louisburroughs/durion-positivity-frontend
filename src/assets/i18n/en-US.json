@@ -3634,7 +3634,7 @@
       "LIST": {
         "HEADING": "Periods",
         "CAPTION": "Accounting periods, most recent first",
-        "EMPTY": "No accounting periods have been recorded yet. A month is added the first time an entry posts into it.",
+        "EMPTY": "No accounting periods have been recorded yet. A month is added the first time an entry posts into it or it is closed.",
         "COL_PERIOD": "Period",
         "COL_STATUS": "Status",
         "COL_CLOSED": "Closed",
@@ -3642,7 +3642,8 @@
         "COL_ACTIONS": "Actions",
         "DATE_RANGE": "{{start}} to {{end}}",
         "BY": "by {{actor}}",
-        "REASON": "Reason: {{reason}}"
+        "REASON": "Reason: {{reason}}",
+        "ACTOR_UNAVAILABLE": "User not available"
       },
       "STATUS": {
         "OPEN": "Open",
