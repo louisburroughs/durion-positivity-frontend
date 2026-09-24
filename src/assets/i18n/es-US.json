@@ -2593,6 +2593,52 @@
       "OVERRIDDEN": "Anulado",
       "HARD_NOT_OVERRIDABLE": "Estos conflictos bloquearon el cambio y no se pueden anular; elija otro horario."
     },
+    "APPOINTMENT_EDIT": {
+      "TITLE": "Detalles de la cita",
+      "RESCHEDULE_SUCCESS": "Cita reprogramada correctamente.",
+      "CANCEL_SUCCESS": "Cita cancelada correctamente.",
+      "CANNOT_MODIFY": "Esta cita no se puede modificar mientras esté {{status}}.",
+      "AUDIT_HISTORY": "Historial de auditoría",
+      "AUDIT_UNAVAILABLE": "El historial de auditoría no está disponible.",
+      "AUDIT_EMPTY": "No hay historial de auditoría.",
+      "RESCHEDULE_APPOINTMENT": "Reprogramar cita",
+      "NEW_START": "Nuevo inicio",
+      "NEW_END": "Nuevo fin",
+      "CANCEL_APPOINTMENT": "Cancelar cita",
+      "CANCELLATION_REASON": "Motivo de cancelación",
+      "REASONS": {
+        "CUSTOMER_REQUEST": "Solicitud del cliente",
+        "TECHNICIAN_UNAVAILABLE": "Técnico no disponible",
+        "WEATHER": "Clima",
+        "VEHICLE_NOT_READY": "Vehículo no listo",
+        "OTHER": "Otro"
+      },
+      "CONFIRM_CANCEL": "Confirmar cancelación",
+      "ERROR": {
+        "CANCELLATION_FAILED": "Error al cancelar la cita.",
+        "RESCHEDULE_FAILED": "Error al reprogramar la cita."
+      }
+    },
+    "APPOINTMENT_RESCHEDULE": {
+      "TITLE": "Reprogramar cita",
+      "NEW_START": "Nuevo inicio",
+      "NEW_END": "Nuevo fin",
+      "RESCHEDULE_REASON": "Motivo de reprogramación",
+      "SELECT_REASON": "Seleccione un motivo",
+      "REASONS": {
+        "CUSTOMER_REQUEST": "Solicitud del cliente",
+        "FACILITY_UNAVAILABLE": "Instalación no disponible",
+        "TECHNICIAN_UNAVAILABLE": "Técnico no disponible",
+        "OTHER": "Otro"
+      },
+      "NOTES": "Notas",
+      "APPROVAL_REASON": "Motivo de aprobación",
+      "VERSION_MISMATCH": "Esta cita se actualizó en otro lugar. Recargue para ver los detalles más recientes antes de volver a intentarlo.",
+      "ERROR": {
+        "LOAD_DETAILS": "Error al cargar los detalles de la cita."
+      },
+      "SUCCESS": "Cita reprogramada correctamente."
+    },
     "LANDING": {
       "TITLE": "Gestión del Taller",
       "SUBTITLE": "Gestione el tablero de despacho, el horario, las citas y la disponibilidad de mecánicos desde un solo lugar.",
@@ -4025,6 +4071,9 @@
       },
       "LOCATION_OVERRIDES": {
         "TITLE": "Sobrecargos de precio por ubicación",
+        "STATE": {
+          "EMPTY": "No hay sobrecargos pendientes."
+        },
         "PENDING": {
           "TITLE": "Sobrecargos pendientes",
           "LOCATION": "Ubicación",
@@ -6612,7 +6661,18 @@
     "CLOSE": "Cerrar",
     "EMPTY_VALUE": "—",
     "NOT_AVAILABLE": "No disponible",
-    "ERROR": "Se produjo un error"
+    "ERROR": "Se produjo un error",
+    "ADD": "Agregar",
+    "SAVE": "Guardar",
+    "UPDATE": "Actualizar",
+    "DEACTIVATE": "Desactivar",
+    "NEW": "Nuevo",
+    "ALL": "Todos",
+    "APPROVE": "Aprobar",
+    "REASON": "Motivo",
+    "REJECT": "Rechazar",
+    "BREADCRUMB": "Ruta de navegación",
+    "END": "Fin"
   },
   "STATUS": {
     "INITIATED": "Iniciado",

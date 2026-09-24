@@ -6,7 +6,7 @@
 </div>
 
 @if (loading()) {
-  <div class="loading-state">{{ 'SHOPMGMT.APPOINTMENT_EDIT.LOADING' | translate }}</div>
+  <div class="loading-state">{{ 'COMMON.LOADING' | translate }}</div>
 }
 
 @if (!loading()) {
@@ -19,33 +19,33 @@
   @if (appointment()) {
     <div class="appointment-summary">
       <div class="summary-row">
-        <span class="label">{{ 'SHOPMGMT.APPOINTMENT_EDIT.STATUS' | translate }}</span>
+        <span class="label">{{ 'SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.STATUS' | translate }}</span>
         <span class="value status-badge">{{ appointment()!.status }}</span>
       </div>
       @if (appointment()!.scheduledStart) {
         <div class="summary-row">
-          <span class="label">{{ 'SHOPMGMT.APPOINTMENT_EDIT.SCHEDULED_START' | translate }}</span>
+          <span class="label">{{ 'SHOPMGMT.APPOINTMENT_CREATE.SCHEDULED_START' | translate }}</span>
           <span class="value">{{ appointment()!.scheduledStart }}</span>
         </div>
       }
       @if (appointment()!.scheduledEnd) {
         <div class="summary-row">
-          <span class="label">{{ 'SHOPMGMT.APPOINTMENT_EDIT.SCHEDULED_END' | translate }}</span>
+          <span class="label">{{ 'SHOPMGMT.APPOINTMENT_CREATE.SCHEDULED_END' | translate }}</span>
           <span class="value">{{ appointment()!.scheduledEnd }}</span>
         </div>
       }
       <div class="summary-row">
-        <span class="label">{{ 'SHOPMGMT.APPOINTMENT_EDIT.FACILITY' | translate }}</span>
+        <span class="label">{{ 'SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.FACILITY' | translate }}</span>
         <span class="value">{{ appointment()!.facilityId }}</span>
       </div>
     </div>
   }
   <div class="actions-row">
     @if (canModify) {
-      <button class="btn-primary" (click)="openReschedule()">{{ 'SHOPMGMT.APPOINTMENT_EDIT.RESCHEDULE' | translate }}</button>
+      <button class="btn-primary" (click)="openReschedule()">{{ 'SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.RESCHEDULE' | translate }}</button>
       <button class="btn-danger" (click)="openCancel()">{{ 'SHOPMGMT.APPOINTMENT_EDIT.CANCEL_APPOINTMENT' | translate }}</button>
     } @else {
-      <button class="btn-primary" disabled>{{ 'SHOPMGMT.APPOINTMENT_EDIT.RESCHEDULE' | translate }}</button>
+      <button class="btn-primary" disabled>{{ 'SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.RESCHEDULE' | translate }}</button>
       <button class="btn-danger" disabled>{{ 'SHOPMGMT.APPOINTMENT_EDIT.CANCEL_APPOINTMENT' | translate }}</button>
       <span class="actions-helper-text">
         {{ 'SHOPMGMT.APPOINTMENT_EDIT.CANNOT_MODIFY' | translate: { status: appointment()?.status } }}
@@ -81,7 +81,7 @@
   <dialog class="modal reschedule-modal" appModalDialog (modalCancel)="closeReschedule()" aria-labelledby="reschedule-modal-title">
       <div class="modal-header">
         <h3 id="reschedule-modal-title">{{ 'SHOPMGMT.APPOINTMENT_EDIT.RESCHEDULE_APPOINTMENT' | translate }}</h3>
-        <button class="modal-close" (click)="closeReschedule()" [attr.aria-label]="'SHOPMGMT.APPOINTMENT_EDIT.CLOSE' | translate">&#x2715;</button>
+        <button class="modal-close" (click)="closeReschedule()" [attr.aria-label]="'COMMON.CLOSE' | translate">&#x2715;</button>
       </div>
       <form [formGroup]="rescheduleForm" (ngSubmit)="submitReschedule()" novalidate>
         <div class="form-group">
@@ -94,7 +94,7 @@
           <input id="rsEnd" name="scheduledEndDateTime" type="datetime-local" formControlName="scheduledEndDateTime" />
         </div>
         <div class="form-group">
-          <label for="rsReason">{{ 'SHOPMGMT.APPOINTMENT_EDIT.REASON' | translate }}</label>
+          <label for="rsReason">{{ 'SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.REASON' | translate }}</label>
           <input id="rsReason" name="reason" type="text" formControlName="reason" />
         </div>
         @if (rescheduleError()) {
@@ -115,9 +115,9 @@
           </div>
         }
         <div class="modal-actions">
-          <button type="button" class="btn-secondary" (click)="closeReschedule()">{{ 'SHOPMGMT.APPOINTMENT_EDIT.CANCEL' | translate }}</button>
+          <button type="button" class="btn-secondary" (click)="closeReschedule()">{{ 'COMMON.CANCEL' | translate }}</button>
           <button type="submit" class="btn-primary" [disabled]="rescheduleForm.invalid || rescheduleLoading()">
-            {{ 'SHOPMGMT.APPOINTMENT_EDIT.SAVE' | translate }}
+            {{ 'COMMON.SAVE' | translate }}
           </button>
         </div>
       </form>
@@ -128,7 +128,7 @@
   <dialog class="modal cancel-modal" appModalDialog (modalCancel)="closeCancel()" aria-labelledby="cancel-modal-title">
       <div class="modal-header">
         <h3 id="cancel-modal-title">{{ 'SHOPMGMT.APPOINTMENT_EDIT.CANCEL_APPOINTMENT' | translate }}</h3>
-        <button class="modal-close" (click)="closeCancel()" [attr.aria-label]="'SHOPMGMT.APPOINTMENT_EDIT.CLOSE' | translate">&#x2715;</button>
+        <button class="modal-close" (click)="closeCancel()" [attr.aria-label]="'COMMON.CLOSE' | translate">&#x2715;</button>
       </div>
       <form [formGroup]="cancelForm" (ngSubmit)="submitCancel()" novalidate>
         <div class="form-group">
@@ -142,14 +142,14 @@
           </select>
         </div>
         <div class="form-group">
-          <label for="cancelNotes">{{ 'SHOPMGMT.APPOINTMENT_EDIT.NOTES_OPTIONAL' | translate }}</label>
+          <label for="cancelNotes">{{ 'WORKEXEC.WORKORDER_DETAIL.NOTES_OPTIONAL' | translate }}</label>
           <textarea id="cancelNotes" name="notes" formControlName="notes" rows="3"></textarea>
         </div>
         @if (cancelError()) {
           <div class="error-banner">{{ cancelError()! | translate }}</div>
         }
         <div class="modal-actions">
-          <button type="button" class="btn-secondary" (click)="closeCancel()">{{ 'SHOPMGMT.APPOINTMENT_EDIT.BACK' | translate }}</button>
+          <button type="button" class="btn-secondary" (click)="closeCancel()">{{ 'COMMON.BACK' | translate }}</button>
           <button type="submit" class="btn-danger" [disabled]="cancelForm.invalid || cancelLoading()">
             {{ 'SHOPMGMT.APPOINTMENT_EDIT.CONFIRM_CANCEL' | translate }}
           </button>

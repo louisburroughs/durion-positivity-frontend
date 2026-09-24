@@ -2593,6 +2593,52 @@
       "OVERRIDDEN": "Dérogation accordée",
       "HARD_NOT_OVERRIDABLE": "Ces conflits ont bloqué la modification et ne peuvent pas faire l’objet d’une dérogation; choisissez une autre plage."
     },
+    "APPOINTMENT_EDIT": {
+      "TITLE": "Détails du rendez-vous",
+      "RESCHEDULE_SUCCESS": "Rendez-vous reporté avec succès.",
+      "CANCEL_SUCCESS": "Rendez-vous annulé avec succès.",
+      "CANNOT_MODIFY": "Ce rendez-vous ne peut pas être modifié pendant qu’il est {{status}}.",
+      "AUDIT_HISTORY": "Historique d’audit",
+      "AUDIT_UNAVAILABLE": "L’historique d’audit n’est pas disponible.",
+      "AUDIT_EMPTY": "Aucun historique d’audit.",
+      "RESCHEDULE_APPOINTMENT": "Reporter le rendez-vous",
+      "NEW_START": "Nouveau début",
+      "NEW_END": "Nouvelle fin",
+      "CANCEL_APPOINTMENT": "Annuler le rendez-vous",
+      "CANCELLATION_REASON": "Motif d’annulation",
+      "REASONS": {
+        "CUSTOMER_REQUEST": "Demande du client",
+        "TECHNICIAN_UNAVAILABLE": "Technicien non disponible",
+        "WEATHER": "Météo",
+        "VEHICLE_NOT_READY": "Véhicule non prêt",
+        "OTHER": "Autre"
+      },
+      "CONFIRM_CANCEL": "Confirmer l’annulation",
+      "ERROR": {
+        "CANCELLATION_FAILED": "Échec de l’annulation du rendez-vous.",
+        "RESCHEDULE_FAILED": "Échec du report du rendez-vous."
+      }
+    },
+    "APPOINTMENT_RESCHEDULE": {
+      "TITLE": "Reporter le rendez-vous",
+      "NEW_START": "Nouveau début",
+      "NEW_END": "Nouvelle fin",
+      "RESCHEDULE_REASON": "Motif du report",
+      "SELECT_REASON": "Sélectionnez un motif",
+      "REASONS": {
+        "CUSTOMER_REQUEST": "Demande du client",
+        "FACILITY_UNAVAILABLE": "Installation non disponible",
+        "TECHNICIAN_UNAVAILABLE": "Technicien non disponible",
+        "OTHER": "Autre"
+      },
+      "NOTES": "Notes",
+      "APPROVAL_REASON": "Motif d’approbation",
+      "VERSION_MISMATCH": "Ce rendez-vous a été mis à jour ailleurs. Rechargez pour voir les derniers détails avant de réessayer.",
+      "ERROR": {
+        "LOAD_DETAILS": "Échec du chargement des détails du rendez-vous."
+      },
+      "SUCCESS": "Rendez-vous reporté avec succès."
+    },
     "LANDING": {
       "TITLE": "Gestion de l'atelier",
       "SUBTITLE": "Gérez le tableau d'expédition, l'horaire, les rendez-vous et la disponibilité des mécaniciens depuis un seul endroit.",
@@ -4025,6 +4071,9 @@
       },
       "LOCATION_OVERRIDES": {
         "TITLE": "Dérogations de prix par emplacement",
+        "STATE": {
+          "EMPTY": "Aucune dérogation en attente."
+        },
         "PENDING": {
           "TITLE": "Dérogations en attente",
           "LOCATION": "Emplacement",
@@ -6612,7 +6661,18 @@
     "CLOSE": "Fermer",
     "EMPTY_VALUE": "—",
     "NOT_AVAILABLE": "Non disponible",
-    "ERROR": "Une erreur est survenue"
+    "ERROR": "Une erreur est survenue",
+    "ADD": "Ajouter",
+    "SAVE": "Enregistrer",
+    "UPDATE": "Actualiser",
+    "DEACTIVATE": "Désactiver",
+    "NEW": "Nouveau",
+    "ALL": "Tous",
+    "APPROVE": "Approuver",
+    "REASON": "Raison",
+    "REJECT": "Rejeter",
+    "BREADCRUMB": "Fil d’Ariane",
+    "END": "Fin"
   },
   "STATUS": {
     "INITIATED": "Initié",

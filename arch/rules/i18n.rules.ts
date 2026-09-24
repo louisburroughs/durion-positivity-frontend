@@ -204,7 +204,7 @@ export const i18n05 = (p: Project): ArchRule => {
   const enUsKeys = loadEnUsKeys(p);
   const missingKeyFindings = (keys: string[]): string[] => uniqSorted(keys.filter((k) => !enUsKeys.has(k)).map((k) => `missing key ${k}`));
 
-  const meta = { id: 'I18N-05', title: 'referenced translation keys exist in en-US.json (ADR-0030, plan §11.5)', mode: 'ratchet' as const };
+  const meta = { id: 'I18N-05', title: 'referenced translation keys exist in en-US.json (ADR-0030, plan §11.5)', mode: 'enforce' as const };
   const templateFinder: Finder = (f) => missingKeyFindings(templateTranslateKeys(f).keys);
   const tsFinder: Finder = (f) => missingKeyFindings(staticTranslateKeysInTs(f));
 

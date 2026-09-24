@@ -3,7 +3,7 @@
 </div>
 
 @if (loading()) {
-  <div class="loading-state">{{ 'SHOPMGMT.APPOINTMENT_RESCHEDULE.LOADING' | translate }}</div>
+  <div class="loading-state">{{ 'COMMON.LOADING' | translate }}</div>
 }
 
 @if (!loading()) {
@@ -74,7 +74,7 @@
     }
     @if (showOverrideReason()) {
       <div class="override-reason-field form-group">
-        <label for="overrideReason">{{ 'SHOPMGMT.APPOINTMENT_RESCHEDULE.OVERRIDE_REASON' | translate }}</label>
+        <label for="overrideReason">{{ 'SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.OVERRIDE_REASON' | translate }}</label>
         <textarea id="overrideReason" name="overrideReason" formControlName="overrideReason" rows="2"></textarea>
       </div>
     }
@@ -85,7 +85,7 @@
       </div>
     }
     <div class="action-row">
-      <button type="submit" [disabled]="isSubmitDisabled">{{ 'SHOPMGMT.APPOINTMENT_RESCHEDULE.RESCHEDULE' | translate }}</button>
+      <button type="submit" [disabled]="isSubmitDisabled">{{ 'SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.RESCHEDULE' | translate }}</button>
     </div>
   </form>
 }
