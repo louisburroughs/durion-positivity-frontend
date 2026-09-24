@@ -1107,6 +1107,32 @@
         "LOAD_PREFS": "Impossible de charger les préférences.",
         "PREFS_FORBIDDEN": "Non autorisé à mettre à jour les préférences.",
         "SAVE_PREFS": "Impossible d'enregistrer les préférences ({{status}})."
+      },
+      "PERSON": {
+        "TITLE": "Renseignements personnels",
+        "LOADING": "Chargement des renseignements personnels…",
+        "FORBIDDEN": "Vous n'avez pas l'autorisation de consulter les renseignements de cette personne.",
+        "ERROR_LOAD": "Impossible de charger les renseignements personnels.",
+        "UNAVAILABLE": "Les renseignements personnels ne sont pas disponibles pour ce client.",
+        "FIRST_NAME": "Prénom",
+        "LAST_NAME": "Nom",
+        "PREFERRED_CONTACT": "Mode de contact préféré",
+        "CONTACT_POINTS": "Coordonnées",
+        "NO_CONTACT_POINTS": "Aucune coordonnée au dossier.",
+        "PRIMARY": "Principal",
+        "CONTACT_TYPE": {
+          "EMAIL": "Courriel",
+          "PHONE_MOBILE": "Cellulaire",
+          "PHONE_HOME": "Téléphone à domicile",
+          "PHONE_WORK": "Téléphone au travail",
+          "FAX": "Télécopieur"
+        },
+        "METHOD": {
+          "EMAIL": "Courriel",
+          "PHONE_CALL": "Appel téléphonique",
+          "SMS": "Texto",
+          "NONE": "Aucune préférence"
+        }
       }
     },
     "LANDING": {

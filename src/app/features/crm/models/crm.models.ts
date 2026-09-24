@@ -78,6 +78,26 @@ export interface CreatePersonRequest {
   defaultBillingTermsId?: string;
 }
 
+export type PersonContactType = 'EMAIL' | 'PHONE_MOBILE' | 'PHONE_HOME' | 'PHONE_WORK' | 'FAX';
+export type PreferredContactMethod = 'EMAIL' | 'PHONE_CALL' | 'SMS' | 'NONE';
+
+export interface PersonContactPoint {
+  contactPointId: string;
+  contactType: PersonContactType;
+  value: string;
+  primary?: boolean;
+}
+
+/** CRM view of an individual (`getPerson`), keyed by the canonical pos-people person id. */
+export interface PersonDetail {
+  personId: string;
+  firstName: string;
+  lastName: string;
+  displayName?: string;
+  preferredContactMethod?: PreferredContactMethod;
+  contactPoints?: PersonContactPoint[];
+}
+
 export interface CreatePersonResponse {
   personId: string;
   firstName: string;
@@ -184,6 +204,8 @@ export interface PartyDetail {
   partyId: string;
   /** Set by `getParty`; browse/search rows may omit it. */
   partyType?: PartyType;
+  /** Canonical pos-people person id; `getParty` sets it only for PERSON parties. */
+  personId?: string;
   legalName: string;
   dba?: string;
   /** Human-readable customer/account number, supplied by browse/search responses. */

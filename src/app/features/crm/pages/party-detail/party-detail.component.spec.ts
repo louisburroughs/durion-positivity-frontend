@@ -6,7 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { Observable, Subject, of, throwError } from 'rxjs';
 import { PartyDetailComponent } from './party-detail.component';
 import { CrmService } from '../../services/crm.service';
-import { PartyDetail } from '../../models/crm.models';
+import { PartyDetail, PersonDetail } from '../../models/crm.models';
 import { AuthService } from '../../../../core/services/auth.service';
 import { CRM_SECTION } from '../../../../core/security/route-permissions';
 
@@ -14,6 +14,8 @@ const PARTY_ID = '01960020-0000-7000-8000-00000000002b';
 
 const CONTACTS_PERMISSION = CRM_SECTION.partyContacts[0];
 const PREFS_PERMISSION = CRM_SECTION.communicationPreferences[0];
+const PERSON_PERMISSION = CRM_SECTION.person[0];
+const PERSON_ID = '01960020-0000-7000-8000-0000000000aa';
 
 /**
  * `permissions: null` models a token with no `perm_bits` claim — permissions
@@ -32,6 +34,7 @@ const crmServiceStub = {
   getParty: vi.fn(),
   getContactsWithRoles: vi.fn(),
   getCommunicationPreferences: vi.fn(),
+  getPerson: vi.fn(),
   fetchByParty: vi.fn(),
 };
 
@@ -48,6 +51,7 @@ describe('PartyDetailComponent', () => {
     partyResult?: Observable<PartyDetail>;
     contactsResult?: Observable<unknown>;
     prefsResult?: Observable<unknown>;
+    personResult?: Observable<PersonDetail>;
   };
 
   const setup = async (permissions: string[] | null = null, options: SetupOptions = {}) => {
@@ -55,6 +59,7 @@ describe('PartyDetailComponent', () => {
     crmServiceStub.getParty.mockReturnValue(options.partyResult ?? of({ partyId: PARTY_ID, legalName: 'Albert Rogers' }));
     crmServiceStub.getContactsWithRoles.mockReturnValue(options.contactsResult ?? of([]));
     crmServiceStub.getCommunicationPreferences.mockReturnValue(options.prefsResult ?? of(null));
+    crmServiceStub.getPerson.mockReturnValue(options.personResult ?? of(null));
 
     await TestBed.configureTestingModule({
       imports: [PartyDetailComponent, TranslateModule.forRoot()],
@@ -227,6 +232,93 @@ describe('PartyDetailComponent', () => {
 
       expect(crmServiceStub.getContactsWithRoles).not.toHaveBeenCalled();
       expect(q('[data-testid="contacts-section"]')).toBeNull();
+    });
+  });
+
+  describe('personal details panel', () => {
+    const q = (sel: string) => fixture.nativeElement.querySelector(sel) as HTMLElement | null;
+    const individual: PartyDetail = { partyId: PARTY_ID, partyType: 'PERSON', personId: PERSON_ID, legalName: 'Pat Person' };
+    const pat: PersonDetail = {
+      personId: PERSON_ID,
+      firstName: 'Pat',
+      lastName: 'Person',
+      preferredContactMethod: 'SMS',
+      contactPoints: [
+        { contactPointId: 'cp-1', contactType: 'EMAIL', value: 'pat@example.com', primary: true },
+        { contactPointId: 'cp-2', contactType: 'PHONE_MOBILE', value: '+1-555-0100' },
+      ],
+    };
+
+    it('loads the person by personId once the party resolves, and renders names and contact points', async () => {
+      const party$ = new Subject<PartyDetail>();
+      await setup(null, { partyResult: party$, personResult: of(pat) });
+
+      // Party read in flight: the personId is not known yet.
+      expect(crmServiceStub.getPerson).not.toHaveBeenCalled();
+
+      party$.next(individual);
+      fixture.detectChanges();
+
+      expect(crmServiceStub.getPerson).toHaveBeenCalledExactlyOnceWith(PERSON_ID);
+      expect(q('[data-testid="person-first-name"]')?.textContent?.trim()).toBe('Pat');
+      expect(q('[data-testid="person-last-name"]')?.textContent?.trim()).toBe('Person');
+      expect(q('[data-testid="person-preferred-contact"]')?.textContent?.trim())
+        .toBe('CRM.PARTY_DETAIL.PERSON.METHOD.SMS');
+      const points = Array.from(q('[data-testid="person-contact-points"]')?.querySelectorAll('li') ?? []);
+      expect(points.map(li => li.querySelector('.contact-point__value')?.textContent?.trim()))
+        .toEqual(['pat@example.com', '+1-555-0100']);
+      expect(points[0].querySelector('.role-badge')).not.toBeNull();
+      expect(points[1].querySelector('.role-badge')).toBeNull();
+    });
+
+    it('never requests a person for a commercial account', async () => {
+      await setup(null, { partyResult: of({ partyId: PARTY_ID, partyType: 'COMMERCIAL', legalName: 'Acme Fleet' }) });
+
+      expect(crmServiceStub.getPerson).not.toHaveBeenCalled();
+      expect(q('[data-testid="person-section"]')).toBeNull();
+    });
+
+    it('shows an unavailable hint without a request when the party carries no personId', async () => {
+      await setup(null, { partyResult: of({ ...individual, personId: undefined }) });
+
+      expect(crmServiceStub.getPerson).not.toHaveBeenCalled();
+      expect(q('[data-testid="person-section"]')?.textContent).toContain('CRM.PARTY_DETAIL.PERSON.UNAVAILABLE');
+    });
+
+    it('skips the request and shows the denied state without crm:person:read', async () => {
+      await setup([CONTACTS_PERMISSION, PREFS_PERMISSION], { partyResult: of(individual) });
+
+      expect(crmServiceStub.getPerson).not.toHaveBeenCalled();
+      expect(fixture.componentInstance.personState()).toBe('access-denied');
+    });
+
+    it('requests the person when the session holds crm:person:read', async () => {
+      await setup([PERSON_PERMISSION], { partyResult: of(individual), personResult: of(pat) });
+
+      expect(crmServiceStub.getPerson).toHaveBeenCalledWith(PERSON_ID);
+    });
+
+    it('offers a retry when the person read fails', async () => {
+      await setup(null, { partyResult: of(individual), personResult: throwError(() => ({ status: 500 })) });
+
+      expect(fixture.componentInstance.personState()).toBe('error');
+      crmServiceStub.getPerson.mockReturnValue(of(pat));
+      (q('[data-testid="person-section"] .inline-error button') as HTMLButtonElement).click();
+      fixture.detectChanges();
+
+      expect(crmServiceStub.getPerson).toHaveBeenCalledTimes(2);
+      expect(q('[data-testid="person-first-name"]')?.textContent?.trim()).toBe('Pat');
+    });
+
+    it('falls back to the raw value for an unrecognized contact type or method', async () => {
+      await setup(null, { partyResult: of(individual), personResult: of({
+        ...pat,
+        preferredContactMethod: 'PIGEON' as PersonDetail['preferredContactMethod'],
+        contactPoints: [{ contactPointId: 'cp-9', contactType: 'TELEX' as 'EMAIL', value: 'x' }],
+      }) });
+
+      expect(q('[data-testid="person-preferred-contact"]')?.textContent?.trim()).toBe('PIGEON');
+      expect(q('.contact-point__type')?.textContent?.trim()).toBe('TELEX');
     });
   });
 });

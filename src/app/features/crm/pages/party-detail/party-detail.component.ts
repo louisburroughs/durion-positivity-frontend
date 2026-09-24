@@ -9,6 +9,9 @@ import { CRM_SECTION } from '../../../../core/security/route-permissions';
 import { CrmService } from '../../services/crm.service';
 import {
   PartyDetail,
+  PersonDetail,
+  PersonContactType,
+  PreferredContactMethod,
   ContactRole,
   CommunicationPreferences,
   Relationship,
@@ -46,6 +49,10 @@ export class PartyDetailComponent implements OnInit {
   // screen (UI rule). The party detail endpoint omits it; the snapshot's
   // account block carries it, so we fetch it best-effort.
   readonly customerNumber = signal('');
+
+  // ── Person (individuals only) ────────────────────────────────────────
+  readonly personState = signal<SectionState>('loading');
+  readonly person      = signal<PersonDetail | null>(null);
 
   // ── Contacts ─────────────────────────────────────────────────────────
   readonly contactsState = signal<SectionState>('loading');
@@ -105,8 +112,11 @@ export class PartyDetailComponent implements OnInit {
       next: p => {
         this.party.set(p);
         this.partyState.set('ready');
-        // Contacts need the party type first: contacts-with-roles is commercial-only.
-        if (!this.isPerson()) {
+        // Both panels need the party type first: contacts-with-roles is
+        // commercial-only, and an individual's details key on its personId.
+        if (this.isPerson()) {
+          this.loadPerson();
+        } else {
           this.loadContacts();
         }
       },
@@ -128,6 +138,40 @@ export class PartyDetailComponent implements OnInit {
    */
   private mayRead(permissions: readonly string[]): boolean {
     return !this.auth.permissionsKnown() || this.auth.hasAnyPermission(permissions);
+  }
+
+  // ── Person ────────────────────────────────────────────────────────────
+  loadPerson(): void {
+    const personId = this.party()?.personId;
+    if (!personId) {
+      // A backend predating personId on getParty: nothing to look up.
+      this.person.set(null);
+      this.personState.set('ready');
+      return;
+    }
+    if (!this.mayRead(CRM_SECTION.person)) {
+      this.personState.set('access-denied');
+      return;
+    }
+    this.personState.set('loading');
+    this.crm.getPerson(personId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: p => { this.person.set(p); this.personState.set('ready'); },
+      error: err => {
+        this.personState.set(err?.status === 403 ? 'access-denied' : 'error');
+      },
+    });
+  }
+
+  /** Known contact types render a localized label; anything else falls back to its raw value. */
+  contactTypeLabel(type: PersonContactType): string {
+    const known: readonly string[] = ['EMAIL', 'PHONE_MOBILE', 'PHONE_HOME', 'PHONE_WORK', 'FAX'];
+    return known.includes(type) ? this.translate.instant(`CRM.PARTY_DETAIL.PERSON.CONTACT_TYPE.${type}`) : type;
+  }
+
+  /** Known contact methods render a localized label; anything else falls back to its raw value. */
+  contactMethodLabel(method: PreferredContactMethod): string {
+    const known: readonly string[] = ['EMAIL', 'PHONE_CALL', 'SMS', 'NONE'];
+    return known.includes(method) ? this.translate.instant(`CRM.PARTY_DETAIL.PERSON.METHOD.${method}`) : method;
   }
 
   // ── Contacts ──────────────────────────────────────────────────────────

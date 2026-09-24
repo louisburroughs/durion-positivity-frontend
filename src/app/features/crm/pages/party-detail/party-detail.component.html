@@ -97,6 +97,61 @@
     </section>
   }
 
+  <!-- ── Personal details section (individuals only) ───────────────────── -->
+  @if (partyState() === 'ready' && party() && isPerson()) {
+    <section class="detail-section" aria-labelledby="person-heading" data-testid="person-section">
+      <div class="section-heading-row">
+        <h2 id="person-heading" class="section-heading">{{ 'CRM.PARTY_DETAIL.PERSON.TITLE' | translate }}</h2>
+      </div>
+
+      @if (personState() === 'loading') {
+        <p class="loading-hint" aria-busy="true">{{ 'CRM.PARTY_DETAIL.PERSON.LOADING' | translate }}</p>
+      }
+      @if (personState() === 'access-denied') {
+        <p class="hint-text hint-text--warn">{{ 'CRM.PARTY_DETAIL.PERSON.FORBIDDEN' | translate }}</p>
+      }
+      @if (personState() === 'error') {
+        <div class="inline-error" role="alert">
+          {{ 'CRM.PARTY_DETAIL.PERSON.ERROR_LOAD' | translate }}
+          <button class="btn btn--ghost btn--sm" type="button" (click)="loadPerson()">{{ 'CRM.PARTY_DETAIL.RETRY' | translate }}</button>
+        </div>
+      }
+      @if (personState() === 'ready') {
+        @if (person(); as p) {
+          <dl class="person-summary">
+            <dt>{{ 'CRM.PARTY_DETAIL.PERSON.FIRST_NAME' | translate }}</dt>
+            <dd data-testid="person-first-name">{{ p.firstName }}</dd>
+            <dt>{{ 'CRM.PARTY_DETAIL.PERSON.LAST_NAME' | translate }}</dt>
+            <dd data-testid="person-last-name">{{ p.lastName }}</dd>
+            @if (p.preferredContactMethod; as method) {
+              <dt>{{ 'CRM.PARTY_DETAIL.PERSON.PREFERRED_CONTACT' | translate }}</dt>
+              <dd data-testid="person-preferred-contact">{{ contactMethodLabel(method) }}</dd>
+            }
+          </dl>
+
+          <h3 class="subsection-heading">{{ 'CRM.PARTY_DETAIL.PERSON.CONTACT_POINTS' | translate }}</h3>
+          @if (p.contactPoints?.length) {
+            <ul class="contact-points" data-testid="person-contact-points">
+              @for (cp of p.contactPoints; track cp.contactPointId) {
+                <li class="contact-point">
+                  <span class="contact-point__type">{{ contactTypeLabel(cp.contactType) }}</span>
+                  <span class="contact-point__value">{{ cp.value }}</span>
+                  @if (cp.primary) {
+                    <span class="role-badge">{{ 'CRM.PARTY_DETAIL.PERSON.PRIMARY' | translate }}</span>
+                  }
+                </li>
+              }
+            </ul>
+          } @else {
+            <p class="hint-text">{{ 'CRM.PARTY_DETAIL.PERSON.NO_CONTACT_POINTS' | translate }}</p>
+          }
+        } @else {
+          <p class="hint-text">{{ 'CRM.PARTY_DETAIL.PERSON.UNAVAILABLE' | translate }}</p>
+        }
+      }
+    </section>
+  }
+
   <!-- ── Communication Preferences section ────────────────────────────── -->
   <section class="detail-section" aria-labelledby="prefs-heading">
     <div class="section-heading-row">

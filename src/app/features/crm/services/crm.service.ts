@@ -27,6 +27,7 @@ import {
   CreatePartyRelationshipResponse,
   CreatePersonRequest,
   CreatePersonResponse,
+  PersonDetail,
   CreateVehicleRequest,
   CommunicationPreferences,
   CrmSnapshot,
@@ -170,8 +171,8 @@ export class CrmService {
     return this.personsApi.createCrmPerson(sdkRequest) as Observable<CreatePersonResponse>;
   }
 
-  getPerson(personId: string): Observable<CreatePersonResponse> {
-    return this.personsApi.getPerson(personId) as Observable<CreatePersonResponse>;
+  getPerson(personId: string): Observable<PersonDetail> {
+    return this.personsApi.getPerson(personId) as Observable<PersonDetail>;
   }
 
   searchPersons(query: string): Observable<{ persons: CreatePersonResponse[] }> {
