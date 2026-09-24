@@ -238,6 +238,21 @@ export const ACCOUNTING_PAGE = {
   vendorInvoiceDetail: ['accounting:ap:view'],
   laborOverheadReport: ['reporting:view:financial-statements'],
   invoicePaymentStatus: ['accounting:ap:view'],
+  /** `listAccountingPeriods`. Closing and reopening are gated by {@link ACCOUNTING_SECTION}. */
+  periodClose: ['accounting:period:view'],
+} as const satisfies Record<string, readonly string[]>;
+
+/**
+ * Write controls *inside* an accounting page, as opposed to the page gate in
+ * {@link ACCOUNTING_PAGE}. The period-close page admits anyone holding
+ * `accounting:period:view`, but `closeAccountingPeriod` enforces
+ * `accounting:period:close` and `reopenAccountingPeriod` enforces
+ * `accounting:period:reopen`, so each control and its handler gate on its own
+ * code (ADR-0040 §6a).
+ */
+export const ACCOUNTING_SECTION = {
+  periodClose: ['accounting:period:close'],
+  periodReopen: ['accounting:period:reopen'],
 } as const satisfies Record<string, readonly string[]>;
 
 /** `/app/crm/*` — one entry per routed page, keyed by route path. */

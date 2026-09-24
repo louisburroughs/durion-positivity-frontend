@@ -3133,6 +3133,10 @@
         "PAYABLES": {
           "TITLE": "Payables",
           "DESCRIPTION": "Vendor invoices received electronically, their voucher linkage and the exceptions to clear before a payment run."
+        },
+        "PERIOD_CLOSE": {
+          "TITLE": "Period Close",
+          "DESCRIPTION": "Close each month once its journal entries are posted, and reopen a closed month for late adjustments."
         }
       },
       "CARD": {
@@ -3211,6 +3215,10 @@
         "PAYABLES_DETAIL": {
           "TITLE": "Vendor Bill Detail",
           "DESCRIPTION": "Open one vendor bill by its identifier."
+        },
+        "PERIOD_CLOSE": {
+          "TITLE": "Accounting Periods",
+          "DESCRIPTION": "See which months are open or closed, close a month, or reopen one with a recorded reason."
         }
       },
       "FIELD": {
@@ -3611,6 +3619,88 @@
           "ORIGIN_EVENT": "Origin Event",
           "CREATED_AT": "Created"
         }
+      }
+    },
+    "PERIOD_CLOSE": {
+      "OVERLINE": "Accounting",
+      "TITLE": "Accounting Periods",
+      "SUBTITLE": "Close a month once all of its journal entries are posted. Entries dated in a closed month are rejected unless someone with override permission supplies a justification.",
+      "LOADING": "Loading accounting periods…",
+      "VIEW_ONLY": "You can view accounting periods. Closing or reopening a period needs additional permissions.",
+      "PENDING": {
+        "CLOSING": "Closing {{period}}…",
+        "REOPENING": "Reopening {{period}}…"
+      },
+      "LIST": {
+        "HEADING": "Periods",
+        "CAPTION": "Accounting periods, most recent first",
+        "EMPTY": "No accounting periods have been recorded yet. A month is added the first time an entry posts into it or it is closed.",
+        "COL_PERIOD": "Period",
+        "COL_STATUS": "Status",
+        "COL_CLOSED": "Closed",
+        "COL_REOPENED": "Last reopened",
+        "COL_ACTIONS": "Actions",
+        "DATE_RANGE": "{{start}} to {{end}}",
+        "BY": "by {{actor}}",
+        "REASON": "Reason: {{reason}}",
+        "ACTOR_UNAVAILABLE": "User not available"
+      },
+      "STATUS": {
+        "OPEN": "Open",
+        "CLOSED": "Closed",
+        "UNKNOWN": "Unknown"
+      },
+      "ACTION": {
+        "CLOSE": "Close period",
+        "REOPEN": "Reopen period"
+      },
+      "CLOSE_MONTH": {
+        "HEADING": "Close a month",
+        "HINT": "Use this for a month that isn't listed. Any month that has started can be closed; it is added and closed in one step.",
+        "LABEL": "Month",
+        "SUBMIT": "Close month",
+        "ERROR": {
+          "INVALID": "Choose a month to close.",
+          "FUTURE": "{{period}} hasn't started yet, so it can't be closed.",
+          "ALREADY_CLOSED": "{{period}} is already closed.",
+          "STATUS_UNKNOWN": "{{period}}'s status couldn't be read, so it can't be closed from here. Reload the page and try again."
+        }
+      },
+      "CONFIRM_CLOSE": {
+        "TITLE": "Close {{period}}?",
+        "BODY": "Entries dated in {{period}} will be rejected unless someone with override permission supplies a justification. The period can be reopened later with a recorded reason.",
+        "CONFIRM": "Close period"
+      },
+      "CONFIRM_REOPEN": {
+        "TITLE": "Reopen {{period}}?",
+        "BODY": "Entries can be posted into {{period}} again until it is closed. Your reason is recorded in the audit trail.",
+        "LABEL": "Reason for reopening",
+        "HINT": "Required, up to {{max}} characters.",
+        "CONFIRM": "Reopen period",
+        "ERROR": {
+          "REQUIRED": "Enter a reason for reopening the period.",
+          "TOO_LONG": "Keep the reason to {{max}} characters or fewer."
+        }
+      },
+      "OUTCOME": {
+        "CLOSED": "{{period}} is closed.",
+        "REOPENED": "{{period}} is open again."
+      },
+      "ERROR": {
+        "LOAD": "Accounting periods couldn't be loaded.",
+        "FORBIDDEN": "You don't have permission to view accounting periods.",
+        "DRAFT_ENTRIES": "{{period}} can't be closed while it has draft journal entries ({{count}} found). Post or delete them, then close the period again.",
+        "DRAFT_ENTRIES_UNCOUNTED": "{{period}} can't be closed while it has draft journal entries. Post or delete them, then close the period again.",
+        "ALREADY_CLOSED": "{{period}} had already been closed.",
+        "ALREADY_OPEN": "{{period}} was already open.",
+        "NOT_FOUND_CLOSE": "{{period}} hasn't started yet, so it can't be closed.",
+        "NOT_FOUND_REOPEN": "No record of {{period}} was found.",
+        "INVALID_CLOSE": "The period was rejected as invalid. Check the month and try again.",
+        "INVALID_REOPEN": "The reason was rejected. Enter a reason and try again.",
+        "FORBIDDEN_CLOSE": "You don't have permission to close accounting periods.",
+        "FORBIDDEN_REOPEN": "You don't have permission to reopen accounting periods.",
+        "OTHER_CLOSE": "{{period}} couldn't be closed. Try again.",
+        "OTHER_REOPEN": "{{period}} couldn't be reopened. Try again."
       }
     }
   },
@@ -7124,7 +7214,8 @@
       "WORKORDERS": "Workorders",
       "WORK_SESSION": "Work Session",
       "PERSON": "Person",
-      "PERIODS": "Pay periods"
+      "PERIODS": "Pay periods",
+      "ACCOUNTING_PERIODS": "Accounting Periods"
     }
   },
   "POSITIVITY": {

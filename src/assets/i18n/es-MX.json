@@ -3133,6 +3133,10 @@
         "PAYABLES": {
           "TITLE": "Cuentas por pagar",
           "DESCRIPTION": "Facturas de proveedores recibidas electrónicamente, su vínculo al comprobante y las excepciones que resolver antes de un pago."
+        },
+        "PERIOD_CLOSE": {
+          "TITLE": "Cierre de períodos",
+          "DESCRIPTION": "Cierre cada mes cuando sus asientos contables estén contabilizados y reabra un mes cerrado para ajustes tardíos."
         }
       },
       "CARD": {
@@ -3211,6 +3215,10 @@
         "PAYABLES_DETAIL": {
           "TITLE": "Detalle de factura de proveedor",
           "DESCRIPTION": "Abra una factura de proveedor por su identificador."
+        },
+        "PERIOD_CLOSE": {
+          "TITLE": "Períodos contables",
+          "DESCRIPTION": "Vea qué meses están abiertos o cerrados, cierre un mes o reabra uno con un motivo registrado."
         }
       },
       "FIELD": {
@@ -3611,6 +3619,88 @@
           "ORIGIN_EVENT": "Evento de origen",
           "CREATED_AT": "Creada"
         }
+      }
+    },
+    "PERIOD_CLOSE": {
+      "OVERLINE": "Contabilidad",
+      "TITLE": "Períodos contables",
+      "SUBTITLE": "Cierre un mes cuando todos sus asientos contables estén contabilizados. Los asientos con fecha en un mes cerrado se rechazan, salvo que alguien con permiso de excepción aporte una justificación.",
+      "LOADING": "Cargando períodos contables…",
+      "VIEW_ONLY": "Puede ver los períodos contables. Para cerrar o reabrir un período se necesitan permisos adicionales.",
+      "PENDING": {
+        "CLOSING": "Cerrando {{period}}…",
+        "REOPENING": "Reabriendo {{period}}…"
+      },
+      "LIST": {
+        "HEADING": "Períodos",
+        "CAPTION": "Períodos contables, del más reciente al más antiguo",
+        "EMPTY": "Todavía no se ha registrado ningún período contable. Un mes se agrega la primera vez que se contabiliza un asiento en él o cuando se cierra.",
+        "COL_PERIOD": "Período",
+        "COL_STATUS": "Estado",
+        "COL_CLOSED": "Cerrado",
+        "COL_REOPENED": "Última reapertura",
+        "COL_ACTIONS": "Acciones",
+        "DATE_RANGE": "Del {{start}} al {{end}}",
+        "BY": "por {{actor}}",
+        "REASON": "Motivo: {{reason}}",
+        "ACTOR_UNAVAILABLE": "Usuario no disponible"
+      },
+      "STATUS": {
+        "OPEN": "Abierto",
+        "CLOSED": "Cerrado",
+        "UNKNOWN": "Desconocido"
+      },
+      "ACTION": {
+        "CLOSE": "Cerrar período",
+        "REOPEN": "Reabrir período"
+      },
+      "CLOSE_MONTH": {
+        "HEADING": "Cerrar un mes",
+        "HINT": "Úselo para un mes que no aparece en la lista. Se puede cerrar cualquier mes que ya haya comenzado; se agrega y se cierra en un solo paso.",
+        "LABEL": "Mes",
+        "SUBMIT": "Cerrar mes",
+        "ERROR": {
+          "INVALID": "Elija un mes para cerrar.",
+          "FUTURE": "{{period}} todavía no ha comenzado, así que no se puede cerrar.",
+          "ALREADY_CLOSED": "{{period}} ya está cerrado.",
+          "STATUS_UNKNOWN": "No se pudo leer el estado de {{period}}, así que no se puede cerrar desde aquí. Vuelva a cargar la página e inténtelo de nuevo."
+        }
+      },
+      "CONFIRM_CLOSE": {
+        "TITLE": "¿Cerrar {{period}}?",
+        "BODY": "Los asientos con fecha en {{period}} se rechazarán, salvo que alguien con permiso de excepción aporte una justificación. El período se puede reabrir más adelante con un motivo registrado.",
+        "CONFIRM": "Cerrar período"
+      },
+      "CONFIRM_REOPEN": {
+        "TITLE": "¿Reabrir {{period}}?",
+        "BODY": "Se podrán volver a contabilizar asientos en {{period}} hasta que se cierre. Su motivo queda anotado en el registro de auditoría.",
+        "LABEL": "Motivo de la reapertura",
+        "HINT": "Obligatorio, hasta {{max}} caracteres.",
+        "CONFIRM": "Reabrir período",
+        "ERROR": {
+          "REQUIRED": "Escriba un motivo para reabrir el período.",
+          "TOO_LONG": "El motivo no puede superar los {{max}} caracteres."
+        }
+      },
+      "OUTCOME": {
+        "CLOSED": "{{period}} está cerrado.",
+        "REOPENED": "{{period}} está abierto de nuevo."
+      },
+      "ERROR": {
+        "LOAD": "No se pudieron cargar los períodos contables.",
+        "FORBIDDEN": "No tiene permiso para ver los períodos contables.",
+        "DRAFT_ENTRIES": "{{period}} no se puede cerrar mientras tenga asientos contables en borrador (total: {{count}}). Contabilícelos o elimínelos y vuelva a cerrar el período.",
+        "DRAFT_ENTRIES_UNCOUNTED": "{{period}} no se puede cerrar mientras tenga asientos contables en borrador. Contabilícelos o elimínelos y vuelva a cerrar el período.",
+        "ALREADY_CLOSED": "{{period}} ya estaba cerrado.",
+        "ALREADY_OPEN": "{{period}} ya estaba abierto.",
+        "NOT_FOUND_CLOSE": "{{period}} todavía no ha comenzado, así que no se puede cerrar.",
+        "NOT_FOUND_REOPEN": "No se encontró ningún registro de {{period}}.",
+        "INVALID_CLOSE": "El período se rechazó por no ser válido. Revise el mes e inténtelo de nuevo.",
+        "INVALID_REOPEN": "Se rechazó el motivo. Escriba un motivo e inténtelo de nuevo.",
+        "FORBIDDEN_CLOSE": "No tiene permiso para cerrar períodos contables.",
+        "FORBIDDEN_REOPEN": "No tiene permiso para reabrir períodos contables.",
+        "OTHER_CLOSE": "No se pudo cerrar {{period}}. Inténtelo de nuevo.",
+        "OTHER_REOPEN": "No se pudo reabrir {{period}}. Inténtelo de nuevo."
       }
     }
   },
@@ -7124,7 +7214,8 @@
       "WORKORDERS": "Órdenes de trabajo",
       "WORK_SESSION": "Sesión de trabajo",
       "PERSON": "Persona",
-      "PERIODS": "Períodos de pago"
+      "PERIODS": "Períodos de pago",
+      "ACCOUNTING_PERIODS": "Períodos contables"
     }
   },
   "POSITIVITY": {
