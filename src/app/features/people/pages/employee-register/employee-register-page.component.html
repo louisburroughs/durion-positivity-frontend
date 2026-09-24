@@ -143,7 +143,7 @@
             <tr class="register-row" [class.register-row--inactive]="!row.active">
               <td class="register-td register-td--name">
                 @if (canViewPiiFor(row)) {
-                  <a class="register-name-link" [routerLink]="['/app/people/employees', row.employeeId]">
+                  <a class="register-name-link" [routerLink]="['/app/people/employees', row.personId]">
                     {{ displayName(row) }}
                   </a>
                 } @else {
@@ -287,7 +287,7 @@
                   @if (canViewPiiFor(row)) {
                     <a
                       class="register-action"
-                      [routerLink]="['/app/people/employees', row.employeeId]"
+                      [routerLink]="['/app/people/employees', row.personId]"
                       [attr.aria-label]="'PEOPLE.EMPLOYEE_REGISTER.ACTION.PROFILE_FOR' | translate: { name: displayName(row) }"
                     >
                       {{ 'PEOPLE.EMPLOYEE_REGISTER.ACTION.PROFILE' | translate }}

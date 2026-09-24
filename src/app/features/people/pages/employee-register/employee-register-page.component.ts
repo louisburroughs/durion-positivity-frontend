@@ -367,7 +367,7 @@ export class EmployeeRegisterPageComponent implements OnInit {
 
     this.writeSubs.get(row.employeeId)?.unsubscribe();
     const sub = this.registerService
-      .disableEmployee(row.employeeId, endDate)
+      .disableEmployee(row.personId, endDate)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
