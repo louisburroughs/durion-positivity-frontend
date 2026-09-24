@@ -678,7 +678,10 @@
         "PENDING": "En attente",
         "APPROVED": "Approuvées",
         "REJECTED": "Rejetées"
-      }
+      },
+      "REQUESTED_EMPLOYEE_OPTION": "{{name}} (aucune entrée de temps pour l'instant)",
+      "REQUESTED_EMPLOYEE_FALLBACK": "Employé sélectionné (aucune entrée de temps pour l'instant)",
+      "PERIODS_EMPTY": "Aucune période de paie n'a encore été créée."
     },
     "DIRECTORY": {
       "TITLE": "Répertoire des personnes",

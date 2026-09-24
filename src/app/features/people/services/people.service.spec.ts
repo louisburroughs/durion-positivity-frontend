@@ -2,6 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import {
+  ApprovalPersonDto,
   AttendanceDiscrepancyReportResponse,
   CreateEmployeeRequest,
   CreateEmployeeRequestStatusEnum,
@@ -12,8 +13,17 @@ import {
   UpdateEmployeeRequest,
   PeopleReportsAPIService,
   PeopleStaffingAssignmentsService,
+  RejectTimePeriodRequest,
   StaffingAssignmentResponse,
   StaffingAssignmentResponseStatusEnum,
+  TimePeriodApprovalDto,
+  TimePeriodApprovalDtoOverallStatusEnum,
+  TimePeriodDecisionResponse,
+  TimePeriodDto,
+  TimePeriodDtoStatusEnum,
+  TimekeepingApprovalAPIService,
+  TimekeepingEntryDto,
+  TimekeepingEntryDtoApprovalStatusEnum,
   UpdateEmployeeRequestStatusEnum,
   WorkSessionDto,
   WorkSessionsAPIService,
@@ -62,6 +72,15 @@ describe('PeopleService', () => {
     assignRoleToPerson: vi.fn(),
     revokePersonRoleAssignment: vi.fn(),
   };
+  const timekeepingApiStub = {
+    listTimekeepingApprovalPeople: vi.fn(),
+    listTimePeriods: vi.fn(),
+    listTimekeepingEntries: vi.fn(),
+    getTimePeriodApproval: vi.fn(),
+    approveTimePeriod: vi.fn(),
+    rejectTimePeriod: vi.fn(),
+  };
+
   const workSessionsApiStub = {
     startWorkSession: vi.fn(),
     stopWorkSession: vi.fn(),
@@ -91,6 +110,7 @@ describe('PeopleService', () => {
         { provide: PeopleAPIService, useValue: peopleApiStub },
         { provide: PostalAddressAPIService, useValue: postalAddressApiStub },
         { provide: WorkSessionsAPIService, useValue: workSessionsApiStub },
+        { provide: TimekeepingApprovalAPIService, useValue: timekeepingApiStub },
         { provide: ApiBaseService, useValue: apiBaseStub },
       ],
     });
@@ -419,65 +439,90 @@ describe('PeopleService', () => {
     expect(accessControlApiStub.revokePersonRoleAssignment).toHaveBeenCalledWith('p-1', 'ROLE_ADMIN');
   });
 
-  it('listApprovalPeople() calls the approval people endpoint', () => {
-    apiBaseStub.get.mockReturnValue(of({ items: [] }));
+  it('listApprovalPeople() delegates to TimekeepingApprovalAPIService.listTimekeepingApprovalPeople', () => {
+    const people: ApprovalPersonDto[] = [{ personId: 'p-1', displayName: 'Alice', employeeNumber: 'E001' }];
+    timekeepingApiStub.listTimekeepingApprovalPeople.mockReturnValue(of(people));
 
-    service.listApprovalPeople().subscribe();
+    let result: ApprovalPersonDto[] | undefined;
+    service.listApprovalPeople().subscribe(r => (result = r));
 
-    expect(apiBaseStub.get).toHaveBeenCalledWith('/people/v1/people/timekeeping/approvals/people');
+    expect(timekeepingApiStub.listTimekeepingApprovalPeople).toHaveBeenCalledExactlyOnceWith();
+    expect(result).toEqual(people);
   });
 
-  it('listTimePeriods() calls the time periods endpoint', () => {
-    apiBaseStub.get.mockReturnValue(of({ items: [] }));
+  it('listTimePeriods() delegates to TimekeepingApprovalAPIService.listTimePeriods', () => {
+    const periods: TimePeriodDto[] = [{
+      timePeriodId: 'tp-1',
+      tenantId: 't-1',
+      status: TimePeriodDtoStatusEnum.SubmissionClosed,
+      startDate: '2026-09-01',
+      endDate: '2026-09-14',
+    }];
+    timekeepingApiStub.listTimePeriods.mockReturnValue(of(periods));
 
-    service.listTimePeriods().subscribe();
+    let result: TimePeriodDto[] | undefined;
+    service.listTimePeriods().subscribe(r => (result = r));
 
-    expect(apiBaseStub.get).toHaveBeenCalledWith('/people/v1/people/timekeeping/time-periods');
+    expect(timekeepingApiStub.listTimePeriods).toHaveBeenCalledExactlyOnceWith();
+    expect(result).toEqual(periods);
   });
 
-  it('listTimekeepingEntries() calls the entries endpoint with personId and timePeriodId params', () => {
-    apiBaseStub.get.mockReturnValue(of({ items: [] }));
+  it('listTimekeepingEntries() passes personId then timePeriodId to the SDK', () => {
+    const entries: TimekeepingEntryDto[] = [{
+      timekeepingEntryId: 'e-1',
+      employeeId: 'p-1',
+      approvalStatus: TimekeepingEntryDtoApprovalStatusEnum.PendingApproval,
+      sessionStartTime: '2026-09-02T08:00:00Z',
+    }];
+    timekeepingApiStub.listTimekeepingEntries.mockReturnValue(of(entries));
 
-    service.listTimekeepingEntries('p-1', 'tp-1').subscribe();
+    let result: TimekeepingEntryDto[] | undefined;
+    service.listTimekeepingEntries('p-1', 'tp-1').subscribe(r => (result = r));
 
-    const [path, params] = apiBaseStub.get.mock.calls[0];
-    expect(path).toBe('/people/v1/people/timekeeping/timekeeping-entries');
-    expect(params.get('personId')).toBe('p-1');
-    expect(params.get('timePeriodId')).toBe('tp-1');
+    expect(timekeepingApiStub.listTimekeepingEntries).toHaveBeenCalledExactlyOnceWith('p-1', 'tp-1');
+    expect(result).toEqual(entries);
   });
 
-  it('listTimePeriodApprovals() calls the approvals history endpoint with personId and timePeriodId params', () => {
-    apiBaseStub.get.mockReturnValue(of({ items: [] }));
+  it('getTimePeriodApproval() passes personId then timePeriodId and emits the summary', () => {
+    const summary: TimePeriodApprovalDto = {
+      personId: 'p-1',
+      timePeriodId: 'tp-1',
+      overallStatus: TimePeriodApprovalDtoOverallStatusEnum.PendingApproval,
+      totalCount: 1,
+      pendingCount: 1,
+      approvedCount: 0,
+      rejectedCount: 0,
+    };
+    timekeepingApiStub.getTimePeriodApproval.mockReturnValue(of(summary));
 
-    service.listTimePeriodApprovals('p-1', 'tp-1').subscribe();
+    let result: TimePeriodApprovalDto | undefined;
+    service.getTimePeriodApproval('p-1', 'tp-1').subscribe(r => (result = r));
 
-    const [path, params] = apiBaseStub.get.mock.calls[0];
-    expect(path).toBe('/people/v1/people/timekeeping/time-period-approvals');
-    expect(params.get('personId')).toBe('p-1');
-    expect(params.get('timePeriodId')).toBe('tp-1');
+    expect(timekeepingApiStub.getTimePeriodApproval).toHaveBeenCalledExactlyOnceWith('p-1', 'tp-1');
+    expect(result).toEqual(summary);
   });
 
-  it('approveTimePeriod() calls the approval endpoint with encoded identifiers', () => {
-    apiBaseStub.post.mockReturnValue(of(void 0));
+  it('approveTimePeriod() passes timePeriodId then personId to the SDK and emits its decision', () => {
+    const decision: TimePeriodDecisionResponse = { timePeriodId: 'tp-1', personId: 'p-1', processedCount: 3, status: 'APPROVED' };
+    timekeepingApiStub.approveTimePeriod.mockReturnValue(of(decision));
 
-    service.approveTimePeriod('tp/1', 'person 1').subscribe();
+    let result: TimePeriodDecisionResponse | undefined;
+    service.approveTimePeriod('tp-1', 'p-1').subscribe(r => (result = r));
 
-    expect(apiBaseStub.post).toHaveBeenCalledWith(
-      '/people/v1/people/timekeeping/time-periods/tp%2F1/people/person%201/approve',
-      {},
-    );
+    expect(timekeepingApiStub.approveTimePeriod).toHaveBeenCalledExactlyOnceWith('tp-1', 'p-1');
+    expect(result).toEqual(decision);
   });
 
-  it('rejectTimePeriod() calls the rejection endpoint with encoded identifiers and request body', () => {
-    apiBaseStub.post.mockReturnValue(of(void 0));
-    const request = { comments: 'Needs correction' };
+  it('rejectTimePeriod() passes timePeriodId, personId and the reason body to the SDK and emits its decision', () => {
+    const decision: TimePeriodDecisionResponse = { timePeriodId: 'tp-1', personId: 'p-1', processedCount: 3, status: 'REJECTED' };
+    timekeepingApiStub.rejectTimePeriod.mockReturnValue(of(decision));
+    const request: RejectTimePeriodRequest = { reason: 'Needs correction' };
 
-    service.rejectTimePeriod('tp/1', 'person 1', request).subscribe();
+    let result: TimePeriodDecisionResponse | undefined;
+    service.rejectTimePeriod('tp-1', 'p-1', request).subscribe(r => (result = r));
 
-    expect(apiBaseStub.post).toHaveBeenCalledWith(
-      '/people/v1/people/timekeeping/time-periods/tp%2F1/people/person%201/reject',
-      request,
-    );
+    expect(timekeepingApiStub.rejectTimePeriod).toHaveBeenCalledExactlyOnceWith('tp-1', 'p-1', request);
+    expect(result).toEqual(decision);
   });
 
   it('startSession() delegates to WorkSessionsAPIService.startWorkSession', () => {

@@ -678,7 +678,10 @@
         "PENDING": "Pending",
         "APPROVED": "Approved",
         "REJECTED": "Rejected"
-      }
+      },
+      "REQUESTED_EMPLOYEE_OPTION": "{{name}} (no time entries yet)",
+      "REQUESTED_EMPLOYEE_FALLBACK": "Selected employee (no time entries yet)",
+      "PERIODS_EMPTY": "No pay periods have been created yet."
     },
     "DIRECTORY": {
       "TITLE": "People Directory",

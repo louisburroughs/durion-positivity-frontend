@@ -678,7 +678,10 @@
         "PENDING": "Pendientes",
         "APPROVED": "Aprobados",
         "REJECTED": "Rechazados"
-      }
+      },
+      "REQUESTED_EMPLOYEE_OPTION": "{{name}} (aún sin registros de tiempo)",
+      "REQUESTED_EMPLOYEE_FALLBACK": "Empleado seleccionado (aún sin registros de tiempo)",
+      "PERIODS_EMPTY": "Todavía no se han creado períodos de pago."
     },
     "DIRECTORY": {
       "TITLE": "Directorio de personas",

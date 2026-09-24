@@ -421,6 +421,12 @@ export const PEOPLE_SECTION = {
   registerLocations: PEOPLE_PAGE.locationAssignments,
   registerDeactivate: PEOPLE_PAGE.employeeOffboard,
   registerCreate: PEOPLE_PAGE.employeeCreate,
+  /**
+   * Time approval decisions. The page gate is only `people:timekeeping:view`; the period
+   * approve/reject writes need their own authorities in pos-people.
+   */
+  timeApprove: ['people:timekeeping:approve'],
+  timeReject: ['people:timekeeping:reject'],
 } as const satisfies Record<string, readonly string[]>;
 
 /** `/app/location/*` — sites, bays, mobile units, storage locations. */
