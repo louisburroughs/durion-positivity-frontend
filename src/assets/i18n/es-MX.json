@@ -2592,6 +2592,67 @@
       "OVERRIDDEN": "Anulado",
       "HARD_NOT_OVERRIDABLE": "Estos conflictos bloquearon el cambio y no se pueden anular; elija otro horario."
     },
+    "APPOINTMENT_EDIT": {
+      "TITLE": "Editar cita",
+      "LOADING": "Cargando cita…",
+      "RESCHEDULE_SUCCESS": "Cita reprogramada correctamente.",
+      "CANCEL_SUCCESS": "Cita cancelada correctamente.",
+      "STATUS": "Estado",
+      "SCHEDULED_START": "Inicio programado",
+      "SCHEDULED_END": "Fin programado",
+      "FACILITY": "Instalación",
+      "RESCHEDULE": "Reprogramar",
+      "CANCEL_APPOINTMENT": "Cancelar cita",
+      "CANNOT_MODIFY": "Esta cita no se puede modificar mientras su estado sea {{status}}.",
+      "AUDIT_HISTORY": "Historial de auditoría",
+      "AUDIT_UNAVAILABLE": "El historial de auditoría no está disponible en este momento.",
+      "AUDIT_EMPTY": "No hay entradas de auditoría para esta cita.",
+      "RESCHEDULE_APPOINTMENT": "Reprogramar cita",
+      "CLOSE": "Cerrar",
+      "NEW_START": "Nuevo inicio",
+      "NEW_END": "Nuevo fin",
+      "REASON": "Motivo",
+      "CANCEL": "Cancelar",
+      "SAVE": "Guardar",
+      "CANCELLATION_REASON": "Motivo de cancelación",
+      "REASONS": {
+        "CUSTOMER_REQUEST": "Solicitud del cliente",
+        "TECHNICIAN_UNAVAILABLE": "Técnico no disponible",
+        "WEATHER": "Clima",
+        "VEHICLE_NOT_READY": "Vehículo no listo",
+        "OTHER": "Otro"
+      },
+      "NOTES_OPTIONAL": "Notas (opcional)",
+      "BACK": "Atrás",
+      "CONFIRM_CANCEL": "Confirmar cancelación",
+      "ERROR": {
+        "RESCHEDULE_FAILED": "No se pudo reprogramar la cita.",
+        "CANCELLATION_FAILED": "No se pudo cancelar la cita."
+      }
+    },
+    "APPOINTMENT_RESCHEDULE": {
+      "TITLE": "Reprogramar cita",
+      "LOADING": "Cargando cita…",
+      "VERSION_MISMATCH": "Otra persona modificó esta cita. Vuelva a cargarla e inténtelo de nuevo.",
+      "NEW_START": "Nuevo inicio",
+      "NEW_END": "Nuevo fin",
+      "RESCHEDULE_REASON": "Motivo de reprogramación",
+      "SELECT_REASON": "Seleccione un motivo",
+      "REASONS": {
+        "CUSTOMER_REQUEST": "Solicitud del cliente",
+        "FACILITY_UNAVAILABLE": "Instalación no disponible",
+        "TECHNICIAN_UNAVAILABLE": "Técnico no disponible",
+        "OTHER": "Otro"
+      },
+      "NOTES": "Notas",
+      "OVERRIDE_REASON": "Motivo de sobrescritura",
+      "APPROVAL_REASON": "Motivo de aprobación",
+      "RESCHEDULE": "Reprogramar",
+      "SUCCESS": "Cita reprogramada correctamente.",
+      "ERROR": {
+        "LOAD_DETAILS": "No se pudieron cargar los detalles de la cita."
+      }
+    },
     "LANDING": {
       "TITLE": "Gestión del Taller",
       "SUBTITLE": "Gestione el tablero de despacho, el horario, las citas y la disponibilidad de mecánicos desde un solo lugar.",
@@ -4140,6 +4201,9 @@
         },
         "EFFECTIVE_PRICE": {
           "TITLE": "Precios vigentes"
+        },
+        "STATE": {
+          "EMPTY": "No se encontraron sobrecargos de precio por ubicación."
         },
         "ERROR": {
           "LOAD": "Error al cargar los sobrecargos de precio por ubicación.",
@@ -6701,7 +6765,18 @@
     "CLOSE": "Cerrar",
     "EMPTY_VALUE": "—",
     "NOT_AVAILABLE": "No disponible",
-    "ERROR": "Se produjo un error"
+    "ERROR": "Se produjo un error",
+    "ADD": "Agregar",
+    "ALL": "Todos",
+    "APPROVE": "Aprobar",
+    "BREADCRUMB": "Ruta de navegación",
+    "DEACTIVATE": "Desactivar",
+    "END": "Fin",
+    "NEW": "Nuevo",
+    "REASON": "Motivo",
+    "REJECT": "Rechazar",
+    "SAVE": "Guardar",
+    "UPDATE": "Actualizar"
   },
   "STATUS": {
     "INITIATED": "Iniciado",

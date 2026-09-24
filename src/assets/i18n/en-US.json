@@ -2592,6 +2592,67 @@
       "OVERRIDDEN": "Overridden",
       "HARD_NOT_OVERRIDABLE": "These conflicts blocked the change and cannot be overridden; choose another slot."
     },
+    "APPOINTMENT_EDIT": {
+      "TITLE": "Edit Appointment",
+      "LOADING": "Loading appointment…",
+      "RESCHEDULE_SUCCESS": "Appointment rescheduled successfully.",
+      "CANCEL_SUCCESS": "Appointment cancelled successfully.",
+      "STATUS": "Status",
+      "SCHEDULED_START": "Scheduled Start",
+      "SCHEDULED_END": "Scheduled End",
+      "FACILITY": "Facility",
+      "RESCHEDULE": "Reschedule",
+      "CANCEL_APPOINTMENT": "Cancel Appointment",
+      "CANNOT_MODIFY": "This appointment cannot be modified while its status is {{status}}.",
+      "AUDIT_HISTORY": "Audit History",
+      "AUDIT_UNAVAILABLE": "Audit history is unavailable right now.",
+      "AUDIT_EMPTY": "No audit entries for this appointment.",
+      "RESCHEDULE_APPOINTMENT": "Reschedule Appointment",
+      "CLOSE": "Close",
+      "NEW_START": "New Start",
+      "NEW_END": "New End",
+      "REASON": "Reason",
+      "CANCEL": "Cancel",
+      "SAVE": "Save",
+      "CANCELLATION_REASON": "Cancellation Reason",
+      "REASONS": {
+        "CUSTOMER_REQUEST": "Customer request",
+        "TECHNICIAN_UNAVAILABLE": "Technician unavailable",
+        "WEATHER": "Weather",
+        "VEHICLE_NOT_READY": "Vehicle not ready",
+        "OTHER": "Other"
+      },
+      "NOTES_OPTIONAL": "Notes (optional)",
+      "BACK": "Back",
+      "CONFIRM_CANCEL": "Confirm Cancellation",
+      "ERROR": {
+        "RESCHEDULE_FAILED": "Failed to reschedule appointment.",
+        "CANCELLATION_FAILED": "Failed to cancel appointment."
+      }
+    },
+    "APPOINTMENT_RESCHEDULE": {
+      "TITLE": "Reschedule Appointment",
+      "LOADING": "Loading appointment…",
+      "VERSION_MISMATCH": "This appointment was changed by someone else. Reload it and try again.",
+      "NEW_START": "New Start",
+      "NEW_END": "New End",
+      "RESCHEDULE_REASON": "Reschedule Reason",
+      "SELECT_REASON": "Select a reason",
+      "REASONS": {
+        "CUSTOMER_REQUEST": "Customer request",
+        "FACILITY_UNAVAILABLE": "Facility unavailable",
+        "TECHNICIAN_UNAVAILABLE": "Technician unavailable",
+        "OTHER": "Other"
+      },
+      "NOTES": "Notes",
+      "OVERRIDE_REASON": "Override Reason",
+      "APPROVAL_REASON": "Approval Reason",
+      "RESCHEDULE": "Reschedule",
+      "SUCCESS": "Appointment rescheduled successfully.",
+      "ERROR": {
+        "LOAD_DETAILS": "Failed to load appointment details."
+      }
+    },
     "LANDING": {
       "TITLE": "Shop Management",
       "SUBTITLE": "Manage the dispatch board, schedule, appointments, and mechanic availability from one place.",
@@ -4140,6 +4201,9 @@
         },
         "EFFECTIVE_PRICE": {
           "TITLE": "Effective prices"
+        },
+        "STATE": {
+          "EMPTY": "No location price overrides found."
         },
         "ERROR": {
           "LOAD": "Failed to load location price overrides.",
@@ -6701,7 +6765,18 @@
     "CLOSE": "Close",
     "EMPTY_VALUE": "—",
     "NOT_AVAILABLE": "Not available",
-    "ERROR": "Something went wrong"
+    "ERROR": "Something went wrong",
+    "ADD": "Add",
+    "ALL": "All",
+    "APPROVE": "Approve",
+    "BREADCRUMB": "Breadcrumb",
+    "DEACTIVATE": "Deactivate",
+    "END": "End",
+    "NEW": "New",
+    "REASON": "Reason",
+    "REJECT": "Reject",
+    "SAVE": "Save",
+    "UPDATE": "Update"
   },
   "STATUS": {
     "INITIATED": "Initiated",
