@@ -1,7 +1,7 @@
 import { Component, inject, signal, computed, OnInit, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
@@ -15,7 +15,7 @@ type SortDir = 'asc' | 'desc';
 @Component({
   selector: 'app-customer-list',
   standalone: true,
-  imports: [ReactiveFormsModule, TranslatePipe],
+  imports: [ReactiveFormsModule, RouterLink, TranslatePipe],
   templateUrl: './customer-list.component.html',
   styleUrl: './customer-list.component.css',
 })
@@ -134,6 +134,14 @@ export class CustomerListComponent implements OnInit {
 
   primaryContact(party: PartyDetail): PrimaryContact | undefined {
     return party.primaryContact?.name ? party.primaryContact : undefined;
+  }
+
+  /** Whole-row click for mouse users; the name link owns keyboard and new-tab navigation. */
+  onRowClick(event: MouseEvent, partyId: string, customerNumber?: string): void {
+    if ((event.target as Element | null)?.closest('a')) {
+      return;
+    }
+    this.openParty(partyId, customerNumber);
   }
 
   openParty(partyId: string, customerNumber?: string): void {

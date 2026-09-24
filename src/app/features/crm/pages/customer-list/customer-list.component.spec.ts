@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { By } from '@angular/platform-browser';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
@@ -85,6 +85,35 @@ describe('CustomerListComponent', () => {
     const headers = fixture.debugElement.queryAll(By.css('.party-table thead th'))
       .map(h => h.nativeElement.textContent.replace(/[↑↓↕]/g, '').trim());
     expect(headers).toEqual(expect.arrayContaining(['Customer #', 'Phone', 'Status']));
+  });
+
+  it('links each row name to its party detail page, carrying the customer number', () => {
+    crmServiceStub.browseParties.mockReturnValue(of(partyPage([{
+      partyId: 'p1', legalName: 'Acme Corp', customerNumber: 'CUST-000123',
+    } as ReturnType<typeof party>], 1)));
+    const router = TestBed.inject(Router);
+    const navigate = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
+
+    fixture.detectChanges();
+    const link = fixture.debugElement.query(By.css('.party-table tbody a.party-row__link'));
+
+    expect(link.nativeElement.getAttribute('href')).toBe('/app/crm/party/p1');
+    expect(link.nativeElement.textContent.trim()).toBe('Acme Corp');
+
+    link.nativeElement.click();
+    // The row click must not navigate a second time on top of the link.
+    expect(navigate).toHaveBeenCalledTimes(1);
+    expect(navigate.mock.calls[0][1]).toEqual(expect.objectContaining({ state: { customerNumber: 'CUST-000123' } }));
+  });
+
+  it('still opens the party when the row is clicked outside the link', () => {
+    crmServiceStub.browseParties.mockReturnValue(of(partyPage([party('p1')], 1)));
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+
+    fixture.detectChanges();
+    fixture.debugElement.query(By.css('.party-row .party-row__vehicles')).nativeElement.click();
+
+    expect(navigate).toHaveBeenCalledWith(['/app/crm/party', 'p1'], { state: { customerNumber: undefined } });
   });
 
   it('renders em-dash fallbacks when customer number, phone and status are absent', () => {
