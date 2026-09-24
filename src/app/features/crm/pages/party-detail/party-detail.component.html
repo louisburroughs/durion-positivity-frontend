@@ -26,10 +26,15 @@
       </div>
     }
     @if (partyState() === 'ready' && party()) {
-      <div class="party-header-actions">
-        <button class="btn btn--ghost btn--sm" type="button" (click)="navigateToBillingRules()">{{ 'CRM.PARTY_DETAIL.BILLING_RULES' | translate }}</button>
-      </div>
-      @if (party()!.dba) {
+      <p class="party-type" data-testid="party-type" [attr.data-type]="isPerson() ? 'PERSON' : 'COMMERCIAL'">
+        {{ (isPerson() ? 'CRM.CUSTOMER_LIST.PARTY_TYPE.PERSON' : 'CRM.CUSTOMER_LIST.PARTY_TYPE.COMMERCIAL') | translate }}
+      </p>
+      @if (!isPerson()) {
+        <div class="party-header-actions">
+          <button class="btn btn--ghost btn--sm" type="button" (click)="navigateToBillingRules()">{{ 'CRM.PARTY_DETAIL.BILLING_RULES' | translate }}</button>
+        </div>
+      }
+      @if (!isPerson() && party()!.dba) {
         <p class="party-dba">{{ 'CRM.PARTY_DETAIL.DBA' | translate: { dba: party()!.dba } }}</p>
       }
       <dl class="party-meta">
@@ -37,7 +42,7 @@
           <dt>{{ 'CRM.PARTY_DETAIL.CUSTOMER_NUMBER' | translate }}</dt>
           <dd data-testid="customer-number">{{ customerNo }}</dd>
         }
-        @if (party()!.taxId) {
+        @if (!isPerson() && party()!.taxId) {
           <dt>{{ 'CRM.PARTY_DETAIL.TAX_ID' | translate }}</dt>
           <dd>{{ party()!.taxId }}</dd>
         }
@@ -45,50 +50,52 @@
     }
   </header>
 
-  <!-- ── Contacts section ─────────────────────────────────────────────── -->
-  <section class="detail-section" aria-labelledby="contacts-heading">
-    <div class="section-heading-row">
-      <h2 id="contacts-heading" class="section-heading">{{ 'CRM.PARTY_DETAIL.CONTACTS_TITLE' | translate }}</h2>
-      <button class="btn btn--ghost btn--sm" type="button" (click)="navigateToContacts()">{{ 'CRM.PARTY_DETAIL.MANAGE_CONTACTS' | translate }}</button>
-    </div>
-
-    @if (contactsState() === 'loading') {
-      <p class="loading-hint" aria-busy="true">{{ 'CRM.PARTY_DETAIL.LOADING_CONTACTS' | translate }}</p>
-    }
-    @if (contactsState() === 'access-denied') {
-      <p class="hint-text hint-text--warn">{{ 'CRM.PARTY_DETAIL.CONTACTS_FORBIDDEN' | translate }}</p>
-    }
-    @if (contactsState() === 'error') {
-      <div class="inline-error" role="alert">
-        {{ 'CRM.PARTY_DETAIL.ERROR.LOAD_CONTACTS' | translate }}
-        <button class="btn btn--ghost btn--sm" type="button" (click)="loadContacts()">{{ 'CRM.PARTY_DETAIL.RETRY' | translate }}</button>
+  <!-- ── Contacts section (commercial accounts only) ──────────────────── -->
+  @if (partyState() === 'ready' && party() && !isPerson()) {
+    <section class="detail-section" aria-labelledby="contacts-heading" data-testid="contacts-section">
+      <div class="section-heading-row">
+        <h2 id="contacts-heading" class="section-heading">{{ 'CRM.PARTY_DETAIL.CONTACTS_TITLE' | translate }}</h2>
+        <button class="btn btn--ghost btn--sm" type="button" (click)="navigateToContacts()">{{ 'CRM.PARTY_DETAIL.MANAGE_CONTACTS' | translate }}</button>
       </div>
-    }
-    @if (contactsState() === 'ready') {
-      @if (!contacts().length) {
-        <p class="hint-text">{{ 'CRM.PARTY_DETAIL.CONTACTS_EMPTY' | translate }}</p>
-      } @else {
-        <table class="contacts-table" [attr.aria-label]="'CRM.PARTY_DETAIL.CONTACTS_TABLE_ARIA' | translate">
-          <thead>
-            <tr>
-              <th scope="col">{{ 'CRM.PARTY_DETAIL.COL.NAME' | translate }}</th>
-              <th scope="col">{{ 'CRM.PARTY_DETAIL.COL.ROLES' | translate }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (contact of contacts(); track contact.relationshipId) {
-              <tr>
-                <td class="contact-name">{{ contact.personName || contact.personId }}</td>
-                <td class="contact-roles">
-                  <span class="role-badge">{{ roleLabel(contact.role) }}</span>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
+
+      @if (contactsState() === 'loading') {
+        <p class="loading-hint" aria-busy="true">{{ 'CRM.PARTY_DETAIL.LOADING_CONTACTS' | translate }}</p>
       }
-    }
-  </section>
+      @if (contactsState() === 'access-denied') {
+        <p class="hint-text hint-text--warn">{{ 'CRM.PARTY_DETAIL.CONTACTS_FORBIDDEN' | translate }}</p>
+      }
+      @if (contactsState() === 'error') {
+        <div class="inline-error" role="alert">
+          {{ 'CRM.PARTY_DETAIL.ERROR.LOAD_CONTACTS' | translate }}
+          <button class="btn btn--ghost btn--sm" type="button" (click)="loadContacts()">{{ 'CRM.PARTY_DETAIL.RETRY' | translate }}</button>
+        </div>
+      }
+      @if (contactsState() === 'ready') {
+        @if (!contacts().length) {
+          <p class="hint-text">{{ 'CRM.PARTY_DETAIL.CONTACTS_EMPTY' | translate }}</p>
+        } @else {
+          <table class="contacts-table" [attr.aria-label]="'CRM.PARTY_DETAIL.CONTACTS_TABLE_ARIA' | translate">
+            <thead>
+              <tr>
+                <th scope="col">{{ 'CRM.PARTY_DETAIL.COL.NAME' | translate }}</th>
+                <th scope="col">{{ 'CRM.PARTY_DETAIL.COL.ROLES' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (contact of contacts(); track contact.relationshipId) {
+                <tr>
+                  <td class="contact-name">{{ contact.personName || contact.personId }}</td>
+                  <td class="contact-roles">
+                    <span class="role-badge">{{ roleLabel(contact.role) }}</span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      }
+    </section>
+  }
 
   <!-- ── Communication Preferences section ────────────────────────────── -->
   <section class="detail-section" aria-labelledby="prefs-heading">

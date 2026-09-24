@@ -44,13 +44,14 @@ describe('PartyDetailComponent', () => {
   let fixture: ComponentFixture<PartyDetailComponent>;
 
   type SetupOptions = {
+    partyResult?: Observable<unknown>;
     contactsResult?: Observable<unknown>;
     prefsResult?: Observable<unknown>;
   };
 
   const setup = async (permissions: string[] | null = null, options: SetupOptions = {}) => {
     session.permissions = permissions;
-    crmServiceStub.getParty.mockReturnValue(of({ partyId: PARTY_ID, legalName: 'Albert Rogers' }));
+    crmServiceStub.getParty.mockReturnValue(options.partyResult ?? of({ partyId: PARTY_ID, legalName: 'Albert Rogers' }));
     crmServiceStub.getContactsWithRoles.mockReturnValue(options.contactsResult ?? of([]));
     crmServiceStub.getCommunicationPreferences.mockReturnValue(options.prefsResult ?? of(null));
 
@@ -166,5 +167,50 @@ describe('PartyDetailComponent', () => {
 
     expect(fixture.componentInstance.contactsState()).toBe('access-denied');
     expect(fixture.componentInstance.prefsState()).toBe('access-denied');
+  });
+
+  describe('by party type', () => {
+    const q = (sel: string) => fixture.nativeElement.querySelector(sel) as HTMLElement | null;
+    const commercial = { partyId: PARTY_ID, partyType: 'COMMERCIAL', legalName: 'Acme Fleet', dba: 'Acme', taxId: '12-3456789' };
+    const person = { partyId: PARTY_ID, partyType: 'PERSON', legalName: 'Albert Rogers', dba: 'stale', taxId: 'stale' };
+
+    it('shows the commercial account layout: badge, DBA, tax id, billing rules and contacts', async () => {
+      await setup(null, { partyResult: of(commercial) });
+
+      expect(q('[data-testid="party-type"]')?.dataset['type']).toBe('COMMERCIAL');
+      expect(q('.party-dba')).not.toBeNull();
+      expect(q('.party-meta')?.textContent).toContain('12-3456789');
+      expect(q('.party-header-actions')).not.toBeNull();
+      expect(q('[data-testid="contacts-section"]')).not.toBeNull();
+      expect(crmServiceStub.getContactsWithRoles).toHaveBeenCalledWith(PARTY_ID);
+    });
+
+    it('drops the commercial-only panels for an individual and never requests contacts', async () => {
+      await setup(null, { partyResult: of(person) });
+
+      expect(q('[data-testid="party-type"]')?.dataset['type']).toBe('PERSON');
+      expect(q('#party-heading')?.textContent).toContain('Albert Rogers');
+      expect(q('.party-dba')).toBeNull();
+      expect(q('.party-meta')?.textContent).not.toContain('stale');
+      expect(q('.party-header-actions')).toBeNull();
+      expect(q('[data-testid="contacts-section"]')).toBeNull();
+      expect(crmServiceStub.getContactsWithRoles).not.toHaveBeenCalled();
+      // Communication preferences apply to both party types.
+      expect(crmServiceStub.getCommunicationPreferences).toHaveBeenCalledWith(PARTY_ID);
+    });
+
+    it('keeps the commercial layout when the party type is absent', async () => {
+      await setup(null);
+
+      expect(q('[data-testid="party-type"]')?.dataset['type']).toBe('COMMERCIAL');
+      expect(crmServiceStub.getContactsWithRoles).toHaveBeenCalledWith(PARTY_ID);
+    });
+
+    it('waits for the party before requesting contacts, and skips them when it fails', async () => {
+      await setup(null, { partyResult: throwError(() => ({ status: 500 })) });
+
+      expect(crmServiceStub.getContactsWithRoles).not.toHaveBeenCalled();
+      expect(q('[data-testid="contacts-section"]')).toBeNull();
+    });
   });
 });

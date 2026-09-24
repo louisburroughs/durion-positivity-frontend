@@ -26,6 +26,17 @@
   color: var(--currentTextColor);
 }
 
+.party-type {
+  align-self: flex-start;
+  margin: 0;
+  padding: 2px var(--space-2);
+  background: var(--status-info-bg);
+  color: var(--status-info-fg);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
 .party-dba {
   margin: 0;
   font-size: 0.9rem;
