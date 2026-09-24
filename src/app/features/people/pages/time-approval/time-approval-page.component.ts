@@ -151,7 +151,7 @@ export class TimeApprovalPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (person) => {
-          const name = [person.firstName, person.lastName].filter(Boolean).join(' ');
+          const name = [person.firstName, person.lastName].map(part => part?.trim()).filter(Boolean).join(' ');
           this.requestedPerson.set({ personId, name: name || null });
         },
         error: () => { /* keep the generic label */ },

@@ -270,10 +270,19 @@ describe('TimeApprovalPageComponent', () => {
       expect(select(linked).value).toBe('p9');
     });
 
+    it('keeps the generic label when the person record has only blank names', async () => {
+      peopleService.getPerson.mockReturnValue(of({ firstName: '  ', lastName: '' }));
+      const linked = await openFor('p9');
+
+      expect(requestedOption(linked)?.textContent?.trim()).toBe(enUS.PEOPLE.TIME_APPROVAL.REQUESTED_EMPLOYEE_FALLBACK);
+    });
+
     it('keeps the generic label when the person lookup fails', async () => {
       peopleService.getPerson.mockReturnValue(throwError(() => ({ status: 404 })));
       const linked = await openFor('p9');
 
+      // The lookup ran and failed; the label is the handled fallback, not an untouched default.
+      expect(peopleService.getPerson).toHaveBeenCalledExactlyOnceWith('p9');
       expect(requestedOption(linked)?.textContent?.trim()).toBe(enUS.PEOPLE.TIME_APPROVAL.REQUESTED_EMPLOYEE_FALLBACK);
       expect(select(linked).value).toBe('p9');
     });
