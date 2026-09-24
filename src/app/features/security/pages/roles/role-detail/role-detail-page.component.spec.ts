@@ -199,6 +199,15 @@ describe('RoleDetailPageComponent', () => {
       component.openGrantModal();
       expect(component.selectedPermKeys()).toEqual(['PERM_READ', 'PERM_WRITE']);
     });
+
+    it('renders the grant panel as a native <dialog> carrying appModalDialog', () => {
+      component.openGrantModal();
+      fixture.detectChanges();
+      const dialog = fixture.nativeElement.querySelector('dialog.modal-surface') as HTMLDialogElement | null;
+      expect(dialog).toBeTruthy();
+      expect(dialog?.tagName).toBe('DIALOG');
+      expect(dialog?.matches(':modal')).toBe(true);
+    });
   });
 
   describe('togglePermission()', () => {

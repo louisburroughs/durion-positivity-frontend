@@ -214,8 +214,7 @@
 
 <!-- Story 209: Elevation modal ─────────────────────────────────────────── -->
 @if (showElevationModal()) {
-  <div class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="elevation-heading">
-    <div class="modal" [attr.aria-label]="'BILLING.INVOICE_DETAIL.ELEVATION.ARIA_LABEL' | translate">
+  <dialog class="modal" appModalDialog (modalCancel)="dismissElevationModal()" aria-labelledby="elevation-heading">
       <div class="modal__header">
         <h2 id="elevation-heading" class="modal__title">{{ 'BILLING.INVOICE_DETAIL.ELEVATION.TITLE' | translate }}</h2>
       </div>
@@ -252,6 +251,5 @@
           {{ issueState() === 'elevating' ? ('BILLING.INVOICE_DETAIL.ELEVATION.VERIFYING' | translate) : ('BILLING.INVOICE_DETAIL.ELEVATION.AUTHORIZE' | translate) }}
         </button>
       </div>
-    </div>
-  </div>
+  </dialog>
 }

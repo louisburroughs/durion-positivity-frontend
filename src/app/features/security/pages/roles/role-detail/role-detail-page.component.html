@@ -107,8 +107,7 @@
   }
 
   @if (showGrantModal()) {
-  <section class="modal-backdrop">
-    <dialog class="modal-surface dur-elevation-4" open [attr.aria-label]="'SECURITY.ROLE_DETAIL.ARIAS.GRANT_DIALOG' | translate">
+    <dialog class="modal-surface dur-elevation-4" appModalDialog (modalCancel)="showGrantModal.set(false)" [attr.aria-label]="'SECURITY.ROLE_DETAIL.ARIAS.GRANT_DIALOG' | translate">
       <header class="modal-header">
         <h2>{{ 'SECURITY.ROLE_DETAIL.GRANT_PERMISSIONS' | translate }}</h2>
         <p>{{ 'SECURITY.ROLE_DETAIL.GRANT_HELP' | translate }}</p>
@@ -139,6 +138,5 @@
         </button>
       </footer>
     </dialog>
-  </section>
   }
 </section>

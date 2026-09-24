@@ -8,13 +8,14 @@ import { Subject, of } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, map, switchMap } from 'rxjs/operators';
 import { CrmService } from '../../services/crm.service';
 import { CreatePersonResponse, PartyDetail, Relationship, RelationshipRole } from '../../models/crm.models';
+import { ModalDialogDirective } from '../../../../shared/modal-dialog.directive';
 
 const MAX_SUGGESTIONS = 8;
 
 @Component({
   selector: 'app-party-contacts',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslatePipe],
+  imports: [CommonModule, ReactiveFormsModule, TranslatePipe, ModalDialogDirective],
   templateUrl: './party-contacts.component.html',
   styleUrl: './party-contacts.component.css',
 })

@@ -6,11 +6,12 @@ import { SecurityPermission, SecurityRole } from '../../../models/security.model
 import { SecurityService } from '../../../services/security.service';
 import { AuthService } from '../../../../../core/services/auth.service';
 import { SECURITY_SECTION } from '../../../../../core/security/route-permissions';
+import { ModalDialogDirective } from '../../../../../shared/modal-dialog.directive';
 
 @Component({
   selector: 'app-role-detail-page',
   standalone: true,
-  imports: [RouterLink, TranslatePipe],
+  imports: [RouterLink, TranslatePipe, ModalDialogDirective],
   templateUrl: './role-detail-page.component.html',
   styleUrl: './role-detail-page.component.css',
 })

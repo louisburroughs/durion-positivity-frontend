@@ -171,7 +171,7 @@ export function sec08Finder(f: Source): string[] {
 
 /** URL.revokeObjectURL runs inside a setTimeout callback, never synchronously after .click(). */
 export const sec08 = (p: Project): ArchRule =>
-  contentRule({ id: 'SEC-08', title: 'URL.revokeObjectURL runs inside setTimeout( (ADR-0065 §3)', mode: 'ratchet' }, p, {
+  contentRule({ id: 'SEC-08', title: 'URL.revokeObjectURL runs inside setTimeout( (ADR-0065 §3)', mode: 'enforce' }, p, {
     subject: selectors.appTree(p),
     finder: sec08Finder,
   });
@@ -203,6 +203,6 @@ export function sec09Finder(f: Source): string[] {
 
 /** aria-modal/role="dialog" only on <dialog appModalDialog>, never on a div/section. */
 export const sec09 = (p: Project): ArchRule =>
-  templateRule({ id: 'SEC-09', title: 'aria-modal/role="dialog" only on <dialog appModalDialog> (ADR-0029 §8.1)', mode: 'ratchet' }, p, {
+  templateRule({ id: 'SEC-09', title: 'aria-modal/role="dialog" only on <dialog appModalDialog> (ADR-0029 §8.1)', mode: 'enforce' }, p, {
     finder: sec09Finder,
   });

@@ -78,10 +78,9 @@
 }
 
 @if (showRescheduleModal()) {
-  <div class="modal-overlay">
-    <div class="modal reschedule-modal" role="dialog" aria-modal="true">
+  <dialog class="modal reschedule-modal" appModalDialog (modalCancel)="closeReschedule()" aria-labelledby="reschedule-modal-title">
       <div class="modal-header">
-        <h3>{{ 'SHOPMGMT.APPOINTMENT_EDIT.RESCHEDULE_APPOINTMENT' | translate }}</h3>
+        <h3 id="reschedule-modal-title">{{ 'SHOPMGMT.APPOINTMENT_EDIT.RESCHEDULE_APPOINTMENT' | translate }}</h3>
         <button class="modal-close" (click)="closeReschedule()" [attr.aria-label]="'SHOPMGMT.APPOINTMENT_EDIT.CLOSE' | translate">&#x2715;</button>
       </div>
       <form [formGroup]="rescheduleForm" (ngSubmit)="submitReschedule()" novalidate>
@@ -122,15 +121,13 @@
           </button>
         </div>
       </form>
-    </div>
-  </div>
+  </dialog>
 }
 
 @if (showCancelModal()) {
-  <div class="modal-overlay">
-    <div class="modal cancel-modal" role="dialog" aria-modal="true">
+  <dialog class="modal cancel-modal" appModalDialog (modalCancel)="closeCancel()" aria-labelledby="cancel-modal-title">
       <div class="modal-header">
-        <h3>{{ 'SHOPMGMT.APPOINTMENT_EDIT.CANCEL_APPOINTMENT' | translate }}</h3>
+        <h3 id="cancel-modal-title">{{ 'SHOPMGMT.APPOINTMENT_EDIT.CANCEL_APPOINTMENT' | translate }}</h3>
         <button class="modal-close" (click)="closeCancel()" [attr.aria-label]="'SHOPMGMT.APPOINTMENT_EDIT.CLOSE' | translate">&#x2715;</button>
       </div>
       <form [formGroup]="cancelForm" (ngSubmit)="submitCancel()" novalidate>
@@ -158,6 +155,5 @@
           </button>
         </div>
       </form>
-    </div>
-  </div>
+  </dialog>
 }

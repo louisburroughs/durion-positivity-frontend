@@ -12,6 +12,7 @@ import {
 } from '../../models/billing.models';
 import { BillingTransportService } from '../../services/billing-transport.service';
 import { AuthService } from '../../../../core/services/auth.service';
+import { ModalDialogDirective } from '../../../../shared/modal-dialog.directive';
 
 type PageState = 'loading' | 'ready' | 'error';
 type IssueState = 'idle' | 'elevating' | 'issuing' | 'success' | 'error';
@@ -46,7 +47,7 @@ const FINALIZE_OVERRIDE_ROLES = [
 @Component({
   selector: 'app-invoice-detail-page',
   standalone: true,
-  imports: [CurrencyPipe, DatePipe, SlicePipe, FormsModule, TranslatePipe],
+  imports: [CurrencyPipe, DatePipe, SlicePipe, FormsModule, TranslatePipe, ModalDialogDirective],
   templateUrl: './invoice-detail-page.component.html',
   styleUrl: './invoice-detail-page.component.css',
 })

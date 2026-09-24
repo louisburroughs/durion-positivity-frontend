@@ -238,6 +238,8 @@ describe('StorageLocationsPageComponent [CAP-214 #103] (location selected)', () 
     expect(component.showDeactivateDialog()).toBe(true);
     const dialog = fixture.debugElement.query(By.css('[data-testid="deactivate-dialog"]'));
     expect(dialog).toBeTruthy();
+    expect(dialog.nativeElement.tagName).toBe('DIALOG');
+    expect((dialog.nativeElement as HTMLDialogElement).matches(':modal')).toBe(true);
   });
 
   it('deactivates via the location service with the site id', async () => {

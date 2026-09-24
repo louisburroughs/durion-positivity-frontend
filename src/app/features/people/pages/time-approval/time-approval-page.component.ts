@@ -21,6 +21,7 @@ import type {
 import { AuthService } from '../../../../core/services/auth.service';
 import { PEOPLE_SECTION } from '../../../../core/security/route-permissions';
 import { PeopleService } from '../../services/people.service';
+import { ModalDialogDirective } from '../../../../shared/modal-dialog.directive';
 
 type PeriodStatus = TimePeriodDto['status'];
 
@@ -38,7 +39,7 @@ interface RequestedPerson {
 @Component({
   selector: 'app-time-approval-page',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, TranslatePipe],
+  imports: [ReactiveFormsModule, RouterLink, TranslatePipe, ModalDialogDirective],
   templateUrl: './time-approval-page.component.html',
   styleUrl: './time-approval-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

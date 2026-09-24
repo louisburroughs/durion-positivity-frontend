@@ -147,24 +147,19 @@ label {
   color: var(--currentTextColor);
 }
 
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.45);
-  display: grid;
-  place-items: center;
-  padding: var(--space-4);
-  z-index: 40;
-}
-
 .modal-panel {
   width: min(32rem, 100%);
   background: var(--cardBackground);
+  border: none;
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-card);
   padding: var(--space-6);
   display: grid;
   gap: var(--space-3);
+}
+
+.modal-panel::backdrop {
+  background: rgba(0, 0, 0, 0.45);
 }
 
 .modal-panel h2,

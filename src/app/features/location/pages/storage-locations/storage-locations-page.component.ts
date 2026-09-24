@@ -16,6 +16,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { InventoryLocationsService } from '@durion-sdk/inventory';
 import { LocationService, STORAGE_LOCATION_TYPES } from '../../services/location.service';
 import { LocationPickerComponent } from '../../components/location-picker/location-picker.component';
+import { ModalDialogDirective } from '../../../../shared/modal-dialog.directive';
 
 interface LocationInventory {
   count: number;
@@ -25,7 +26,7 @@ interface LocationInventory {
 @Component({
   selector: 'app-storage-locations-page',
   standalone: true,
-  imports: [ReactiveFormsModule, TranslatePipe, LocationPickerComponent],
+  imports: [ReactiveFormsModule, TranslatePipe, LocationPickerComponent, ModalDialogDirective],
   templateUrl: './storage-locations-page.component.html',
   styleUrl: './storage-locations-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -5,12 +5,13 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { EmployeeProfileDto } from '@durion-sdk/people';
 import { PeopleService } from '../../services/people.service';
+import { ModalDialogDirective } from '../../../../shared/modal-dialog.directive';
 
 @Component({
   selector: 'app-employee-offboard-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, TranslatePipe],
+  imports: [ReactiveFormsModule, TranslatePipe, ModalDialogDirective],
   templateUrl: './employee-offboard-page.component.html',
   styleUrl: './employee-offboard-page.component.css',
 })

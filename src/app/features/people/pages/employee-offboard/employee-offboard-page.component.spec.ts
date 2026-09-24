@@ -156,6 +156,8 @@ describe('EmployeeOffboardPageComponent', () => {
 
     const el = fixture.debugElement.query(By.css('[role="alertdialog"]'));
     expect(el).toBeTruthy();
+    expect(el.nativeElement.tagName).toBe('DIALOG');
+    expect((el.nativeElement as HTMLDialogElement).matches(':modal')).toBe(true);
   });
 
   // T7 ─────────────────────────────────────────────────────────────────────
