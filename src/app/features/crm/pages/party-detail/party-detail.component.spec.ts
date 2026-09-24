@@ -3,9 +3,10 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { convertToParamMap, ActivatedRoute, Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
-import { Observable, of, throwError } from 'rxjs';
+import { Observable, Subject, of, throwError } from 'rxjs';
 import { PartyDetailComponent } from './party-detail.component';
 import { CrmService } from '../../services/crm.service';
+import { PartyDetail } from '../../models/crm.models';
 import { AuthService } from '../../../../core/services/auth.service';
 import { CRM_SECTION } from '../../../../core/security/route-permissions';
 
@@ -44,7 +45,7 @@ describe('PartyDetailComponent', () => {
   let fixture: ComponentFixture<PartyDetailComponent>;
 
   type SetupOptions = {
-    partyResult?: Observable<unknown>;
+    partyResult?: Observable<PartyDetail>;
     contactsResult?: Observable<unknown>;
     prefsResult?: Observable<unknown>;
   };
@@ -171,8 +172,8 @@ describe('PartyDetailComponent', () => {
 
   describe('by party type', () => {
     const q = (sel: string) => fixture.nativeElement.querySelector(sel) as HTMLElement | null;
-    const commercial = { partyId: PARTY_ID, partyType: 'COMMERCIAL', legalName: 'Acme Fleet', dba: 'Acme', taxId: '12-3456789' };
-    const person = { partyId: PARTY_ID, partyType: 'PERSON', legalName: 'Albert Rogers', dba: 'stale', taxId: 'stale' };
+    const commercial: PartyDetail = { partyId: PARTY_ID, partyType: 'COMMERCIAL', legalName: 'Acme Fleet', dba: 'Acme', taxId: '12-3456789' };
+    const person: PartyDetail = { partyId: PARTY_ID, partyType: 'PERSON', legalName: 'Albert Rogers', dba: 'stale', taxId: 'stale' };
 
     it('shows the commercial account layout: badge, DBA, tax id, billing rules and contacts', async () => {
       await setup(null, { partyResult: of(commercial) });
@@ -206,7 +207,22 @@ describe('PartyDetailComponent', () => {
       expect(crmServiceStub.getContactsWithRoles).toHaveBeenCalledWith(PARTY_ID);
     });
 
-    it('waits for the party before requesting contacts, and skips them when it fails', async () => {
+    it('holds the contacts request until the party read resolves as commercial', async () => {
+      const party$ = new Subject<PartyDetail>();
+      await setup(null, { partyResult: party$ });
+
+      // Party read still in flight: the type is unknown, so contacts must not go out yet.
+      expect(crmServiceStub.getContactsWithRoles).not.toHaveBeenCalled();
+      expect(q('[data-testid="contacts-section"]')).toBeNull();
+
+      party$.next(commercial);
+      fixture.detectChanges();
+
+      expect(crmServiceStub.getContactsWithRoles).toHaveBeenCalledTimes(1);
+      expect(q('[data-testid="contacts-section"]')).not.toBeNull();
+    });
+
+    it('skips contacts when the party read fails', async () => {
       await setup(null, { partyResult: throwError(() => ({ status: 500 })) });
 
       expect(crmServiceStub.getContactsWithRoles).not.toHaveBeenCalled();
