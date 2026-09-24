@@ -1,6 +1,6 @@
 # Architecture tests with ArchUnitTS
 
-**Status:** accepted; Phase 0 complete (§11) · **Owner:** frontend · **Created:** 2026-09-24
+**Status:** implemented; Phases 0–5 complete (§11, §12) · **Owner:** frontend · **Created:** 2026-09-24
 
 The architecture rules in this repo exist only as prose, in the ADRs, `AGENTS.md` and `CLAUDE.md`.
 Nothing mechanical stops a page from composing a backend URL, a feature from importing another
@@ -484,3 +484,75 @@ The whole suite should land well under the 30 s budget (§10). No CI split is ne
   already do this.
 - The spike scripts were throwaway probes and are not committed. Phase 1 re-implements their
   queries as `arch/support/ast.ts`.
+
+## 12. Implementation results (2026-09-24)
+
+Phases 1–5 landed on `feat/archunit-architecture-tests`. `npm run test:arch` runs 250 tests (rules
+plus self-tests) in about 32 s with `isolate: false`, which lets spec files share ArchUnitTS's
+graph cache. Without it the run took 64 s.
+
+### 12.1 Where the build differs from §3 and §6
+
+- **One rule model, not `toPassAsync()`.** Every rule, Enforce ones included, goes through
+  `support/baseline.ts` `verify()`, so failures read the same and name the rule, the ADR and the
+  exact keys. `support/rule.ts` provides `dependencyRule`, `cycleRule`, `contentRule` (ArchUnitTS
+  `adhereTo` supplies the file set; the finder returns one key per finding), `templateRule`,
+  `customRule` and `combine`.
+- **Content finders are self-tested on inline sources.** Dependency rules are self-tested against
+  the `arch/fixtures` program. There is no per-rule `fixtures/<ID>/` tree.
+- **ArchUnitTS paths are relative to the tsconfig's directory**, and `FileInfo.content` is empty
+  for a tsconfig outside the repo root. `Project` therefore has a `root`, and `app`/`src` are
+  relative to it. Content and template rules read from disk through `onDisk()`. A harness
+  self-test guards this. The upstream issue is worth filing next to §11.3.1.
+- **The TEN-06 classification** lives in `tenancy.rules.ts`, not `support/projects.ts`.
+- **Keys collapse repeated identical findings** in one file (for example SDK-05's 44 literals
+  become 30 keys, and TEN-07's 7 calls became 4). That keeps keys free of line numbers.
+
+### 12.2 Final modes
+
+- **Ratchet (debt left, tracking issue):**
+
+  | Rule | Entries | Issue |
+  | --- | --- | --- |
+  | LAY-03 | 102 | #347 |
+  | LAY-04 | 17 | #347 |
+  | LAY-08 | 4 | #350 |
+  | SDK-03 | 13 | #350 |
+  | SDK-05 | 30 | #350 |
+  | SDK-06 | 4 | #350 |
+  | SDK-11 | 1 | #350 |
+  | TEN-08 | 6 | #339 |
+  | CON-01 | 1 | #348 |
+  | CON-04 | 9 | #345 |
+  | CON-07 | 97 | #346 |
+  | CON-09 | 7 | #348 |
+  | PAT-02 | 1 | #349 |
+  | PAT-03 | 4 | #351 |
+  | PAT-04 | 3 | #352 |
+  | PAT-08 | 10 | #349 |
+
+- **Warn:** SDK-09 (20), CON-03 (83), PAT-06, I18N-09.
+- **Enforce:** everything else, including the rules that started as Ratchet but reached zero
+  on this branch: TEN-07, SEC-08, SEC-09, CON-02, PAT-05, I18N-05 and I18N-07.
+
+### 12.3 Defects fixed on this branch
+
+| Issue | Rule | Fix |
+| --- | --- | --- |
+| #336 | SEC-09 | 10 hand-rolled modals are now `<dialog appModalDialog>` |
+| #337 | TEN-07 | Storage writes are guarded |
+| #338 | SEC-08 | Deferred object-URL revoke |
+| #340 | I18N-05 | 62 raw-rendering translation keys |
+| #341 | I18N-07 | Locale-aware number and date formatting, plus CLDR data registration |
+| #342 | PAT-03 | schedule-view state/errorKey order |
+| #343 | PAT-04 | Job search no longer swallows errors |
+| #344 | PAT-05 | 4 UTC-date bugs; `isoDateLocal`/`parseIsoDateLocal` moved to `core/utils/local-date.ts` |
+
+CON-07 measured 97, against the Phase 0 estimate of about 59; each entry was reviewed as genuine.
+CON-09 covers `core/util/` as well as the two feature folders.
+
+### 12.4 Still open from §5.7 and §7
+
+- Keep the separate `i18n:check` CI step until I18N-01…04 have run alongside it for one release
+  cycle, then drop it.
+- Promote SDK-09 to Ratchet once SDK-03 is under 5 importers (§8.2).
