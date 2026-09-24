@@ -3,7 +3,7 @@ import { createEnvironmentInjector, EnvironmentInjector, PLATFORM_ID, runInInjec
 import { TestBed } from '@angular/core/testing';
 import { TranslateService } from '@ngx-translate/core';
 import { of } from 'rxjs';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { LocaleService } from './locale.service';
 
@@ -19,6 +19,26 @@ describe('LocaleService', () => {
     setItem: ReturnType<typeof vi.fn>;
     clear: ReturnType<typeof vi.fn>;
   };
+
+  // Spec files share one browser page, so the real globals must come back after this file:
+  // a leaked `navigator` stub (no userAgent) or `localStorage` stub breaks unrelated specs.
+  let realLocalStorage: PropertyDescriptor | undefined;
+  let realNavigator: PropertyDescriptor | undefined;
+
+  beforeAll(() => {
+    realLocalStorage = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+    realNavigator = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
+  });
+
+  afterAll(() => {
+    for (const [name, real] of [
+      ['localStorage', realLocalStorage],
+      ['navigator', realNavigator],
+    ] as const) {
+      if (real) Object.defineProperty(globalThis, name, real);
+      else delete (globalThis as Record<string, unknown>)[name];
+    }
+  });
 
   beforeEach(() => {
     localStorageMock = {
@@ -124,6 +144,7 @@ describe('LocaleService', () => {
       await expect(service.initialize()).resolves.toBeUndefined();
       expect(service.currentLocale()).toBe('en-US');
     } finally {
+      // Puts back this file's mock; afterAll restores the real storage.
       if (original) Object.defineProperty(globalThis, 'localStorage', original);
     }
   });

@@ -1,7 +1,7 @@
 import '@angular/compiler';
 import { createEnvironmentInjector, EnvironmentInjector, PLATFORM_ID, runInInjectionContext } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ThemeService } from './theme.service';
 
@@ -19,6 +19,26 @@ describe('ThemeService', () => {
     );
     return runInInjectionContext(injector, () => new ThemeService());
   }
+
+  // Spec files share one browser page: restore the real globals after this file, or every later
+  // spec inherits this file's stubs.
+  let realLocalStorage: PropertyDescriptor | undefined;
+  let realMatchMedia: PropertyDescriptor | undefined;
+
+  beforeAll(() => {
+    realLocalStorage = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+    realMatchMedia = Object.getOwnPropertyDescriptor(globalThis, 'matchMedia');
+  });
+
+  afterAll(() => {
+    for (const [name, real] of [
+      ['localStorage', realLocalStorage],
+      ['matchMedia', realMatchMedia],
+    ] as const) {
+      if (real) Object.defineProperty(globalThis, name, real);
+      else delete (globalThis as Record<string, unknown>)[name];
+    }
+  });
 
   beforeEach(() => {
     localStorageMock = {
@@ -110,6 +130,7 @@ describe('ThemeService', () => {
 
       expect(service.theme()).toBe('light');
     } finally {
+      // Puts back this file's mock; afterAll restores the real storage.
       if (original) Object.defineProperty(globalThis, 'localStorage', original);
     }
   });
