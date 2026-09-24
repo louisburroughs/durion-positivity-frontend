@@ -1,6 +1,6 @@
 import { projectFiles } from 'archunit';
 import ts from 'typescript';
-import { compare, formatFailure } from '../../support/baseline';
+import { compare, formatFailure, validateEntries } from '../../support/baseline';
 import { APP, FIXTURES, SPEC, selectors, type Project } from '../../support/projects';
 import { contentRule, type ArchRule } from '../../support/rule';
 import { listFiles } from '../../support/templates';
@@ -58,8 +58,8 @@ describe('[harness] ArchUnitTS file set and selectors (plan §11.1, §11.3)', ()
 describe('[harness] baseline ratchet (plan §3.3)', () => {
   const rule: ArchRule = { id: 'X-01', title: 't', mode: 'ratchet', keys: async () => [] };
   const base = [
-    { key: 'a', reason: 'r' },
-    { key: 'b', reason: 'r' },
+    { key: 'a', reason: 'r', tracking: '#1' },
+    { key: 'b', reason: 'r', tracking: '#1' },
   ];
 
   it('passes when current keys equal the baseline', () => {
@@ -74,6 +74,12 @@ describe('[harness] baseline ratchet (plan §3.3)', () => {
     const o = compare(['a'], base);
     expect(o.stale).toEqual(['b']);
     expect(formatFailure(rule, o)).toMatch(/delete this entry[\s\S]*- b/);
+  });
+  it('rejects an entry without a tracking issue', () => {
+    expect(() => validateEntries('X.json', [{ key: 'a', reason: 'r' } as never])).toThrow(/tracking/);
+    expect(() => validateEntries('X.json', [{ key: 'a', reason: 'r', tracking: 'TBD' }])).toThrow(/tracking/);
+    expect(() => validateEntries('X.json', [{ key: 'a', reason: ' ', tracking: '#1' }])).toThrow(/reason/);
+    expect(validateEntries('X.json', [{ key: 'a', reason: 'r', tracking: '#1' }])).toHaveLength(1);
   });
   it('treats a missing baseline as empty', () => {
     expect(compare(['a'], null).added).toEqual(['a']);

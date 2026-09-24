@@ -11,7 +11,7 @@
 import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest';
 import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { provideRouter, ActivatedRoute } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { By } from '@angular/platform-browser';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
@@ -387,6 +387,37 @@ describe('ScheduleViewPageComponent', () => {
 
     expect(component.jobSearchFailed()).toBe(false);
     expect(component.jobOptions()).toEqual([ALIGNMENT_JOB]);
+  });
+
+  // ADR-0063 §2 / ADR-0035 §6: a slow answer to an older keystroke must not
+  // overwrite the newer query's result. Driven through Subjects so both
+  // requests are genuinely in flight at once.
+  it('ignores a job-search answer that lands after a newer query', async () => {
+    await setup();
+    const older = new Subject<{ options: (typeof ALIGNMENT_JOB)[]; ok: boolean }>();
+    const newer = new Subject<{ options: (typeof ALIGNMENT_JOB)[]; ok: boolean }>();
+    capacityStub.searchJobTypes.mockReturnValueOnce(older).mockReturnValueOnce(newer);
+
+    component.onJobQuery('al');
+    component.onJobQuery('align');
+    newer.next({ options: [ALIGNMENT_JOB], ok: true });
+    older.next({ options: [], ok: false });
+
+    expect(component.jobOptions()).toEqual([ALIGNMENT_JOB]);
+    expect(component.jobSearchFailed()).toBe(false);
+  });
+
+  it('ignores a job-search answer that lands after the filter is cleared', async () => {
+    await setup();
+    const pending = new Subject<{ options: (typeof ALIGNMENT_JOB)[]; ok: boolean }>();
+    capacityStub.searchJobTypes.mockReturnValueOnce(pending);
+
+    component.onJobQuery('align');
+    component.clearJob();
+    pending.next({ options: [], ok: false });
+
+    expect(component.jobOptions()).toEqual([]);
+    expect(component.jobSearchFailed()).toBe(false);
   });
 
   it('returns to all work when the filter is cleared', async () => {

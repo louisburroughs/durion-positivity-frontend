@@ -147,6 +147,11 @@ export class ScheduleViewPageComponent implements OnInit {
   readonly jobPickerOpen = signal(false);
   /** True when the last {@link onJobQuery} search failed (ADR-0064 §1) — distinct from "no matches". */
   readonly jobSearchFailed = signal(false);
+  /**
+   * Issued per job search; only the latest query may write `jobOptions`/`jobSearchFailed`, so a
+   * slow answer to an older keystroke can't overwrite a newer one (ADR-0063 §2).
+   */
+  private jobSearchSeq = 0;
 
   readonly hourPitchPx = HOUR_PITCH_PX;
 
@@ -407,10 +412,12 @@ export class ScheduleViewPageComponent implements OnInit {
 
   onJobQuery(value: string): void {
     this.jobQuery.set(value);
+    const seq = ++this.jobSearchSeq;
     this.capacity
       .searchJobTypes(value)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(({ options, ok }) => {
+        if (seq !== this.jobSearchSeq) return;
         this.jobOptions.set(options);
         this.jobSearchFailed.set(!ok);
       });
@@ -425,6 +432,7 @@ export class ScheduleViewPageComponent implements OnInit {
   clearJob(): void {
     this.job.set(CapacityCalendarService.allWorkJob(''));
     this.jobQuery.set('');
+    this.jobSearchSeq++;
     this.jobOptions.set([]);
     this.jobSearchFailed.set(false);
     this.load();

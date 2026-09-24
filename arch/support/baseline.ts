@@ -13,7 +13,8 @@ import type { ArchRule } from './rule';
 export interface BaselineEntry {
   key: string;
   reason: string;
-  tracking?: string;
+  /** Tracking issue, e.g. `#347`. Required: untracked debt has no owner to burn it down. */
+  tracking: string;
 }
 
 export const BASELINE_DIR = path.resolve('arch/baselines');
@@ -23,9 +24,15 @@ export const baselinePath = (id: string): string => path.join(BASELINE_DIR, `${i
 export function readBaseline(id: string): BaselineEntry[] | null {
   const file = baselinePath(id);
   if (!existsSync(file)) return null;
-  const entries = JSON.parse(readFileSync(file, 'utf8')) as BaselineEntry[];
+  return validateEntries(file, JSON.parse(readFileSync(file, 'utf8')) as BaselineEntry[]);
+}
+
+/** Every entry needs a key, a reason and a `#123` tracking issue (plan §3.3). */
+export function validateEntries(file: string, entries: BaselineEntry[]): BaselineEntry[] {
   for (const e of entries) {
-    if (!e.key || !e.reason?.trim()) throw new Error(`${file}: every entry needs a non-empty "key" and "reason"`);
+    if (!e.key || !e.reason?.trim() || !/^#\d+$/.test(e.tracking?.trim() ?? '')) {
+      throw new Error(`${file}: every entry needs a non-empty "key", "reason" and a "tracking" issue (#123)`);
+    }
   }
   return entries;
 }
