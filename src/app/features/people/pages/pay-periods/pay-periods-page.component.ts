@@ -1,4 +1,14 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  ElementRef,
+  Injector,
+  afterNextRender,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormControl, FormGroup, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -10,6 +20,7 @@ import {
 } from '@durion-sdk/people';
 
 import { AuthService } from '../../../../core/services/auth.service';
+import { LocaleService } from '../../../../core/services/locale.service';
 import { PEOPLE_SECTION } from '../../../../core/security/route-permissions';
 import { ModalDialogDirective } from '../../../../shared/modal-dialog.directive';
 import { isoDateLocal, parseIsoDateLocal } from '../../../shopmgmt/models/capacity-calendar.models';
@@ -53,6 +64,9 @@ export class PayPeriodsPageComponent {
   private readonly peopleService = inject(PeopleService);
   private readonly auth = inject(AuthService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly locale = inject(LocaleService);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly injector = inject(Injector);
 
   // ── List ────────────────────────────────────────────────────────────────
   // `state` always moves before `errorKey` (EXEMPLARS §1).
@@ -122,6 +136,15 @@ export class PayPeriodsPageComponent {
     return TRANSITIONS[period.status] ?? [];
   }
 
+  /**
+   * A date-only `YYYY-MM-DD` in the user's chosen locale. Parsed as a local date: `new Date(iso)`
+   * would read it as UTC midnight and show the previous day west of Greenwich (ADR-0038). Reading
+   * `currentLocale()` here re-renders the table when the language changes.
+   */
+  displayDate(iso: string): string {
+    return parseIsoDateLocal(iso).toLocaleDateString(this.locale.currentLocale(), { dateStyle: 'medium' });
+  }
+
   statusKey(status: string): string {
     return `PEOPLE.PAY_PERIODS.STATUS.${status}`;
   }
@@ -171,11 +194,17 @@ export class PayPeriodsPageComponent {
   confirmTransition(): void {
     const pending = this.pendingConfirm();
     this.pendingConfirm.set(null);
-    if (pending) this.applyTransition(pending.period, pending.target);
+    if (!pending) return;
+    // The dialog is torn down now; park focus on the period's row until the result lands.
+    this.focusAfterRender(pending.period.timePeriodId);
+    this.applyTransition(pending.period, pending.target);
   }
 
   cancelTransition(): void {
+    const pending = this.pendingConfirm();
     this.pendingConfirm.set(null);
+    // Nothing changed: hand focus back to the control that opened the dialog.
+    if (pending) this.focusAfterRender(pending.period.timePeriodId, pending.target);
   }
 
   private applyTransition(period: TimePeriodDto, target: TransitionTimePeriodRequestStatusEnum): void {
@@ -188,6 +217,8 @@ export class PayPeriodsPageComponent {
         next: (updated) => {
           this.periods.update(list => list.map(p => (p.timePeriodId === updated.timePeriodId ? updated : p)));
           this.transitioningId.set(null);
+          // The clicked button may be gone (its move no longer applies), so the row header takes focus.
+          this.focusAfterRender(updated.timePeriodId);
         },
         error: (err) => {
           this.transitioningId.set(null);
@@ -196,6 +227,18 @@ export class PayPeriodsPageComponent {
           if (err?.status === 404 || err?.status === 409) this.load();
         },
       });
+  }
+
+  /**
+   * Moves focus once the DOM reflects the change (ADR-0029 §8.7): to the transition button for
+   * `target` when given and still rendered, otherwise to the period's row header.
+   */
+  private focusAfterRender(timePeriodId: string, target?: TransitionTimePeriodRequestStatusEnum): void {
+    afterNextRender(() => {
+      const row = this.host.nativeElement.querySelector(`[data-period-id="${timePeriodId}"]`);
+      const button = target ? row?.querySelector<HTMLElement>(`button[data-target="${target}"]`) : null;
+      (button ?? row?.querySelector<HTMLElement>('th'))?.focus();
+    }, { injector: this.injector });
   }
 
   /** Suggest the period right after the newest one on the default grid; never overwrite user input. */

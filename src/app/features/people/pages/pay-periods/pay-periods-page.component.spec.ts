@@ -12,6 +12,7 @@ import {
 } from '@durion-sdk/people';
 
 import { AuthService } from '../../../../core/services/auth.service';
+import { LocaleService } from '../../../../core/services/locale.service';
 import { PEOPLE_SECTION } from '../../../../core/security/route-permissions';
 import { PeopleService } from '../../services/people.service';
 import { PayPeriodsPageComponent } from './pay-periods-page.component';
@@ -305,6 +306,64 @@ describe('PayPeriodsPageComponent', () => {
       expect(qa('button[data-target]')).toHaveLength(0);
       component.requestTransition(OPEN, TransitionTimePeriodRequestStatusEnum.SubmissionClosed);
       expect(peopleStub.transitionTimePeriod).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('dates', () => {
+    it('shows date-only values in the chosen locale without shifting the day', async () => {
+      await setup({ periods: of([OPEN]) });
+      const cells = () => Array.from(row('tp-open')!.querySelectorAll('time')).map(t => t.textContent?.trim());
+
+      // Parsed as a local date: UTC parsing would show Sep 14 west of Greenwich.
+      expect(cells()).toEqual(['Sep 15, 2026', 'Sep 28, 2026']);
+      expect(row('tp-open')!.querySelector('time')?.getAttribute('datetime')).toBe('2026-09-15');
+
+      TestBed.inject(LocaleService).currentLocale.set('fr-FR');
+      fixture.detectChanges();
+      expect(cells()).toEqual(['15 sept. 2026', '28 sept. 2026']);
+    });
+  });
+
+  describe('focus handoff', () => {
+    const active = () => document.activeElement as HTMLElement | null;
+
+    it('returns focus to the opener when the payroll close is cancelled', async () => {
+      await setup();
+      const opener = button('tp-sub', 'PAYROLL_CLOSED')!;
+      opener.focus();
+      opener.click();
+      fixture.detectChanges();
+
+      component.cancelTransition();
+      fixture.detectChanges();
+      TestBed.tick();
+
+      expect(active()).toBe(button('tp-sub', 'PAYROLL_CLOSED'));
+    });
+
+    it('moves focus to the period row after a confirmed payroll close removes its buttons', async () => {
+      await setup();
+      peopleStub.transitionTimePeriod.mockReturnValue(of({ ...SUBMITTED, status: TimePeriodDtoStatusEnum.PayrollClosed }));
+      button('tp-sub', 'PAYROLL_CLOSED')!.click();
+      fixture.detectChanges();
+
+      (q('[data-testid="confirm-yes"]') as HTMLButtonElement).click();
+      fixture.detectChanges();
+      TestBed.tick();
+
+      expect(button('tp-sub', 'PAYROLL_CLOSED')).toBeNull();
+      expect(active()).toBe(row('tp-sub')!.querySelector('th'));
+    });
+
+    it('moves focus to the period row after an immediate transition', async () => {
+      await setup();
+      peopleStub.transitionTimePeriod.mockReturnValue(of({ ...OPEN, status: TimePeriodDtoStatusEnum.SubmissionClosed }));
+
+      button('tp-open', 'SUBMISSION_CLOSED')!.click();
+      fixture.detectChanges();
+      TestBed.tick();
+
+      expect(active()).toBe(row('tp-open')!.querySelector('th'));
     });
   });
 });
