@@ -378,6 +378,8 @@ export const PEOPLE_PAGE = {
   employeeRegister: ['people:employee:view'],
   roleAssignment: ['people-contact:role:view'],
   timeApproval: ['people:timekeeping:view'],
+  /** Pay-period admin: the list is `listTimePeriods`, the same read the approval page uses. */
+  payPeriods: ['people:timekeeping:view'],
   /** Both timekeeping reports are served by pos-accounting. */
   timeExport: ['accounting:export:view'],
   discrepancyReport: ['accounting:time:export'],
@@ -427,6 +429,9 @@ export const PEOPLE_SECTION = {
    */
   timeApprove: ['people:timekeeping:approve'],
   timeReject: ['people:timekeeping:reject'],
+  /** Pay-period admin controls: `createTimePeriod` and `transitionTimePeriod` in pos-people. */
+  payPeriodCreate: ['people:timePeriod:create'],
+  payPeriodTransition: ['people:timePeriod:transition'],
 } as const satisfies Record<string, readonly string[]>;
 
 /** `/app/location/*` — sites, bays, mobile units, storage locations. */

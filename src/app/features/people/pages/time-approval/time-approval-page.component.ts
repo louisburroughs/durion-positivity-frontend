@@ -10,7 +10,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import type {
   ApprovalPersonDto,
   TimePeriodApprovalDto,
@@ -38,7 +38,7 @@ interface RequestedPerson {
 @Component({
   selector: 'app-time-approval-page',
   standalone: true,
-  imports: [ReactiveFormsModule, TranslatePipe],
+  imports: [ReactiveFormsModule, RouterLink, TranslatePipe],
   templateUrl: './time-approval-page.component.html',
   styleUrl: './time-approval-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

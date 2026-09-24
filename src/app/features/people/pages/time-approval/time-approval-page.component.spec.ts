@@ -294,8 +294,11 @@ describe('TimeApprovalPageComponent', () => {
     TestBed.inject(TranslateService).setTranslation('en-US', enUS);
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.querySelector('[data-testid="periods-empty"]')?.textContent?.trim())
-      .toBe(enUS.PEOPLE.TIME_APPROVAL.PERIODS_EMPTY);
+    const empty = fixture.nativeElement.querySelector('[data-testid="periods-empty"]') as HTMLElement;
+    expect(empty.textContent).toContain(enUS.PEOPLE.TIME_APPROVAL.PERIODS_EMPTY);
+    // Points at the admin page that can create the first period.
+    expect(empty.querySelector('[data-testid="manage-periods-link"]')?.getAttribute('href'))
+      .toBe('/app/people/timekeeping/periods');
   });
 
   it('omits the empty parentheses when an employee has no number', () => {

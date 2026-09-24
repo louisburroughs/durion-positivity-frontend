@@ -495,6 +495,10 @@
         "EMPLOYEE_REGISTER": {
           "TITLE": "Registre des employés",
           "DESCRIPTION": "Parcourez, filtrez et gérez tous les employés dans un seul tableau."
+        },
+        "PAY_PERIODS": {
+          "TITLE": "Périodes de paie",
+          "DESCRIPTION": "Créez des périodes de paie et faites-les passer à la clôture des soumissions et de la paie."
         }
       },
       "FIELD": {
@@ -681,7 +685,8 @@
       },
       "REQUESTED_EMPLOYEE_OPTION": "{{name}} (aucune saisie de temps pour le moment)",
       "REQUESTED_EMPLOYEE_FALLBACK": "Salarié sélectionné (aucune saisie de temps pour le moment)",
-      "PERIODS_EMPTY": "Aucune période de paie n'a encore été créée."
+      "PERIODS_EMPTY": "Aucune période de paie n'a encore été créée.",
+      "MANAGE_PERIODS": "Gérer les périodes de paie"
     },
     "DIRECTORY": {
       "TITLE": "Répertoire des personnes",
@@ -1038,6 +1043,64 @@
         "ADDRESS_INCOMPLETE": "La ligne d'adresse 1 et le code de pays sont obligatoires lorsqu'une adresse est saisie."
       },
       "CONTACT_ROW_ARIA": "Point de contact {{index}} : {{type}}"
+    },
+    "PAY_PERIODS": {
+      "TITLE": "Périodes de paie",
+      "INTRO": "Les périodes de paie regroupent les saisies de temps pour l'approbation et la paie. Le traitement quotidien ouvre les périodes courantes dès qu'un locataire a une activité de saisie du temps ; utilisez cette page pour créer la première période ou effectuer des corrections.",
+      "OPEN_APPROVAL": "Aller à l'approbation du temps",
+      "LIST_TITLE": "Périodes",
+      "LOADING": "Chargement des périodes de paie…",
+      "RETRY": "Réessayer",
+      "EMPTY": "Aucune période de paie n'a encore été créée.",
+      "TABLE_ARIA": "Périodes de paie",
+      "FINAL": "Définitive",
+      "COL": {
+        "START": "Début",
+        "END": "Fin",
+        "STATUS": "Statut",
+        "ACTIONS": "Actions"
+      },
+      "STATUS": {
+        "OPEN": "Ouverte",
+        "SUBMISSION_CLOSED": "Soumissions clôturées",
+        "PAYROLL_CLOSED": "Paie clôturée"
+      },
+      "ACTION": {
+        "CLOSE_SUBMISSIONS": "Clôturer les soumissions",
+        "CLOSE_PAYROLL": "Clôturer la paie",
+        "CLOSE_PAYROLL_NOW": "Clôturer la paie maintenant",
+        "REOPEN": "Rouvrir"
+      },
+      "CREATE_TITLE": "Créer une période de paie",
+      "CREATE_HINT": "Les dates sont incluses. La plage ne doit pas chevaucher une période existante.",
+      "FIELD": {
+        "START": "Date de début",
+        "END": "Date de fin",
+        "STATUS": "Statut initial"
+      },
+      "CREATE": "Créer la période",
+      "CREATING": "Création…",
+      "CREATE_SUCCESS": "Période de paie créée.",
+      "CONFIRM": {
+        "TITLE": "Clôturer la paie ?",
+        "BODY": "La clôture de la paie du {{start}} au {{end}} est définitive. Ses saisies de temps ne pourront plus être approuvées ni modifiées.",
+        "YES": "Clôturer la paie",
+        "CANCEL": "Annuler"
+      },
+      "ERROR": {
+        "LOAD": "Impossible de charger les périodes de paie.",
+        "FORBIDDEN": "Vous n'avez pas l'autorisation de consulter les périodes de paie.",
+        "CREATE": "Impossible de créer la période de paie.",
+        "OVERLAP": "Cette plage chevauche une période de paie existante.",
+        "INVALID_RANGE": "Cette plage de dates n'est pas valide.",
+        "CREATE_FORBIDDEN": "Vous n'avez pas l'autorisation de créer des périodes de paie.",
+        "END_BEFORE_START": "La date de fin doit être égale ou postérieure à la date de début.",
+        "NO_TENANT": "Votre session n'a pas de locataire ; impossible de créer une période de paie.",
+        "TRANSITION": "Impossible de modifier le statut de la période.",
+        "TRANSITION_NOT_ALLOWED": "Ce changement de statut n'est plus autorisé ; la liste a été actualisée.",
+        "NOT_FOUND": "Cette période de paie n'existe plus ; la liste a été actualisée.",
+        "TRANSITION_FORBIDDEN": "Vous n'avez pas l'autorisation de modifier le statut des périodes de paie."
+      }
     }
   },
   "CRM": {
@@ -7061,7 +7124,8 @@
       "WIP_STATUS": "État des travaux en cours",
       "WORKORDERS": "Ordres de travail",
       "WORK_SESSION": "Séance de travail",
-      "PERSON": "Personne"
+      "PERSON": "Personne",
+      "PERIODS": "Périodes de paie"
     }
   },
   "POSITIVITY": {

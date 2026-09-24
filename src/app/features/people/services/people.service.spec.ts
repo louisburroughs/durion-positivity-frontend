@@ -22,6 +22,10 @@ import {
   TimePeriodDto,
   TimePeriodDtoStatusEnum,
   TimekeepingApprovalAPIService,
+  TimePeriodManagementAPIService,
+  TransitionTimePeriodRequestStatusEnum,
+  CreateTimePeriodRequestStatusEnum,
+  type CreateTimePeriodRequest,
   TimekeepingEntryDto,
   TimekeepingEntryDtoApprovalStatusEnum,
   UpdateEmployeeRequestStatusEnum,
@@ -81,6 +85,11 @@ describe('PeopleService', () => {
     rejectTimePeriod: vi.fn(),
   };
 
+  const timePeriodApiStub = {
+    createTimePeriod: vi.fn(),
+    transitionTimePeriod: vi.fn(),
+  };
+
   const workSessionsApiStub = {
     startWorkSession: vi.fn(),
     stopWorkSession: vi.fn(),
@@ -111,6 +120,7 @@ describe('PeopleService', () => {
         { provide: PostalAddressAPIService, useValue: postalAddressApiStub },
         { provide: WorkSessionsAPIService, useValue: workSessionsApiStub },
         { provide: TimekeepingApprovalAPIService, useValue: timekeepingApiStub },
+        { provide: TimePeriodManagementAPIService, useValue: timePeriodApiStub },
         { provide: ApiBaseService, useValue: apiBaseStub },
       ],
     });
@@ -523,6 +533,34 @@ describe('PeopleService', () => {
 
     expect(timekeepingApiStub.rejectTimePeriod).toHaveBeenCalledExactlyOnceWith('tp-1', 'p-1', request);
     expect(result).toEqual(decision);
+  });
+
+  it('createTimePeriod() passes the request through to TimePeriodManagementAPIService', () => {
+    const request: CreateTimePeriodRequest = {
+      tenantId: 't-1',
+      startDate: '2026-10-01',
+      endDate: '2026-10-14',
+      status: CreateTimePeriodRequestStatusEnum.Open,
+    };
+    const created: TimePeriodDto = { timePeriodId: 'tp-9', tenantId: 't-1', startDate: '2026-10-01', endDate: '2026-10-14', status: TimePeriodDtoStatusEnum.Open };
+    timePeriodApiStub.createTimePeriod.mockReturnValue(of(created));
+
+    let result: TimePeriodDto | undefined;
+    service.createTimePeriod(request).subscribe(r => (result = r));
+
+    expect(timePeriodApiStub.createTimePeriod).toHaveBeenCalledExactlyOnceWith(request);
+    expect(result).toEqual(created);
+  });
+
+  it('transitionTimePeriod() wraps the target status in the request body', () => {
+    const moved: TimePeriodDto = { timePeriodId: 'tp-9', tenantId: 't-1', startDate: '2026-10-01', endDate: '2026-10-14', status: TimePeriodDtoStatusEnum.SubmissionClosed };
+    timePeriodApiStub.transitionTimePeriod.mockReturnValue(of(moved));
+
+    let result: TimePeriodDto | undefined;
+    service.transitionTimePeriod('tp-9', TransitionTimePeriodRequestStatusEnum.SubmissionClosed).subscribe(r => (result = r));
+
+    expect(timePeriodApiStub.transitionTimePeriod).toHaveBeenCalledExactlyOnceWith('tp-9', { status: 'SUBMISSION_CLOSED' });
+    expect(result).toEqual(moved);
   });
 
   it('startSession() delegates to WorkSessionsAPIService.startWorkSession', () => {

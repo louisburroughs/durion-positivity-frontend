@@ -49,6 +49,15 @@ export const PEOPLE_LANDING_CONFIG: LandingPageConfig = {
         },
         {
           kind: 'direct',
+          icon: 'date_range',
+          titleKey: 'PEOPLE.LANDING.CARD.PAY_PERIODS.TITLE',
+          descriptionKey: 'PEOPLE.LANDING.CARD.PAY_PERIODS.DESCRIPTION',
+          ctaKey: 'PEOPLE.LANDING.ACTION.OPEN_PAGE',
+          route: '/app/people/timekeeping/periods',
+          permissions: PEOPLE_PAGE.payPeriods,
+        },
+        {
+          kind: 'direct',
           icon: 'timer',
           titleKey: 'PEOPLE.LANDING.CARD.WORK_SESSION.TITLE',
           descriptionKey: 'PEOPLE.LANDING.CARD.WORK_SESSION.DESCRIPTION',

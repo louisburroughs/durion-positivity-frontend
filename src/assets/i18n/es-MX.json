@@ -495,6 +495,10 @@
         "EMPLOYEE_REGISTER": {
           "TITLE": "Registro de empleados",
           "DESCRIPTION": "Consulte, filtre y administre a todos los empleados en una sola tabla."
+        },
+        "PAY_PERIODS": {
+          "TITLE": "Períodos de pago",
+          "DESCRIPTION": "Cree períodos de pago y avance su cierre de envíos y de nómina."
         }
       },
       "FIELD": {
@@ -681,7 +685,8 @@
       },
       "REQUESTED_EMPLOYEE_OPTION": "{{name}} (aún sin registros de tiempo)",
       "REQUESTED_EMPLOYEE_FALLBACK": "Empleado seleccionado (aún sin registros de tiempo)",
-      "PERIODS_EMPTY": "Todavía no se han creado períodos de pago."
+      "PERIODS_EMPTY": "Todavía no se han creado períodos de pago.",
+      "MANAGE_PERIODS": "Administrar períodos de pago"
     },
     "DIRECTORY": {
       "TITLE": "Directorio de personas",
@@ -1038,6 +1043,64 @@
         "ADDRESS_INCOMPLETE": "La línea de dirección 1 y el código de país son obligatorios cuando se ingresa una dirección."
       },
       "CONTACT_ROW_ARIA": "Punto de contacto {{index}}: {{type}}"
+    },
+    "PAY_PERIODS": {
+      "TITLE": "Períodos de pago",
+      "INTRO": "Los períodos de pago agrupan los registros de tiempo para su aprobación y la nómina. El proceso diario abre los períodos habituales cuando un inquilino ya tiene actividad de registro de tiempo; use esta página para crear el primer período o hacer correcciones.",
+      "OPEN_APPROVAL": "Ir a la aprobación de tiempo",
+      "LIST_TITLE": "Períodos",
+      "LOADING": "Cargando períodos de pago…",
+      "RETRY": "Reintentar",
+      "EMPTY": "Todavía no se han creado períodos de pago.",
+      "TABLE_ARIA": "Períodos de pago",
+      "FINAL": "Definitivo",
+      "COL": {
+        "START": "Inicio",
+        "END": "Fin",
+        "STATUS": "Estado",
+        "ACTIONS": "Acciones"
+      },
+      "STATUS": {
+        "OPEN": "Abierto",
+        "SUBMISSION_CLOSED": "Envíos cerrados",
+        "PAYROLL_CLOSED": "Nómina cerrada"
+      },
+      "ACTION": {
+        "CLOSE_SUBMISSIONS": "Cerrar envíos",
+        "CLOSE_PAYROLL": "Cerrar nómina",
+        "CLOSE_PAYROLL_NOW": "Cerrar nómina ahora",
+        "REOPEN": "Reabrir"
+      },
+      "CREATE_TITLE": "Crear un período de pago",
+      "CREATE_HINT": "Las fechas son inclusivas. El rango no debe superponerse con un período existente.",
+      "FIELD": {
+        "START": "Fecha de inicio",
+        "END": "Fecha de fin",
+        "STATUS": "Estado inicial"
+      },
+      "CREATE": "Crear período",
+      "CREATING": "Creando…",
+      "CREATE_SUCCESS": "Período de pago creado.",
+      "CONFIRM": {
+        "TITLE": "¿Cerrar la nómina?",
+        "BODY": "Cerrar la nómina del {{start}} al {{end}} es definitivo. Sus registros de tiempo ya no se podrán aprobar ni modificar.",
+        "YES": "Cerrar nómina",
+        "CANCEL": "Cancelar"
+      },
+      "ERROR": {
+        "LOAD": "No se pudieron cargar los períodos de pago.",
+        "FORBIDDEN": "No tiene permiso para ver los períodos de pago.",
+        "CREATE": "No se pudo crear el período de pago.",
+        "OVERLAP": "Ese rango se superpone con un período de pago existente.",
+        "INVALID_RANGE": "Ese rango de fechas no es válido.",
+        "CREATE_FORBIDDEN": "No tiene permiso para crear períodos de pago.",
+        "END_BEFORE_START": "La fecha de fin debe ser igual o posterior a la fecha de inicio.",
+        "NO_TENANT": "Su sesión no tiene inquilino, por lo que no se puede crear un período de pago.",
+        "TRANSITION": "No se pudo cambiar el estado del período.",
+        "TRANSITION_NOT_ALLOWED": "Ese cambio de estado ya no está permitido; la lista se actualizó.",
+        "NOT_FOUND": "Ese período de pago ya no existe; la lista se actualizó.",
+        "TRANSITION_FORBIDDEN": "No tiene permiso para cambiar el estado de los períodos de pago."
+      }
     }
   },
   "CRM": {
@@ -7061,7 +7124,8 @@
       "WIP_STATUS": "Estado de trabajo en curso",
       "WORKORDERS": "Órdenes de trabajo",
       "WORK_SESSION": "Sesión de trabajo",
-      "PERSON": "Persona"
+      "PERSON": "Persona",
+      "PERIODS": "Períodos de pago"
     }
   },
   "POSITIVITY": {
