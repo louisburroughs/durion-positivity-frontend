@@ -1,7 +1,7 @@
 import '@angular/compiler';
 import { createEnvironmentInjector, EnvironmentInjector, PLATFORM_ID, runInInjectionContext } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { LastTenantService } from './last-tenant.service';
 
@@ -44,6 +44,16 @@ function throwingStore() {
 }
 
 describe('LastTenantService', () => {
+  // Spec files share one browser page: restore the real localStorage after this file.
+  let realLocalStorage: PropertyDescriptor | undefined;
+  beforeAll(() => {
+    realLocalStorage = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+  });
+  afterAll(() => {
+    if (realLocalStorage) Object.defineProperty(globalThis, 'localStorage', realLocalStorage);
+    else delete (globalThis as { localStorage?: Storage }).localStorage;
+  });
+
   beforeEach(() => {
     Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: memoryStore() });
   });

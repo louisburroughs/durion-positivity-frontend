@@ -63,9 +63,8 @@
   }
 
   @if (showCreateDialog()) {
-  <dialog class="modal-backdrop" aria-modal="true" aria-labelledby="create-assignment-title"
-    aria-describedby="create-assignment-description" data-testid="create-dialog" open tabindex="0"
-    (keydown.escape)="closeCreateDialog()">
+  <dialog class="modal-backdrop" appModalDialog (modalCancel)="closeCreateDialog()" aria-labelledby="create-assignment-title"
+    aria-describedby="create-assignment-description" data-testid="create-dialog">
     <div class="modal-panel">
       <h2 id="create-assignment-title">{{ 'PEOPLE.LOCATION_ASSIGNMENTS.CREATE_TITLE' | translate }}</h2>
       <p id="create-assignment-description">
@@ -134,29 +133,26 @@
   }
 
   @if (showEndDialog()) {
-  <div class="modal-backdrop" role="alertdialog" aria-modal="true" aria-labelledby="end-assignment-title"
-    aria-describedby="end-assignment-description" data-testid="end-confirm-dialog" (keydown.escape)="closeEndDialog()">
+  <dialog class="modal-backdrop" role="alertdialog" appModalDialog (modalCancel)="closeEndDialog()" aria-labelledby="end-assignment-title"
+    aria-describedby="end-assignment-description" data-testid="end-confirm-dialog">
     <div class="modal-panel modal-panel--destructive">
       <h2 id="end-assignment-title">{{ 'PEOPLE.LOCATION_ASSIGNMENTS.END_TITLE' | translate }}</h2>
       <p id="end-assignment-description">
         {{ 'PEOPLE.LOCATION_ASSIGNMENTS.END_DESC' | translate }}
       </p>
       <footer class="form-footer">
-        <!-- autofocus moves focus into this non-native role="alertdialog" on open (Cancel is the
-             safe default for a destructive confirm); no JS focus-trap exists, so this is the only
-             mechanism placing keyboard/SR users inside the modal. ADR-0029 keyboard-flow. -->
-        <!-- eslint-disable @angular-eslint/template/no-autofocus -->
+        <!-- autofocus moves focus onto Cancel (the safe default for a destructive confirm) when
+             showModal() opens the dialog. ADR-0029 keyboard-flow. -->
         <button type="button" class="btn btn--ghost" data-testid="cancel-end-btn" [disabled]="submitting()"
           (click)="closeEndDialog()" autofocus>
           {{ 'PEOPLE.LOCATION_ASSIGNMENTS.CANCEL' | translate }}
         </button>
-        <!-- eslint-enable @angular-eslint/template/no-autofocus -->
         <button type="button" class="btn btn--danger" data-testid="confirm-end-btn" [disabled]="submitting()"
           (click)="confirmEnd()">
           {{ (submitting() ? 'PEOPLE.LOCATION_ASSIGNMENTS.ENDING' : 'PEOPLE.LOCATION_ASSIGNMENTS.CONFIRM_END') | translate }}
         </button>
       </footer>
     </div>
-  </div>
+  </dialog>
   }
 </main>

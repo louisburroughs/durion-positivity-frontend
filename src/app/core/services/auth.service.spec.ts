@@ -674,4 +674,160 @@ describe('AuthService', () => {
       expect(service.hostTenantSlug()).toBeNull();
     });
   });
+
+  describe('storage write failures (ADR-0065 §6)', () => {
+    const TENANT_ID = '01990000-0000-7000-8000-00000000c003';
+
+    /** Builds an unsigned JWT carrying the given claims, deterministic for a given input. */
+    function tokenWith(claims: Record<string, unknown>): string {
+      const payload = btoa(
+        JSON.stringify({ sub: 'usr', roles: ['ADMIN'], exp: 9999999999, iat: 1700000000, ...claims }),
+      )
+        .replaceAll('+', '-')
+        .replaceAll('/', '_')
+        .replaceAll('=', '');
+      return `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.${payload}.sig`;
+    }
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('keeps the session usable when localStorage.setItem throws while storing access/refresh tokens', () => {
+      environment.mockAuth = false;
+      vi.spyOn(Storage.prototype, 'setItem').mockImplementation((key: string) => {
+        if (key === 'durion-access-token' || key === 'durion-refresh-token') {
+          throw new DOMException('QuotaExceededError');
+        }
+      });
+      const token = tokenWith({});
+
+      expect(() => {
+        service.login({ username: 'demo', password: 'testpass' }).subscribe();
+        httpMock
+          .expectOne(r => r.url.includes('/security-service/v1/auth/login'))
+          .flush({ accessToken: token, refreshToken: 'rt' });
+      }).not.toThrow();
+
+      expect(service.accessToken()).toBe(token);
+      expect(service.isAuthenticated()).toBe(true);
+    });
+
+    it('keeps roles readable in memory when sessionStorage.setItem throws while caching them', () => {
+      environment.mockAuth = false;
+      vi.spyOn(Storage.prototype, 'setItem').mockImplementation((key: string) => {
+        if (key === 'durion-user-roles' || key === 'durion-user-roles-exp') {
+          throw new DOMException('QuotaExceededError');
+        }
+      });
+
+      expect(() => {
+        service.login({ username: 'demo', password: 'testpass' }).subscribe();
+        httpMock
+          .expectOne(r => r.url.includes('/security-service/v1/auth/login'))
+          .flush({ accessToken: tokenWith({}), refreshToken: 'rt' });
+      }).not.toThrow();
+
+      expect(service.hasRole('ROLE_ADMIN')).toBe(true);
+    });
+
+    it('keeps the loaded tenant readable when sessionStorage.setItem throws while caching it', () => {
+      environment.mockAuth = false;
+      vi.spyOn(Storage.prototype, 'setItem').mockImplementation((key: string) => {
+        if (key === 'durion-tenant') {
+          throw new DOMException('QuotaExceededError');
+        }
+      });
+
+      expect(() => {
+        service.login({ username: 'demo', password: 'testpass' }).subscribe();
+        httpMock
+          .expectOne(r => r.url.includes('/security-service/v1/auth/login'))
+          .flush({ accessToken: tokenWith({ tid: TENANT_ID }), refreshToken: 'rt' });
+        httpMock
+          .expectOne(r => r.url.endsWith('/security-service/v1/tenants/me'))
+          .flush({ id: TENANT_ID, slug: 'acme-tire', displayName: 'Acme Tire & Auto', status: 'ACTIVE' });
+      }).not.toThrow();
+
+      expect(service.tenant()).toEqual({
+        tenantId: TENANT_ID,
+        slug: 'acme-tire',
+        displayName: 'Acme Tire & Auto',
+        status: 'ACTIVE',
+      });
+    });
+  });
+
+  describe('storage read failures (ADR-0065 §6)', () => {
+    /** Rebuilds the DI container and constructs a fresh AuthService, so field
+     * initializers (loadFromStorage / loadRolesFromSession) and the
+     * constructor (reconcileSessionFromToken → loadTenantFromSession) run
+     * again under whatever storage mock the test has installed. */
+    function freshService(): AuthService {
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        providers: [
+          AuthService,
+          provideRouter([]),
+          provideHttpClient(),
+          provideHttpClientTesting(),
+          { provide: SecurityConfiguration, useValue: new SecurityConfiguration({ basePath: `${environment.apiBaseUrl}/security-service` }) },
+        ],
+      });
+      const fresh = TestBed.inject(AuthService);
+      httpMock = TestBed.inject(HttpTestingController);
+      return fresh;
+    }
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('constructs with no session when Storage.prototype.getItem throws (SecurityError, storage disabled)', () => {
+      vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+        throw new DOMException('denied', 'SecurityError');
+      });
+
+      let fresh!: AuthService;
+      expect(() => {
+        fresh = freshService();
+      }).not.toThrow();
+
+      expect(fresh.accessToken()).toBeNull();
+      expect(fresh.isAuthenticated()).toBe(false);
+      expect(fresh.currentUserRoles()).toEqual([]);
+      expect(fresh.tenant()).toBeNull();
+      httpMock.expectNone(() => true);
+    });
+
+    it('constructs with no session when the localStorage accessor itself throws (SecurityError)', () => {
+      vi.spyOn(window, 'localStorage', 'get').mockImplementation(() => {
+        throw new DOMException('denied', 'SecurityError');
+      });
+
+      let fresh!: AuthService;
+      expect(() => {
+        fresh = freshService();
+      }).not.toThrow();
+
+      expect(fresh.accessToken()).toBeNull();
+      expect(fresh.isAuthenticated()).toBe(false);
+      httpMock.expectNone(() => true);
+    });
+
+    it('constructs with no session when the sessionStorage accessor itself throws (SecurityError)', () => {
+      vi.spyOn(window, 'sessionStorage', 'get').mockImplementation(() => {
+        throw new DOMException('denied', 'SecurityError');
+      });
+
+      let fresh!: AuthService;
+      expect(() => {
+        fresh = freshService();
+      }).not.toThrow();
+
+      expect(fresh.currentUserRoles()).toEqual([]);
+      expect(fresh.tenant()).toBeNull();
+      httpMock.expectNone(() => true);
+    });
+  });
 });

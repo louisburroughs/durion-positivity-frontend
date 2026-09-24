@@ -6,12 +6,13 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { CreateStaffingAssignmentRequest, StaffingAssignmentResponse } from '@durion-sdk/people';
 import { LocationService } from '../../../location/services/location.service';
 import { PeopleService } from '../../services/people.service';
+import { ModalDialogDirective } from '../../../../shared/modal-dialog.directive';
 
 @Component({
   selector: 'app-person-location-assignments-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, TranslatePipe],
+  imports: [ReactiveFormsModule, TranslatePipe, ModalDialogDirective],
   templateUrl: './person-location-assignments-page.component.html',
   styleUrl: './person-location-assignments-page.component.css',
 })

@@ -934,4 +934,44 @@ describe('WorkexecService', () => {
       expect(result).toEqual({ name: null, employeeNumber: null });
     });
   });
+
+  // ── #344: local, not UTC, "today" (ADR-0038 §1) ────────────────────────────
+  // Both methods used to fall back to `new Date().toISOString().slice(0, 10)`
+  // — the UTC date, which for evening local hours in any UTC-N zone is
+  // tomorrow. Frozen so the expectation cannot straddle local midnight; under
+  // a UTC CI clock this alone can't tell local getters from toISOString() —
+  // the enforcing test lives in core/utils/local-date.spec.ts.
+
+  describe('listTechniciansForLocation', () => {
+    it('requests the local calendar date, not the UTC date', () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date(2026, 8, 5, 23, 30, 0)); // 23:30 local, 5 Sep 2026
+      try {
+        service.listTechniciansForLocation('loc-1').subscribe();
+        const r = http.expectOne(
+          req => req.url === `${BASE}/v1/people/availability` && req.params.get('date') === '2026-09-05',
+        );
+        expect(r.request.method).toBe('GET');
+        r.flush([]);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+  });
+
+  describe('submitTravelSegments', () => {
+    it('falls back to the local calendar date, not the UTC date, when workDate is omitted', () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date(2026, 8, 5, 23, 30, 0)); // 23:30 local, 5 Sep 2026
+      try {
+        service.submitTravelSegments('assignment-1', {}).subscribe();
+        const r = http.expectOne(`${BASE}/v1/workorders/travelSegments/submit/assignment-1`);
+        expect(r.request.method).toBe('POST');
+        expect(r.request.body['workDate']).toBe('2026-09-05');
+        r.flush({});
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+  });
 });

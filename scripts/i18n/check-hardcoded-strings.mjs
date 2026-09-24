@@ -40,6 +40,7 @@
  */
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 const DEFAULT_ROOT = 'src/app';
 
@@ -215,98 +216,116 @@ function isProse(t) {
   return true;
 }
 
-const targets = process.argv.slice(2);
-const files = [...new Set(targets.length ? targets.flatMap(collect) : collect(DEFAULT_ROOT))].sort();
-const findings = [];
-let suppressed = 0;
+/**
+ * Pure scan: collect hardcoded-literal findings for a set of targets, with no printing and no
+ * `process.exit`. `options.targets` mirrors the CLI's positional args (paths to narrow the scan);
+ * an empty/absent list scans the whole `src/app` tree, exactly like running the CLI with no args.
+ */
+export function scan(options = {}) {
+  const targets = options.targets ?? [];
+  const files = [...new Set(targets.length ? targets.flatMap(collect) : collect(DEFAULT_ROOT))].sort();
+  const findings = [];
+  let suppressed = 0;
 
-for (const file of files) {
-  const raw = readFileSync(file, 'utf8');
-  const { coverage, markers } = parseSuppressions(file, raw);
-  const literals = [];
+  for (const file of files) {
+    const raw = readFileSync(file, 'utf8');
+    const { coverage, markers } = parseSuppressions(file, raw);
+    const literals = [];
 
-  // 1) static localizable attributes (scan raw so we keep them in context)
-  raw.split('\n').forEach((line, i) => {
-    if (IGNORE_NEXT_RE.test(line) || IGNORE_START_RE.test(line)) return;   // the marker's own reason text
-    let m;
-    ATTR_RE.lastIndex = 0;
-    while ((m = ATTR_RE.exec(line))) {
-      literals.push({ file, lineNo: i + 1, kind: `attr ${m[1]}`, text: m[2].trim() });
+    // 1) static localizable attributes (scan raw so we keep them in context)
+    raw.split('\n').forEach((line, i) => {
+      if (IGNORE_NEXT_RE.test(line) || IGNORE_START_RE.test(line)) return;   // the marker's own reason text
+      let m;
+      ATTR_RE.lastIndex = 0;
+      while ((m = ATTR_RE.exec(line))) {
+        literals.push({ file, lineNo: i + 1, kind: `attr ${m[1]}`, text: m[2].trim() });
+      }
+    });
+
+    // 2) visible text: strip comments, <style>/<script> bodies, icon ligatures,
+    // interpolations, then tags and control-flow tokens (all newline-safe).
+    // Whatever prose is left is an un-translated literal.
+    let stripped = blank(raw, /<!--[\s\S]*?-->/g);
+    stripped = blank(stripped, /<(style|script)\b[^>]*>[\s\S]*?<\/\1>/gi);
+    stripped = blankGroup(stripped, ICON_TEXT_RE, 2);
+    stripped = blank(stripped, /\{\{[\s\S]*?\}\}/g);
+    stripped = blankTags(stripped);
+    stripped = blankControlFlow(stripped);
+    stripped = stripped.replace(/[{}]/g, ' ');
+
+    stripped.split('\n').forEach((line, i) => {
+      if (isProse(line)) {
+        literals.push({ file, lineNo: i + 1, kind: 'text', text: line.trim().replace(/\s+/g, ' ').slice(0, 80) });
+      }
+    });
+
+    // 3) apply the template's i18n-ignore markers, then audit the markers themselves.
+    for (const lit of literals) {
+      const marker = coverage.get(lit.lineNo);
+      if (marker) { marker.used = true; suppressed++; } else { findings.push(lit); }
     }
-  });
 
-  // 2) visible text: strip comments, <style>/<script> bodies, icon ligatures,
-  // interpolations, then tags and control-flow tokens (all newline-safe).
-  // Whatever prose is left is an un-translated literal.
-  let stripped = blank(raw, /<!--[\s\S]*?-->/g);
-  stripped = blank(stripped, /<(style|script)\b[^>]*>[\s\S]*?<\/\1>/gi);
-  stripped = blankGroup(stripped, ICON_TEXT_RE, 2);
-  stripped = blank(stripped, /\{\{[\s\S]*?\}\}/g);
-  stripped = blankTags(stripped);
-  stripped = blankControlFlow(stripped);
-  stripped = stripped.replace(/[{}]/g, ' ');
-
-  stripped.split('\n').forEach((line, i) => {
-    if (isProse(line)) {
-      literals.push({ file, lineNo: i + 1, kind: 'text', text: line.trim().replace(/\s+/g, ' ').slice(0, 80) });
+    for (const marker of markers) {
+      if (marker.unterminated) {
+        findings.push({ file, lineNo: marker.lineNo, kind: 'i18n-ignore', text: 'i18n-ignore-start without a matching i18n-ignore-end' });
+      } else if (!marker.reason) {
+        findings.push({ file, lineNo: marker.lineNo, kind: 'i18n-ignore', text: `${marker.kind} needs a reason: <!-- ${marker.kind}: why this stays untranslated -->` });
+      } else if (!marker.used) {
+        findings.push({ file, lineNo: marker.lineNo, kind: 'i18n-ignore', text: `${marker.kind} suppresses nothing — delete it` });
+      }
     }
-  });
-
-  // 3) apply the template's i18n-ignore markers, then audit the markers themselves.
-  for (const lit of literals) {
-    const marker = coverage.get(lit.lineNo);
-    if (marker) { marker.used = true; suppressed++; } else { findings.push(lit); }
   }
 
-  for (const marker of markers) {
-    if (marker.unterminated) {
-      findings.push({ file, lineNo: marker.lineNo, kind: 'i18n-ignore', text: 'i18n-ignore-start without a matching i18n-ignore-end' });
-    } else if (!marker.reason) {
-      findings.push({ file, lineNo: marker.lineNo, kind: 'i18n-ignore', text: `${marker.kind} needs a reason: <!-- ${marker.kind}: why this stays untranslated -->` });
-    } else if (!marker.used) {
-      findings.push({ file, lineNo: marker.lineNo, kind: 'i18n-ignore', text: `${marker.kind} suppresses nothing — delete it` });
-    }
-  }
+  return { targets, files, findings, suppressed };
 }
 
-const scope = targets.length ? targets.join(', ') : `${DEFAULT_ROOT} (all modules)`;
-const suppressedNote = suppressed
-  ? `  (${suppressed} literal(s) suppressed by i18n-ignore markers)`
-  : '';
+function main() {
+  const targets = process.argv.slice(2);
+  const { files, findings, suppressed } = scan({ targets });
 
-if (findings.length) {
-  const byModule = new Map();
-  for (const f of findings) {
-    const mod = moduleOf(f.file);
-    if (!byModule.has(mod)) byModule.set(mod, []);
-    byModule.get(mod).push(f);
-  }
-  const ranked = [...byModule].sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0]));
+  const scope = targets.length ? targets.join(', ') : `${DEFAULT_ROOT} (all modules)`;
+  const suppressedNote = suppressed
+    ? `  (${suppressed} literal(s) suppressed by i18n-ignore markers)`
+    : '';
 
-  console.error(
-    `FAIL hardcoded-string check: ${findings.length} user-visible literal(s) ` +
-    `across ${byModule.size} module(s) in ${scope}.\n`,
-  );
-  for (const [mod, list] of ranked) {
-    const fileCount = new Set(list.map((f) => f.file)).size;
-    console.error(`  ${mod}: ${list.length} literal(s) in ${fileCount} template(s)`);
-  }
-  console.error('');
+  if (findings.length) {
+    const byModule = new Map();
+    for (const f of findings) {
+      const mod = moduleOf(f.file);
+      if (!byModule.has(mod)) byModule.set(mod, []);
+      byModule.get(mod).push(f);
+    }
+    const ranked = [...byModule].sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0]));
 
-  for (const [mod, list] of ranked) {
-    console.error(`${mod}`);
-    for (const f of list) {
-      console.error(`  ${f.file}:${f.lineNo}  [${f.kind}]  "${f.text}"`);
+    console.error(
+      `FAIL hardcoded-string check: ${findings.length} user-visible literal(s) ` +
+      `across ${byModule.size} module(s) in ${scope}.\n`,
+    );
+    for (const [mod, list] of ranked) {
+      const fileCount = new Set(list.map((f) => f.file)).size;
+      console.error(`  ${mod}: ${list.length} literal(s) in ${fileCount} template(s)`);
     }
     console.error('');
+
+    for (const [mod, list] of ranked) {
+      console.error(`${mod}`);
+      for (const f of list) {
+        console.error(`  ${f.file}:${f.lineNo}  [${f.kind}]  "${f.text}"`);
+      }
+      console.error('');
+    }
+    if (suppressedNote) console.error(`${suppressedNote.trim()}\n`);
+    console.error('Wrap each in the | translate pipe with a key in src/assets/i18n/*.json (ADR-0030).');
+    console.error(`Remediate one module at a time: node ${relative('.', process.argv[1])} src/app/features/<module>`);
+    process.exit(1);
   }
-  if (suppressedNote) console.error(`${suppressedNote.trim()}\n`);
-  console.error('Wrap each in the | translate pipe with a key in src/assets/i18n/*.json (ADR-0030).');
-  console.error(`Remediate one module at a time: node ${relative('.', process.argv[1])} src/app/features/<module>`);
-  process.exit(1);
+
+  console.log(
+    `PASS hardcoded-string check: no user-visible literals in ${scope} ` +
+    `(${files.length} files scanned).${suppressedNote}`,
+  );
 }
 
-console.log(
-  `PASS hardcoded-string check: no user-visible literals in ${scope} ` +
-  `(${files.length} files scanned).${suppressedNote}`,
-);
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main();
+}

@@ -2264,7 +2264,8 @@
       "TECH_LANE": "Technician lane — the second half of capacity",
       "TECH_LANE_NOTE": "a bay without a certified technician is not capacity",
       "HOURS_ASSIGNED": "{{count}} hr assigned",
-      "NO_TECHNICIANS": "No technicians on this location roster."
+      "NO_TECHNICIANS": "No technicians on this location roster.",
+      "JOB_SEARCH_ERROR": "Could not search job types. Try again."
     },
     "APPOINTMENT_ASSIGNMENT": {
       "TITLE": "Appointment Assignment",

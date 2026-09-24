@@ -146,6 +146,8 @@ describe('PersonLocationAssignmentsPageComponent [CAP-119 #150]', () => {
 
     const dialog = fixture.debugElement.query(By.css('[data-testid="create-dialog"]'));
     expect(dialog).not.toBeNull();
+    expect(dialog.nativeElement.tagName).toBe('DIALOG');
+    expect((dialog.nativeElement as HTMLDialogElement).matches(':modal')).toBe(true);
   });
 
   // T6 ─────────────────────────────────────────────────────────────────────
@@ -219,6 +221,9 @@ describe('PersonLocationAssignmentsPageComponent [CAP-119 #150]', () => {
 
     const dialog = fixture.debugElement.query(By.css('[data-testid="end-confirm-dialog"]'));
     expect(dialog).not.toBeNull();
+    expect(dialog.nativeElement.tagName).toBe('DIALOG');
+    expect(dialog.nativeElement.getAttribute('role')).toBe('alertdialog');
+    expect((dialog.nativeElement as HTMLDialogElement).matches(':modal')).toBe(true);
   });
 
   // T10 ────────────────────────────────────────────────────────────────────

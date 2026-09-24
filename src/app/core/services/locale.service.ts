@@ -1,7 +1,22 @@
 import { inject, Injectable, PLATFORM_ID, signal } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
+import { isPlatformBrowser, registerLocaleData } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
 import { TranslateService } from '@ngx-translate/core';
+import localeEsUS from '@angular/common/locales/es-US';
+import localeEsMX from '@angular/common/locales/es-MX';
+import localeFrCA from '@angular/common/locales/fr-CA';
+import localeFr from '@angular/common/locales/fr';
+
+// Angular's `formatDate`/`formatNumber` (and the `date`/`number`/`currency`
+// pipes) throw NG0701 for any locale without registered CLDR data. 'en-US'
+// falls back to Angular's built-in 'en' data for free; the other locales the
+// header dropdown offers do not ship registered by default, so every page
+// that formats with the user's *chosen* locale (ADR-0030) needs them
+// registered once, here, before any component can read `currentLocale()`.
+registerLocaleData(localeEsUS, 'es-US');
+registerLocaleData(localeEsMX, 'es-MX');
+registerLocaleData(localeFrCA, 'fr-CA');
+registerLocaleData(localeFr, 'fr-FR');
 
 export const LOCALE_OPTIONS = [
   { code: 'en-US', labelKey: 'SHELL.HEADER.LOCALE.OPTION.EN_US' },
@@ -17,6 +32,7 @@ const SUPPORTED_LOCALES = LOCALE_OPTIONS.map((locale) => locale.code) as [
 ];
 type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];
 
+// arch: non-tenant storage — UI locale preference, not keyed by tenant or user (ADR-0065 §6)
 @Injectable({ providedIn: 'root' })
 export class LocaleService {
   private readonly platformId = inject(PLATFORM_ID);
@@ -86,7 +102,13 @@ export class LocaleService {
       return null;
     }
 
-    return this.normalizeLocale(localStorage.getItem(this.storageKey));
+    try {
+      return this.normalizeLocale(localStorage.getItem(this.storageKey));
+    } catch {
+      // Storage disabled (private window, blocked site data) or inaccessible:
+      // fall back to the browser-preferred locale / default.
+      return null;
+    }
   }
 
   private persistLocale(locale: SupportedLocale): void {
@@ -94,7 +116,12 @@ export class LocaleService {
       return;
     }
 
-    localStorage.setItem(this.storageKey, locale);
+    try {
+      localStorage.setItem(this.storageKey, locale);
+    } catch {
+      // Quota exceeded or storage disabled: the locale stays active for this
+      // page load via currentLocale; it just won't be remembered on reload.
+    }
   }
 
   private getBrowserPreferredLocale(): SupportedLocale | null {

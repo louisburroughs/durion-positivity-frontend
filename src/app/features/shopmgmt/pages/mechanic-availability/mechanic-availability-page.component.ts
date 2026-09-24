@@ -7,6 +7,7 @@ import {
   PeopleAvailabilityResponseAssignmentStatusEnum,
 } from '@durion-sdk/people';
 import { DispatchBoardService } from '../../services/dispatch-board.service';
+import { isoDateLocal } from '../../models/capacity-calendar.models';
 
 @Component({
   selector: 'app-mechanic-availability-page',
@@ -93,6 +94,6 @@ export class MechanicAvailabilityPageComponent implements OnInit {
   }
 
   private todayIso(): string {
-    return new Date().toISOString().slice(0, 10);
+    return isoDateLocal(new Date()); // ADR-0038 §1 — local, not UTC, date
   }
 }

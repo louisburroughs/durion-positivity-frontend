@@ -40,15 +40,19 @@
               (input)="onJobQuery($any($event.target).value)"
               [attr.aria-label]="'SHOPMGMT.SCHEDULE_VIEW.JOB_SEARCH_ARIA' | translate"
               [attr.placeholder]="'SHOPMGMT.SCHEDULE_VIEW.JOB_SEARCH_ARIA' | translate" />
-            @for (option of jobOptions(); track option.serviceId) {
-              <button type="button" class="job-option" (click)="selectJob(option)">
-                <span class="job-option-name">{{ option.label }}</span>
-                <span class="job-option-duration">
-                  {{ 'SHOPMGMT.SCHEDULE_VIEW.HOURS_SHORT' | translate: { hours: option.durationHours } }}
-                </span>
-              </button>
-            } @empty {
-              <p class="job-option-empty">{{ 'SHOPMGMT.SCHEDULE_VIEW.JOB_SEARCH_EMPTY' | translate }}</p>
+            @if (jobSearchFailed()) {
+              <p class="job-option-error" role="alert">{{ 'SHOPMGMT.SCHEDULE_VIEW.JOB_SEARCH_ERROR' | translate }}</p>
+            } @else {
+              @for (option of jobOptions(); track option.serviceId) {
+                <button type="button" class="job-option" (click)="selectJob(option)">
+                  <span class="job-option-name">{{ option.label }}</span>
+                  <span class="job-option-duration">
+                    {{ 'SHOPMGMT.SCHEDULE_VIEW.HOURS_SHORT' | translate: { hours: option.durationHours } }}
+                  </span>
+                </button>
+              } @empty {
+                <p class="job-option-empty">{{ 'SHOPMGMT.SCHEDULE_VIEW.JOB_SEARCH_EMPTY' | translate }}</p>
+              }
             }
           </div>
         }

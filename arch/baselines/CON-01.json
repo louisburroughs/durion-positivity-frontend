@@ -1,0 +1,7 @@
+[
+  {
+    "key": "src/app/features/auth/organization-search.service.ts :: not under services/ folder",
+    "reason": "pre-existing service placed at the feature root before the services/ convention was enforced; move it in a follow-up.",
+    "tracking": "#348"
+  }
+]

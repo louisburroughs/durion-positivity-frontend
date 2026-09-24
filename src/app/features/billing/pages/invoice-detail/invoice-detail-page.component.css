@@ -389,26 +389,21 @@
 
 /* ── Modal ──────────────────────────────────────────────────────────────── */
 
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(18, 18, 19, 0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 200;
-  padding: var(--space-4);
-}
-
 .modal {
   background: var(--cardBackground);
   border-radius: var(--radius-lg);
+  border: none;
   min-width: 320px;
   max-width: 480px;
   width: 100%;
+  padding: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+}
+
+.modal::backdrop {
+  background: rgba(18, 18, 19, 0.45);
 }
 
 .modal__header {

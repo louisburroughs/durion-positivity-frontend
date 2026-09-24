@@ -137,8 +137,11 @@ describe('TimeApprovalPageComponent', () => {
     expect(rejectBtn).toBeTruthy();
     rejectBtn.click();
     fixture.detectChanges();
-    const dialog = fixture.nativeElement.querySelector('[data-testid="reject-dialog"]');
+    const dialog = fixture.nativeElement.querySelector('[data-testid="reject-dialog"]') as HTMLDialogElement | null;
     expect(dialog).toBeTruthy();
+    expect(dialog?.tagName).toBe('DIALOG');
+    expect(dialog?.getAttribute('role')).toBe('alertdialog');
+    expect(dialog?.matches(':modal')).toBe(true);
   });
 
   it('T9: submit-reject-btn calls rejectTimePeriod and closes dialog on success', () => {

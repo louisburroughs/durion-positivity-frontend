@@ -4,11 +4,12 @@ import { Router } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { SecurityRole } from '../../../models/security.models';
 import { SecurityService } from '../../../services/security.service';
+import { ModalDialogDirective } from '../../../../../shared/modal-dialog.directive';
 
 @Component({
   selector: 'app-roles-list-page',
   standalone: true,
-  imports: [TranslatePipe],
+  imports: [TranslatePipe, ModalDialogDirective],
   templateUrl: './roles-list-page.component.html',
   styleUrl: './roles-list-page.component.css',
 })

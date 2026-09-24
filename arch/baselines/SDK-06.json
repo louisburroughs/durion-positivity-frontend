@@ -1,0 +1,22 @@
+[
+  {
+    "key": "src/app/features/accounting/services/accounting.service.ts :: 'apiBaseUrl'",
+    "reason": "reads environment.apiBaseUrl directly instead of through ApiBaseService/app.config; migrates with PRD-sdk-migration-completion.md.",
+    "tracking": "#350"
+  },
+  {
+    "key": "src/app/features/billing/pages/invoice-detail/invoice-detail-page.component.ts :: 'apiBaseUrl'",
+    "reason": "reads environment.apiBaseUrl directly for a document-download URL instead of through ApiBaseService/app.config; migrates with PRD-sdk-migration-completion.md.",
+    "tracking": "#350"
+  },
+  {
+    "key": "src/app/features/bulk-import/services/bulk-import.service.ts :: 'apiBaseUrl'",
+    "reason": "reads environment.apiBaseUrl directly instead of through ApiBaseService/app.config; migrates with PRD-sdk-migration-completion.md.",
+    "tracking": "#350"
+  },
+  {
+    "key": "src/app/features/shell/services/chat-api.service.ts :: 'apiBaseUrl'",
+    "reason": "reads environment.apiBaseUrl directly instead of through ApiBaseService/app.config; migrates with PRD-sdk-migration-completion.md.",
+    "tracking": "#350"
+  }
+]

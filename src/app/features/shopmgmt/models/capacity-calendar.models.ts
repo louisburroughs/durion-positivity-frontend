@@ -24,6 +24,7 @@
  * `CapacityCalendarService` does the composition and hands these functions
  * already-normalized inputs.
  */
+import { isoDateLocal, parseIsoDateLocal } from '../../../core/utils/local-date';
 
 /** Operational state of one bay for one whole hour. */
 export type BayHourState =
@@ -278,25 +279,8 @@ export interface CapacityCalendarView {
 
 // ── Pure helpers ────────────────────────────────────────────────────────────
 
-/**
- * Local-calendar `YYYY-MM-DD`.
- *
- * ADR-0038 rejects `toISOString().slice(0, 10)` by name: it is UTC, so in any
- * UTC-N zone it returns tomorrow's date during the last hours of the local day
- * — which here would ask for the wrong day's board.
- */
-export function isoDateLocal(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
-
-/** Parses `YYYY-MM-DD` as local midnight, not the UTC instant `new Date(s)` gives. */
-export function parseIsoDateLocal(iso: string): Date {
-  const [year, month, day] = iso.split('-').map(Number);
-  return new Date(year, (month ?? 1) - 1, day ?? 1);
-}
+// Local-date helpers moved to core so other features can share them (ADR-0010 §3).
+export { isoDateLocal, parseIsoDateLocal };
 
 /**
  * True when `bay` can perform `job`.

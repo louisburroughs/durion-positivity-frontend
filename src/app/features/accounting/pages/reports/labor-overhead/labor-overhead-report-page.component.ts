@@ -7,8 +7,10 @@ import {
   inject,
   signal,
 } from '@angular/core';
+import { formatNumber } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
+import { LocaleService } from '../../../../../core/services/locale.service';
 import { LocationPickerComponent } from '../../../../location/components/location-picker/location-picker.component';
 import { LaborOverheadReport, LaborOverheadReportLine } from '../../../models/accounting.models';
 import { AccountingService } from '../../../services/accounting.service';
@@ -28,6 +30,7 @@ const YEAR_SPAN = 5;
 export class LaborOverheadReportPageComponent {
   private readonly accountingService = inject(AccountingService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly locale = inject(LocaleService);
 
   readonly state = signal<ReportState>('idle');
   readonly report = signal<LaborOverheadReport | null>(null);
@@ -99,10 +102,14 @@ export class LaborOverheadReportPageComponent {
     return this.openHelpCode() === code;
   }
 
-  /** Whole-dollar formatting; negatives in accounting parentheses. */
+  /**
+   * Whole-dollar formatting; negatives in accounting parentheses. Reading
+   * `currentLocale()` here re-renders the grid when the language changes
+   * (ADR-0030), matching `displayDate` on the pay-periods page.
+   */
   formatAmount(value: number): string {
     const rounded = Math.round(value ?? 0);
-    const grouped = Math.abs(rounded).toLocaleString('en-US');
+    const grouped = formatNumber(Math.abs(rounded), this.locale.currentLocale(), '1.0-0');
     return rounded < 0 ? `(${grouped})` : grouped;
   }
 

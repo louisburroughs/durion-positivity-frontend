@@ -8,6 +8,7 @@ import type { ServiceDto } from '@durion-sdk/catalog';
 import { ScheduleAPIService, TechnicianAPIService, TechnicianCredentialResponseStatusEnum } from '@durion-sdk/shop-manager';
 import type { TechnicianCredentialResponse } from '@durion-sdk/shop-manager';
 import { CapacityCalendarService, heldSkillCodes } from './capacity-calendar.service';
+import type { JobRequirement } from '../models/capacity-calendar.models';
 
 /**
  * The transport mappings the capacity engine depends on (CAP-325, CAP-329): what a catalog
@@ -70,6 +71,44 @@ describe('CapacityCalendarService', () => {
       );
       expect(job.skillCodes).toEqual(['DOT-INSPECTOR']);
       expect(job.skillRequirementsConfigured).toBe(true);
+    });
+  });
+
+  describe('searchJobTypes', () => {
+    const catalogApi = () =>
+      TestBed.inject(ProductsAPIService) as unknown as { searchCatalogServices: ReturnType<typeof vi.fn> };
+
+    it('answers { options: [], ok: true } without calling the catalog for a blank query', () => {
+      let result: { options: unknown[]; ok: boolean } | undefined;
+      service.searchJobTypes('   ').subscribe(r => (result = r));
+
+      expect(result).toEqual({ options: [], ok: true });
+      expect(catalogApi().searchCatalogServices).not.toHaveBeenCalled();
+    });
+
+    it('maps catalog services to job requirements and answers ok: true', () => {
+      catalogApi().searchCatalogServices.mockReturnValue(of([catalogService()]));
+      let result: { options: JobRequirement[]; ok: boolean } | undefined;
+
+      service.searchJobTypes('brake').subscribe(r => (result = r));
+
+      expect(catalogApi().searchCatalogServices).toHaveBeenCalledWith('brake', 20);
+      expect(result?.ok).toBe(true);
+      expect(result?.options).toHaveLength(1);
+      expect(result?.options[0].serviceId).toBe('svc-1');
+    });
+
+    // #343 (ADR-0064 §1): a catalog outage must not look like "no matches" —
+    // it now surfaces as ok: false, never a bare empty array (was `of([])`).
+    it('answers { options: [], ok: false } instead of silently swallowing a catalog failure', () => {
+      catalogApi().searchCatalogServices.mockReturnValue(
+        throwError(() => new HttpErrorResponse({ status: 500 })),
+      );
+      let result: { options: unknown[]; ok: boolean } | undefined;
+
+      service.searchJobTypes('brake').subscribe(r => (result = r));
+
+      expect(result).toEqual({ options: [], ok: false });
     });
   });
 

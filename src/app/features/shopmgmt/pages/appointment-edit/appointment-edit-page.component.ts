@@ -6,6 +6,7 @@ import { ActivatedRoute } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AppointmentService } from '../../services/appointment.service';
 import type { AppointmentDetail, Conflict } from '../../models/appointment.models';
+import { ModalDialogDirective } from '../../../../shared/modal-dialog.directive';
 
 export interface AuditEntry {
   id?: string;
@@ -18,7 +19,7 @@ export interface AuditEntry {
 @Component({
   selector: 'app-appointment-edit-page',
   standalone: true,
-  imports: [ReactiveFormsModule, TranslatePipe],
+  imports: [ReactiveFormsModule, TranslatePipe, ModalDialogDirective],
   templateUrl: './appointment-edit-page.component.html',
   styleUrl: './appointment-edit-page.component.css',
 })

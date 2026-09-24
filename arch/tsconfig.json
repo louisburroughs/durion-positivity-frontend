@@ -1,0 +1,12 @@
+/* Typechecks the architecture suite itself (`npx tsc -p arch`). Not part of the app or spec programs. */
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "types": ["node", "vitest/globals"]
+  },
+  "include": ["**/*.ts"],
+  "exclude": ["fixtures/**"]
+}

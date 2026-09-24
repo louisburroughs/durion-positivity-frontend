@@ -2264,7 +2264,8 @@
       "TECH_LANE": "Couloir technicien — la seconde moitié de la capacité",
       "TECH_LANE_NOTE": "une baie sans technicien certifié n’est pas de la capacité",
       "HOURS_ASSIGNED": "{{count}} h affectées",
-      "NO_TECHNICIANS": "Aucun technicien dans l’effectif de ce site."
+      "NO_TECHNICIANS": "Aucun technicien dans l’effectif de ce site.",
+      "JOB_SEARCH_ERROR": "Impossible de rechercher les types de travaux. Veuillez réessayer."
     },
     "APPOINTMENT_ASSIGNMENT": {
       "TITLE": "Affectation de rendez-vous",

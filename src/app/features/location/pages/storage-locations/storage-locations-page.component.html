@@ -190,7 +190,7 @@
   }
 
   @if (showDeactivateDialog()) {
-  <dialog class="modal-backdrop" open tabindex="-1" (keydown.escape)="cancelDeactivate()" aria-modal="true"
+  <dialog class="modal-backdrop" appModalDialog (modalCancel)="cancelDeactivate()"
     aria-labelledby="deactivate-dialog-title" data-testid="deactivate-dialog">
     <div class="modal-panel">
       <h2 id="deactivate-dialog-title">{{ 'LOCATION.STORAGE.DEACTIVATE_TITLE' | translate }}</h2>

@@ -3,6 +3,8 @@ import { isPlatformBrowser } from '@angular/common';
 
 const HISTORY_RAIL_KEY = 'durion-chat-history-rail';
 
+// arch: non-tenant storage — history-rail layout preference, not keyed by tenant or user (ADR-0065 §6)
+
 /**
  * ChatUiService
  * -------------

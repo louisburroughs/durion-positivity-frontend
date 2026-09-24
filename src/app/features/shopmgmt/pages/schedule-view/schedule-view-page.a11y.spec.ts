@@ -137,7 +137,7 @@ describe('Capacity calendar a11y (rendered DOM)', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     capacityStub.getCalendar.mockReturnValue(of(VIEW));
-    capacityStub.searchJobTypes.mockReturnValue(of([JOB]));
+    capacityStub.searchJobTypes.mockReturnValue(of({ options: [JOB], ok: true }));
     locationServiceStub.getAllLocations.mockReturnValue(of([{ id: 'loc-1', name: 'Riverside' }]));
     locationServiceStub.getLocationById.mockReturnValue(of(null));
 

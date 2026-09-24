@@ -4,6 +4,7 @@ import { Observable, forkJoin, of, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { EmployeeAPIService, PeopleAvailabilityAPIService, PeopleAvailabilityResponse } from '@durion-sdk/people';
 import { ApiBaseService } from '../../../core/services/api-base.service';
+import { isoDateLocal } from '../../../core/utils/local-date';
 import {
   ChangeRequestAPIService,
   EstimateAPIService,
@@ -943,7 +944,7 @@ export class WorkexecService {
    * those stems.
    */
   listTechniciansForLocation(locationId: string): Observable<LocationTechnician[]> {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = isoDateLocal(new Date()); // ADR-0038 §1 — local, not UTC, date
     return this.peopleAvailability.listPeopleAvailability(locationId.trim(), today).pipe(
       map(roster => (roster ?? [])
         .filter(p => String(p.assignmentStatus) !== 'ENDED' && this.isTechnicianRole(p.role))
@@ -1454,7 +1455,7 @@ export class WorkexecService {
     _idempotencyKey?: string,
   ): Observable<unknown> {
     const sdkRequest: import('@durion-sdk/workorder').SubmitTravelSegmentsRequest = {
-      workDate: typeof body['workDate'] === 'string' ? body['workDate'] : new Date().toISOString().slice(0, 10),
+      workDate: typeof body['workDate'] === 'string' ? body['workDate'] : isoDateLocal(new Date()), // ADR-0038 §1
       notes: typeof body['notes'] === 'string' ? body['notes'] : undefined,
     };
     return this.travelSegment.submitTravelSegments(mobileWorkAssignmentId, sdkRequest);

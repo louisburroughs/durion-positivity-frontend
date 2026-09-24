@@ -289,8 +289,14 @@ export class AuthService {
     this._accessToken.set(accessToken);
     this._refreshToken.set(refreshToken);
     if (isPlatformBrowser(this.platformId)) {
-      localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
-      localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+      try {
+        localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
+        localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+      } catch {
+        // Quota exceeded or storage disabled (private window, blocked site data):
+        // the session stays usable from the signals set above; it just won't
+        // survive a reload.
+      }
     }
     this.cacheRolesFromToken(accessToken);
     this.syncTenant(previousTenantId);
@@ -309,11 +315,15 @@ export class AuthService {
     this.tenantLoadFor = null;
 
     if (isPlatformBrowser(this.platformId)) {
-      localStorage.removeItem(ACCESS_TOKEN_KEY);
-      localStorage.removeItem(REFRESH_TOKEN_KEY);
-      sessionStorage.removeItem(ROLES_KEY);
-      sessionStorage.removeItem(ROLES_EXP_KEY);
-      sessionStorage.removeItem(TENANT_KEY);
+      try {
+        localStorage.removeItem(ACCESS_TOKEN_KEY);
+        localStorage.removeItem(REFRESH_TOKEN_KEY);
+        sessionStorage.removeItem(ROLES_KEY);
+        sessionStorage.removeItem(ROLES_EXP_KEY);
+        sessionStorage.removeItem(TENANT_KEY);
+      } catch {
+        // Storage disabled: the signals above already reflect the cleared session.
+      }
     }
   }
 
@@ -335,7 +345,11 @@ export class AuthService {
       this._tenant.set(null);
       this.tenantLoadFor = null;
       if (isPlatformBrowser(this.platformId)) {
-        sessionStorage.removeItem(TENANT_KEY);
+        try {
+          sessionStorage.removeItem(TENANT_KEY);
+        } catch {
+          // Storage disabled: nothing persisted to clear.
+        }
       }
     }
 
@@ -393,7 +407,12 @@ export class AuthService {
         if (this.tenantId() !== tenantId) return;
         const tenant = this.toTenantSummary(response, tenantId);
         this._tenant.set(tenant);
-        sessionStorage.setItem(TENANT_KEY, JSON.stringify(tenant));
+        try {
+          sessionStorage.setItem(TENANT_KEY, JSON.stringify(tenant));
+        } catch {
+          // Quota exceeded or storage disabled: the tenant stays available for
+          // this page load from the signal; a reload simply re-fetches it.
+        }
       },
       error: (err: unknown) => {
         // The tenant name is presentation only; the session stays usable
@@ -417,29 +436,40 @@ export class AuthService {
   private loadTenantFromSession(): TenantSummary | null {
     if (!isPlatformBrowser(this.platformId)) return null;
 
-    const raw = sessionStorage.getItem(TENANT_KEY);
-    if (!raw) return null;
-
     try {
-      const parsed: unknown = JSON.parse(raw);
-      if (
-        parsed &&
-        typeof parsed === 'object' &&
-        typeof (parsed as TenantSummary).tenantId === 'string' &&
-        typeof (parsed as TenantSummary).slug === 'string'
-      ) {
-        return parsed as TenantSummary;
+      const raw = sessionStorage.getItem(TENANT_KEY);
+      if (!raw) return null;
+
+      try {
+        const parsed: unknown = JSON.parse(raw);
+        if (
+          parsed &&
+          typeof parsed === 'object' &&
+          typeof (parsed as TenantSummary).tenantId === 'string' &&
+          typeof (parsed as TenantSummary).slug === 'string'
+        ) {
+          return parsed as TenantSummary;
+        }
+      } catch {
+        // fall through — a corrupt cache is simply discarded
       }
+      sessionStorage.removeItem(TENANT_KEY);
+      return null;
     } catch {
-      // fall through — a corrupt cache is simply discarded
+      // Storage disabled (private window, blocked site data) or inaccessible:
+      // treat as no cached tenant.
+      return null;
     }
-    sessionStorage.removeItem(TENANT_KEY);
-    return null;
   }
 
   private loadFromStorage(key: string): string | null {
-    if (typeof localStorage === 'undefined') return null;
-    return localStorage.getItem(key);
+    try {
+      if (typeof localStorage === 'undefined') return null;
+      return localStorage.getItem(key);
+    } catch {
+      // Storage disabled or inaccessible: treat as no persisted value.
+      return null;
+    }
   }
 
   private decodeJwt(token: string): JwtClaims | null {
@@ -455,24 +485,30 @@ export class AuthService {
   private loadRolesFromSession(): string[] {
     if (!isPlatformBrowser(this.platformId)) return [];
 
-    const expRaw = sessionStorage.getItem(ROLES_EXP_KEY);
-    const rolesRaw = sessionStorage.getItem(ROLES_KEY);
-
-    if (!expRaw || !rolesRaw) return [];
-
-    const expiresAt = Number(expRaw);
-    if (!Number.isFinite(expiresAt) || expiresAt <= Date.now()) {
-      sessionStorage.removeItem(ROLES_KEY);
-      sessionStorage.removeItem(ROLES_EXP_KEY);
-      return [];
-    }
-
     try {
-      const parsed = JSON.parse(rolesRaw);
-      return Array.isArray(parsed) ? parsed.filter(r => typeof r === 'string') : [];
+      const expRaw = sessionStorage.getItem(ROLES_EXP_KEY);
+      const rolesRaw = sessionStorage.getItem(ROLES_KEY);
+
+      if (!expRaw || !rolesRaw) return [];
+
+      const expiresAt = Number(expRaw);
+      if (!Number.isFinite(expiresAt) || expiresAt <= Date.now()) {
+        sessionStorage.removeItem(ROLES_KEY);
+        sessionStorage.removeItem(ROLES_EXP_KEY);
+        return [];
+      }
+
+      try {
+        const parsed = JSON.parse(rolesRaw);
+        return Array.isArray(parsed) ? parsed.filter(r => typeof r === 'string') : [];
+      } catch {
+        sessionStorage.removeItem(ROLES_KEY);
+        sessionStorage.removeItem(ROLES_EXP_KEY);
+        return [];
+      }
     } catch {
-      sessionStorage.removeItem(ROLES_KEY);
-      sessionStorage.removeItem(ROLES_EXP_KEY);
+      // Storage disabled (private window, blocked site data) or inaccessible:
+      // treat as no cached roles.
       return [];
     }
   }
@@ -513,8 +549,13 @@ export class AuthService {
     this._roles.set(effectiveRoles);
 
     if (isPlatformBrowser(this.platformId)) {
-      sessionStorage.setItem(ROLES_KEY, JSON.stringify(effectiveRoles));
-      sessionStorage.setItem(ROLES_EXP_KEY, String(sessionExpiryMs));
+      try {
+        sessionStorage.setItem(ROLES_KEY, JSON.stringify(effectiveRoles));
+        sessionStorage.setItem(ROLES_EXP_KEY, String(sessionExpiryMs));
+      } catch {
+        // Quota exceeded or storage disabled: roles stay correct in the signal
+        // for this page load; a reload re-derives them from the access token.
+      }
     }
 
     this.scheduleSessionExpiry(sessionExpiryMs);

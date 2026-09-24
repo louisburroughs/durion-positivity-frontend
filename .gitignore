@@ -63,3 +63,6 @@ PR-Review-Processing.md
 .worktrees/
 .tokensave
 repomix-output.*
+
+# Architecture suite reports (arch/rules/reports.arch.spec.ts)
+/reports

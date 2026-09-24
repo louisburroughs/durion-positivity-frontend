@@ -11,7 +11,7 @@
 import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest';
 import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { provideRouter, ActivatedRoute } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { By } from '@angular/platform-browser';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
@@ -174,7 +174,7 @@ describe('ScheduleViewPageComponent', () => {
     capacityStub.getCalendar.mockImplementation((request: { job: JobRequirement }) =>
       of(view({ job: request.job })),
     );
-    capacityStub.searchJobTypes.mockReturnValue(of([ALIGNMENT_JOB]));
+    capacityStub.searchJobTypes.mockReturnValue(of({ options: [ALIGNMENT_JOB], ok: true }));
     locationServiceStub.getAllLocations.mockReturnValue(of([{ id: 'loc-1', name: 'Riverside' }]));
     locationServiceStub.getLocationById.mockReturnValue(of(null));
   });
@@ -361,6 +361,66 @@ describe('ScheduleViewPageComponent', () => {
     expect(capacityStub.getCalendar).toHaveBeenCalledWith(
       expect.objectContaining({ job: ALIGNMENT_JOB }),
     );
+  });
+
+  // #343 (ADR-0064 §1): a catalog search outage must not look like "no
+  // matches" — searchJobTypes now answers { options, ok } and the page must
+  // surface ok: false as a distinct failure state, not an empty result list.
+  it('surfaces a job-search failure distinctly from "no matching job types"', async () => {
+    await setup();
+    capacityStub.searchJobTypes.mockReturnValue(of({ options: [], ok: false }));
+
+    component.onJobQuery('align');
+
+    expect(component.jobOptions()).toEqual([]);
+    expect(component.jobSearchFailed()).toBe(true);
+  });
+
+  it('clears a prior job-search failure once a search succeeds again', async () => {
+    await setup();
+    capacityStub.searchJobTypes.mockReturnValueOnce(of({ options: [], ok: false }));
+    component.onJobQuery('align');
+    expect(component.jobSearchFailed()).toBe(true);
+
+    capacityStub.searchJobTypes.mockReturnValue(of({ options: [ALIGNMENT_JOB], ok: true }));
+    component.onJobQuery('align');
+
+    expect(component.jobSearchFailed()).toBe(false);
+    expect(component.jobOptions()).toEqual([ALIGNMENT_JOB]);
+  });
+
+  // ADR-0063 §2 / ADR-0035 §6: a slow answer to an older keystroke must not
+  // overwrite the newer query's result. Driven through Subjects so both
+  // requests are genuinely in flight at once.
+  it('ignores a job-search answer that lands after a newer query', async () => {
+    await setup();
+    const older = new Subject<{ options: (typeof ALIGNMENT_JOB)[]; ok: boolean }>();
+    const newer = new Subject<{ options: (typeof ALIGNMENT_JOB)[]; ok: boolean }>();
+    capacityStub.searchJobTypes.mockReturnValueOnce(older).mockReturnValueOnce(newer);
+
+    component.onJobQuery('al');
+    older.next({ options: [ALIGNMENT_JOB], ok: true });
+    component.onJobQuery('align');
+    // The previous query's options are dropped while the new one is pending.
+    expect(component.jobOptions()).toEqual([]);
+    newer.next({ options: [ALIGNMENT_JOB], ok: true });
+    older.next({ options: [], ok: false });
+
+    expect(component.jobOptions()).toEqual([ALIGNMENT_JOB]);
+    expect(component.jobSearchFailed()).toBe(false);
+  });
+
+  it('ignores a job-search answer that lands after the filter is cleared', async () => {
+    await setup();
+    const pending = new Subject<{ options: (typeof ALIGNMENT_JOB)[]; ok: boolean }>();
+    capacityStub.searchJobTypes.mockReturnValueOnce(pending);
+
+    component.onJobQuery('align');
+    component.clearJob();
+    pending.next({ options: [], ok: false });
+
+    expect(component.jobOptions()).toEqual([]);
+    expect(component.jobSearchFailed()).toBe(false);
   });
 
   it('returns to all work when the filter is cleared', async () => {
@@ -554,6 +614,29 @@ describe('ScheduleViewPageComponent', () => {
     expect(component.state()).toBe('error');
     expect(component.errorKey()).toBe('SHOPMGMT.SCHEDULE_VIEW.ERROR_LOAD');
     expect(all('[role="alert"]').length).toBeGreaterThan(0);
+  });
+
+  // #342 (ADR-0031 §5): state.set('error') must run before errorKey.set(...)
+  // in the load() error callback — was reversed from every other page.
+  it('sets state to error before setting the error key on a load failure', async () => {
+    capacityStub.getCalendar.mockReturnValue(of(view()));
+    await setup();
+
+    const stateSetSpy = vi.spyOn(component.state, 'set');
+    const errorKeySetSpy = vi.spyOn(component.errorKey, 'set');
+    capacityStub.getCalendar.mockReturnValue(throwError(() => new Error('boom')));
+
+    component.load();
+
+    const errorCallIndex = stateSetSpy.mock.calls.findIndex(args => args[0] === 'error');
+    const errorKeyCallIndex = errorKeySetSpy.mock.calls.findIndex(
+      args => args[0] === 'SHOPMGMT.SCHEDULE_VIEW.ERROR_LOAD',
+    );
+    expect(errorCallIndex).toBeGreaterThanOrEqual(0);
+    expect(errorKeyCallIndex).toBeGreaterThanOrEqual(0);
+    expect(stateSetSpy.mock.invocationCallOrder[errorCallIndex]).toBeLessThan(
+      errorKeySetSpy.mock.invocationCallOrder[errorKeyCallIndex],
+    );
   });
 
   it('retries the load from the error state', async () => {

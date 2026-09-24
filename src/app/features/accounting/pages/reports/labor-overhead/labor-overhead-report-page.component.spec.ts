@@ -5,6 +5,7 @@ import { of, throwError } from 'rxjs';
 import { LaborOverheadReport } from '../../../models/accounting.models';
 import { AccountingService } from '../../../services/accounting.service';
 import { LocationService } from '../../../../location/services/location.service';
+import { LocaleService } from '../../../../../core/services/locale.service';
 import { LaborOverheadReportPageComponent } from './labor-overhead-report-page.component';
 
 function sampleReport(overrides: Partial<LaborOverheadReport> = {}): LaborOverheadReport {
@@ -168,6 +169,14 @@ describe('LaborOverheadReportPageComponent', () => {
     expect(component.formatAmount(12345)).toBe('12,345');
     expect(component.isNegative(-1)).toBe(true);
     expect(component.isNegative(0)).toBe(false);
+  });
+
+  it('formats amounts in the active locale\'s grouping, not always en-US (ADR-0030)', () => {
+    expect(component.formatAmount(12345)).toBe('12,345');
+
+    TestBed.inject(LocaleService).currentLocale.set('fr-FR');
+
+    expect(component.formatAmount(12345)).toBe('12 345');
   });
 
   it('marks the USD-only line (2.11.4) and has no editable cells', () => {

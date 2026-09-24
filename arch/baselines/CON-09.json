@@ -1,0 +1,37 @@
+[
+  {
+    "key": "src/app/core/util/form-validators.ts :: file under a util/ folder \u2014 rename the folder to utils/",
+    "reason": "plan \u00a78.4 decision: utils/ is the chosen folder name; this util/ folder needs a rename-and-move follow-up PR.",
+    "tracking": "#348"
+  },
+  {
+    "key": "src/app/core/util/spring-page.ts :: file under a util/ folder \u2014 rename the folder to utils/",
+    "reason": "plan \u00a78.4 decision: utils/ is the chosen folder name; this util/ folder needs a rename-and-move follow-up PR.",
+    "tracking": "#348"
+  },
+  {
+    "key": "src/app/features/crm/util/crm-labels.ts :: file under a util/ folder \u2014 rename the folder to utils/",
+    "reason": "plan \u00a78.4 decision: utils/ is the chosen folder name; this util/ folder needs a rename-and-move follow-up PR.",
+    "tracking": "#348"
+  },
+  {
+    "key": "src/app/features/shell/util/chat-response.mapper.ts :: file under a util/ folder \u2014 rename the folder to utils/",
+    "reason": "plan \u00a78.4 decision: utils/ is the chosen folder name; this util/ folder needs a rename-and-move follow-up PR.",
+    "tracking": "#348"
+  },
+  {
+    "key": "src/app/features/shell/util/identity.util.ts :: file under a util/ folder \u2014 rename the folder to utils/",
+    "reason": "plan \u00a78.4 decision: utils/ is the chosen folder name; this util/ folder needs a rename-and-move follow-up PR.",
+    "tracking": "#348"
+  },
+  {
+    "key": "src/app/features/shell/util/mailto-href.util.ts :: file under a util/ folder \u2014 rename the folder to utils/",
+    "reason": "plan \u00a78.4 decision: utils/ is the chosen folder name; this util/ folder needs a rename-and-move follow-up PR.",
+    "tracking": "#348"
+  },
+  {
+    "key": "src/app/features/shell/util/markdown.util.ts :: file under a util/ folder \u2014 rename the folder to utils/",
+    "reason": "plan \u00a78.4 decision: utils/ is the chosen folder name; this util/ folder needs a rename-and-move follow-up PR.",
+    "tracking": "#348"
+  }
+]

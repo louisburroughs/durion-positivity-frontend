@@ -5,6 +5,8 @@ export type Theme = 'light' | 'dark';
 
 const STORAGE_KEY = 'durion-theme';
 
+// arch: non-tenant storage — UI theme preference, not keyed by tenant or user (ADR-0065 §6)
+
 /**
  * ThemeService
  * -----------
@@ -30,7 +32,12 @@ export class ThemeService {
       const t = this.theme();
       if (isPlatformBrowser(this.platformId)) {
         document.documentElement.dataset['theme'] = t;
-        localStorage.setItem(STORAGE_KEY, t);
+        try {
+          localStorage.setItem(STORAGE_KEY, t);
+        } catch {
+          // Quota exceeded or storage disabled: the theme stays applied to the
+          // document for this page load; it just won't survive a reload.
+        }
       }
     });
   }
@@ -44,10 +51,19 @@ export class ThemeService {
   }
 
   private loadPreference(): Theme {
-    if (typeof localStorage === 'undefined') return 'light';
-    const stored = localStorage.getItem(STORAGE_KEY) as Theme | null;
-    if (stored === 'light' || stored === 'dark') return stored;
-    // Respect OS preference when no explicit choice has been saved.
+    try {
+      if (typeof localStorage === 'undefined') return this.osPreference();
+      const stored = localStorage.getItem(STORAGE_KEY) as Theme | null;
+      if (stored === 'light' || stored === 'dark') return stored;
+    } catch {
+      // Storage disabled (private window, blocked site data) or inaccessible:
+      // fall back to OS preference below.
+    }
+    return this.osPreference();
+  }
+
+  /** Respect OS preference when no explicit choice has been saved (or storage is unavailable). */
+  private osPreference(): Theme {
     return globalThis.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   }
 }

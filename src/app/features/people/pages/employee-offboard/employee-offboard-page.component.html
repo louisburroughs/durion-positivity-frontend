@@ -59,31 +59,25 @@
   </button>
 
   @if (showConfirmDialog()) {
-  <div role="alertdialog" aria-modal="true" aria-labelledby="offboard-dialog-title"
-    aria-describedby="offboard-dialog-desc" class="modal-backdrop" data-testid="offboard-confirm-dialog"
-    (keydown.escape)="cancelConfirmDialog()">
-    <div class="modal-panel modal-panel--destructive">
+  <dialog role="alertdialog" appModalDialog (modalCancel)="cancelConfirmDialog()" aria-labelledby="offboard-dialog-title"
+    aria-describedby="offboard-dialog-desc" class="modal-panel modal-panel--destructive" data-testid="offboard-confirm-dialog">
       <h2 id="offboard-dialog-title">{{ 'PEOPLE.OFFBOARD.DIALOG_TITLE' | translate }}</h2>
       <p id="offboard-dialog-desc" data-testid="offboard-dialog-desc">
         {{ 'PEOPLE.OFFBOARD.DIALOG_DESC' | translate }}
       </p>
       <footer class="modal-footer">
-        <!-- autofocus moves focus into this non-native role="alertdialog" on open (Cancel is the
-             safe default for a destructive confirm); no JS focus-trap exists, so this is the only
-             mechanism placing keyboard/SR users inside the modal. ADR-0029 keyboard-flow. -->
-        <!-- eslint-disable @angular-eslint/template/no-autofocus -->
+        <!-- autofocus moves focus onto Cancel (the safe default for a destructive confirm) when
+             showModal() opens the dialog. ADR-0029 keyboard-flow. -->
         <button type="button" class="btn btn--ghost" data-testid="offboard-cancel-btn" [disabled]="submitting()"
           (click)="cancelConfirmDialog()" autofocus>
           {{ 'PEOPLE.OFFBOARD.CANCEL' | translate }}
         </button>
-        <!-- eslint-enable @angular-eslint/template/no-autofocus -->
         <button type="button" class="btn btn--danger" data-testid="offboard-confirm-btn" [disabled]="submitting()"
           (click)="confirmOffboard()">
           {{ (submitting() ? 'PEOPLE.OFFBOARD.SUBMITTING' : 'PEOPLE.OFFBOARD.CONFIRM') | translate }}
         </button>
       </footer>
-    </div>
-  </div>
+  </dialog>
   }
   }
 </main>

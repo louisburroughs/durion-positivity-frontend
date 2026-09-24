@@ -145,6 +145,13 @@ export class ScheduleViewPageComponent implements OnInit {
   readonly jobQuery = signal('');
   readonly jobOptions = signal<readonly JobRequirement[]>([]);
   readonly jobPickerOpen = signal(false);
+  /** True when the last {@link onJobQuery} search failed (ADR-0064 §1) — distinct from "no matches". */
+  readonly jobSearchFailed = signal(false);
+  /**
+   * Issued per job search; only the latest query may write `jobOptions`/`jobSearchFailed`, so a
+   * slow answer to an older keystroke can't overwrite a newer one (ADR-0063 §2).
+   */
+  private jobSearchSeq = 0;
 
   readonly hourPitchPx = HOUR_PITCH_PX;
 
@@ -405,10 +412,19 @@ export class ScheduleViewPageComponent implements OnInit {
 
   onJobQuery(value: string): void {
     this.jobQuery.set(value);
+    const seq = ++this.jobSearchSeq;
+    // Drop the previous query's answer while this one is pending, so the picker never offers
+    // options for a query that is no longer on screen (ADR-0063 §1).
+    this.jobOptions.set([]);
+    this.jobSearchFailed.set(false);
     this.capacity
       .searchJobTypes(value)
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(options => this.jobOptions.set(options));
+      .subscribe(({ options, ok }) => {
+        if (seq !== this.jobSearchSeq) return;
+        this.jobOptions.set(options);
+        this.jobSearchFailed.set(!ok);
+      });
   }
 
   selectJob(job: JobRequirement): void {
@@ -420,7 +436,9 @@ export class ScheduleViewPageComponent implements OnInit {
   clearJob(): void {
     this.job.set(CapacityCalendarService.allWorkJob(''));
     this.jobQuery.set('');
+    this.jobSearchSeq++;
     this.jobOptions.set([]);
+    this.jobSearchFailed.set(false);
     this.load();
   }
 
@@ -447,8 +465,8 @@ export class ScheduleViewPageComponent implements OnInit {
         },
         error: () => {
           this.view.set(null);
+          this.state.set('error'); // ADR-0031 §5 — state first, then the key
           this.errorKey.set('SHOPMGMT.SCHEDULE_VIEW.ERROR_LOAD');
-          this.state.set('error');
         },
       });
   }

@@ -197,6 +197,23 @@ describe('MechanicAvailabilityPageComponent [CAP-138]', () => {
     expect(component.error()).toBe('SHOPMGMT.MECHANIC_AVAILABILITY.ERROR.LOCATION_REQUIRED');
   });
 
+  // #344: todayIso() used to read `new Date().toISOString().slice(0, 10)` — the
+  // UTC date, which for evening local hours in any UTC-N zone is tomorrow.
+  it('defaults the date filter to the local calendar date, not the UTC date', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 8, 5, 23, 30, 0)); // 23:30 local, 5 Sep 2026
+    try {
+      await setup();
+      expect(fixture.componentInstance.selectedDate()).toBe('2026-09-05');
+      expect(fixture.componentInstance.filterForm.controls.date.value).toBe('2026-09-05');
+    } finally {
+      vi.useRealTimers();
+    }
+    // As shop-dashboard.service.spec.ts notes: under a UTC CI clock this alone
+    // cannot tell local getters from toISOString() — the enforcing test lives
+    // in capacity-calendar.models.spec.ts (isoDateLocal).
+  });
+
   it('shows .error-banner on error', async () => {
     vi.clearAllMocks();
     const errorDispatchBoardService = {

@@ -2264,7 +2264,8 @@
       "TECH_LANE": "Carril de técnicos — la otra mitad de la capacidad",
       "TECH_LANE_NOTE": "una bahía sin técnico certificado no es capacidad",
       "HOURS_ASSIGNED": "{{count}} h asignadas",
-      "NO_TECHNICIANS": "No hay técnicos en la plantilla de esta ubicación."
+      "NO_TECHNICIANS": "No hay técnicos en la plantilla de esta ubicación.",
+      "JOB_SEARCH_ERROR": "No se pudieron buscar los tipos de trabajo. Vuelva a intentarlo."
     },
     "APPOINTMENT_ASSIGNMENT": {
       "TITLE": "Asignación de cita",

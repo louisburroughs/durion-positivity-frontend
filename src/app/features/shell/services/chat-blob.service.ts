@@ -124,12 +124,21 @@ export class ChatBlobService {
   }
 
   private discard(): void {
-    for (const url of this.objectUrls) URL.revokeObjectURL(url);
+    const urls = [...this.objectUrls];
     this.objectUrls.clear();
     // Only the ENTRIES go: a fetch already open stays subscribed under
     // `shareReplay({ refCount: false })`, which is why `resolve()` also checks the
     // identity when the bytes arrive.
     this.inFlight.clear();
+
+    if (urls.length === 0) return;
+    // Revoking synchronously can invalidate an in-flight `<a download>` read of a
+    // blob URL that was already handed out — the same reasoning as the CSV export
+    // revoke in chat-message.component. Deferring lets that read finish
+    // (ADR-0065 §3).
+    setTimeout(() => {
+      for (const url of urls) URL.revokeObjectURL(url);
+    });
   }
 }
 

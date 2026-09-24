@@ -32,7 +32,6 @@ main {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: var(--surface-variant);
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -42,4 +41,8 @@ main {
   max-width: 100%;
   max-height: 100%;
   margin: 0;
+}
+
+.modal-backdrop::backdrop {
+  background: var(--surface-variant);
 }

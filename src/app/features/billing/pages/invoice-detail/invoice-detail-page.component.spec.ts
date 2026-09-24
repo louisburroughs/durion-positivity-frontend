@@ -210,6 +210,12 @@ describe('InvoiceDetailPageComponent', () => {
     const host = fixture.nativeElement as HTMLElement;
     const managerInput = host.querySelector('#elevation-manager-number') as HTMLInputElement | null;
 
+    const dialog = host.querySelector('dialog.modal') as HTMLDialogElement | null;
+    expect(dialog).toBeTruthy();
+    expect(dialog?.tagName).toBe('DIALOG');
+    expect(dialog?.matches(':modal')).toBe(true);
+    expect(dialog?.getAttribute('aria-labelledby')).toBe('elevation-heading');
+
     expect(host.textContent).toContain('Manager Authorization Required');
     expect(host.textContent).toContain("Issuing this invoice requires manager-level authorization. Enter an authorizing manager's employee number to proceed.");
     expect(host.textContent).toContain('Manager Employee Number');

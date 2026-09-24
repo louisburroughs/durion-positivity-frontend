@@ -83,8 +83,7 @@
   </section>
 
   @if (showCreateModal()) {
-  <section class="modal-backdrop">
-    <dialog class="modal-surface dur-elevation-4" open [attr.aria-label]="'SECURITY.ROLES_LIST.CREATE_ROLE' | translate">
+    <dialog class="modal-surface dur-elevation-4" appModalDialog (modalCancel)="closeCreateModal()" [attr.aria-label]="'SECURITY.ROLES_LIST.CREATE_ROLE' | translate">
       <header class="modal-header">
         <h2>{{ 'SECURITY.ROLES_LIST.CREATE_ROLE' | translate }}</h2>
         <p>{{ 'SECURITY.ROLES_LIST.CREATE_HELP' | translate }}</p>
@@ -113,6 +112,5 @@
         </button>
       </footer>
     </dialog>
-  </section>
   }
 </section>

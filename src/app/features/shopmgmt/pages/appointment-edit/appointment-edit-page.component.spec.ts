@@ -180,6 +180,9 @@ describe('AppointmentEditPageComponent [CAP-137]', () => {
     fixture.detectChanges();
     const modal = fixture.debugElement.query(By.css('.reschedule-modal'));
     expect(modal).not.toBeNull();
+    expect(modal.nativeElement.tagName).toBe('DIALOG');
+    expect((modal.nativeElement as HTMLDialogElement).matches(':modal')).toBe(true);
+    expect(modal.nativeElement.getAttribute('aria-labelledby')).toBe('reschedule-modal-title');
   });
 
   // 9. closes reschedule modal
@@ -273,6 +276,9 @@ describe('AppointmentEditPageComponent [CAP-137]', () => {
     fixture.detectChanges();
     const modal = fixture.debugElement.query(By.css('.cancel-modal'));
     expect(modal).not.toBeNull();
+    expect(modal.nativeElement.tagName).toBe('DIALOG');
+    expect((modal.nativeElement as HTMLDialogElement).matches(':modal')).toBe(true);
+    expect(modal.nativeElement.getAttribute('aria-labelledby')).toBe('cancel-modal-title');
   });
 
   // 15. calls cancelAppointment on submit

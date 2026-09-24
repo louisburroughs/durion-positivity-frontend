@@ -1,0 +1,7 @@
+[
+  {
+    "key": "src/app/features/bulk-import/services/bulk-import.service.ts :: 'window.location.origin'",
+    "reason": "builds the bulk-import TUS upload URL from window.location.origin instead of a configured base URL; migrates with PRD-sdk-migration-completion.md.",
+    "tracking": "#350"
+  }
+]

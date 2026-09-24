@@ -181,9 +181,9 @@
   }
 
   @if (showRejectDialog()) {
-  <div class="modal-overlay" tabindex="0" (keydown.escape)="closeRejectDialog()">
-    <section class="modal-panel" role="alertdialog" aria-modal="true" aria-labelledby="reject-dialog-title"
-      data-testid="reject-dialog">
+  <dialog class="modal-overlay" role="alertdialog" appModalDialog (modalCancel)="closeRejectDialog()" aria-labelledby="reject-dialog-title"
+    data-testid="reject-dialog">
+    <section class="modal-panel">
       <h2 id="reject-dialog-title">{{ 'PEOPLE.TIME_APPROVAL.REJECT_DIALOG_TITLE' | translate }}</h2>
       <div class="field" [formGroup]="rejectForm">
         <label for="reject-comments">{{ 'PEOPLE.TIME_APPROVAL.FIELD_COMMENTS' | translate }}</label>
@@ -191,19 +191,16 @@
           rows="4"></textarea>
       </div>
       <div class="actions-row">
-        <!-- autofocus moves focus into this non-native role="alertdialog" on open (Cancel is the
-             safe default for a destructive confirm); no JS focus-trap exists, so this is the only
-             mechanism placing keyboard/SR users inside the modal. ADR-0029 keyboard-flow. -->
-        <!-- eslint-disable @angular-eslint/template/no-autofocus -->
+        <!-- autofocus moves focus onto Cancel (the safe default for a destructive confirm) when
+             showModal() opens the dialog. ADR-0029 keyboard-flow. -->
         <button type="button" (click)="closeRejectDialog()" data-testid="cancel-reject-btn" autofocus>
           {{ 'PEOPLE.TIME_APPROVAL.CANCEL' | translate }}
         </button>
-        <!-- eslint-enable @angular-eslint/template/no-autofocus -->
         <button type="button" (click)="submitReject()" data-testid="submit-reject-btn" [disabled]="actionInFlight()">
           {{ 'PEOPLE.TIME_APPROVAL.SUBMIT_REJECT_BTN' | translate }}
         </button>
       </div>
     </section>
-  </div>
+  </dialog>
   }
 </main>

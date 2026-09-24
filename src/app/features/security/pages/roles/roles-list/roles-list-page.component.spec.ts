@@ -159,6 +159,15 @@ describe('RolesListPageComponent', () => {
       expect(component.showCreateModal()).toBe(false);
     });
 
+    it('renders the create panel as a native <dialog> carrying appModalDialog', () => {
+      component.openCreateModal();
+      fixture.detectChanges();
+      const dialog = fixture.nativeElement.querySelector('dialog.modal-surface') as HTMLDialogElement | null;
+      expect(dialog).toBeTruthy();
+      expect(dialog?.tagName).toBe('DIALOG');
+      expect(dialog?.matches(':modal')).toBe(true);
+    });
+
     it('closeCreateModal() resets newRoleName, newRoleDescription, and createError', () => {
       component.newRoleName.set('SOME_ROLE');
       component.newRoleDescription.set('desc');

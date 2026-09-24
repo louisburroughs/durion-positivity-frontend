@@ -18,6 +18,7 @@ npm test
 npm run lint                          # ESLint via @angular-eslint
 npm run lint:css                      # stylelint src/**/*.css
 npm run i18n:check                    # missing-keys + pseudo-locale check
+npm run test:arch                     # architecture suite (arch/README.md), plain-node Vitest
 npx ng test --no-watch --browsers=ChromiumHeadless --runner-config vitest.config.ts   # single CI pass (Vitest in Chromium; jsdom fails ~22 specs)
 ```
 
@@ -289,7 +290,7 @@ locale-sensitive values. Assert copy claims against the real `src/assets/i18n/*.
 
 ### Validation commands run locally
 
-- [ ] `npm run build`, `npx ng test --no-watch --browsers=ChromiumHeadless --runner-config vitest.config.ts`, `npx ng lint`, `npm run lint:css`, `npm run i18n:check`
+- [ ] `npm run build`, `npx ng test --no-watch --browsers=ChromiumHeadless --runner-config vitest.config.ts`, `npx ng lint`, `npm run lint:css`, `npm run i18n:check`, `npm run test:arch`
 
 CI now runs the same set in `.github/workflows/frontend-checks.yml` (plus `.github/workflows/accessibility-gate.yml`) — a local pass before pushing catches failures before the gate does; it does not replace it.
 
@@ -317,6 +318,7 @@ CI now runs the same set in `.github/workflows/frontend-checks.yml` (plus `.gith
 | Browser storage keyed by `sub` only | A subject switching tenants can read the previous tenant's stored data | Key by `tid` AND `sub` together | ADR-0065 §4 |
 | `//evil.example/...` passing a scheme allowlist | A protocol-relative URL carries no scheme, so an allowlist checking only scheme lets it through as if same-window | Reject network-path references (`//`, `\\`) before the scheme allowlist | ADR-0065 §2 |
 | RFC 4180 quoting alone on a CSV cell from untrusted content | Stops delimiter injection, not formula execution (`=HYPERLINK(...)`) | Prefix a formula-lead cell (`=+-@`, tab, CR) before quoting | ADR-0065 §3 |
+| Adding a baseline entry to make the architecture suite pass | Baselines are shrink-only debt records; a new entry hides the violation the rule exists to catch | Fix the code. If the violation is genuinely intended, change the rule (with its self-test) in review, not the baseline | arch/README.md |
 | PR checklist item ticked but not actually performed | Misleads reviewers and erodes the checklist's value as evidence | Leave it unticked, or perform the check before ticking it | Description honesty |
 
 ## Review Loop

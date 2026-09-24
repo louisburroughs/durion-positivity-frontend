@@ -1,5 +1,5 @@
 import { Component, inject, signal, OnInit, DestroyRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, formatDate } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
@@ -64,9 +64,11 @@ export class ApprovalDetailPageComponent implements OnInit {
             this.errorMessage.set(
               est.expiresAt
                 ? this.translate.instant('WORKEXEC.ERROR.APPROVAL_EXPIRED_ON', {
-                    // Bare toLocaleDateString() formats in the browser's locale, which
-                    // is not the one the user picked in the app.
-                    date: new Date(est.expiresAt).toLocaleDateString(this.locale.currentLocale()),
+                    // formatDate (not a bare toLocaleDateString()) keeps this on Angular's
+                    // locale pipeline (ADR-0030); `currentLocale()` — not the browser's — is
+                    // the one the user picked in the app. `mediumDate` matches the
+                    // `| date:'mediumDate'` used for this same field elsewhere on this page.
+                    date: formatDate(new Date(est.expiresAt), 'mediumDate', this.locale.currentLocale()),
                   })
                 : this.translate.instant('WORKEXEC.ERROR.APPROVAL_EXPIRED'),
             );

@@ -113,14 +113,20 @@ describe('DashboardComponent', () => {
     // The server cannot know the platform. Branching on it during render made SSR
     // emit `Ctrl` where a Mac client expected `⌘` — a hydration text mismatch on
     // every Apple device.
-    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue(
-      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
-    );
+    // Restored in `finally`: a leaked getter spy on the shared `navigator` outlives this file, and
+    // a later `vi.resetAllMocks()` turns it into `() => undefined`, crashing Angular forms'
+    // DefaultValueAccessor (`userAgent.toLowerCase()`) in whichever spec runs next.
+    const userAgent = vi
+      .spyOn(navigator, 'userAgent', 'get')
+      .mockReturnValue('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)');
+    try {
+      const fresh = TestBed.createComponent(DashboardComponent);
+      expect(fresh.componentInstance.shortcutModifier()).toBe('Ctrl');
 
-    const fresh = TestBed.createComponent(DashboardComponent);
-    expect(fresh.componentInstance.shortcutModifier()).toBe('Ctrl');
-
-    fresh.detectChanges();
-    expect(fresh.componentInstance.shortcutModifier()).toBe('\u2318');
+      fresh.detectChanges();
+      expect(fresh.componentInstance.shortcutModifier()).toBe('\u2318');
+    } finally {
+      userAgent.mockRestore();
+    }
   });
 });
