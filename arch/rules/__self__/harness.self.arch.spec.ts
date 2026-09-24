@@ -1,10 +1,12 @@
 import { projectFiles } from 'archunit';
 import ts from 'typescript';
 import { compare, formatFailure } from '../../support/baseline';
-import { APP, SPEC, selectors, type Project } from '../../support/projects';
-import type { ArchRule } from '../../support/rule';
+import { APP, FIXTURES, SPEC, selectors, type Project } from '../../support/projects';
+import { contentRule, type ArchRule } from '../../support/rule';
 import { listFiles } from '../../support/templates';
 import { violationKey } from '../../support/violation-key';
+import { lay02 } from '../layers.rules';
+import { sdk04 } from '../transport.rules';
 
 /** Files ArchUnitTS sees for a project (via `adhereTo`, which visits every node). */
 async function archunitFiles(p: Project, subject: RegExp = /./): Promise<string[]> {
@@ -75,6 +77,41 @@ describe('[harness] baseline ratchet (plan §3.3)', () => {
   });
   it('treats a missing baseline as empty', () => {
     expect(compare(['a'], null).added).toEqual(['a']);
+  });
+});
+
+/**
+ * Regression guard for the `Project.root`/`onDisk` fix (`support/projects.ts`, `support/rule.ts`):
+ * ArchUnitTS reports `FileInfo.path`/`FileInfo.content` relative to the tsconfig's own directory,
+ * which for FIXTURES (`arch/fixtures/tsconfig.json`) isn't the repo root. Before the fix, every
+ * FIXTURES selector silently matched zero files (`allowEmptyTests` swallowed it) and every
+ * `contentRule` finder saw `content: ''`. Reuses real rule factories with real planted fixtures so a
+ * regression here fails loudly instead of quietly matching nothing.
+ */
+describe('[harness] FIXTURES is visible through dependencyRule/contentRule (regression: Project.root, support/projects.ts)', () => {
+  it('dependencyRule(FIXTURES) sees non-empty keys, including a planted violation', async () => {
+    const keys = await lay02(FIXTURES).keys();
+    expect(keys.length).toBeGreaterThan(0);
+    expect(keys).toContain('src/app/shared/fxlay-shared-violate.ts -> src/app/features/fxlay-a/fxlay-a-target.ts');
+  });
+
+  it('contentRule(FIXTURES) sees non-empty keys, including a planted violation', async () => {
+    const keys = await sdk04(FIXTURES).keys();
+    expect(keys.length).toBeGreaterThan(0);
+    expect(keys).toContain('src/app/features/fxlay-a/services/fxlay-sdk04-violate.service.ts :: fetch(');
+  });
+
+  it('contentRule(FIXTURES) hands every finder non-empty FileInfo content', async () => {
+    const lengths: number[] = [];
+    await contentRule({ id: 'X-HARNESS-CONTENT', title: 'collect content lengths', mode: 'enforce' }, FIXTURES, {
+      subject: selectors.appTree(FIXTURES),
+      finder: (f) => {
+        lengths.push(f.content.length);
+        return [];
+      },
+    }).keys();
+    expect(lengths.length).toBeGreaterThan(0);
+    expect(lengths.every((n) => n > 0)).toBe(true);
   });
 });
 

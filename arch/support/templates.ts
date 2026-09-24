@@ -10,12 +10,20 @@ import {
   TmplAstRecursiveVisitor,
   tmplAstVisitAll,
 } from '@angular/compiler';
-import type { Project } from './projects';
+import { onDisk, type Project } from './projects';
 import type { Source } from './ast';
 
-/** `*.html` files under the project's app tree (plan §3.4: suite-hosted template rules). */
+/**
+ * `*.html` files under the project's app tree (plan §3.4: suite-hosted template rules). Listed off
+ * disk under `onDisk(p, p.app)` (repo-relative), but reported back `root`-relative — the same path
+ * space ArchUnitTS's `FileInfo.path` uses (see `support/projects.ts`) — so template-rule keys are
+ * consistent with dependency/content-rule keys for the same project.
+ */
 export function templateFiles(p: Project): Source[] {
-  return listFiles(p.app, '.html').map((f) => ({ path: f, content: readFileSync(f, 'utf8') }));
+  return listFiles(onDisk(p, p.app), '.html').map((f) => ({
+    path: p.root === '.' ? f : path.posix.relative(p.root, f),
+    content: readFileSync(f, 'utf8'),
+  }));
 }
 
 /** Repo-relative files under `dir` with the given extension, sorted. */

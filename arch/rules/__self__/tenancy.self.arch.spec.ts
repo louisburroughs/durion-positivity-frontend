@@ -20,7 +20,7 @@ import {
  * Distinct from the shared FIXTURES tree (arch/fixtures) so this file doesn't collide with other
  * agents' fixtures there — TEN-06 is tested purely against inline {path, content} sources.
  */
-const TEST_PROJECT: Project = { tsconfig: 'unused', app: 'src/app', src: 'src' };
+const TEST_PROJECT: Project = { tsconfig: 'unused', root: '.', app: 'src/app', src: 'src' };
 
 describe('[TEN-01] no tenant/location header string literals', () => {
   it('flags an exact header string literal', () => {

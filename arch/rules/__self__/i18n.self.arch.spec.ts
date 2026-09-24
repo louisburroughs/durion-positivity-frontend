@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { FIXTURES } from '../../support/projects';
 import type { Source } from '../../support/ast';
-import { i18n05, i18n06Findings, loadEnUsKeys, staticTranslateKeysInTs } from '../i18n.rules';
+import { i18n05, i18n06, i18n06Findings, loadEnUsKeys, staticTranslateKeysInTs } from '../i18n.rules';
 
 const read = (path: string): Source => ({ path, content: readFileSync(path, 'utf8') });
 
@@ -10,13 +10,11 @@ const FROZEN_TS = 'arch/fixtures/src/app/core/fxi18n-frozen.component.ts';
 
 /**
  * Self-tests for the i18n suite (plan §6, §11.4). I18N-05's template half runs through the real
- * rule (`i18n05(FIXTURES)`), since `templateRule` reads `*.html` straight off disk. Its TS half and
- * I18N-06 call the exported finder functions directly on a `Source` built from a real file read:
- * ArchUnitTS's `adhereTo` (which the TS-side `contentRule` goes through in production) only
- * materializes `FileInfo.content` for files it has a reason to open while building its dependency
- * graph, and these standalone fixture files have no import edges into the fixture program — see
- * `i18n06Findings`'s doc comment in `../i18n.rules.ts`. Calling the finder directly still exercises
- * the exact detection logic the production rule runs; it only bypasses ArchUnitTS's file-loading.
+ * rule (`i18n05(FIXTURES)`), since `templateRule` reads `*.html` straight off disk. I18N-05's TS
+ * half and I18N-06 are exercised two ways: directly, by calling the exported finder functions on a
+ * `Source` built from a real file read (a focused unit test of the detection logic), and end to end,
+ * by calling `i18n05(FIXTURES).keys()`/`i18n06(FIXTURES).keys()` — `contentRule` (`support/rule.ts`)
+ * reads every file straight off disk, so both paths see the same fixtures.
  */
 describe('[self] I18N-05 referenced keys exist in en-US.json', () => {
   it("catches a typo'd/missing key used as a literal `| translate` pipe in a template", async () => {
@@ -44,6 +42,11 @@ describe('[self] I18N-05 referenced keys exist in en-US.json', () => {
     expect(enUsKeys.has('FXI18N.MISSING_TS')).toBe(false);
     expect(enUsKeys.has('FXI18N.EXISTING')).toBe(true);
   });
+
+  it('end to end: i18n05(FIXTURES).keys() also catches the missing TS key', async () => {
+    const keys = await i18n05(FIXTURES).keys();
+    expect(keys.some((k) => k.includes('fxi18n-typo.component.ts') && k.includes('FXI18N.MISSING_TS'))).toBe(true);
+  });
 });
 
 describe('[self] I18N-06 no translate.instant( ) in computed()/field initializer/effect()', () => {
@@ -68,5 +71,10 @@ describe('[self] I18N-06 no translate.instant( ) in computed()/field initializer
     // 4th finding would mean the compliant call site was (wrongly) also flagged.
     const findings = i18n06Findings(read(FROZEN_TS));
     expect(findings.length).toBe(3);
+  });
+
+  it('end to end: i18n06(FIXTURES).keys() also catches the frozen-instant fixture', async () => {
+    const keys = await i18n06(FIXTURES).keys();
+    expect(keys.some((k) => k.includes('fxi18n-frozen.component.ts'))).toBe(true);
   });
 });

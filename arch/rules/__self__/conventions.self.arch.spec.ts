@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { FIXTURES, type Project } from '../../support/projects';
+import { FIXTURES } from '../../support/projects';
 import {
   con01,
   con02Finder,
@@ -21,25 +21,16 @@ import {
  * needed. CON-05/06/07/08 are pure AST content finders and need no filesystem at all.
  *
  * CON-01/09's own finders are constants (the real logic is the subject/except selector
- * composition), so those two run the actual rule factory against the FIXTURES project — but with
- * `FIXTURES.app` corrected to `'src/app'` for this call only. ArchUnitTS reports each project's
- * file paths relative to *that tsconfig's own directory* (confirmed by direct inspection: it
- * reports `src/app/features/fxcon/...`, not `arch/fixtures/src/app/features/fxcon/...`), so
- * `support/projects.ts`'s `FIXTURES.app = 'arch/fixtures/src/app'` is wrong for any selector match
- * against the real ArchUnitTS project — every rule's subject regex silently matches zero fixture
- * files today (`allowEmptyTests` swallows it). That file is out of this agent's scope to edit; this
- * is a local, test-only correction, and it's flagged in the final report as a fix for
- * `support/projects.ts`. It does not affect CON-02/03/04 above, which never touch the ArchUnitTS
- * FIXTURES project.
+ * composition), so those two run the actual rule factory against the FIXTURES project directly:
+ * `FIXTURES.app` is `root`-relative (`'src/app'`, see `support/projects.ts`), the same path space
+ * ArchUnitTS's own `FileInfo.path` uses, so the selectors built from it match the fixture files.
  */
-const FIXTURES_APP_RELATIVE: Project = { tsconfig: FIXTURES.tsconfig, app: 'src/app', src: 'src' };
-
 const fx = (rel: string): string => `arch/fixtures/src/app/${rel}`;
 const read = (rel: string): string => readFileSync(fx(rel), 'utf8');
 
 describe('[self] CON-01 a *.service.ts under features/** lives in a services/ folder', () => {
   it('flags a service outside services/ and leaves one inside services/ alone', async () => {
-    const keys = await con01(FIXTURES_APP_RELATIVE).keys();
+    const keys = await con01(FIXTURES).keys();
     expect(keys).toContain('src/app/features/fxcon/fxcon-root.service.ts :: not under services/ folder');
     expect(keys.some((k) => k.startsWith('src/app/features/fxcon/services/fxcon-nospec.service.ts'))).toBe(false); // it IS under services/
     for (const k of keys) expect(k.split(' :: ')[0]).not.toMatch(/\/services\//);
@@ -200,7 +191,7 @@ describe('[self] CON-08 a server-generated key must not appear in a create*/upda
 
 describe('[self] CON-09 (ratchet) only utils/ is used as the folder name, not util/', () => {
   it('flags a file under util/ and leaves one under utils/ alone', async () => {
-    const keys = await con09(FIXTURES_APP_RELATIVE).keys();
+    const keys = await con09(FIXTURES).keys();
     expect(keys).toContain('src/app/features/fxcon/util/fxcon-legacy.ts :: file under a util/ folder — rename the folder to utils/');
     expect(keys.some((k) => k.startsWith('src/app/features/fxcon/utils/fxcon-current.ts'))).toBe(false);
     for (const k of keys) expect(k.split(' :: ')[0]).toMatch(/\/util\//); // never a utils/ path

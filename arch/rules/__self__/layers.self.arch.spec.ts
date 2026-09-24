@@ -1,5 +1,5 @@
 import { FIXTURES } from '../../support/projects';
-import { lay01, lay02, lay03, lay03d, lay04, lay05, lay06, lay07, lay08, regexProject } from '../layers.rules';
+import { lay01, lay02, lay03, lay03d, lay04, lay05, lay06, lay07, lay08 } from '../layers.rules';
 
 /**
  * Self-tests for layers.rules.ts (plan §6): each rule factory runs against the FIXTURES project and
@@ -7,11 +7,11 @@ import { lay01, lay02, lay03, lay03d, lay04, lay05, lay06, lay07, lay08, regexPr
  * toContain/not.toContain, never exact equality, since other agents plant fixtures in the same tree
  * concurrently (plan brief).
  *
- * Expected keys are built from `regexProject(FIXTURES)` (paths relative to the tsconfig's own
- * directory, e.g. `src/app/...`), not from `FIXTURES.app` (repo-relative, e.g.
- * `arch/fixtures/src/app/...`) — see the `regexProject` doc comment in layers.rules.ts for why.
+ * Expected keys are built from `FIXTURES.app` directly: `Project.app` is `root`-relative (see
+ * `support/projects.ts`), the same path space ArchUnitTS's own `FileInfo.path` uses, so no
+ * re-derivation is needed here.
  */
-const FX = regexProject(FIXTURES);
+const FX = FIXTURES;
 const A = `${FX.app}/features/fxlay-a`;
 const B = `${FX.app}/features/fxlay-b`;
 

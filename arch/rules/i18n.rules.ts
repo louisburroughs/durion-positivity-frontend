@@ -2,7 +2,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { ASTWithSource, BindingPipe, LiteralPrimitive, RecursiveAstVisitor } from '@angular/compiler';
 import { calls, enclosing, insideCallback, ts, type Source } from '../support/ast';
-import { type Project, selectors } from '../support/projects';
+import { onDisk, type Project, selectors } from '../support/projects';
 import { type ArchRule, type Finder, combine, contentRule, customRule, templateRule } from '../support/rule';
 import { parseHtml, templateFiles, elements } from '../support/templates';
 import { checkPseudoLocale } from '../../scripts/i18n/generate-pseudo-locale.mjs';
@@ -19,18 +19,6 @@ import { scan as scanHardcodedTs } from '../../scripts/i18n/check-hardcoded-ts-s
  */
 
 const uniqSorted = (xs: Iterable<string>): string[] => [...new Set(xs)].sort();
-
-/**
- * ArchUnitTS reports `FileInfo.path` relative to the *tsconfig's own directory*, not the repo
- * root. For `tsconfig.app.json`/`tsconfig.spec.json` (repo root) that's the same as the
- * repo-relative path (`src/app/…`); for `arch/fixtures/tsconfig.json` it's `src/app/…` too, since
- * the fixture tree mirrors the real one one level down. A selector anchored on `src/app/` matches
- * both, unlike `selectors.appTree(p)` (`support/projects.ts`), which is built from `p.app` and is
- * correct for filesystem globs (`templateFiles`, `tsSourceFiles`) but not for ArchUnitTS's own path
- * space when `p` is `FIXTURES` (`p.app` there is `arch/fixtures/src/app`, a prefix ArchUnitTS never
- * emits). Content rules that need `projectFiles(...).inPath(...)` use this instead.
- */
-const ARCHUNIT_APP_TREE = /^src\/app\//;
 
 // ---------------------------------------------------------------------------------------------
 // I18N-01..04: wrap the existing checkers. No new heuristics here.
@@ -69,7 +57,7 @@ export const i18n04 = (options: { targets?: string[] } = {}): ArchRule =>
 
 /** Flattened dot-path key set of `en-US.json` for one project (plan §11.4). */
 export function loadEnUsKeys(p: Project): Set<string> {
-  const file = path.join(p.src, 'assets', 'i18n', 'en-US.json');
+  const file = path.join(onDisk(p, p.src), 'assets', 'i18n', 'en-US.json');
   const json: unknown = JSON.parse(readFileSync(file, 'utf8'));
   const keys = new Set<string>();
   const flatten = (v: unknown, prefix: string): void => {
@@ -202,7 +190,7 @@ function tsSourceFiles(p: Project): Source[] {
       else if (name.endsWith('.ts') && !name.endsWith('.spec.ts') && !name.endsWith('.d.ts')) out.push(full);
     }
   };
-  walk(p.app);
+  walk(onDisk(p, p.app));
   return out
     .sort()
     .map((filePath) => ({ path: filePath, content: readFileSync(filePath, 'utf8') }));
@@ -222,7 +210,7 @@ export const i18n05 = (p: Project): ArchRule => {
 
   return combine(meta, [
     templateRule(meta, p, { finder: templateFinder }),
-    contentRule(meta, p, { subject: ARCHUNIT_APP_TREE, except: [/\.spec\.ts$/], finder: tsFinder }),
+    contentRule(meta, p, { subject: selectors.appTree(p), except: [/\.spec\.ts$/], finder: tsFinder }),
   ]);
 };
 
@@ -252,11 +240,10 @@ function frozenInstantReason(node: ts.Node): string | null {
 }
 
 /**
- * The I18N-06 finder itself, exported so the self-test can call it directly on a `Source` built
- * from a real file read. (ArchUnitTS's `adhereTo` only materializes `FileInfo.content` for files
- * it has a reason to open when building its dependency graph; a standalone fixture file with no
- * import edges gets an empty string back. That's an ArchUnitTS/`support/rule.ts` characteristic,
- * not a rule bug, and it doesn't affect `src/app` — every real file is graph-reachable there.)
+ * The I18N-06 finder itself, exported so the self-test can also call it directly on a `Source`
+ * built from a real file read, for a focused unit test of the detection logic. `contentRule`
+ * (`support/rule.ts`) reads the file straight off disk whenever ArchUnitTS's own `FileInfo.content`
+ * comes back empty, so `i18n06(FIXTURES).keys()` exercises the same logic end to end too.
  */
 export const i18n06Findings: Finder = (f) =>
   uniqSorted(
@@ -270,7 +257,7 @@ export const i18n06 = (p: Project): ArchRule =>
   contentRule(
     { id: 'I18N-06', title: 'no translate.instant( ) in computed(), a class field initializer, or effect() (ADR-0030)', mode: 'enforce' },
     p,
-    { subject: ARCHUNIT_APP_TREE, except: [/\.spec\.ts$/], finder: i18n06Findings },
+    { subject: selectors.appTree(p), except: [/\.spec\.ts$/], finder: i18n06Findings },
   );
 
 // ---------------------------------------------------------------------------------------------

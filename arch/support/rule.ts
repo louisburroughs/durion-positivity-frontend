@@ -1,6 +1,7 @@
+import { readFileSync } from 'node:fs';
 import { projectFiles } from 'archunit';
 import type { Source } from './ast';
-import type { Project } from './projects';
+import { onDisk, type Project } from './projects';
 import { templateFiles } from './templates';
 import { isTypeOnlyDependency, violationKey } from './violation-key';
 
@@ -90,6 +91,13 @@ export interface ContentSpec {
 /**
  * Content rule: ArchUnitTS supplies the file set and `FileInfo` (`adhereTo`); the finder does the
  * AST work. Keys are `path :: finding`.
+ *
+ * `FileInfo.content` is lazily materialized by ArchUnitTS only for files it has a reason to open
+ * while building its dependency graph, so a standalone file with no import edges can come back
+ * `""` — and, for any `p.tsconfig` that isn't at the repo root (FIXTURES), it comes back `""` for
+ * every file, since ArchUnitTS resolves it against the tsconfig's own directory (`p.root`), which
+ * only matches the real file location when `p.root` is `.` (see `support/projects.ts`). Either way
+ * the fix is the same: read the file straight off disk via `onDisk`.
  */
 export function contentRule(meta: { id: string; title: string; mode: Mode }, p: Project, spec: ContentSpec): ArchRule {
   return {
@@ -102,7 +110,8 @@ export function contentRule(meta: { id: string; title: string; mode: Mode }, p: 
         .should()
         .adhereTo((f) => {
           if (except.some((r) => r.test(f.path))) return true;
-          const r = spec.finder({ path: f.path, content: f.content });
+          const content = p.root !== '.' || !f.content ? readFileSync(onDisk(p, f.path), 'utf8') : f.content;
+          const r = spec.finder({ path: f.path, content });
           if (r.length) found.set(f.path, r);
           return r.length === 0;
         }, `${meta.id} ${meta.title}`)

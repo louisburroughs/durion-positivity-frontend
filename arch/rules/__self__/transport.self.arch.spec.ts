@@ -1,4 +1,3 @@
-import { regexProject } from '../layers.rules';
 import { FIXTURES } from '../../support/projects';
 import { sdk01, sdk02, sdk03, sdk04, sdk05, sdk06, sdk07, sdk08, sdk09, sdk10, sdk11 } from '../transport.rules';
 
@@ -8,10 +7,10 @@ import { sdk01, sdk02, sdk03, sdk04, sdk05, sdk06, sdk07, sdk08, sdk09, sdk10, s
  * positive shape. Uses toContain/not.toContain, never exact equality (other agents plant fixtures in
  * the same tree concurrently).
  *
- * Expected keys are built from `regexProject(FIXTURES)` (paths relative to the tsconfig's own
- * directory), not `FX.app` — see the `regexProject` doc comment in layers.rules.ts.
+ * Expected keys are built from `FIXTURES.app` directly: `Project.app` is `root`-relative (see
+ * `support/projects.ts`), the same path space ArchUnitTS's own `FileInfo.path` uses.
  */
-const FX = regexProject(FIXTURES);
+const FX = FIXTURES;
 const A = `${FX.app}/features/fxlay-a`;
 const CORE = `${FX.app}/core`;
 
