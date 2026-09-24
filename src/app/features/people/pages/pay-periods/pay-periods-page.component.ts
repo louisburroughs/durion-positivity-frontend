@@ -10,6 +10,7 @@ import {
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { formatDate } from '@angular/common';
 import { AbstractControl, FormControl, FormGroup, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
@@ -138,10 +139,12 @@ export class PayPeriodsPageComponent {
   /**
    * A date-only `YYYY-MM-DD` in the user's chosen locale. Parsed as a local date: `new Date(iso)`
    * would read it as UTC midnight and show the previous day west of Greenwich (ADR-0038). Reading
-   * `currentLocale()` here re-renders the table when the language changes.
+   * `currentLocale()` here re-renders the table when the language changes. `formatDate` (not
+   * `toLocaleDateString`) keeps this on Angular's locale pipeline (ADR-0030); `mediumDate` is the
+   * CLDR date-only style equivalent of the previous `{ dateStyle: 'medium' }`.
    */
   displayDate(iso: string): string {
-    return parseIsoDateLocal(iso).toLocaleDateString(this.locale.currentLocale(), { dateStyle: 'medium' });
+    return formatDate(parseIsoDateLocal(iso), 'mediumDate', this.locale.currentLocale());
   }
 
   statusKey(status: string): string {

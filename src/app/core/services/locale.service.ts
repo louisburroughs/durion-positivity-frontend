@@ -1,7 +1,22 @@
 import { inject, Injectable, PLATFORM_ID, signal } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
+import { isPlatformBrowser, registerLocaleData } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
 import { TranslateService } from '@ngx-translate/core';
+import localeEsUS from '@angular/common/locales/es-US';
+import localeEsMX from '@angular/common/locales/es-MX';
+import localeFrCA from '@angular/common/locales/fr-CA';
+import localeFr from '@angular/common/locales/fr';
+
+// Angular's `formatDate`/`formatNumber` (and the `date`/`number`/`currency`
+// pipes) throw NG0701 for any locale without registered CLDR data. 'en-US'
+// falls back to Angular's built-in 'en' data for free; the other locales the
+// header dropdown offers do not ship registered by default, so every page
+// that formats with the user's *chosen* locale (ADR-0030) needs them
+// registered once, here, before any component can read `currentLocale()`.
+registerLocaleData(localeEsUS, 'es-US');
+registerLocaleData(localeEsMX, 'es-MX');
+registerLocaleData(localeFrCA, 'fr-CA');
+registerLocaleData(localeFr, 'fr-FR');
 
 export const LOCALE_OPTIONS = [
   { code: 'en-US', labelKey: 'SHELL.HEADER.LOCALE.OPTION.EN_US' },

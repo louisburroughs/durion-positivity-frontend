@@ -5,6 +5,7 @@ import { provideRouter, ActivatedRoute } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ApprovalDetailPageComponent } from './approval-detail-page.component';
+import { LocaleService } from '../../../../core/services/locale.service';
 import { BASE_PATH } from '@durion-sdk/workorder';
 import { environment } from '../../../../../environments/environment';
 
@@ -107,5 +108,36 @@ describe('ApprovalDetailPageComponent [Story 268]', () => {
     // Confirm no approval POST attempts pending
     http.expectNone(`${BASE}/v1/workorders/estimates/est-123/approval`);
     expect(component.pageState()).toBe('expired');
+  });
+
+  describe('expiration date formatting (ADR-0030)', () => {
+    // Noon UTC keeps the local-time conversion on the same calendar day in every
+    // CI/test-machine timezone, so the assertion isn't a flake of where this runs.
+    const EXPIRES_AT = '2024-06-15T12:00:00Z';
+
+    it('formats the expiration date through Angular\'s locale pipeline, not a bare toLocaleDateString', () => {
+      fixture.detectChanges();
+      http.expectOne(`${BASE}/v1/workorders/estimates/est-123`).flush({
+        id: 'est-123', status: 'EXPIRED', customerId: 'c', vehicleId: 'v',
+        expiresAt: EXPIRES_AT,
+      });
+      fixture.detectChanges();
+
+      // `mediumDate` for en-US ("Jun 15, 2024"), not the numeric "6/15/2024" a bare
+      // toLocaleDateString(locale) with no options would have produced.
+      expect(component.errorMessage()).toContain('Jun 15, 2024');
+    });
+
+    it('formats in the locale the user picked in the app, not always en-US', () => {
+      TestBed.inject(LocaleService).currentLocale.set('fr-FR');
+      fixture.detectChanges();
+      http.expectOne(`${BASE}/v1/workorders/estimates/est-123`).flush({
+        id: 'est-123', status: 'EXPIRED', customerId: 'c', vehicleId: 'v',
+        expiresAt: EXPIRES_AT,
+      });
+      fixture.detectChanges();
+
+      expect(component.errorMessage()).toContain('15 juin 2024');
+    });
   });
 });

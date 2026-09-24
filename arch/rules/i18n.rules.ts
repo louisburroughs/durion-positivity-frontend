@@ -283,7 +283,7 @@ const INTL_CTOR_RE = /(^|\.)Intl\.[A-Za-z]+$/;
 
 export const i18n07 = (p: Project): ArchRule =>
   contentRule(
-    { id: 'I18N-07', title: 'no manual locale formatting (toLocale*/Intl.*/toFixed) in pages/** or components/** (ADR-0030)', mode: 'ratchet' },
+    { id: 'I18N-07', title: 'no manual locale formatting (toLocale*/Intl.*/toFixed) in pages/** or components/** (ADR-0030)', mode: 'enforce' },
     p,
     {
       subject: selectors.ui(p),
