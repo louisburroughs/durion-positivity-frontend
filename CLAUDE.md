@@ -87,4 +87,5 @@ Each domain under `src/app/features/<domain>/`: `<domain>.routes.ts`, `models/` 
 `services/` (feature services wrapping the generated `@durion-sdk/*` facades, or `ApiBaseService` only where
 no SDK package exists yet; each with co-located `*.service.spec.ts` — required), `pages/`
 (routed components, 4 files each: ts/html/css/spec), optional `components/`. Global state services
-(`AuthService`, `ThemeService`, `LocaleService`, `ChatStateService`) live in `src/app/core/services/`.
+(`AuthService`, `ThemeService`, `LocaleService`) live in `src/app/core/services/`; the chat panel's
+`ChatStateService` lives with the shell in `src/app/features/shell/services/`.

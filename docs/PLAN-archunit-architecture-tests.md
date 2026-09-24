@@ -1,6 +1,6 @@
 # Architecture tests with ArchUnitTS
 
-**Status:** proposed · **Owner:** frontend · **Created:** 2026-09-24
+**Status:** accepted; Phase 0 complete (§11) · **Owner:** frontend · **Created:** 2026-09-24
 
 The architecture rules in this repo exist only as prose, in the ADRs, `AGENTS.md` and `CLAUDE.md`.
 Nothing mechanical stops a page from composing a backend URL, a feature from importing another
@@ -53,7 +53,7 @@ Each of these was verified against `archunit@2.5.4`'s published typings and READ
 | `inFolder(..., { except: {...} })` is supported on both the subject and the dependency side. | "Feature A must not depend on any other feature" can be one rule per domain, generated from the folder list. |
 | `toPassAsync()` needs Vitest `globals: true`. `.check()` returns `Violation[]` (`ViolatingFileDependency`, `ViolatingCycle`, `CustomFileViolation`, …). | Rules without debt use `toPassAsync()` for readable failures. Baselined rules use `.check()` and diff the result against the baseline (§3.3). |
 | Since 2.5.0 a broken *referenced* tsconfig throws `TechnicalError`. | That behaviour is wanted, so leave `ignoreReferencedConfigErrors` off. |
-| `archunit` has a hard dependency on `typescript ^5.9.3`. The repo pins `~6.0.3`. | npm nests a private TS 5.9 for ArchUnitTS. **Phase 0 spike** confirms it parses our TS 6 sources and `tsconfig.app.json` (`module: preserve`, `isolatedModules`). If it doesn't, add an `overrides` entry pinning it to the root `typescript`. Our own AST helpers import the root `typescript` 6. |
+| `archunit` has a hard dependency on `typescript ^5.9.3`. The repo pins `~6.0.3`. | npm nests a private TS 5.9 for ArchUnitTS. **Confirmed in Phase 0** (§11.1): it reads the same 382 files as TS 6, so no `overrides` is needed. A self-test guards file-set parity from here on. Our own AST helpers import the root `typescript` 6. |
 | The Angular `ng test` builder runs specs in Chromium (browser mode). | ArchUnitTS reads the filesystem, so it **must not** run under `ng test`. It runs in plain-node Vitest, like the existing `test:contracts` precedent. |
 
 ## 3. Harness design
@@ -177,12 +177,12 @@ each number before any baseline is committed.
 | --- | --- | --- | --- | --- | --- |
 | LAY-01 | `core/**` must not depend on `features/**` | 0010 §2 | `inFolder('src/app/core/**').shouldNot().dependOnFiles().inFolder('src/app/features/**')` | 0 | Enforce |
 | LAY-02 | `shared/**` must not depend on `features/**` | 0010 | same, for `shared` | 0 | Enforce |
-| LAY-03 | A feature must not depend on another feature | 0010 §3, 0036 §2 | one rule per domain from `featureDomains()`: `inFolder(\`features/${d}/**\`).shouldNot().dependOnFiles().inFolder('src/app/features/**', { except: { inFolder: \`features/${d}/**\` } })` | 33 files (bulk-import ×5 features, `crm/customer-lookup`, `location/location-picker`, workexec/product services…) | Ratchet |
-| LAY-04 | A feature must not import another feature's `models/` (the stricter subset of LAY-03, called out separately so it can reach zero first) | 0036 §2 | as LAY-03, with dependency side `features/*/models/**` | ~7 (shopmgmt→workexec models, bulk-import models) | Ratchet |
-| LAY-05 | `models/**` must not depend on `services/`, `pages/` or `components/`, and must not import `@angular/*` or `rxjs` at runtime (type-only imports allowed) | 0010 §5 | dependency rule + `adhereTo` on `importSpecifiers` | 0 | Enforce |
-| LAY-06 | `services/**` must not depend on `pages/**` or `components/**` | 0010 §5 | dependency rule | 0 | Enforce |
-| LAY-07 | No import cycles within `src/app/**` | best practice | `inFolder('src/app/**').should().haveNoCycles()` | measure in Phase 0 | Enforce if 0, else Ratchet |
-| LAY-08 | Only `core/**`, `app.config*.ts` and `main*.ts` may import `src/environments/**` | 0041 §3–4 (transport config belongs to core) | dependency rule | 4 features (accounting, billing, bulk-import, shell), all URL composition that SDK-05 also tracks | Ratchet |
+| LAY-03 | A feature must not depend on another feature | 0010 §3, 0036 §2 | one rule per domain from `featureDomains()`: `inFolder(\`features/${d}/**\`).shouldNot().dependOnFiles().inFolder('src/app/features/**', { except: { inFolder: \`features/${d}/**\` } })` | 33 files / 102 edges; 0 cross-feature dynamic `import()` | Ratchet |
+| LAY-04 | A feature must not import another feature's `models/` (the stricter subset of LAY-03, called out separately so it can reach zero first) | 0036 §2 | as LAY-03, with dependency side `features/*/models/**` | 17 files / 17 edges (bulk-import models ×8, workexec models ×5, product models ×2, crm, security) | Ratchet |
+| LAY-05 | `models/**` must not depend on `services/`, `pages/` or `components/`, and must not import `@angular/*` or `rxjs` at runtime (type-only imports allowed) | 0010 §5 | dependency rule + `adhereTo` on `importSpecifiers` | 0 (planted violation caught) | Enforce |
+| LAY-06 | `services/**` must not depend on `pages/**` or `components/**` | 0010 §5 | dependency rule | 0 (planted violation caught) | Enforce |
+| LAY-07 | No import cycles within `src/app/**` | best practice | `inFolder('src/app/**').should().haveNoCycles()` | 0 (planted cycle caught) | Enforce |
+| LAY-08 | Only `core/**`, `app.config*.ts` and `main*.ts` may import `src/environments/**` | 0041 §3–4 (transport config belongs to core) | dependency rule | 4 feature files (accounting, billing page, bulk-import, shell) | Ratchet |
 
 **The LAY-03 debt has a design answer, not just a cleanup answer.** Three features are de facto
 shared libraries: bulk-import (imported by crm, product, inventory, location and people),
@@ -196,15 +196,15 @@ permanent allowlist.
 | --- | --- | --- | --- | --- | --- |
 | SDK-01 | `HttpClient`/`HttpBackend` may be imported only by `app.config.ts`, `core/services/api-base.service.ts` and `core/interceptors/**`. `HttpErrorResponse`/`HttpParams` stay legal everywhere. | 0010 §2, 0041 §2, §4 | `adhereTo` on `importedNames(f, '@angular/common/http')` | 0 outside allowlist | Enforce |
 | SDK-02 | `pages/**` and `components/**` must not depend on `ApiBaseService` | 0041 §2 | `inFolder('**/{pages,components}/**').shouldNot().dependOnFiles().inPath('src/app/core/services/api-base.service.ts')` | 0 | Enforce |
-| SDK-03 | **Frozen importer list** for `ApiBaseService`: no new file may depend on it | 0041 §2 ("legacy migration infrastructure") | dependency rule, baselined | 13 services (accounting, bulk-import, billing-transport, inventory ×2, location/inventory, people, product-inventory, workexec, platform-account, platform-tenant, shell chat-api, chat-blob) | Ratchet, tracked by `PRD-sdk-migration-completion.md` |
+| SDK-03 | **Frozen importer list** for `ApiBaseService`: no new file may depend on it | 0041 §2 ("legacy migration infrastructure") | dependency rule, baselined | 13 services | Ratchet, tracked by `PRD-sdk-migration-completion.md` |
 | SDK-04 | No `fetch(`, `XMLHttpRequest` or `new EventSource(` in `src/app/**`, except an explicit allowlist | 0041 §1 | `adhereTo` on `calls`/`new` expressions | 0 | Enforce |
-| SDK-05 | **No hardcoded backend paths.** No string or template literal in `src/app/**` matching `^/?(api/)?[a-z][a-z-]*/v\d+(/|$)` or `^/v\d+/`, except `app.config.ts` (SDK `basePath` wiring) and `api-base.service.ts` | 0041 §2 | `adhereTo` on `stringLiterals` (comments excluded) | ~35 executable literals, all in `ApiBaseService`-backed services, plus 1 page (`invoice-detail-page`) | Ratchet; shrinks with SDK-03 |
-| SDK-06 | `environment.apiBaseUrl` may be read only in `app.config.ts` and `api-base.service.ts` | 0041 §3–4 | `adhereTo`: property-access `apiBaseUrl` | 4 (bulk-import tus URL, invoice-detail page, accounting export, shell `GATEWAY_BASE_URL`) | Ratchet |
+| SDK-05 | **No hardcoded backend paths.** No string or template literal in `src/app/**` matching `^/?(api/)?[a-z][a-z-]*/v\d+(/|$)` or `^/v\d+/`, except `app.config.ts` (SDK `basePath` wiring) and `api-base.service.ts` | 0041 §2 | `adhereTo` on `stringLiterals` (comments excluded) | 44 literals in 13 files (12 `ApiBaseService`-backed services + `invoice-detail-page`) | Ratchet; shrinks with SDK-03 |
+| SDK-06 | `environment.apiBaseUrl` may be read only in `app.config.ts` and `api-base.service.ts` | 0041 §3–4 | `adhereTo`: property-access `apiBaseUrl` | 5 reads in 4 files (bulk-import tus URL, invoice-detail page, accounting export, shell `GATEWAY_BASE_URL`) | Ratchet |
 | SDK-07 | No absolute `http(s)://` literals in `src/app/**` (`server.ts` is out of scope) | 0041 | `adhereTo` on `stringLiterals` | 0 | Enforce |
 | SDK-08 | `@durion-sdk/*` is imported from the package root only, with no deep `@durion-sdk/x/…` paths | 0041 §1 (generated surface is the contract) | `adhereTo` on `importSpecifiers` | 0 | Enforce |
-| SDK-09 | `@durion-sdk/*` in `pages/**`/`components/**` means page-level SDK injection is a "temporary shortcut" | 0041 §3 (SHOULD) | `adhereTo` | 25 files | **Warn**, promote to Ratchet once decided (§8) |
+| SDK-09 | `@durion-sdk/*` in `pages/**`/`components/**` means page-level SDK injection is a "temporary shortcut" | 0041 §3 (SHOULD) | `adhereTo` | 20 files (25 imports) | **Warn** until SDK-03 < 5, then Ratchet (§8.2) |
 | SDK-10 | `@durion-sdk/tenant` may be imported only under `features/platform/**` | 0062 §7 | `adhereTo` | 0 | Enforce |
-| SDK-11 | `window.location.origin` must not be used to build URLs | 0041 §2 | `adhereTo` | 1 (`bulk-import.service`) | Ratchet |
+| SDK-11 | `window.location.origin` must not be used to build URLs | 0041 §2 | `adhereTo` | 2 in 1 file (`bulk-import.service`) | Ratchet |
 
 ### 5.3 Tenancy (`tenancy.arch.spec.ts`)
 
@@ -219,12 +219,12 @@ is the resource being administered, and the login `tenantSlug` are legitimate ca
 | --- | --- | --- | --- | --- | --- |
 | TEN-01 | No string literal equal to `X-Tenant-Id`, `X-Tenant-Slug`, `X-Loc-Fin-Bits`, `X-Loc-Oth-Bits` or `X-Loc-Scope` (case-insensitive) in `src/app/**` production code. Specs may keep them, to assert absence. | 0062 §3, 0061 §3 | `adhereTo` on `stringLiterals` (comment mentions in `tenant.ts:8` and `auth.service.ts:84` are correctly ignored) | 0 | Enforce |
 | TEN-02 | Outside `core/**` and `features/platform/**`, no identifier, property key or string literal named `tenantId`, `tenant_id`, `tenantID` or `tid`. This covers payload keys, `HttpParams.set('tenantId', …)`, `paramMap.get('tenantId')` and SDK argument objects. | 0062 §3 ("never read one from a route"; never in body/query/header) | `adhereTo` on identifiers + `propertyKeys` + `stringLiterals` | 0 | Enforce |
-| TEN-03 | `tenantSlug` may appear only in `core/services/auth.service.ts`, `core/services/last-tenant.service.ts`, `core/models/auth.models.ts`, `core/security/tenant.ts` and `features/auth/**` (the login contract) | 0062 §3 | `adhereTo` | 0 outside | Enforce |
+| TEN-03 | `tenantSlug` may appear only in `core/services/auth.service.ts`, `core/services/last-tenant.service.ts`, `core/models/auth.models.ts`, `core/security/tenant.ts` and `features/auth/**` (the login contract) | 0062 §3 | `adhereTo` | 0 once `features/platform/**` is allowlisted (tenant-create sets a new tenant's slug) | Enforce |
 | TEN-04 | Only `core/**` decodes the access token. `atob(`, `jwtDecode`, and splitting a token on `.` are allowed only in `core/services/auth.service.ts` and `core/security/**`. Features get identity from `AuthService` (`tenantId`, `claims`). | 0062 §3, 0065 §4 | `adhereTo` on `calls` | 0 outside (measure) | Enforce |
-| TEN-05 | Reading the `.tid` claim is allowed only in `core/**` and a named allowlist of tenant-scoped stores (`shell/services/chat-history.store.ts`, `chat-blob.service.ts`, `chat-state.service.ts`), which need `tid` for ADR-0065 keys | 0065 §4–5 | `adhereTo` on property access | allowlist only | Enforce |
-| TEN-06 | **Browser-storage allowlist.** `localStorage`/`sessionStorage`/`indexedDB` may be used only in classified files. **Tenant-scoped** files (`chat-history.store.ts`, `auth.service.ts`) must reference both `tid` and `sub`. **Preference** files (`theme.service.ts`, `chat-ui.service.ts`, `last-tenant.service.ts`, `router/chunk-error-recovery.ts`) must carry an `// arch: non-tenant storage — <reason>` marker. A new storage user fails until it is classified. | 0065 §4, §6 | `adhereTo` + classification table in `support/projects.ts` | 7 files, all to classify | Enforce, after classifying in Phase 1 |
-| TEN-07 | A storage `setItem(` call must sit inside a `try` block, and a `JSON.parse(` of a storage read must too | 0065 §6 | `adhereTo` + `enclosing(TryStatement)` | measure | Enforce or Ratchet |
-| TEN-08 | **No new `organizationId`** (ADR-0062 §4: "no new `organizationId` field is introduced anywhere") | 0062 §4, 0023 §2 | `adhereTo` on identifiers and property keys | 4 files | Ratchet |
+| TEN-05 | Reading the `.tid` claim is allowed only in `core/**` and a named allowlist of tenant-scoped stores (`shell/services/chat-history.store.ts`, `chat-blob.service.ts`, `chat-state.service.ts`), which need `tid` for ADR-0065 keys | 0065 §4–5 | `adhereTo` on property access | 0 once the allowlist is `shell/util/identity.util.ts`, `chat-history.store.ts`, `chat-blob.service.ts` | Enforce |
+| TEN-06 | **Browser-storage allowlist.** `localStorage`/`sessionStorage`/`indexedDB` may be used only in classified files. **Tenant-scoped** files (`chat-history.store.ts`, `auth.service.ts`) must reference both `tid` and `sub`. **Preference** files (`theme.service.ts`, `chat-ui.service.ts`, `last-tenant.service.ts`, `router/chunk-error-recovery.ts`) must carry an `// arch: non-tenant storage — <reason>` marker. A new storage user fails until it is classified. | 0065 §4, §6 | `adhereTo` + classification table in `support/projects.ts` | 7 files: tenant-scoped 2 (`auth.service`, `chat-history.store`, both key on `tid`+`sub`); preference 5 (`theme`, `locale`, `chat-ui`, `last-tenant`, `chunk-error-recovery`) | Enforce, after classifying in Phase 1 |
+| TEN-07 | A storage `setItem(` call must sit inside a `try` block, and a `JSON.parse(` of a storage read must too | 0065 §6 | `adhereTo` + `enclosing(TryStatement)` | 7 unguarded `setItem` in 3 core files (`auth.service` ×5, `locale`, `theme`) | Ratchet |
+| TEN-08 | **No new `organizationId`** (ADR-0062 §4: "no new `organizationId` field is introduced anywhere") | 0062 §4, 0023 §2 | `adhereTo` on identifiers and property keys | 4 files (accounting, crm-integration models + services) | Ratchet |
 
 TEN-02 and TEN-05 are deliberately separate. TEN-02 stops the tenant going **out** in a request.
 TEN-05 limits who reads it **in** from the token, which is how you'd end up putting it in a request
@@ -238,11 +238,11 @@ in the first place.
 | SEC-02 | No `[innerHTML]`/`[outerHTML]` binding in any template | 0065 §1 | suite-hosted template rule | 0 | Enforce |
 | SEC-03 | No `eval(` or `new Function(` | best practice / OWASP | `adhereTo` | 0 | Enforce |
 | SEC-04 | No assignment to `location`/`location.href`, and no `location.assign`/`replace`, except `core/router/chunk-error-recovery.ts` (the full-reload recovery) | 0037 | `adhereTo` | 1 (allowlisted) | Enforce |
-| SEC-05 | In-app navigation in templates is `routerLink`. No bare `href="/…"` or relative `href`. An external `href` carries `rel` containing `noopener` and `noreferrer`. | 0037 §1, §4 | suite-hosted template rule | measure | Enforce or Ratchet |
-| SEC-06 | An `<a>` with a `(click)` handler and neither `href` nor `routerLink` must become a `<button>` | 0037 §3 | suite-hosted template rule | measure | Ratchet |
-| SEC-07 | URL scheme validation lives only in `features/shell/util/markdown.util.ts` (`normaliseHref`/`isSafeHref`). No other file declares a scheme-allowlist regex (`/^(https?|mailto)…/`). | 0065 §2 | `adhereTo` on regex literals | measure | Enforce |
-| SEC-08 | `URL.revokeObjectURL(` must run inside a `setTimeout` callback, never synchronously after `.click()` | 0065 §3 | `adhereTo` + `enclosing` | measure | Ratchet |
-| SEC-09 | `aria-modal`/`role="dialog"` only on `<dialog appModalDialog>`, never on a `div` | 0029 §8.1 | suite-hosted template rule | measure | Ratchet |
+| SEC-05 | In-app navigation in templates is `routerLink`. No bare `href="/…"` or relative `href`. An external `href` carries `rel` containing `noopener` and `noreferrer`. | 0037 §1, §4 | suite-hosted template rule | 0 bare in-app `href`; 0 external links missing `rel` | Enforce |
+| SEC-06 | An `<a>` with a `(click)` handler and neither `href` nor `routerLink` must become a `<button>` | 0037 §3 | suite-hosted template rule | 0 | Enforce |
+| SEC-07 | URL scheme validation lives only in `features/shell/util/markdown.util.ts` (`normaliseHref`/`isSafeHref`). No other file declares a scheme-allowlist regex (`/^(https?|mailto)…/`). | 0065 §2 | `adhereTo` on regex literals | 0 | Enforce |
+| SEC-08 | `URL.revokeObjectURL(` must run inside a `setTimeout` callback, never synchronously after `.click()` | 0065 §3 | `adhereTo` + `enclosing` | 1 (`shell/services/chat-blob.service.ts`) | Ratchet |
+| SEC-09 | `aria-modal`/`role="dialog"` only on `<dialog appModalDialog>`, never on a `div` | 0029 §8.1 | suite-hosted template rule | 7 `role="dialog"`/`aria-modal` on `div`/`section` in 6 files, + 4 `<dialog open>` without `appModalDialog` | Ratchet |
 
 ### 5.5 Conventions and placement (`conventions.arch.spec.ts`)
 
@@ -250,13 +250,13 @@ in the first place.
 | --- | --- | --- | --- | --- | --- |
 | CON-01 | A `*.service.ts` under `features/**` lives in a `services/` folder | 0010 §5 | `withName('*.service.ts').should().beInFolder('**/services')` scoped to features | 1 (`auth/organization-search.service.ts`) | Ratchet |
 | CON-02 | Every `*.service.ts`/`*.store.ts` in `features/**` and `core/**` has a co-located `*.spec.ts` | 0032 §3, 0035 §1, §4 | `adhereTo(f => existsSync(spec(f)))` | 1 (`core/services/theme.service.ts`) | Ratchet |
-| CON-03 | Every **public** method of a `*Service` class is named in a `describe`/`it` title or called in its sibling spec (the stronger version of CON-02) | 0035 §1 | `adhereTo` + AST on both files | measure; expect noise | Warn first, then Ratchet |
-| CON-04 | Every `@Component` under `pages/**` or `components/**` follows the four-file convention (`.ts`/`.html`/`.css`/`.spec.ts`) | CLAUDE.md feature layout, 0035 | `adhereTo` | 10 missing specs (6 crm pages, `workorder-finalize`, 3 components) | Ratchet |
+| CON-03 | Every **public** method of a `*Service` class is named in a `describe`/`it` title or called in its sibling spec (the stronger version of CON-02) | 0035 §1 | `adhereTo` + AST on both files | not measured (Phase 4) | Warn first, then Ratchet |
+| CON-04 | Every `@Component` under `pages/**` or `components/**` follows the four-file convention (`.ts`/`.html`/`.css`/`.spec.ts`) | CLAUDE.md feature layout, 0035 | `adhereTo` | 10 missing specs. The 10 `*-landing-page` shells use a one-element inline template and are exempt (same rule as the i18n TS checker) | Ratchet |
 | CON-05 | The four security-audit interfaces (`AuditEventFilter`, `AuditEventDetail`, `AuditEventPageResponse`, `AuditExportJob`) are declared only in `features/security/models/security-audit.models.ts` | 0036 §1 | `adhereTo` on exported declarations | 0 | Enforce |
 | CON-06 | No `@NgModule` and no `standalone: false` | Angular 22 standalone-only (CLAUDE.md) | `adhereTo` | 0 | Enforce |
-| CON-07 | Server-generated timestamp fields (`createdAt`, `updatedAt`, `requestedAt`, `approvedAt`, `issuedAt`, `completedAt`, `cancelledAt`) in `models/**` interfaces are `readonly` and optional and carry `@serverGenerated` | 0034 §1, §3 | `adhereTo` on interface members | measure | Ratchet |
-| CON-08 | A server-generated key must not appear in an object literal passed to an SDK `create*`/`update*` method or an `ApiBaseService` `post`/`put`/`patch` | 0034 §2 | `adhereTo` on call arguments | measure | Ratchet |
-| CON-09 | Only one of `util/` and `utils/`: pick one name | hygiene | `beInFolder` | 6 folders mixed | Warn (§8) |
+| CON-07 | Server-generated timestamp fields (`createdAt`, `updatedAt`, `requestedAt`, `approvedAt`, `issuedAt`, `completedAt`, `cancelledAt`) in `models/**` interfaces are `readonly` and optional and carry `@serverGenerated` | 0034 §1, §3 | `adhereTo` on interface members | 38 members not `readonly`/optional in 13 files; 21 more lack `@serverGenerated` | Ratchet |
+| CON-08 | A server-generated key must not appear in an object literal passed to an SDK `create*`/`update*` method or an `ApiBaseService` `post`/`put`/`patch` | 0034 §2 | `adhereTo` on call arguments | 0 (approximate: server-field keys in args to `post`/`put`/`patch`/`create*`/`update*`) | Enforce |
+| CON-09 | Only one of `util/` and `utils/`: pick one name | hygiene | `beInFolder` | 2 `util/` folders (crm, shell) against 4 `utils/` | Ratchet: rename to `utils/` (§8.4) |
 
 ### 5.6 Reactive-state and date patterns (`patterns.arch.spec.ts`)
 
@@ -265,14 +265,14 @@ fires and doesn't misfire.
 
 | ID | Rule | ADR | Today | Mode |
 | --- | --- | --- | --- | --- |
-| PAT-01 | An `effect(` callback that calls `.subscribe(` must declare `onCleanup` and call it | 0033 §1, §3 | measure | Ratchet |
-| PAT-02 | No `takeUntilDestroyed` inside an `effect(` callback | 0033 §2 | measure | Enforce/Ratchet |
-| PAT-03 | In one block, `errorKey.set(<non-null>)` is immediately preceded by `state.set('error')`, and `state` is written before `errorKey` when clearing. `dispatch-board-page` (the §4 carve-out) is allowlisted with a reason. | 0031 §1, §5 | measure | Ratchet |
-| PAT-04 | Inside `catchError(` in `features/**/services/**`, never return `of([])`, `of(new Map())`, `of(new Set())`, `of({})` or `EMPTY` | 0064 §1 | measure | Ratchet |
-| PAT-05 | No `new Date('YYYY-MM-DD')` literal, `.toISOString().slice(0, 10)`/`.substring(0, 10)`, `86400000`/`86_400_000`/`24 * 60 * 60 * 1000`, and no class field `today = new Date()` | 0038 §1, §6, §8 | measure | Ratchet |
-| PAT-06 | (spec project) no literal-date `new Date('2026-…')` in date-comparison specs | 0038 §7 | measure | Warn, since it's broad |
-| PAT-07 | No parameter default that reads a live signal in an `apply*` method (`key = this.requestKey()`) | 0063 §1 | measure | Enforce |
-| PAT-08 | No `console.*` in `src/app/**` production code except an allowlisted logger location | best practice | 14 lines / 9 files | Ratchet |
+| PAT-01 | An `effect(` callback that calls `.subscribe(` must declare `onCleanup` and call it | 0033 §1, §3 | 0: all 28 subscribing effects (of 40) register `onCleanup` | Enforce |
+| PAT-02 | No `takeUntilDestroyed` inside an `effect(` callback | 0033 §2 | 1 (`shell/directives/authed-image.directive.ts`) | Ratchet |
+| PAT-03 | In one block, `errorKey.set(<non-null>)` is immediately preceded by `state.set('error')`, and `state` is written before `errorKey` when clearing. `dispatch-board-page` (the §4 carve-out) is allowlisted with a reason. | 0031 §1, §5 | 22 in 18 files when scoped to `subscribe({ error })` callbacks (44 unscoped). About 11 remain once a computed `state.set(… 'forbidden' : 'error')` is accepted | Ratchet |
+| PAT-04 | Inside `catchError(` in `features/**/services/**`, never return `of([])`, `of(new Map())`, `of(new Set())`, `of({})` or `EMPTY` | 0064 §1 | 4 in 2 files (3 in `chat-state.service` need human review) | Ratchet |
+| PAT-05 | No `new Date('YYYY-MM-DD')` literal, `.toISOString().slice(0, 10)`/`.substring(0, 10)`, `86400000`/`86_400_000`/`24 * 60 * 60 * 1000`, and no class field `today = new Date()` | 0038 §1, §6, §8 | 4 `toISOString().slice(0, 10)` in 3 files; 0 of the other shapes | Ratchet |
+| PAT-06 | (spec project) no literal-date `new Date('2026-…')` in date-comparison specs | 0038 §7 | 21 in 3 shell specs | Warn, since it's broad |
+| PAT-07 | No parameter default that reads a live signal in an `apply*` method (`key = this.requestKey()`) | 0063 §1 | 0 | Enforce |
+| PAT-08 | No `console.*` in `src/app/**` production code except an allowlisted logger location | best practice | 12 in 7 files | Ratchet |
 
 ### 5.7 i18n (`i18n.arch.spec.ts`)
 
@@ -297,11 +297,11 @@ PR by diffing CLI output before and after on `master`.
 | I18N-02 | `qps-ploc` is in sync with `en-US` (regenerated, never hand-edited) | 0030 | wraps pseudo-locale `--check` | 0 | Enforce |
 | I18N-03 | No hardcoded copy in templates | 0030 §1 | wraps `check-hardcoded-strings` `scan()` | 0 (post-remediation) | Enforce |
 | I18N-04 | No hardcoded prose in TS, including prose-bearing inline `template:` | 0030 §1 | wraps `check-hardcoded-ts-strings` `scan()` | 0 | Enforce |
-| I18N-05 | **New: referenced keys exist.** Every static key used in code or templates exists in `en-US.json`. Static keys are: literal `'A.B' \| translate` pipes in templates; literal args to `translate.instant/get/stream`; `errorKey.set('A.B')`; and literals typed as a key. Today's `check-missing-keys` only checks locale **parity**, so a typo'd key renders raw in production (ADR-0030 "no raw key leakage"). Dynamic keys (template literals) are skipped and counted. | 0030 | suite-hosted: template AST + `ast.ts` | measure | Ratchet |
-| I18N-06 | No `translate.instant(` inside a `computed(` callback, a class field initializer, or a memoised `effect(` (the locale isn't a signal dependency, so the value freezes) | 0030 (AGENTS.md Common Mistakes) | `adhereTo` + `enclosing` | 172 `instant(` calls; offending subset unknown | Ratchet |
-| I18N-07 | No manual locale formatting (`toLocaleString`/`toLocaleDateString`/`toLocaleTimeString`, `new Intl.*`, `.toFixed(` feeding display) in `pages/**`/`components/**`. Use the `number`/`date`/`currency` pipes or a single allowlisted core formatter. | 0030 (Intl/CLDR only via the framework) | `adhereTo` | 3 (`Intl`/`toLocale`) + `.toFixed` measure | Ratchet |
-| I18N-08 | No hardcoded `dir="ltr"`/`dir="rtl"` in templates | 0030 (direction is locale-driven) | suite-hosted template rule | measure | Enforce |
-| I18N-09 | Unused `en-US` keys: keys no static reference reaches | hygiene | same index as I18N-05 | measure | Warn (report only; dynamic keys make it unprovable) |
+| I18N-05 | **New: referenced keys exist.** Every static key used in code or templates exists in `en-US.json`. Static keys are: literal `'A.B' \| translate` pipes in templates; literal args to `translate.instant/get/stream`; `errorKey.set('A.B')`; and literals typed as a key. Today's `check-missing-keys` only checks locale **parity**, so a typo'd key renders raw in production (ADR-0030 "no raw key leakage"). Dynamic keys (template literals) are skipped and counted. | 0030 | suite-hosted: template AST + `ast.ts` | **58 distinct keys missing from `en-US.json`, used 68 times in 8 templates**, plus 4 in TS. These render as raw keys today. | Ratchet |
+| I18N-06 | No `translate.instant(` inside a `computed(` callback, a class field initializer, or a memoised `effect(` (the locale isn't a signal dependency, so the value freezes) | 0030 (AGENTS.md Common Mistakes) | `adhereTo` + `enclosing` | 0 | Enforce |
+| I18N-07 | No manual locale formatting (`toLocaleString`/`toLocaleDateString`/`toLocaleTimeString`, `new Intl.*`, `.toFixed(` feeding display) in `pages/**`/`components/**`. Use the `number`/`date`/`currency` pipes or a single allowlisted core formatter. | 0030 (Intl/CLDR only via the framework) | `adhereTo` | 2 in 2 files | Ratchet |
+| I18N-08 | No hardcoded `dir="ltr"`/`dir="rtl"` in templates | 0030 (direction is locale-driven) | suite-hosted template rule | 0 | Enforce |
+| I18N-09 | Unused `en-US` keys: keys no static reference reaches | hygiene | same index as I18N-05 | not measured | Warn (report only; dynamic keys make it unprovable) |
 
 **What happens to `i18n:check` in CI.**
 - Keep the `i18n:check` CI step until I18N-01…04 have run green alongside it for one release cycle.
@@ -340,7 +340,7 @@ Each phase is one PR. Every phase leaves `npm test` green.
 | Phase | Deliverable | Exit criterion |
 | --- | --- | --- |
 | **0: Spike** (½ day) | Install `archunit` (exact pin). Confirm the nested TS 5.9 parses our TS 6 sources and `tsconfig.app.json`, or add an `overrides` pin. Run LAY-01 and LAY-03 against `master` and time them. Record the Violation object shapes for `violation-key.ts`. Re-measure every "measure" cell in §5. | Written spike notes appended to this plan: runtime, version decision, measured counts |
-| **1: Harness + Enforce rules** | `arch/` scaffolding, `vitest.arch.config.ts`, `test:arch` chained into `test`, `ast.ts`, `baseline.ts`, `templates.ts`. Every rule that is 0 today: LAY-01/02/05/06, SDK-01/02/04/07/08/10, TEN-01/02/03/04/05, SEC-01/02/03/04, CON-05/06. TEN-06 with the storage classification. Self-tests for each. `AGENTS.md`/`CLAUDE.md` updates. `arch/README.md`. | All green on `master`; each rule shown to fail on a planted violation |
+| **1: Harness + Enforce rules** | `arch/` scaffolding, `vitest.arch.config.ts`, `test:arch` chained into `test`, `ast.ts`, `baseline.ts`, `templates.ts`. Every rule that is 0 today: LAY-01/02/05/06, SDK-01/02/04/07/08/10, TEN-01/02/03/04/05, SEC-01/02/03/04, CON-05/06. TEN-06 with the storage classification. Self-tests for each, plus the §11.3 guards: selector-count parity, ArchUnitTS/TS 6 file-set parity, and the dynamic-`import()` supplement to LAY-03. ESLint mirrors of SDK-01, SEC-01 and SEC-03 (§8.3). `AGENTS.md`/`CLAUDE.md` updates. `arch/README.md`. | All green on `master`; each rule shown to fail on a planted violation |
 | **2: Ratchets** | Baselines for LAY-03/04/08, SDK-03/05/06/11, TEN-08, CON-01/02/04, PAT-08. Stale-entry and new-entry failure paths self-tested. | `baseline-summary.json` published; the prune mode works |
 | **3: i18n** | Refactor the four checkers to `scan()` + CLI shim (CLI output diffed identical). I18N-01…04 wrapping. I18N-05/06/07/08 new rules with baselines. I18N-09 report. | `i18n:check` CLI unchanged; the suite catches a planted typo'd key and a planted `instant()` in `computed()` |
 | **4: Pattern rules** | PAT-01…07, SEC-05…09, CON-03/07/08, measured first, each Enforce or Ratchet per its count, with fixture self-tests including the false-positive shapes. | False-positive rate reviewed on real code: every baseline entry read by a human and confirmed genuine |
@@ -351,28 +351,24 @@ Debt burn-down, as separate PRs driven by the baselines:
 - LAY-03 shrinks with the §8 shared-promotion decision.
 - CON-04 shrinks by writing the 10 missing specs.
 
-## 8. Decisions needed
+## 8. Decisions (settled 2026-09-24)
 
-1. **Where do the de facto shared features go?** bulk-import (5 importers), `crm/customer-lookup`
-   and `location/location-picker` are imported across features.
-   - **Recommendation:** promote the reusable parts to `shared/` (for example
-     `shared/bulk-import/` for the upload/progress components and job models; the bulk-import
-     *pages* stay in the feature). LAY-03 then reaches zero for them without an allowlist.
-   - The alternative is a permanent `SHARED_FEATURES` allowlist in LAY-03, which is cheaper but
-     makes "feature isolation" mean less.
-2. **Page-level SDK injection (SDK-09).** ADR-0041 §3 calls it a temporary shortcut (SHOULD). There
-   are 25 page/component files today. Keep it as Warn, or ratchet it now?
-   - **Recommendation:** keep it as Warn until SDK-03 is under 5, then ratchet.
-3. **Should ArchUnitTS enforce things ESLint could?** Several content rules (SEC-01, SEC-03, SDK-01,
-   TEN-01) could be `no-restricted-imports`/`no-restricted-syntax` entries instead. Those give
-   editor squiggles, but no baselines or allowlist reasons.
-   - **Recommendation:** keep them in the suite for one source of truth, and add the three cheapest
-     (SDK-01, SEC-01, SEC-03) to ESLint *as well* for in-editor feedback. The suite stays
-     authoritative.
-4. **`util/` vs `utils/` (CON-09).** Pick one name.
-   - **Recommendation:** `utils/`, which is used by 4 domains against 2.
-5. **Should `CLAUDE.md` be corrected?** It places `ChatStateService` in `core/services`; it actually
-   lives in `features/shell/services`. Fix the doc; don't move the file.
+1. **De facto shared features move to `shared/`.** bulk-import (5 importers), `crm/customer-lookup`
+   and `location/location-picker` are imported across features. Their reusable parts get promoted,
+   for example `shared/bulk-import/` for the upload/progress components and job models; the
+   bulk-import *pages* stay in the feature. LAY-03 then reaches zero for them without an allowlist.
+   There is no permanent `SHARED_FEATURES` allowlist. The edges stay in the LAY-03 baseline until
+   the promotion PRs land.
+2. **Page-level SDK injection (SDK-09) stays Warn** until SDK-03 is under 5 importers, then becomes
+   a Ratchet. It covers 20 files today.
+3. **The suite is authoritative. ESLint mirrors the three cheapest rules for in-editor feedback:**
+   SDK-01 (`no-restricted-imports` for `HttpClient`/`HttpBackend`), SEC-01 and SEC-03
+   (`no-restricted-syntax`). The ESLint copies land in Phase 1 alongside the suite rules, and
+   `arch/README.md` names them as mirrors.
+4. **`utils/` is the folder name.** CON-09 becomes a Ratchet, and `crm/util/` and `shell/util/` are
+   renamed in a follow-up PR.
+5. **`CLAUDE.md` corrected** in the Phase 0 PR: `ChatStateService` lives in
+   `features/shell/services`, not `core/services`.
 
 ## 9. Follow-ups outside this plan
 
@@ -392,3 +388,99 @@ Debt burn-down, as separate PRs driven by the baselines:
 | Baselines become a dumping ground | No record mode, a mandatory `reason`, stale entries fail, a Common-Mistakes row, and a visible burndown |
 | AST heuristics misfire and lose trust | Fixture self-tests with known false-positive shapes; Warn before Ratchet for the noisier rules (CON-03, PAT-06) |
 | Pre-2.x API churn in ArchUnitTS | Exact version pin; violation keys go through one adapter (`violation-key.ts`) |
+
+## 11. Phase 0 spike results (2026-09-24)
+
+Run against `master` at `e4def8d` on Node 22.22, with `archunit@2.5.4` pinned exactly in
+`devDependencies`. The catalog in §5 now carries the measured counts. This section records what the
+spike found about the tool itself, since that changes how Phase 1 is built.
+
+### 11.1 TypeScript 6 compatibility: no `overrides` needed
+
+- npm nests `typescript@5.9.3` under `archunit`; the repo keeps `6.0.3`. No `overrides` pin is
+  required today.
+- **Completeness:** TS 5.9 and TS 6 parse `tsconfig.app.json` to the same 382 files with 0
+  diagnostics. ArchUnitTS sees all 382 plus one JSON module import (`site-map.data.json`). No
+  files are dropped.
+- **Guard for the future:** Phase 1 adds a self-test asserting that ArchUnitTS's file set equals
+  the TS 6 `tsconfig.app.json` file list. If the codebase adopts TS 6-only syntax that 5.9 can't
+  read, the suite fails loudly instead of silently analysing fewer files. That is when the
+  `overrides` fallback gets revisited.
+
+### 11.2 Runtime
+
+| Step | Time |
+| --- | --- |
+| First ArchUnitTS graph build (382 files) | ≈ 2.5 s |
+| Each further dependency rule (graph cached) | 5–25 ms |
+| All 20 per-domain LAY-03 rules + LAY-04…08 + SDK-02/03 | ≈ 2.3 s total |
+| TS-AST + Angular-template content pass (373 app + 285 spec + 194 templates) | ≈ 2.6 s |
+
+The whole suite should land well under the 30 s budget (§10). No CI split is needed.
+
+### 11.3 Tool behaviour Phase 1 must design around
+
+1. **Globs with an interior `**` don't match nested folders.** `inFolder('src/app/**/pages/**')`
+   matched **1 of 170** page files, and `src/app/**/components/**` matched 0 of 37. Leading-`**`
+   globs (`'**/pages/**'`: 170) and anchored ones (`'src/app/features/**'`: 347) are correct, as
+   are regexes (`/\/(pages|components)(\/|$)/`: 207).
+   - Such a rule under-covers silently. It still "passes", because it matched *some* files.
+   - Phase 1 rule: selectors live only in `support/projects.ts`, as regexes or leading-`**` globs.
+     A self-test asserts each selector's match count equals a filesystem count for the same
+     folders.
+   - Worth an upstream issue on ArchUnitTS.
+2. **An empty match reports a violation, not a silent pass,** on both the subject and the
+   dependency side ("No files found matching pattern(s) …"). That is good. But per-domain loops
+   need `allowEmptyTests: true` for domains with no subfolder, and those rules then depend on
+   11.3.1's self-test for coverage.
+3. **Dynamic `import()` edges are not in the graph.** `app.routes.ts` shows 0 edges to the
+   features it lazy-loads. LAY-03 therefore gets an AST supplement over `import('…')` specifiers.
+   Today it finds 0 cross-feature dynamic imports, so it ships as Enforce.
+4. **Self-edges appear.** `api-base.service.ts` was reported as depending on itself under a broad
+   `inPath('src/**')` subject. `violation-key.ts` drops edges where source equals target.
+5. **Type-only imports are distinguishable.** Each edge carries `importKinds` (`value`, `named`,
+   `type`, `default`); 16 `type` edges exist today. So LAY-05's "type-only imports allowed" can be
+   expressed exactly.
+6. **Violation shapes** for the baseline keys:
+   - `ViolatingFileDependency { dependency: { sourceLabel, targetLabel, cumulatedEdges[{ source,
+     target, external, importKinds }] }, isNegated }` → key `source -> target`
+   - `ViolatingCycle { cycle: ProjectedEdge[] }` → key: the sorted member list
+   - `CustomFileViolation { message, fileInfo, rule }` → key `path :: <finding>`, where the
+     finding comes from our AST pass and never includes a line number
+
+### 11.4 Heuristic tuning found by the spike
+
+- **PAT-03** is scoped to `subscribe({ error })` callbacks, which drops it from 44 hits to 22. A
+  computed `state.set(outcome.kind === 'forbidden' ? 'forbidden' : 'error')` directly before
+  `errorKey.set` counts as compliant: it is the ADR-0064 forbidden split. That leaves about 11.
+- **I18N-05 (TS side)** must read only translation call sites (`instant`/`get`/`stream`,
+  `errorKey.set`) and key-typed fields. A bare "looks like a key" literal matched 4 permission
+  codes (`INVENTORY.VIEW` …) as false positives.
+- **CON-04** exempts components whose inline `template:` is a single element (the 10
+  `*-landing-page` shells), matching the i18n TS checker's `inline-template` rule.
+- **TEN-03** allowlists `features/platform/**`: tenant-create sets a *new* tenant's slug, which is
+  the administered resource (ADR-0062 §7), not request tenancy.
+- **TEN-06** classification needs `core/services/locale.service.ts` as a preference store. It was
+  missing from §5.3's first list.
+
+### 11.5 Real defects the spike surfaced (not fixed in Phase 0)
+
+- **58 translation keys used in 8 templates don't exist in `en-US.json`** and render as raw keys.
+  Examples: `COMMON.SAVE`, `COMMON.ADD`, `COMMON.APPROVE`, and the whole
+  `SHOPMGMT.APPOINTMENT_EDIT.*` block. Also 4 in TS, `SHOPMGMT.APPOINTMENT_EDIT.ERROR.*` and
+  `SHOPMGMT.APPOINTMENT_RESCHEDULE.*`. `i18n:check` can't see these because it only checks parity
+  *between* locale files. This is the strongest argument for I18N-05; fix it in its own PR before
+  or with Phase 3.
+- **4 `<dialog open>` without `appModalDialog`** (storage-locations, person-location-assignments,
+  role-detail, roles-list), plus **7 `role="dialog"`/`aria-modal` on `div`/`section`**
+  (ADR-0029 §8.1).
+- **7 unguarded `localStorage`/`sessionStorage.setItem`** in `auth.service`, `locale.service` and
+  `theme.service` (ADR-0065 §6: a quota failure must be caught).
+
+### 11.6 Environment notes
+
+- A plain `npm install` prunes the `@durion-sdk/*` packages that `sdk:install` placed in
+  `node_modules`, so run `npm run sdk:install` afterwards. The `start`/`build`/`test` scripts
+  already do this.
+- The spike scripts were throwaway probes and are not committed. Phase 1 re-implements their
+  queries as `arch/support/ast.ts`.
