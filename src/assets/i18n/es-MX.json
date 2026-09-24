@@ -1107,6 +1107,32 @@
         "LOAD_PREFS": "No se pudieron cargar las preferencias.",
         "PREFS_FORBIDDEN": "No tiene autorización para actualizar las preferencias.",
         "SAVE_PREFS": "No se pudieron guardar las preferencias ({{status}})."
+      },
+      "PERSON": {
+        "TITLE": "Datos personales",
+        "LOADING": "Cargando datos personales…",
+        "FORBIDDEN": "No tiene permiso para ver los datos de esta persona.",
+        "ERROR_LOAD": "No se pudieron cargar los datos personales.",
+        "UNAVAILABLE": "Los datos personales no están disponibles para este cliente.",
+        "FIRST_NAME": "Nombre",
+        "LAST_NAME": "Apellido",
+        "PREFERRED_CONTACT": "Contacto preferido",
+        "CONTACT_POINTS": "Medios de contacto",
+        "NO_CONTACT_POINTS": "No hay medios de contacto registrados.",
+        "PRIMARY": "Principal",
+        "CONTACT_TYPE": {
+          "EMAIL": "Correo electrónico",
+          "PHONE_MOBILE": "Celular",
+          "PHONE_HOME": "Teléfono de casa",
+          "PHONE_WORK": "Teléfono del trabajo",
+          "FAX": "Fax"
+        },
+        "METHOD": {
+          "EMAIL": "Correo electrónico",
+          "PHONE_CALL": "Llamada telefónica",
+          "SMS": "Mensaje de texto",
+          "NONE": "Sin preferencia"
+        }
       }
     },
     "LANDING": {

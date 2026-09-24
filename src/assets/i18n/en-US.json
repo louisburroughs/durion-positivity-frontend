@@ -1107,6 +1107,32 @@
         "LOAD_PREFS": "Could not load preferences.",
         "PREFS_FORBIDDEN": "Not authorized to update preferences.",
         "SAVE_PREFS": "Could not save preferences ({{status}})."
+      },
+      "PERSON": {
+        "TITLE": "Personal details",
+        "LOADING": "Loading personal details…",
+        "FORBIDDEN": "You do not have permission to view this person's details.",
+        "ERROR_LOAD": "Could not load personal details.",
+        "UNAVAILABLE": "Personal details are not available for this customer.",
+        "FIRST_NAME": "First name",
+        "LAST_NAME": "Last name",
+        "PREFERRED_CONTACT": "Preferred contact",
+        "CONTACT_POINTS": "Contact points",
+        "NO_CONTACT_POINTS": "No contact points on file.",
+        "PRIMARY": "Primary",
+        "CONTACT_TYPE": {
+          "EMAIL": "Email",
+          "PHONE_MOBILE": "Mobile phone",
+          "PHONE_HOME": "Home phone",
+          "PHONE_WORK": "Work phone",
+          "FAX": "Fax"
+        },
+        "METHOD": {
+          "EMAIL": "Email",
+          "PHONE_CALL": "Phone call",
+          "SMS": "Text message",
+          "NONE": "No preference"
+        }
       }
     },
     "LANDING": {

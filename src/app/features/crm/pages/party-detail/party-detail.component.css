@@ -150,14 +150,16 @@
 }
 
 /* ── Prefs summary ──────────────────────────────────────────────────────── */
-.prefs-summary {
+.prefs-summary,
+.person-summary {
   display: grid;
   grid-template-columns: auto 1fr;
   gap: var(--space-2) var(--space-6);
   margin: 0;
 }
 
-.prefs-summary dt {
+.prefs-summary dt,
+.person-summary dt {
   font-size: 0.8rem;
   font-weight: 600;
   color: var(--handleColor);
@@ -165,10 +167,49 @@
   letter-spacing: 0.05em;
 }
 
-.prefs-summary dd {
+.prefs-summary dd,
+.person-summary dd {
   margin: 0;
   font-size: 0.88rem;
   color: var(--currentTextColor);
+}
+
+/* ── Personal details (individuals) ─────────────────────────────────────── */
+.subsection-heading {
+  margin: var(--space-3) 0 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--handleColor);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.contact-points {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.contact-point {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2) var(--space-3);
+  font-size: 0.88rem;
+  color: var(--currentTextColor);
+}
+
+.contact-point__type {
+  min-width: 7rem;
+  font-size: 0.8rem;
+  color: var(--handleColor);
+}
+
+.contact-point__value {
+  overflow-wrap: anywhere;
 }
 
 /* ── Prefs form ─────────────────────────────────────────────────────────── */

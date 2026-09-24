@@ -273,6 +273,7 @@ export const CRM_PAGE = {
 export const CRM_SECTION = {
   partyContacts: CRM_PAGE.partyContacts,
   communicationPreferences: ['crm:contact_preference:view'],
+  person: ['crm:person:read'],
 } as const satisfies Record<string, readonly string[]>;
 
 /** `/app/workexec/*` — estimates, approvals, work orders, labor, parts. */
