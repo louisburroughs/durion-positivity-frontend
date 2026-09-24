@@ -212,15 +212,23 @@ th,
 
 .modal {
   width: min(560px, 100%);
-  padding: var(--space-5);
+  padding: 0;
   border: none;
-  border-radius: var(--radius-md);
-  background: var(--cardBackground);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  background: transparent;
 }
 
 .modal::backdrop {
   background: rgb(0 0 0 / 0.36);
+}
+
+/* Panel chrome lives on this inner wrapper, not on the dialog element itself,
+   so a click on the dialog's own box (backdrop) can be told apart from a
+   click on the panel via event.target === event.currentTarget. */
+.modal-panel {
+  padding: var(--space-5);
+  border-radius: var(--radius-md);
+  background: var(--cardBackground);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
 }
 
 .modal-form {

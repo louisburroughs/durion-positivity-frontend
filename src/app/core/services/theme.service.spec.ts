@@ -79,4 +79,38 @@ describe('ThemeService', () => {
     expect(service.isDark()).toBe(true);
     expect(document.documentElement.dataset['theme']).toBe('dark');
   });
+
+  it('constructs with the default (or OS) theme when localStorage.getItem throws while reading the stored preference (storage disabled, ADR-0065 §6)', () => {
+    localStorageMock.getItem.mockImplementation(() => {
+      throw new DOMException('denied', 'SecurityError');
+    });
+
+    let service!: ReturnType<typeof createService>;
+    expect(() => {
+      service = createService();
+    }).not.toThrow();
+
+    expect(service.theme()).toBe('light');
+  });
+
+  it('constructs with the default (or OS) theme when the localStorage accessor itself throws (SecurityError)', () => {
+    const original = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+    Object.defineProperty(globalThis, 'localStorage', {
+      configurable: true,
+      get() {
+        throw new DOMException('denied', 'SecurityError');
+      },
+    });
+
+    try {
+      let service!: ReturnType<typeof createService>;
+      expect(() => {
+        service = createService();
+      }).not.toThrow();
+
+      expect(service.theme()).toBe('light');
+    } finally {
+      if (original) Object.defineProperty(globalThis, 'localStorage', original);
+    }
+  });
 });

@@ -757,4 +757,77 @@ describe('AuthService', () => {
       });
     });
   });
+
+  describe('storage read failures (ADR-0065 §6)', () => {
+    /** Rebuilds the DI container and constructs a fresh AuthService, so field
+     * initializers (loadFromStorage / loadRolesFromSession) and the
+     * constructor (reconcileSessionFromToken → loadTenantFromSession) run
+     * again under whatever storage mock the test has installed. */
+    function freshService(): AuthService {
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        providers: [
+          AuthService,
+          provideRouter([]),
+          provideHttpClient(),
+          provideHttpClientTesting(),
+          { provide: SecurityConfiguration, useValue: new SecurityConfiguration({ basePath: `${environment.apiBaseUrl}/security-service` }) },
+        ],
+      });
+      const fresh = TestBed.inject(AuthService);
+      httpMock = TestBed.inject(HttpTestingController);
+      return fresh;
+    }
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('constructs with no session when Storage.prototype.getItem throws (SecurityError, storage disabled)', () => {
+      vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+        throw new DOMException('denied', 'SecurityError');
+      });
+
+      let fresh!: AuthService;
+      expect(() => {
+        fresh = freshService();
+      }).not.toThrow();
+
+      expect(fresh.accessToken()).toBeNull();
+      expect(fresh.isAuthenticated()).toBe(false);
+      expect(fresh.currentUserRoles()).toEqual([]);
+      expect(fresh.tenant()).toBeNull();
+      httpMock.expectNone(() => true);
+    });
+
+    it('constructs with no session when the localStorage accessor itself throws (SecurityError)', () => {
+      vi.spyOn(window, 'localStorage', 'get').mockImplementation(() => {
+        throw new DOMException('denied', 'SecurityError');
+      });
+
+      let fresh!: AuthService;
+      expect(() => {
+        fresh = freshService();
+      }).not.toThrow();
+
+      expect(fresh.accessToken()).toBeNull();
+      expect(fresh.isAuthenticated()).toBe(false);
+      httpMock.expectNone(() => true);
+    });
+
+    it('constructs with no session when the sessionStorage accessor itself throws (SecurityError)', () => {
+      vi.spyOn(window, 'sessionStorage', 'get').mockImplementation(() => {
+        throw new DOMException('denied', 'SecurityError');
+      });
+
+      let fresh!: AuthService;
+      expect(() => {
+        fresh = freshService();
+      }).not.toThrow();
+
+      expect(fresh.currentUserRoles()).toEqual([]);
+      expect(fresh.tenant()).toBeNull();
+      httpMock.expectNone(() => true);
+    });
+  });
 });

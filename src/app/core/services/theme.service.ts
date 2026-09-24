@@ -51,10 +51,19 @@ export class ThemeService {
   }
 
   private loadPreference(): Theme {
-    if (typeof localStorage === 'undefined') return 'light';
-    const stored = localStorage.getItem(STORAGE_KEY) as Theme | null;
-    if (stored === 'light' || stored === 'dark') return stored;
-    // Respect OS preference when no explicit choice has been saved.
+    try {
+      if (typeof localStorage === 'undefined') return this.osPreference();
+      const stored = localStorage.getItem(STORAGE_KEY) as Theme | null;
+      if (stored === 'light' || stored === 'dark') return stored;
+    } catch {
+      // Storage disabled (private window, blocked site data) or inaccessible:
+      // fall back to OS preference below.
+    }
+    return this.osPreference();
+  }
+
+  /** Respect OS preference when no explicit choice has been saved (or storage is unavailable). */
+  private osPreference(): Theme {
     return globalThis.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   }
 }

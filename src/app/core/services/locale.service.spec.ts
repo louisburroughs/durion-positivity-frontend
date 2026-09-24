@@ -57,6 +57,7 @@ describe('LocaleService', () => {
 
   afterEach(() => {
     localStorage.clear();
+    vi.restoreAllMocks();
   });
 
   it('registers all locales offered by the header dropdown', async () => {
@@ -96,5 +97,34 @@ describe('LocaleService', () => {
 
     expect(translateService.use).toHaveBeenCalledWith('fr-FR');
     expect(service.currentLocale()).toBe('fr-FR');
+  });
+
+  it('resolves initialize() with a default when localStorage.getItem throws while reading the persisted locale (storage disabled, ADR-0065 §6)', async () => {
+    localStorageMock.getItem.mockImplementation(() => {
+      throw new DOMException('denied', 'SecurityError');
+    });
+
+    await expect(service.initialize()).resolves.toBeUndefined();
+
+    // getPersistedLocale() failed closed to null; falls through to the mocked
+    // browser-preferred locale ('en-US') rather than throwing.
+    expect(service.currentLocale()).toBe('en-US');
+  });
+
+  it('resolves initialize() with a default when the localStorage accessor itself throws (SecurityError)', async () => {
+    const original = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+    Object.defineProperty(globalThis, 'localStorage', {
+      configurable: true,
+      get() {
+        throw new DOMException('denied', 'SecurityError');
+      },
+    });
+
+    try {
+      await expect(service.initialize()).resolves.toBeUndefined();
+      expect(service.currentLocale()).toBe('en-US');
+    } finally {
+      if (original) Object.defineProperty(globalThis, 'localStorage', original);
+    }
   });
 });

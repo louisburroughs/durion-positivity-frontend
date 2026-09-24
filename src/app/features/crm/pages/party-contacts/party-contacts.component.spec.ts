@@ -106,4 +106,42 @@ describe('PartyContactsComponent [#344]', () => {
     expect(fixture.componentInstance.pendingRowId()).toBeNull();
     expect(fixture.componentInstance.toast()?.type).toBe('success');
   });
+
+  // ADR-0029 §8.1: converting the hand-rolled `.modal-backdrop` div to a
+  // native `dialog[appModalDialog]` (2db523b) dropped its backdrop-click
+  // dismissal, since a native dialog does not close on backdrop click by
+  // itself. `[closeOnBackdrop]="true"` on ModalDialogDirective restores it.
+  describe('add-contact modal backdrop dismissal (ADR-0029 §8.1)', () => {
+    it('closes the modal on a click that lands on the dialog element itself (backdrop)', async () => {
+      const fixture = await setup();
+      fixture.detectChanges();
+
+      fixture.componentInstance.openModal();
+      fixture.detectChanges();
+
+      const dialog = fixture.nativeElement.querySelector('dialog.modal') as HTMLDialogElement;
+      expect(dialog).toBeTruthy();
+
+      dialog.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      fixture.detectChanges();
+
+      expect(fixture.componentInstance.modalState()).toBe('closed');
+    });
+
+    it('does not close the modal on a click inside the panel content', async () => {
+      const fixture = await setup();
+      fixture.detectChanges();
+
+      fixture.componentInstance.openModal();
+      fixture.detectChanges();
+
+      const heading = fixture.nativeElement.querySelector('#modal-heading') as HTMLElement;
+      expect(heading).toBeTruthy();
+
+      heading.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      fixture.detectChanges();
+
+      expect(fixture.componentInstance.modalState()).toBe('open');
+    });
+  });
 });

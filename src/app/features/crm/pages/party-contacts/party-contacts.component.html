@@ -170,7 +170,8 @@
 	}
 
 	@if (modalState() !== 'closed') {
-		<dialog class="modal" appModalDialog (modalCancel)="closeModal()" aria-labelledby="modal-heading">
+		<dialog class="modal" appModalDialog [closeOnBackdrop]="true" (modalCancel)="closeModal()" aria-labelledby="modal-heading">
+			<div class="modal-panel">
 				<h2 id="modal-heading">{{ 'CRM.PARTY_CONTACTS.MODAL_TITLE' | translate }}</h2>
 
 				@if (modalError()) {
@@ -238,6 +239,7 @@
 						<button class="btn-ghost" type="button" [disabled]="modalState() === 'saving'" (click)="closeModal()">{{ 'CRM.PARTY_CONTACTS.CANCEL' | translate }}</button>
 					</div>
 				</form>
+			</div>
 		</dialog>
 	}
 

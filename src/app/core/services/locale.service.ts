@@ -102,7 +102,13 @@ export class LocaleService {
       return null;
     }
 
-    return this.normalizeLocale(localStorage.getItem(this.storageKey));
+    try {
+      return this.normalizeLocale(localStorage.getItem(this.storageKey));
+    } catch {
+      // Storage disabled (private window, blocked site data) or inaccessible:
+      // fall back to the browser-preferred locale / default.
+      return null;
+    }
   }
 
   private persistLocale(locale: SupportedLocale): void {

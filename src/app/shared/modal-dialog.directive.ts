@@ -5,6 +5,7 @@ import {
   OnDestroy,
   PLATFORM_ID,
   inject,
+  input,
   output,
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
@@ -21,19 +22,44 @@ import { isPlatformBrowser } from '@angular/common';
  *
  * SSR-safe: `showModal()` is browser-only, but in practice the toggling signal
  * defaults to closed so the host element is never rendered on the server.
+ *
+ * Backdrop dismissal (ADR-0029 §8.1) is opt-in via `[closeOnBackdrop]="true"` —
+ * a native `<dialog>` does not close on backdrop click by itself, and not every
+ * modal wants that behavior restored. When enabled, a click is treated as a
+ * backdrop click (and emits `modalCancel`, same as Esc) only when
+ * `event.target === event.currentTarget`, i.e. the click landed on the dialog
+ * element's own box rather than on any descendant. For that check to mean
+ * "backdrop, not panel", the host's CSS must give the `<dialog>` element itself
+ * zero padding and put all panel chrome (padding, background, border-radius,
+ * box-shadow) on an inner wrapper element — otherwise a click on the dialog's
+ * own padding would be misread as a backdrop click.
  */
-@Directive({ selector: 'dialog[appModalDialog]', standalone: true })
+@Directive({ selector: 'dialog[appModalDialog]', standalone: true, host: { '(click)': 'onBackdropClick($event)' } })
 export class ModalDialogDirective implements AfterViewInit, OnDestroy {
   private readonly el = inject<ElementRef<HTMLDialogElement>>(ElementRef);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
-  /** Emitted when the user dismisses via the Esc key (native `cancel`). */
+  /**
+   * Opt-in: clicking the dialog's own box (the backdrop area, per the CSS
+   * contract above) closes it, same as Esc. Defaults to false — most modals
+   * converted from hand-rolled markup never had this before and must not gain
+   * it silently.
+   */
+  readonly closeOnBackdrop = input(false);
+
+  /** Emitted when the user dismisses via the Esc key (native `cancel`) or, when `closeOnBackdrop` is set, a backdrop click. */
   readonly modalCancel = output<void>();
 
   private readonly onCancel = (event: Event): void => {
     event.preventDefault();
     this.modalCancel.emit();
   };
+
+  onBackdropClick(event: MouseEvent): void {
+    if (!this.closeOnBackdrop()) return;
+    if (event.target !== event.currentTarget) return; // click landed inside the panel content
+    this.modalCancel.emit();
+  }
 
   ngAfterViewInit(): void {
     if (!this.isBrowser) return;
