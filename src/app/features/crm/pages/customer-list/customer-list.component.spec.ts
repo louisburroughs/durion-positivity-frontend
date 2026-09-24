@@ -99,6 +99,8 @@ describe('CustomerListComponent', () => {
 
     expect(link.nativeElement.getAttribute('href')).toBe('/app/crm/party/p1');
     expect(link.nativeElement.textContent.trim()).toBe('Acme Corp');
+    // Label in Name (WCAG 2.5.3): the accessible name is the visible text, not an override.
+    expect(link.nativeElement.hasAttribute('aria-label')).toBe(false);
 
     link.nativeElement.click();
     // The row click must not navigate a second time on top of the link.

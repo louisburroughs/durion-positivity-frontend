@@ -99,8 +99,7 @@
                 <td>
                   <a class="party-row__name party-row__link"
                     [routerLink]="['/app/crm/party', party.partyId]"
-                    [state]="{ customerNumber: party.customerNumber }"
-                    [attr.aria-label]="'CRM.CUSTOMER_LIST.ROW_ARIA' | translate: { name: party.legalName }">{{ party.legalName }}</a>
+                    [state]="{ customerNumber: party.customerNumber }">{{ party.legalName }}</a>
                   @if (party.dba) {
                     <span class="party-row__sub">{{ 'CRM.CUSTOMER_LIST.DBA' | translate: { dba: party.dba } }}</span>
                   }
