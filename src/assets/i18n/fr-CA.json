@@ -1389,7 +1389,6 @@
       "EMPTY": "Aucun compte ne correspond à vos filtres.",
       "FORBIDDEN": "Vous n'avez pas la permission de consulter les comptes.",
       "TABLE_ARIA": "Répertoire des clients",
-      "ROW_ARIA": "Ouvrir le dossier de la partie {{name}}",
       "DBA": "Nom commercial : {{dba}}",
       "PAGINATION_ARIA": "Pagination du répertoire des clients",
       "PREVIOUS": "Précédent",

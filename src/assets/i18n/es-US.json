@@ -1389,7 +1389,6 @@
       "EMPTY": "No se encontraron cuentas que coincidan con sus filtros.",
       "FORBIDDEN": "No tiene permiso para ver las cuentas.",
       "TABLE_ARIA": "Directorio de clientes",
-      "ROW_ARIA": "Abrir el registro de la parte {{name}}",
       "DBA": "Nombre comercial: {{dba}}",
       "PAGINATION_ARIA": "Paginación del directorio de clientes",
       "PREVIOUS": "Anterior",

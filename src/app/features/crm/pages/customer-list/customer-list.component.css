@@ -24,8 +24,11 @@
 .sort-btn:hover { color: var(--currentTextColor); }
 .sort-icon { font-size: 0.75rem; opacity: 0.7; }
 .party-row { cursor: pointer; transition: background var(--transition-fast); }
-.party-row:hover, .party-row:focus-visible { background: color-mix(in srgb, var(--brand-primary) 8%, var(--cardBackground)); outline: none; }
+.party-row:hover { background: color-mix(in srgb, var(--brand-primary) 8%, var(--cardBackground)); }
 .party-row__name { display: block; font-weight: 600; font-size: 0.95rem; color: var(--currentTextColor); }
+.party-row__link { min-height: 24px; color: var(--link-color); text-decoration: none; }
+.party-row__link:hover { text-decoration: underline; }
+.party-row__link:focus-visible { outline: 2px solid var(--input-focus-border); outline-offset: 2px; border-radius: var(--radius-sm); }
 .party-row__sub { display: block; font-size: 0.8rem; color: color-mix(in srgb, var(--currentTextColor) 72%, transparent); margin-top: 2px; }
 .party-row__empty { color: color-mix(in srgb, var(--currentTextColor) 40%, transparent); }
 .party-row__vehicles { font-weight: 600; font-variant-numeric: tabular-nums; }
