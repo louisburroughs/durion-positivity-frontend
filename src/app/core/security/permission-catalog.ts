@@ -20,7 +20,7 @@
  */
 
 /** Backend `PermissionCode.CATALOG_VERSION` this file was generated from. */
-export const PERMISSION_CATALOG_VERSION = 89;
+export const PERMISSION_CATALOG_VERSION = 90;
 
 /**
  * Permission code by `perm_bits` bit index. The array index IS the bit index.
@@ -145,7 +145,7 @@ export const PERMISSION_BY_BIT: readonly string[] = [
   'people:employee:view',
   'people:employee:create',
   'people:employee:edit',
-  'people:employee:deactivate',
+  'people:employee:activation',
   'people:role:view',
   'people:role:assign',
   'people:role:revoke',
@@ -560,4 +560,6 @@ export const PERMISSION_BY_BIT: readonly string[] = [
   'shop:conflict:override',
   'catalog:service_requirement:manage',
   'workorder:position:assign',
+  'people:jobRole:manage',
+  'people:jobRole:view',
 ];

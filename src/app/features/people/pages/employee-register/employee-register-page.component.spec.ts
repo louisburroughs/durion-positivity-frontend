@@ -23,7 +23,7 @@ import {
  */
 const PII_PERMISSION = 'people:employee_pii:view';
 const ROLE_PERMISSION = 'people-contact:role:view';
-const DEACTIVATE_PERMISSION = 'people:employee:deactivate';
+const DEACTIVATE_PERMISSION = 'people:employee:activation';
 const TIME_PERMISSION = 'people:timekeeping:view';
 const VIEW_PERMISSION = 'people:employee:view';
 
@@ -198,7 +198,7 @@ describe('EmployeeRegisterPageComponent', () => {
 
   // ── Write-control gating (ADR-0040 §6a) ─────────────────────────────────────────────
 
-  it('hides the switch AND refuses the method without people:employee:deactivate', async () => {
+  it('hides the switch AND refuses the method without people:employee:activation', async () => {
     await setup({ permissions: ALL_PERMISSIONS.filter(p => p !== DEACTIVATE_PERMISSION) });
     expect(fixture.debugElement.queryAll(By.css('.status-switch')).length).toBe(0);
 

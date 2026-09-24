@@ -383,7 +383,7 @@ export const PEOPLE_PAGE = {
   employeeCreate: ['people:employee:create'],
   /** `getEmployee` reads PII, so the profile page needs the PII bit, not `people:employee:view`. */
   employeeDetail: ['people:employee_pii:view'],
-  employeeOffboard: ['people:employee:deactivate'],
+  employeeOffboard: ['people:employee:activation'],
   locationAssignments: ['people:employee:view'],
   identityCompliance: ['people:compliance:view'],
   bulkImport: ['bulkImport:upload:execute'],
