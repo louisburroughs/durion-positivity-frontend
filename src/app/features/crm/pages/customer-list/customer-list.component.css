@@ -26,7 +26,7 @@
 .party-row { cursor: pointer; transition: background var(--transition-fast); }
 .party-row:hover { background: color-mix(in srgb, var(--brand-primary) 8%, var(--cardBackground)); }
 .party-row__name { display: block; font-weight: 600; font-size: 0.95rem; color: var(--currentTextColor); }
-.party-row__link { color: var(--link-color); text-decoration: none; }
+.party-row__link { min-height: 24px; color: var(--link-color); text-decoration: none; }
 .party-row__link:hover { text-decoration: underline; }
 .party-row__link:focus-visible { outline: 2px solid var(--input-focus-border); outline-offset: 2px; border-radius: var(--radius-sm); }
 .party-row__sub { display: block; font-size: 0.8rem; color: color-mix(in srgb, var(--currentTextColor) 72%, transparent); margin-top: 2px; }

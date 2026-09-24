@@ -93,6 +93,7 @@ describe('CustomerListComponent', () => {
     } as ReturnType<typeof party>], 1)));
     const router = TestBed.inject(Router);
     const navigate = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
+    const rowNavigate = vi.spyOn(router, 'navigate');
 
     fixture.detectChanges();
     const link = fixture.debugElement.query(By.css('.party-table tbody a.party-row__link'));
@@ -103,7 +104,9 @@ describe('CustomerListComponent', () => {
     expect(link.nativeElement.hasAttribute('aria-label')).toBe(false);
 
     link.nativeElement.click();
-    // The row click must not navigate a second time on top of the link.
+    // The row click must not navigate a second time on top of the link: the link
+    // goes through navigateByUrl, the row handler through navigate.
+    expect(rowNavigate).not.toHaveBeenCalled();
     expect(navigate).toHaveBeenCalledTimes(1);
     expect(navigate.mock.calls[0][1]).toEqual(expect.objectContaining({ state: { customerNumber: 'CUST-000123' } }));
   });
