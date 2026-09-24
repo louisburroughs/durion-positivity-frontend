@@ -9,6 +9,7 @@ import { catchError, debounceTime, distinctUntilChanged, map, switchMap } from '
 import { CrmService } from '../../services/crm.service';
 import { CreatePersonResponse, PartyDetail, Relationship, RelationshipRole } from '../../models/crm.models';
 import { ModalDialogDirective } from '../../../../shared/modal-dialog.directive';
+import { isoDateLocal } from '../../../../core/utils/local-date';
 
 const MAX_SUGGESTIONS = 8;
 
@@ -315,7 +316,7 @@ export class PartyContactsComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
-          const today = new Date().toISOString().slice(0, 10);
+          const today = isoDateLocal(new Date()); // ADR-0038 §1 — local, not UTC, date
           this.relationships.update(rows =>
             rows.map(r =>
               r.relationshipId === relationship.relationshipId

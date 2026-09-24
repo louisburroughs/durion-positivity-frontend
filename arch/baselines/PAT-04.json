@@ -13,10 +13,5 @@
     "key": "src/app/features/shell/services/chat-state.service.ts :: selectConversation :: catchError returns EMPTY",
     "reason": "selection-load catchError: sets state/errorKey before returning EMPTY, so the failure is surfaced in the UI, but the literal EMPTY return still trips ADR-0064 \u00a71 \u2014 human review requested by the plan.",
     "tracking": "#343"
-  },
-  {
-    "key": "src/app/features/shopmgmt/services/capacity-calendar.service.ts :: searchJobTypes :: catchError returns of([])",
-    "reason": "genuine silent failure: a failed catalog search returns of([]) with no error surfaced anywhere (no state/errorKey set) \u2014 an empty result set looks identical to 'no matches'. Worth its own fix, flagged for a GitHub issue.",
-    "tracking": "#343"
   }
 ]

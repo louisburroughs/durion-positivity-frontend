@@ -18,10 +18,5 @@
     "key": "src/app/features/positivity/components/supplier-fleet-lookup-panel/supplier-fleet-lookup-panel.component.ts :: constructor :: errorKey.set not immediately preceded by state.set('error')",
     "reason": "same 'unreachable' third-state shape as supplier-fleet-authorization-panel above.",
     "tracking": "#342"
-  },
-  {
-    "key": "src/app/features/shopmgmt/pages/schedule-view/schedule-view-page.component.ts :: load :: errorKey.set not immediately preceded by state.set('error')",
-    "reason": "genuine ADR-0031 §5 ordering bug: the error callback calls this.errorKey.set('SHOPMGMT.SCHEDULE_VIEW.ERROR_LOAD') BEFORE this.state.set('error') (reversed from every other page in the codebase). Worth its own fix/GitHub issue.",
-    "tracking": "#342"
   }
 ]

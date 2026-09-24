@@ -2218,6 +2218,7 @@
       "CLEAR_JOB_ARIA": "Clear the job type filter",
       "JOB_SEARCH_ARIA": "Search job types",
       "JOB_SEARCH_EMPTY": "No matching job types.",
+      "JOB_SEARCH_ERROR": "Could not search job types. Try again.",
       "PREVIOUS_ARIA": "Previous period",
       "NEXT_ARIA": "Next period",
       "TODAY": "Today",

@@ -323,7 +323,7 @@ export const pat05 = (p: Project): ArchRule =>
       id: 'PAT-05',
       title:
         "no new Date('YYYY-MM-DD') literal, .toISOString().slice/substring(0, 10), an 86400000/86_400_000/24*60*60*1000 ms-per-day literal, or a class field 'today = new Date()' (ADR-0038 §1, §6, §8)",
-      mode: 'ratchet',
+      mode: 'enforce',
     },
     p,
     { subject: selectors.appTree(p), finder: pat05Finder },

@@ -2218,6 +2218,7 @@
       "CLEAR_JOB_ARIA": "Quitar el filtro de tipo de trabajo",
       "JOB_SEARCH_ARIA": "Buscar tipos de trabajo",
       "JOB_SEARCH_EMPTY": "No hay tipos de trabajo que coincidan.",
+      "JOB_SEARCH_ERROR": "No se pudieron buscar los tipos de trabajo. Vuelva a intentarlo.",
       "PREVIOUS_ARIA": "Periodo anterior",
       "NEXT_ARIA": "Periodo siguiente",
       "TODAY": "Hoy",

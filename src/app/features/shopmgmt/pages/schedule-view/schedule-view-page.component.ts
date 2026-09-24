@@ -145,6 +145,8 @@ export class ScheduleViewPageComponent implements OnInit {
   readonly jobQuery = signal('');
   readonly jobOptions = signal<readonly JobRequirement[]>([]);
   readonly jobPickerOpen = signal(false);
+  /** True when the last {@link onJobQuery} search failed (ADR-0064 §1) — distinct from "no matches". */
+  readonly jobSearchFailed = signal(false);
 
   readonly hourPitchPx = HOUR_PITCH_PX;
 
@@ -408,7 +410,10 @@ export class ScheduleViewPageComponent implements OnInit {
     this.capacity
       .searchJobTypes(value)
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(options => this.jobOptions.set(options));
+      .subscribe(({ options, ok }) => {
+        this.jobOptions.set(options);
+        this.jobSearchFailed.set(!ok);
+      });
   }
 
   selectJob(job: JobRequirement): void {
@@ -421,6 +426,7 @@ export class ScheduleViewPageComponent implements OnInit {
     this.job.set(CapacityCalendarService.allWorkJob(''));
     this.jobQuery.set('');
     this.jobOptions.set([]);
+    this.jobSearchFailed.set(false);
     this.load();
   }
 
@@ -447,8 +453,8 @@ export class ScheduleViewPageComponent implements OnInit {
         },
         error: () => {
           this.view.set(null);
+          this.state.set('error'); // ADR-0031 §5 — state first, then the key
           this.errorKey.set('SHOPMGMT.SCHEDULE_VIEW.ERROR_LOAD');
-          this.state.set('error');
         },
       });
   }

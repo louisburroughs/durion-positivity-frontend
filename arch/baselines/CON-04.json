@@ -30,11 +30,6 @@
     "tracking": "#345"
   },
   {
-    "key": "src/app/features/crm/pages/party-contacts/party-contacts.component.ts :: missing spec",
-    "reason": "component predates the mandatory co-located spec convention; write the missing *.spec.ts.",
-    "tracking": "#345"
-  },
-  {
     "key": "src/app/features/shell/components/content-panel/content-panel.component.ts :: missing spec",
     "reason": "component predates the mandatory co-located spec convention; write the missing *.spec.ts.",
     "tracking": "#345"

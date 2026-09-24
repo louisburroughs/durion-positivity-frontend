@@ -2218,6 +2218,7 @@
       "CLEAR_JOB_ARIA": "Effacer le filtre de type de travaux",
       "JOB_SEARCH_ARIA": "Rechercher un type de travaux",
       "JOB_SEARCH_EMPTY": "Aucun type de travaux correspondant.",
+      "JOB_SEARCH_ERROR": "Impossible de rechercher les types de travaux. Réessayez.",
       "PREVIOUS_ARIA": "Période précédente",
       "NEXT_ARIA": "Période suivante",
       "TODAY": "Aujourd'hui",

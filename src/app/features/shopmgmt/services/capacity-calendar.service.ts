@@ -164,14 +164,15 @@ export class CapacityCalendarService {
    * no default is offered at one hour, the smallest window the hour-resolution
    * grids can express.
    */
-  searchJobTypes(query: string): Observable<JobRequirement[]> {
+  searchJobTypes(query: string): Observable<{ options: JobRequirement[]; ok: boolean }> {
     const trimmed = query.trim();
     if (!trimmed) {
-      return of([]);
+      return of({ options: [], ok: true });
     }
     return this.catalogApi.searchCatalogServices(trimmed, 20).pipe(
-      map(services => services.map(service => this.toJobRequirement(service))),
-      catchError(() => of([])),
+      map(services => ({ options: services.map(service => this.toJobRequirement(service)), ok: true })),
+      // ADR-0064 §1: a catalog outage must not look like "no matches" — surface it via ok: false.
+      catchError(() => of({ options: [] as JobRequirement[], ok: false })),
     );
   }
 

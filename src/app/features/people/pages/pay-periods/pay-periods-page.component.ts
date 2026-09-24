@@ -24,7 +24,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { LocaleService } from '../../../../core/services/locale.service';
 import { PEOPLE_SECTION } from '../../../../core/security/route-permissions';
 import { ModalDialogDirective } from '../../../../shared/modal-dialog.directive';
-import { isoDateLocal, parseIsoDateLocal } from '../../../shopmgmt/models/capacity-calendar.models';
+import { isoDateLocal, parseIsoDateLocal } from '../../../../core/utils/local-date';
 import { PeopleService } from '../../services/people.service';
 
 type PageState = 'loading' | 'ready' | 'error';
