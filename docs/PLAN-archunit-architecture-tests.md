@@ -391,7 +391,7 @@ Debt burn-down, as separate PRs driven by the baselines:
 
 ## 11. Phase 0 spike results (2026-09-24)
 
-Run against `master` at `e4def8d` on Node 22.22, with `archunit@2.5.4` pinned exactly in
+Run against `master` at `e4def8d` on Node 22.23.2, with `archunit@2.5.4` pinned exactly in
 `devDependencies`. The catalog in §5 now carries the measured counts. This section records what the
 spike found about the tool itself, since that changes how Phase 1 is built.
 
