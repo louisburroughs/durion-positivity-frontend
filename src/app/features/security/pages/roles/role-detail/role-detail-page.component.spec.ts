@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { SecurityService } from '../../../services/security.service';
+import { AuthService } from '../../../../../core/services/auth.service';
 import { RoleDetailPageComponent } from './role-detail-page.component';
 import { TranslateModule } from '@ngx-translate/core';
 
@@ -9,7 +10,9 @@ describe('RoleDetailPageComponent', () => {
   let fixture: ComponentFixture<RoleDetailPageComponent>;
   let component: RoleDetailPageComponent;
 
+  const ROLE_ID = '018f0a1b-2c3d-7e4f-8a9b-0c1d2e3f4a5b';
   const mockRole = {
+    id: ROLE_ID,
     name: 'ROLE_ADMIN',
     description: 'Admin role',
     grantedPermissions: [
@@ -36,6 +39,14 @@ describe('RoleDetailPageComponent', () => {
     updateRolePermissions: vi.fn().mockReturnValue(of(undefined)),
   };
 
+  /** `permissions: null` models a legacy token with no `perm_bits` claim. */
+  const session: { permissions: string[] | null } = { permissions: ['security:role:view', 'security:role:edit'] };
+  const authStub = {
+    permissionsKnown: () => session.permissions !== null,
+    hasAnyPermission: (permissions: readonly string[]) =>
+      permissions.some(permission => session.permissions?.includes(permission) ?? false),
+  };
+
   const routeParamGet = vi.fn((key: string) => (key === 'name' ? 'ROLE_ADMIN' : null));
   const activatedRouteStub = {
     snapshot: { paramMap: { get: routeParamGet } },
@@ -47,6 +58,7 @@ describe('RoleDetailPageComponent', () => {
       providers: [
         { provide: SecurityService, useValue: securityServiceStub },
         { provide: ActivatedRoute, useValue: activatedRouteStub },
+        { provide: AuthService, useValue: authStub },
       ],
     }).compileComponents();
 
@@ -56,6 +68,47 @@ describe('RoleDetailPageComponent', () => {
 
   afterEach(() => {
     vi.clearAllMocks();
+    session.permissions = ['security:role:view', 'security:role:edit'];
+  });
+
+  describe('write gating on security:role:edit (ADR-0040 §6a)', () => {
+    const el = () => fixture.nativeElement as HTMLElement;
+
+    it('view-only: no edit or revoke controls, and every write method refuses', () => {
+      session.permissions = ['security:role:view'];
+      fixture.detectChanges();
+
+      expect(component.canEdit()).toBe(false);
+      expect(el().querySelector('[data-testid="edit-permissions"]')).toBeNull();
+      expect(el().querySelector('[data-testid="revoke-permission"]')).toBeNull();
+
+      component.openGrantModal();
+      component.submitGrantPermissions();
+      component.confirmRevoke('PERM_READ');
+      component.executeRevoke();
+
+      expect(component.showGrantModal()).toBe(false);
+      expect(component.confirmRevokeKey()).toBeNull();
+      expect(securityServiceStub.updateRolePermissions).not.toHaveBeenCalled();
+    });
+
+    it('edit granted: controls render and the write goes out', () => {
+      fixture.detectChanges();
+
+      expect(el().querySelector('[data-testid="edit-permissions"]')).not.toBeNull();
+      expect(el().querySelectorAll('[data-testid="revoke-permission"]').length).toBe(2);
+      component.confirmRevoke('PERM_READ');
+      component.executeRevoke();
+      expect(securityServiceStub.updateRolePermissions).toHaveBeenCalled();
+    });
+
+    it('legacy token with unknown perm_bits falls back to allowing edits', () => {
+      session.permissions = null;
+      fixture.detectChanges();
+
+      expect(component.canEdit()).toBe(true);
+      expect(el().querySelector('[data-testid="edit-permissions"]')).not.toBeNull();
+    });
   });
 
   describe('ngOnInit', () => {
@@ -169,6 +222,18 @@ describe('RoleDetailPageComponent', () => {
   describe('confirmRevoke() / cancelRevoke()', () => {
     beforeEach(() => fixture.detectChanges());
 
+    it('refuses to write when the loaded role carries no id (the endpoint keys on the UUID)', () => {
+      securityServiceStub.getRoleByName.mockReturnValueOnce(of({ name: 'ROLE_ADMIN', grantedPermissions: [{ permissionKey: 'PERM_READ' }] }));
+      component.loadRole();
+      component.confirmRevoke('PERM_READ');
+
+      component.executeRevoke();
+      component.openGrantModal();
+      component.submitGrantPermissions();
+
+      expect(securityServiceStub.updateRolePermissions).not.toHaveBeenCalled();
+    });
+
     it('confirmRevoke(key) sets confirmRevokeKey() to that key', () => {
       component.confirmRevoke('PERM_READ');
       expect(component.confirmRevokeKey()).toBe('PERM_READ');
@@ -189,7 +254,7 @@ describe('RoleDetailPageComponent', () => {
       component.executeRevoke();
 
       expect(securityServiceStub.updateRolePermissions).toHaveBeenCalledWith({
-        roleName: 'ROLE_ADMIN',
+        roleId: ROLE_ID,
         permissionKeys: ['PERM_READ'],
       });
       // reload triggers another getRoleByName call
@@ -239,7 +304,7 @@ describe('RoleDetailPageComponent', () => {
       component.submitGrantPermissions();
 
       expect(securityServiceStub.updateRolePermissions).toHaveBeenCalledWith({
-        roleName: 'ROLE_ADMIN',
+        roleId: ROLE_ID,
         permissionKeys: ['PERM_READ'],
       });
       expect(component.showGrantModal()).toBe(false);

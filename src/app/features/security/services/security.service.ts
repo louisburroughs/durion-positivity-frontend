@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { RoleManagementService, UserAPIService, PermissionRegistryService } from '@durion-sdk/security';
-import type { CreateUserRequest as SdkCreateUserRequest, RolePermissionsRequest } from '@durion-sdk/security';
+import type { CreateUserRequest as SdkCreateUserRequest, RoleDto, RolePermissionsRequest } from '@durion-sdk/security';
 import { ShopAuditService } from '@durion-sdk/shop-manager';
 import {
   CreateRoleRequest,
@@ -12,6 +12,23 @@ import {
   SecurityRole,
   UpdateRolePermissionsRequest,
 } from '../models/security.models';
+
+/**
+ * One mapping for every role read. The SDK's `permissions` is typed as a `Set` but arrives as
+ * a JSON array; `Array.from` covers both. `lastModifiedAt` is the SDK's name for `updatedAt`.
+ */
+function toSecurityRole(dto: RoleDto): SecurityRole {
+  return {
+    id: dto.id,
+    name: dto.name ?? '',
+    description: dto.description,
+    grantedPermissions: dto.permissions
+      ? Array.from(dto.permissions).map(p => ({ permissionKey: p.name ?? '', description: p.description }))
+      : undefined,
+    createdAt: dto.createdAt,
+    updatedAt: dto.lastModifiedAt,
+  };
+}
 
 @Injectable({ providedIn: 'root' })
 export class SecurityService {
@@ -23,15 +40,7 @@ export class SecurityService {
   getAllRoles(_page = 0, _size = 20): Observable<PagedResponse<SecurityRole>> {
     return this.roleManagement.listRoles().pipe(
       map(roles => ({
-        results: roles.map(role => ({
-          name: role.name ?? '',
-          description: role.description,
-          grantedPermissions: role.permissions
-            ? Array.from(role.permissions).map(p => ({ permissionKey: p.name ?? '' }))
-            : undefined,
-          createdAt: role.createdAt,
-          updatedAt: role.lastModifiedAt,
-        } satisfies SecurityRole)),
+        results: roles.map(toSecurityRole),
         totalCount: roles.length,
         pageNumber: _page,
         pageSize: _size,
@@ -41,21 +50,13 @@ export class SecurityService {
   }
 
   createRole(req: CreateRoleRequest): Observable<SecurityRole> {
-    return this.roleManagement.createRole(req).pipe(
-      map(dto => ({
-        name: dto.name ?? '',
-        description: dto.description,
-        grantedPermissions: dto.permissions
-          ? Array.from(dto.permissions).map(p => ({ permissionKey: p.name ?? '' }))
-          : undefined,
-        createdAt: dto.createdAt,
-        updatedAt: dto.lastModifiedAt,
-      } satisfies SecurityRole)),
-    );
+    return this.roleManagement.createRole(req).pipe(map(toSecurityRole));
   }
 
   getRoleByName(name: string): Observable<SecurityRole> {
-    return this.roleManagement.getRoleByName(name) as Observable<SecurityRole>;
+    // Was a bare cast: the SDK's `permissions` never became `grantedPermissions`, so the
+    // role page showed an empty permission table for every role.
+    return this.roleManagement.getRoleByName(name).pipe(map(toSecurityRole));
   }
 
   /**
@@ -93,10 +94,16 @@ export class SecurityService {
     );
   }
 
+  /**
+   * `PUT /v1/roles/permissions` keys on the role's UUID (`roleId`), not its name — the name
+   * 404s. The SDK types `permissionNames` as a `Set`, but it hands the body straight to
+   * HttpClient, and `JSON.stringify(new Set(...))` is `{}`; the backend's `Set<String>` reads a
+   * JSON array, so send a de-duplicated array under that type.
+   */
   updateRolePermissions(req: UpdateRolePermissionsRequest): Observable<void> {
     const sdkReq: RolePermissionsRequest = {
-      roleId: req.roleName,
-      permissionNames: new Set(req.permissionKeys),
+      roleId: req.roleId,
+      permissionNames: [...new Set(req.permissionKeys)] as unknown as Set<string>,
     };
     return this.roleManagement.updateRolePermissions(sdkReq).pipe(map(() => undefined));
   }
