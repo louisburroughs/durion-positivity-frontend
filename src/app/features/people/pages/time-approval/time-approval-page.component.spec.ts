@@ -167,6 +167,54 @@ describe('TimeApprovalPageComponent', () => {
     expect(errEl.textContent).toContain('Approve failed');
   });
 
+  describe('decision permissions', () => {
+    const APPROVE = PEOPLE_SECTION.timeApprove[0];
+    const REJECT = PEOPLE_SECTION.timeReject[0];
+    const btn = (id: string) => fixture.nativeElement.querySelector(`[data-testid="${id}"]`) as HTMLButtonElement;
+    const selectWith = (permissions: string[]) => {
+      // Set before the selection so the decision predicates recompute when the detail loads.
+      session.permissions = permissions;
+      component.selectionForm.patchValue({ personId: 'p1', timePeriodId: 't1' });
+      fixture.detectChanges();
+    };
+
+    it('enables approve and allows the call for a session holding people:timekeeping:approve', () => {
+      selectWith(['people:timekeeping:view', APPROVE]);
+
+      expect(btn('approve-btn').disabled).toBe(false);
+      component.approvePeriod();
+      expect(peopleService.approveTimePeriod).toHaveBeenCalledExactlyOnceWith('t1', 'p1');
+    });
+
+    it('disables approve and refuses the method without people:timekeeping:approve', () => {
+      selectWith(['people:timekeeping:view', REJECT]);
+
+      expect(btn('approve-btn').disabled).toBe(true);
+      component.approvePeriod();
+      expect(peopleService.approveTimePeriod).not.toHaveBeenCalled();
+    });
+
+    it('enables reject and allows the call for a session holding people:timekeeping:reject', () => {
+      selectWith(['people:timekeeping:view', REJECT]);
+
+      expect(btn('reject-btn').disabled).toBe(false);
+      component.openRejectDialog();
+      component.rejectForm.setValue({ comments: 'Missing punch-out' });
+      component.submitReject();
+      expect(peopleService.rejectTimePeriod).toHaveBeenCalledExactlyOnceWith('t1', 'p1', { reason: 'Missing punch-out' });
+    });
+
+    it('disables reject and refuses both reject methods without people:timekeeping:reject', () => {
+      selectWith(['people:timekeeping:view', APPROVE]);
+
+      expect(btn('reject-btn').disabled).toBe(true);
+      component.openRejectDialog();
+      expect(component.showRejectDialog()).toBe(false);
+      component.submitReject();
+      expect(peopleService.rejectTimePeriod).not.toHaveBeenCalled();
+    });
+  });
+
   describe('employee named by ?personId=', () => {
     const openFor = async (personId: string) => {
       TestBed.resetTestingModule();

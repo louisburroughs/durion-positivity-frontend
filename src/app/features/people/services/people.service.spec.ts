@@ -18,6 +18,7 @@ import {
   StaffingAssignmentResponseStatusEnum,
   TimePeriodApprovalDto,
   TimePeriodApprovalDtoOverallStatusEnum,
+  TimePeriodDecisionResponse,
   TimePeriodDto,
   TimePeriodDtoStatusEnum,
   TimekeepingApprovalAPIService,
@@ -501,21 +502,27 @@ describe('PeopleService', () => {
     expect(result).toEqual(summary);
   });
 
-  it('approveTimePeriod() passes timePeriodId then personId to the SDK', () => {
-    timekeepingApiStub.approveTimePeriod.mockReturnValue(of({}));
+  it('approveTimePeriod() passes timePeriodId then personId to the SDK and emits its decision', () => {
+    const decision: TimePeriodDecisionResponse = { timePeriodId: 'tp-1', personId: 'p-1', processedCount: 3, status: 'APPROVED' };
+    timekeepingApiStub.approveTimePeriod.mockReturnValue(of(decision));
 
-    service.approveTimePeriod('tp-1', 'p-1').subscribe();
+    let result: TimePeriodDecisionResponse | undefined;
+    service.approveTimePeriod('tp-1', 'p-1').subscribe(r => (result = r));
 
     expect(timekeepingApiStub.approveTimePeriod).toHaveBeenCalledExactlyOnceWith('tp-1', 'p-1');
+    expect(result).toEqual(decision);
   });
 
-  it('rejectTimePeriod() passes timePeriodId, personId and the reason body to the SDK', () => {
-    timekeepingApiStub.rejectTimePeriod.mockReturnValue(of({}));
+  it('rejectTimePeriod() passes timePeriodId, personId and the reason body to the SDK and emits its decision', () => {
+    const decision: TimePeriodDecisionResponse = { timePeriodId: 'tp-1', personId: 'p-1', processedCount: 3, status: 'REJECTED' };
+    timekeepingApiStub.rejectTimePeriod.mockReturnValue(of(decision));
     const request: RejectTimePeriodRequest = { reason: 'Needs correction' };
 
-    service.rejectTimePeriod('tp-1', 'p-1', request).subscribe();
+    let result: TimePeriodDecisionResponse | undefined;
+    service.rejectTimePeriod('tp-1', 'p-1', request).subscribe(r => (result = r));
 
     expect(timekeepingApiStub.rejectTimePeriod).toHaveBeenCalledExactlyOnceWith('tp-1', 'p-1', request);
+    expect(result).toEqual(decision);
   });
 
   it('startSession() delegates to WorkSessionsAPIService.startWorkSession', () => {

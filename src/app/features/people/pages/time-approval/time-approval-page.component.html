@@ -118,11 +118,11 @@
     }
 
     <div class="actions-row">
-      <button type="button" (click)="approvePeriod()" [disabled]="!canDecide() || actionInFlight()"
+      <button type="button" (click)="approvePeriod()" [disabled]="!canApprove() || actionInFlight()"
         data-testid="approve-btn">
         {{ 'PEOPLE.TIME_APPROVAL.APPROVE_PERIOD' | translate }}
       </button>
-      <button type="button" (click)="openRejectDialog()" [disabled]="!canDecide() || actionInFlight()"
+      <button type="button" (click)="openRejectDialog()" [disabled]="!canReject() || actionInFlight()"
         data-testid="reject-btn">
         {{ 'PEOPLE.TIME_APPROVAL.REJECT_PERIOD' | translate }}
       </button>

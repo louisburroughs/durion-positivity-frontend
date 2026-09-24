@@ -96,6 +96,11 @@ export class TimeApprovalPageComponent {
     return allPending;
   });
 
+  // Each decision control and its handler share one predicate (EXEMPLARS §5): viewing the page
+  // does not grant the write, so a keyboard or programmatic call is refused just like the button.
+  readonly canApprove = computed(() => this.canDecide() && this.allows(PEOPLE_SECTION.timeApprove));
+  readonly canReject = computed(() => this.canDecide() && this.allows(PEOPLE_SECTION.timeReject));
+
   constructor() {
     // The employee register links here per row ("Time for <employee>"), so the person it names
     // has to arrive selected — otherwise the link promises a row-specific destination and hands
@@ -139,7 +144,7 @@ export class TimeApprovalPageComponent {
     this.requestedPerson.set({ personId, name: null });
     // Name lookup is best-effort: without people-contact:person:view the option keeps its
     // generic label rather than provoking a 403 (issue #255).
-    if (this.auth.permissionsKnown() && !this.auth.hasAnyPermission(PEOPLE_SECTION.personLookup)) {
+    if (!this.allows(PEOPLE_SECTION.personLookup)) {
       return;
     }
     this.peopleService.getPerson(personId)
@@ -209,6 +214,7 @@ export class TimeApprovalPageComponent {
   }
 
   approvePeriod(): void {
+    if (!this.canApprove()) return;
     const { personId, timePeriodId } = this.selectionForm.getRawValue();
     if (!personId || !timePeriodId) return;
     this.actionInFlight.set(true);
@@ -231,6 +237,7 @@ export class TimeApprovalPageComponent {
   }
 
   openRejectDialog(): void {
+    if (!this.canReject()) return;
     this.rejectForm.reset();
     this.showRejectDialog.set(true);
   }
@@ -240,6 +247,7 @@ export class TimeApprovalPageComponent {
   }
 
   submitReject(): void {
+    if (!this.canReject()) return;
     this.rejectForm.markAllAsTouched();
     if (this.rejectForm.invalid) return;
     const { personId, timePeriodId } = this.selectionForm.getRawValue();
@@ -275,5 +283,10 @@ export class TimeApprovalPageComponent {
     if (status === 'OPEN') return this.translate.instant('PEOPLE.TIME_APPROVAL.STATUS_OPEN');
     if (status === 'PAYROLL_CLOSED') return this.translate.instant('PEOPLE.TIME_APPROVAL.STATUS_PAYROLL_CLOSED');
     return null;
+  }
+
+  /** Open when the token carries no permission claim, matching `canAccess()`; a 403 is the backstop. */
+  private allows(permissions: readonly string[]): boolean {
+    return !this.auth.permissionsKnown() || this.auth.hasAnyPermission(permissions);
   }
 }
