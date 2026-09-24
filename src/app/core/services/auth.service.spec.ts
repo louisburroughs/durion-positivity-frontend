@@ -674,4 +674,87 @@ describe('AuthService', () => {
       expect(service.hostTenantSlug()).toBeNull();
     });
   });
+
+  describe('storage write failures (ADR-0065 §6)', () => {
+    const TENANT_ID = '01990000-0000-7000-8000-00000000c003';
+
+    /** Builds an unsigned JWT carrying the given claims, deterministic for a given input. */
+    function tokenWith(claims: Record<string, unknown>): string {
+      const payload = btoa(
+        JSON.stringify({ sub: 'usr', roles: ['ADMIN'], exp: 9999999999, iat: 1700000000, ...claims }),
+      )
+        .replaceAll('+', '-')
+        .replaceAll('/', '_')
+        .replaceAll('=', '');
+      return `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.${payload}.sig`;
+    }
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('keeps the session usable when localStorage.setItem throws while storing access/refresh tokens', () => {
+      environment.mockAuth = false;
+      vi.spyOn(Storage.prototype, 'setItem').mockImplementation((key: string) => {
+        if (key === 'durion-access-token' || key === 'durion-refresh-token') {
+          throw new DOMException('QuotaExceededError');
+        }
+      });
+      const token = tokenWith({});
+
+      expect(() => {
+        service.login({ username: 'demo', password: 'testpass' }).subscribe();
+        httpMock
+          .expectOne(r => r.url.includes('/security-service/v1/auth/login'))
+          .flush({ accessToken: token, refreshToken: 'rt' });
+      }).not.toThrow();
+
+      expect(service.accessToken()).toBe(token);
+      expect(service.isAuthenticated()).toBe(true);
+    });
+
+    it('keeps roles readable in memory when sessionStorage.setItem throws while caching them', () => {
+      environment.mockAuth = false;
+      vi.spyOn(Storage.prototype, 'setItem').mockImplementation((key: string) => {
+        if (key === 'durion-user-roles' || key === 'durion-user-roles-exp') {
+          throw new DOMException('QuotaExceededError');
+        }
+      });
+
+      expect(() => {
+        service.login({ username: 'demo', password: 'testpass' }).subscribe();
+        httpMock
+          .expectOne(r => r.url.includes('/security-service/v1/auth/login'))
+          .flush({ accessToken: tokenWith({}), refreshToken: 'rt' });
+      }).not.toThrow();
+
+      expect(service.hasRole('ROLE_ADMIN')).toBe(true);
+    });
+
+    it('keeps the loaded tenant readable when sessionStorage.setItem throws while caching it', () => {
+      environment.mockAuth = false;
+      vi.spyOn(Storage.prototype, 'setItem').mockImplementation((key: string) => {
+        if (key === 'durion-tenant') {
+          throw new DOMException('QuotaExceededError');
+        }
+      });
+
+      expect(() => {
+        service.login({ username: 'demo', password: 'testpass' }).subscribe();
+        httpMock
+          .expectOne(r => r.url.includes('/security-service/v1/auth/login'))
+          .flush({ accessToken: tokenWith({ tid: TENANT_ID }), refreshToken: 'rt' });
+        httpMock
+          .expectOne(r => r.url.endsWith('/security-service/v1/tenants/me'))
+          .flush({ id: TENANT_ID, slug: 'acme-tire', displayName: 'Acme Tire & Auto', status: 'ACTIVE' });
+      }).not.toThrow();
+
+      expect(service.tenant()).toEqual({
+        tenantId: TENANT_ID,
+        slug: 'acme-tire',
+        displayName: 'Acme Tire & Auto',
+        status: 'ACTIVE',
+      });
+    });
+  });
 });

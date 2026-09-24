@@ -242,7 +242,7 @@ export function ten07Finder(f: Source): string[] {
 /** A storage write must be inside try; JSON.parse of a value that same function read from storage too. */
 export const ten07 = (p: Project): ArchRule =>
   contentRule(
-    { id: 'TEN-07', title: 'storage setItem/JSON.parse must sit inside try (ADR-0065 §6)', mode: 'ratchet' },
+    { id: 'TEN-07', title: 'storage setItem/JSON.parse must sit inside try (ADR-0065 §6)', mode: 'enforce' },
     p,
     { subject: selectors.appTree(p), finder: ten07Finder },
   );

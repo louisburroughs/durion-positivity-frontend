@@ -95,7 +95,12 @@ export class LocaleService {
       return;
     }
 
-    localStorage.setItem(this.storageKey, locale);
+    try {
+      localStorage.setItem(this.storageKey, locale);
+    } catch {
+      // Quota exceeded or storage disabled: the locale stays active for this
+      // page load via currentLocale; it just won't be remembered on reload.
+    }
   }
 
   private getBrowserPreferredLocale(): SupportedLocale | null {

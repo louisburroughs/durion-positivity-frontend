@@ -289,8 +289,14 @@ export class AuthService {
     this._accessToken.set(accessToken);
     this._refreshToken.set(refreshToken);
     if (isPlatformBrowser(this.platformId)) {
-      localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
-      localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+      try {
+        localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
+        localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+      } catch {
+        // Quota exceeded or storage disabled (private window, blocked site data):
+        // the session stays usable from the signals set above; it just won't
+        // survive a reload.
+      }
     }
     this.cacheRolesFromToken(accessToken);
     this.syncTenant(previousTenantId);
@@ -393,7 +399,12 @@ export class AuthService {
         if (this.tenantId() !== tenantId) return;
         const tenant = this.toTenantSummary(response, tenantId);
         this._tenant.set(tenant);
-        sessionStorage.setItem(TENANT_KEY, JSON.stringify(tenant));
+        try {
+          sessionStorage.setItem(TENANT_KEY, JSON.stringify(tenant));
+        } catch {
+          // Quota exceeded or storage disabled: the tenant stays available for
+          // this page load from the signal; a reload simply re-fetches it.
+        }
       },
       error: (err: unknown) => {
         // The tenant name is presentation only; the session stays usable
@@ -513,8 +524,13 @@ export class AuthService {
     this._roles.set(effectiveRoles);
 
     if (isPlatformBrowser(this.platformId)) {
-      sessionStorage.setItem(ROLES_KEY, JSON.stringify(effectiveRoles));
-      sessionStorage.setItem(ROLES_EXP_KEY, String(sessionExpiryMs));
+      try {
+        sessionStorage.setItem(ROLES_KEY, JSON.stringify(effectiveRoles));
+        sessionStorage.setItem(ROLES_EXP_KEY, String(sessionExpiryMs));
+      } catch {
+        // Quota exceeded or storage disabled: roles stay correct in the signal
+        // for this page load; a reload re-derives them from the access token.
+      }
     }
 
     this.scheduleSessionExpiry(sessionExpiryMs);

@@ -32,7 +32,12 @@ export class ThemeService {
       const t = this.theme();
       if (isPlatformBrowser(this.platformId)) {
         document.documentElement.dataset['theme'] = t;
-        localStorage.setItem(STORAGE_KEY, t);
+        try {
+          localStorage.setItem(STORAGE_KEY, t);
+        } catch {
+          // Quota exceeded or storage disabled: the theme stays applied to the
+          // document for this page load; it just won't survive a reload.
+        }
       }
     });
   }

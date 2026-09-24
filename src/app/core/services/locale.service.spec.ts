@@ -86,4 +86,15 @@ describe('LocaleService', () => {
     expect(service.currentLocale()).toBe('fr-FR');
     expect(localStorage.setItem).toHaveBeenCalledWith('durion.locale', 'fr-FR');
   });
+
+  it('keeps the locale active in memory when persisting it throws (quota/disabled storage, ADR-0065 §6)', async () => {
+    localStorageMock.setItem.mockImplementation(() => {
+      throw new DOMException('QuotaExceededError');
+    });
+
+    await expect(service.setLocale('fr-FR')).resolves.toBeUndefined();
+
+    expect(translateService.use).toHaveBeenCalledWith('fr-FR');
+    expect(service.currentLocale()).toBe('fr-FR');
+  });
 });

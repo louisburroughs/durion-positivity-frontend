@@ -25,7 +25,14 @@ describe('ChatBlobService', () => {
     service = TestBed.inject(ChatBlobService);
   });
 
-  afterEach(() => vi.restoreAllMocks());
+  afterEach(async () => {
+    // discard() defers its revoke via setTimeout (ADR-0065 §3); tear the service
+    // down and flush that timer here so a pending revoke from this test cannot
+    // fire — captured by a freshly-installed spy — inside the next one.
+    TestBed.resetTestingModule();
+    await new Promise(resolve => setTimeout(resolve));
+    vi.restoreAllMocks();
+  });
 
   it('treats a relative URL as one our API must authenticate', () => {
     expect(service.needsAuthentication('/mcp-server/v1/mcp/blobs/1')).toBe(true);
@@ -78,6 +85,8 @@ describe('ChatBlobService', () => {
 
     expect(getBlob).toHaveBeenCalledTimes(2);
     expect(second).not.toBe(first);
+    // The revoke is deferred past the current tick (ADR-0065 §3) — flush it.
+    await new Promise(resolve => setTimeout(resolve));
     expect(revoke).toHaveBeenCalledWith(first);
   });
 
@@ -183,6 +192,7 @@ describe('ChatBlobService', () => {
 
     // Still OWNED, though: an uncached URL is revoked on destroy like any other.
     TestBed.resetTestingModule();
+    await new Promise(resolve => setTimeout(resolve));
     expect(revoke).toHaveBeenCalledWith(first);
     expect(revoke).toHaveBeenCalledWith(second);
   });
@@ -204,7 +214,28 @@ describe('ChatBlobService', () => {
     await firstValueFrom(service.resolve('/blobs/1'));
 
     TestBed.resetTestingModule();
+    await new Promise(resolve => setTimeout(resolve));
 
     expect(revoke).toHaveBeenCalledTimes(1);
+  });
+
+  it('defers revocation until after the timer, so an in-flight download survives the current tick (ADR-0065 §3)', async () => {
+    vi.useFakeTimers();
+    try {
+      const revoke = vi.spyOn(URL, 'revokeObjectURL');
+      const first = await firstValueFrom(service.resolve('/blobs/1'));
+
+      claims.set({ sub: 'admin.alpha', tid: 'tenant-two', exp: 9999999999 });
+      TestBed.tick();
+
+      // Not yet: revocation must not happen synchronously with discard().
+      expect(revoke).not.toHaveBeenCalled();
+
+      vi.runAllTimers();
+
+      expect(revoke).toHaveBeenCalledWith(first);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
