@@ -11,6 +11,12 @@ import {
 } from '../security.rules';
 
 describe('[SEC-01] no innerHTML/outerHTML/DomSanitizer bypass sinks', () => {
+  it('flags a compound innerHTML assignment', () => {
+    expect(sec01Finder({ path: 'x.ts', content: `el.innerHTML += html;` })).toEqual(['assignment to .innerHTML']);
+  });
+  it('does not flag reading innerHTML or comparing it', () => {
+    expect(sec01Finder({ path: 'x.ts', content: `const h = el.innerHTML; if (el.innerHTML === '') {}` })).toEqual([]);
+  });
   it('flags an innerHTML assignment', () => {
     expect(sec01Finder({ path: 'x.ts', content: `el.innerHTML = html;` })).toEqual(['assignment to .innerHTML']);
   });
@@ -166,7 +172,7 @@ describe('[SEC-09] aria-modal/role="dialog" only on <dialog appModalDialog>', ()
   it('does not flag a non-modal alertdialog with no aria-modal (tenant-detail-page carve-out)', () => {
     expect(sec09Finder({ path: 'x.html', content: `<div role="alertdialog">x</div>` })).toEqual([]);
   });
-  it('does not flag a <dialog> with no open and no directive (JS-driven showModal())', () => {
-    expect(sec09Finder({ path: 'x.html', content: `<dialog #d>x</dialog>` })).toEqual([]);
+  it('flags a <dialog> with no open and no directive (JS-driven show())', () => {
+    expect(sec09Finder({ path: 'x.html', content: `<dialog #d>x</dialog>` })).toEqual(['<dialog> without appModalDialog']);
   });
 });

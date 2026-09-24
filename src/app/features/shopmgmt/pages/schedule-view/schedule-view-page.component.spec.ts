@@ -399,7 +399,10 @@ describe('ScheduleViewPageComponent', () => {
     capacityStub.searchJobTypes.mockReturnValueOnce(older).mockReturnValueOnce(newer);
 
     component.onJobQuery('al');
+    older.next({ options: [ALIGNMENT_JOB], ok: true });
     component.onJobQuery('align');
+    // The previous query's options are dropped while the new one is pending.
+    expect(component.jobOptions()).toEqual([]);
     newer.next({ options: [ALIGNMENT_JOB], ok: true });
     older.next({ options: [], ok: false });
 

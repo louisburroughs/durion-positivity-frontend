@@ -413,6 +413,10 @@ export class ScheduleViewPageComponent implements OnInit {
   onJobQuery(value: string): void {
     this.jobQuery.set(value);
     const seq = ++this.jobSearchSeq;
+    // Drop the previous query's answer while this one is pending, so the picker never offers
+    // options for a query that is no longer on screen (ADR-0063 §1).
+    this.jobOptions.set([]);
+    this.jobSearchFailed.set(false);
     this.capacity
       .searchJobTypes(value)
       .pipe(takeUntilDestroyed(this.destroyRef))

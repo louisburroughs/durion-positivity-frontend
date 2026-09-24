@@ -1,7 +1,9 @@
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 import { FIXTURES } from '../../support/projects';
 import type { Source } from '../../support/ast';
-import { i18n05, i18n06, i18n06Findings, loadEnUsKeys, staticTranslateKeysInTs } from '../i18n.rules';
+import { i18n01, i18n05, i18n06, i18n06Findings, loadEnUsKeys, staticTranslateKeysInTs } from '../i18n.rules';
 
 const read = (path: string): Source => ({ path, content: readFileSync(path, 'utf8') });
 
@@ -76,5 +78,31 @@ describe('[self] I18N-06 no translate.instant( ) in computed()/field initializer
   it('end to end: i18n06(FIXTURES).keys() also catches the frozen-instant fixture', async () => {
     const keys = await i18n06(FIXTURES).keys();
     expect(keys.some((k) => k.includes('fxi18n-frozen.component.ts'))).toBe(true);
+  });
+});
+
+describe('[I18N-01] exact en-US key set', () => {
+  const withLocales = async (locales: Record<string, unknown>): Promise<string[]> => {
+    const dir = mkdtempSync(path.join(tmpdir(), 'i18n01-'));
+    try {
+      for (const [name, body] of Object.entries(locales)) writeFileSync(path.join(dir, `${name}.json`), JSON.stringify(body));
+      return await i18n01(dir).keys();
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  };
+
+  it('flags a key a release locale has but en-US does not', async () => {
+    const keys = await withLocales({ 'en-US': { A: { B: 'x' } }, 'fr-FR': { A: { B: 'y', C: 'z' } } });
+    expect(keys.some((k) => k.includes('extra') && k.includes('A.C'))).toBe(true);
+  });
+
+  it('flags a key missing from a release locale', async () => {
+    const keys = await withLocales({ 'en-US': { A: { B: 'x', C: 'w' } }, 'fr-FR': { A: { B: 'y' } } });
+    expect(keys.some((k) => k.includes('missing') && k.includes('A.C'))).toBe(true);
+  });
+
+  it('passes identical key sets', async () => {
+    expect(await withLocales({ 'en-US': { A: { B: 'x' } }, 'fr-FR': { A: { B: 'y' } } })).toEqual([]);
   });
 });

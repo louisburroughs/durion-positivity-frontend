@@ -24,12 +24,13 @@ const uniqSorted = (xs: Iterable<string>): string[] => [...new Set(xs)].sort();
 // I18N-01..04: wrap the existing checkers. No new heuristics here.
 // ---------------------------------------------------------------------------------------------
 
-export const i18n01 = (): ArchRule =>
+export const i18n01 = (i18nDir?: string): ArchRule =>
   customRule({ id: 'I18N-01', title: 'every release locale has exactly the en-US key set (ADR-0030)', mode: 'enforce' }, () => {
-    const { diffs } = scanMissingKeys();
+    const { diffs } = scanMissingKeys(i18nDir ? { i18nDir } : undefined);
     return diffs.flatMap((d) => [
       ...d.missing.map((k) => `${d.locale} :: missing ${k}`),
       ...d.typeMismatches.map((t) => `${d.locale} :: type-mismatch ${t}`),
+      ...d.extras.map((k) => `${d.locale} :: extra ${k}`),
     ]);
   });
 

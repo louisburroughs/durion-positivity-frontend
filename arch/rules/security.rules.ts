@@ -10,7 +10,12 @@ import { type ArchRule, contentRule, templateRule } from '../support/rule';
 export function sec01Finder(f: Source): string[] {
   const out: string[] = [];
   walk({ path: f.path, content: f.content }, (n) => {
-    if (ts.isBinaryExpression(n) && n.operatorToken.kind === ts.SyntaxKind.EqualsToken && ts.isPropertyAccessExpression(n.left)) {
+    // Any assignment operator writes HTML: `=` and compound forms such as `+=`.
+    const assigns =
+      ts.isBinaryExpression(n) &&
+      n.operatorToken.kind >= ts.SyntaxKind.FirstAssignment &&
+      n.operatorToken.kind <= ts.SyntaxKind.LastAssignment;
+    if (assigns && ts.isPropertyAccessExpression(n.left)) {
       if (n.left.name.text === 'innerHTML') out.push('assignment to .innerHTML');
     }
     if (ts.isPropertyAccessExpression(n) && n.name.text === 'outerHTML') out.push('access: .outerHTML');
@@ -186,9 +191,11 @@ export function sec09Finder(f: Source): string[] {
   const out: string[] = [];
   for (const el of elements(f)) {
     if (el.name === 'dialog') {
-      // A <dialog> is the right element; it only needs the directive, and only when it renders
-      // statically open (a `showModal()`-driven dialog needs no static `aria-modal`/`role` either).
-      if (el.attrs.has('open') && !hasAttr(el, 'appModalDialog')) out.push('<dialog open> without appModalDialog');
+      // A <dialog> is the right element but must carry the directive: without it, a JS-driven
+      // dialog can be opened with show() (no top layer, focus trap or implicit aria-modal).
+      if (!hasAttr(el, 'appModalDialog')) {
+        out.push(el.attrs.has('open') ? '<dialog open> without appModalDialog' : '<dialog> without appModalDialog');
+      }
       continue;
     }
     const roleDialog = (el.attrs.get('role') ?? '').toLowerCase() === 'dialog';

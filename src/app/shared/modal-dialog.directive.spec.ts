@@ -100,9 +100,7 @@ describe('ModalDialogDirective', () => {
   });
 
   it('does nothing on SSR (no browser platform) and never throws', async () => {
-    expect(async () => {
-      fixture = await setup('server');
-      fixture.detectChanges();
-    }).not.toThrow();
+    fixture = await setup('server');
+    expect(() => fixture.detectChanges()).not.toThrow();
   });
 });
