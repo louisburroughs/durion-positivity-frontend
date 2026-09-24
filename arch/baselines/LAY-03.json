@@ -2,516 +2,516 @@
   {
     "key": "src/app/features/accounting/pages/credit-memo/credit-memo-create/credit-memo-create-page.component.ts -> src/app/features/crm/components/customer-lookup/customer-lookup.component.ts",
     "reason": "crm/components/customer-lookup is a de facto shared component reused by accounting and workexec pages; migrates to shared/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/accounting/pages/reports/labor-overhead/labor-overhead-report-page.component.ts -> src/app/features/location/components/location-picker/location-picker.component.ts",
     "reason": "location/components/location-picker is a de facto shared component reused by accounting, shopmgmt and workexec pages; migrates to shared/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/crm/pages/bulk-import/customer-bulk-import-page.component.ts -> src/app/features/bulk-import/components/bulk-import-column-mapping-table/bulk-import-column-mapping-table.component.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/crm/pages/bulk-import/customer-bulk-import-page.component.ts -> src/app/features/bulk-import/components/bulk-import-error-records-table/bulk-import-error-records-table.component.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/crm/pages/bulk-import/customer-bulk-import-page.component.ts -> src/app/features/bulk-import/components/bulk-import-file-drop/bulk-import-file-drop.component.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/crm/pages/bulk-import/customer-bulk-import-page.component.ts -> src/app/features/bulk-import/components/bulk-import-progress-stepper/bulk-import-progress-stepper.component.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/crm/pages/bulk-import/customer-bulk-import-page.component.ts -> src/app/features/bulk-import/components/bulk-import-results-summary/bulk-import-results-summary.component.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/crm/pages/bulk-import/customer-bulk-import-page.component.ts -> src/app/features/bulk-import/components/bulk-import-upload-progress/bulk-import-upload-progress.component.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/crm/pages/bulk-import/customer-bulk-import-page.component.ts -> src/app/features/bulk-import/models/bulk-import.models.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/crm/pages/bulk-import/customer-bulk-import-page.component.ts -> src/app/features/bulk-import/services/bulk-import.service.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/crm/pages/bulk-import/vehicle-fitment-bulk-import-page.component.ts -> src/app/features/bulk-import/components/bulk-import-column-mapping-table/bulk-import-column-mapping-table.component.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/crm/pages/bulk-import/vehicle-fitment-bulk-import-page.component.ts -> src/app/features/bulk-import/components/bulk-import-error-records-table/bulk-import-error-records-table.component.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/crm/pages/bulk-import/vehicle-fitment-bulk-import-page.component.ts -> src/app/features/bulk-import/components/bulk-import-file-drop/bulk-import-file-drop.component.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/crm/pages/bulk-import/vehicle-fitment-bulk-import-page.component.ts -> src/app/features/bulk-import/components/bulk-import-progress-stepper/bulk-import-progress-stepper.component.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/crm/pages/bulk-import/vehicle-fitment-bulk-import-page.component.ts -> src/app/features/bulk-import/components/bulk-import-results-summary/bulk-import-results-summary.component.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/crm/pages/bulk-import/vehicle-fitment-bulk-import-page.component.ts -> src/app/features/bulk-import/components/bulk-import-upload-progress/bulk-import-upload-progress.component.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/crm/pages/bulk-import/vehicle-fitment-bulk-import-page.component.ts -> src/app/features/bulk-import/models/bulk-import.models.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/crm/pages/bulk-import/vehicle-fitment-bulk-import-page.component.ts -> src/app/features/bulk-import/services/bulk-import.service.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/crm/pages/bulk-import/vehicle-inventory-bulk-import-page.component.ts -> src/app/features/bulk-import/components/bulk-import-column-mapping-table/bulk-import-column-mapping-table.component.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/crm/pages/bulk-import/vehicle-inventory-bulk-import-page.component.ts -> src/app/features/bulk-import/components/bulk-import-error-records-table/bulk-import-error-records-table.component.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/crm/pages/bulk-import/vehicle-inventory-bulk-import-page.component.ts -> src/app/features/bulk-import/components/bulk-import-file-drop/bulk-import-file-drop.component.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/crm/pages/bulk-import/vehicle-inventory-bulk-import-page.component.ts -> src/app/features/bulk-import/components/bulk-import-progress-stepper/bulk-import-progress-stepper.component.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/crm/pages/bulk-import/vehicle-inventory-bulk-import-page.component.ts -> src/app/features/bulk-import/components/bulk-import-results-summary/bulk-import-results-summary.component.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/crm/pages/bulk-import/vehicle-inventory-bulk-import-page.component.ts -> src/app/features/bulk-import/components/bulk-import-upload-progress/bulk-import-upload-progress.component.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/crm/pages/bulk-import/vehicle-inventory-bulk-import-page.component.ts -> src/app/features/bulk-import/models/bulk-import.models.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/crm/pages/bulk-import/vehicle-inventory-bulk-import-page.component.ts -> src/app/features/bulk-import/services/bulk-import.service.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/inventory/pages/availability/availability.component.ts -> src/app/features/location/components/location-picker/location-picker.component.ts",
     "reason": "location/components/location-picker is a de facto shared component reused by accounting, shopmgmt and workexec pages; migrates to shared/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/inventory/pages/bulk-import/inventory-bulk-import-page.component.ts -> src/app/features/bulk-import/components/bulk-import-column-mapping-table/bulk-import-column-mapping-table.component.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/inventory/pages/bulk-import/inventory-bulk-import-page.component.ts -> src/app/features/bulk-import/components/bulk-import-error-records-table/bulk-import-error-records-table.component.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/inventory/pages/bulk-import/inventory-bulk-import-page.component.ts -> src/app/features/bulk-import/components/bulk-import-file-drop/bulk-import-file-drop.component.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/inventory/pages/bulk-import/inventory-bulk-import-page.component.ts -> src/app/features/bulk-import/components/bulk-import-progress-stepper/bulk-import-progress-stepper.component.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/inventory/pages/bulk-import/inventory-bulk-import-page.component.ts -> src/app/features/bulk-import/components/bulk-import-results-summary/bulk-import-results-summary.component.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/inventory/pages/bulk-import/inventory-bulk-import-page.component.ts -> src/app/features/bulk-import/components/bulk-import-upload-progress/bulk-import-upload-progress.component.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/inventory/pages/bulk-import/inventory-bulk-import-page.component.ts -> src/app/features/bulk-import/models/bulk-import.models.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/inventory/pages/bulk-import/inventory-bulk-import-page.component.ts -> src/app/features/bulk-import/services/bulk-import.service.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/inventory/pages/fulfillment/consume-picked-items/consume-picked-items-page.component.ts -> src/app/features/workexec/models/workexec.models.ts",
     "reason": "inventory fulfillment pages and shopmgmt read workexec's models/service directly for shared work-order state; no shared/ promotion decided yet (tracked separately from plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/inventory/pages/fulfillment/consume-picked-items/consume-picked-items-page.component.ts -> src/app/features/workexec/services/workexec.service.ts",
     "reason": "inventory fulfillment pages and shopmgmt read workexec's models/service directly for shared work-order state; no shared/ promotion decided yet (tracked separately from plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/inventory/pages/fulfillment/pick-execute/pick-execute-page.component.ts -> src/app/features/workexec/models/workexec.models.ts",
     "reason": "inventory fulfillment pages and shopmgmt read workexec's models/service directly for shared work-order state; no shared/ promotion decided yet (tracked separately from plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/inventory/pages/fulfillment/pick-execute/pick-execute-page.component.ts -> src/app/features/workexec/services/workexec.service.ts",
     "reason": "inventory fulfillment pages and shopmgmt read workexec's models/service directly for shared work-order state; no shared/ promotion decided yet (tracked separately from plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/inventory/pages/fulfillment/pick-list/pick-list-page.component.ts -> src/app/features/workexec/models/workexec.models.ts",
     "reason": "inventory fulfillment pages and shopmgmt read workexec's models/service directly for shared work-order state; no shared/ promotion decided yet (tracked separately from plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/inventory/pages/fulfillment/pick-list/pick-list-page.component.ts -> src/app/features/workexec/services/workexec.service.ts",
     "reason": "inventory fulfillment pages and shopmgmt read workexec's models/service directly for shared work-order state; no shared/ promotion decided yet (tracked separately from plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/inventory/pages/purchase-orders/po-detail/po-detail.component.ts -> src/app/features/positivity/components/purchase-order-transmission-timeline-panel/purchase-order-transmission-timeline-panel.component.ts",
     "reason": "inventory's PO detail page reads positivity's supplier/PO transmission-timeline panels directly; no shared/ promotion decided yet.",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/inventory/pages/purchase-orders/po-detail/po-detail.component.ts -> src/app/features/positivity/components/supplier-transmission-panel/supplier-transmission-panel.component.ts",
     "reason": "inventory's PO detail page reads positivity's supplier/PO transmission-timeline panels directly; no shared/ promotion decided yet.",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/inventory/pages/security/inventory-security-admin/inventory-security-admin-page.component.ts -> src/app/features/security/models/security.models.ts",
     "reason": "inventory-security-admin reads the security feature's models/service directly for the shared audit UI; no shared/ promotion decided yet.",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/inventory/pages/security/inventory-security-admin/inventory-security-admin-page.component.ts -> src/app/features/security/services/security.service.ts",
     "reason": "inventory-security-admin reads the security feature's models/service directly for the shared audit UI; no shared/ promotion decided yet.",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/location/pages/bulk-import/location-bulk-import-page.component.ts -> src/app/features/bulk-import/components/bulk-import-column-mapping-table/bulk-import-column-mapping-table.component.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/location/pages/bulk-import/location-bulk-import-page.component.ts -> src/app/features/bulk-import/components/bulk-import-error-records-table/bulk-import-error-records-table.component.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/location/pages/bulk-import/location-bulk-import-page.component.ts -> src/app/features/bulk-import/components/bulk-import-file-drop/bulk-import-file-drop.component.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/location/pages/bulk-import/location-bulk-import-page.component.ts -> src/app/features/bulk-import/components/bulk-import-progress-stepper/bulk-import-progress-stepper.component.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/location/pages/bulk-import/location-bulk-import-page.component.ts -> src/app/features/bulk-import/components/bulk-import-results-summary/bulk-import-results-summary.component.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/location/pages/bulk-import/location-bulk-import-page.component.ts -> src/app/features/bulk-import/components/bulk-import-upload-progress/bulk-import-upload-progress.component.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/location/pages/bulk-import/location-bulk-import-page.component.ts -> src/app/features/bulk-import/models/bulk-import.models.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/location/pages/bulk-import/location-bulk-import-page.component.ts -> src/app/features/bulk-import/services/bulk-import.service.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/people/pages/bulk-import/people-bulk-import-page.component.ts -> src/app/features/bulk-import/components/bulk-import-column-mapping-table/bulk-import-column-mapping-table.component.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/people/pages/bulk-import/people-bulk-import-page.component.ts -> src/app/features/bulk-import/components/bulk-import-error-records-table/bulk-import-error-records-table.component.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/people/pages/bulk-import/people-bulk-import-page.component.ts -> src/app/features/bulk-import/components/bulk-import-file-drop/bulk-import-file-drop.component.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/people/pages/bulk-import/people-bulk-import-page.component.ts -> src/app/features/bulk-import/components/bulk-import-progress-stepper/bulk-import-progress-stepper.component.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/people/pages/bulk-import/people-bulk-import-page.component.ts -> src/app/features/bulk-import/components/bulk-import-results-summary/bulk-import-results-summary.component.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/people/pages/bulk-import/people-bulk-import-page.component.ts -> src/app/features/bulk-import/components/bulk-import-upload-progress/bulk-import-upload-progress.component.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/people/pages/bulk-import/people-bulk-import-page.component.ts -> src/app/features/bulk-import/models/bulk-import.models.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/people/pages/bulk-import/people-bulk-import-page.component.ts -> src/app/features/bulk-import/services/bulk-import.service.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/people/pages/directory/people-directory-page.component.ts -> src/app/features/shell/util/mailto-href.util.ts",
     "reason": "people pages reuse shell's mailto-href formatting util directly; a small cross-feature helper with no shared/ promotion decided yet.",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/people/pages/employee-register/employee-register-page.component.ts -> src/app/features/shell/util/mailto-href.util.ts",
     "reason": "people pages reuse shell's mailto-href formatting util directly; a small cross-feature helper with no shared/ promotion decided yet.",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/people/pages/pay-periods/pay-periods-page.component.ts -> src/app/features/shopmgmt/models/capacity-calendar.models.ts",
     "reason": "people/pay-periods reads shopmgmt's capacity-calendar models directly for combined scheduling data; no shared/ promotion decided yet.",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/people/pages/person-location-assignments/person-location-assignments-page.component.ts -> src/app/features/location/services/location.service.ts",
     "reason": "people pages (person-location-assignments, time-export) call location's service directly instead of through a documented cross-feature contract.",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/people/pages/time-export/time-export-page.component.ts -> src/app/features/accounting/services/accounting.service.ts",
     "reason": "people/time-export calls accounting's service directly instead of through a documented cross-feature contract.",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/people/pages/time-export/time-export-page.component.ts -> src/app/features/location/services/location.service.ts",
     "reason": "people pages (person-location-assignments, time-export) call location's service directly instead of through a documented cross-feature contract.",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/product/pages/bulk-import/catalog-bulk-import-page.component.ts -> src/app/features/bulk-import/components/bulk-import-column-mapping-table/bulk-import-column-mapping-table.component.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/product/pages/bulk-import/catalog-bulk-import-page.component.ts -> src/app/features/bulk-import/components/bulk-import-error-records-table/bulk-import-error-records-table.component.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/product/pages/bulk-import/catalog-bulk-import-page.component.ts -> src/app/features/bulk-import/components/bulk-import-file-drop/bulk-import-file-drop.component.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/product/pages/bulk-import/catalog-bulk-import-page.component.ts -> src/app/features/bulk-import/components/bulk-import-progress-stepper/bulk-import-progress-stepper.component.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/product/pages/bulk-import/catalog-bulk-import-page.component.ts -> src/app/features/bulk-import/components/bulk-import-results-summary/bulk-import-results-summary.component.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/product/pages/bulk-import/catalog-bulk-import-page.component.ts -> src/app/features/bulk-import/components/bulk-import-upload-progress/bulk-import-upload-progress.component.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/product/pages/bulk-import/catalog-bulk-import-page.component.ts -> src/app/features/bulk-import/models/bulk-import.models.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/product/pages/bulk-import/catalog-bulk-import-page.component.ts -> src/app/features/bulk-import/services/bulk-import.service.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/product/pages/bulk-import/price-bulk-import-page.component.ts -> src/app/features/bulk-import/components/bulk-import-column-mapping-table/bulk-import-column-mapping-table.component.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/product/pages/bulk-import/price-bulk-import-page.component.ts -> src/app/features/bulk-import/components/bulk-import-error-records-table/bulk-import-error-records-table.component.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/product/pages/bulk-import/price-bulk-import-page.component.ts -> src/app/features/bulk-import/components/bulk-import-file-drop/bulk-import-file-drop.component.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/product/pages/bulk-import/price-bulk-import-page.component.ts -> src/app/features/bulk-import/components/bulk-import-progress-stepper/bulk-import-progress-stepper.component.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/product/pages/bulk-import/price-bulk-import-page.component.ts -> src/app/features/bulk-import/components/bulk-import-results-summary/bulk-import-results-summary.component.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/product/pages/bulk-import/price-bulk-import-page.component.ts -> src/app/features/bulk-import/components/bulk-import-upload-progress/bulk-import-upload-progress.component.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/product/pages/bulk-import/price-bulk-import-page.component.ts -> src/app/features/bulk-import/models/bulk-import.models.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/product/pages/bulk-import/price-bulk-import-page.component.ts -> src/app/features/bulk-import/services/bulk-import.service.ts",
     "reason": "bulk-import is a de facto shared library (upload/progress/results components, models, service) imported across crm, inventory, location, people and product bulk-import pages; migrates to shared/bulk-import/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/shopmgmt/models/shop-dashboard.models.ts -> src/app/features/workexec/models/workexec.models.ts",
     "reason": "inventory fulfillment pages and shopmgmt read workexec's models/service directly for shared work-order state; no shared/ promotion decided yet (tracked separately from plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/shopmgmt/pages/dispatch-board/dispatch-board-page.component.ts -> src/app/features/location/components/location-picker/location-picker.component.ts",
     "reason": "location/components/location-picker is a de facto shared component reused by accounting, shopmgmt and workexec pages; migrates to shared/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/shopmgmt/pages/schedule-view/schedule-view-page.component.ts -> src/app/features/location/components/location-picker/location-picker.component.ts",
     "reason": "location/components/location-picker is a de facto shared component reused by accounting, shopmgmt and workexec pages; migrates to shared/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/shopmgmt/services/shop-dashboard.service.ts -> src/app/features/workexec/models/workexec.models.ts",
     "reason": "inventory fulfillment pages and shopmgmt read workexec's models/service directly for shared work-order state; no shared/ promotion decided yet (tracked separately from plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/workexec/pages/approval-digital/approval-digital-page.component.ts -> src/app/features/crm/components/customer-lookup/customer-lookup.component.ts",
     "reason": "crm/components/customer-lookup is a de facto shared component reused by accounting and workexec pages; migrates to shared/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/workexec/pages/approval-in-person/approval-in-person-page.component.ts -> src/app/features/crm/components/customer-lookup/customer-lookup.component.ts",
     "reason": "crm/components/customer-lookup is a de facto shared component reused by accounting and workexec pages; migrates to shared/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/workexec/pages/approval-partial/approval-partial-page.component.ts -> src/app/features/crm/components/customer-lookup/customer-lookup.component.ts",
     "reason": "crm/components/customer-lookup is a de facto shared component reused by accounting and workexec pages; migrates to shared/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/workexec/pages/estimate-create/estimate-create-page.component.ts -> src/app/features/crm/components/customer-lookup/customer-lookup.component.ts",
     "reason": "crm/components/customer-lookup is a de facto shared component reused by accounting and workexec pages; migrates to shared/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/workexec/pages/estimate-create/estimate-create-page.component.ts -> src/app/features/crm/util/crm-labels.ts",
     "reason": "workexec's estimate pages read crm's labels/models/service directly instead of through a documented cross-feature contract.",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/workexec/pages/estimate-detail/estimate-detail-page.component.ts -> src/app/features/crm/models/crm.models.ts",
     "reason": "workexec's estimate pages read crm's labels/models/service directly instead of through a documented cross-feature contract.",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/workexec/pages/estimate-detail/estimate-detail-page.component.ts -> src/app/features/crm/services/crm.service.ts",
     "reason": "workexec's estimate pages read crm's labels/models/service directly instead of through a documented cross-feature contract.",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/workexec/pages/estimate-detail/estimate-detail-page.component.ts -> src/app/features/crm/util/crm-labels.ts",
     "reason": "workexec's estimate pages read crm's labels/models/service directly instead of through a documented cross-feature contract.",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/workexec/pages/estimate-labor/estimate-labor-page.component.ts -> src/app/features/product/models/product.models.ts",
     "reason": "workexec's estimate-labor/estimate-parts pages read product's models/catalog service directly instead of through a documented cross-feature contract.",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/workexec/pages/estimate-labor/estimate-labor-page.component.ts -> src/app/features/product/services/product-catalog.service.ts",
     "reason": "workexec's estimate-labor/estimate-parts pages read product's models/catalog service directly instead of through a documented cross-feature contract.",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/workexec/pages/estimate-list/estimate-list-page.component.ts -> src/app/features/crm/components/customer-lookup/customer-lookup.component.ts",
     "reason": "crm/components/customer-lookup is a de facto shared component reused by accounting and workexec pages; migrates to shared/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/workexec/pages/estimate-list/estimate-list-page.component.ts -> src/app/features/crm/services/crm.service.ts",
     "reason": "workexec's estimate pages read crm's labels/models/service directly instead of through a documented cross-feature contract.",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/workexec/pages/estimate-list/estimate-list-page.component.ts -> src/app/features/crm/util/crm-labels.ts",
     "reason": "workexec's estimate pages read crm's labels/models/service directly instead of through a documented cross-feature contract.",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/workexec/pages/estimate-parts/estimate-parts-page.component.ts -> src/app/features/product/models/product.models.ts",
     "reason": "workexec's estimate-labor/estimate-parts pages read product's models/catalog service directly instead of through a documented cross-feature contract.",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/workexec/pages/estimate-parts/estimate-parts-page.component.ts -> src/app/features/product/services/product-catalog.service.ts",
     "reason": "workexec's estimate-labor/estimate-parts pages read product's models/catalog service directly instead of through a documented cross-feature contract.",
-    "tracking": "TBD"
+    "tracking": "#347"
   },
   {
     "key": "src/app/features/workexec/pages/wip-status/wip-status-page.component.ts -> src/app/features/location/components/location-picker/location-picker.component.ts",
     "reason": "location/components/location-picker is a de facto shared component reused by accounting, shopmgmt and workexec pages; migrates to shared/ (plan \u00a78 decision 1).",
-    "tracking": "TBD"
+    "tracking": "#347"
   }
 ]

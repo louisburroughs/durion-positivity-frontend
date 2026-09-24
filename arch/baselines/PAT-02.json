@@ -2,6 +2,6 @@
   {
     "key": "src/app/features/shell/directives/authed-image.directive.ts :: constructor :: takeUntilDestroyed inside effect(",
     "reason": "AuthedImageDirective combines effect()'s own onCleanup with takeUntilDestroyed(this.destroyRef) inside the effect callback \u2014 redundant/confusing per ADR-0033 \u00a72; needs the takeUntilDestroyed removed since onCleanup already unsubscribes.",
-    "tracking": "TBD"
+    "tracking": "#349"
   }
 ]

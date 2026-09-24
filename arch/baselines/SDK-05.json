@@ -2,151 +2,151 @@
   {
     "key": "src/app/features/accounting/services/accounting.service.ts :: '/accounting/v1/accounting'",
     "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "TBD"
+    "tracking": "#350"
   },
   {
     "key": "src/app/features/billing/pages/invoice-detail/invoice-detail-page.component.ts :: '/invoice/v1/invoices/'",
     "reason": "reads environment.apiBaseUrl and hardcodes an invoice path directly for a document-download URL, bypassing ApiBaseService entirely; migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "TBD"
+    "tracking": "#350"
   },
   {
     "key": "src/app/features/billing/services/billing-transport.service.ts :: '/invoice/v1/billing/auth/elevate'",
     "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "TBD"
+    "tracking": "#350"
   },
   {
     "key": "src/app/features/billing/services/billing-transport.service.ts :: '/invoice/v1/invoices/'",
     "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "TBD"
+    "tracking": "#350"
   },
   {
     "key": "src/app/features/billing/services/billing-transport.service.ts :: '/v1/billing/invoices/'",
     "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "TBD"
+    "tracking": "#350"
   },
   {
     "key": "src/app/features/bulk-import/services/bulk-import.service.ts :: '/api/bulk-loader/v1/bulk-jobs/'",
     "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "TBD"
+    "tracking": "#350"
   },
   {
     "key": "src/app/features/bulk-import/services/bulk-import.service.ts :: '/bulk-loader/v1/bulk-jobs/'",
     "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "TBD"
+    "tracking": "#350"
   },
   {
     "key": "src/app/features/inventory/services/inventory-receiving.service.ts :: '/inventory/v1/receiving/workorders'",
     "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "TBD"
+    "tracking": "#350"
   },
   {
     "key": "src/app/features/inventory/services/inventory.service.ts :: '/inventory/v1/inventory/ledger'",
     "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "TBD"
+    "tracking": "#350"
   },
   {
     "key": "src/app/features/inventory/services/inventory.service.ts :: '/inventory/v1/inventory/ledger/'",
     "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "TBD"
+    "tracking": "#350"
   },
   {
     "key": "src/app/features/inventory/services/inventory.service.ts :: '/inventory/v1/inventory/putaway/tasks'",
     "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "TBD"
+    "tracking": "#350"
   },
   {
     "key": "src/app/features/inventory/services/inventory.service.ts :: '/inventory/v1/inventory/putaway/tasks/'",
     "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "TBD"
+    "tracking": "#350"
   },
   {
     "key": "src/app/features/inventory/services/inventory.service.ts :: '/inventory/v1/inventory/replenishment/tasks'",
     "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "TBD"
+    "tracking": "#350"
   },
   {
     "key": "src/app/features/inventory/services/inventory.service.ts :: '/inventory/v1/inventory/returns/reason-codes'",
     "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "TBD"
+    "tracking": "#350"
   },
   {
     "key": "src/app/features/inventory/services/inventory.service.ts :: '/inventory/v1/inventory/returns/returnable-items'",
     "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "TBD"
+    "tracking": "#350"
   },
   {
     "key": "src/app/features/inventory/services/inventory.service.ts :: '/inventory/v1/inventory/returns/submit-to-stock'",
     "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "TBD"
+    "tracking": "#350"
   },
   {
     "key": "src/app/features/inventory/services/inventory.service.ts :: '/inventory/v1/inventory/shortage/options'",
     "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "TBD"
+    "tracking": "#350"
   },
   {
     "key": "src/app/features/inventory/services/inventory.service.ts :: '/inventory/v1/inventory/shortage/resolve'",
     "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "TBD"
+    "tracking": "#350"
   },
   {
     "key": "src/app/features/location/services/inventory.service.ts :: '/inventory/v1/inventory'",
     "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "TBD"
+    "tracking": "#350"
   },
   {
     "key": "src/app/features/people/services/people.service.ts :: '/people/v1/people/workSessions/'",
     "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "TBD"
+    "tracking": "#350"
   },
   {
     "key": "src/app/features/platform/services/platform-account.service.ts :: '/tenant/v1/platform/accounts'",
     "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "TBD"
+    "tracking": "#350"
   },
   {
     "key": "src/app/features/platform/services/platform-tenant.service.ts :: '/tenant/v1/platform/tenants'",
     "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "TBD"
+    "tracking": "#350"
   },
   {
     "key": "src/app/features/product/services/product-inventory.service.ts :: '/inventory/v1/availability/by-sku'",
     "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "TBD"
+    "tracking": "#350"
   },
   {
     "key": "src/app/features/product/services/product-inventory.service.ts :: '/inventory/v1/lead-time'",
     "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "TBD"
+    "tracking": "#350"
   },
   {
     "key": "src/app/features/product/services/product-inventory.service.ts :: '/inventory/v1/locations/'",
     "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "TBD"
+    "tracking": "#350"
   },
   {
     "key": "src/app/features/shell/services/chat-api.service.ts :: '/mcp-server/v1/mcp/chat'",
     "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "TBD"
+    "tracking": "#350"
   },
   {
     "key": "src/app/features/shell/services/chat-api.service.ts :: '/mcp-server/v1/mcp/documents'",
     "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "TBD"
+    "tracking": "#350"
   },
   {
     "key": "src/app/features/workexec/services/workexec.service.ts :: '/v1/workorders/'",
     "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "TBD"
+    "tracking": "#350"
   },
   {
     "key": "src/app/features/workexec/services/workexec.service.ts :: '/v1/workorders/estimates'",
     "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "TBD"
+    "tracking": "#350"
   },
   {
     "key": "src/app/features/workexec/services/workexec.service.ts :: '/workexec/v1/workorders/'",
     "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "TBD"
+    "tracking": "#350"
   }
 ]

@@ -2,21 +2,21 @@
   {
     "key": "src/app/features/accounting/services/accounting.service.ts -> src/environments/environment.ts",
     "reason": "reads environment.apiBaseUrl directly instead of going through app.config/ApiBaseService wiring; tracked with SDK-03/SDK-06, migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "TBD"
+    "tracking": "#350"
   },
   {
     "key": "src/app/features/billing/pages/invoice-detail/invoice-detail-page.component.ts -> src/environments/environment.ts",
     "reason": "reads environment.apiBaseUrl directly instead of going through app.config/ApiBaseService wiring; tracked with SDK-03/SDK-06, migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "TBD"
+    "tracking": "#350"
   },
   {
     "key": "src/app/features/bulk-import/services/bulk-import.service.ts -> src/environments/environment.ts",
     "reason": "reads environment.apiBaseUrl directly instead of going through app.config/ApiBaseService wiring; tracked with SDK-03/SDK-06, migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "TBD"
+    "tracking": "#350"
   },
   {
     "key": "src/app/features/shell/services/chat-api.service.ts -> src/environments/environment.ts",
     "reason": "reads environment.apiBaseUrl directly instead of going through app.config/ApiBaseService wiring; tracked with SDK-03/SDK-06, migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "TBD"
+    "tracking": "#350"
   }
 ]

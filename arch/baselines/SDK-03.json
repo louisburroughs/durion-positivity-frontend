@@ -2,66 +2,66 @@
   {
     "key": "src/app/features/accounting/services/accounting.service.ts -> src/app/core/services/api-base.service.ts",
     "reason": "legacy ApiBaseService transport; migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "TBD"
+    "tracking": "#350"
   },
   {
     "key": "src/app/features/billing/services/billing-transport.service.ts -> src/app/core/services/api-base.service.ts",
     "reason": "legacy ApiBaseService transport; migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "TBD"
+    "tracking": "#350"
   },
   {
     "key": "src/app/features/bulk-import/services/bulk-import.service.ts -> src/app/core/services/api-base.service.ts",
     "reason": "legacy ApiBaseService transport; migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "TBD"
+    "tracking": "#350"
   },
   {
     "key": "src/app/features/inventory/services/inventory-receiving.service.ts -> src/app/core/services/api-base.service.ts",
     "reason": "legacy ApiBaseService transport; migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "TBD"
+    "tracking": "#350"
   },
   {
     "key": "src/app/features/inventory/services/inventory.service.ts -> src/app/core/services/api-base.service.ts",
     "reason": "legacy ApiBaseService transport; migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "TBD"
+    "tracking": "#350"
   },
   {
     "key": "src/app/features/location/services/inventory.service.ts -> src/app/core/services/api-base.service.ts",
     "reason": "legacy ApiBaseService transport; migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "TBD"
+    "tracking": "#350"
   },
   {
     "key": "src/app/features/people/services/people.service.ts -> src/app/core/services/api-base.service.ts",
     "reason": "legacy ApiBaseService transport; migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "TBD"
+    "tracking": "#350"
   },
   {
     "key": "src/app/features/platform/services/platform-account.service.ts -> src/app/core/services/api-base.service.ts",
     "reason": "legacy ApiBaseService transport; migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "TBD"
+    "tracking": "#350"
   },
   {
     "key": "src/app/features/platform/services/platform-tenant.service.ts -> src/app/core/services/api-base.service.ts",
     "reason": "legacy ApiBaseService transport; migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "TBD"
+    "tracking": "#350"
   },
   {
     "key": "src/app/features/product/services/product-inventory.service.ts -> src/app/core/services/api-base.service.ts",
     "reason": "legacy ApiBaseService transport; migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "TBD"
+    "tracking": "#350"
   },
   {
     "key": "src/app/features/shell/services/chat-api.service.ts -> src/app/core/services/api-base.service.ts",
     "reason": "legacy ApiBaseService transport; migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "TBD"
+    "tracking": "#350"
   },
   {
     "key": "src/app/features/shell/services/chat-blob.service.ts -> src/app/core/services/api-base.service.ts",
     "reason": "legacy ApiBaseService transport; migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "TBD"
+    "tracking": "#350"
   },
   {
     "key": "src/app/features/workexec/services/workexec.service.ts -> src/app/core/services/api-base.service.ts",
     "reason": "legacy ApiBaseService transport; migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "TBD"
+    "tracking": "#350"
   }
 ]
