@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { HttpParams } from '@angular/common/http';
 import { of } from 'rxjs';
 import { ApiBaseService } from '../../../core/services/api-base.service';
-import { InventoryAvailabilityService } from '@durion-sdk/inventory';
+import { InventoryAvailabilityService, InventoryLocationsService } from '@durion-sdk/inventory';
 import { ProductInventoryService } from './product-inventory.service';
 
 describe('ProductInventoryService', () => {
@@ -17,6 +17,7 @@ describe('ProductInventoryService', () => {
   };
 
   const availSdkStub = { listAvailabilityBySku: vi.fn() };
+  const locationsSdkStub = { getLocationInventory: vi.fn() };
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -24,6 +25,7 @@ describe('ProductInventoryService', () => {
         ProductInventoryService,
         { provide: ApiBaseService, useValue: apiStub },
         { provide: InventoryAvailabilityService, useValue: availSdkStub },
+        { provide: InventoryLocationsService, useValue: locationsSdkStub },
       ],
     });
     service = TestBed.inject(ProductInventoryService);
@@ -114,13 +116,13 @@ describe('ProductInventoryService', () => {
   // ── queryAvailabilityBySku() ─────────────────────────────────────────────────
 
   describe('queryAvailabilityBySku()', () => {
-    it('calls GET /inventory/v1/availability/by-sku with sku and sourceType params', () => {
+    it('calls GET /inventory/v1/inventory/availability/by-sku with sku and sourceType params [issue #370]', () => {
       apiStub.get.mockReturnValueOnce(of([]));
 
       service.queryAvailabilityBySku('SKU-003', 'MFR').subscribe();
 
       const [path, params] = apiStub.get.mock.calls[0];
-      expect(path).toBe('/inventory/v1/availability/by-sku');
+      expect(path).toBe('/inventory/v1/inventory/availability/by-sku');
       expect((params as HttpParams).get('sku')).toBe('SKU-003');
       expect((params as HttpParams).get('sourceType')).toBe('MFR');
     });
@@ -138,13 +140,13 @@ describe('ProductInventoryService', () => {
   // ── queryLeadTime() ──────────────────────────────────────────────────────────
 
   describe('queryLeadTime()', () => {
-    it('calls GET /inventory/v1/lead-time with sku and sourceType params', () => {
+    it('calls GET /inventory/v1/inventory/availability/lead-time with sku and sourceType params [issue #370]', () => {
       apiStub.get.mockReturnValueOnce(of([]));
 
       service.queryLeadTime('SKU-004', 'DISTRIBUTOR').subscribe();
 
       const [path, params] = apiStub.get.mock.calls[0];
-      expect(path).toBe('/inventory/v1/lead-time');
+      expect(path).toBe('/inventory/v1/inventory/availability/lead-time');
       expect((params as HttpParams).get('sku')).toBe('SKU-004');
       expect((params as HttpParams).get('sourceType')).toBe('DISTRIBUTOR');
     });
@@ -153,27 +155,34 @@ describe('ProductInventoryService', () => {
   // ── getLocationInventory() ───────────────────────────────────────────────────
 
   describe('getLocationInventory()', () => {
-    it('calls GET /inventory/v1/locations/{locationId}/inventory', () => {
-      apiStub.get.mockReturnValueOnce(
-        of({ locationId: 'LOC-1', locationName: 'Test', onHand: 0, reserved: 0, atp: 0 }),
+    it('calls InventoryLocationsService.getLocationInventory(locationId, sku) [issue #370]', () => {
+      locationsSdkStub.getLocationInventory.mockReturnValueOnce(
+        of({ locationId: 'LOC-1', onHandQuantity: 4, availableToPromiseQuantity: 3 }),
       );
 
-      service.getLocationInventory('LOC-1', 'SKU-001').subscribe();
+      let result;
+      service.getLocationInventory('LOC-1', 'SKU-001').subscribe(value => (result = value));
 
-      const [path] = apiStub.get.mock.calls[0];
-      expect(path).toContain('LOC-1');
-      expect(path).toBe('/inventory/v1/locations/LOC-1/inventory');
+      expect(locationsSdkStub.getLocationInventory).toHaveBeenCalledWith('LOC-1', 'SKU-001');
+      expect(result).toEqual({
+        locationId: 'LOC-1',
+        locationName: undefined,
+        onHand: 4,
+        reserved: undefined,
+        atp: 3,
+      });
     });
 
-    it('URL-encodes the locationId', () => {
-      apiStub.get.mockReturnValueOnce(
-        of({ locationId: 'LOC/1', locationName: 'Test', onHand: 0, reserved: 0, atp: 0 }),
+    it('omits locationName/reserved rather than fabricating them (backend #2206)', () => {
+      locationsSdkStub.getLocationInventory.mockReturnValueOnce(
+        of({ locationId: 'LOC-1', onHandQuantity: 0 }),
       );
 
-      service.getLocationInventory('LOC/1', 'SKU-001').subscribe();
+      let result: { locationName?: string; reserved?: number } | undefined;
+      service.getLocationInventory('LOC-1', 'SKU-001').subscribe(value => (result = value));
 
-      const [path] = apiStub.get.mock.calls[0];
-      expect(path).toBe('/inventory/v1/locations/LOC%2F1/inventory');
+      expect(result?.locationName).toBeUndefined();
+      expect(result?.reserved).toBeUndefined();
     });
   });
 });

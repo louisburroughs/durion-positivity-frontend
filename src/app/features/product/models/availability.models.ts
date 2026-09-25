@@ -20,9 +20,12 @@ export interface LeadTime {
 
 export interface LocationInventory {
   locationId: string;
-  locationName: string;
+  // Optional: LocationInventoryInquiryResponse (@durion-sdk/inventory) has no locationName or
+  // reserved field (backend #2206) — getLocationInventory() omits them rather than faking a
+  // value; the by-sku listing path still supplies both.
+  locationName?: string;
   onHand: number;
-  reserved: number;
+  reserved?: number;
   atp: number;
 }
 
