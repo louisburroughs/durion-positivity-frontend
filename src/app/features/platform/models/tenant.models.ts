@@ -24,8 +24,10 @@ export interface Tenant {
   cell?: string | null;
   /** Email of the initial administrator provisioned with the tenant. */
   initialAdminEmail: string;
-  createdAt: string;
-  updatedAt: string;
+  /** @serverGenerated */
+  readonly createdAt?: string;
+  /** @serverGenerated */
+  readonly updatedAt?: string;
   activatedAt?: string | null;
   suspendedAt?: string | null;
   decommissionedAt?: string | null;

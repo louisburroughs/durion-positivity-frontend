@@ -54,7 +54,8 @@ export interface PayableBillDetail {
   readonly paymentTransactionId: string | null;
   readonly originEventId: string | null;
   readonly originEventType: string | null;
-  readonly createdAt: string;
+  /** @serverGenerated */
+  readonly createdAt?: string;
   readonly createdBy: string | null;
 }
 
@@ -77,5 +78,6 @@ export interface PayableMatchCandidate {
   readonly scoreBreakdown: string | null;
   readonly resolved: boolean;
   readonly selected: boolean;
-  readonly createdAt: string | null;
+  /** @serverGenerated */
+  readonly createdAt?: string | null;
 }

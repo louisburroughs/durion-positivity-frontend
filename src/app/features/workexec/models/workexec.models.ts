@@ -81,14 +81,16 @@ export interface EstimateResponse {
   currencyUomId?: string;
   status: EstimateStatus;
   createdByUserId?: string;
-  createdAt?: string;
+  /** @serverGenerated */
+  readonly createdAt?: string;
   subtotal?: number;
   taxAmount?: number;
   total?: number;
   submittedAt?: string;
   submittedBy?: string;
   expiresAt?: string;
-  approvedAt?: string;
+  /** @serverGenerated */
+  readonly approvedAt?: string;
   approvedBy?: string;
   signatureData?: string;
   signatureMimeType?: string;
@@ -136,8 +138,10 @@ export interface EstimateItemResponse {
   productId?: string;
   serviceId?: string;
   lineItemApprovalStatus?: 'APPROVED' | 'DECLINED' | string;
-  createdAt?: string;
-  updatedAt?: string;
+  /** @serverGenerated */
+  readonly createdAt?: string;
+  /** @serverGenerated */
+  readonly updatedAt?: string;
 }
 
 // ── CAP-002: Calculate Totals (Story 236) ────────────────────────────────────
@@ -167,7 +171,8 @@ export interface EstimateSnapshotResponse {
 export interface EstimateSummaryResponse {
   id: string;
   estimateNumber?: string;
-  createdAt?: string;
+  /** @serverGenerated */
+  readonly createdAt?: string;
   expiresAt?: string;
   customerId?: string;
   vehicleId?: string;
@@ -198,6 +203,7 @@ export interface EstimateListItem {
   readonly totalAmount: number;
   readonly currency: string;
   readonly lastUpdatedAt?: string;
+  /** @serverGenerated */
   readonly createdAt?: string;
   readonly notes?: string;
 }
@@ -235,6 +241,7 @@ export interface WorkorderInvoiceView {
   readonly currency: string;
   readonly invoiceStatus: string;
   readonly finalizedAt?: string;
+  /** @serverGenerated */
   readonly createdAt?: string;
 }
 
@@ -320,9 +327,12 @@ export interface WorkorderResponse {
   primaryTechnicianId?: string;
   primaryTechnicianName?: string;
   startedAt?: string;
-  completedAt?: string;
-  createdAt?: string;
-  updatedAt?: string;
+  /** @serverGenerated */
+  readonly completedAt?: string;
+  /** @serverGenerated */
+  readonly createdAt?: string;
+  /** @serverGenerated */
+  readonly updatedAt?: string;
   version?: number;
   /** Set once async invoice generation links an invoice to the workorder (ADR-0044 #900) */
   invoiceId?: string;
@@ -348,8 +358,10 @@ export interface WorkorderDetailResponse {
   startedAt?: string;
   isInProgress?: boolean;
   inProgressReason?: string;
-  completedAt?: string;
-  createdAt?: string;
+  /** @serverGenerated */
+  readonly completedAt?: string;
+  /** @serverGenerated */
+  readonly createdAt?: string;
   version?: number;
   items?: WorkorderItemResponse[];
   technician?: TechnicianAssignmentResponse;
@@ -476,7 +488,8 @@ export interface WorkorderLaborEntryResponse {
   laborCode?: string;
   description?: string;
   flatRate?: boolean;
-  createdAt?: string;
+  /** @serverGenerated */
+  readonly createdAt?: string;
 }
 
 // ── CAP-005: Parts (Stories 222, 221) ────────────────────────────────────────
@@ -514,7 +527,8 @@ export interface PartUsageResponse {
   quantityConsumed?: number;
   quantityReturned?: number;
   workorderServiceId?: string;
-  issuedAt?: string;
+  /** @serverGenerated */
+  readonly issuedAt?: string;
   consumedAt?: string;
 }
 
@@ -548,7 +562,8 @@ export interface ChangeRequestResponse {
   workorderId?: string;
   description?: string;
   status?: ChangeRequestStatus;
-  createdAt?: string;
+  /** @serverGenerated */
+  readonly createdAt?: string;
   createdBy?: string;
   resolvedAt?: string;
   resolvedBy?: string;
@@ -593,7 +608,8 @@ export interface CompletionFailedCheck {
 export interface CompleteWorkorderResponse {
   workorderId: string;
   status: WorkorderStatus;
-  completedAt?: string;
+  /** @serverGenerated */
+  readonly completedAt?: string;
   completedBy?: string;
   completionNotes?: string;
   failedChecks?: CompletionFailedCheck[];
@@ -672,6 +688,7 @@ export interface PickListView {
   workorderId: string;
   pickListId: string;
   status: string;
+  /** @serverGenerated */
   readonly createdAt?: string;
   tasks: PickTaskLine[];
 }

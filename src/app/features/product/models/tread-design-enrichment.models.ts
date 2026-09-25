@@ -70,7 +70,8 @@ export interface TreadDesignEnrichment {
   readonly supplierRef: string | null;
   readonly vendorProfileId: string | null;
   readonly vendorVariantId: string | null;
-  readonly updatedAt: string | null;
+  /** @serverGenerated */
+  readonly updatedAt?: string | null;
   /** Whether any artwork on this design is still missing and awaiting retry. */
   readonly hasUnresolvedImages: boolean;
   readonly images: readonly TreadDesignEnrichmentImage[];

@@ -356,7 +356,8 @@ describe('LocalChatHistoryStore', () => {
     const loaded = await firstValueFrom(store.listConversations());
 
     expect(loaded.map(entry => entry.id)).toEqual(['c2']);
-    expect(loaded[0].updatedAt.getTime()).not.toBeNaN();
+    expect(loaded[0].updatedAt).toBeDefined();
+    expect(loaded[0].updatedAt?.getTime()).not.toBeNaN();
   });
 
   it('drops a message whose timestamp does not parse', async () => {

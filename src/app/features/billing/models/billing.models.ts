@@ -92,7 +92,8 @@ export interface InvoiceArtifact {
   filename?: string;
   mimeType?: string;
   contentType?: string;
-  createdAt?: string;
+  /** @serverGenerated */
+  readonly createdAt?: string;
 }
 
 export interface ArtifactDownloadToken {
@@ -117,9 +118,12 @@ export interface InvoiceDetail {
   adjustmentTotal?: number;
   grandTotal?: number;
   currencyCode?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  issuedAt?: string;
+  /** @serverGenerated */
+  readonly createdAt?: string;
+  /** @serverGenerated */
+  readonly updatedAt?: string;
+  /** @serverGenerated */
+  readonly issuedAt?: string;
   issuedBy?: string;
   lineItems?: InvoiceLineItem[];
   adjustments?: InvoiceAdjustment[];

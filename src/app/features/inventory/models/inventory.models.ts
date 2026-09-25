@@ -207,7 +207,9 @@ export interface AdjustmentDetail {
   varianceValue?: number;
   status: string;
   requiredApprovalTier: number;
+  /** @serverGenerated */
   readonly createdAt?: string;
+  /** @serverGenerated */
   readonly approvedAt?: string;
   readonly rejectedAt?: string;
   rejectionReason?: string;
@@ -238,6 +240,7 @@ export interface CycleCountPlan {
   planName?: string;
   scheduledDate: string;
   status: string;
+  /** @serverGenerated */
   readonly createdAt?: string;
 }
 
@@ -260,7 +263,9 @@ export interface PurchaseOrderDetail {
   scheduledDeliveryDate: string;
   notes?: string;
   lines: PurchaseOrderLine[];
+  /** @serverGenerated */
   readonly createdAt?: string;
+  /** @serverGenerated */
   readonly updatedAt?: string;
 }
 
@@ -324,6 +329,7 @@ export interface AsnResponse {
   asnId: string;
   poId: string;
   status: string;
+  /** @serverGenerated */
   readonly createdAt?: string;
   lines: AsnResponseLine[];
 }
@@ -393,6 +399,7 @@ export interface ReturnToStockResult {
   returnId: string;
   workorderId: string;
   totalItemsReturned: number;
+  /** @serverGenerated */
   readonly createdAt?: string;
   ledgerEntryIds?: string[];
 }

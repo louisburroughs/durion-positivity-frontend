@@ -645,7 +645,7 @@ export class ChatStateService {
    */
   private setConversations(conversations: readonly ChatConversation[]): void {
     this._conversations.set(
-      [...conversations].sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()),
+      [...conversations].sort((a, b) => (b.updatedAt?.getTime() ?? 0) - (a.updatedAt?.getTime() ?? 0)),
     );
 
     // The active conversation must exist in the list: `persist()` resolves it
@@ -918,7 +918,7 @@ function bucketOf(
 ): ChatHistoryBucket {
   if (conversation.pinned) return 'pinned';
 
-  const updated = conversation.updatedAt.getTime();
+  const updated = conversation.updatedAt?.getTime() ?? 0;
   if (updated >= startOfToday) return 'today';
   if (updated >= startOfYesterday) return 'yesterday';
   if (updated >= startOfPrevious7Days) return 'previous7Days';

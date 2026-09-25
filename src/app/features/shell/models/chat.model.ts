@@ -113,8 +113,10 @@ export interface ChatConversation {
   readonly title: string;
   /** First line of the latest assistant turn, for the history rail. */
   readonly preview: string;
-  readonly createdAt: Date;
-  readonly updatedAt: Date;
+  /** @serverGenerated */
+  readonly createdAt?: Date;
+  /** @serverGenerated */
+  readonly updatedAt?: Date;
   readonly pinned: boolean;
 }
 

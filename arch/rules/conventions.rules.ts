@@ -245,7 +245,7 @@ export const con07 = (p: Project): ArchRule =>
     {
       id: 'CON-07',
       title: 'server-generated timestamp fields in models/** interfaces are readonly, optional, and carry @serverGenerated (ADR-0034 §1, §3)',
-      mode: 'ratchet',
+      mode: 'enforce',
     },
     p,
     { subject: selectors.models(p), finder: con07Finder },
