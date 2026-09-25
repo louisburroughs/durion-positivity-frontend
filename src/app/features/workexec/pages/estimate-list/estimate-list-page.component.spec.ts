@@ -4,7 +4,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { BehaviorSubject, Subject, of, throwError } from 'rxjs';
 import { EstimateListItem } from '../../models/workexec.models';
 import { WorkexecService } from '../../services/workexec.service';
-import { CrmService } from '../../../crm/services/crm.service';
+import { CUSTOMER_DIRECTORY_SOURCE } from '../../../../shared/customer-directory/customer-directory-source.tokens';
 import { CUSTOMER_LOOKUP_SOURCE } from '../../../../shared/customer-lookup/customer-lookup.tokens';
 import { EstimateListPageComponent } from './estimate-list-page.component';
 
@@ -19,10 +19,10 @@ describe('EstimateListPageComponent', () => {
   };
 
   // Resolves each estimate row's customer display name (EstimateListPageComponent's
-  // own CRM lookup — a genuine cross-feature business dependency, not the embedded
-  // app-customer-lookup control below).
+  // own customer-directory read — a genuine cross-feature business dependency, not
+  // the embedded app-customer-lookup control below).
   const crmMock = {
-    getParty: vi.fn(),
+    getById: vi.fn(),
   };
 
   // Stubs the embedded app-customer-lookup control's search source; its own
@@ -37,15 +37,15 @@ describe('EstimateListPageComponent', () => {
 
     serviceMock.listEstimatesForCustomer.mockReset();
     serviceMock.listEstimatesForVehicle.mockReset();
-    crmMock.getParty.mockReset();
-    crmMock.getParty.mockReturnValue(of({ partyId: 'cust-1', legalName: 'Acme Tire Co', customerNumber: 'CUST-CP-001' }));
+    crmMock.getById.mockReset();
+    crmMock.getById.mockReturnValue(of({ partyId: 'cust-1', legalName: 'Acme Tire Co', customerNumber: 'CUST-CP-001' }));
 
     await TestBed.configureTestingModule({
       imports: [EstimateListPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
         { provide: WorkexecService, useValue: serviceMock },
-        { provide: CrmService, useValue: crmMock },
+        { provide: CUSTOMER_DIRECTORY_SOURCE, useValue: crmMock },
         { provide: CUSTOMER_LOOKUP_SOURCE, useValue: customerLookupSourceMock },
         {
           provide: ActivatedRoute,
@@ -97,7 +97,7 @@ describe('EstimateListPageComponent', () => {
 
     fixture.detectChanges();
 
-    expect(crmMock.getParty).toHaveBeenCalledWith('cust-1');
+    expect(crmMock.getById).toHaveBeenCalledWith('cust-1');
     expect(component.customerName('cust-1')).toBe('Acme Tire Co · CUST-CP-001');
     // Falls back to the raw id when unresolved.
     expect(component.customerName('unknown')).toBe('unknown');

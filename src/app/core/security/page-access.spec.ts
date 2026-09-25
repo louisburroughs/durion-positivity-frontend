@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { Route, Routes } from '@angular/router';
 
+import { routes as APP_ROUTES } from '../../app.routes';
 import { ACCOUNTING_ROUTES } from '../../features/accounting/accounting.routes';
 import { ADMIN_ROUTES } from '../../features/admin/admin.routes';
 import { BILLING_ROUTES } from '../../features/billing/billing.routes';
@@ -73,6 +74,20 @@ interface GroupUnderTest {
   readonly groupPermissions?: readonly string[];
 }
 
+/**
+ * inventory-permissions lives with the security feature's code (#347), but its
+ * route is a standalone sibling of 'security' in app.routes.ts, not a child of
+ * SECURITY_ROUTES — it keeps the permission-only gate it had at its old
+ * /app/inventory/security/permissions URL instead of picking up /app/security's
+ * ROLE_ADMIN group gate. Pulled straight from app.routes.ts so this file checks
+ * the same route object the router uses, and so the inventory landing card that
+ * still points at it isn't flagged as dangling.
+ */
+const INVENTORY_PERMISSIONS_ROUTES: Routes =
+  (APP_ROUTES.find(route => route.path === 'app')?.children ?? []).filter(
+    route => route.path === 'security/inventory-permissions',
+  );
+
 const GROUPS: readonly GroupUnderTest[] = [
   { name: '/app/inventory', base: '/app/inventory', routes: INVENTORY_ROUTES, groupPermissions: INVENTORY_PERMISSIONS },
   { name: '/app/accounting', base: '/app/accounting', routes: ACCOUNTING_ROUTES, groupPermissions: ACCOUNTING_PERMISSIONS },
@@ -88,6 +103,8 @@ const GROUPS: readonly GroupUnderTest[] = [
   // Role-gated groups: the mount point carries `roles: ['ROLE_ADMIN']`, so there
   // is no group permission set for a page gate to sit inside.
   { name: '/app/security', base: '/app/security', routes: SECURITY_ROUTES },
+  // Permission-gated standalone route; see INVENTORY_PERMISSIONS_ROUTES above.
+  { name: '/app/security/inventory-permissions', base: '/app', routes: INVENTORY_PERMISSIONS_ROUTES },
   { name: '/app/positivity', base: '/app/positivity', routes: POSITIVITY_ROUTES },
   { name: '/app/admin', base: '/app/admin', routes: ADMIN_ROUTES },
   // Gated on platform:* (roles fallback ROLE_PLATFORM_ADMIN); pages narrow to
@@ -115,6 +132,7 @@ const UNGATED_BY_DESIGN: Readonly<Record<string, string>> = {
   '/app/admin': 'landing page — static config, cards filtered individually',
   '/app/bulk-import': 'redirect to the job list',
   '/app/platform': 'redirect to the tenant list',
+  '/app/inventory/security/permissions': 'redirect to /app/security/inventory-permissions (#347)',
 
   // Primary read carries the backend's AUTHENTICATED sentinel: `isAuthenticated()`
   // or no `@PreAuthorize` at all, so the page cannot 403 on load.
@@ -436,11 +454,11 @@ describe('fulfillment picking permissions (issue #347 group 5)', () => {
     expect(canOpen(mechanicLike, PICK_LIST)).toBe(true);
 
     // Every other inventory page stays closed: this session widens nothing else.
-    // (The bare landing page is intentionally ungated by design — cards are
-    // filtered individually — so it is excluded here, not a widening.)
+    // Routes ungated by design (the landing page, whose cards are filtered
+    // individually, and redirects) are excluded here; they aren't a widening.
     const otherPages = inventoryPages.filter(
       ({ path }) =>
-        path !== PICK_EXECUTE && path !== CONSUME_ITEMS && path !== PICK_LIST && path !== '/app/inventory',
+        path !== PICK_EXECUTE && path !== CONSUME_ITEMS && path !== PICK_LIST && !(path in UNGATED_BY_DESIGN),
     );
     const opened = otherPages.filter(({ path }) => canOpen(mechanicLike, path)).map(({ path }) => path);
 

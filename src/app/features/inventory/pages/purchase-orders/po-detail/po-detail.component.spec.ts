@@ -10,6 +10,7 @@ import { SupplierOrderTransmissionService } from '../../../../positivity/service
 import { SupplierOrderTransmission } from '../../../../positivity/models/supplier-order-transmission.models';
 import { PurchaseOrderTransmissionTimelineService } from '../../../../positivity/services/purchase-order-transmission-timeline.service';
 import { PurchaseOrderTransmissionTimelinePage } from '../../../../positivity/models/purchase-order-transmission-timeline.models';
+import { providePositivitySupplierTransmissionPanels } from '../../../../positivity/services/supplier-transmission-panels.provider';
 
 const mockPoService = {
   getPurchaseOrder: vi.fn(),
@@ -81,6 +82,7 @@ describe('PoDetailComponent', () => {
         { provide: ActivatedRoute, useValue: mockRoute },
         { provide: SupplierOrderTransmissionService, useValue: mockTransmissionService },
         { provide: PurchaseOrderTransmissionTimelineService, useValue: mockTimelineService },
+        providePositivitySupplierTransmissionPanels(),
       ],
     }).compileComponents();
   });
@@ -126,23 +128,33 @@ describe('PoDetailComponent', () => {
   });
 
   describe('supplier connectivity section (#191, #201, #215)', () => {
-    it('hosts the transmission panel and the transmission timeline, keyed by the PO UUID, and no shipment timeline', () => {
+    it('hosts the transmission panel and the transmission timeline, keyed by the PO UUID, and no shipment timeline', async () => {
       mockPoService.getPurchaseOrder.mockReturnValue(of(poFixture));
       const fixture = TestBed.createComponent(PoDetailComponent);
-      fixture.detectChanges();
       const el = fixture.nativeElement as HTMLElement;
 
-      expect(el.querySelector('app-supplier-transmission-panel')).not.toBeNull();
-      expect(el.querySelector('app-purchase-order-transmission-timeline-panel')).not.toBeNull();
+      // Both panel types resolve via SUPPLIER_TRANSMISSION_PANELS's dynamic
+      // import(); poll rather than assume one detectChanges is enough, since
+      // the (real, unmocked) module load isn't a fixed number of microtasks.
+      await vi.waitFor(() => {
+        fixture.detectChanges();
+        expect(el.querySelector('app-supplier-transmission-panel')).not.toBeNull();
+        expect(el.querySelector('app-purchase-order-transmission-timeline-panel')).not.toBeNull();
+      });
+
       expect(el.querySelector('app-supplier-shipment-panel')).toBeNull();
       expect(mockTransmissionService.listForPurchaseOrder).toHaveBeenCalledWith('po-001');
       expect(mockTimelineService.listForPurchaseOrder).toHaveBeenCalledWith('po-001', 0);
     });
 
-    it('exposes no path anywhere on the page that re-transmits the order', () => {
+    it('exposes no path anywhere on the page that re-transmits the order', async () => {
       mockPoService.getPurchaseOrder.mockReturnValue(of(poFixture));
       const fixture = TestBed.createComponent(PoDetailComponent);
-      fixture.detectChanges();
+      const elForWait = fixture.nativeElement as HTMLElement;
+      await vi.waitFor(() => {
+        fixture.detectChanges();
+        expect(elForWait.querySelector('app-supplier-transmission-panel')).not.toBeNull();
+      });
       const el = fixture.nativeElement as HTMLElement;
 
       const controlText = Array.from(el.querySelectorAll('button, a, input[type="submit"]'))

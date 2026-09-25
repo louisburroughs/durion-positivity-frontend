@@ -10,8 +10,11 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { v4 as uuidv4 } from 'uuid';
-import { AccountingService } from '../../../accounting/services/accounting.service';
-import { LocationService } from '../../../location/services/location.service';
+import { TIME_EXPORT_SOURCE } from '../../../../shared/time-export/time-export-source.tokens';
+import {
+  LOCATION_LOOKUP_SOURCE,
+  LocationLookupResult,
+} from '../../../../shared/location-picker/location-lookup-source.tokens';
 
 type ExportState = 'IDLE' | 'REQUESTING' | 'QUEUED' | 'PROCESSING' | 'READY' | 'FAILED';
 
@@ -24,13 +27,13 @@ type ExportState = 'IDLE' | 'REQUESTING' | 'QUEUED' | 'PROCESSING' | 'READY' | '
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TimeExportPageComponent {
-  private readonly accountingService = inject(AccountingService);
-  private readonly locationService = inject(LocationService);
+  private readonly timeExportSource = inject(TIME_EXPORT_SOURCE);
+  private readonly locationLookup = inject(LOCATION_LOOKUP_SOURCE);
   private readonly destroyRef = inject(DestroyRef);
   private readonly translate = inject(TranslateService);
 
   // Locations for multi-select
-  readonly locations = signal<unknown[]>([]);
+  readonly locations = signal<LocationLookupResult[]>([]);
   readonly locationsLoading = signal(false);
   readonly locationsError = signal<string | null>(null);
 
@@ -69,7 +72,7 @@ export class TimeExportPageComponent {
   loadLocations(): void {
     this.locationsLoading.set(true);
     this.locationsError.set(null);
-    this.locationService.getAllLocations()
+    this.locationLookup.getAll()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (locs) => {
@@ -105,7 +108,7 @@ export class TimeExportPageComponent {
     this.exportError.set(null);
     this.exportId.set(null);
 
-    this.accountingService
+    this.timeExportSource
       .requestExport({ startDate, endDate, locationIds, format }, this.currentIdempotencyKey)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -126,7 +129,7 @@ export class TimeExportPageComponent {
     const id = this.exportId();
     if (!id) return;
 
-    this.accountingService
+    this.timeExportSource
       .getExportStatus(id)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -149,13 +152,13 @@ export class TimeExportPageComponent {
   downloadExport(): void {
     const id = this.exportId();
     if (!id) return;
-    this.accountingService.downloadExport(id);
+    this.timeExportSource.downloadExport(id);
   }
 
   loadHistory(): void {
     this.historyLoading.set(true);
     this.historyError.set(null);
-    this.accountingService
+    this.timeExportSource
       .getExportHistory({ pageIndex: 0, pageSize: 20 })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({

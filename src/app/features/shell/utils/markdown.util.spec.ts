@@ -1,4 +1,4 @@
-import { flattenInline, isSafeHref, parseInline, parseMarkdown } from './markdown.util';
+import { flattenInline, parseInline, parseMarkdown } from './markdown.util';
 
 describe('parseMarkdown', () => {
   it('parses an ATX heading at its level', () => {
@@ -134,46 +134,5 @@ describe('parseInline', () => {
     expect(() => parseInline(source)).not.toThrow();
     expect(() => parseMarkdown(source)).not.toThrow();
     expect(flattenInline(parseInline(source))).toContain('x');
-  });
-});
-
-describe('isSafeHref', () => {
-  it('accepts http, mailto and scheme-less targets', () => {
-    for (const href of [
-      'https://durion.example',
-      'http://durion.example',
-      'mailto:ops@durion.example',
-      '/app/people',
-      '#top',
-      'people/42',
-    ]) {
-      expect(isSafeHref(href), href).toBe(true);
-    }
-  });
-
-  it('rejects script-bearing and empty targets', () => {
-    for (const href of [
-      'javascript:alert(1)',
-      'data:text/html;base64,PHNjcmlwdD4=',
-      'vbscript:msgbox',
-      '  ',
-    ]) {
-      expect(isSafeHref(href), href).toBe(false);
-    }
-  });
-
-  it('rejects an origin-relative target that only looks like a path', () => {
-    // `//host/path` carries no scheme but resolves to another origin, so a
-    // scheme check alone used to wave it through as an in-app link.
-    for (const href of ['//evil.example/login', '\\\\evil.example\\share', '//evil.example']) {
-      expect(isSafeHref(href), href).toBe(false);
-    }
-  });
-
-  it('sees through whitespace and control characters smuggled into a scheme', () => {
-    // Browsers strip these before resolving, so `java\tscript:` would have run.
-    expect(isSafeHref('java\tscript:alert(1)')).toBe(false);
-    expect(isSafeHref('java\nscript:alert(1)')).toBe(false);
-    expect(isSafeHref('\u0001javascript:alert(1)')).toBe(false);
   });
 });

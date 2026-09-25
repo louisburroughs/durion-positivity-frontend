@@ -8,8 +8,10 @@ import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { WorkexecService } from '../../services/workexec.service';
 import { EstimateItemResponse, EstimateResponse, PageState } from '../../models/workexec.models';
-import { ProductCatalogService } from '../../../product/services/product-catalog.service';
-import { ServiceSummary } from '../../../product/models/product.models';
+import {
+  CatalogServiceSummary as ServiceSummary,
+  PRODUCT_CATALOG_SOURCE,
+} from '../../../../shared/product-catalog/product-catalog-source.tokens';
 
 /**
  * EstimateLaborPageComponent — Story 237 (CAP-002)
@@ -26,7 +28,7 @@ import { ServiceSummary } from '../../../product/models/product.models';
 export class EstimateLaborPageComponent implements OnInit {
   private readonly translate = inject(TranslateService);
   private readonly workexec   = inject(WorkexecService);
-  private readonly catalog     = inject(ProductCatalogService);
+  private readonly catalog     = inject(PRODUCT_CATALOG_SOURCE);
   private readonly route      = inject(ActivatedRoute);
   private readonly router     = inject(Router);
   private readonly fb         = inject(FormBuilder);
@@ -42,7 +44,7 @@ export class EstimateLaborPageComponent implements OnInit {
   // Service catalog typeahead (name substring) — mirrors the estimate parts search.
   readonly searchQuery     = signal('');
   readonly searchState     = signal<'idle' | 'loading' | 'empty' | 'ready' | 'error'>('idle');
-  readonly searchResults   = signal<ServiceSummary[]>([]);
+  readonly searchResults   = signal<readonly ServiceSummary[]>([]);
   readonly selectedService = signal<ServiceSummary | null>(null);
   readonly activeIndex     = signal(-1);
   private readonly searchChanges$ = new Subject<string>();

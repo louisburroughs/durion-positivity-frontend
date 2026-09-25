@@ -4,7 +4,10 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { ActivatedRoute } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { CreateStaffingAssignmentRequest, StaffingAssignmentResponse } from '@durion-sdk/people';
-import { LocationService } from '../../../location/services/location.service';
+import {
+  LOCATION_LOOKUP_SOURCE,
+  LocationLookupResult,
+} from '../../../../shared/location-picker/location-lookup-source.tokens';
 import { PeopleService } from '../../services/people.service';
 import { ModalDialogDirective } from '../../../../shared/modal-dialog.directive';
 
@@ -18,7 +21,7 @@ import { ModalDialogDirective } from '../../../../shared/modal-dialog.directive'
 })
 export class PersonLocationAssignmentsPageComponent implements OnInit {
   private readonly peopleService = inject(PeopleService);
-  private readonly locationService = inject(LocationService);
+  private readonly locationLookup = inject(LOCATION_LOOKUP_SOURCE);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
   private readonly translate = inject(TranslateService);
@@ -26,7 +29,7 @@ export class PersonLocationAssignmentsPageComponent implements OnInit {
   readonly personId = signal('');
   readonly loading = signal(false);
   readonly assignments = signal<StaffingAssignmentResponse[]>([]);
-  readonly availableLocations = signal<unknown[]>([]);
+  readonly availableLocations = signal<LocationLookupResult[]>([]);
   readonly errorKey = signal<string | null>(null);
   readonly showCreateDialog = signal(false);
   readonly showEndDialog = signal(false);
@@ -69,7 +72,7 @@ export class PersonLocationAssignmentsPageComponent implements OnInit {
   }
 
   loadLocations(): void {
-    this.locationService.getAllLocations()
+    this.locationLookup.getAll()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (data) => this.availableLocations.set(Array.isArray(data) ? data : []),
@@ -163,11 +166,10 @@ export class PersonLocationAssignmentsPageComponent implements OnInit {
     return a.assignmentId;
   }
 
-  // The location SDK's LocationResponseDTO keys locations by `id`; older local
-  // models used `locationId`. Accept both so the display name resolves.
-  getLocationId(location: unknown): string {
-    const rec = location as Record<string, unknown>;
-    return String(rec['locationId'] ?? rec['id'] ?? '');
+  // LOCATION_LOOKUP_SOURCE.getAll() already filters out entries without an id
+  // (see location-lookup-source.provider.ts), so `id` is always present here.
+  getLocationId(location: LocationLookupResult): string {
+    return location.id;
   }
 
   // Memoized so table rows do an O(1) lookup per change-detection cycle
@@ -177,8 +179,7 @@ export class PersonLocationAssignmentsPageComponent implements OnInit {
     for (const location of this.availableLocations()) {
       const id = this.getLocationId(location);
       if (!id) continue;
-      const name = (location as Record<string, unknown>)['name'];
-      names.set(id, name ? String(name) : id);
+      names.set(id, location.name ? String(location.name) : id);
     }
     return names;
   });

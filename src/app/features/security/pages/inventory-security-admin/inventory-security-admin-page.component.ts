@@ -2,12 +2,22 @@ import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
-import { AuthService } from '../../../../../core/services/auth.service';
-import { InventoryPermissionEntry } from '../../../models/inventory.models';
-import { SecurityPermission } from '../../../../security/models/security.models';
-import { SecurityService } from '../../../../security/services/security.service';
+import { AuthService } from '../../../../core/services/auth.service';
+import { SecurityPermission } from '../../models/security.models';
+import { SecurityService } from '../../services/security.service';
 
 type PageState = 'idle' | 'loading' | 'ready' | 'error';
+
+// Administers the inventory-tagged subset of the security permission registry
+// (CAP-221 #87). Moved here from features/inventory (#347): this page reads and
+// displays SecurityService data, so it belongs with the feature that owns that
+// data, not with the domain the permissions happen to describe.
+export interface InventoryPermissionEntry {
+  permissionKey: string;
+  description: string;
+  category: string;
+  isCurrentUserGranted: boolean;
+}
 
 const INVENTORY_PERMISSION_FALLBACK: Array<Pick<InventoryPermissionEntry, 'permissionKey' | 'description' | 'category'>> = [
   {

@@ -5,6 +5,7 @@ import { routes } from './app.routes';
 import { authGuard } from './core/guards/auth.guard';
 import { rolesChildGuard } from './core/guards/roles.guard';
 import { PERMISSION_BY_BIT } from './core/security/permission-catalog';
+import { SECURITY_PAGE } from './core/security/route-permissions';
 import { NAV_REGISTRY } from './features/shell/services/navigation-registry.service';
 
 describe('app route topology', () => {
@@ -68,6 +69,18 @@ describe('/app route access', () => {
     expect(declaredRoles(platform!)).toEqual(['ROLE_PLATFORM_ADMIN']);
     expect(declaredPermissions(platform!).length).toBeGreaterThan(0);
     expect(declaredPermissions(platform!).every(code => code.startsWith('platform:'))).toBe(true);
+  });
+
+  it('gates /app/security/inventory-permissions on its own permission, not the /app/security group ROLE_ADMIN gate', () => {
+    // The page's code lives under features/security (#347), but its route is a
+    // sibling of 'security' here rather than a child of it: the 'security'
+    // group is ROLE_ADMIN-gated, and this page has to keep the permission-only
+    // access it had at its old /app/inventory/security/permissions URL.
+    const page = children.find(child => child.path === 'security/inventory-permissions');
+
+    expect(page).toBeTruthy();
+    expect(declaredPermissions(page!)).toEqual(SECURITY_PAGE.permissions);
+    expect(declaredRoles(page!)).toEqual([]);
   });
 
   it('aliases the plan-named /app/admin/tenants onto the platform area', () => {

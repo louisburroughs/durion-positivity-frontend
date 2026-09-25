@@ -131,7 +131,7 @@ describe('[SEC-06] <a (click)> without href/routerLink must be a <button>', () =
   });
 });
 
-describe('[SEC-07] URL scheme validation lives only in markdown.util.ts', () => {
+describe('[SEC-07] URL scheme validation lives only in shared/utils/safe-href.util.ts', () => {
   it('flags a scheme-allowlist regex literal', () => {
     expect(sec07Finder({ path: 'x.ts', content: `const SAFE = /^(?:https?:|mailto:)/i;` })).toEqual([
       'regex literal: /^(?:https?:|mailto:)/i',

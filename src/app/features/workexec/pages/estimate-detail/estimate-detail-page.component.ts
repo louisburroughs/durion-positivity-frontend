@@ -9,9 +9,12 @@ import { v4 as uuidv4 } from 'uuid';
 import { catchError, of } from 'rxjs';
 import { CRMVehiclesService } from '@durion-sdk/customer';
 import { WorkexecService } from '../../services/workexec.service';
-import { CrmService } from '../../../crm/services/crm.service';
-import { Relationship } from '../../../crm/models/crm.models';
-import { partyLabel, vehicleLabel } from '../../../crm/utils/crm-labels';
+import {
+  CUSTOMER_DIRECTORY_SOURCE,
+  CustomerContact,
+  customerDirectoryLabel as partyLabel,
+  vehicleLabel,
+} from '../../../../shared/customer-directory/customer-directory-source.tokens';
 import {
   EstimateItemResponse,
   EstimateResponse,
@@ -46,7 +49,7 @@ import {
 export class EstimateDetailPageComponent implements OnInit {
   private readonly translate = inject(TranslateService);
   private readonly workexec   = inject(WorkexecService);
-  private readonly crm        = inject(CrmService);
+  private readonly customerDirectory = inject(CUSTOMER_DIRECTORY_SOURCE);
   private readonly vehiclesApi = inject(CRMVehiclesService);
   private readonly route      = inject(ActivatedRoute);
   private readonly router     = inject(Router);
@@ -63,7 +66,7 @@ export class EstimateDetailPageComponent implements OnInit {
   readonly errorMessage = signal<string | null>(null);
   readonly taxBlocked   = signal(false);
   /** Customer contacts resolved from CRM via the estimate's crmPartyId */
-  readonly contacts     = signal<Relationship[]>([]);
+  readonly contacts     = signal<CustomerContact[]>([]);
   /** True when the CRM contacts lookup failed (distinct from "no contacts") */
   readonly contactsError = signal(false);
 
@@ -153,7 +156,7 @@ export class EstimateDetailPageComponent implements OnInit {
       this.contacts.set([]);
       return;
     }
-    this.crm.getContactsWithRoles(partyId)
+    this.customerDirectory.getContacts(partyId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: rels => this.contacts.set(rels.filter(r => r.status === 'ACTIVE')),
@@ -175,7 +178,7 @@ export class EstimateDetailPageComponent implements OnInit {
     this.vehicleLabel.set(null);
 
     if (partyId) {
-      this.crm.getParty(partyId)
+      this.customerDirectory.getById(partyId)
         .pipe(catchError(() => of(null)), takeUntilDestroyed(this.destroyRef))
         .subscribe(party => this.customerLabel.set(party ? partyLabel(party) : null));
 

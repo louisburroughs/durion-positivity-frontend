@@ -188,11 +188,23 @@
   </section>
 
   <!-- Supplier connectivity section (#191). Own state, own generated client,
-       no supplier logic in this domain — inputs only. -->
-  <app-supplier-transmission-panel [purchaseOrderId]="order()!.poId" [poNumber]="order()!.poNumber" />
+       no supplier logic in this domain — inputs only. Resolved through the
+       SUPPLIER_TRANSMISSION_PANELS shared contract (#347) instead of a
+       direct positivity import. -->
+  @if (panelTypes().first; as SupplierTransmissionPanel) {
+  <ng-container
+    [ngComponentOutlet]="SupplierTransmissionPanel"
+    [ngComponentOutletInputs]="{ purchaseOrderId: order()!.poId, poNumber: order()!.poNumber }"
+  ></ng-container>
+  }
 
   <!-- Vendor transmission timeline (#215). Own state, own generated
        @durion-sdk/order client — inputs only, same isolation as above. -->
-  <app-purchase-order-transmission-timeline-panel [purchaseOrderId]="order()!.poId" />
+  @if (panelTypes().second; as PurchaseOrderTransmissionTimelinePanel) {
+  <ng-container
+    [ngComponentOutlet]="PurchaseOrderTransmissionTimelinePanel"
+    [ngComponentOutletInputs]="{ purchaseOrderId: order()!.poId }"
+  ></ng-container>
+  }
   }
 </main>

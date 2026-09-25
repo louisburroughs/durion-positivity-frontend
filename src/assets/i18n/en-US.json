@@ -7294,6 +7294,7 @@
       "PAYMENT_CAPTURE": "Payment Capture",
       "PAYMENT_STATUS": "Payment Status",
       "PEOPLE": "People",
+      "INVENTORY_PERMISSIONS": "Inventory permissions",
       "PERMISSIONS": "Permissions",
       "PICK_EXECUTE": "Pick Execute",
       "PICK_LIST": "Pick List",

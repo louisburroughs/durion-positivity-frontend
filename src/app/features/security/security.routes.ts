@@ -47,6 +47,13 @@ export const SECURITY_ROUTES: Routes = [
           import('./pages/user-provision/user-provision-page.component')
             .then(m => m.UserProvisionPageComponent),
       },
+      // inventory-permissions (InventorySecurityAdminPageComponent, in
+      // ./pages/inventory-security-admin) is NOT nested here even though its
+      // code lives under this feature (#347). Its route is registered as a
+      // sibling of 'security' in app.routes.ts, at /app/security/inventory-
+      // permissions, so it keeps the permission-only gate it had at its old
+      // /app/inventory/security/permissions URL instead of picking up this
+      // group's ROLE_ADMIN requirement.
     ],
   },
 ];

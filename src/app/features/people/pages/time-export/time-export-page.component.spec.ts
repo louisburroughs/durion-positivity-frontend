@@ -3,8 +3,8 @@ import { provideRouter } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 import { TimeExportPageComponent } from './time-export-page.component';
-import { AccountingService } from '../../../accounting/services/accounting.service';
-import { LocationService } from '../../../location/services/location.service';
+import { TIME_EXPORT_SOURCE } from '../../../../shared/time-export/time-export-source.tokens';
+import { LOCATION_LOOKUP_SOURCE } from '../../../../shared/location-picker/location-lookup-source.tokens';
 
 describe('TimeExportPageComponent', () => {
   let fixture: ComponentFixture<TimeExportPageComponent>;
@@ -16,7 +16,7 @@ describe('TimeExportPageComponent', () => {
     downloadExport: ReturnType<typeof vi.fn>;
   };
   let locationService: {
-    getAllLocations: ReturnType<typeof vi.fn>;
+    getAll: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(async () => {
@@ -29,15 +29,15 @@ describe('TimeExportPageComponent', () => {
       downloadExport: vi.fn(),
     };
     locationService = {
-      getAllLocations: vi.fn().mockReturnValue(of([{ locationId: 'loc-1', name: 'Main Shop' }])),
+      getAll: vi.fn().mockReturnValue(of([{ locationId: 'loc-1', name: 'Main Shop' }])),
     };
 
     await TestBed.configureTestingModule({
       imports: [TimeExportPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
-        { provide: AccountingService, useValue: accountingService },
-        { provide: LocationService, useValue: locationService },
+        { provide: TIME_EXPORT_SOURCE, useValue: accountingService },
+        { provide: LOCATION_LOOKUP_SOURCE, useValue: locationService },
       ],
     }).compileComponents();
 
@@ -54,8 +54,8 @@ describe('TimeExportPageComponent', () => {
     expect(h1.textContent).toMatch(/export/i);
   });
 
-  it('T2: loads locations on init via LocationService.getAllLocations', () => {
-    expect(locationService.getAllLocations).toHaveBeenCalledTimes(1);
+  it('T2: loads locations on init via LOCATION_LOOKUP_SOURCE.getAll', () => {
+    expect(locationService.getAll).toHaveBeenCalledTimes(1);
     expect(component.locations().length).toBe(1);
   });
 
