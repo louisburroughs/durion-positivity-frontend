@@ -84,7 +84,7 @@ describe('PaymentVoidRefundPageComponent', () => {
     const stateSetSpy = vi.spyOn(component.state, 'set');
     const errorKeySetSpy = vi.spyOn(component.errorKey, 'set');
 
-    component.executeRefund('test reason', 'AUTH1');
+    component.executeRefund('test reason', 'AUTH1', 42.5);
 
     expect(component.state()).toBe('error');
     expect(component.errorKey()).toBe('BILLING.PAYMENT.ERROR.REFUND');
@@ -94,10 +94,10 @@ describe('PaymentVoidRefundPageComponent', () => {
     expect(stateOrder).toBeLessThan(errorKeyOrder);
   });
 
-  it('sets ready state on successful refund', () => {
+  it('sets ready state on successful refund, sending the entered amount explicitly (issue #381)', () => {
     billingTransportStub.executeRefund.mockReturnValue(of(undefined));
 
-    component.executeRefund('reason', 'AUTH1');
+    component.executeRefund('reason', 'AUTH1', 42.5);
 
     expect(component.state()).toBe('ready');
     expect(billingTransportStub.executeRefund).toHaveBeenCalledWith(
@@ -105,8 +105,47 @@ describe('PaymentVoidRefundPageComponent', () => {
       'pay-001',
       'reason',
       'AUTH1',
-      undefined,
+      42.5,
     );
+  });
+
+  it('sets error state before errorKey and never calls the service when refund amount is missing (issue #381: no more implicit full refund)', () => {
+    const stateSetSpy = vi.spyOn(component.state, 'set');
+    const errorKeySetSpy = vi.spyOn(component.errorKey, 'set');
+
+    component.executeRefund('reason', 'AUTH1', null);
+
+    expect(component.state()).toBe('error');
+    expect(component.errorKey()).toBe('BILLING.PAYMENT.ERROR.REFUND_AMOUNT_REQUIRED');
+    expect(billingTransportStub.executeRefund).not.toHaveBeenCalled();
+
+    const stateOrder = stateSetSpy.mock.invocationCallOrder.at(-1) ?? 0;
+    const errorKeyOrder = errorKeySetSpy.mock.invocationCallOrder.at(-1) ?? 0;
+    expect(stateOrder).toBeLessThan(errorKeyOrder);
+  });
+
+  it('sets error state and never calls the service when refund amount is zero or negative', () => {
+    component.executeRefund('reason', 'AUTH1', 0);
+    expect(component.state()).toBe('error');
+    expect(component.errorKey()).toBe('BILLING.PAYMENT.ERROR.REFUND_AMOUNT_REQUIRED');
+
+    component.executeRefund('reason', 'AUTH1', -5);
+    expect(component.state()).toBe('error');
+    expect(component.errorKey()).toBe('BILLING.PAYMENT.ERROR.REFUND_AMOUNT_REQUIRED');
+
+    expect(billingTransportStub.executeRefund).not.toHaveBeenCalled();
+  });
+
+  it('canSubmitRefund() is false with no amount entered and true once a positive amount is entered', () => {
+    component.refundReason.set('reason');
+    component.refundAuthorityCode.set('AUTH1');
+    expect(component.canSubmitRefund()).toBe(false);
+
+    component.setRefundAmount('0');
+    expect(component.canSubmitRefund()).toBe(false);
+
+    component.setRefundAmount('25');
+    expect(component.canSubmitRefund()).toBe(true);
   });
 
   it('setRefundAmount with empty string sets refundAmount to null', () => {
@@ -142,7 +181,7 @@ describe('PaymentVoidRefundPageComponent', () => {
     const stateSetSpy = vi.spyOn(component.state, 'set');
     const errorKeySetSpy = vi.spyOn(component.errorKey, 'set');
 
-    component.executeRefund('DAMAGE', 'AUTH-REFUND');
+    component.executeRefund('DAMAGE', 'AUTH-REFUND', 25);
 
     expect(component.state()).toBe('error');
     expect(component.errorKey()).toBe('BILLING.PAYMENT.ERROR.MISSING_IDS');

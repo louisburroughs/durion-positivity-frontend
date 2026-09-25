@@ -6679,13 +6679,14 @@
         "TITLE": "Rembourser le paiement",
         "REASON_LABEL": "Raison",
         "AUTHORITY_LABEL": "Code d'autorisation",
-        "AMOUNT_LABEL": "Montant du remboursement (laisser vide pour un remboursement complet)"
+        "AMOUNT_LABEL": "Montant du remboursement (obligatoire)"
       },
       "ERROR": {
         "CAPTURE": "Impossible de traiter le paiement. Veuillez réessayer.",
         "VOID": "Impossible d'annuler l'autorisation. Veuillez réessayer.",
         "REFUND": "Impossible de traiter le remboursement. Veuillez réessayer.",
-        "MISSING_IDS": "Référence de paiement ou de facture invalide."
+        "MISSING_IDS": "Référence de paiement ou de facture invalide.",
+        "REFUND_AMOUNT_REQUIRED": "Saisissez un montant de remboursement."
       }
     },
     "RECEIPT": {
@@ -6713,7 +6714,8 @@
         "LOAD": "Impossible de charger le recu.",
         "GENERATE": "Impossible de generer le recu. Veuillez reessayer.",
         "REPRINT": "Impossible de reimprimer le recu. Veuillez reessayer.",
-        "MISSING_INVOICE": "Aucun ID de facture fourni."
+        "MISSING_INVOICE": "Aucun ID de facture fourni.",
+        "NOT_AVAILABLE": "Ce reçu n’est pas disponible à l’affichage. Utilisez la réimpression pour en obtenir une copie."
       }
     },
     "INVOICE_STATUS": {

@@ -3,7 +3,6 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { TranslatePipe } from '@ngx-translate/core';
-import { switchMap } from 'rxjs';
 import { GenerateReceiptRequest, ReceiptRef } from '../../models/billing.models';
 import { BillingTransportService } from '../../services/billing-transport.service';
 
@@ -34,11 +33,24 @@ export class ReceiptPageComponent implements OnInit {
     this.invoiceId.set(invoiceId);
     this.receiptId.set(receiptId);
 
-    if (receiptId) {
-      this.loadReceipt(receiptId);
-    } else {
+    if (!receiptId) {
       this.state.set('idle');
+      return;
     }
+
+    if (!invoiceId) {
+      this.state.set('error');
+      this.errorKey.set('BILLING.RECEIPT.ERROR.MISSING_INVOICE');
+      return;
+    }
+
+    // Issue #381: there is no backend GET for an existing receipt's detail
+    // (durion-positivity-backend#2214) — only generateReceipt/reprintReceipt (POST, both
+    // side-effecting) return one. Arriving here with a receiptId already in the route (a deep
+    // link or reload) can't safely re-trigger either of those, so this shows a localized
+    // not-available state instead of calling a route that does not exist.
+    this.state.set('error');
+    this.errorKey.set('BILLING.RECEIPT.ERROR.NOT_AVAILABLE');
   }
 
   generateAndShow(delivery?: GenerateReceiptRequest): void {
@@ -52,15 +64,10 @@ export class ReceiptPageComponent implements OnInit {
 
     this.billingService
       .generateReceipt(this.invoiceId(), delivery ?? {})
-      .pipe(
-        switchMap(result => {
-          this.receiptId.set(result.receiptId);
-          return this.billingService.loadReceipt(this.invoiceId(), result.receiptId);
-        }),
-        takeUntilDestroyed(this.destroyRef),
-      )
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: receipt => {
+          this.receiptId.set(receipt.receiptId);
           this.receipt.set(receipt);
           this.state.set('ready');
         },
@@ -119,30 +126,6 @@ export class ReceiptPageComponent implements OnInit {
         error: () => {
           this.state.set('error');
           this.errorKey.set('BILLING.RECEIPT.ERROR.REPRINT');
-        },
-      });
-  }
-
-  private loadReceipt(receiptId: string): void {
-    if (!this.invoiceId()) {
-      this.state.set('error');
-      this.errorKey.set('BILLING.RECEIPT.ERROR.MISSING_INVOICE');
-      return;
-    }
-    this.state.set('loading');
-    this.errorKey.set(null);
-
-    this.billingService
-      .loadReceipt(this.invoiceId(), receiptId)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: receipt => {
-          this.receipt.set(receipt);
-          this.state.set('ready');
-        },
-        error: () => {
-          this.state.set('error');
-          this.errorKey.set('BILLING.RECEIPT.ERROR.LOAD');
         },
       });
   }

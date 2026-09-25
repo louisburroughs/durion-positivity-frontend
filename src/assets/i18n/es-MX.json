@@ -6679,13 +6679,14 @@
         "TITLE": "Reembolsar pago",
         "REASON_LABEL": "Motivo",
         "AUTHORITY_LABEL": "Código de autorización",
-        "AMOUNT_LABEL": "Importe del reembolso (deje en blanco para reembolso completo)"
+        "AMOUNT_LABEL": "Importe del reembolso (obligatorio)"
       },
       "ERROR": {
         "CAPTURE": "No se pudo procesar el pago. Inténtelo de nuevo.",
         "VOID": "No se pudo anular la autorización. Inténtelo de nuevo.",
         "REFUND": "No se pudo procesar el reembolso. Inténtelo de nuevo.",
-        "MISSING_IDS": "Referencia de pago o factura no válida."
+        "MISSING_IDS": "Referencia de pago o factura no válida.",
+        "REFUND_AMOUNT_REQUIRED": "Ingrese un importe de reembolso."
       }
     },
     "RECEIPT": {
@@ -6713,7 +6714,8 @@
         "LOAD": "No se pudo cargar el recibo.",
         "GENERATE": "No se pudo generar el recibo. Inténtelo de nuevo.",
         "REPRINT": "No se pudo reimprimir el recibo. Inténtelo de nuevo.",
-        "MISSING_INVOICE": "No se proporciónó ID de factura."
+        "MISSING_INVOICE": "No se proporciónó ID de factura.",
+        "NOT_AVAILABLE": "Este recibo no está disponible para ver. Use reimprimir para obtener una copia."
       }
     },
     "INVOICE_STATUS": {

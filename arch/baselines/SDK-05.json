@@ -5,11 +5,6 @@
     "tracking": "#350"
   },
   {
-    "key": "src/app/features/billing/services/billing-transport.service.ts :: '/v1/billing/invoices/'",
-    "reason": "executeRefund (no-amount branch; louisburroughs/durion-positivity-backend#2215) and loadReceipt (louisburroughs/durion-positivity-backend#2214) — live backend bugs, not SDK gaps (see SDK-03).",
-    "tracking": "#350"
-  },
-  {
     "key": "src/app/shared/bulk-import/services/bulk-import.service.ts :: '/api/bulk-loader/v1/bulk-jobs/'",
     "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
     "tracking": "#350"

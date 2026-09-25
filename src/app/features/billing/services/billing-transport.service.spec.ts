@@ -311,21 +311,10 @@ describe('BillingTransportService', () => {
     expect(result).toBeUndefined();
   });
 
-  it('keeps refund without an amount on the direct transport compatibility path', () => {
-    apiStub.post.mockReturnValueOnce(of(undefined));
-
-    service.executeRefund('inv-001', 'pay-001', 'DAMAGE', 'AUTH-REFUND').subscribe();
-
-    expect(apiStub.post).toHaveBeenCalledWith(
-      '/v1/billing/invoices/inv-001/payments/pay-001/refund',
-      { reason: 'DAMAGE', authorityCode: 'AUTH-REFUND' },
-    );
-    expect(paymentReversalServiceStub.refundPayment).not.toHaveBeenCalled();
-  });
-
-  it('generates receipts through the receipt SDK client', () => {
+  it('generates receipts through the receipt SDK client and maps the full response to a ReceiptRef, issue #381 (no follow-up loadReceipt call)', () => {
     const receiptResponse: ReceiptResponse = {
       receiptId: 'rcpt-001',
+      reference: 'R-1001',
       status: ReceiptResponseStatusEnum.Generated,
     };
     receiptServiceStub.generateReceipt.mockReturnValueOnce(of(receiptResponse));
@@ -343,7 +332,8 @@ describe('BillingTransportService', () => {
     };
     expect(receiptServiceStub.generateReceipt).toHaveBeenCalledWith('inv-001', expectedRequest);
     expect(apiStub.post).not.toHaveBeenCalled();
-    expect(result).toEqual({ receiptId: 'rcpt-001' });
+    expect(apiStub.get).not.toHaveBeenCalled();
+    expect(result).toEqual({ receiptId: 'rcpt-001', invoiceId: 'inv-001', receiptNumber: 'R-1001' });
   });
 
   it('creates artifact download tokens through the invoice artifact SDK and maps the token response', () => {
@@ -381,16 +371,6 @@ describe('BillingTransportService', () => {
 
       expect(url).toBe('/api/invoice/v1/invoices/inv-001/artifacts/artifact-001/download?token=token-001');
     });
-  });
-
-  it('keeps receipt detail reads on the direct transport compatibility path', () => {
-    apiStub.get.mockReturnValueOnce(of({ receiptId: 'rcpt-001', invoiceId: 'inv-001' }));
-
-    service.loadReceipt('inv-001', 'rcpt-001').subscribe();
-
-    expect(apiStub.get).toHaveBeenCalledWith('/v1/billing/invoices/inv-001/receipts/rcpt-001');
-    expect(receiptServiceStub.generateReceipt).not.toHaveBeenCalled();
-    expect(receiptServiceStub.reprintReceipt).not.toHaveBeenCalled();
   });
 
   it('reprints receipts through the receipt SDK client and maps the response', () => {

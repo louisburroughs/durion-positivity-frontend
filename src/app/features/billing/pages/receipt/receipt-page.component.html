@@ -13,6 +13,13 @@
 
   @if (state() === 'error' && errorKey()) {
   <div class="receipt__error" role="alert">{{ errorKey()! | translate }}</div>
+  @if (errorKey() === 'BILLING.RECEIPT.ERROR.NOT_AVAILABLE' && receiptId()) {
+  <div class="receipt__actions" data-testid="receipt-not-available">
+    <button type="button" class="receipt__reprint-btn" (click)="reprint()">
+      {{ 'BILLING.RECEIPT.ACTION.REPRINT' | translate }}
+    </button>
+  </div>
+  }
   }
 
   @if (state() === 'idle' || state() === 'error') {

@@ -58,11 +58,10 @@ export class PaymentVoidRefundPageComponent implements OnInit {
 
   canSubmitRefund(): boolean {
     const amount = this.refundAmount();
-    const amountValid = amount === null || amount > 0;
     return this.state() !== 'submitting'
       && this.refundReason().trim().length > 0
       && this.refundAuthorityCode().trim().length > 0
-      && amountValid;
+      && amount !== null && amount > 0;
   }
 
   executeVoid(reason: string, authorityCode: string): void {
@@ -87,10 +86,20 @@ export class PaymentVoidRefundPageComponent implements OnInit {
       });
   }
 
-  executeRefund(reason: string, authorityCode: string, amount?: number): void {
+  /**
+   * Issue #381: the refund SDK contract (`PaymentReversalService.refundPayment`) always requires
+   * `amount` — this page loads no invoice/payment data it could derive a refundable balance from,
+   * so `amount` is required here too rather than defaulting to an implicit full refund.
+   */
+  executeRefund(reason: string, authorityCode: string, amount: number | null): void {
     if (!this.invoiceId() || !this.paymentId()) {
       this.state.set('error');
       this.errorKey.set('BILLING.PAYMENT.ERROR.MISSING_IDS');
+      return;
+    }
+    if (amount === null || amount <= 0) {
+      this.state.set('error');
+      this.errorKey.set('BILLING.PAYMENT.ERROR.REFUND_AMOUNT_REQUIRED');
       return;
     }
     this.mode.set('refund');

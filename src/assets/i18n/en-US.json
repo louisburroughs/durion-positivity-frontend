@@ -6679,13 +6679,14 @@
         "TITLE": "Refund Payment",
         "REASON_LABEL": "Reason",
         "AUTHORITY_LABEL": "Authority Code",
-        "AMOUNT_LABEL": "Refund Amount (leave blank for full refund)"
+        "AMOUNT_LABEL": "Refund Amount (required)"
       },
       "ERROR": {
         "CAPTURE": "Unable to process payment. Please try again.",
         "VOID": "Unable to void authorization. Please try again.",
         "REFUND": "Unable to process refund. Please try again.",
-        "MISSING_IDS": "Invalid payment or invoice reference."
+        "MISSING_IDS": "Invalid payment or invoice reference.",
+        "REFUND_AMOUNT_REQUIRED": "Enter a refund amount."
       }
     },
     "RECEIPT": {
@@ -6713,7 +6714,8 @@
         "LOAD": "Unable to load receipt.",
         "GENERATE": "Unable to generate receipt. Please try again.",
         "REPRINT": "Unable to reprint receipt. Please try again.",
-        "MISSING_INVOICE": "No invoice ID provided."
+        "MISSING_INVOICE": "No invoice ID provided.",
+        "NOT_AVAILABLE": "This receipt is not available to view. Use reprint to get a copy."
       }
     },
     "INVOICE_STATUS": {

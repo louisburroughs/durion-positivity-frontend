@@ -30,7 +30,6 @@ import {
   VoidPaymentRequest,
   VoidPaymentRequestReasonEnum,
 } from '@durion-sdk/invoice';
-import { ApiBaseService } from '../../../core/services/api-base.service';
 import {
   ArtifactDownloadToken,
   ElevateResponse,
@@ -47,11 +46,6 @@ import {
 
 @Injectable({ providedIn: 'root' })
 export class BillingTransportService {
-  // Direct ApiBaseService usage inventory:
-  // - Temporary compatibility exceptions (outside ADR-0041), both live backend bugs:
-  //   executeRefund (full refund path without amount — louisburroughs/durion-positivity-backend#2215)
-  //   loadReceipt (no SDK read endpoint for receipt detail — louisburroughs/durion-positivity-backend#2214)
-  private readonly api = inject(ApiBaseService);
   private readonly configuration = inject(InvoiceConfiguration);
   private readonly invoiceService = inject(InvoiceService);
   private readonly invoiceSearchService = inject(InvoiceSearchService);
@@ -155,23 +149,21 @@ export class BillingTransportService {
     );
   }
 
+  /**
+   * Issue #381: the previous no-amount branch posted to
+   * `/v1/billing/invoices/{id}/payments/{pid}/refund`, a route that does not exist —
+   * `PaymentReversalService.refundPayment` (`POST /v1/invoices/{id}/payments/{pid}/refunds`)
+   * always requires `amount`. This page has no loaded invoice/payment data to derive a
+   * refundable balance from, so the caller (`PaymentVoidRefundPageComponent`) now requires the
+   * user to enter an amount rather than requesting an implicit full refund.
+   */
   executeRefund(
     invoiceId: string,
     paymentId: string,
     reason: string,
     authorityCode: string,
-    amount?: number,
+    amount: number,
   ): Observable<void> {
-    if (amount === undefined) {
-      // Live bug (outside ADR-0041): SDK refund contract requires amount, while billing UX still
-      // supports a full refund via omitted amount. Tracked in
-      // louisburroughs/durion-positivity-backend#2215.
-      return this.api.post<void>(
-        `/v1/billing/invoices/${invoiceId}/payments/${paymentId}/refund`,
-        { reason, authorityCode },
-      );
-    }
-
     const request: RefundPaymentRequest = {
       amount,
       reason: this.toRefundReason(reason),
@@ -183,7 +175,13 @@ export class BillingTransportService {
     );
   }
 
-  generateReceipt(invoiceId: string, request: UiGenerateReceiptRequest): Observable<{ receiptId: string }> {
+  /**
+   * `ReceiptService.generateReceipt` already returns the full `ReceiptResponse`
+   * (receiptId/reference/status) — the same shape `reprintReceipt` returns — so this maps it to
+   * `ReceiptRef` directly (issue #381) instead of the caller following up with a `loadReceipt`
+   * call to a GET route the backend does not have (durion-positivity-backend#2214).
+   */
+  generateReceipt(invoiceId: string, request: UiGenerateReceiptRequest): Observable<ReceiptRef> {
     const sdkRequest: GenerateReceiptRequest = {
       paymentIntentId: request.emailAddress ?? request.deliveryMethod ?? 'UNSPECIFIED',
       terminalId: 'WEB-UI',
@@ -192,14 +190,8 @@ export class BillingTransportService {
     };
 
     return this.receiptService.generateReceipt(invoiceId, sdkRequest).pipe(
-      map(result => ({ receiptId: result.receiptId ?? '' })),
+      map(result => this.toReceiptRef(invoiceId, result)),
     );
-  }
-
-  loadReceipt(invoiceId: string, receiptId: string): Observable<ReceiptRef> {
-    // Live bug (outside ADR-0041): SDK ReceiptService does not expose a read endpoint for
-    // retrieving receipt detail by ID. Tracked in louisburroughs/durion-positivity-backend#2214.
-    return this.api.get<ReceiptRef>(`/v1/billing/invoices/${invoiceId}/receipts/${receiptId}`);
   }
 
   reprintReceipt(invoiceId: string, receiptId: string): Observable<ReceiptRef> {
