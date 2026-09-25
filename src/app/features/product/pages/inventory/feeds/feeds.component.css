@@ -77,129 +77,23 @@ label {
   box-shadow: inset 0 -1px 0 var(--brand-primary);
 }
 
-.table-wrap {
-  overflow-x: auto;
-}
-
-.data-table {
-  border-collapse: separate;
-  border-spacing: 0;
-  width: 100%;
-}
-
-.data-table th,
-.data-table td {
-  padding: 0.75rem 0.6rem;
-  text-align: left;
-}
-
-.data-table tbody tr:nth-child(even) {
-  background: color-mix(in srgb, var(--cardBackground) 82%, var(--themeBackground));
-}
-
 .state-card {
   text-align: center;
 }
 
-.skeleton-row {
-  animation: skeleton-pulse 1.3s ease-in-out infinite;
-  background: var(--primary50);
-  border-radius: 0.5rem;
-  height: 1.5rem;
-  margin-bottom: 0.5rem;
-}
-
-@keyframes skeleton-pulse {
-  0% {
-    opacity: 0.45;
-  }
-
-  50% {
-    opacity: 0.95;
-  }
-
-  100% {
-    opacity: 0.45;
-  }
-}
-
-.badge {
-  border-radius: 999px;
-  display: inline-flex;
-  font-size: 0.75rem;
-  font-weight: 600;
-  line-height: 1;
-  padding: 0.35rem 0.6rem;
-}
-
-.badge--success {
-  background: var(--status-success-bg); color: var(--status-success-fg);
-}
-
-.badge--warning {
-  background: var(--status-warning-bg); color: var(--status-warning-fg);
-}
-
-.badge--error {
-  background: var(--status-error-bg); color: var(--status-error-fg);
-}
-
-.badge--neutral {
-  background: color-mix(in srgb, var(--navBackground) 35%, transparent);
-  color: var(--currentTextColor);
-}
-
-.btn-primary,
-.btn-secondary {
+.btn-primary {
+  background: var(--brand-primary);
+  border: none;
   border-radius: 0.65rem;
+  color: var(--contrastTextColor);
   cursor: pointer;
   font: inherit;
   font-weight: 600;
   padding: 0.5rem 0.85rem;
 }
 
-.btn-primary {
-  background: var(--brand-primary);
-  border: none;
-  color: var(--contrastTextColor);
-}
-
-.btn-secondary {
-  background: var(--primary50);
-  border: none;
-  color: var(--link-color);
-}
-
-.error-banner {
-  align-items: center;
-  background: var(--status-error-bg);
-  border-radius: 0.9rem; color: var(--status-error-fg);
-  display: flex;
-  gap: 0.75rem;
-  margin-top: 1rem;
-  padding: 0.9rem 1rem;
-  width: 100%;
-}
-
-.error-icon {
-  align-items: center;
-  background: var(--functional-error-red);
-  border-radius: 999px;
-  color: var(--contrastTextColor);
-  display: inline-flex;
-  font-size: 0.75rem;
-  font-weight: 700;
-  height: 1rem;
-  justify-content: center;
-  width: 1rem;
-}
-
 @media (max-width: 1024px) {
   .search-grid {
     grid-template-columns: 1fr;
-  }
-
-  .table-wrap {
-    overflow-x: auto;
   }
 }

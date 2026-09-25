@@ -1,20 +1,10 @@
 import { TestBed } from '@angular/core/testing';
-import { HttpParams } from '@angular/common/http';
 import { of } from 'rxjs';
-import { ApiBaseService } from '../../../core/services/api-base.service';
 import { InventoryAvailabilityService, InventoryLocationsService } from '@durion-sdk/inventory';
 import { ProductInventoryService } from './product-inventory.service';
 
 describe('ProductInventoryService', () => {
   let service: ProductInventoryService;
-
-  const apiStub = {
-    get: vi.fn(),
-    post: vi.fn(),
-    put: vi.fn(),
-    patch: vi.fn(),
-    delete: vi.fn(),
-  };
 
   const availSdkStub = { listAvailabilityBySku: vi.fn() };
   const locationsSdkStub = { getLocationInventory: vi.fn() };
@@ -23,7 +13,6 @@ describe('ProductInventoryService', () => {
     TestBed.configureTestingModule({
       providers: [
         ProductInventoryService,
-        { provide: ApiBaseService, useValue: apiStub },
         { provide: InventoryAvailabilityService, useValue: availSdkStub },
         { provide: InventoryLocationsService, useValue: locationsSdkStub },
       ],
@@ -110,45 +99,6 @@ describe('ProductInventoryService', () => {
       service.queryInventoryAvailability('SKU-003').subscribe();
 
       expect(availSdkStub.listAvailabilityBySku).toHaveBeenCalledWith('SKU-003');
-    });
-  });
-
-  // ── queryAvailabilityBySku() ─────────────────────────────────────────────────
-
-  describe('queryAvailabilityBySku()', () => {
-    it('calls GET /inventory/v1/inventory/availability/by-sku with sku and sourceType params [issue #370]', () => {
-      apiStub.get.mockReturnValueOnce(of([]));
-
-      service.queryAvailabilityBySku('SKU-003', 'MFR').subscribe();
-
-      const [path, params] = apiStub.get.mock.calls[0];
-      expect(path).toBe('/inventory/v1/inventory/availability/by-sku');
-      expect((params as HttpParams).get('sku')).toBe('SKU-003');
-      expect((params as HttpParams).get('sourceType')).toBe('MFR');
-    });
-
-    it('passes DISTRIBUTOR sourceType correctly', () => {
-      apiStub.get.mockReturnValueOnce(of([]));
-
-      service.queryAvailabilityBySku('SKU-003', 'DISTRIBUTOR').subscribe();
-
-      const [, params] = apiStub.get.mock.calls[0];
-      expect((params as HttpParams).get('sourceType')).toBe('DISTRIBUTOR');
-    });
-  });
-
-  // ── queryLeadTime() ──────────────────────────────────────────────────────────
-
-  describe('queryLeadTime()', () => {
-    it('calls GET /inventory/v1/inventory/availability/lead-time with sku and sourceType params [issue #370]', () => {
-      apiStub.get.mockReturnValueOnce(of([]));
-
-      service.queryLeadTime('SKU-004', 'DISTRIBUTOR').subscribe();
-
-      const [path, params] = apiStub.get.mock.calls[0];
-      expect(path).toBe('/inventory/v1/inventory/availability/lead-time');
-      expect((params as HttpParams).get('sku')).toBe('SKU-004');
-      expect((params as HttpParams).get('sourceType')).toBe('DISTRIBUTOR');
     });
   });
 

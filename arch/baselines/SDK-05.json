@@ -105,16 +105,6 @@
     "tracking": "#350"
   },
   {
-    "key": "src/app/features/product/services/product-inventory.service.ts :: '/inventory/v1/inventory/availability/by-sku'",
-    "reason": "issue #370: corrected to the real doubled-module-prefix path; still hardcoded on legacy ApiBaseService transport (see SDK-03) because the endpoint's productSku/WAREHOUSE-SUPPLIER-TRANSIT sourceType contract has no vendor-feed (MFR/DISTRIBUTOR) equivalent (backend #2213).",
-    "tracking": "#370"
-  },
-  {
-    "key": "src/app/features/product/services/product-inventory.service.ts :: '/inventory/v1/inventory/availability/lead-time'",
-    "reason": "issue #370: corrected to the real doubled-module-prefix path; still hardcoded on legacy ApiBaseService transport (see SDK-03) because the endpoint keys by productId (UUID), not this sku + MFR/DISTRIBUTOR vendor-feed shape (backend #2213).",
-    "tracking": "#370"
-  },
-  {
     "key": "src/app/features/shell/services/chat-api.service.ts :: '/mcp-server/v1/mcp/chat'",
     "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
     "tracking": "#350"

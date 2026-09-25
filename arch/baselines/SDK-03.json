@@ -35,11 +35,6 @@
     "tracking": "#350"
   },
   {
-    "key": "src/app/features/product/services/product-inventory.service.ts -> src/app/core/services/api-base.service.ts",
-    "reason": "legacy ApiBaseService transport; migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "#350"
-  },
-  {
     "key": "src/app/features/shell/services/chat-api.service.ts -> src/app/core/services/api-base.service.ts",
     "reason": "legacy ApiBaseService transport; migrates with PRD-sdk-migration-completion.md.",
     "tracking": "#350"

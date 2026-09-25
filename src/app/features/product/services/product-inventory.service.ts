@@ -1,8 +1,6 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { ApiBaseService } from '../../../core/services/api-base.service';
 import {
   AvailabilityView,
   InventoryAvailabilityService,
@@ -11,16 +9,12 @@ import {
   LocationInventoryInquiryResponse,
 } from '@durion-sdk/inventory';
 import {
-  FeedSourceType,
   InventoryAvailability,
-  LeadTime,
   LocationInventory,
-  SkuAvailability,
 } from '../models/availability.models';
 
 @Injectable({ providedIn: 'root' })
 export class ProductInventoryService {
-  private readonly api = inject(ApiBaseService);
   private readonly availSdk = inject(InventoryAvailabilityService);
   private readonly locationsSdk = inject(InventoryLocationsService);
 
@@ -32,26 +26,12 @@ export class ProductInventoryService {
     );
   }
 
-  // Issue #370: was missing the doubled /inventory module segment the gateway's
-  // StripPrefix=1 requires (real path: InventoryAvailabilityController#getAvailabilityBySku,
-  // GET /v1/inventory/availability/by-sku). SDK gap remains open even at the correct path:
-  // that endpoint takes `productSku` (not `sku`) and a WAREHOUSE/SUPPLIER/TRANSIT
-  // `sourceType`, with no vendor-feed (MFR/DISTRIBUTOR) concept or by-sku listing —
-  // backend #2213. Left on ApiBaseService.
-  queryAvailabilityBySku(sku: string, sourceType: FeedSourceType): Observable<SkuAvailability[]> {
-    const params = new HttpParams().set('sku', sku).set('sourceType', sourceType);
-    return this.api.get<SkuAvailability[]>('/inventory/v1/inventory/availability/by-sku', params);
-  }
-
-  // Issue #370: was missing the doubled /inventory module segment and the /availability
-  // segment (real path: InventoryAvailabilityController#getInventoryLeadTime, GET
-  // /v1/inventory/availability/lead-time). SDK gap remains open even at the correct path:
-  // that endpoint keys by `productId` (UUID) and a WAREHOUSE/SUPPLIER/TRANSIT `sourceType`,
-  // not this `sku` + MFR/DISTRIBUTOR vendor-feed shape — backend #2213. Left on ApiBaseService.
-  queryLeadTime(sku: string, sourceType: FeedSourceType): Observable<LeadTime[]> {
-    const params = new HttpParams().set('sku', sku).set('sourceType', sourceType);
-    return this.api.get<LeadTime[]>('/inventory/v1/inventory/availability/lead-time', params);
-  }
+  // Issue #370/#373: queryAvailabilityBySku()/queryLeadTime() were removed. Even at the
+  // corrected /v1/inventory/availability/{by-sku,lead-time} paths, those endpoints expect a
+  // `productSku` + WAREHOUSE/SUPPLIER/TRANSIT `sourceType` contract with no vendor-feed
+  // (MFR/DISTRIBUTOR) equivalent — backend #2213. Their only caller, FeedsComponent, now
+  // shows a "vendor-feed availability isn't available yet" notice instead of calling an
+  // endpoint that cannot serve this request shape.
 
   // Issue #370: moved to InventoryLocationsService.getLocationInventory (SDK), which matches
   // LocationInventoryInquiryController#getLocationInventory, GET

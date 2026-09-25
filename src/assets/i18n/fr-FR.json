@@ -4108,7 +4108,8 @@
           "OUT_OF_STOCK": "Rupture de stock"
         },
         "STATE": {
-          "EMPTY": "Aucune donnée de flux d'inventaire trouvée."
+          "EMPTY": "Aucune donnée de flux d'inventaire trouvée.",
+          "UNAVAILABLE": "La disponibilité du flux fournisseur n'est pas encore disponible."
         },
         "ERROR": {
           "LOAD": "Échec du chargement des flux d'inventaire."

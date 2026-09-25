@@ -398,20 +398,33 @@ export class AccountingService {
     );
   }
 
-  downloadExport(exportId: string): void {
-    // Trigger browser download via anchor element (appended to DOM for cross-browser reliability).
-    // NOTE: SDK gap — ReportExportController#downloadExport (operationId downloadReportExport) has
-    // no SDK operation yet (backend #2216), so the URL is still hand-built, but from the injected
-    // AccountingConfiguration's basePath rather than reading environment.apiBaseUrl directly
-    // (SDK-06). Issue #368: the id is a path segment under /reports/export, not an ?exportId= query
-    // parameter.
-    const url = `${this.configuration.basePath}/v1/accounting/reports/export/${encodeURIComponent(exportId)}/download`;
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `time-export-${exportId}.csv`;
-    document.body.append(a);
-    a.click();
-    a.remove();
+  /**
+   * Fetches the export as an authenticated Blob and triggers the browser download
+   * from an object URL, rather than a plain `<a href>` navigation: an anchor click
+   * is fetched by the browser directly, not by `HttpClient`, so `authInterceptor`
+   * never attaches the bearer token and the (now-correct) URL 401s (ADR-0041; same
+   * reasoning as ChatBlobService). NOTE: SDK gap — ReportExportController#downloadExport
+   * (operationId downloadReportExport) has no SDK operation yet (backend #2216), so the
+   * path is still hand-built, but from the injected AccountingConfiguration's basePath
+   * rather than reading environment.apiBaseUrl directly (SDK-06). Issue #368: the id is
+   * a path segment under /reports/export, not an ?exportId= query parameter.
+   */
+  downloadExport(exportId: string): Observable<void> {
+    const path = `/v1/accounting/reports/export/${encodeURIComponent(exportId)}/download`;
+    return this.api.getBlob(path, { baseUrlOverride: this.configuration.basePath }).pipe(
+      map(blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `time-export-${exportId}.csv`;
+        document.body.append(a);
+        a.click();
+        a.remove();
+        // Deferred revoke: revoking synchronously can invalidate the anchor's
+        // in-flight read of the blob URL it just triggered (ADR-0065 §3 / SEC-08).
+        setTimeout(() => URL.revokeObjectURL(url));
+      }),
+    );
   }
 
   // --- Private adapter methods: SDK DTOs → local models ---
