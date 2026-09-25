@@ -7294,6 +7294,7 @@
       "PAYMENT_CAPTURE": "Capture du paiement",
       "PAYMENT_STATUS": "État du paiement",
       "PEOPLE": "Personnes",
+      "INVENTORY_PERMISSIONS": "Autorisations d'inventaire",
       "PERMISSIONS": "Autorisations",
       "PICK_EXECUTE": "Exécuter le prélèvement",
       "PICK_LIST": "Liste de prélèvement",

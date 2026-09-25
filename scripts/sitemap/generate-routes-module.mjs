@@ -72,6 +72,18 @@ if (checkOnly) {
     console.error('Run: npm run sitemap:routes:generate');
     process.exit(1);
   }
+  // Every label key the sitemap renders must exist in en-US (ADR-0030): a route added or moved
+  // without its SITEMAP.LABEL.* copy would render the raw key. i18n:check only compares locales
+  // with each other, so it cannot see this.
+  const enUS = JSON.parse(readFileSync(resolve(repoRoot, 'src/assets/i18n/en-US.json'), 'utf8'));
+  const has = key => key.split('.').reduce((node, part) => (node && typeof node === 'object' ? node[part] : undefined), enUS) !== undefined;
+  const missing = [...new Set(entries.map(e => e.labelKey).filter(k => k && !has(k)))].sort();
+  if (missing.length) {
+    console.error(`FAIL sitemap routes check: ${missing.length} label key(s) missing from en-US.json:`);
+    for (const k of missing) console.error(`  ${k}`);
+    console.error('Add them to every release locale, then run: npm run i18n:pseudo:generate');
+    process.exit(1);
+  }
   console.log('PASS sitemap routes check: site-map.routes.generated.ts is up to date.');
   process.exit(0);
 }
