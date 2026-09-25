@@ -28,7 +28,7 @@
   </section>
   }
 
-  <section class="pick-layout" [attr.aria-busy]="state() === 'mutating' ? true : null">
+  <section class="pick-layout" [attr.aria-busy]="activeTaskBusy() ? true : null">
     <section class="card lines-card">
       <h2>{{ 'INVENTORY.FULFILLMENT.PICK_EXECUTE.SECTION.TASKS' | translate }}</h2>
       <div class="table-wrap">
@@ -49,13 +49,13 @@
               [class.row-partial]="task.pickedQty > 0 && task.pickedQty < task.requestedQty"
               [class.row-active]="task.pickTaskId === activeTaskId()">
               <td>{{ task.productSku }}</td>
-              <td>{{ task.storageLocationCode || task.storageLocationId || ('COMMON.NOT_AVAILABLE' | translate) }}</td>
+              <td>{{ task.storageLocationCode || ('COMMON.NOT_AVAILABLE' | translate) }}</td>
               <td>{{ task.requestedQty }}</td>
               <td>{{ task.pickedQty }}</td>
               <td>{{ ('STATUS.' + task.status) | translate }}</td>
               <td>
                 <button type="button" class="btn-secondary select-task-btn" (click)="selectTask(task.pickTaskId)"
-                  [attr.aria-current]="task.pickTaskId === activeTaskId() ? 'true' : null"
+                  [attr.aria-pressed]="task.pickTaskId === activeTaskId() ? 'true' : 'false'"
                   [attr.aria-label]="((task.pickTaskId === activeTaskId() ? 'INVENTORY.FULFILLMENT.PICK_EXECUTE.ACTION.SELECTED_TASK' : 'INVENTORY.FULFILLMENT.PICK_EXECUTE.ACTION.SELECT_TASK') | translate) + ': ' + task.productSku">
                   {{ (task.pickTaskId === activeTaskId() ? 'INVENTORY.FULFILLMENT.PICK_EXECUTE.ACTION.SELECTED_TASK' :
                   'INVENTORY.FULFILLMENT.PICK_EXECUTE.ACTION.SELECT_TASK') | translate }}
@@ -81,20 +81,27 @@
         <dd>{{ task.pickedQty }}</dd>
       </dl>
 
+      @if (activeTaskPending()) {
+      <p class="scan-status" aria-live="polite">{{ 'INVENTORY.FULFILLMENT.PICK_EXECUTE.STATE.PROCESSING' | translate }}</p>
+      }
+      @if (activeTaskStatus(); as taskStatus) {
+      <p class="scan-status" role="alert" aria-live="assertive">{{ taskStatus.key | translate }}</p>
+      }
+
       <div class="field-row">
         <label for="scan-sku">{{ 'INVENTORY.FULFILLMENT.PICK_EXECUTE.FIELD.SCAN_SKU' | translate }}</label>
         <input id="scan-sku" type="text" [value]="scannedSkuId()" (input)="setScannedSkuId($any($event.target).value)"
-          [attr.disabled]="state() === 'mutating' || !canExecute() ? true : null" />
+          [attr.disabled]="activeTaskBusy() || !canExecute() ? true : null" />
       </div>
       <div class="field-row">
         <label for="scan-location">{{ 'INVENTORY.FULFILLMENT.PICK_EXECUTE.FIELD.SCAN_LOCATION' | translate }}</label>
         <input id="scan-location" type="text" [value]="scannedLocationId()"
           (input)="setScannedLocationId($any($event.target).value)"
-          [attr.disabled]="state() === 'mutating' || !canExecute() ? true : null" />
+          [attr.disabled]="activeTaskBusy() || !canExecute() ? true : null" />
       </div>
       <div class="action-row">
         <button class="btn-primary" type="button" (click)="resolveScan()"
-          [disabled]="state() === 'mutating' || !scannedSkuId().trim() || !scannedLocationId().trim() || !canExecute()">
+          [disabled]="activeTaskBusy() || !scannedSkuId().trim() || !scannedLocationId().trim() || !canExecute()">
           {{ 'INVENTORY.FULFILLMENT.PICK_EXECUTE.ACTION.RESOLVE_SCAN' | translate }}
         </button>
       </div>
@@ -116,11 +123,11 @@
           <label for="confirm-qty">{{ 'INVENTORY.FULFILLMENT.PICK_EXECUTE.FIELD.CONFIRM_QTY' | translate }}</label>
           <input id="confirm-qty" type="number" min="1" [max]="activeTaskRemainingQty()" [value]="confirmQty()"
             (input)="setConfirmQty(+$any($event.target).value)"
-            [attr.disabled]="state() === 'mutating' || !canExecute() ? true : null" />
+            [attr.disabled]="activeTaskBusy() || !canExecute() ? true : null" />
         </div>
 
         <button class="btn-primary" type="button" (click)="confirmLine()"
-          [disabled]="state() === 'mutating' || confirmQty() <= 0 || !canExecute()">
+          [disabled]="activeTaskBusy() || confirmQty() <= 0 || !canExecute()">
           {{ 'INVENTORY.FULFILLMENT.PICK_EXECUTE.ACTION.CONFIRM' | translate }}
         </button>
       </section>
@@ -128,7 +135,7 @@
 
       <div class="action-row">
         <button class="btn-primary" type="button" (click)="completeTask()"
-          [disabled]="state() === 'mutating' || !canExecute()">
+          [disabled]="activeTaskBusy() || !canExecute() || activeTaskRemainingQty() > 0">
           {{ 'INVENTORY.FULFILLMENT.PICK_EXECUTE.ACTION.COMPLETE_TASK' | translate }}
         </button>
       </div>

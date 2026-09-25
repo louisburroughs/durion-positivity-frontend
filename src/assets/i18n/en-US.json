@@ -6219,7 +6219,8 @@
           "LOADING": "Loading pick execution data...",
           "AWAITING_SCAN": "Scan an item to begin confirmation.",
           "SCAN_NO_MATCH": "No pick task matched that scan.",
-          "NO_TASK_SELECTED": "Select a pick task to begin."
+          "NO_TASK_SELECTED": "Select a pick task to begin.",
+          "PROCESSING": "Applying your update..."
         },
         "SECTION": {
           "TASKS": "Pick Tasks",
@@ -6262,7 +6263,8 @@
           "RESOLVE_SCAN": "Failed to resolve scanned value.",
           "CONFIRM": "Failed to confirm picked quantity.",
           "COMPLETE": "Failed to complete the pick task.",
-          "REFRESH": "Failed to refresh pick task status."
+          "REFRESH": "Failed to refresh pick task status.",
+          "STILL_PROCESSING": "Still processing your last update. Refresh in a moment to check the latest status."
         },
         "SCAN_RESULT": {
           "MATCHED": "Scan matched the expected SKU and location.",

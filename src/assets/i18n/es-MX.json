@@ -6219,7 +6219,8 @@
           "LOADING": "Cargando datos de ejecución de surtido...",
           "AWAITING_SCAN": "Escanee un artículo para comenzar la confirmación.",
           "SCAN_NO_MATCH": "Ninguna tarea de surtido coincide con ese escaneo.",
-          "NO_TASK_SELECTED": "Seleccione una tarea de surtido para comenzar."
+          "NO_TASK_SELECTED": "Seleccione una tarea de surtido para comenzar.",
+          "PROCESSING": "Aplicando su actualización..."
         },
         "SECTION": {
           "TASKS": "Tareas de Surtido",
@@ -6262,7 +6263,8 @@
           "RESOLVE_SCAN": "No se pudo resolver el valor escaneado.",
           "CONFIRM": "No se pudo confirmar la cantidad surtida.",
           "COMPLETE": "No se pudo completar la tarea de surtido.",
-          "REFRESH": "No se pudo actualizar el estado de la tarea de surtido."
+          "REFRESH": "No se pudo actualizar el estado de la tarea de surtido.",
+          "STILL_PROCESSING": "Su última actualización aún se está procesando. Actualice en un momento para ver el estado más reciente."
         },
         "SCAN_RESULT": {
           "MATCHED": "El escaneo coincide con el SKU y la ubicación esperados.",

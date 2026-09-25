@@ -6219,7 +6219,8 @@
           "LOADING": "Chargement des données d'exécution de prélèvement...",
           "AWAITING_SCAN": "Scannez un article pour commencer la confirmation.",
           "SCAN_NO_MATCH": "Aucune tâche de prélèvement ne correspond à ce scan.",
-          "NO_TASK_SELECTED": "Sélectionnez une tâche de prélèvement pour commencer."
+          "NO_TASK_SELECTED": "Sélectionnez une tâche de prélèvement pour commencer.",
+          "PROCESSING": "Application de votre mise à jour..."
         },
         "SECTION": {
           "TASKS": "Tâches de Prélèvement",
@@ -6262,7 +6263,8 @@
           "RESOLVE_SCAN": "Impossible de résoudre la valeur scannée.",
           "CONFIRM": "Impossible de confirmer la quantité prélevée.",
           "COMPLETE": "Impossible de terminer la tâche de prélèvement.",
-          "REFRESH": "Impossible d'actualiser l'état de la tâche de prélèvement."
+          "REFRESH": "Impossible d'actualiser l'état de la tâche de prélèvement.",
+          "STILL_PROCESSING": "Votre dernière mise à jour est toujours en cours de traitement. Actualisez dans un instant pour voir le dernier état."
         },
         "SCAN_RESULT": {
           "MATCHED": "Le scan correspond au SKU et à l'emplacement attendus.",
