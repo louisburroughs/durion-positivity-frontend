@@ -1,5 +1,7 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
+import { LocationAPIService } from '@durion-sdk/location';
 import {
   AppointmentAssignmentsService,
   AppointmentCreateRequestSourceTypeEnum,
@@ -12,6 +14,7 @@ import {
 } from '@durion-sdk/shop-manager';
 import type {
   AppointmentCreateRequest,
+  AppointmentResponse,
   CancelAppointmentRequest,
   ConflictOverrideRequest,
   CreateAssignmentRequest,
@@ -19,11 +22,41 @@ import type {
   RescheduleAppointmentRequest,
 } from '@durion-sdk/shop-manager';
 import type {
+  AppointmentConflict,
   AppointmentDetail,
   AssignmentDetail,
+  AuditEntry,
   RescheduleRequest,
   CreateAppointmentPayload,
 } from '../models/appointment.models';
+
+/**
+ * Maps the generated `AppointmentResponse` onto the page-facing `AppointmentDetail` (ADR-0032).
+ * The wire names differ from the ones every appointment page reads (`locationId` → `facilityId`,
+ * `startAt`/`endAt` → `scheduledStart`/`scheduledEnd`) — a previous `as unknown as` cast on every
+ * call site papered over the mismatch instead of translating it, so `facilityId` and the scheduled
+ * times were always `undefined` at runtime.
+ */
+function toAppointmentDetail(response: AppointmentResponse): AppointmentDetail {
+  return {
+    appointmentId: response.appointmentId,
+    status: response.status,
+    facilityId: response.locationId,
+    scheduledStart: response.startAt,
+    scheduledEnd: response.endAt,
+    conflicts: (response.conflicts ?? []).map(
+      (conflict): AppointmentConflict => ({
+        conflictId: conflict.conflictId,
+        code: conflict.code,
+        message: conflict.message,
+        severity: conflict.severity,
+        overridable: conflict.overridable,
+        overridden: conflict.overridden,
+        resourceId: conflict.resourceId,
+      }),
+    ),
+  };
+}
 
 @Injectable({ providedIn: 'root' })
 export class AppointmentService {
@@ -32,9 +65,23 @@ export class AppointmentService {
   private readonly conflictOverride = inject(ConflictOverrideAPIService);
   private readonly schedule = inject(ScheduleAPIService);
   private readonly shopAudit = inject(ShopAuditService);
+  private readonly locationApi = inject(LocationAPIService);
 
   getAppointment(appointmentId: string): Observable<AppointmentDetail> {
-    return this.appointments.getAppointmentById(appointmentId) as unknown as Observable<AppointmentDetail>;
+    return this.appointments.getAppointmentById(appointmentId).pipe(map(toAppointmentDetail));
+  }
+
+  /**
+   * Resolves a facility/location id to its display name, the same way schedule-view and
+   * dispatch-board do (`capacity-calendar.service.ts`'s `loadLocationName`) — degrading to
+   * `undefined` on any failure so the page falls back to `COMMON.NOT_AVAILABLE` rather than a bare
+   * UUID (ADR-0064 §5).
+   */
+  getFacilityName(locationId: string): Observable<string | undefined> {
+    return this.locationApi.getLocationById(locationId).pipe(
+      map(location => location.name),
+      catchError(() => of(undefined)),
+    );
   }
 
   listAssignments(appointmentId: string): Observable<AssignmentDetail[]> {
@@ -70,10 +117,10 @@ export class AppointmentService {
       reason: (body.reason as RescheduleAppointmentRequest['reason']) ?? 'OTHER',
       rescheduleReasonNotes: body.notes,
     };
-    return this.appointments.rescheduleAppointment(appointmentId, sdkRequest) as unknown as Observable<AppointmentDetail>;
+    return this.appointments.rescheduleAppointment(appointmentId, sdkRequest).pipe(map(toAppointmentDetail));
   }
 
-  searchAudit(appointmentId: string): Observable<unknown[]> {
+  searchAudit(appointmentId: string): Observable<AuditEntry[]> {
     return this.shopAudit.searchShopAudit(undefined, appointmentId);
   }
 
@@ -91,7 +138,7 @@ export class AppointmentService {
       sourceType,
       sourceId: body.sourceId,
     };
-    return this.appointments.createAppointment(sdkRequest, idempotencyKey) as unknown as Observable<AppointmentDetail>;
+    return this.appointments.createAppointment(sdkRequest, idempotencyKey).pipe(map(toAppointmentDetail));
   }
 
   /**
@@ -117,7 +164,7 @@ export class AppointmentService {
       cancellationReason: (body.cancellationReason as CancelAppointmentRequest['cancellationReason']) ?? 'OTHER',
       notes: body.notes,
     };
-    return this.appointments.cancelAppointment(appointmentId, sdkRequest) as unknown as Observable<AppointmentDetail>;
+    return this.appointments.cancelAppointment(appointmentId, sdkRequest).pipe(map(toAppointmentDetail));
   }
 
   viewSchedule(locationId: string, date: string, resourceType?: string, resourceId?: string): Observable<unknown> {

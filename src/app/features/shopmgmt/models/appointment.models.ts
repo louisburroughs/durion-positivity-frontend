@@ -1,3 +1,52 @@
+import type { ShopAuditEntryResponse } from '@durion-sdk/shop-manager';
+
+/**
+ * One shop-audit trail entry (CAP-249). Re-exports the generated SDK response verbatim — its wire
+ * fields (`actorUserId`, `recordedAt`, `eventType`, `changeSummaryText`) already match `GET
+ * /v1/shop/audit`; the previous local shape (`id?/timestamp?/actor?/action?/details?`) never did
+ * (ADR-0032).
+ */
+export type AuditEntry = ShopAuditEntryResponse;
+
+/**
+ * Appointment status codes (`pos-shop-manager` `AppointmentStatus`); translated via
+ * `SHOPMGMT.APPOINTMENT_STATUS.*` — never rendered raw (ADR-0064 §5).
+ */
+export const APPOINTMENT_STATUS_CODES = [
+  'SCHEDULED',
+  'CHECKED_IN',
+  'WORK_IN_PROGRESS',
+  'WAITING_FOR_PARTS',
+  'QUALITY_CHECK',
+  'READY_FOR_PICKUP',
+  'COMPLETED',
+  'CANCELLED',
+  'INVOICED',
+  'REOPENED',
+] as const;
+
+/** The recorded scheduling-conflict codes `SchedulingConflictEvaluator` emits. */
+const KNOWN_CONFLICT_CODES: ReadonlySet<string> = new Set([
+  'FACILITY_CLOSED',
+  'OUTSIDE_OPERATING_HOURS',
+  'BAY_DOUBLE_BOOKED',
+  'MECHANIC_UNAVAILABLE',
+  'FACILITY_NEAR_CAPACITY',
+  'NO_COMPETENT_MECHANIC_ROSTERED',
+  'COMPETENT_MECHANIC_UNAVAILABLE',
+]);
+
+/**
+ * Maps a conflict `code` to its translation key under `SHOPMGMT.APPOINTMENT_CONFLICT_CODE.*`,
+ * falling back to a generic summary key for a code this catalog does not (yet) name — never the
+ * server's own `message` prose (ADR-0030).
+ */
+export function conflictCodeKey(code: string): string {
+  return KNOWN_CONFLICT_CODES.has(code)
+    ? `SHOPMGMT.APPOINTMENT_CONFLICT_CODE.${code}`
+    : 'SHOPMGMT.APPOINTMENT_CONFLICT_CODE.GENERIC';
+}
+
 export interface AppointmentDetail {
   appointmentId: string;
   status: string;
