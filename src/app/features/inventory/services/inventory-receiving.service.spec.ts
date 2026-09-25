@@ -1,7 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { HttpParams } from '@angular/common/http';
 import { of } from 'rxjs';
-import { ApiBaseService } from '../../../core/services/api-base.service';
 import { ASNService, ReceivingService } from '@durion-sdk/inventory';
 import { InventoryReceivingService } from './inventory-receiving.service';
 import {
@@ -19,27 +17,19 @@ import {
 describe('InventoryReceivingService', () => {
   let service: InventoryReceivingService;
 
-  const apiStub = {
-    get: vi.fn(),
-    post: vi.fn(),
-    put: vi.fn(),
-    patch: vi.fn(),
-    delete: vi.fn(),
-  };
-
   const asnSdkStub = { createAsn: vi.fn(), getAsn: vi.fn() };
   const receivingSdkStub = {
     getReceivingSession: vi.fn(),
     receiveItemsIntoStaging: vi.fn(),
     createReceivingSession: vi.fn(),
     crossDockReceivingLine: vi.fn(),
+    searchCrossDockWorkorders: vi.fn(),
   };
 
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [
         InventoryReceivingService,
-        { provide: ApiBaseService, useValue: apiStub },
         { provide: ASNService, useValue: asnSdkStub },
         { provide: ReceivingService, useValue: receivingSdkStub },
       ],
@@ -274,28 +264,38 @@ describe('InventoryReceivingService', () => {
   // ── searchWorkordersForCrossDock() ────────────────────────────────────
 
   describe('searchWorkordersForCrossDock()', () => {
-    const mockRefs: WorkorderCrossDockRef[] = [
-      { workorderId: 'wo-001', workorderNumber: 'WO-001', status: 'OPEN' },
+    const sdkResults = [
+      { workorderId: 'wo-001', workorderNumber: 'WO-001', status: 'OPEN', partLineCount: 2, updatedAt: '2026-09-20T00:00:00Z' },
     ];
 
-    it('calls GET /inventory/v1/receiving/workorders with query param', () => {
-      apiStub.get.mockReturnValueOnce(of(mockRefs));
+    it('calls receivingSdk.searchCrossDockWorkorders with the query', () => {
+      receivingSdkStub.searchCrossDockWorkorders.mockReturnValueOnce(of(sdkResults));
 
       service.searchWorkordersForCrossDock('WO-001').subscribe();
 
-      expect(apiStub.get).toHaveBeenCalledOnce();
-      const [path, params] = apiStub.get.mock.calls[0];
-      expect(path).toBe('/inventory/v1/receiving/workorders');
-      expect((params as HttpParams).get('query')).toBe('WO-001');
+      expect(receivingSdkStub.searchCrossDockWorkorders).toHaveBeenCalledWith('WO-001');
     });
 
-    it('returns the WorkorderCrossDockRef array emitted by the API', () => {
-      apiStub.get.mockReturnValueOnce(of(mockRefs));
+    it('maps CrossDockWorkorderSearchResultDto to WorkorderCrossDockRef, including partLineCount/updatedAt', () => {
+      receivingSdkStub.searchCrossDockWorkorders.mockReturnValueOnce(of(sdkResults));
 
       let result: WorkorderCrossDockRef[] | undefined;
       service.searchWorkordersForCrossDock('WO-001').subscribe(r => (result = r));
 
-      expect(result).toEqual(mockRefs);
+      expect(result).toEqual([
+        { workorderId: 'wo-001', workorderNumber: 'WO-001', status: 'OPEN', partLineCount: 2, updatedAt: '2026-09-20T00:00:00Z' },
+      ]);
+    });
+
+    it('defaults workorderNumber/status to empty string when the SDK omits them', () => {
+      receivingSdkStub.searchCrossDockWorkorders.mockReturnValueOnce(of([{ workorderId: 'wo-002', partLineCount: 1 }]));
+
+      let result: WorkorderCrossDockRef[] | undefined;
+      service.searchWorkordersForCrossDock('').subscribe(r => (result = r));
+
+      expect(result).toEqual([
+        { workorderId: 'wo-002', workorderNumber: '', status: '', partLineCount: 1, updatedAt: undefined },
+      ]);
     });
   });
 

@@ -45,6 +45,9 @@ export interface LedgerFilter {
   pageToken?: string;
 }
 
+// `fromStorageLocationId`/`toStorageLocationId` were ruled out (backend #2206, issue #350):
+// InventoryLedgerEntryDto's fromLocationId/toLocationId already carry the bin or site the
+// posting used, and the ledger stores no separate storage-location column.
 export interface InventoryLedgerEntry {
   ledgerEntryId: string;
   timestamp: string;
@@ -53,9 +56,7 @@ export interface InventoryLedgerEntry {
   quantityChange: number;
   uom: string;
   fromLocationId?: string;
-  fromStorageLocationId?: string;
   toLocationId?: string;
-  toStorageLocationId?: string;
   actorId?: string;
   reasonCode?: string;
   sourceTransactionId?: string;
@@ -123,7 +124,8 @@ export interface ReceiptResultLine {
 }
 
 // Putaway (CAP-217 #95). Field names mirror the backend's PutawayTaskResponse
-// (issue #377 verification) — there is no separate `uom` or top-level `locationId`.
+// (issue #377 verification). Backend #2206 added `locationId` (the task's site) and `uom`
+// (the product's base UoM; null when it cannot be resolved).
 export interface PutawayTask {
   taskId: string;
   sourceReceiptId: string;
@@ -134,6 +136,8 @@ export interface PutawayTask {
   actualDestinationLocationId?: string;
   status: string;
   assigneeId?: string;
+  locationId?: string;
+  uom?: string;
   /** @serverGenerated */
   readonly createdAt?: string;
   /** @serverGenerated */
@@ -362,11 +366,15 @@ export interface ReceivingSessionFromAsnRequest {
   locationId: string;
 }
 
-// Cross-dock receiving (CAP-216 #97)
+// Cross-dock receiving (CAP-216 #97). `searchCrossDockWorkorders` (backend #2211) only
+// returns workorders that are not closed and demand at least one part line.
 export interface WorkorderCrossDockRef {
   workorderId: string;
   workorderNumber: string;
   status: string;
+  partLineCount?: number;
+  /** @serverGenerated */
+  readonly updatedAt?: string;
 }
 
 export interface CrossDockReceiveRequest {
@@ -412,35 +420,54 @@ export interface ReturnToStockLine {
   quantityToReturn: number;
 }
 
+// `ledgerEntryIds` is no longer available: ReturnSubmissionResultDto reports a processed
+// line count, not the ledger entries it posted (backend #2206/#2227).
 export interface ReturnToStockResult {
   returnId: string;
   workorderId: string;
   totalItemsReturned: number;
+  status?: string;
   /** @serverGenerated */
   readonly createdAt?: string;
-  ledgerEntryIds?: string[];
 }
 
-// Shortage Resolution (CAP-220 #89)
+// Shortage Resolution (CAP-220 #89). Field names mirror the backend's ShortageOptionDto /
+// ShortageResolveRequest / ShortageResolutionResultDto (backend #2206) — the old
+// optionId/decisionType/label/clientRequestId shape doesn't exist on the SDK. The
+// shortage-resolution PAGE stays a "not available yet" notice pending backend
+// louisburroughs/durion-positivity-backend#2233 (no read supplies the allocationId a
+// workorder route would need); this model backs the service methods only.
 export interface ShortageOption {
-  optionId: string;
-  decisionType: string;
-  label: string;
-  leadTimeDays?: number;
-  partialOptionsWarning?: boolean;
+  allocationId: string;
+  optionType: string;
+  description: string;
+  availableQuantity?: number;
+  costDelta?: number;
+  expectedResolutionDate?: string;
+  sourceLocationId?: string;
+  substituteSku?: string;
 }
 
 export interface ShortageResolutionRequest {
-  workorderId: string;
-  allocationLineId: string;
-  optionId: string;
-  decisionType: string;
-  clientRequestId: string;
+  allocationId: string;
+  optionType: string;
+  sku?: string;
+  shortQuantity?: number;
+  workorderLineId?: string;
+  locationId?: string;
+  sourceLocationId?: string;
+  substituteSku?: string;
+  notes?: string;
+  idempotencyKey?: string;
 }
 
 export interface ShortageResolutionResult {
-  allocationLineId: string;
-  resolvedDecisionType: string;
+  allocationId: string;
+  optionType: string;
+  artifactId?: string;
+  artifactType: string;
+  idempotencyKey: string;
+  status: string;
   readonly resolvedAt?: string;
 }
 
