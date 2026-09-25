@@ -10,7 +10,7 @@ import {
 } from '@durion-sdk/workorder';
 import type { BayStatus, DashboardResponse, MechanicStatus, WorkorderSummary } from '@durion-sdk/workorder';
 import { VehicleRegistryAPIService } from '@durion-sdk/vehicle-inventory';
-import type { WorkorderStatus } from '../../workexec/models/workexec.models';
+import type { WorkorderStatus } from '../../../shared/workorder-status/workorder-status.models';
 import {
   DashboardMechanic,
   DashboardVehicle,
