@@ -43,6 +43,7 @@ const stubService = {
   getAppointment: vi.fn(),
   rescheduleAppointment: vi.fn(),
   executeOverride: vi.fn(),
+  getFacilityName: vi.fn(),
 };
 
 describe('AppointmentConflictOverridePageComponent [CAP-138]', () => {
@@ -58,6 +59,7 @@ describe('AppointmentConflictOverridePageComponent [CAP-138]', () => {
     stubService.getAppointment.mockReturnValue(of(APPOINTMENT_WITH_SOFT_CONFLICT));
     stubService.rescheduleAppointment.mockReturnValue(of({ appointmentId: 'appt-1', status: 'SCHEDULED', facilityId: 'loc-1' }));
     stubService.executeOverride.mockReturnValue(of({ appointmentId: 'appt-1', status: 'SCHEDULED', facilityId: 'loc-1' }));
+    stubService.getFacilityName.mockReturnValue(of('Downtown Shop'));
 
     await TestBed.configureTestingModule({
       imports: [AppointmentConflictOverridePageComponent, TranslateModule.forRoot()],
@@ -133,6 +135,7 @@ describe('AppointmentConflictOverridePageComponent [CAP-138]', () => {
       ),
     );
     stubService.executeOverride.mockReturnValue(of({ appointmentId: 'appt-1', status: 'SCHEDULED', facilityId: 'loc-1' }));
+    stubService.getFacilityName.mockReturnValue(of('Downtown Shop'));
 
     await TestBed.configureTestingModule({
       imports: [AppointmentConflictOverridePageComponent, TranslateModule.forRoot()],
@@ -184,6 +187,7 @@ describe('AppointmentConflictOverridePageComponent [CAP-138]', () => {
       ),
     );
     stubService.executeOverride.mockReturnValue(of(APPOINTMENT_WITH_SOFT_CONFLICT));
+    stubService.getFacilityName.mockReturnValue(of('Downtown Shop'));
 
     await TestBed.configureTestingModule({
       imports: [AppointmentConflictOverridePageComponent, TranslateModule.forRoot()],
@@ -268,6 +272,7 @@ describe('AppointmentConflictOverridePageComponent [CAP-138]', () => {
     );
     stubService.rescheduleAppointment.mockReturnValue(of(APPOINTMENT_WITH_SOFT_CONFLICT));
     stubService.executeOverride.mockReturnValue(of({}));
+    stubService.getFacilityName.mockReturnValue(of('Downtown Shop'));
 
     await TestBed.configureTestingModule({
       imports: [AppointmentConflictOverridePageComponent, TranslateModule.forRoot()],
@@ -325,6 +330,7 @@ describe('AppointmentConflictOverridePageComponent [CAP-138]', () => {
     );
     stubService.rescheduleAppointment.mockReturnValue(of(APPOINTMENT_WITH_SOFT_CONFLICT));
     stubService.executeOverride.mockReturnValue(of(APPOINTMENT_WITH_SOFT_CONFLICT));
+    stubService.getFacilityName.mockReturnValue(of('Downtown Shop'));
 
     await TestBed.configureTestingModule({
       imports: [AppointmentConflictOverridePageComponent, TranslateModule.forRoot()],
@@ -347,5 +353,40 @@ describe('AppointmentConflictOverridePageComponent [CAP-138]', () => {
     component.submitOverride();
     expect(stubService.executeOverride).not.toHaveBeenCalled();
     expect(component.overrideError()).toBe('SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.ERROR.NOTHING_TO_OVERRIDE');
+  });
+
+  // #358: the facility must be resolved and shown by name, never the raw locationId/facilityId UUID.
+  it('resolves the facility name via getFacilityName and renders it', async () => {
+    await setup();
+    expect(stubService.getFacilityName).toHaveBeenCalledWith('loc-1');
+    const summary = fixture.debugElement.query(By.css('.appointment-summary'));
+    expect(summary.nativeElement.textContent).toContain('Downtown Shop');
+  });
+
+  it('falls back to COMMON.NOT_AVAILABLE when the facility name cannot be resolved', async () => {
+    vi.clearAllMocks();
+    stubService.getAppointment.mockReturnValue(of(APPOINTMENT_WITH_SOFT_CONFLICT));
+    stubService.getFacilityName.mockReturnValue(of(undefined));
+
+    await TestBed.configureTestingModule({
+      imports: [AppointmentConflictOverridePageComponent, TranslateModule.forRoot()],
+      providers: [
+        provideRouter([]),
+        { provide: AppointmentService, useValue: stubService },
+        { provide: AuthService, useValue: authStub },
+        { provide: ActivatedRoute, useValue: { params: of({ id: 'appt-1' }) } },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(AppointmentConflictOverridePageComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).not.toContain('loc-1');
+  });
+
+  it('never renders the facility/location UUID as visible text, resolved or not', async () => {
+    await setup();
+    expect(fixture.nativeElement.textContent).not.toContain('loc-1');
   });
 });

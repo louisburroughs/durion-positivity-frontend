@@ -12,6 +12,7 @@ const stubService = {
   getAppointment: vi.fn(),
   listAssignments: vi.fn(),
   createAssignment: vi.fn(),
+  getFacilityName: vi.fn(),
 };
 
 describe('AppointmentDispatchAssignPageComponent [CAP-138]', () => {
@@ -33,6 +34,7 @@ describe('AppointmentDispatchAssignPageComponent [CAP-138]', () => {
       assignmentType: 'BAY',
       mechanic: { mechanicId: 'm-2', displayName: 'Robin' },
     }));
+    stubService.getFacilityName.mockReturnValue(of('Downtown Shop'));
 
     await TestBed.configureTestingModule({
       imports: [AppointmentDispatchAssignPageComponent, TranslateModule.forRoot()],
@@ -125,6 +127,7 @@ describe('AppointmentDispatchAssignPageComponent [CAP-138]', () => {
         }),
       ),
     );
+    stubService.getFacilityName.mockReturnValue(of('Downtown Shop'));
 
     await TestBed.configureTestingModule({
       imports: [AppointmentDispatchAssignPageComponent, TranslateModule.forRoot()],
@@ -149,5 +152,66 @@ describe('AppointmentDispatchAssignPageComponent [CAP-138]', () => {
 
     const panel = fixture.debugElement.query(By.css('.conflict-panel'));
     expect(panel).toBeTruthy();
+  });
+
+  // #358: the facility must be resolved and shown by name, never the raw locationId/facilityId UUID.
+  it('resolves the facility name via getFacilityName and renders it', async () => {
+    await setup();
+    expect(stubService.getFacilityName).toHaveBeenCalledWith('loc-1');
+    const header = fixture.debugElement.query(By.css('.appointment-header'));
+    expect(header.nativeElement.textContent).toContain('Downtown Shop');
+  });
+
+  it('falls back to COMMON.NOT_AVAILABLE when the facility name cannot be resolved', async () => {
+    vi.clearAllMocks();
+    stubService.getAppointment.mockReturnValue(of({ appointmentId: 'appt-1', status: 'SCHEDULED', facilityId: 'loc-1' }));
+    stubService.listAssignments.mockReturnValue(of([]));
+    stubService.getFacilityName.mockReturnValue(of(undefined));
+
+    await TestBed.configureTestingModule({
+      imports: [AppointmentDispatchAssignPageComponent, TranslateModule.forRoot()],
+      providers: [
+        provideRouter([]),
+        { provide: AppointmentService, useValue: stubService },
+        { provide: ActivatedRoute, useValue: { params: of({ id: 'appt-1' }) } },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(AppointmentDispatchAssignPageComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).not.toContain('loc-1');
+  });
+
+  it('never renders the facility/location UUID or a raw mechanic UUID as visible text', async () => {
+    await setup();
+    const text = fixture.nativeElement.textContent as string;
+    expect(text).not.toContain('loc-1');
+    expect(text).not.toContain('m-1');
+  });
+
+  it('falls back to COMMON.NOT_AVAILABLE for an assignment with no mechanic displayName, never the raw mechanicId', async () => {
+    vi.clearAllMocks();
+    stubService.getAppointment.mockReturnValue(of({ appointmentId: 'appt-1', status: 'SCHEDULED', facilityId: 'loc-1' }));
+    stubService.listAssignments.mockReturnValue(of([
+      { assignmentId: 'asn-1', assignmentType: 'BAY', mechanic: { mechanicId: 'm-unresolved' } },
+    ]));
+    stubService.getFacilityName.mockReturnValue(of('Downtown Shop'));
+
+    await TestBed.configureTestingModule({
+      imports: [AppointmentDispatchAssignPageComponent, TranslateModule.forRoot()],
+      providers: [
+        provideRouter([]),
+        { provide: AppointmentService, useValue: stubService },
+        { provide: ActivatedRoute, useValue: { params: of({ id: 'appt-1' }) } },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(AppointmentDispatchAssignPageComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).not.toContain('m-unresolved');
   });
 });

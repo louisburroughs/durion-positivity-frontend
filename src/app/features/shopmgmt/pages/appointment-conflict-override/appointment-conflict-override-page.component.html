@@ -18,8 +18,8 @@
 @if (appointment(); as appt) {
   <section class="appointment-summary">
     <h3>{{ 'SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.APPOINTMENT' | translate: { id: appt.appointmentId } }}</h3>
-    <p>{{ 'SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.STATUS' | translate }}: {{ appt.status }}</p>
-    <p>{{ 'SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.FACILITY' | translate }}: {{ appt.facilityId }}</p>
+    <p>{{ 'SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.STATUS' | translate }}: {{ statusKey() | translate }}</p>
+    <p>{{ 'SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.FACILITY' | translate }}: {{ facilityName() ?? ('COMMON.NOT_AVAILABLE' | translate) }}</p>
   </section>
 }
 
@@ -49,8 +49,7 @@
     <ul class="recorded-conflict-list">
       @for (conflict of recordedConflicts(); track conflict.conflictId) {
         <li class="conflict-item soft-conflict" [class.conflict-item--overridden]="conflict.overridden">
-          <strong>{{ conflict.code }}</strong>
-          <p>{{ conflict.message }}</p>
+          <strong>{{ conflictKey(conflict.code) | translate }}</strong>
           @if (conflict.overridden) {
             <span class="conflict-state">{{ 'SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.OVERRIDDEN' | translate }}</span>
           }
@@ -70,8 +69,7 @@
     @for (conflict of conflicts(); track conflict) {
       <article class="conflict-item"
         [ngClass]="conflict.severity === 'HARD' ? 'hard-conflict' : 'soft-conflict'">
-        <strong>{{ conflict.severity }}</strong>
-        <p>{{ conflict.message }}</p>
+        <strong>{{ conflictKey(conflict.code) | translate }}</strong>
       </article>
     }
     @if (hasHardConflict()) {

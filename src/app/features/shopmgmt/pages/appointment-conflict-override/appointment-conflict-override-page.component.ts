@@ -7,6 +7,7 @@ import { ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
 import { SHOPMGMT_PAGE } from '../../../../core/security/route-permissions';
 import { AppointmentService } from '../../services/appointment.service';
+import { conflictCodeKey } from '../../models/appointment.models';
 import type { AppointmentConflict, AppointmentDetail, Conflict, RescheduleRequest } from '../../models/appointment.models';
 
 @Component({
@@ -23,6 +24,8 @@ export class AppointmentConflictOverridePageComponent implements OnInit {
 
   readonly loading = signal(false);
   readonly appointment = signal<AppointmentDetail | null>(null);
+  /** Resolved the same way appointment-edit/appointment-reschedule do; `undefined` falls back to COMMON.NOT_AVAILABLE (ADR-0064 §5). */
+  readonly facilityName = signal<string | undefined>(undefined);
   readonly conflicts = signal<Conflict[]>([]);
   readonly showConflictPanel = signal(false);
   readonly overrideMode = signal(false);
@@ -64,11 +67,13 @@ export class AppointmentConflictOverridePageComponent implements OnInit {
     () => !this.auth.permissionsKnown() || this.auth.hasAnyPermission(SHOPMGMT_PAGE.conflictOverride),
   );
   readonly hasOverridableConflicts = computed(() => this.canOverride() && this.overridableConflicts().length > 0);
+  readonly statusKey = computed(() => `SHOPMGMT.APPOINTMENT_STATUS.${this.appointment()?.status ?? ''}`);
 
   ngOnInit(): void {
     this.route.params.subscribe(params => {
       const id = String(params['id'] ?? '');
       this.appointmentId = id;
+      this.facilityName.set(undefined);
       if (!id) {
         return;
       }
@@ -84,6 +89,7 @@ export class AppointmentConflictOverridePageComponent implements OnInit {
           }
           this.appointment.set(appointment);
           this.loading.set(false);
+          this.loadFacilityName(id, appointment.facilityId);
         },
         error: () => {
           if (id !== this.appointmentId) {
@@ -93,6 +99,23 @@ export class AppointmentConflictOverridePageComponent implements OnInit {
           this.loading.set(false);
         },
       });
+    });
+  }
+
+  conflictKey(code: string): string {
+    return conflictCodeKey(code);
+  }
+
+  private loadFacilityName(id: string, facilityId: string): void {
+    if (!facilityId) {
+      this.facilityName.set(undefined);
+      return;
+    }
+    this.appointmentService.getFacilityName(facilityId).subscribe(name => {
+      // A route change to another :id while this was in flight must not paint the previous
+      // appointment's facility onto the one now on screen (ADR-0063 §1).
+      if (id !== this.appointmentId) return;
+      this.facilityName.set(name);
     });
   }
 
@@ -115,6 +138,7 @@ export class AppointmentConflictOverridePageComponent implements OnInit {
     this.appointmentService.rescheduleAppointment(this.appointmentId, body).subscribe({
       next: (appointment) => {
         this.appointment.set(appointment);
+        this.loadFacilityName(this.appointmentId, appointment.facilityId);
         this.conflicts.set([]);
         this.showConflictPanel.set(false);
         this.rescheduleSuccess.set(true);
@@ -216,6 +240,7 @@ export class AppointmentConflictOverridePageComponent implements OnInit {
       next: (appointment) => {
         if (id === this.appointmentId) {
           this.appointment.set(appointment);
+          this.loadFacilityName(id, appointment.facilityId);
         }
       },
       // The override error already says what happened; a failed refresh keeps the last known state.
