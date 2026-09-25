@@ -6,11 +6,13 @@ import { DatePipe } from '@angular/common';
 import { TranslatePipe } from '@ngx-translate/core';
 import { ActivatedRoute } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
-import { switchMap } from 'rxjs';
+import { switchMap, map, catchError, of } from 'rxjs';
 import { AppointmentService } from '../../services/appointment.service';
 import type { AppointmentDetail, Conflict, TimeSlot } from '../../models/appointment.models';
 import { conflictCodeKey } from '../../models/appointment.models';
 import { toDatetimeLocalValue, fromDatetimeLocalValue } from '../../../../core/utils/local-date';
+import { AuthService } from '../../../../core/services/auth.service';
+import { SHOPMGMT_PAGE } from '../../../../core/security/route-permissions';
 
 type PageState = 'idle' | 'loading' | 'ready' | 'error';
 
@@ -46,6 +48,7 @@ export class AppointmentReschedulePageComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly appointmentService = inject(AppointmentService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly auth = inject(AuthService);
 
   private readonly appointmentId = signal<string>('');
   readonly state = signal<PageState>('idle');
@@ -58,8 +61,6 @@ export class AppointmentReschedulePageComponent {
   readonly conflicts = signal<Conflict[]>([]);
   readonly suggestedAlternatives = signal<TimeSlot[]>([]);
   readonly hasHardConflict = signal(false);
-  readonly showOverrideReason = signal(false);
-  readonly showApprovalReason = signal(false);
   readonly versionMismatch = signal(false);
   readonly fieldErrors = signal<FieldError[]>([]);
 
@@ -68,14 +69,20 @@ export class AppointmentReschedulePageComponent {
     scheduledEndDateTime: new FormControl(''),
     reason: new FormControl('', Validators.required),
     notes: new FormControl(''),
-    overrideReason: new FormControl(''),
-    approvalReason: new FormControl(''),
   });
 
   readonly statusKey = computed(() => `SHOPMGMT.APPOINTMENT_STATUS.${this.appointment()?.status ?? ''}`);
+  /**
+   * The route is gated on `appointmentReschedule` (shopmgmt.routes.ts), but a route permission
+   * never substitutes for the control-and-method write gate the endpoint itself enforces
+   * (ADR-0040 §6a) — checked again here and in `submit()`.
+   */
+  readonly canReschedule = computed(
+    () => !this.auth.permissionsKnown() || this.auth.hasAnyPermission(SHOPMGMT_PAGE.appointmentReschedule),
+  );
 
   get isSubmitDisabled(): boolean {
-    return this.form.invalid || this.submitLoading() || this.hasHardConflict();
+    return this.form.invalid || this.submitLoading() || this.hasHardConflict() || !this.canReschedule();
   }
 
   constructor() {
@@ -88,26 +95,31 @@ export class AppointmentReschedulePageComponent {
           this.errorKey.set(null);
           this.appointment.set(null);
           this.facilityName.set(undefined);
-          return this.appointmentService.getAppointment(id);
+          // A load failure must not terminate this outer stream (switchMap unsubscribes/completes
+          // on an upstream error) — catch it inside the inner observable so a later :id still
+          // issues its own getAppointment (ADR-0063 §1).
+          return this.appointmentService.getAppointment(id).pipe(
+            map(appt => ({ id, appt, error: null as HttpErrorResponse | null })),
+            catchError((err: HttpErrorResponse) => of({ id, appt: null as AppointmentDetail | null, error: err })),
+          );
         }),
         takeUntilDestroyed(this.destroyRef),
       )
-      .subscribe({
-        next: appt => {
-          this.appointment.set(appt);
-          this.state.set('ready');
-          this.prefill(appt);
-          this.loadFacilityName(this.appointmentId(), appt.facilityId);
-        },
-        error: (err: HttpErrorResponse) => {
+      .subscribe(result => {
+        if (result.error) {
           this.appointment.set(null);
           this.state.set('error'); // ADR-0031 §5 — state first, then the key
           this.errorKey.set(
-            err.status === 404
+            result.error.status === 404
               ? 'SHOPMGMT.APPOINTMENT_RESCHEDULE.ERROR.LOAD_NOT_FOUND'
               : 'SHOPMGMT.APPOINTMENT_RESCHEDULE.ERROR.LOAD_DETAILS',
           );
-        },
+          return;
+        }
+        this.appointment.set(result.appt);
+        this.state.set('ready');
+        this.prefill(result.appt!);
+        this.loadFacilityName(result.id, result.appt!.facilityId);
       });
   }
 
@@ -136,6 +148,7 @@ export class AppointmentReschedulePageComponent {
 
   submit(): void {
     if (this.form.invalid) return;
+    if (!this.canReschedule()) return; // ADR-0040 §6a — re-checked, not only gated at the control
     this.submitLoading.set(true);
     this.successMessage.set(null);
     this.submitErrorKey.set(null);
@@ -143,32 +156,36 @@ export class AppointmentReschedulePageComponent {
     this.fieldErrors.set([]);
     this.versionMismatch.set(false);
     this.hasHardConflict.set(false);
-    this.showOverrideReason.set(false);
-    this.showApprovalReason.set(false);
 
+    // Captured at issue time — a route change to another :id while this request is in flight
+    // must not let a late answer paint the wrong appointment (ADR-0063 §1).
+    const id = this.appointmentId();
     const value = this.form.value;
     const body = {
       scheduledStartDateTime: fromDatetimeLocalValue(value.scheduledStartDateTime),
       scheduledEndDateTime: value.scheduledEndDateTime ? fromDatetimeLocalValue(value.scheduledEndDateTime) : undefined,
       reason: value.reason ?? '',
       notes: value.notes || undefined,
-      overrideReason: value.overrideReason || undefined,
-      approvalReason: value.approvalReason || undefined,
     };
 
-    this.appointmentService.rescheduleAppointment(this.appointmentId(), body).subscribe({
-      next: () => {
-        this.submitLoading.set(false);
-        this.successMessage.set('SHOPMGMT.APPOINTMENT_RESCHEDULE.SUCCESS');
-        // What's on screen must match the server afterward (ADR-0063 §5) — re-read rather than
-        // trust the pre-reschedule signal the form was seeded from.
-        this.refreshAppointment();
-      },
-      error: (err: HttpErrorResponse) => {
-        this.submitLoading.set(false);
-        this.handleError(err);
-      },
-    });
+    this.appointmentService
+      .rescheduleAppointment(id, body)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          if (id !== this.appointmentId()) return;
+          this.submitLoading.set(false);
+          this.successMessage.set('SHOPMGMT.APPOINTMENT_RESCHEDULE.SUCCESS');
+          // What's on screen must match the server afterward (ADR-0063 §5) — re-read rather than
+          // trust the pre-reschedule signal the form was seeded from.
+          this.refreshAppointment(id);
+        },
+        error: (err: HttpErrorResponse) => {
+          if (id !== this.appointmentId()) return;
+          this.submitLoading.set(false);
+          this.handleError(err);
+        },
+      });
   }
 
   private prefill(appt: AppointmentDetail): void {
@@ -178,8 +195,8 @@ export class AppointmentReschedulePageComponent {
     });
   }
 
-  private refreshAppointment(): void {
-    const id = this.appointmentId();
+  /** @param id the appointment id the just-completed submit answered (ADR-0063 §1). */
+  private refreshAppointment(id: string): void {
     this.appointmentService
       .getAppointment(id)
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -190,9 +207,15 @@ export class AppointmentReschedulePageComponent {
           this.prefill(appt);
           this.loadFacilityName(id, appt.facilityId);
         },
-        // The success banner already says the reschedule went through; a failed re-read keeps
-        // the last known state rather than surfacing a second, unrelated error.
-        error: () => undefined,
+        error: () => {
+          if (id !== this.appointmentId()) return;
+          // The reschedule itself succeeded, but this page can no longer show what the server now
+          // holds — leaving the success banner up over the stale pre-reschedule form would
+          // contradict the server (ADR-0063 §5, ADR-0064 §1). Withdraw the success claim and
+          // surface a distinct, localized readback failure instead of swallowing it.
+          this.successMessage.set(null);
+          this.submitErrorKey.set('SHOPMGMT.APPOINTMENT_RESCHEDULE.ERROR.READBACK_FAILED');
+        },
       });
   }
 
@@ -218,32 +241,32 @@ export class AppointmentReschedulePageComponent {
         return;
       }
       const conflictList: Conflict[] = body?.conflicts ?? [];
-      this.conflicts.set(conflictList);
-      this.suggestedAlternatives.set(body?.suggestedAlternatives ?? []);
-      const hasHard = conflictList.some(c => c.severity === 'HARD');
-      this.hasHardConflict.set(hasHard);
-      if (!hasHard) {
-        this.showOverrideReason.set(true);
-      }
-      return;
-    }
-    if (err.status === 422) {
-      const body = err.error as { requiresApproval?: boolean } | null;
-      if (body?.requiresApproval) {
-        this.showApprovalReason.set(true);
+      if (conflictList.length === 0) {
+        // A non-VERSION_MISMATCH 409 with an empty envelope is still a real failure; the
+        // template only renders the conflict panel when conflicts().length > 0, so an empty
+        // list here must not be silent (ADR-0064).
+        this.submitErrorKey.set('SHOPMGMT.APPOINTMENT_RESCHEDULE.ERROR.SUBMIT_FAILED');
         return;
       }
-      // A 422 without the approval hint was previously silent (issue #333) — same generic
-      // fallback as any other unhandled outcome.
-      this.submitErrorKey.set('SHOPMGMT.APPOINTMENT_RESCHEDULE.ERROR.SUBMIT_FAILED');
+      this.conflicts.set(conflictList);
+      this.suggestedAlternatives.set(body?.suggestedAlternatives ?? []);
+      this.hasHardConflict.set(conflictList.some(c => c.severity === 'HARD'));
       return;
     }
     if (err.status === 400) {
       const body = err.error as { fieldErrors?: FieldError[] } | null;
-      this.fieldErrors.set(body?.fieldErrors ?? []);
+      const fieldErrorList = body?.fieldErrors ?? [];
+      this.fieldErrors.set(fieldErrorList);
+      // A field error only renders when a control maps to it (fieldErrorKeyFor); an empty list,
+      // or one naming only fields this form doesn't carry, is otherwise silent despite the
+      // page's every-non-2xx requirement (ADR-0031/ADR-0064) — fall back to the generic key.
+      const hasDisplayable = fieldErrorList.some(fe => BACKEND_FIELD_TO_CONTROL[fe.field] !== undefined);
+      if (!hasDisplayable) {
+        this.submitErrorKey.set('SHOPMGMT.APPOINTMENT_RESCHEDULE.ERROR.SUBMIT_FAILED');
+      }
       return;
     }
-    // 403, 404, 5xx and network failures all cleared submitLoading and showed nothing before
+    // 403, 404, 422, 5xx and network failures all cleared submitLoading and showed nothing before
     // (issue #333) — every one now produces a visible, localized message.
     this.submitErrorKey.set('SHOPMGMT.APPOINTMENT_RESCHEDULE.ERROR.SUBMIT_FAILED');
   }

@@ -18,24 +18,30 @@
  *   11. renders .hard-conflict items inside the conflict panel (localized, not server prose)
  *   12. renders .soft-conflict items inside the conflict panel
  *   13. shows .suggested-slots when suggestedAlternatives present, as fillable buttons
- *   14. shows .override-reason-field when only soft conflicts and override permitted
+ *   14. shows .conflict-panel for a SOFT-only 409 with no dead-end override input (#359 review)
  *   15. submit is disabled when a HARD conflict exists (no override allowed)
- *   16. shows .approval-reason-field when 422 + policy approval hint returned
+ *   16. shows the generic submit error on a 422 approval hint, no dead-end reason input (#359 review)
  *   17. keeps form state on 409 VERSION_MISMATCH (prompts reload)
  *   18. maps 400 fieldErrors to inline .field-error messages attached via aria-describedby
+ *       18b. falls back to the generic submit error when a 400/409 has no displayable outcome
  *   19. shows a visible, localized message on 403 / 404 / 5xx submit outcomes (previously silent)
  *   20. shows a visible message on 422 without requiresApproval (previously silent)
  *   21. renders a load-error state via state()/errorKey() and hides the form
+ *       21b. recovers on a later :id after a load error (ADR-0063 §1)
  *   22. shows the current appointment schedule and pre-fills the form
+ *   23. write-permission gating — control disabled + submit() refuses (ADR-0040 §6a)
+ *   24. withdraws success and surfaces a readback failure when the post-submit re-read fails
+ *   25. ignores a stale reschedule response after the route moves to another :id
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { provideRouter, ActivatedRoute } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { Subject, of, throwError } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { By } from '@angular/platform-browser';
 import { AppointmentReschedulePageComponent } from './appointment-reschedule-page.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { AuthService } from '../../../../core/services/auth.service';
 import { AppointmentService } from '../../services/appointment.service';
 
 // ---------------------------------------------------------------------------
@@ -92,6 +98,18 @@ const appointmentServiceStub = {
   viewSchedule: vi.fn(),
 };
 
+/** Permissions known and the write authority held, unless a test narrows it (ADR-0040 §6a). */
+const authStub = {
+  known: true,
+  granted: ['appointments:reschedule'] as readonly string[],
+  permissionsKnown(): boolean {
+    return this.known;
+  },
+  hasAnyPermission(required: readonly string[]): boolean {
+    return required.some(code => this.granted.includes(code));
+  },
+};
+
 // ---------------------------------------------------------------------------
 // Suite
 // ---------------------------------------------------------------------------
@@ -111,6 +129,7 @@ describe('AppointmentReschedulePageComponent [CAP-249/#333]', () => {
       providers: [
         provideRouter([]),
         { provide: AppointmentService, useValue: appointmentServiceStub },
+        { provide: AuthService, useValue: authStub },
         { provide: ActivatedRoute, useValue: { params: of({ id: 'appt-1' }) } },
       ],
     }).compileComponents();
@@ -121,6 +140,8 @@ describe('AppointmentReschedulePageComponent [CAP-249/#333]', () => {
 
   afterEach(() => {
     vi.clearAllMocks();
+    authStub.known = true;
+    authStub.granted = ['appointments:reschedule'];
     TestBed.resetTestingModule();
   });
 
@@ -304,7 +325,7 @@ describe('AppointmentReschedulePageComponent [CAP-249/#333]', () => {
 
   // 14 ────────────────────────────────────────────────────────────────────
 
-  it('shows .override-reason-field when only soft conflicts are present and override is permitted', () => {
+  it('shows the .conflict-panel for a SOFT-only 409 without a dead-end override input (#359 review — no SDK field carries it)', () => {
     appointmentServiceStub.rescheduleAppointment.mockReturnValueOnce(
       throwError(() => new HttpErrorResponse({ status: 409, error: CONFLICT_PAYLOAD_SOFT })),
     );
@@ -315,8 +336,11 @@ describe('AppointmentReschedulePageComponent [CAP-249/#333]', () => {
     component.submit();
     fixture.detectChanges();
 
-    const el = fixture.debugElement.query(By.css('.override-reason-field'));
-    expect(el).toBeTruthy();
+    expect(fixture.debugElement.query(By.css('.conflict-panel'))).toBeTruthy();
+    // `overrideReason` never reached the SDK's RescheduleAppointmentRequest — resubmitting it
+    // would silently re-send the same request, so the field was removed rather than left to lie.
+    expect(fixture.debugElement.query(By.css('.override-reason-field'))).toBeNull();
+    expect(fixture.nativeElement.querySelector('textarea[name="overrideReason"]')).toBeNull();
   });
 
   // 15 ────────────────────────────────────────────────────────────────────
@@ -338,7 +362,7 @@ describe('AppointmentReschedulePageComponent [CAP-249/#333]', () => {
 
   // 16 ────────────────────────────────────────────────────────────────────
 
-  it('shows .approval-reason-field when 422 response contains a policy approval hint', () => {
+  it('shows the generic localized submit error on a 422 approval hint, without a dead-end reason input (#359 review — no SDK field carries it)', () => {
     appointmentServiceStub.rescheduleAppointment.mockReturnValueOnce(
       throwError(() => new HttpErrorResponse({
         status: 422,
@@ -352,8 +376,10 @@ describe('AppointmentReschedulePageComponent [CAP-249/#333]', () => {
     component.submit();
     fixture.detectChanges();
 
-    const el = fixture.debugElement.query(By.css('.approval-reason-field'));
-    expect(el).toBeTruthy();
+    expect(component.submitErrorKey()).toBe('SHOPMGMT.APPOINTMENT_RESCHEDULE.ERROR.SUBMIT_FAILED');
+    expect(fixture.debugElement.query(By.css('.error-banner'))).toBeTruthy();
+    expect(fixture.debugElement.query(By.css('.approval-reason-field'))).toBeNull();
+    expect(fixture.nativeElement.querySelector('textarea[name="approvalReason"]')).toBeNull();
   });
 
   // 17 ────────────────────────────────────────────────────────────────────
@@ -411,6 +437,60 @@ describe('AppointmentReschedulePageComponent [CAP-249/#333]', () => {
     expect(input.getAttribute('aria-describedby')).toBe('scheduledStartDateTime-error');
   });
 
+  // 18b ───────────────────────────────────────────────────────────────────
+
+  it('falls back to the generic submit error on a 400 with no fieldErrors at all', () => {
+    appointmentServiceStub.rescheduleAppointment.mockReturnValueOnce(
+      throwError(() => new HttpErrorResponse({ status: 400, error: { code: 'VALIDATION_ERROR', message: 'Invalid input' } })),
+    );
+    fixture.detectChanges();
+    fixture.detectChanges();
+
+    component.form.patchValue(VALID_FORM_VALUES);
+    component.submit();
+    fixture.detectChanges();
+
+    expect(fixture.debugElement.query(By.css('.field-error'))).toBeNull();
+    expect(component.submitErrorKey()).toBe('SHOPMGMT.APPOINTMENT_RESCHEDULE.ERROR.SUBMIT_FAILED');
+    expect(fixture.debugElement.query(By.css('.error-banner'))).toBeTruthy();
+  });
+
+  it('falls back to the generic submit error on a 400 naming only a field this form does not carry', () => {
+    appointmentServiceStub.rescheduleAppointment.mockReturnValueOnce(
+      throwError(() => new HttpErrorResponse({
+        status: 400,
+        error: { code: 'VALIDATION_ERROR', fieldErrors: [{ field: 'someUnmappedField', message: 'Unrecognized' }] },
+      })),
+    );
+    fixture.detectChanges();
+    fixture.detectChanges();
+
+    component.form.patchValue(VALID_FORM_VALUES);
+    component.submit();
+    fixture.detectChanges();
+
+    expect(fixture.debugElement.query(By.css('.field-error'))).toBeNull();
+    expect(component.submitErrorKey()).toBe('SHOPMGMT.APPOINTMENT_RESCHEDULE.ERROR.SUBMIT_FAILED');
+  });
+
+  it('falls back to the generic submit error on a non-VERSION_MISMATCH 409 with an empty conflicts envelope', () => {
+    appointmentServiceStub.rescheduleAppointment.mockReturnValueOnce(
+      throwError(() => new HttpErrorResponse({ status: 409, error: { code: 'SOME_OTHER_CODE', conflicts: [] } })),
+    );
+    fixture.detectChanges();
+    fixture.detectChanges();
+
+    component.form.patchValue(VALID_FORM_VALUES);
+    component.submit();
+    fixture.detectChanges();
+
+    // The template only renders .conflict-panel when conflicts().length > 0 — this outcome must
+    // not be silent (ADR-0064).
+    expect(fixture.debugElement.query(By.css('.conflict-panel'))).toBeNull();
+    expect(component.submitErrorKey()).toBe('SHOPMGMT.APPOINTMENT_RESCHEDULE.ERROR.SUBMIT_FAILED');
+    expect(fixture.debugElement.query(By.css('.error-banner'))).toBeTruthy();
+  });
+
   // 19 ────────────────────────────────────────────────────────────────────
 
   it.each([403, 404, 500, 503])(
@@ -463,6 +543,7 @@ describe('AppointmentReschedulePageComponent [CAP-249/#333]', () => {
       providers: [
         provideRouter([]),
         { provide: AppointmentService, useValue: appointmentServiceStub },
+        { provide: AuthService, useValue: authStub },
         { provide: ActivatedRoute, useValue: { params: of({ id: 'appt-1' }) } },
       ],
     }).compileComponents();
@@ -475,6 +556,38 @@ describe('AppointmentReschedulePageComponent [CAP-249/#333]', () => {
     expect(component.errorKey()).toBe('SHOPMGMT.APPOINTMENT_RESCHEDULE.ERROR.LOAD_NOT_FOUND');
     expect(fixture.debugElement.query(By.css('.load-error'))).toBeTruthy();
     expect(fixture.nativeElement.querySelector('form')).toBeNull();
+  });
+
+  // 21b ───────────────────────────────────────────────────────────────────
+
+  it('recovers on a later :id after a load error instead of leaving the outer route stream dead (ADR-0063 §1)', async () => {
+    const params$ = new Subject<{ id: string }>();
+    appointmentServiceStub.getAppointment.mockReturnValueOnce(throwError(() => new HttpErrorResponse({ status: 404 })));
+
+    TestBed.resetTestingModule();
+    await TestBed.configureTestingModule({
+      imports: [AppointmentReschedulePageComponent, TranslateModule.forRoot()],
+      providers: [
+        provideRouter([]),
+        { provide: AppointmentService, useValue: appointmentServiceStub },
+        { provide: AuthService, useValue: authStub },
+        { provide: ActivatedRoute, useValue: { params: params$ } },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(AppointmentReschedulePageComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+    params$.next({ id: 'appt-1' });
+    fixture.detectChanges();
+    expect(component.state()).toBe('error');
+
+    appointmentServiceStub.getAppointment.mockReturnValueOnce(of(STUB_APPOINTMENT));
+    params$.next({ id: 'appt-2' });
+    fixture.detectChanges();
+
+    expect(appointmentServiceStub.getAppointment).toHaveBeenCalledWith('appt-2');
+    expect(component.state()).toBe('ready');
   });
 
   // 22 ────────────────────────────────────────────────────────────────────
@@ -490,5 +603,94 @@ describe('AppointmentReschedulePageComponent [CAP-249/#333]', () => {
 
     expect(component.form.value.scheduledStartDateTime).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/);
     expect(component.form.value.scheduledEndDateTime).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/);
+  });
+
+  // 23 ────────────────────────────────────────────────────────────────────
+  // Write-permission gating (ADR-0040 §6a) — the route is gated on appointmentReschedule too,
+  // but a route permission never substitutes for the control-and-method write gate.
+
+  it('disables the submit control and refuses submit() when appointments:reschedule is not granted', () => {
+    authStub.granted = [];
+    fixture.detectChanges();
+    fixture.detectChanges();
+
+    const btn: HTMLButtonElement | null = fixture.nativeElement.querySelector('button[type="submit"]');
+    expect(btn?.disabled).toBe(true);
+
+    component.form.patchValue(VALID_FORM_VALUES);
+    component.submit();
+    expect(appointmentServiceStub.rescheduleAppointment).not.toHaveBeenCalled();
+  });
+
+  it('treats unknown permissions (legacy token, no perm_bits claim) as granted, matching canAccess()', () => {
+    authStub.known = false;
+    authStub.granted = [];
+    fixture.detectChanges();
+    fixture.detectChanges();
+
+    expect(component.canReschedule()).toBe(true);
+    component.form.patchValue(VALID_FORM_VALUES);
+    fixture.detectChanges();
+    const btn: HTMLButtonElement | null = fixture.nativeElement.querySelector('button[type="submit"]');
+    expect(btn?.disabled).toBe(false);
+  });
+
+  // 24 ────────────────────────────────────────────────────────────────────
+
+  it('withdraws the success banner and surfaces a localized readback failure when the post-submit re-read fails (ADR-0063 §5, ADR-0064 §1)', () => {
+    fixture.detectChanges();
+    fixture.detectChanges();
+
+    appointmentServiceStub.getAppointment.mockReturnValueOnce(throwError(() => new HttpErrorResponse({ status: 500 })));
+    component.form.patchValue(VALID_FORM_VALUES);
+    component.submit();
+    fixture.detectChanges();
+
+    expect(component.successMessage()).toBeNull();
+    expect(fixture.debugElement.query(By.css('.success-banner'))).toBeNull();
+    expect(component.submitErrorKey()).toBe('SHOPMGMT.APPOINTMENT_RESCHEDULE.ERROR.READBACK_FAILED');
+  });
+
+  // 25 ────────────────────────────────────────────────────────────────────
+
+  it('ignores a stale reschedule response after the route moves to another :id before it lands (ADR-0063 §1)', async () => {
+    const reschedule$ = new Subject<typeof STUB_APPOINTMENT>();
+    const params$ = new Subject<{ id: string }>();
+    appointmentServiceStub.rescheduleAppointment.mockReturnValueOnce(reschedule$);
+
+    TestBed.resetTestingModule();
+    await TestBed.configureTestingModule({
+      imports: [AppointmentReschedulePageComponent, TranslateModule.forRoot()],
+      providers: [
+        provideRouter([]),
+        { provide: AppointmentService, useValue: appointmentServiceStub },
+        { provide: AuthService, useValue: authStub },
+        { provide: ActivatedRoute, useValue: { params: params$ } },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(AppointmentReschedulePageComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+    params$.next({ id: 'appt-1' });
+    fixture.detectChanges();
+
+    component.form.patchValue(VALID_FORM_VALUES);
+    component.submit();
+
+    // The route moves to a different appointment while the reschedule request is still in flight.
+    appointmentServiceStub.getAppointment.mockReturnValueOnce(
+      of({ ...STUB_APPOINTMENT, appointmentId: 'appt-2', status: 'SCHEDULED' }),
+    );
+    params$.next({ id: 'appt-2' });
+    fixture.detectChanges();
+
+    // The stale request for appt-1 now answers; it must not touch appt-2's page.
+    reschedule$.next({ ...STUB_APPOINTMENT, appointmentId: 'appt-1' });
+    reschedule$.complete();
+    fixture.detectChanges();
+
+    expect(component.successMessage()).toBeNull();
+    expect(component.appointment()?.appointmentId).toBe('appt-2');
   });
 });

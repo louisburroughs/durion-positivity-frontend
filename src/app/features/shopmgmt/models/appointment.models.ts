@@ -105,13 +105,17 @@ export interface ConflictPayload {
   suggestedAlternatives?: TimeSlot[];
 }
 
+/**
+ * `overrideReason`/`approvalReason` were removed (durion-positivity-frontend#359 review): the
+ * generated `RescheduleAppointmentRequest` (`@durion-sdk/shop-manager`) has no such fields, so a
+ * value collected here could never reach the server — accepting a recorded SOFT conflict goes
+ * through the separate `executeOverride` call instead (`appointment-conflict-override-page`).
+ */
 export interface RescheduleRequest {
   scheduledStartDateTime: string;
   scheduledEndDateTime?: string;
   reason: string;
   notes?: string;
-  overrideReason?: string;
-  approvalReason?: string;
   overrideSoftConflicts?: boolean;
   clientRequestId?: string;
 }
