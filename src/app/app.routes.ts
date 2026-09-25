@@ -12,6 +12,7 @@ import {
   PEOPLE_PERMISSIONS,
   PLATFORM_PERMISSIONS,
   PRODUCT_PERMISSIONS,
+  SECURITY_PAGE,
   SHOPMGMT_PERMISSIONS,
   WORKEXEC_PERMISSIONS,
 } from './core/security/route-permissions';
@@ -158,6 +159,22 @@ export const routes: Routes = [
         data: { roles: ['ROLE_ADMIN'] },
         loadChildren: () =>
           import('./features/security/security.routes').then(m => m.SECURITY_ROUTES),
+      },
+      // Not a child of the 'security' route above: that group is gated on
+      // ROLE_ADMIN, but this page's access has always been permission-based
+      // (previously reachable at /app/inventory/security/permissions, inside
+      // the /app/inventory permission gate). The page's *code* moved under
+      // features/security (#347: it administers the security permission
+      // registry, filtered to inventory-tagged codes), but nesting its route
+      // under the ROLE_ADMIN-gated group as well would have silently required
+      // ROLE_ADMIN too — narrower than before. This sibling entry keeps the
+      // same canonical URL and the original permission-only gate.
+      {
+        path: 'security/inventory-permissions',
+        data: { permissions: SECURITY_PAGE.permissions },
+        loadComponent: () =>
+          import('./features/security/pages/inventory-security-admin/inventory-security-admin-page.component')
+            .then(m => m.InventorySecurityAdminPageComponent),
       },
       {
         path: 'shopmgmt',

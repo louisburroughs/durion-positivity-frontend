@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { Route, Routes } from '@angular/router';
 
+import { routes as APP_ROUTES } from '../../app.routes';
 import { ACCOUNTING_ROUTES } from '../../features/accounting/accounting.routes';
 import { ADMIN_ROUTES } from '../../features/admin/admin.routes';
 import { BILLING_ROUTES } from '../../features/billing/billing.routes';
@@ -73,6 +74,20 @@ interface GroupUnderTest {
   readonly groupPermissions?: readonly string[];
 }
 
+/**
+ * inventory-permissions lives with the security feature's code (#347), but its
+ * route is a standalone sibling of 'security' in app.routes.ts, not a child of
+ * SECURITY_ROUTES — it keeps the permission-only gate it had at its old
+ * /app/inventory/security/permissions URL instead of picking up /app/security's
+ * ROLE_ADMIN group gate. Pulled straight from app.routes.ts so this file checks
+ * the same route object the router uses, and so the inventory landing card that
+ * still points at it isn't flagged as dangling.
+ */
+const INVENTORY_PERMISSIONS_ROUTES: Routes =
+  (APP_ROUTES.find(route => route.path === 'app')?.children ?? []).filter(
+    route => route.path === 'security/inventory-permissions',
+  );
+
 const GROUPS: readonly GroupUnderTest[] = [
   { name: '/app/inventory', base: '/app/inventory', routes: INVENTORY_ROUTES, groupPermissions: INVENTORY_PERMISSIONS },
   { name: '/app/accounting', base: '/app/accounting', routes: ACCOUNTING_ROUTES, groupPermissions: ACCOUNTING_PERMISSIONS },
@@ -88,6 +103,8 @@ const GROUPS: readonly GroupUnderTest[] = [
   // Role-gated groups: the mount point carries `roles: ['ROLE_ADMIN']`, so there
   // is no group permission set for a page gate to sit inside.
   { name: '/app/security', base: '/app/security', routes: SECURITY_ROUTES },
+  // Permission-gated standalone route; see INVENTORY_PERMISSIONS_ROUTES above.
+  { name: '/app/security/inventory-permissions', base: '/app', routes: INVENTORY_PERMISSIONS_ROUTES },
   { name: '/app/positivity', base: '/app/positivity', routes: POSITIVITY_ROUTES },
   { name: '/app/admin', base: '/app/admin', routes: ADMIN_ROUTES },
   // Gated on platform:* (roles fallback ROLE_PLATFORM_ADMIN); pages narrow to
