@@ -1,54 +1,55 @@
 <div class="page-header">
   <h2>{{ 'SHOPMGMT.APPOINTMENT_EDIT.TITLE' | translate }}</h2>
-  @if (appointment()) {
-    <span class="appt-id">{{ appointment()!.appointmentId }}</span>
-  }
 </div>
 
-@if (loading()) {
+@if (state() === 'loading' || state() === 'idle') {
   <div class="loading-state">{{ 'COMMON.LOADING' | translate }}</div>
 }
 
-@if (!loading()) {
+@if (state() === 'error') {
+  <div class="error-banner load-error" role="alert">{{ errorKey()! | translate }}</div>
+}
+
+@if (state() === 'ready') {
   @if (rescheduleSuccess()) {
     <div class="success-banner">{{ 'SHOPMGMT.APPOINTMENT_EDIT.RESCHEDULE_SUCCESS' | translate }}</div>
   }
   @if (cancelSuccess()) {
     <div class="success-banner">{{ 'SHOPMGMT.APPOINTMENT_EDIT.CANCEL_SUCCESS' | translate }}</div>
   }
-  @if (appointment()) {
+  @if (appointment(); as appt) {
     <div class="appointment-summary">
       <div class="summary-row">
-        <span class="label">{{ 'SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.STATUS' | translate }}</span>
-        <span class="value status-badge">{{ appointment()!.status }}</span>
+        <span class="label">{{ 'SHOPMGMT.APPOINTMENT_EDIT.STATUS' | translate }}</span>
+        <span class="value status-badge">{{ statusKey() | translate }}</span>
       </div>
-      @if (appointment()!.scheduledStart) {
+      @if (appt.scheduledStart) {
         <div class="summary-row">
           <span class="label">{{ 'SHOPMGMT.APPOINTMENT_CREATE.SCHEDULED_START' | translate }}</span>
-          <span class="value">{{ appointment()!.scheduledStart }}</span>
+          <span class="value">{{ appt.scheduledStart | date: 'medium' }}</span>
         </div>
       }
-      @if (appointment()!.scheduledEnd) {
+      @if (appt.scheduledEnd) {
         <div class="summary-row">
           <span class="label">{{ 'SHOPMGMT.APPOINTMENT_CREATE.SCHEDULED_END' | translate }}</span>
-          <span class="value">{{ appointment()!.scheduledEnd }}</span>
+          <span class="value">{{ appt.scheduledEnd | date: 'medium' }}</span>
         </div>
       }
       <div class="summary-row">
-        <span class="label">{{ 'SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.FACILITY' | translate }}</span>
-        <span class="value">{{ appointment()!.facilityId }}</span>
+        <span class="label">{{ 'SHOPMGMT.APPOINTMENT_EDIT.FACILITY' | translate }}</span>
+        <span class="value">{{ facilityName() ?? ('COMMON.NOT_AVAILABLE' | translate) }}</span>
       </div>
     </div>
   }
   <div class="actions-row">
-    @if (canModify) {
-      <button class="btn-primary" (click)="openReschedule()">{{ 'SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.RESCHEDULE' | translate }}</button>
+    @if (canModify()) {
+      <button class="btn-primary" (click)="openReschedule()">{{ 'SHOPMGMT.APPOINTMENT_EDIT.RESCHEDULE' | translate }}</button>
       <button class="btn-danger" (click)="openCancel()">{{ 'SHOPMGMT.APPOINTMENT_EDIT.CANCEL_APPOINTMENT' | translate }}</button>
     } @else {
-      <button class="btn-primary" disabled>{{ 'SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.RESCHEDULE' | translate }}</button>
+      <button class="btn-primary" disabled>{{ 'SHOPMGMT.APPOINTMENT_EDIT.RESCHEDULE' | translate }}</button>
       <button class="btn-danger" disabled>{{ 'SHOPMGMT.APPOINTMENT_EDIT.CANCEL_APPOINTMENT' | translate }}</button>
       <span class="actions-helper-text">
-        {{ 'SHOPMGMT.APPOINTMENT_EDIT.CANNOT_MODIFY' | translate: { status: appointment()?.status } }}
+        {{ 'SHOPMGMT.APPOINTMENT_EDIT.CANNOT_MODIFY' | translate: { status: (statusKey() | translate) } }}
       </span>
     }
   </div>
@@ -64,12 +65,12 @@
         @if (auditEntries().length === 0) {
           <div class="audit-empty">{{ 'SHOPMGMT.APPOINTMENT_EDIT.AUDIT_EMPTY' | translate }}</div>
         }
-        @for (entry of auditEntries(); track entry) {
+        @for (entry of auditEntries(); track entry.id) {
           <div class="audit-entry">
-            <span class="audit-timestamp">{{ entry.timestamp }}</span>
-            <span class="audit-actor">{{ entry.actor }}</span>
-            <span class="audit-action">{{ entry.action }}</span>
-            <span class="audit-details">{{ entry.details }}</span>
+            <span class="audit-timestamp">{{ entry.recordedAt | date: 'medium' }}</span>
+            <span class="audit-actor">{{ 'COMMON.NOT_AVAILABLE' | translate }}</span>
+            <span class="audit-action">{{ 'SHOPMGMT.APPOINTMENT_EDIT.AUDIT_EVENT.' + entry.eventType | translate }}</span>
+            <span class="audit-details">{{ entry.changeSummaryText }}</span>
           </div>
         }
       </div>
@@ -94,21 +95,21 @@
           <input id="rsEnd" name="scheduledEndDateTime" type="datetime-local" formControlName="scheduledEndDateTime" />
         </div>
         <div class="form-group">
-          <label for="rsReason">{{ 'SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.REASON' | translate }}</label>
+          <label for="rsReason">{{ 'SHOPMGMT.APPOINTMENT_EDIT.REASON' | translate }}</label>
           <input id="rsReason" name="reason" type="text" formControlName="reason" />
         </div>
-        @if (rescheduleError()) {
-          <div class="error-banner">{{ rescheduleError()! | translate }}</div>
+        @if (rescheduleErrorKey()) {
+          <div class="error-banner" role="alert">{{ rescheduleErrorKey()! | translate }}</div>
         }
         @if (rescheduleConflicts().length > 0) {
           <div class="conflict-panel">
-            @for (c of rescheduleConflicts(); track c) {
+            @for (c of rescheduleConflicts(); track c.code) {
               <div>
                 @if (c.severity === 'HARD') {
-                  <div class="hard-conflict">{{ c.message }}</div>
+                  <div class="hard-conflict">{{ conflictKey(c.code) | translate }}</div>
                 }
                 @if (c.severity === 'SOFT') {
-                  <div class="soft-conflict">{{ c.message }}</div>
+                  <div class="soft-conflict">{{ conflictKey(c.code) | translate }}</div>
                 }
               </div>
             }
@@ -145,8 +146,8 @@
           <label for="cancelNotes">{{ 'WORKEXEC.WORKORDER_DETAIL.NOTES_OPTIONAL' | translate }}</label>
           <textarea id="cancelNotes" name="notes" formControlName="notes" rows="3"></textarea>
         </div>
-        @if (cancelError()) {
-          <div class="error-banner">{{ cancelError()! | translate }}</div>
+        @if (cancelErrorKey()) {
+          <div class="error-banner" role="alert">{{ cancelErrorKey()! | translate }}</div>
         }
         <div class="modal-actions">
           <button type="button" class="btn-secondary" (click)="closeCancel()">{{ 'COMMON.BACK' | translate }}</button>

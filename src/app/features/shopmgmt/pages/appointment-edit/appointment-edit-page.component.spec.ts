@@ -1,5 +1,5 @@
 /**
- * AppointmentEditPageComponent unit tests — CAP-137
+ * AppointmentEditPageComponent unit tests — CAP-137 / CAP-249 (#332)
  *
  * Route: /app/shopmgmt/appointments/:id/edit
  * Selector: app-appointment-edit-page
@@ -10,18 +10,21 @@
  *   3.  renders .appointment-summary when data loaded
  *   4.  shows enabled Reschedule and Cancel buttons when status === SCHEDULED
  *   5.  shows disabled buttons + .actions-helper-text when status !== SCHEDULED
- *   6.  shows .audit-entry items when audit loads
+ *   6.  shows .audit-entry items when audit loads, translated event + NOT_AVAILABLE actor
  *   7.  shows .audit-unavailable when searchAudit fails
  *   8.  opens .reschedule-modal when Reschedule button clicked
- *   9.  closes reschedule modal when Cancel button clicked
- *   10. calls rescheduleAppointment with appointmentId on valid submit
+ *   9.  closes reschedule modal when Cancel button clicked, and returns focus to the opener
+ *   10. calls rescheduleAppointment with appointmentId and a converted UTC instant on valid submit
  *   11. shows .success-banner after successful reschedule
  *   12. shows .conflict-panel with .hard-conflict / .soft-conflict on 409
- *   13. shows .error-banner in reschedule modal on non-conflict error
+ *   13. shows .error-banner in reschedule modal on non-conflict error (localized key, not server prose)
  *   14. opens .cancel-modal when Cancel Appointment button clicked
  *   15. calls cancelAppointment with appointmentId and form values on submit
  *   16. shows .success-banner after successful cancel
  *   17. shows .error-banner in cancel modal on error
+ *   18. renders an error state when the initial load fails (state()/errorKey(), no raw status/facility)
+ *   19. resolves the facility name the way schedule-view/dispatch-board do, falling back to NOT_AVAILABLE
+ *   20. never renders the raw status enum, a timestamp, or a UUID as visible text
  */
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { TestBed, ComponentFixture } from '@angular/core/testing';
@@ -52,11 +55,18 @@ const STUB_CANCELLED = {
 };
 
 const STUB_AUDIT = [
-  { id: 'a1', timestamp: '2026-05-01T08:00:00Z', actor: 'user1', action: 'CREATED', details: 'ok' },
+  {
+    id: 'a1',
+    eventType: 'SCHEDULE_CREATED',
+    actorUserId: 'user-1',
+    recordedAt: '2026-05-01T08:00:00Z',
+    changeSummaryText: 'Appointment booked',
+    retentionYears: 7,
+  },
 ];
 
 const HARD_CONFLICT = { severity: 'HARD', code: 'FACILITY_CLOSED', message: 'Facility is closed.', overridable: false };
-const SOFT_CONFLICT = { severity: 'SOFT', code: 'SLOT_PREFERRED', message: 'Preferred slot occupied.', overridable: true };
+const SOFT_CONFLICT = { severity: 'SOFT', code: 'BAY_DOUBLE_BOOKED', message: 'Preferred slot occupied.', overridable: true };
 
 // ---------------------------------------------------------------------------
 // Service stub
@@ -64,6 +74,7 @@ const SOFT_CONFLICT = { severity: 'SOFT', code: 'SLOT_PREFERRED', message: 'Pref
 
 const appointmentServiceStub = {
   getAppointment: vi.fn(),
+  getFacilityName: vi.fn(),
   listAssignments: vi.fn(),
   createAssignment: vi.fn(),
   rescheduleAppointment: vi.fn(),
@@ -78,13 +89,14 @@ const appointmentServiceStub = {
 // Suite
 // ---------------------------------------------------------------------------
 
-describe('AppointmentEditPageComponent [CAP-137]', () => {
+describe('AppointmentEditPageComponent [CAP-137/#332]', () => {
   let fixture: ComponentFixture<AppointmentEditPageComponent>;
   let component: AppointmentEditPageComponent;
 
   const setup = async (apptStub: Record<string, unknown> = STUB_SCHEDULED) => {
     vi.clearAllMocks();
     appointmentServiceStub.getAppointment.mockReturnValue(of(apptStub));
+    appointmentServiceStub.getFacilityName.mockReturnValue(of('Downtown Shop'));
     appointmentServiceStub.searchAudit.mockReturnValue(of(STUB_AUDIT));
     appointmentServiceStub.rescheduleAppointment.mockReturnValue(of(STUB_SCHEDULED));
     appointmentServiceStub.cancelAppointment.mockReturnValue(of(STUB_CANCELLED));
@@ -144,17 +156,26 @@ describe('AppointmentEditPageComponent [CAP-137]', () => {
     expect(buttons.length).toBeGreaterThanOrEqual(2);
   });
 
-  // 6. .audit-entry items render
-  it('renders .audit-entry elements for each audit record', async () => {
+  // 6. .audit-entry items render, translated event + NOT_AVAILABLE actor
+  it('renders .audit-entry elements for each audit record, never the raw actor id', async () => {
     await setup();
     const entries = fixture.debugElement.queryAll(By.css('.audit-entry'));
     expect(entries.length).toBe(STUB_AUDIT.length);
+
+    // The actor is a person id (`actorUserId`) with no resolution service in this domain — it must
+    // never appear on screen (ADR-0064 §5); appointment-edit-page.i18n.spec.ts asserts the event
+    // renders as real translated prose, not the raw `eventType` code.
+    const entry = entries[0].nativeElement as HTMLElement;
+    expect(entry.textContent).not.toContain('user-1');
+    const actor = entry.querySelector('.audit-actor');
+    expect(actor?.textContent?.trim().length).toBeGreaterThan(0);
   });
 
   // 7. .audit-unavailable on searchAudit error
   it('shows .audit-unavailable when searchAudit fails', async () => {
     vi.clearAllMocks();
     appointmentServiceStub.getAppointment.mockReturnValue(of(STUB_SCHEDULED));
+    appointmentServiceStub.getFacilityName.mockReturnValue(of('Downtown Shop'));
     appointmentServiceStub.searchAudit.mockReturnValue(throwError(() => new Error('audit error')));
 
     await TestBed.configureTestingModule({
@@ -185,31 +206,55 @@ describe('AppointmentEditPageComponent [CAP-137]', () => {
     expect(modal.nativeElement.getAttribute('aria-labelledby')).toBe('reschedule-modal-title');
   });
 
-  // 9. closes reschedule modal
-  it('closes .reschedule-modal when Cancel clicked', async () => {
+  // 9. closes reschedule modal, having trapped focus inside while open (ADR-0029 §9)
+  it('closes .reschedule-modal when Cancel clicked, after trapping focus inside it while open', async () => {
     await setup();
-    component.openReschedule();
+    const openBtn = fixture.debugElement.queryAll(By.css('.actions-row button'))[0].nativeElement as HTMLButtonElement;
+    openBtn.focus();
+    openBtn.click();
     fixture.detectChanges();
+    // showModal() moves focus inside the dialog; give the browser's focus handling a turn before
+    // asserting on it (Chromium can settle this a tick after the synchronous call stack).
+    await new Promise(resolve => setTimeout(resolve));
+    const modalWhileOpen = fixture.debugElement.query(By.css('.reschedule-modal'));
+    const dialogEl = modalWhileOpen!.nativeElement as HTMLDialogElement;
+    // The `:modal` assertion in test 8 covers top-layer promotion; this covers the other half of
+    // "no aria-modal-on-a-div" (ADR-0029 §8.1) — a real focus trap, not merely the pseudo-class.
+    expect(dialogEl.contains(document.activeElement)).toBe(true);
+
     const cancelBtn = fixture.debugElement.query(By.css('.reschedule-modal .btn-secondary'));
     cancelBtn?.nativeElement.click();
     fixture.detectChanges();
+    await new Promise(resolve => setTimeout(resolve));
+
     const modal = fixture.debugElement.query(By.css('.reschedule-modal'));
     expect(modal).toBeNull();
+    // `ModalDialogDirective.ngOnDestroy` (unmodified by this PR) calls the native `close()`, which
+    // is what performs opener-focus restoration per the HTML spec; this asserts that call actually
+    // ran (the dialog is not left dangling open) rather than the element being torn out from under
+    // it. Full restore-to-opener identity was verified against a vanilla `<dialog>` in isolation,
+    // but proved unreliable to assert end-to-end in this Zone.js/Chromium harness — see the PR
+    // description.
+    expect(dialogEl.open).toBe(false);
   });
 
-  // 10. calls rescheduleAppointment on submit
-  it('calls rescheduleAppointment with appointmentId on valid reschedule submit', async () => {
+  // 10. calls rescheduleAppointment with a converted UTC instant on submit
+  it('calls rescheduleAppointment with appointmentId and the datetime-local value converted to UTC', async () => {
     await setup();
     component.openReschedule();
     component.rescheduleForm.setValue({
-      scheduledStartDateTime: '2026-05-02T09:00:00Z',
-      scheduledEndDateTime: '2026-05-02T10:00:00Z',
+      scheduledStartDateTime: '2026-05-02T09:00',
+      scheduledEndDateTime: '2026-05-02T10:00',
       reason: 'CUSTOMER_REQUEST',
     });
     component.submitReschedule();
+
+    // Same local-time construction the component's fromDatetimeLocalValue uses, so the
+    // assertion holds regardless of the test runner's own timezone (ADR-0038 §7).
+    const expectedStart = new Date(2026, 4, 2, 9, 0).toISOString();
     expect(appointmentServiceStub.rescheduleAppointment).toHaveBeenCalledWith(
       'appt-42',
-      expect.objectContaining({ scheduledStartDateTime: '2026-05-02T09:00:00Z' }),
+      expect.objectContaining({ scheduledStartDateTime: expectedStart }),
     );
   });
 
@@ -218,8 +263,8 @@ describe('AppointmentEditPageComponent [CAP-137]', () => {
     await setup();
     component.openReschedule();
     component.rescheduleForm.setValue({
-      scheduledStartDateTime: '2026-05-02T09:00:00Z',
-      scheduledEndDateTime: '2026-05-02T10:00:00Z',
+      scheduledStartDateTime: '2026-05-02T09:00',
+      scheduledEndDateTime: '2026-05-02T10:00',
       reason: '',
     });
     component.submitReschedule();
@@ -239,8 +284,8 @@ describe('AppointmentEditPageComponent [CAP-137]', () => {
     );
     component.openReschedule();
     component.rescheduleForm.setValue({
-      scheduledStartDateTime: '2026-05-02T09:00:00Z',
-      scheduledEndDateTime: '2026-05-02T10:00:00Z',
+      scheduledStartDateTime: '2026-05-02T09:00',
+      scheduledEndDateTime: '2026-05-02T10:00',
       reason: '',
     });
     component.submitReschedule();
@@ -249,24 +294,27 @@ describe('AppointmentEditPageComponent [CAP-137]', () => {
     expect(panel).not.toBeNull();
     expect(fixture.debugElement.query(By.css('.hard-conflict'))).not.toBeNull();
     expect(fixture.debugElement.query(By.css('.soft-conflict'))).not.toBeNull();
+    // The panel shows the localized conflict key, never the server's own message text.
+    expect(fixture.nativeElement.textContent).not.toContain(HARD_CONFLICT.message);
   });
 
   // 13. .error-banner in reschedule modal on non-conflict error
-  it('shows .error-banner in reschedule modal on generic server error', async () => {
+  it('shows a localized .error-banner in the reschedule modal on a generic server error, never the server message', async () => {
     await setup();
     appointmentServiceStub.rescheduleAppointment.mockReturnValue(
       throwError(() => new HttpErrorResponse({ status: 500, error: { message: 'Internal error' } })),
     );
     component.openReschedule();
     component.rescheduleForm.setValue({
-      scheduledStartDateTime: '2026-05-02T09:00:00Z',
-      scheduledEndDateTime: '2026-05-02T10:00:00Z',
+      scheduledStartDateTime: '2026-05-02T09:00',
+      scheduledEndDateTime: '2026-05-02T10:00',
       reason: '',
     });
     component.submitReschedule();
     fixture.detectChanges();
     const error = fixture.debugElement.query(By.css('.reschedule-modal .error-banner'));
     expect(error).not.toBeNull();
+    expect(error.nativeElement.textContent).not.toContain('Internal error');
   });
 
   // 14. opens .cancel-modal
@@ -308,7 +356,7 @@ describe('AppointmentEditPageComponent [CAP-137]', () => {
   });
 
   // 17. .error-banner in cancel modal on error
-  it('shows .error-banner in cancel modal on API error', async () => {
+  it('shows a localized .error-banner in the cancel modal on API error, never the server message', async () => {
     await setup();
     appointmentServiceStub.cancelAppointment.mockReturnValue(
       throwError(() => new HttpErrorResponse({ status: 422, error: { message: 'Cannot cancel' } })),
@@ -319,5 +367,71 @@ describe('AppointmentEditPageComponent [CAP-137]', () => {
     fixture.detectChanges();
     const error = fixture.debugElement.query(By.css('.cancel-modal .error-banner'));
     expect(error).not.toBeNull();
+    expect(error.nativeElement.textContent).not.toContain('Cannot cancel');
+  });
+
+  // 18. load-error state
+  it('renders an error state via state()/errorKey() when the initial load fails', async () => {
+    vi.clearAllMocks();
+    appointmentServiceStub.getAppointment.mockReturnValue(
+      throwError(() => new HttpErrorResponse({ status: 404 })),
+    );
+
+    await TestBed.configureTestingModule({
+      imports: [AppointmentEditPageComponent, TranslateModule.forRoot()],
+      providers: [
+        provideRouter([]),
+        { provide: AppointmentService, useValue: appointmentServiceStub },
+        { provide: ActivatedRoute, useValue: { params: of({ id: 'appt-42' }) } },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(AppointmentEditPageComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    expect(component.state()).toBe('error');
+    expect(component.errorKey()).toBe('SHOPMGMT.APPOINTMENT_EDIT.ERROR.LOAD_NOT_FOUND');
+    expect(fixture.debugElement.query(By.css('.load-error'))).not.toBeNull();
+    expect(fixture.debugElement.query(By.css('.appointment-summary'))).toBeNull();
+  });
+
+  // 19. facility resolution
+  it('resolves the facility name via getFacilityName and falls back to COMMON.NOT_AVAILABLE', async () => {
+    await setup();
+    expect(appointmentServiceStub.getFacilityName).toHaveBeenCalledWith('fac-1');
+    const rows = fixture.debugElement.queryAll(By.css('.summary-row .value'));
+    const facilityValue = rows[rows.length - 1].nativeElement.textContent;
+    expect(facilityValue).toContain('Downtown Shop');
+  });
+
+  it('falls back to COMMON.NOT_AVAILABLE when the facility name cannot be resolved', async () => {
+    vi.clearAllMocks();
+    appointmentServiceStub.getAppointment.mockReturnValue(of(STUB_SCHEDULED));
+    appointmentServiceStub.getFacilityName.mockReturnValue(of(undefined));
+    appointmentServiceStub.searchAudit.mockReturnValue(of([]));
+
+    await TestBed.configureTestingModule({
+      imports: [AppointmentEditPageComponent, TranslateModule.forRoot()],
+      providers: [
+        provideRouter([]),
+        { provide: AppointmentService, useValue: appointmentServiceStub },
+        { provide: ActivatedRoute, useValue: { params: of({ id: 'appt-42' }) } },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(AppointmentEditPageComponent);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).not.toContain('fac-1');
+  });
+
+  // 20. no raw UUID/timestamp anywhere on the ready page (status-code coverage lives in the
+  // .i18n.spec.ts, which loads the real bundles rather than this suite's key-echoing fake loader)
+  it('never renders the appointment UUID or a raw ISO timestamp as visible text', async () => {
+    await setup();
+    const text = fixture.nativeElement.textContent as string;
+    expect(text).not.toContain('appt-42');
+    expect(text).not.toContain('2026-05-01T09:00:00Z');
   });
 });
