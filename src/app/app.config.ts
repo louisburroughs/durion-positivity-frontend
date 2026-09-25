@@ -39,6 +39,7 @@ import { clearChunkReloadGuard, recoverFromChunkError } from './core/router/chun
 import { AuthService } from './core/services/auth.service';
 import { LocaleService } from './core/services/locale.service';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
+import { TENANT_API_BASE_PATH } from './core/tokens/tenant-api-base-path.token';
 import { environment } from '../environments/environment';
 // These wire the `shared/**` lookup-widget injection tokens to their real,
 // feature-owned implementations (LAY-02: shared/** must not depend on
@@ -131,6 +132,10 @@ export const appConfig: ApplicationConfig = {
     { provide: SecurityConfiguration, useFactory: () => new SecurityConfiguration({ basePath: `${environment.apiBaseUrl}/security-service` }) },
     { provide: ShopManagerConfiguration, useFactory: () => new ShopManagerConfiguration({ basePath: `${environment.apiBaseUrl}/shop-manager` }) },
     { provide: SupplierConfiguration, useFactory: () => new SupplierConfiguration({ basePath: `${environment.apiBaseUrl}/supplier` }) },
+    // @durion-sdk/tenant's Configuration class is constructed lazily, inside
+    // features/platform (SDK-10, ADR-0062 §7) — only its basePath is provided
+    // here, to keep the SDK itself out of the eager initial bundle.
+    { provide: TENANT_API_BASE_PATH, useValue: `${environment.apiBaseUrl}/tenant` },
     { provide: VehicleInventoryConfiguration, useFactory: () => new VehicleInventoryConfiguration({ basePath: `${environment.apiBaseUrl}/vehicle-inventory` }) },
     { provide: WorkorderConfiguration, useFactory: () => new WorkorderConfiguration({ basePath: `${environment.apiBaseUrl}/workorder` }) },
   ],

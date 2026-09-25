@@ -1,12 +1,27 @@
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
+import { Configuration as TenantConfiguration } from '@durion-sdk/tenant';
 import { PLATFORM_ROUTES, platformLanding } from './platform.routes';
 import { PLATFORM_PAGE } from '../../core/security/route-permissions';
 import { AuthService } from '../../core/services/auth.service';
+import { TENANT_API_BASE_PATH } from '../../core/tokens/tenant-api-base-path.token';
 
 describe('PLATFORM_ROUTES', () => {
   const rootRoute = PLATFORM_ROUTES.find(route => route.path === '');
   const children = rootRoute?.children ?? [];
+
+  it('scopes @durion-sdk/tenant Configuration to this lazy route tree (SDK-10, ADR-0062 §7)', () => {
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: TENANT_API_BASE_PATH, useValue: '/api/tenant' },
+        ...(rootRoute?.providers ?? []),
+      ],
+    });
+
+    const configuration = TestBed.inject(TenantConfiguration);
+
+    expect(configuration.basePath).toBe('/api/tenant');
+  });
 
   it('lands the empty platform child path on the first page the session can open', () => {
     const defaultChild = children.find(child => child.path === '');
