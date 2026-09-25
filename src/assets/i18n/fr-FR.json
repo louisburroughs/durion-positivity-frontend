@@ -7073,7 +7073,7 @@
       },
       "ERROR": {
         "LOAD": "Impossible de verifier l'etat du travail actif.",
-        "UPLOAD": "Echec du televersement du fichier. Veuillez réessayer.",
+        "UPLOAD": "Échec du téléversement du fichier. Veuillez réessayer.",
         "CREATE_SESSION": "Impossible de demarrer la session d'importation.",
         "LOAD_MAPPINGS": "Impossible de charger les mappages de colonnes.",
         "APPROVE_MAPPINGS": "Impossible d'approuver les mappages de colonnes.",
@@ -7174,7 +7174,7 @@
       "SUCCESS": "Reussies",
       "FAILURES": "Echouees",
       "DOWNLOAD_ERRORS": "Telecharger le rapport d'erreurs",
-      "RETRY": "Reessayer les lignes en echec"
+      "RETRY": "Réessayer les lignes en échec"
     },
     "ERROR_RECORDS": {
       "ARIA_LABEL": "Enregistrements d'erreurs",
