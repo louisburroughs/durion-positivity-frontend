@@ -118,7 +118,7 @@ export const sdk07 = (p: Project): ArchRule =>
 const deepSdkImportFinder: Finder = (f) =>
   importSpecifiers(f)
     .filter((i) => /^@durion-sdk\/[^/]+\/.+/.test(i.module))
-    .filter((i) => !(/(^|\/)app\.config\.ts$/.test(f.path) && /^@durion-sdk\/[^/]+\/configuration$/.test(i.module)))
+    .filter((i) => !(/^src\/app\/app\.config\.ts$/.test(f.path) && /^@durion-sdk\/[^/]+\/configuration$/.test(i.module)))
     .map((i) => `'${i.module}'`);
 
 export { deepSdkImportFinder };

@@ -119,6 +119,9 @@ describe('[SDK-08] @durion-sdk/* is imported from the package root only', () => 
     expect(deepSdkImportFinder({ path: 'src/app/features/x/services/x.service.ts', content: src })).toEqual([
       `'@durion-sdk/accounting/configuration'`,
     ]);
+    expect(deepSdkImportFinder({ path: 'src/app/features/x/app.config.ts', content: src })).toEqual([
+      `'@durion-sdk/accounting/configuration'`,
+    ]);
     expect(
       deepSdkImportFinder({ path: 'src/app/app.config.ts', content: `import { X } from '@durion-sdk/accounting/other';` }),
     ).toEqual([`'@durion-sdk/accounting/other'`]);
