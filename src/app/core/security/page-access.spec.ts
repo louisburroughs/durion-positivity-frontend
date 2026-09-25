@@ -454,11 +454,11 @@ describe('fulfillment picking permissions (issue #347 group 5)', () => {
     expect(canOpen(mechanicLike, PICK_LIST)).toBe(true);
 
     // Every other inventory page stays closed: this session widens nothing else.
-    // (The bare landing page is intentionally ungated by design — cards are
-    // filtered individually — so it is excluded here, not a widening.)
+    // Routes ungated by design (the landing page, whose cards are filtered
+    // individually, and redirects) are excluded here; they aren't a widening.
     const otherPages = inventoryPages.filter(
       ({ path }) =>
-        path !== PICK_EXECUTE && path !== CONSUME_ITEMS && path !== PICK_LIST && path !== '/app/inventory',
+        path !== PICK_EXECUTE && path !== CONSUME_ITEMS && path !== PICK_LIST && !(path in UNGATED_BY_DESIGN),
     );
     const opened = otherPages.filter(({ path }) => canOpen(mechanicLike, path)).map(({ path }) => path);
 
