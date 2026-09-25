@@ -520,14 +520,18 @@ graph cache. Without it the run took 64 s.
 
   | Rule | Entries | Issue |
   | --- | --- | --- |
-  | LAY-03 | 102 | #347 |
-  | LAY-04 | 17 | #347 |
-  | LAY-08 | 4 | #350 |
-  | SDK-03 | 13 | #350 |
-  | SDK-05 | 30 | #350 |
-  | SDK-06 | 4 | #350 |
-  | SDK-11 | 1 | #350 |
-  | TEN-08 | 6 | #339 |
+  | LAY-03 | 27 | #347 |
+  | LAY-04 | 9 | #347 |
+  | LAY-08 | 1 | #350 (shell chat-api, stays on MCP) |
+  | SDK-03 | 11 | #350 |
+  | SDK-05 | 29 | #350 |
+  | SDK-06 | 1 | #350 (shell chat-api, stays on MCP) |
+
+  Burn-down on 2026-09-25 (PRs #354–#361): LAY-03 fell from 102 to 27 entries and LAY-04 from 17
+  to 9 once bulk-import, customer-lookup and location-picker moved to `shared/`. SDK-11, TEN-08,
+  CON-01, CON-04, CON-07, CON-09 and PAT-02/03/04/08 reached zero and are now Enforce. The
+  remaining SDK-03/05 entries are blocked on SDK operations or DTO fields that don't exist yet;
+  each entry names its gap.
 
 - **Warn:** SDK-09 (20), CON-03 (83), PAT-06, I18N-09.
 - **Enforce:** everything else, including the rules that started as Ratchet but reached zero
