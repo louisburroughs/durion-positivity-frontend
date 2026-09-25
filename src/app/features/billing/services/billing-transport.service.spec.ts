@@ -3,12 +3,14 @@ import { TranslateService } from '@ngx-translate/core';
 import { of } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  BillingAuthorizationService,
   Configuration as InvoiceConfiguration,
   GenerateReceiptRequest,
   InitiatePaymentRequestPaymentFlowEnum,
   InitiatePaymentResponse,
   InitiatePaymentResponseStatusEnum,
   InvoiceAdjustmentResponseTypeEnum,
+  InvoiceArtifactControllerService,
   InvoiceDetailsResponse,
   InvoiceDetailsResponseStatusEnum,
   InvoiceSearchResultStatusEnum,
@@ -66,6 +68,15 @@ describe('BillingTransportService', () => {
     reprintReceipt: vi.fn(),
   };
 
+  const invoiceArtifactServiceStub = {
+    listInvoiceArtifacts: vi.fn(),
+    createArtifactDownloadToken: vi.fn(),
+  };
+
+  const billingAuthorizationServiceStub = {
+    elevateManagerApproval: vi.fn(),
+  };
+
   const invoiceResponse: InvoiceDetailsResponse = {
     invoiceId: 'inv-001',
     invoiceNumber: 'INV-001',
@@ -110,6 +121,8 @@ describe('BillingTransportService', () => {
         { provide: PaymentService, useValue: paymentServiceStub },
         { provide: PaymentReversalService, useValue: paymentReversalServiceStub },
         { provide: ReceiptService, useValue: receiptServiceStub },
+        { provide: InvoiceArtifactControllerService, useValue: invoiceArtifactServiceStub },
+        { provide: BillingAuthorizationService, useValue: billingAuthorizationServiceStub },
         { provide: InvoiceConfiguration, useValue: { basePath: '/api/invoice' } },
       ],
     });
@@ -172,27 +185,47 @@ describe('BillingTransportService', () => {
     expect(result).toEqual(expect.objectContaining({ invoiceId: 'inv-001', status: 'FINALIZED' }));
   });
 
-  it('loads invoice artifacts through the billing transport endpoint', () => {
-    apiStub.get.mockReturnValueOnce(of([]));
+  it('loads invoice artifacts through the invoice artifact SDK and maps them into the frontend model', () => {
+    invoiceArtifactServiceStub.listInvoiceArtifacts.mockReturnValueOnce(of([
+      {
+        artifactRefId: 'artifact-001',
+        fileName: 'invoice.pdf',
+        mimeType: 'application/pdf',
+        createdAt: '2026-04-26T12:00:00Z',
+      },
+    ]));
 
-    service.loadInvoiceArtifacts('inv-001').subscribe();
+    let result: unknown;
+    service.loadInvoiceArtifacts('inv-001').subscribe(value => {
+      result = value;
+    });
 
-    expect(apiStub.get).toHaveBeenCalledWith('/invoice/v1/invoices/inv-001/artifacts');
+    expect(invoiceArtifactServiceStub.listInvoiceArtifacts).toHaveBeenCalledWith('inv-001');
+    expect(apiStub.get).not.toHaveBeenCalled();
+    expect(result).toEqual([
+      {
+        artifactRefId: 'artifact-001',
+        fileName: 'invoice.pdf',
+        mimeType: 'application/pdf',
+        createdAt: '2026-04-26T12:00:00Z',
+      },
+    ]);
   });
 
-  it('elevates through the billing transport endpoint and emits the elevation token response', () => {
-    const elevationResponse = { elevationToken: 'elev-001' };
-    apiStub.post.mockReturnValueOnce(of(elevationResponse));
+  it('elevates through the billing authorization SDK and emits the elevation token response', () => {
+    const elevationResponse = { elevationToken: 'elev-001', expiresAt: '2026-04-26T12:05:00Z' };
+    billingAuthorizationServiceStub.elevateManagerApproval.mockReturnValueOnce(of(elevationResponse));
 
     let result: unknown;
     service.elevate('EMP-0001', 'inv-001').subscribe(value => {
       result = value;
     });
 
-    expect(apiStub.post).toHaveBeenCalledWith('/invoice/v1/billing/auth/elevate', {
+    expect(billingAuthorizationServiceStub.elevateManagerApproval).toHaveBeenCalledWith({
       managerEmployeeNumber: 'EMP-0001',
       invoiceId: 'inv-001',
     });
+    expect(apiStub.post).not.toHaveBeenCalled();
     expect(invoiceServiceStub.finalizeInvoice).not.toHaveBeenCalled();
     expect(result).toEqual(elevationResponse);
   });
@@ -313,23 +346,20 @@ describe('BillingTransportService', () => {
     expect(result).toEqual({ receiptId: 'rcpt-001' });
   });
 
-  it('creates artifact download tokens through the billing transport endpoint and emits the token response', () => {
+  it('creates artifact download tokens through the invoice artifact SDK and maps the token response', () => {
     const tokenResponse = {
       downloadToken: 'token-001',
-      downloadUrl: 'https://example.test/download/token-001',
       expiresAt: '2026-04-26T12:00:00Z',
     };
-    apiStub.post.mockReturnValueOnce(of(tokenResponse));
+    invoiceArtifactServiceStub.createArtifactDownloadToken.mockReturnValueOnce(of(tokenResponse));
 
     let result: unknown;
     service.createArtifactDownloadToken('inv-001', 'artifact-001').subscribe(value => {
       result = value;
     });
 
-    expect(apiStub.post).toHaveBeenCalledWith(
-      '/invoice/v1/invoices/inv-001/artifacts/artifact-001/download-token',
-      {},
-    );
+    expect(invoiceArtifactServiceStub.createArtifactDownloadToken).toHaveBeenCalledWith('inv-001', 'artifact-001');
+    expect(apiStub.post).not.toHaveBeenCalled();
     expect(receiptServiceStub.generateReceipt).not.toHaveBeenCalled();
     expect(result).toEqual(tokenResponse);
   });
