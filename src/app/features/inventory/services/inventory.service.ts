@@ -2,7 +2,15 @@ import { Injectable, inject } from '@angular/core';
 import { HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { InventoryAvailabilityService, InventoryReferenceDataService } from '@durion-sdk/inventory';
+import {
+  InventoryAvailabilityService,
+  InventoryLedgerEntryDto,
+  InventoryLedgerService,
+  InventoryReferenceDataService,
+  LedgerPage,
+  ReasonCodeDto,
+  ReturnsService,
+} from '@durion-sdk/inventory';
 import { ApiBaseService } from '../../../core/services/api-base.service';
 import { pageContent } from '../../../core/util/spring-page';
 import {
@@ -55,6 +63,8 @@ export class InventoryDomainService {
   private readonly api = inject(ApiBaseService);
   private readonly refDataSdk = inject(InventoryReferenceDataService);
   private readonly availabilitySdk = inject(InventoryAvailabilityService);
+  private readonly ledgerSdk = inject(InventoryLedgerService);
+  private readonly returnsSdk = inject(ReturnsService);
 
   queryAvailability(
     sku: string,
@@ -99,29 +109,34 @@ export class InventoryDomainService {
   }
 
   queryLedger(filter: LedgerFilter): Observable<LedgerPageResponse> {
-    let params = new HttpParams();
-    if (filter.productSku != null) { params = params.set('productSku', filter.productSku); }
-    if (filter.locationId != null) { params = params.set('locationId', filter.locationId); }
-    if (filter.storageLocationId != null) { params = params.set('storageLocationId', filter.storageLocationId); }
-    if (filter.dateFrom != null) { params = params.set('dateFrom', filter.dateFrom); }
-    if (filter.dateTo != null) { params = params.set('dateTo', filter.dateTo); }
-    if (filter.sourceTransactionId != null) { params = params.set('sourceTransactionId', filter.sourceTransactionId); }
-    if (filter.workorderId != null) { params = params.set('workorderId', filter.workorderId); }
-    if (filter.workorderLineId != null) { params = params.set('workorderLineId', filter.workorderLineId); }
-    if (filter.pageSize != null) { params = params.set('pageSize', String(filter.pageSize)); }
-    if (filter.pageToken != null) { params = params.set('pageToken', filter.pageToken); }
-    if (filter.movementTypes != null && filter.movementTypes.length > 0) {
-      filter.movementTypes.forEach(t => { params = params.append('movementTypes', t); });
-    }
-    return this.api.get<LedgerPageResponse>('/inventory/v1/inventory/ledger', params);
+    return this.ledgerSdk
+      .listInventoryLedger(
+        filter.productSku,
+        filter.locationId,
+        filter.storageLocationId,
+        filter.dateFrom,
+        filter.dateTo,
+        filter.sourceTransactionId,
+        filter.workorderId,
+        filter.workorderLineId,
+        filter.movementTypes,
+        filter.pageToken,
+        filter.pageSize,
+      )
+      .pipe(map(page => this.toLedgerPageResponse(page)));
   }
 
   getLedgerEntry(ledgerEntryId: string): Observable<InventoryLedgerEntry> {
-    return this.api.get<InventoryLedgerEntry>(
-      `/inventory/v1/inventory/ledger/${encodeURIComponent(ledgerEntryId)}`,
+    return this.ledgerSdk.getInventoryLedgerEntry(ledgerEntryId).pipe(
+      map(dto => this.toLedgerEntry(dto)),
     );
   }
 
+  // D5 follow-up (docs/PRD-sdk-migration-completion.md): the generated putaway/
+  // replenishment/returnable-items/shortage operations describe a source/destination
+  // shape with no top-level site `locationId` and no `uom`, which this local model
+  // needs; migrating would silently drop or fabricate data rather than rename fields.
+  // Left on ApiBaseService pending SDK model alignment.
   getPutawayTasks(locationId?: string): Observable<PutawayTask[]> {
     let params = new HttpParams();
     if (locationId) {
@@ -145,6 +160,9 @@ export class InventoryDomainService {
     return this.api.get<ReplenishmentTask[]>('/inventory/v1/inventory/replenishment/tasks', params);
   }
 
+  // D5 follow-up: SDK's ReturnableItemDto has no `uom` and keys the returnable row by
+  // `itemId`, not `workorderLineId` (this endpoint is also a documented backend stub).
+  // Left on ApiBaseService pending SDK model alignment.
   getReturnableItems(workorderId: string): Observable<ReturnableItem[]> {
     const params = new HttpParams().set('workorderId', workorderId);
     return this.api.get<ReturnableItem[]>(
@@ -153,11 +171,17 @@ export class InventoryDomainService {
     );
   }
 
-  getReasonCodes(type: string): Observable<ReturnReasonCode[]> {
-    const params = new HttpParams().set('type', type);
-    return this.api.get<ReturnReasonCode[]>('/inventory/v1/inventory/returns/reason-codes', params);
+  // `type` is unused by the SDK's fixed reason-code catalog (no filter support) but
+  // stays in the signature so callers don't churn.
+  getReasonCodes(_type: string): Observable<ReturnReasonCode[]> {
+    return this.returnsSdk.listReturnReasonCodes().pipe(
+      map((codes: ReasonCodeDto[]) => codes.map(dto => this.toReturnReasonCode(dto))),
+    );
   }
 
+  // D5 follow-up: the SDK's ReturnSubmitRequest carries only workorderId + lines; it
+  // drops locationId/storageLocationId/reasonCode, which this request needs per line.
+  // Left on ApiBaseService pending SDK model alignment.
   submitReturnToStock(request: ReturnToStockRequest): Observable<ReturnToStockResult> {
     return this.api.post<ReturnToStockResult>(
       '/inventory/v1/inventory/returns/submit-to-stock',
@@ -165,6 +189,11 @@ export class InventoryDomainService {
     );
   }
 
+  // D5 follow-up: the SDK's listShortageOptions requires sku and shortQuantity (plus
+  // allocationId); neither is available at this call site's current shape, and
+  // resolveShortage's ShortageResolveRequest needs the same additional fields plus an
+  // idempotencyKey. Left on ApiBaseService pending an SDK model alignment or a wider
+  // page-level request shape.
   getShortageOptions(allocationLineId: string): Observable<ShortageOption[]> {
     const params = new HttpParams().set('allocationId', allocationLineId);
     return this.api.get<ShortageOption[]>(
@@ -178,5 +207,33 @@ export class InventoryDomainService {
       '/inventory/v1/inventory/shortage/resolve',
       request,
     );
+  }
+
+  private toLedgerPageResponse(page: LedgerPage): LedgerPageResponse {
+    const entries = (page.entries ?? []) as InventoryLedgerEntryDto[];
+    return {
+      items: entries.map(dto => this.toLedgerEntry(dto)),
+      nextPageToken: page.nextPageToken ?? null,
+    };
+  }
+
+  private toLedgerEntry(dto: InventoryLedgerEntryDto): InventoryLedgerEntry {
+    return {
+      ledgerEntryId: dto.ledgerEntryId,
+      timestamp: dto.timestamp,
+      movementType: dto.eventType,
+      productSku: dto.stockItemId,
+      quantityChange: dto.changeInQuantity,
+      uom: dto.unitOfMeasure ?? '',
+      fromLocationId: dto.fromLocationId,
+      toLocationId: dto.toLocationId,
+      actorId: dto.transactionUserId,
+      reasonCode: dto.reasonCode,
+      sourceTransactionId: dto.sourceTransactionId,
+    };
+  }
+
+  private toReturnReasonCode(dto: ReasonCodeDto): ReturnReasonCode {
+    return { code: dto.code, label: dto.description };
   }
 }
