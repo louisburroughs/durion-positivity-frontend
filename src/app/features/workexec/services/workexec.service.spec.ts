@@ -26,7 +26,7 @@ import { of } from 'rxjs';
 import { vi } from 'vitest';
 import { WorkexecService } from './workexec.service';
 import { ApiBaseService } from '../../../core/services/api-base.service';
-import { BASE_PATH, EstimateSearchService, WorkorderSearchService } from '@durion-sdk/workorder';
+import { BASE_PATH, EstimateSearchService, WorkorderPartAdjustmentsService, WorkorderSearchService } from '@durion-sdk/workorder';
 import { Configuration as PeopleConfiguration } from '@durion-sdk/people';
 import { environment } from '../../../../environments/environment';
 import {
@@ -38,6 +38,7 @@ import {
   PickConfirmRequest,
   PickExecuteLine,
   PickListView,
+  PartUsageResponse,
   PickedItemLine,
   ScanResolveRequest,
   SubstituteLinkResponse,
@@ -52,10 +53,12 @@ describe('WorkexecService', () => {
   let http: HttpTestingController;
   let estimateSearchStub: { searchEstimates: ReturnType<typeof vi.fn> };
   let workorderSearchStub: { searchWorkorders: ReturnType<typeof vi.fn> };
+  let partAdjustmentsStub: { substitutePart: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
     estimateSearchStub = { searchEstimates: vi.fn() };
     workorderSearchStub = { searchWorkorders: vi.fn() };
+    partAdjustmentsStub = { substitutePart: vi.fn() };
 
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
@@ -66,6 +69,7 @@ describe('WorkexecService', () => {
         { provide: PeopleConfiguration, useValue: new PeopleConfiguration({ basePath: environment.apiBaseUrl }) },
         { provide: EstimateSearchService, useValue: estimateSearchStub },
         { provide: WorkorderSearchService, useValue: workorderSearchStub },
+        { provide: WorkorderPartAdjustmentsService, useValue: partAdjustmentsStub },
       ],
     });
     service = TestBed.inject(WorkexecService);
@@ -314,27 +318,32 @@ describe('WorkexecService', () => {
     expect(result).toEqual(links);
   });
 
-  it('substitutePart — posts originalPartId/substitutePartId/reason to WorkorderPartAdjustmentsService.substitutePart (SDK-05)', () => {
-    service.substitutePart('wo-1', { originalPartId: 'part-1', substitutePartId: 'part-7', reason: 'Out of stock' }, 'sub-idem-key').subscribe();
-    const r = http.expectOne(`${BASE}/v1/workorders/wo-1/parts/substitute`);
-    expect(r.request.method).toBe('POST');
-    expect(r.request.body).toEqual({
-      originalPartId: 'part-1',
-      substitutePartId: 'part-7',
-      reason: 'Out of stock',
-    });
-    r.flush({ id: 'adj-1', workorderId: 'wo-1' });
+  it('substitutePart — calls WorkorderPartAdjustmentsService.substitutePart with the adapted request and idempotencyKey (SDK-05)', () => {
+    const response: PartUsageResponse = { id: 'adj-1', workorderId: 'wo-1' };
+    partAdjustmentsStub.substitutePart.mockReturnValueOnce(of(response));
+
+    let result: PartUsageResponse | undefined;
+    service.substitutePart('wo-1', { originalPartId: 'part-1', substitutePartId: 'part-7', reason: 'Out of stock' }, 'sub-idem-key')
+      .subscribe(r => (result = r));
+
+    expect(partAdjustmentsStub.substitutePart).toHaveBeenCalledExactlyOnceWith(
+      'wo-1',
+      { originalPartId: 'part-1', substitutePartId: 'part-7', reason: 'Out of stock' },
+      'sub-idem-key',
+    );
+    expect(result).toEqual(response);
   });
 
   it('substitutePart — defaults reason to empty string when omitted', () => {
+    partAdjustmentsStub.substitutePart.mockReturnValueOnce(of({ id: 'adj-1', workorderId: 'wo-1' }));
+
     service.substitutePart('wo-1', { originalPartId: 'part-1', substitutePartId: 'part-7' }).subscribe();
-    const r = http.expectOne(`${BASE}/v1/workorders/wo-1/parts/substitute`);
-    expect(r.request.body).toEqual({
-      originalPartId: 'part-1',
-      substitutePartId: 'part-7',
-      reason: '',
-    });
-    r.flush({ id: 'adj-1', workorderId: 'wo-1' });
+
+    expect(partAdjustmentsStub.substitutePart).toHaveBeenCalledExactlyOnceWith(
+      'wo-1',
+      { originalPartId: 'part-1', substitutePartId: 'part-7', reason: '' },
+      undefined,
+    );
   });
 
   // ── CAP-248: Stories 259, 260, 261 ───────────────────────────────────────
