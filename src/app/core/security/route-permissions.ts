@@ -332,6 +332,8 @@ export const SHOPMGMT_PAGE = {
   appointmentCreate: ['appointments:create', 'shop:schedule:edit'],
   appointmentView: ['appointments:view', 'shop:schedule:view'],
   appointmentReschedule: ['appointments:reschedule'],
+  /** `cancelAppointment` — a separate write authority from reschedule (durion-positivity-backend). */
+  appointmentCancel: ['appointments:cancel'],
   /**
    * The page carries the reschedule form (its own codes) and the CAP-326 D18.3 override, which
    * the backend gates on `shop:conflict:override` alone; the page is reachable by either, and

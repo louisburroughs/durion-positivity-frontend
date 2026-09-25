@@ -3,7 +3,7 @@
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { AppointmentService } from './appointment.service';
 import {
   AppointmentsAPIService,
@@ -12,16 +12,35 @@ import {
   ScheduleAPIService,
   ShopAuditService,
 } from '@durion-sdk/shop-manager';
+import { LocationAPIService } from '@durion-sdk/location';
 
 // ---------------------------------------------------------------------------
-// Inline stubs — mirror models that will live in ../models/appointment.models
+// Inline stubs
 // ---------------------------------------------------------------------------
 
-const STUB_APPOINTMENT = {
+// The real wire shape (`AppointmentResponse`): `locationId`/`startAt`/`endAt`, not the
+// `facilityId`/`scheduledStart`/`scheduledEnd` the pages read (CAP-249 verify finding).
+const RAW_APPOINTMENT_RESPONSE = {
+  appointmentId: 'appt-1',
+  status: 'SCHEDULED',
+  locationId: 'fac-1',
+  startAt: '2026-04-01T09:00:00Z',
+  endAt: '2026-04-01T10:00:00Z',
+  conflicts: [],
+};
+
+// What AppointmentService.getAppointment/rescheduleAppointment/cancelAppointment/createAppointment
+// map the raw response into.
+const MAPPED_APPOINTMENT = {
   appointmentId: 'appt-1',
   status: 'SCHEDULED',
   facilityId: 'fac-1',
+  scheduledStart: '2026-04-01T09:00:00Z',
+  scheduledEnd: '2026-04-01T10:00:00Z',
+  conflicts: [],
 };
+
+const STUB_LOCATION = { id: 'fac-1', name: 'Downtown Shop' };
 
 const STUB_ASSIGNMENT = {
   assignmentId: 'asn-1',
@@ -57,6 +76,7 @@ const assignmentStub = { listAssignments: vi.fn(), createAssignment: vi.fn() };
 const conflictOverrideStub = { executeConflictOverride: vi.fn() };
 const scheduleStub = { viewSchedule: vi.fn() };
 const shopAuditStub = { searchShopAudit: vi.fn() };
+const locationApiStub = { getLocationById: vi.fn() };
 
 // ---------------------------------------------------------------------------
 // Suite
@@ -67,14 +87,16 @@ describe('AppointmentService [CAP-249]', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    appointmentsStub.getAppointmentById.mockReturnValue(of(STUB_APPOINTMENT));
-    appointmentsStub.createAppointment.mockReturnValue(of(STUB_APPOINTMENT));
-    appointmentsStub.rescheduleAppointment.mockReturnValue(of(STUB_APPOINTMENT));
+    appointmentsStub.getAppointmentById.mockReturnValue(of(RAW_APPOINTMENT_RESPONSE));
+    appointmentsStub.createAppointment.mockReturnValue(of(RAW_APPOINTMENT_RESPONSE));
+    appointmentsStub.rescheduleAppointment.mockReturnValue(of(RAW_APPOINTMENT_RESPONSE));
+    appointmentsStub.cancelAppointment.mockReturnValue(of(RAW_APPOINTMENT_RESPONSE));
     assignmentStub.listAssignments.mockReturnValue(of([]));
     assignmentStub.createAssignment.mockReturnValue(of({}));
     conflictOverrideStub.executeConflictOverride.mockReturnValue(of({}));
     scheduleStub.viewSchedule.mockReturnValue(of({}));
     shopAuditStub.searchShopAudit.mockReturnValue(of([]));
+    locationApiStub.getLocationById.mockReturnValue(of(STUB_LOCATION));
 
     TestBed.configureTestingModule({
       providers: [
@@ -84,6 +106,7 @@ describe('AppointmentService [CAP-249]', () => {
         { provide: ConflictOverrideAPIService, useValue: conflictOverrideStub },
         { provide: ScheduleAPIService, useValue: scheduleStub },
         { provide: ShopAuditService, useValue: shopAuditStub },
+        { provide: LocationAPIService, useValue: locationApiStub },
       ],
     });
 
@@ -103,11 +126,31 @@ describe('AppointmentService [CAP-249]', () => {
       expect(appointmentsStub.getAppointmentById).toHaveBeenCalledWith('appt-1');
     });
 
-    it('returns an Observable that emits the SDK response', () => {
+    it('maps the raw SDK response (locationId/startAt/endAt) onto AppointmentDetail', () => {
       let emitted: unknown;
       service.getAppointment('appt-1').subscribe((v) => { emitted = v; });
 
-      expect(emitted).toEqual(STUB_APPOINTMENT);
+      expect(emitted).toEqual(MAPPED_APPOINTMENT);
+    });
+  });
+
+  // ── getFacilityName ───────────────────────────────────────────────────────
+
+  describe('getFacilityName', () => {
+    it('calls locationSdk.getLocationById with the id and resolves its name', () => {
+      let emitted: unknown;
+      service.getFacilityName('fac-1').subscribe((v) => { emitted = v; });
+
+      expect(locationApiStub.getLocationById).toHaveBeenCalledWith('fac-1');
+      expect(emitted).toBe('Downtown Shop');
+    });
+
+    it('degrades to undefined, never throwing, when the location read fails', () => {
+      locationApiStub.getLocationById.mockReturnValue(throwError(() => new Error('down')));
+      let emitted: unknown = 'not-yet-set';
+      service.getFacilityName('fac-1').subscribe((v) => { emitted = v; });
+
+      expect(emitted).toBeUndefined();
     });
   });
 
@@ -190,9 +233,39 @@ describe('AppointmentService [CAP-249]', () => {
     });
   });
 
+  // ── cancelAppointment ─────────────────────────────────────────────────────
+
+  describe('cancelAppointment', () => {
+    it('calls appointmentsSdk.cancelAppointment with appointmentId and the mapped reason', () => {
+      service.cancelAppointment('appt-1', { cancellationReason: 'WEATHER', notes: 'Storm' }).subscribe();
+
+      expect(appointmentsStub.cancelAppointment).toHaveBeenCalledWith('appt-1', {
+        cancellationReason: 'WEATHER',
+        notes: 'Storm',
+      });
+    });
+
+    it('maps the raw SDK response onto AppointmentDetail', () => {
+      let emitted: unknown;
+      service.cancelAppointment('appt-1', { cancellationReason: 'OTHER' }).subscribe((v) => { emitted = v; });
+
+      expect(emitted).toEqual(MAPPED_APPOINTMENT);
+    });
+  });
+
   // ── searchAudit ───────────────────────────────────────────────────────────
 
   describe('searchAudit', () => {
+    const RAW_AUDIT_ENTRY = {
+      id: 'audit-1',
+      eventType: 'SCHEDULE_UPDATED',
+      actorUserId: 'user-9',
+      recordedAt: '2026-04-01T08:00:00Z',
+      changeSummaryText: 'Rescheduled',
+      appointmentId: 'appt-1',
+      retentionYears: 7,
+    };
+
     it('calls shopAuditSdk.searchShopAudit with the appointmentId query parameter', () => {
       shopAuditStub.searchShopAudit.mockReturnValue(of([]));
       service.searchAudit('appt-1').subscribe();
@@ -200,11 +273,12 @@ describe('AppointmentService [CAP-249]', () => {
       expect(shopAuditStub.searchShopAudit).toHaveBeenCalledWith(undefined, 'appt-1');
     });
 
-    it('forwards the appointmentId to the SDK filter', () => {
-      shopAuditStub.searchShopAudit.mockReturnValue(of([]));
-      service.searchAudit('appt-1').subscribe();
+    it('returns the real ShopAuditEntryResponse shape unchanged (ADR-0032)', () => {
+      shopAuditStub.searchShopAudit.mockReturnValue(of([RAW_AUDIT_ENTRY]));
+      let emitted: unknown;
+      service.searchAudit('appt-1').subscribe((v) => { emitted = v; });
 
-      expect(shopAuditStub.searchShopAudit).toHaveBeenCalledWith(undefined, 'appt-1');
+      expect(emitted).toEqual([RAW_AUDIT_ENTRY]);
     });
   });
 
