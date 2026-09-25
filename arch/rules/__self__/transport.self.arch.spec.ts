@@ -104,7 +104,7 @@ describe('[SDK-07] no absolute http(s):// literals', () => {
   });
 });
 
-describe('[SDK-08] @durion-sdk/* is imported from the package root only', () => {
+describe('[SDK-08] @durion-sdk/* is imported from the package root only, except /configuration in app.config.ts', () => {
   it('fires on a deep @durion-sdk/x/… import', async () => {
     const keys = await sdk08(FIXTURES).keys();
     expect(keys).toContain(`${A}/fxlay-sdk08-violate.ts :: '@durion-sdk/accounting/deep/path'`);

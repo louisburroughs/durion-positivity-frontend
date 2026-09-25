@@ -125,7 +125,11 @@ export { deepSdkImportFinder };
 
 export const sdk08 = (p: Project): ArchRule =>
   contentRule(
-    { id: 'SDK-08', title: '@durion-sdk/* is imported from the package root only (ADR-0041 §1)', mode: 'enforce' },
+    {
+      id: 'SDK-08',
+      title: '@durion-sdk/* is imported from the package root only, except the /configuration entry point in app.config.ts (ADR-0041 §1)',
+      mode: 'enforce',
+    },
     p,
     { subject: selectors.appTree(p), finder: deepSdkImportFinder },
   );
