@@ -68,6 +68,8 @@ export class InventoryReceivingService {
     );
   }
 
+  // SDK gap: no workorder-search operation exists in @durion-sdk/inventory for
+  // cross-dock candidate lookup. Left on ApiBaseService.
   searchWorkordersForCrossDock(query: string): Observable<WorkorderCrossDockRef[]> {
     const params = new HttpParams().set('query', query);
     return this.api.get<WorkorderCrossDockRef[]>('/inventory/v1/receiving/workorders', params);
