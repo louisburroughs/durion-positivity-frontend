@@ -337,13 +337,25 @@ describe('count-plan form (issue #258)', () => {
 });
 
 /**
- * Issue #347 group 5: picking belongs to inventory, but on a work order it is
+ * Issue #347 group 5: picking belongs to inventory, but on a workorder it is
  * done by mechanics — a view permission must not double as a write gate.
- * pick-list stays gated on `inventory:pick_list:view`; pick-execute and
- * consume-items now gate on the write authorities their endpoints actually
- * enforce (`inventory:pick_list:execute` and `workorder:parts:consume`
- * respectively — see route-permissions.ts and INVENTORY_PAGE.consumeItems for
- * why the two differ).
+ * pick-list stays gated on `inventory:pick_list:view`; every write control on
+ * pick-execute and consume-items (and their method bodies) gates on the write
+ * authority its endpoint actually enforces (`inventory:pick_list:execute` and
+ * `workorder:parts:consume` respectively — see route-permissions.ts and
+ * INVENTORY_PAGE.consumeItems for why the two differ).
+ *
+ * Route/landing admission for those two pages is a second, independent
+ * requirement (`INVENTORY_PAGE.pickExecuteAccess` / `consumeItemsAccess`):
+ * `getWorkorderPickList`/`getPickTasks` (pick-execute) and `getPickedItems`
+ * (consume-items) are each `@PreAuthorize('inventory:pick_list:view')` on the
+ * backend with no execute/consume fallback, and each page fires that read
+ * unconditionally on construction. A session holding only the write authority
+ * would pass a write-only route guard and then 403 on its own first read
+ * before it could pick anything (PR #364 review finding; the same gap issue
+ * #258 fixed for cycle-count-plan-create). The route/landing gate therefore
+ * ANDs the view code onto the write code; the write-control gate stays
+ * write-only, so view still never enables a write control (ADR-0040 §6a.1).
  */
 describe('fulfillment picking permissions (issue #347 group 5)', () => {
   const inventoryPages = pagesOf(INVENTORY_ROUTES).map(page => ({
@@ -390,11 +402,29 @@ describe('fulfillment picking permissions (issue #347 group 5)', () => {
     expect(canOpen(viewOnly, CONSUME_ITEMS)).toBe(false);
   });
 
-  it('an execute+consume session (mechanic-like) reaches execute and consume, and nothing else in inventory', () => {
+  it('an execute+consume session without the pick-list view cannot open either write page (it would 403 on its own first read)', () => {
+    // The write authority alone satisfies the group gate and each write
+    // control, but not route admission: pick-execute's getWorkorderPickList/
+    // getPickTasks and consume-items' getPickedItems are each
+    // @PreAuthorize('inventory:pick_list:view') on the backend, with no
+    // execute/consume fallback, so a write-only session would pass a
+    // write-only route guard and then 403 immediately on load (PR #364 review
+    // finding).
+    const writeOnly = ['inventory:pick_list:execute', 'workorder:parts:consume'];
+
+    expect(canOpen(writeOnly, PICK_EXECUTE)).toBe(false);
+    expect(canOpen(writeOnly, CONSUME_ITEMS)).toBe(false);
+  });
+
+  it('an execute+consume+view session (mechanic-like) reaches execute and consume, and nothing else in inventory', () => {
     // A mechanic's permission set as the product decision describes it: able to
-    // execute a pick and consume picked items, holding no other inventory
-    // authority (not even the pick-list view).
-    const mechanicLike = ['inventory:pick_list:execute', 'workorder:parts:consume'];
+    // execute a pick and consume picked items, plus the pick-list view both
+    // pages' own reads require to load at all.
+    const mechanicLike = [
+      'inventory:pick_list:view',
+      'inventory:pick_list:execute',
+      'workorder:parts:consume',
+    ];
 
     // The /app/inventory group gate admits it: inventory:pick_list:execute
     // matches the 'inventory:' prefix in INVENTORY_PERMISSIONS.
@@ -402,8 +432,8 @@ describe('fulfillment picking permissions (issue #347 group 5)', () => {
 
     expect(canOpen(mechanicLike, PICK_EXECUTE)).toBe(true);
     expect(canOpen(mechanicLike, CONSUME_ITEMS)).toBe(true);
-    // Denied the view-gated list page — execute does not imply view.
-    expect(canOpen(mechanicLike, PICK_LIST)).toBe(false);
+    // The view code this session also holds admits the plain list page too.
+    expect(canOpen(mechanicLike, PICK_LIST)).toBe(true);
 
     // Every other inventory page stays closed: this session widens nothing else.
     // (The bare landing page is intentionally ungated by design — cards are

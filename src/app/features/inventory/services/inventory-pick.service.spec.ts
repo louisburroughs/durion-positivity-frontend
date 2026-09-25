@@ -2,7 +2,7 @@
  * InventoryPickService unit tests (CAP-218: Pick List & Picking Stories 92, 243, 244).
  *
  * Moved out of workexec.service.spec.ts (issue #347, group 5) — picking
- * belongs to inventory, even though a mechanic performs it on a work order.
+ * belongs to inventory, even though a mechanic performs it on a workorder.
  */
 import { TestBed } from '@angular/core/testing';
 import {

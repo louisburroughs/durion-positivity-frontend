@@ -5,8 +5,8 @@
  * legacy `/workexec/v1/workorders/{workorderId}/picks/*` endpoints still served
  * off `ApiBaseService` (see `services/inventory-pick.service.ts`).
  *
- * Picking belongs to inventory even though a mechanic performs it on a work
- * order (issue #347, group 5) — moved out of `features/workexec` so the pages
+ * Picking belongs to inventory even though a mechanic performs it on a
+ * workorder (issue #347, group 5) — moved out of `features/workexec` so the pages
  * that read/write pick state don't reach across a feature boundary for their
  * own models (ADR-0036 §2).
  */

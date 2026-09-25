@@ -192,7 +192,7 @@ export const INVENTORY_ROUTES: Routes = [
       },
       {
         path: 'fulfillment/workorders/:workorderId/consume-items',
-        data: { permissions: INVENTORY_PAGE.consumeItems },
+        data: { allPermissions: INVENTORY_PAGE.consumeItemsAccess },
         loadComponent: () =>
           import('./pages/fulfillment/consume-picked-items/consume-picked-items-page.component').then(
             m => m.ConsumePickedItemsPageComponent,
@@ -200,7 +200,7 @@ export const INVENTORY_ROUTES: Routes = [
       },
       {
         path: 'fulfillment/workorders/:workorderId/pick-execute',
-        data: { permissions: INVENTORY_PAGE.pickExecute },
+        data: { allPermissions: INVENTORY_PAGE.pickExecuteAccess },
         loadComponent: () =>
           import('./pages/fulfillment/pick-execute/pick-execute-page.component').then(
             m => m.PickExecutePageComponent,

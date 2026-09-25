@@ -18,7 +18,7 @@ import {
  * list, mechanic picking (scan/confirm/complete), consume-picked-items.
  *
  * Moved out of `WorkexecService` (issue #347, group 5) — picking belongs to
- * inventory, even though a mechanic performs it on a work order. Backend
+ * inventory, even though a mechanic performs it on a workorder. Backend
  * operationId mapping (pos-workorder/openapi.yaml):
  *   getWorkorderPickList (facade)  → GET  /v1/workorders/{workorderId}/pick-list
  *   getPickTasks (facade)          → GET  /v1/workorders/{workorderId}/pick-list/tasks

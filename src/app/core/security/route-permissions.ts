@@ -224,22 +224,52 @@ export const INVENTORY_PAGE = {
   /**
    * `pick-execute` exists to write (scan-resolve/confirm/complete on
    * `WorkorderPickFacadeController`, each `@PreAuthorize('inventory:pick_list:execute')`),
-   * so it is gated on the write, not the `pickList` view its initial pick-list
-   * read also happens to need (ADR-0040 §6a.1). Fixes issue #347 group 5: a
-   * mechanic reaching this page previously needed `inventory:pick_list:view`
-   * only, the same read authority as the list page.
+   * so every mutation surface and its method body gate on this write code, not
+   * the `pickList` view (ADR-0040 §6a.1). Fixes issue #347 group 5: a mechanic
+   * reaching this page previously needed `inventory:pick_list:view` only, the
+   * same read authority as the list page.
+   *
+   * Not the route/landing-nav gate — use `pickExecuteAccess` for those. This
+   * write-only set stays exactly what `PickExecutePageComponent.canExecute` and
+   * its component/method tests check.
    */
   pickExecute: ['inventory:pick_list:execute'],
+  /**
+   * Route/landing-nav admission for `pick-execute`, distinct from `pickExecute`
+   * above. `getWorkorderPickList` and `getPickTasks` — the reads the page's
+   * constructor fires unconditionally — are each `@PreAuthorize('inventory:pick_list:view')`
+   * on `WorkorderPickFacadeController`, with no `execute` fallback, so a session
+   * admitted on the write alone still 403s before it can pick. AND both
+   * authorities here, mirroring `cycleCountPlanCreate`: deny before render
+   * rather than let the page load and 403 on its own first read (issue #258
+   * pattern; found again for this page in PR #364 review). Declared on the
+   * route as `allPermissions`, never folded into `pickExecute`, so the write
+   * controls keep gating on the write code alone.
+   */
+  pickExecuteAccess: ['inventory:pick_list:view', 'inventory:pick_list:execute'],
   /**
    * `consume-picked-items` exists to write. Its actual backend enforcement is
    * `WorkorderPickedItemsController.consumeWorkorderPickedItems` →
    * `@PreAuthorize('workorder:parts:consume')` — a workexec-domain code, not
-   * `inventory:pick_list:execute` — so it is gated on that, matching what the
-   * endpoint enforces (ADR-0040 §6a.1). Its own read (`getPickedItems`) still
-   * needs `inventory:pick_list:view`; see INVENTORY_PERMISSIONS for why the
-   * write code is folded into the group gate.
+   * `inventory:pick_list:execute` — so every mutation surface and its method
+   * body gate on that, matching what the endpoint enforces (ADR-0040 §6a.1).
+   *
+   * Not the route/landing-nav gate — use `consumeItemsAccess` for that. This
+   * write-only set stays exactly what `ConsumePickedItemsPageComponent`'s
+   * submit gate and its component/method tests check.
    */
   consumeItems: ['workorder:parts:consume'],
+  /**
+   * Route/landing-nav admission for `consume-items`, distinct from
+   * `consumeItems` above. Its own read, `getPickedItems`, is
+   * `@PreAuthorize('inventory:pick_list:view')` on `WorkorderPickedItemsController`
+   * — same gap as `pickExecuteAccess` above: a write-only session is admitted
+   * by the route but 403s on the page's own first read. AND both authorities
+   * here so the route denies before render instead (issue #258 pattern).
+   * Declared as `allPermissions`, never folded into `consumeItems`, so the
+   * write control keeps gating on `workorder:parts:consume` alone.
+   */
+  consumeItemsAccess: ['inventory:pick_list:view', 'workorder:parts:consume'],
   returnToStock: ['inventory:return:view'],
   shortageResolution: ['inventory:shortage:view'],
   /** Purchase orders live under /app/inventory but are served by pos-order. */

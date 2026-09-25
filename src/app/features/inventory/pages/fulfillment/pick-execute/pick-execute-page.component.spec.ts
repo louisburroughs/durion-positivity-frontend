@@ -56,7 +56,7 @@ function buildRoute(workorderId: string | null = 'wo-001') {
   };
 }
 
-async function setupPickExecute(workorderId: string | null = 'wo-001', permissions: string[] | null = null) {
+async function setupPickExecuteFixture(workorderId: string | null = 'wo-001', permissions: string[] | null = null) {
   session.permissions = permissions;
   await TestBed.configureTestingModule({
     imports: [PickExecutePageComponent, TranslateModule.forRoot()],
@@ -67,7 +67,11 @@ async function setupPickExecute(workorderId: string | null = 'wo-001', permissio
       { provide: ActivatedRoute, useValue: buildRoute(workorderId) },
     ],
   }).compileComponents();
-  return TestBed.createComponent(PickExecutePageComponent).componentInstance;
+  return TestBed.createComponent(PickExecutePageComponent);
+}
+
+async function setupPickExecute(workorderId: string | null = 'wo-001', permissions: string[] | null = null) {
+  return (await setupPickExecuteFixture(workorderId, permissions)).componentInstance;
 }
 
 describe('PickExecutePageComponent', () => {
@@ -196,7 +200,8 @@ describe('PickExecutePageComponent', () => {
     });
 
     it('refuses scan/confirm/complete for a view-only session (the pre-fix authority)', async () => {
-      const component = await setupPickExecute('wo-001', ['inventory:pick_list:view']);
+      const fixture = await setupPickExecuteFixture('wo-001', ['inventory:pick_list:view']);
+      const component = fixture.componentInstance;
 
       expect(component.canExecute()).toBe(false);
 
@@ -206,6 +211,31 @@ describe('PickExecutePageComponent', () => {
 
       component.complete();
       expect(mockPickService.completePickList).not.toHaveBeenCalled();
+
+      // Independent control assertions (ADR-0040 §6a.5): scan and complete
+      // must be disabled in the rendered template too, not only refused
+      // imperatively — a template regression removing a [disabled] binding
+      // would otherwise pass while these buttons stayed clickable.
+      fixture.detectChanges();
+      const scanButton: HTMLButtonElement | null =
+        fixture.nativeElement.querySelector('.scan-card button.btn-primary');
+      const completeButton: HTMLButtonElement | null =
+        fixture.nativeElement.querySelector('.action-row button.btn-primary');
+      expect(scanButton?.disabled).toBe(true);
+      expect(completeButton?.disabled).toBe(true);
+
+      // The confirm control only renders once a line is pending; force one
+      // to check its independent disablement and that confirmLine() itself
+      // refuses too.
+      component.pendingLine.set(executeLineFixture);
+      component.setConfirmQty(1);
+      fixture.detectChanges();
+      const confirmButton: HTMLButtonElement | null =
+        fixture.nativeElement.querySelector('.pending-section button.btn-primary');
+      expect(confirmButton?.disabled).toBe(true);
+
+      component.confirmLine();
+      expect(mockPickService.confirmPickLine).not.toHaveBeenCalled();
     });
 
     it('treats an unknown permission claim (legacy token) as granted, matching canAccess()', async () => {

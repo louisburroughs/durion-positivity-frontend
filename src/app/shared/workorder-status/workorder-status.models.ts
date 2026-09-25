@@ -1,8 +1,8 @@
 /**
- * Work-order status enum shared between `workexec` (source of truth — mirrors
+ * Workorder status enum shared between `workexec` (source of truth — mirrors
  * the backend `WorkorderStatus` / SDK `WorkorderDetailResponseStatusEnum`,
  * pos-workorder/openapi.yaml) and `shopmgmt` (the shop dashboard, which
- * aggregates work-order statuses across bays and mobile units).
+ * aggregates workorder statuses across bays and mobile units).
  *
  * Kept in `shared/` — types only, no dependency on `features/**` — so
  * `shopmgmt` never has to import `workexec`'s Estimate/Workorder DTOs for the

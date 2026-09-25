@@ -1118,8 +1118,8 @@ export class WorkexecService {
   // Pick list / picked items / mechanic picking (getWorkorderPickList,
   // getPickedItems, consumePickedItems, resolvePickScan, confirmPickLine,
   // completePickList) moved to InventoryPickService (features/inventory) —
-  // picking belongs to inventory, even though a mechanic performs it on a work
-  // order (issue #347, group 5).
+  // picking belongs to inventory, even though a mechanic performs it on a
+  // workorder (issue #347, group 5).
 
   // ── CAP-005: Change Requests (Story 220) ──────────────────────────────────
 

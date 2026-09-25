@@ -62,8 +62,9 @@ async function setupConsumeItems(workorderId: string | null = 'wo-001', permissi
 
 async function setupConsumeItemsFixture(
   workorderId: string | null = 'wo-001',
+  permissions: string[] | null = null,
 ): Promise<ComponentFixture<ConsumePickedItemsPageComponent>> {
-  session.permissions = null;
+  session.permissions = permissions;
   await TestBed.configureTestingModule({
     imports: [ConsumePickedItemsPageComponent, TranslateModule.forRoot()],
     providers: [
@@ -194,11 +195,22 @@ describe('ConsumePickedItemsPageComponent', () => {
 
     it('refuses submit for a session holding only inventory:pick_list:execute (the split between authorities)', async () => {
       mockPickService.getPickedItems.mockReturnValue(of(pickedItemsFixture));
-      const component = await setupConsumeItems('wo-001', ['inventory:pick_list:execute']);
+      const fixture = await setupConsumeItemsFixture('wo-001', ['inventory:pick_list:execute']);
+      const component = fixture.componentInstance;
 
       expect(component.canConsume()).toBe(false);
 
+      // Independent control assertion (ADR-0040 §6a.5): the submit button
+      // itself must be disabled, not only the method's imperative refusal —
+      // a regression removing the template's [disabled] binding would
+      // otherwise pass while this session could still click a live button.
       component.consumeQtys.set({ 'pi-001': 3 });
+      fixture.detectChanges();
+
+      const submitButton: HTMLButtonElement | null =
+        fixture.nativeElement.querySelector('.action-bar button.btn-primary');
+      expect(submitButton?.disabled).toBe(true);
+
       component.submit();
 
       expect(mockPickService.consumePickedItems).not.toHaveBeenCalled();

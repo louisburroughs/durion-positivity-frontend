@@ -679,4 +679,4 @@ export interface WorkorderSnapshotHistoryEntry {
 
 // Pick List / Picked Items / Mechanic Picking (CAP-218 #92, #243, #244) moved to
 // features/inventory/models/inventory-pick.models.ts — picking belongs to inventory,
-// even though a mechanic performs it on a work order (issue #347, group 5).
+// even though a mechanic performs it on a workorder (issue #347, group 5).
