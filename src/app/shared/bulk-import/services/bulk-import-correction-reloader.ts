@@ -14,8 +14,14 @@ export interface CorrectionReloadOptions<T> {
   readonly onReloadSuccess: (result: T) => void;
   /** Applies a re-read failure that is still current. */
   readonly onReloadError?: () => void;
-  /** Applied synchronously if `submit$` itself errors — no reload is issued in that case. */
-  readonly onSubmitError?: (error: unknown) => void;
+  /**
+   * Applied synchronously if `submit$` itself errors — no reload is issued in that case.
+   * Mandatory: `submitCorrection()` turns a server `REJECTED` result into an Observable
+   * error (`CorrectionRejectedError`), so an omitted handler would let a rejection vanish
+   * with no localized signal (Copilot #4105840870). Callers must show a localized error —
+   * never the server's `rejectionReason` text.
+   */
+  readonly onSubmitError: (error: unknown) => void;
 }
 
 /**
@@ -53,7 +59,7 @@ export class BulkImportCorrectionReloader {
     return submit$.pipe(
       switchMap(() => this.reload(recordId, options)),
       catchError(error => {
-        options.onSubmitError?.(error);
+        options.onSubmitError(error);
         this.removePending(recordId);
         return of(undefined);
       }),

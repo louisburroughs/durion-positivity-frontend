@@ -14,6 +14,7 @@ describe('BulkImportCorrectionReloader', () => {
     reloader.run('rec-1', submit$, {
       reload$,
       onReloadSuccess: result => { applied = result; },
+      onSubmitError: () => { /* not reached */ },
     }).subscribe();
 
     expect(pendingIds().has('rec-1')).toBe(true);
@@ -55,6 +56,7 @@ describe('BulkImportCorrectionReloader', () => {
       reload$: throwError(() => new Error('reload failed')),
       onReloadSuccess: () => { /* not reached */ },
       onReloadError: () => { errored = true; },
+      onSubmitError: () => { /* not reached */ },
     }).subscribe();
 
     expect(pendingIds().has('rec-1')).toBe(false);
@@ -71,11 +73,13 @@ describe('BulkImportCorrectionReloader', () => {
     reloader.run('rec-A', of(undefined), {
       reload$: reloadA$,
       onReloadSuccess: r => applied.push(r),
+      onSubmitError: () => { /* not reached */ },
     }).subscribe();
 
     reloader.run('rec-B', of(undefined), {
       reload$: reloadB$,
       onReloadSuccess: r => applied.push(r),
+      onSubmitError: () => { /* not reached */ },
     }).subscribe();
 
     // The newer reload (B) lands first and is applied.
@@ -89,5 +93,28 @@ describe('BulkImportCorrectionReloader', () => {
     reloadA$.complete();
     expect(applied).toEqual(['b-result']);
     expect(pendingIds().has('rec-A')).toBe(false);
+  });
+
+  it('onSubmitError is mandatory at the type level, so a REJECTED correction can never vanish silently (Copilot #4105840870)', () => {
+    const pendingIds = signal<Set<string>>(new Set());
+    const reloader = new BulkImportCorrectionReloader(pendingIds);
+    let caught: unknown;
+
+    // Not subscribed: this closure only proves the type-level enforcement below, never runs.
+    // @ts-expect-error onSubmitError is required — a caller omitting it must fail to compile.
+    const missingHandler = () => reloader.run('rec-1', throwError(() => new Error('rejected')), {
+      reload$: of(1),
+      onReloadSuccess: () => { /* not reached */ },
+    });
+    expect(missingHandler).toBeDefined();
+
+    reloader.run('rec-2', throwError(() => new Error('rejected')), {
+      reload$: of(1),
+      onReloadSuccess: () => { /* not reached */ },
+      onSubmitError: err => { caught = err; },
+    }).subscribe();
+
+    expect(caught).toBeInstanceOf(Error);
+    expect(pendingIds().has('rec-2')).toBe(false);
   });
 });

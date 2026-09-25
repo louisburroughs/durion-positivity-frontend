@@ -7078,12 +7078,17 @@
         "LOAD_MAPPINGS": "Unable to load column mappings.",
         "APPROVE_MAPPINGS": "Unable to approve column mappings.",
         "RETRY": "Unable to retry job.",
-        "POLL": "Failed to get import status. Please refresh."
+        "POLL": "Failed to get import status. Please refresh.",
+        "LOAD_RESULTS": "Unable to load error records. Please try again.",
+        "CORRECTION": "Failed to submit correction. Please try again."
       },
       "CONFLICT": {
         "TITLE": "Active Import in Progress",
         "MESSAGE": "There is an active import job for another domain. Please wait for it to complete before starting a new import.",
         "VIEW_JOB": "View Active Job"
+      },
+      "ERROR_RECORDS": {
+        "RETRY": "Retry"
       },
       "STEP": {
         "UPLOAD": {

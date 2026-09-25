@@ -7078,12 +7078,17 @@
         "LOAD_MAPPINGS": "Impossible de charger les mappages de colonnes.",
         "APPROVE_MAPPINGS": "Impossible d'approuver les mappages de colonnes.",
         "RETRY": "Impossible de reessayer le travail.",
-        "POLL": "Impossible d'obtenir le statut d'importation. Veuillez actualiser."
+        "POLL": "Impossible d'obtenir le statut d'importation. Veuillez actualiser.",
+        "LOAD_RESULTS": "Impossible de charger les enregistrements d'erreur. Veuillez reessayer.",
+        "CORRECTION": "Echec de l'envoi de la correction. Veuillez reessayer."
       },
       "CONFLICT": {
         "TITLE": "Importation active en cours",
         "MESSAGE": "Un travail d'importation actif existe pour un autre domaine. Veuillez attendre sa fin avant de commencer une nouvelle importation.",
         "VIEW_JOB": "Voir le travail actif"
+      },
+      "ERROR_RECORDS": {
+        "RETRY": "Reessayer"
       },
       "STEP": {
         "UPLOAD": {

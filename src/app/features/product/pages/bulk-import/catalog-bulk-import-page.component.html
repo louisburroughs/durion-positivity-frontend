@@ -68,10 +68,24 @@
 		<section class="wizard-step" [attr.aria-label]="'BULK_IMPORT.WIZARD.STEP.RESULTS.ARIA_LABEL' | translate">
 			<app-bulk-import-results-summary [job]="job()!" (downloadReport)="downloadErrorReport()" (retry)="retryJob()" />
 
+			@if (auditReadFailed()) {
+				<div class="wizard-banner wizard-banner--error" role="alert">
+					<p>{{ auditErrorKey()! | translate }}</p>
+					<button class="wizard-btn wizard-btn--secondary" type="button" (click)="retryAuditLoad()">
+						{{ 'BULK_IMPORT.WIZARD.ERROR_RECORDS.RETRY' | translate }}
+					</button>
+				</div>
+			}
+			@if (correctionErrorKey()) {
+				<div class="wizard-banner wizard-banner--error" role="alert">
+					{{ correctionErrorKey()! | translate }}
+				</div>
+			}
 			@if (auditRecords().length > 0) {
 				<app-bulk-import-error-records-table
 					[records]="auditRecords()"
 					[pendingRecordIds]="correctionPendingIds()"
+					[readOnly]="auditReadFailed()"
 					(submitCorrection)="onSubmitCorrection($event)"
 				/>
 			}

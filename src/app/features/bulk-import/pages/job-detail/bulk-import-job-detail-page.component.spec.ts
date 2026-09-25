@@ -5,7 +5,7 @@ import { Subject, of, throwError } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { BulkImportJobDetailPageComponent } from './bulk-import-job-detail-page.component';
 import { BulkImportService } from '../../../../shared/bulk-import/services/bulk-import.service';
-import { AuditRecordListResponse, BulkLoadJob, BulkLoadRecordAudit } from '../../../../shared/bulk-import/models/bulk-import.models';
+import { AuditRecordListResponse, BulkLoadJob, BulkLoadRecordAudit, CorrectionRejectedError } from '../../../../shared/bulk-import/models/bulk-import.models';
 import { CorrectionSubmitEvent } from '../../../../shared/bulk-import/components/bulk-import-error-records-table/bulk-import-error-records-table.component';
 
 const mockJob: BulkLoadJob = {
@@ -242,6 +242,42 @@ describe('BulkImportJobDetailPageComponent', () => {
     expect(component.isCorrectionPending('rec-001')).toBe(false);
     expect(component.state()).toBe('error');
     expect(component.errorKey()).toBe('BULK_IMPORT.JOB_DETAIL.ERROR.LOAD_AUDIT');
+
+    // Corrections are blocked: the error-records table (and its stale rows) never render
+    // while state is 'error' (ADR-0064 §1-2) — the failed re-read never looks like success.
+    fixture.detectChanges();
+    const table = fixture.nativeElement.querySelector('app-bulk-import-error-records-table');
+    expect(table).toBeNull();
+
+    // A retry (re-running the same load the page uses on entry) recovers.
+    mockService.getJob.mockReturnValue(of(mockJob));
+    mockService.listAuditRecords.mockReturnValue(
+      of({ items: [mockAuditRecord], nextPageToken: null } as AuditRecordListResponse),
+    );
+    component.loadDetail();
+    fixture.detectChanges();
+
+    expect(component.state()).toBe('ready');
+    expect(component.errorKey()).toBeNull();
+    expect(fixture.nativeElement.querySelector('app-bulk-import-error-records-table')).not.toBeNull();
+  });
+
+  it('a REJECTED correction surfaces the localized correction error, never the server rejectionReason text, and releases the pending flag (Copilot #4105840870)', () => {
+    const event: CorrectionSubmitEvent = {
+      record: mockAuditRecord,
+      request: { correctedValues: { sku: 'GOOD-SKU' } },
+    };
+    mockService.submitCorrection.mockReturnValue(
+      throwError(() => new CorrectionRejectedError('sku already assigned to another record')),
+    );
+
+    component.onSubmitCorrection(event);
+    fixture.detectChanges();
+
+    expect(component.state()).toBe('error');
+    expect(component.errorKey()).toBe('BULK_IMPORT.JOB_DETAIL.ERROR.CORRECTION');
+    expect(component.errorKey()).not.toContain('sku already assigned');
+    expect(component.isCorrectionPending('rec-001')).toBe(false);
   });
 
   it('ignores a stale re-read result when a newer correction reload has already landed', () => {

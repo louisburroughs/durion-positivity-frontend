@@ -97,4 +97,23 @@ describe('BulkImportErrorRecordsTableComponent', () => {
   it('getFieldKeys returns keys from originalValues', () => {
     expect(component.getFieldKeys(mockRecord)).toEqual(['sku', 'qty']);
   });
+
+  describe('readOnly (ADR-0064 §1-2: a failed audit re-read blocks further corrections)', () => {
+    it('defaults to false, leaving fields and the submit button enabled', () => {
+      expect(component.readOnly).toBe(false);
+      const input: HTMLInputElement = fixture.nativeElement.querySelector('.error-records__field-input');
+      expect(input.disabled).toBe(false);
+    });
+
+    it('disables every field input and the submit button when true, even with a pending draft', () => {
+      component.readOnly = true;
+      component.updateDraft('rec-001', 'sku', 'GOOD-SKU');
+      fixture.detectChanges();
+
+      const input: HTMLInputElement = fixture.nativeElement.querySelector('.error-records__field-input');
+      const submitBtn: HTMLButtonElement = fixture.nativeElement.querySelector('.error-records__submit-btn');
+      expect(input.disabled).toBe(true);
+      expect(submitBtn.disabled).toBe(true);
+    });
+  });
 });

@@ -7078,12 +7078,17 @@
         "LOAD_MAPPINGS": "No se pudieron cargar los mapeos de columnas.",
         "APPROVE_MAPPINGS": "No se pudieron aprobar los mapeos de columnas.",
         "RETRY": "No se pudo reintentar el trabajo.",
-        "POLL": "No se pudo obtener el estado de importación. Por favor actualice."
+        "POLL": "No se pudo obtener el estado de importación. Por favor actualice.",
+        "LOAD_RESULTS": "No se pudieron cargar los registros de errores. Intente nuevamente.",
+        "CORRECTION": "No se pudo enviar la corrección. Intente nuevamente."
       },
       "CONFLICT": {
         "TITLE": "Importación activa en curso",
         "MESSAGE": "Un trabajo de importación activo existe para otro dominio. Por favor espere a que termine antes de comenzar una nueva importación.",
         "VIEW_JOB": "Ver trabajo activo"
+      },
+      "ERROR_RECORDS": {
+        "RETRY": "Reintentar"
       },
       "STEP": {
         "UPLOAD": {
