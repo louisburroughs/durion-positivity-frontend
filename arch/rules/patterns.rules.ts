@@ -141,7 +141,9 @@ const ERROR_LIKE_STATE_LITERALS = new Set(['error', 'unreachable']);
 function isCompliantStatePrecede(prev: ts.Statement | undefined): boolean {
   if (!prev) return false;
   if (isStateSetLiteral(prev)) {
-    const expr = (prev as ts.ExpressionStatement).expression as ts.CallExpression;
+    // isStateSetLiteral also accepts a one-statement block (`{ this.state.set('error'); }`).
+    const stmt = ts.isBlock(prev) ? prev.statements[0] : prev;
+    const expr = (stmt as ts.ExpressionStatement).expression as ts.CallExpression;
     return ERROR_LIKE_STATE_LITERALS.has((expr.arguments[0] as ts.StringLiteral).text);
   }
   if (isExhaustiveStateIf(prev)) return true; // §11.4-style carve-out, generalised past the ternary shape

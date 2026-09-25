@@ -129,6 +129,11 @@ describe("[self] PAT-03 errorKey.set(<non-null>) is immediately preceded by an e
     expect(findings).toEqual([]);
   });
 
+  it("does not crash on, and accepts, a one-statement block { state.set('error'); } before errorKey.set", () => {
+    const findings = pat03Finder({ path: P, content: withStateSignal("{ this.state.set('error'); }\n            this.errorKey.set('FXPAT.ERROR');") });
+    expect(findings).toEqual([]);
+  });
+
   it('§11.4: is compliant with a computed forbidden/error ternary', () => {
     const findings = pat03Finder({
       path: P,
