@@ -5768,7 +5768,7 @@
             "SKU": "SKU",
             "STAGING_LOCATION": "Staging",
             "TARGET_LOCATION": "Target Location",
-            "QTY_UOM": "Qty / UOM",
+            "QUANTITY": "Quantity",
             "STATUS": "Status"
           }
         },

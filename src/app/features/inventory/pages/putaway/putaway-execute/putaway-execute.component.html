@@ -58,7 +58,7 @@
     </div>
     <div class="action-bar">
       <button class="btn-primary" type="button" (click)="completePutaway()"
-        [disabled]="submitting() || !targetStorageLocationId().trim()" [attr.aria-busy]="submitting()">
+        [disabled]="submitting() || !targetStorageLocationId().trim() || !canExecute()" [attr.aria-busy]="submitting()">
         {{ 'INVENTORY.PUTAWAY.EXECUTE.ACTION.COMPLETE' | translate }}
       </button>
       <button class="btn-secondary" type="button" (click)="goBack()">

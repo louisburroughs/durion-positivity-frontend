@@ -388,6 +388,27 @@ describe('BulkImportService', () => {
         correctedData: { quantity: '42' },
       });
     });
+
+    it('routes a REJECTED result through the error channel instead of resolving as success (Copilot #4105525794)', async () => {
+      const { CorrectionRejectedError } = await import('../models/bulk-import.models');
+      const req: SubmitCorrectionRequest = { correctedValues: { sku: 'BAD-SKU' } };
+      reviewQueueStub.submitSingleCorrection.mockReturnValue(of({
+        auditRecordId: 'rec-001',
+        status: 'REJECTED',
+        rejectionReason: 'sku already assigned',
+      }));
+
+      let completed = false;
+      let caught: unknown;
+      service.submitCorrection('job-001', 'rec-001', req).subscribe({
+        next: () => { completed = true; },
+        error: err => { caught = err; },
+      });
+
+      expect(completed).toBe(false);
+      expect(caught).toBeInstanceOf(CorrectionRejectedError);
+      expect((caught as InstanceType<typeof CorrectionRejectedError>).rejectionReason).toBe('sku already assigned');
+    });
   });
 
   describe('getErrorReportUrl()', () => {

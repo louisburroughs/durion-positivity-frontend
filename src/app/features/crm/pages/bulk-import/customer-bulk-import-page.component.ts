@@ -4,6 +4,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { interval, Subscription, switchMap } from 'rxjs';
 import { TranslatePipe } from '@ngx-translate/core';
 import { BulkImportService } from '../../../../shared/bulk-import/services/bulk-import.service';
+import { BulkImportCorrectionReloader } from '../../../../shared/bulk-import/services/bulk-import-correction-reloader';
 import {
   ACTIVE_JOB_STATUSES,
   ApproveColumnMappingsRequest,
@@ -50,6 +51,7 @@ export class CustomerBulkImportPageComponent implements OnInit, OnDestroy {
   readonly uploadProgress = signal<number>(0);
   readonly conflictJob = signal<BulkLoadJob | null>(null);
   readonly correctionPendingIds = signal<Set<string>>(new Set());
+  private readonly correctionReloader = new BulkImportCorrectionReloader(this.correctionPendingIds);
 
   readonly domainType = DOMAIN_TYPE;
   private uploadAbort: (() => void) | null = null;
@@ -269,18 +271,20 @@ export class CustomerBulkImportPageComponent implements OnInit, OnDestroy {
   onSubmitCorrection(event: CorrectionSubmitEvent): void {
     const jobId = this.job()?.jobId;
     if (!jobId) { return; }
-    this.correctionPendingIds.update(s => { const n = new Set(s); n.add(event.record.recordId); return n; });
-    this.service.submitCorrection(jobId, event.record.recordId, event.request)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: () => {
-          this.loadAuditRecords();
-          this.correctionPendingIds.update(s => { const n = new Set(s); n.delete(event.record.recordId); return n; });
+    this.correctionReloader.run(
+      event.record.recordId,
+      this.service.submitCorrection(jobId, event.record.recordId, event.request),
+      {
+        reload$: this.service.listAuditRecords(jobId, { reviewStatus: 'PENDING' }),
+        onReloadSuccess: result => {
+          this.auditRecords.set(result.items);
+          this.state.set('results');
         },
-        error: () => {
-          this.correctionPendingIds.update(s => { const n = new Set(s); n.delete(event.record.recordId); return n; });
+        onReloadError: () => {
+          this.state.set('results');
         },
-      });
+      },
+    ).pipe(takeUntilDestroyed(this.destroyRef)).subscribe();
   }
 
   downloadErrorReport(): void {

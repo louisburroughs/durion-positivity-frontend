@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, map } from 'rxjs';
+import { Observable, map, of, switchMap, throwError } from 'rxjs';
 import { Upload } from 'tus-js-client';
 import {
   BulkLoadJobsAPIService,
@@ -17,6 +17,7 @@ import {
   BulkLoadColumnMapping,
   BulkLoadJob,
   BulkLoadRecordAudit,
+  CorrectionRejectedError,
   CreateUploadSessionRequest,
   CreateUploadSessionResponse,
   DomainType,
@@ -159,6 +160,12 @@ export class BulkImportService {
    * none of `entityType`, `rowNumber`, `reasonCodes` or the corrected `originalValues`
    * (backend #2205 tracks widening it), so callers must re-read the audit record list
    * after this resolves rather than splice a record from this response.
+   *
+   * A `REJECTED` result is a normal HTTP 200 — it is not thrown by the SDK — so it is
+   * routed through this Observable's error channel here as a `CorrectionRejectedError`.
+   * Callers rely on their existing localized correction-error handling for this; the
+   * server's free-text `rejectionReason` is carried on the error for logging/future
+   * reason-code mapping only and must never be rendered as-is (ADR-0064 §4-5).
    */
   submitCorrection(
     jobId: string,
@@ -172,7 +179,11 @@ export class BulkImportService {
 
     return this.reviewQueueService
       .submitSingleCorrection(jobId, { auditRecordId: recordId, correctedData })
-      .pipe(map(() => undefined as void));
+      .pipe(
+        switchMap(result => result.status === 'REJECTED'
+          ? throwError(() => new CorrectionRejectedError(result.rejectionReason ?? undefined))
+          : of(undefined as void)),
+      );
   }
 
   /** Returns the API URL for downloading the error report CSV. */

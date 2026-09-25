@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
-import { of, throwError } from 'rxjs';
+import { Subject, of, throwError } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { BulkImportJobDetailPageComponent } from './bulk-import-job-detail-page.component';
 import { BulkImportService } from '../../../../shared/bulk-import/services/bulk-import.service';
@@ -192,6 +192,91 @@ describe('BulkImportJobDetailPageComponent', () => {
 
     expect(component.state()).toBe('error');
     expect(component.errorKey()).toBe('BULK_IMPORT.JOB_DETAIL.ERROR.CORRECTION');
+  });
+
+  it('keeps the record pending until the re-read it triggered settles (ADR-0063 §4-5)', () => {
+    const event: CorrectionSubmitEvent = {
+      record: mockAuditRecord,
+      request: { correctedValues: { sku: 'GOOD-SKU' } },
+    };
+    const submit$ = new Subject<void>();
+    const reload$ = new Subject<AuditRecordListResponse>();
+    mockService.submitCorrection.mockReturnValue(submit$);
+    mockService.listAuditRecords.mockReturnValue(reload$);
+
+    component.onSubmitCorrection(event);
+    expect(component.isCorrectionPending('rec-001')).toBe(true);
+
+    submit$.next(undefined);
+    submit$.complete();
+    // The re-read has started but not landed: still pending.
+    expect(mockService.listAuditRecords).toHaveBeenCalledWith('job-001');
+    expect(component.isCorrectionPending('rec-001')).toBe(true);
+
+    const correctedRecord: BulkLoadRecordAudit = { ...mockAuditRecord, reviewStatus: 'APPROVED' };
+    reload$.next({ items: [correctedRecord], nextPageToken: null });
+    reload$.complete();
+
+    expect(component.isCorrectionPending('rec-001')).toBe(false);
+    expect(component.auditRecords()).toEqual([correctedRecord]);
+    expect(component.state()).toBe('ready');
+  });
+
+  it('settles the pending flag when the re-read itself fails', () => {
+    const event: CorrectionSubmitEvent = {
+      record: mockAuditRecord,
+      request: { correctedValues: { sku: 'GOOD-SKU' } },
+    };
+    const submit$ = new Subject<void>();
+    const reload$ = new Subject<AuditRecordListResponse>();
+    mockService.submitCorrection.mockReturnValue(submit$);
+    mockService.listAuditRecords.mockReturnValue(reload$);
+
+    component.onSubmitCorrection(event);
+    submit$.next(undefined);
+    submit$.complete();
+    expect(component.isCorrectionPending('rec-001')).toBe(true);
+
+    reload$.error(new Error('re-read failed'));
+
+    expect(component.isCorrectionPending('rec-001')).toBe(false);
+    expect(component.state()).toBe('error');
+    expect(component.errorKey()).toBe('BULK_IMPORT.JOB_DETAIL.ERROR.LOAD_AUDIT');
+  });
+
+  it('ignores a stale re-read result when a newer correction reload has already landed', () => {
+    const record2: BulkLoadRecordAudit = {
+      recordId: 'rec-002', jobId: 'job-001', entityType: 'INVENTORY',
+      rowNumber: 2, reviewStatus: 'PENDING', reasonCodes: ['INVALID_SKU'],
+      originalValues: { sku: 'ALSO-BAD-SKU' },
+    };
+    const submitA$ = new Subject<void>();
+    const submitB$ = new Subject<void>();
+    const reloadA$ = new Subject<AuditRecordListResponse>();
+    const reloadB$ = new Subject<AuditRecordListResponse>();
+    mockService.submitCorrection.mockReturnValueOnce(submitA$).mockReturnValueOnce(submitB$);
+    mockService.listAuditRecords.mockReturnValueOnce(reloadA$).mockReturnValueOnce(reloadB$);
+
+    component.onSubmitCorrection({ record: mockAuditRecord, request: { correctedValues: { sku: 'A' } } });
+    submitA$.next(undefined);
+    submitA$.complete(); // issues reloadA, the soon-to-be-stale reload
+
+    component.onSubmitCorrection({ record: record2, request: { correctedValues: { sku: 'B' } } });
+    submitB$.next(undefined);
+    submitB$.complete(); // issues reloadB, the current reload
+
+    const afterB: BulkLoadRecordAudit = { ...record2, reviewStatus: 'APPROVED' };
+    reloadB$.next({ items: [afterB], nextPageToken: null });
+    reloadB$.complete();
+    expect(component.auditRecords()).toEqual([afterB]);
+
+    const afterA: BulkLoadRecordAudit = { ...mockAuditRecord, reviewStatus: 'APPROVED' };
+    reloadA$.next({ items: [afterA], nextPageToken: null });
+    reloadA$.complete();
+
+    expect(component.auditRecords()).toEqual([afterB]);
+    expect(component.isCorrectionPending('rec-001')).toBe(false);
+    expect(component.isCorrectionPending('rec-002')).toBe(false);
   });
 
   it('getFieldKeys returns the keys from originalValues', () => {

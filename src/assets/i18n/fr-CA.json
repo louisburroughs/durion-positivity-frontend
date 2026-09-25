@@ -5768,7 +5768,7 @@
             "SKU": "UGS",
             "STAGING_LOCATION": "Préparation",
             "TARGET_LOCATION": "Destination",
-            "QTY_UOM": "Qté / UOM",
+            "QUANTITY": "Quantité",
             "STATUS": "Statut"
           }
         },
