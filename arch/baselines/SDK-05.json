@@ -98,10 +98,5 @@
     "key": "src/app/features/workexec/services/workexec.service.ts :: '/v1/workorders/'",
     "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
     "tracking": "#350"
-  },
-  {
-    "key": "src/app/features/workexec/services/workexec.service.ts :: '/v1/workorders/estimates'",
-    "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "#350"
   }
 ]

@@ -335,7 +335,7 @@ tracked follow-up decisions.
 | —   | `workexec.service.ts` — `getWorkorderWipStatus`      | SDK path incompatible with legacy path                            | Consumer migration to new WIP API |
 | —   | `workexec.service.ts` — `getWorkorderInvoiceView`    | No SDK equivalent                                                 | SDK team to add endpoint          |
 | —   | `workexec.service.ts` — `requestInvoiceFinalization` | No SDK equivalent                                                 | SDK team to add endpoint          |
-| —   | `workexec.service.ts` — `listEstimatesForVehicle`    | No vehicle-scoped estimate listing in SDK                         | SDK team to add endpoint          |
+| ~~—~~ | ~~`workexec.service.ts` — `listEstimatesForVehicle`~~ | Resolved (issue #379): the vehicle filter exists on `searchEstimates`, which the frontend already used for text search | — |
 | D7  | `billing-transport.service.ts` — `executeRefund` (no-amount branch) | Live bug: SDK `RefundPaymentRequest` requires `amount`, but billing UX still supports a full refund via omitted amount | `louisburroughs/durion-positivity-backend#2215` |
 | D8  | `billing-transport.service.ts` — `loadReceipt`       | Live bug: `ReceiptService` has no read endpoint for receipt detail by ID | `louisburroughs/durion-positivity-backend#2214` |
 | —   | `chat-api.service.ts` — all                          | Permanent exception: gateway/MCP traffic                          | Never migrate                     |

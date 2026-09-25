@@ -1,5 +1,4 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpParams } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { EmployeeAPIService, PeopleAvailabilityAPIService, PeopleAvailabilityResponse } from '@durion-sdk/people';
@@ -9,6 +8,7 @@ import {
   ChangeRequestAPIService,
   EstimateAPIService,
   EstimateSearchService,
+  EstimateSummaryResponse as SdkEstimateSummaryResponse,
   WorkorderSearchService,
   EstimatesFromAppointmentsService,
   OperationalContextService,
@@ -675,13 +675,21 @@ export class WorkexecService {
   }
 
   /**
-   * operationId: listEstimatesForVehicle
-   * GET /v1/workorders/estimates?vehicleId={vehicleId}
+   * operationId: searchEstimates
+   * GET /v1/workexec/estimates/search?vehicleId={vehicleId}
+   *
+   * `GET /v1/workorders/estimates?vehicleId=` (EstimateController.getAllEstimates) takes no
+   * parameters and ignores the query string, silently returning every estimate in the system
+   * (issue #379). The vehicle filter only exists on searchEstimates, the same endpoint the
+   * dropdown text search already uses, so this now calls that with `q`/`customerId` left
+   * undefined so the vehicle filter applies. A vehicle's estimate list is small, so one page of
+   * 100 is fetched — large enough that pagination is not expected to matter in practice, but this
+   * does not walk further pages if a vehicle somehow exceeds that count.
    */
   listEstimatesForVehicle(vehicleId: string): Observable<EstimateListItem[]> {
-    const params = new HttpParams().set('vehicleId', vehicleId);
-    return this.api.get<RawEstimateSummary[]>('/v1/workorders/estimates', params)
-      .pipe(map(list => (list ?? []).map(r => this.toEstimateListItem(r))));
+    return this.estimateSearchApi.searchEstimates(undefined, undefined, vehicleId, 0, 100).pipe(
+      map(page => (page.content ?? []).map(r => this.toEstimateListItemFromSummary(r))),
+    );
   }
 
   /**
@@ -702,6 +710,23 @@ export class WorkexecService {
       lastUpdatedAt: r.updatedAt ?? r.lastUpdatedAt,
       createdAt: r.createdAt,
       notes: r.notes,
+    };
+  }
+
+  /**
+   * Adapts a searchEstimates result row (SDK `EstimateSummaryResponse`) to the list-card model.
+   * That response has no `workorderId`, `updatedAt`/`lastUpdatedAt`, or `notes` fields, so those
+   * stay undefined — all optional on `EstimateListItem`.
+   */
+  private toEstimateListItemFromSummary(r: SdkEstimateSummaryResponse): EstimateListItem {
+    return {
+      estimateId: r.id ?? '',
+      customerId: r.customerId ?? '',
+      vehicleId: r.vehicleId,
+      status: (r.status ?? 'DRAFT') as EstimateListItem['status'],
+      totalAmount: r.total ?? 0,
+      currency: r.currencyUomId ?? 'USD',
+      createdAt: r.createdAt,
     };
   }
 

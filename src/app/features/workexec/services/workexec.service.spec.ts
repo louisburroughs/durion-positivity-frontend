@@ -380,22 +380,31 @@ describe('WorkexecService', () => {
       req.flush(apiRows);
     });
 
-    it('listEstimatesForVehicle — maps API rows and defaults missing total to 0', () => {
-      const apiRows = [
-        { id: 'est-259-2', customerId: 'cust-259-2', vehicleId: 'veh-259-2', status: 'APPROVED', currencyUomId: 'USD' },
-      ];
-
-      service.listEstimatesForVehicle('veh-259-2').subscribe(result => {
-        expect(result[0].estimateId).toBe('est-259-2');
-        expect(result[0].totalAmount).toBe(0);
-        expect(result[0].currency).toBe('USD');
-      });
-
-      const req = http.expectOne(r =>
-        r.url === `${BASE}/v1/workorders/estimates` && r.params.get('vehicleId') === 'veh-259-2',
+    it('listEstimatesForVehicle — calls searchEstimates with the vehicleId filter and maps results, defaulting missing total to 0 (issue #379)', () => {
+      estimateSearchStub.searchEstimates.mockReturnValue(
+        of({
+          content: [
+            { id: 'est-259-2', customerId: 'cust-259-2', vehicleId: 'veh-259-2', status: 'APPROVED', currencyUomId: 'USD' },
+          ],
+        }),
       );
-      expect(req.request.method).toBe('GET');
-      req.flush(apiRows);
+
+      let result: EstimateListItem[] | undefined;
+      service.listEstimatesForVehicle('veh-259-2').subscribe(r => (result = r));
+
+      expect(estimateSearchStub.searchEstimates).toHaveBeenCalledWith(undefined, undefined, 'veh-259-2', 0, 100);
+      expect(result?.[0].estimateId).toBe('est-259-2');
+      expect(result?.[0].totalAmount).toBe(0);
+      expect(result?.[0].currency).toBe('USD');
+    });
+
+    it('listEstimatesForVehicle — yields [] for empty page content', () => {
+      estimateSearchStub.searchEstimates.mockReturnValue(of({ content: [] }));
+
+      let result: EstimateListItem[] | undefined;
+      service.listEstimatesForVehicle('veh-259-3').subscribe(r => (result = r));
+
+      expect(result).toEqual([]);
     });
 
     it('listActiveWorkorders — gets /v1/workexec/wip with locationId query', () => {
