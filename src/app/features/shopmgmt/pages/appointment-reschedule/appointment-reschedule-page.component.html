@@ -2,11 +2,15 @@
   <h2>{{ 'SHOPMGMT.APPOINTMENT_RESCHEDULE.TITLE' | translate }}</h2>
 </div>
 
-@if (loading()) {
+@if (state() === 'loading' || state() === 'idle') {
   <div class="loading-state">{{ 'COMMON.LOADING' | translate }}</div>
 }
 
-@if (!loading()) {
+@if (state() === 'error') {
+  <div class="error-banner load-error" role="alert">{{ errorKey()! | translate }}</div>
+}
+
+@if (state() === 'ready') {
   @if (successMessage()) {
     <div class="success-banner">
       {{ successMessage()! | translate }}
@@ -17,56 +21,97 @@
       {{ 'SHOPMGMT.APPOINTMENT_RESCHEDULE.VERSION_MISMATCH' | translate }}
     </div>
   }
+  @if (submitErrorKey()) {
+    <div class="error-banner" role="alert">{{ submitErrorKey()! | translate }}</div>
+  }
+  @if (appointment(); as appt) {
+    <div class="appointment-summary">
+      <div class="summary-row">
+        <span class="label">{{ 'SHOPMGMT.APPOINTMENT_RESCHEDULE.STATUS' | translate }}</span>
+        <span class="value status-badge">{{ statusKey() | translate }}</span>
+      </div>
+      @if (appt.scheduledStart) {
+        <div class="summary-row">
+          <span class="label">{{ 'SHOPMGMT.APPOINTMENT_RESCHEDULE.NEW_START' | translate }}</span>
+          <span class="value">{{ appt.scheduledStart | date: 'medium' }}</span>
+        </div>
+      }
+      @if (appt.scheduledEnd) {
+        <div class="summary-row">
+          <span class="label">{{ 'SHOPMGMT.APPOINTMENT_RESCHEDULE.NEW_END' | translate }}</span>
+          <span class="value">{{ appt.scheduledEnd | date: 'medium' }}</span>
+        </div>
+      }
+      <div class="summary-row">
+        <span class="label">{{ 'SHOPMGMT.APPOINTMENT_RESCHEDULE.FACILITY' | translate }}</span>
+        <span class="value">{{ facilityName() ?? ('COMMON.NOT_AVAILABLE' | translate) }}</span>
+      </div>
+    </div>
+  }
   <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
     <div class="form-group">
       <label for="scheduledStartDateTime">{{ 'SHOPMGMT.APPOINTMENT_RESCHEDULE.NEW_START' | translate }}</label>
       <input id="scheduledStartDateTime" name="scheduledStartDateTime" type="datetime-local"
-        formControlName="scheduledStartDateTime" />
+        formControlName="scheduledStartDateTime"
+        [attr.aria-describedby]="fieldErrorKeyFor('scheduledStartDateTime') ? 'scheduledStartDateTime-error' : null" />
+      @if (fieldErrorKeyFor('scheduledStartDateTime'); as key) {
+        <div class="field-error" id="scheduledStartDateTime-error">{{ key | translate }}</div>
+      }
     </div>
     <div class="form-group">
       <label for="scheduledEndDateTime">{{ 'SHOPMGMT.APPOINTMENT_RESCHEDULE.NEW_END' | translate }}</label>
       <input id="scheduledEndDateTime" name="scheduledEndDateTime" type="datetime-local"
-        formControlName="scheduledEndDateTime" />
+        formControlName="scheduledEndDateTime"
+        [attr.aria-describedby]="fieldErrorKeyFor('scheduledEndDateTime') ? 'scheduledEndDateTime-error' : null" />
+      @if (fieldErrorKeyFor('scheduledEndDateTime'); as key) {
+        <div class="field-error" id="scheduledEndDateTime-error">{{ key | translate }}</div>
+      }
     </div>
     <div class="form-group">
       <label for="reason">{{ 'SHOPMGMT.APPOINTMENT_RESCHEDULE.RESCHEDULE_REASON' | translate }}</label>
-      <select id="reason" name="reason" formControlName="reason">
+      <select id="reason" name="reason" formControlName="reason"
+        [attr.aria-describedby]="fieldErrorKeyFor('reason') ? 'reason-error' : null">
         <option value="">{{ 'SHOPMGMT.APPOINTMENT_RESCHEDULE.SELECT_REASON' | translate }}</option>
         <option value="CUSTOMER_REQUEST">{{ 'SHOPMGMT.APPOINTMENT_RESCHEDULE.REASONS.CUSTOMER_REQUEST' | translate }}</option>
-        <option value="FACILITY_UNAVAILABLE">{{ 'SHOPMGMT.APPOINTMENT_RESCHEDULE.REASONS.FACILITY_UNAVAILABLE' | translate }}</option>
-        <option value="TECHNICIAN_UNAVAILABLE">{{ 'SHOPMGMT.APPOINTMENT_RESCHEDULE.REASONS.TECHNICIAN_UNAVAILABLE' | translate }}</option>
+        <option value="SHOP_CAPACITY">{{ 'SHOPMGMT.APPOINTMENT_RESCHEDULE.REASONS.SHOP_CAPACITY' | translate }}</option>
+        <option value="EQUIPMENT_ISSUE">{{ 'SHOPMGMT.APPOINTMENT_RESCHEDULE.REASONS.EQUIPMENT_ISSUE' | translate }}</option>
+        <option value="MECHANIC_UNAVAILABLE">{{ 'SHOPMGMT.APPOINTMENT_RESCHEDULE.REASONS.MECHANIC_UNAVAILABLE' | translate }}</option>
+        <option value="PARTS_DELAY">{{ 'SHOPMGMT.APPOINTMENT_RESCHEDULE.REASONS.PARTS_DELAY' | translate }}</option>
+        <option value="WEATHER">{{ 'SHOPMGMT.APPOINTMENT_RESCHEDULE.REASONS.WEATHER' | translate }}</option>
+        <option value="EMERGENCY">{{ 'SHOPMGMT.APPOINTMENT_RESCHEDULE.REASONS.EMERGENCY' | translate }}</option>
+        <option value="MANAGER_DISCRETION">{{ 'SHOPMGMT.APPOINTMENT_RESCHEDULE.REASONS.MANAGER_DISCRETION' | translate }}</option>
         <option value="OTHER">{{ 'SHOPMGMT.APPOINTMENT_RESCHEDULE.REASONS.OTHER' | translate }}</option>
       </select>
+      @if (fieldErrorKeyFor('reason'); as key) {
+        <div class="field-error" id="reason-error">{{ key | translate }}</div>
+      }
     </div>
     <div class="form-group">
       <label for="notes">{{ 'SHOPMGMT.APPOINTMENT_RESCHEDULE.NOTES' | translate }}</label>
-      <textarea id="notes" name="notes" formControlName="notes" rows="3"></textarea>
-    </div>
-    @if (fieldErrors().length > 0) {
-      @for (fe of fieldErrors(); track fe) {
-        <div class="field-error">
-          {{ fe.message | translate }}
-        </div>
+      <textarea id="notes" name="notes" formControlName="notes" rows="3"
+        [attr.aria-describedby]="fieldErrorKeyFor('notes') ? 'notes-error' : null"></textarea>
+      @if (fieldErrorKeyFor('notes'); as key) {
+        <div class="field-error" id="notes-error">{{ key | translate }}</div>
       }
-    }
+    </div>
     @if (conflicts().length > 0) {
       <div class="conflict-panel">
-        @for (c of conflicts(); track c) {
+        @for (c of conflicts(); track c.code) {
           <div>
             @if (c.severity === 'HARD') {
-              <div class="hard-conflict">{{ c.message }}</div>
+              <div class="hard-conflict">{{ conflictKey(c.code) | translate }}</div>
             }
             @if (c.severity === 'SOFT') {
-              <div class="soft-conflict">{{ c.message }}</div>
+              <div class="soft-conflict">{{ conflictKey(c.code) | translate }}</div>
             }
           </div>
         }
         @if (suggestedAlternatives().length > 0) {
           <div class="suggested-slots">
-            @for (slot of suggestedAlternatives(); track slot) {
-              <div class="suggested-slot">
-                {{ slot.scheduledStartDateTime }} &ndash; {{ slot.scheduledEndDateTime }}
-              </div>
+            @for (slot of suggestedAlternatives(); track slot.scheduledStartDateTime) {
+              <button type="button" class="suggested-slot" (click)="fillSuggestedSlot(slot)">
+                {{ slot.scheduledStartDateTime | date: 'medium' }} &ndash; {{ slot.scheduledEndDateTime | date: 'medium' }}
+              </button>
             }
           </div>
         }
