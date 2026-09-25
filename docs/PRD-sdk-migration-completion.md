@@ -142,7 +142,7 @@ Current inventory of non-spec application files still importing or injecting
 | `product/services/product-location.service.ts`        | ✅ Migrated                                           |
 | `bulk-import/services/bulk-import.service.ts`         | ✅ Migrated (D6 exception)                            |
 | `accounting/services/accounting.service.ts`           | ✅ Migrated (D4 resolved — issue #380)                |
-| `inventory/services/inventory.service.ts`             | 🔴 Blocked — D5: pervasive SDK/model field mismatches |
+| `inventory/services/inventory.service.ts`             | ✅ Migrated (D5 resolved — issue #350/#2206)          |
 | `inventory/services/inventory-cycle-count.service.ts` | ✅ Migrated                                           |
 | `inventory/services/inventory-receiving.service.ts`   | ✅ Migrated                                           |
 | `workexec/services/workexec.service.ts`               | ✅ Migrated (partial SDK gaps documented)             |
@@ -297,8 +297,9 @@ the current Angular SDK already supports the operation.
 
 ### Wave 3 — Consolidate models and remove stale adapters
 
-**Status:** ⬜ Deferred — SDK model alignment requires coordinated changes in
-`durion-positivity-sdk-angular`. Scheduled as follow-up work once D5 is resolved.
+**Status:** ⬜ Partially unblocked — D5 (`inventory.service.ts`) is resolved (issue #350); model
+consolidation across the rest of `src/app/features/**/models/*.ts` remains scheduled follow-up
+work.
 
 **Goal:** reduce duplicate transport models and remove compatibility code that only exists
 because the frontend previously outpaced the SDK.
@@ -334,7 +335,7 @@ tracked follow-up decisions.
 | D2  | `people/work-session-submit` — `submitSession`       | `POST .../workSessions/{id}/submit` missing from SDK              | Backend OpenAPI update            |
 | D3  | `people/time-approval` — 5 operations                | Timekeeping approve/period/entries SDK operations absent          | Backend OpenAPI update            |
 | ~~D4~~ | ~~`accounting.service.ts` — `getEventEnvelopeContract`~~ | Resolved (issue #380): migrated to SDK `getEventContract()`; fields it does not return are optional | — |
-| D5  | `inventory.service.ts` — all                         | Pervasive field name mismatches between SDK DTOs and local models | Requires SDK model alignment      |
+| ~~D5~~ | ~~`inventory.service.ts` — all~~                  | Resolved (issue #350, backend #2206/#2211/#2227): ledger/putaway/replenishment/returns/cross-dock and the shortage service methods migrated onto `@durion-sdk/inventory`; `fromStorageLocationId`/`toStorageLocationId` dropped (ruled out — `fromLocationId`/`toLocationId` already carry the bin or site). The shortage-resolution *page* stays blocked on backend #2233 (no read supplies an allocationId). | — |
 | D6  | `bulk-import.service.ts` — `submitAuditCorrection`   | SDK endpoint pattern differs                                      | SDK team to align endpoint        |
 | —   | `workexec.service.ts` — `getWorkorderWipStatus`      | SDK path incompatible with legacy path                            | Consumer migration to new WIP API |
 | —   | `workexec.service.ts` — `getWorkorderInvoiceView`    | No SDK equivalent                                                 | SDK team to add endpoint          |
@@ -395,7 +396,8 @@ not configured in this project.
 - [x] The frontend primarily consumes `durion-positivity-sdk-angular` generated services
       for domain transport.
 - [ ] Duplicate transport-model drift has been reduced through SDK model adoption or
-      explicit justification. _(Wave 3 deferred — pending D5 resolution.)_
+      explicit justification. _(Wave 3 partially unblocked — D5 resolved (issue #350);
+      remaining model consolidation across other domains still deferred.)_
 - [x] `npx ng build` passes. `npx ng test --no-watch` passes (1 pre-existing exception).
 
 ### Note: `chat-panel.component.spec.ts` test failure
