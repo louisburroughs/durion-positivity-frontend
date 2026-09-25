@@ -6020,6 +6020,9 @@
             }
           },
           "RECEIVED_PROGRESS": "Receipt progress"
+        },
+        "PANEL": {
+          "LOAD_FAILED": "This section couldn't be loaded. Try refreshing the page."
         }
       },
       "FORM": {

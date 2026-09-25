@@ -196,6 +196,11 @@
     [ngComponentOutlet]="SupplierTransmissionPanel"
     [ngComponentOutletInputs]="{ purchaseOrderId: order()!.poId, poNumber: order()!.poNumber }"
   ></ng-container>
+  } @else if (panelTypes().firstFailed) {
+  <section class="card state-card" role="alert" data-testid="supplier-panel-load-failed">
+    <span class="material-symbols-outlined" aria-hidden="true">error</span>
+    <p>{{ 'INVENTORY.PURCHASE_ORDERS.DETAIL.PANEL.LOAD_FAILED' | translate }}</p>
+  </section>
   }
 
   <!-- Vendor transmission timeline (#215). Own state, own generated
@@ -205,6 +210,11 @@
     [ngComponentOutlet]="PurchaseOrderTransmissionTimelinePanel"
     [ngComponentOutletInputs]="{ purchaseOrderId: order()!.poId }"
   ></ng-container>
+  } @else if (panelTypes().secondFailed) {
+  <section class="card state-card" role="alert" data-testid="timeline-panel-load-failed">
+    <span class="material-symbols-outlined" aria-hidden="true">error</span>
+    <p>{{ 'INVENTORY.PURCHASE_ORDERS.DETAIL.PANEL.LOAD_FAILED' | translate }}</p>
+  </section>
   }
   }
 </main>

@@ -12,7 +12,9 @@ type PageState = 'idle' | 'loading' | 'empty' | 'ready' | 'error';
 
 interface HostedPanelTypes {
   readonly first: Type<unknown> | null;
+  readonly firstFailed: boolean;
   readonly second: Type<unknown> | null;
+  readonly secondFailed: boolean;
 }
 
 /**
@@ -54,14 +56,41 @@ export class PoDetailComponent {
   readonly order = signal<PurchaseOrderDetail | null>(null);
 
   /** `first` hosts #191, `second` hosts #215 — see the template. */
-  readonly panelTypes = signal<HostedPanelTypes>({ first: null, second: null });
+  readonly panelTypes = signal<HostedPanelTypes>({
+    first: null,
+    firstFailed: false,
+    second: null,
+    secondFailed: false,
+  });
+
+  /**
+   * Guards the two panel-load `.then`/`.catch` callbacks below: both are lazy
+   * `import()`s that can still be in flight when the page is destroyed
+   * (navigated away from before the chunk finishes loading), and a signal
+   * write from a destroyed component would be a leak/no-op at best.
+   */
+  private destroyed = false;
 
   constructor() {
-    this.panelSource.loadSupplierTransmissionPanel().then(type =>
-      this.panelTypes.update(current => ({ ...current, first: type })),
+    this.destroyRef.onDestroy(() => {
+      this.destroyed = true;
+    });
+
+    this.panelSource.loadSupplierTransmissionPanel().then(
+      type => {
+        if (!this.destroyed) this.panelTypes.update(current => ({ ...current, first: type }));
+      },
+      () => {
+        if (!this.destroyed) this.panelTypes.update(current => ({ ...current, firstFailed: true }));
+      },
     );
-    this.panelSource.loadPurchaseOrderTransmissionTimelinePanel().then(type =>
-      this.panelTypes.update(current => ({ ...current, second: type })),
+    this.panelSource.loadPurchaseOrderTransmissionTimelinePanel().then(
+      type => {
+        if (!this.destroyed) this.panelTypes.update(current => ({ ...current, second: type }));
+      },
+      () => {
+        if (!this.destroyed) this.panelTypes.update(current => ({ ...current, secondFailed: true }));
+      },
     );
 
     this.route.paramMap

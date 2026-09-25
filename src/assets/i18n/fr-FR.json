@@ -6020,6 +6020,9 @@
             }
           },
           "RECEIVED_PROGRESS": "Progression de la réception"
+        },
+        "PANEL": {
+          "LOAD_FAILED": "Impossible de charger cette section. Essayez d'actualiser la page."
         }
       },
       "FORM": {

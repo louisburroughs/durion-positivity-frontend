@@ -1,3 +1,4 @@
+import { Component, Type } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, provideRouter } from '@angular/router';
@@ -11,6 +12,13 @@ import { SupplierOrderTransmission } from '../../../../positivity/models/supplie
 import { PurchaseOrderTransmissionTimelineService } from '../../../../positivity/services/purchase-order-transmission-timeline.service';
 import { PurchaseOrderTransmissionTimelinePage } from '../../../../positivity/models/purchase-order-transmission-timeline.models';
 import { providePositivitySupplierTransmissionPanels } from '../../../../positivity/services/supplier-transmission-panels.provider';
+import {
+  SUPPLIER_TRANSMISSION_PANELS,
+  SupplierTransmissionPanels,
+} from '../../../../../shared/positivity/supplier-transmission-panels.tokens';
+
+@Component({ selector: 'app-stub-panel', standalone: true, template: '' })
+class StubPanelComponent {}
 
 const mockPoService = {
   getPurchaseOrder: vi.fn(),
@@ -188,6 +196,84 @@ describe('PoDetailComponent', () => {
       const own = Object.keys(fixture.componentInstance as unknown as Record<string, unknown>);
 
       expect(own.some(key => /supplier|transmission|shipment|vendor/i.test(key))).toBe(false);
+    });
+  });
+
+  describe('panel load-failure handling (#366 followup)', () => {
+    async function setupWithPanels(panels: Partial<SupplierTransmissionPanels>): Promise<void> {
+      TestBed.resetTestingModule();
+      await TestBed.configureTestingModule({
+        imports: [PoDetailComponent, TranslateModule.forRoot()],
+        providers: [
+          provideRouter([]),
+          { provide: InventoryPurchaseOrderService, useValue: mockPoService },
+          { provide: ActivatedRoute, useValue: mockRoute },
+          {
+            provide: SUPPLIER_TRANSMISSION_PANELS,
+            useValue: {
+              loadSupplierTransmissionPanel: () => Promise.resolve(StubPanelComponent as Type<unknown>),
+              loadPurchaseOrderTransmissionTimelinePanel: () => Promise.resolve(StubPanelComponent as Type<unknown>),
+              ...panels,
+            },
+          },
+        ],
+      }).compileComponents();
+    }
+
+    it('shows a load-failed placeholder for the supplier panel when its lazy import rejects, without affecting the timeline panel', async () => {
+      mockPoService.getPurchaseOrder.mockReturnValue(of(poFixture));
+      await setupWithPanels({
+        loadSupplierTransmissionPanel: () => Promise.reject(new Error('chunk load failed')),
+      });
+      const fixture = TestBed.createComponent(PoDetailComponent);
+      const el = fixture.nativeElement as HTMLElement;
+
+      await vi.waitFor(() => {
+        fixture.detectChanges();
+        expect(el.querySelector('[data-testid="supplier-panel-load-failed"]')).not.toBeNull();
+      });
+      expect(el.querySelector('app-supplier-transmission-panel')).toBeNull();
+
+      await vi.waitFor(() => {
+        fixture.detectChanges();
+        expect(fixture.componentInstance.panelTypes().second).toBe(StubPanelComponent);
+      });
+    });
+
+    it('shows a load-failed placeholder for the timeline panel when its lazy import rejects', async () => {
+      mockPoService.getPurchaseOrder.mockReturnValue(of(poFixture));
+      await setupWithPanels({
+        loadPurchaseOrderTransmissionTimelinePanel: () => Promise.reject(new Error('chunk load failed')),
+      });
+      const fixture = TestBed.createComponent(PoDetailComponent);
+      const el = fixture.nativeElement as HTMLElement;
+
+      await vi.waitFor(() => {
+        fixture.detectChanges();
+        expect(el.querySelector('[data-testid="timeline-panel-load-failed"]')).not.toBeNull();
+      });
+      expect(el.querySelector('app-purchase-order-transmission-timeline-panel')).toBeNull();
+    });
+
+    it('does not write panelTypes when a pending panel import settles after the component is destroyed', async () => {
+      let rejectLoad!: (reason?: unknown) => void;
+      mockPoService.getPurchaseOrder.mockReturnValue(of(poFixture));
+      await setupWithPanels({
+        loadSupplierTransmissionPanel: () =>
+          new Promise<Type<unknown>>((_, reject) => {
+            rejectLoad = reject;
+          }),
+      });
+      const fixture = TestBed.createComponent(PoDetailComponent);
+      fixture.detectChanges();
+      const component = fixture.componentInstance;
+
+      fixture.destroy();
+      rejectLoad(new Error('settles after destroy'));
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(component.panelTypes().firstFailed).toBe(false);
     });
   });
 });
