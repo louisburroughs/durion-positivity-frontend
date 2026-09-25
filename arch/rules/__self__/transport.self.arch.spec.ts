@@ -1,5 +1,5 @@
 import { FIXTURES } from '../../support/projects';
-import { deepSdkImportFinder, sdk01, sdk02, sdk03, sdk04, sdk05, sdk06, sdk07, sdk08, sdk09, sdk10, sdk11 } from '../transport.rules';
+import { deepSdkImportFinder, sdk01, sdk02, sdk03, sdk04, sdk05, sdk06, sdk07, sdk08, sdk09, sdk10, sdk11, tenantSdkFinder } from '../transport.rules';
 
 /**
  * Self-tests for transport.rules.ts (plan §6): each rule factory runs against the FIXTURES project
@@ -143,6 +143,15 @@ describe('[SDK-10] @durion-sdk/tenant only under features/platform/**', () => {
   it('allows features/platform/** to import @durion-sdk/tenant', async () => {
     const keys = await sdk10(FIXTURES).keys();
     expect(keys.some((k) => k.startsWith(`${FX.app}/features/platform/`))).toBe(false);
+  });
+  it('catches tenant subpaths, allowing only /configuration in the root app.config.ts', () => {
+    const cfg = `import { Configuration } from '@durion-sdk/tenant/configuration';`;
+    expect(tenantSdkFinder({ path: 'src/app/app.config.ts', content: cfg })).toEqual([]);
+    expect(tenantSdkFinder({ path: 'src/app/features/crm/x.ts', content: cfg })).toEqual([`'@durion-sdk/tenant/configuration'`]);
+    expect(tenantSdkFinder({ path: 'src/app/features/x/app.config.ts', content: cfg })).toEqual([`'@durion-sdk/tenant/configuration'`]);
+    expect(
+      tenantSdkFinder({ path: 'src/app/app.config.ts', content: `import { PlatformTenantAPIService } from '@durion-sdk/tenant';` }),
+    ).toEqual([`'@durion-sdk/tenant'`]);
   });
 });
 

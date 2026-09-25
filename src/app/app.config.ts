@@ -28,6 +28,7 @@ import { Configuration as PeopleContactConfiguration } from '@durion-sdk/people-
 import { Configuration as SecurityConfiguration } from '@durion-sdk/security/configuration';
 import { Configuration as ShopManagerConfiguration } from '@durion-sdk/shop-manager/configuration';
 import { Configuration as SupplierConfiguration } from '@durion-sdk/supplier/configuration';
+import { Configuration as TenantConfiguration } from '@durion-sdk/tenant/configuration';
 import { Configuration as VehicleInventoryConfiguration } from '@durion-sdk/vehicle-inventory/configuration';
 import { Configuration as WorkorderConfiguration } from '@durion-sdk/workorder/configuration';
 
@@ -36,7 +37,6 @@ import { clearChunkReloadGuard, recoverFromChunkError } from './core/router/chun
 import { AuthService } from './core/services/auth.service';
 import { LocaleService } from './core/services/locale.service';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
-import { TENANT_API_BASE_PATH } from './core/tokens/tenant-api-base-path.token';
 import { environment } from '../environments/environment';
 // These wire the `shared/**` lookup-widget injection tokens to their real,
 // feature-owned implementations (LAY-02: shared/** must not depend on
@@ -129,10 +129,10 @@ export const appConfig: ApplicationConfig = {
     { provide: SecurityConfiguration, useFactory: () => new SecurityConfiguration({ basePath: `${environment.apiBaseUrl}/security-service` }) },
     { provide: ShopManagerConfiguration, useFactory: () => new ShopManagerConfiguration({ basePath: `${environment.apiBaseUrl}/shop-manager` }) },
     { provide: SupplierConfiguration, useFactory: () => new SupplierConfiguration({ basePath: `${environment.apiBaseUrl}/supplier` }) },
-    // @durion-sdk/tenant's Configuration class is constructed lazily, inside
-    // features/platform (SDK-10, ADR-0062 §7) — only its basePath is provided
-    // here, to keep the SDK itself out of the eager initial bundle.
-    { provide: TENANT_API_BASE_PATH, useValue: `${environment.apiBaseUrl}/tenant` },
+    // Root-provided like the rest: the tenant SDK's services are providedIn 'root', so a
+    // route-scoped Configuration would never reach them. The /configuration entry keeps
+    // the tenant services themselves in the lazy platform chunk (SDK-10 allows only this).
+    { provide: TenantConfiguration, useFactory: () => new TenantConfiguration({ basePath: `${environment.apiBaseUrl}/tenant` }) },
     { provide: VehicleInventoryConfiguration, useFactory: () => new VehicleInventoryConfiguration({ basePath: `${environment.apiBaseUrl}/vehicle-inventory` }) },
     { provide: WorkorderConfiguration, useFactory: () => new WorkorderConfiguration({ basePath: `${environment.apiBaseUrl}/workorder` }) },
   ],

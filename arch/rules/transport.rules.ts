@@ -149,7 +149,18 @@ export const sdk09 = (p: Project): ArchRule =>
   );
 
 /** [SDK-10] @durion-sdk/tenant may be imported only under features/platform/** (ADR-0062 §7). */
-const tenantSdkFinder: Finder = (f) => importSpecifiers(f).filter((i) => i.module === '@durion-sdk/tenant').map(() => "'@durion-sdk/tenant'");
+/**
+ * Matches `@durion-sdk/tenant` and any subpath. The one exception outside features/platform is the
+ * root `src/app/app.config.ts` providing `Configuration` from `@durion-sdk/tenant/configuration`:
+ * the tenant services are `providedIn: 'root'`, so their Configuration must be root-provided too.
+ */
+const tenantSdkFinder: Finder = (f) =>
+  importSpecifiers(f)
+    .filter((i) => /^@durion-sdk\/tenant(\/|$)/.test(i.module))
+    .filter((i) => !(/^src\/app\/app\.config\.ts$/.test(f.path) && i.module === '@durion-sdk/tenant/configuration'))
+    .map((i) => `'${i.module}'`);
+
+export { tenantSdkFinder };
 
 export const sdk10 = (p: Project): ArchRule =>
   contentRule(

@@ -1,10 +1,8 @@
 import { inject } from '@angular/core';
 import { Routes } from '@angular/router';
-import { Configuration as TenantConfiguration } from '@durion-sdk/tenant';
 import { canAccess } from '../../core/security/route-access';
 import { PLATFORM_PAGE } from '../../core/security/route-permissions';
 import { AuthService } from '../../core/services/auth.service';
-import { TENANT_API_BASE_PATH } from '../../core/tokens/tenant-api-base-path.token';
 import { PlatformComponent } from './platform.component';
 
 /**
@@ -37,16 +35,6 @@ export const PLATFORM_ROUTES: Routes = [
   {
     path: '',
     component: PlatformComponent,
-    // @durion-sdk/tenant's Configuration is scoped to this lazy-loaded route tree
-    // (SDK-10, ADR-0062 §7) rather than the composition root, so the SDK loads
-    // only with the platform chunk instead of bloating the eager initial bundle.
-    providers: [
-      {
-        provide: TenantConfiguration,
-        useFactory: (basePath: string) => new TenantConfiguration({ basePath }),
-        deps: [TENANT_API_BASE_PATH],
-      },
-    ],
     children: [
       { path: '', pathMatch: 'full', redirectTo: platformLanding },
       {
