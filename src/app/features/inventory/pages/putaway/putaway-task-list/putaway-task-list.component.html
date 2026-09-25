@@ -46,6 +46,7 @@
             <th scope="col" role="columnheader">{{ 'INVENTORY.PUTAWAY.TASKS.TABLE.HEADER.TARGET_LOCATION' | translate }}
             </th>
             <th scope="col" role="columnheader">{{ 'INVENTORY.PUTAWAY.TASKS.TABLE.HEADER.QUANTITY' | translate }}</th>
+            <th scope="col" role="columnheader">{{ 'INVENTORY.PUTAWAY.TASKS.TABLE.HEADER.UOM' | translate }}</th>
             <th scope="col" role="columnheader">{{ 'INVENTORY.PUTAWAY.TASKS.TABLE.HEADER.STATUS' | translate }}</th>
           </tr>
         </thead>
@@ -59,6 +60,7 @@
             <td>{{ task.sourceLocationId }}</td>
             <td>{{ task.suggestedDestinationLocationId ?? '—' }}</td>
             <td>{{ task.quantity }}</td>
+            <td>{{ task.uom ?? ('COMMON.NOT_AVAILABLE' | translate) }}</td>
             <td class="badge-cell">
               @switch (task.status) {
               @case ('PENDING') {

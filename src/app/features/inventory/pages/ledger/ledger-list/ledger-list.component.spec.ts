@@ -13,7 +13,7 @@ const mockInventoryService = {
 const ledgerEntryItem: InventoryLedgerEntry = {
   ledgerEntryId: 'e1',
   timestamp: '2026-01-01T00:00:00Z',
-  movementType: 'RECEIPT',
+  movementType: 'GOODS_RECEIPT',
   productSku: 'SKU-001',
   quantityChange: 10,
   uom: 'EA',

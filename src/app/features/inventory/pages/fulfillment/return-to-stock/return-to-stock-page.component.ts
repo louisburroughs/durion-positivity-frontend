@@ -1,6 +1,7 @@
 
 import { Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { forkJoin } from 'rxjs';
@@ -118,11 +119,30 @@ export class ReturnToStockPageComponent {
           this.submitResult.set(result);
           this.state.set('success');
         },
-        error: () => {
+        error: (err: unknown) => {
           this.state.set('error');
-          this.errorKey.set('INVENTORY.FULFILLMENT.RETURN_TO_STOCK.ERROR.SUBMIT');
+          this.errorKey.set(this.mapSubmitErrorKey(err));
         },
       });
+  }
+
+  // Backend #2206/#2227 (`ReturnServiceImpl.submitToStock`): 422 RETURN_QUANTITY_EXCEEDED when a
+  // line's quantity exceeds what remains returnable, 404 when a line's itemId doesn't name a real
+  // workorder line, 400 for a missing/invalid field (empty lines, non-positive quantity, an
+  // unrecognized reasonCode).
+  private mapSubmitErrorKey(err: unknown): string {
+    if (err instanceof HttpErrorResponse) {
+      if (err.status === 422) {
+        return 'INVENTORY.FULFILLMENT.RETURN_TO_STOCK.ERROR.QUANTITY_EXCEEDED';
+      }
+      if (err.status === 404) {
+        return 'INVENTORY.FULFILLMENT.RETURN_TO_STOCK.ERROR.LINE_NOT_FOUND';
+      }
+      if (err.status === 400) {
+        return 'INVENTORY.FULFILLMENT.RETURN_TO_STOCK.ERROR.VALIDATION';
+      }
+    }
+    return 'INVENTORY.FULFILLMENT.RETURN_TO_STOCK.ERROR.SUBMIT';
   }
 
   private loadInitial(): void {

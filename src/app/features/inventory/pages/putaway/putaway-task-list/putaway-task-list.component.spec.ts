@@ -13,6 +13,8 @@ const task: PutawayTask = {
   quantity: 5,
   sourceLocationId: 'ssl-1',
   status: 'PENDING',
+  locationId: 'loc-01',
+  uom: 'EA',
 };
 
 const mockInventoryService = {

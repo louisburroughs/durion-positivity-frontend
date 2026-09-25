@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
@@ -154,6 +155,52 @@ describe('ReturnToStockPageComponent', () => {
     expect(errIdx).toBeGreaterThanOrEqual(0);
     expect(keyIdx).toBeGreaterThan(errIdx);
     expect(component.errorKey()).toBe('INVENTORY.FULFILLMENT.RETURN_TO_STOCK.ERROR.SUBMIT');
+  });
+
+  it('submit error maps a 422 to the QUANTITY_EXCEEDED key (backend RETURN_QUANTITY_EXCEEDED)', async () => {
+    mockInventoryService.submitReturnToStock.mockReturnValue(
+      throwError(() => new HttpErrorResponse({ status: 422, error: { code: 'RETURN_QUANTITY_EXCEEDED' } })),
+    );
+    const component = await setupReturnToStock();
+
+    component.selectedLocationId.set('loc-01');
+    component.selectedReasonCode.set('UNUSED');
+    component.returnQtys.set({ 'line-001': 2 });
+
+    component.submit();
+
+    expect(component.state()).toBe('error');
+    expect(component.errorKey()).toBe('INVENTORY.FULFILLMENT.RETURN_TO_STOCK.ERROR.QUANTITY_EXCEEDED');
+  });
+
+  it('submit error maps a 404 to the LINE_NOT_FOUND key (unknown workorderLineId)', async () => {
+    mockInventoryService.submitReturnToStock.mockReturnValue(
+      throwError(() => new HttpErrorResponse({ status: 404 })),
+    );
+    const component = await setupReturnToStock();
+
+    component.selectedLocationId.set('loc-01');
+    component.selectedReasonCode.set('UNUSED');
+    component.returnQtys.set({ 'line-001': 2 });
+
+    component.submit();
+
+    expect(component.errorKey()).toBe('INVENTORY.FULFILLMENT.RETURN_TO_STOCK.ERROR.LINE_NOT_FOUND');
+  });
+
+  it('submit error maps a 400 to the VALIDATION key', async () => {
+    mockInventoryService.submitReturnToStock.mockReturnValue(
+      throwError(() => new HttpErrorResponse({ status: 400 })),
+    );
+    const component = await setupReturnToStock();
+
+    component.selectedLocationId.set('loc-01');
+    component.selectedReasonCode.set('UNUSED');
+    component.returnQtys.set({ 'line-001': 2 });
+
+    component.submit();
+
+    expect(component.errorKey()).toBe('INVENTORY.FULFILLMENT.RETURN_TO_STOCK.ERROR.VALIDATION');
   });
 
   it('submit success sets state to success', async () => {
