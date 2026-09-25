@@ -5770,6 +5770,7 @@
             "STAGING_LOCATION": "Staging",
             "TARGET_LOCATION": "Target Location",
             "QUANTITY": "Quantity",
+            "UOM": "UOM",
             "STATUS": "Status"
           }
         },
@@ -6174,7 +6175,10 @@
           "MISSING_ID": "Workorder ID is required.",
           "LOAD": "Failed to load return-to-stock data.",
           "STORAGE_LOCATIONS": "Failed to load storage locations.",
-          "SUBMIT": "Failed to submit return-to-stock."
+          "SUBMIT": "Failed to submit return-to-stock.",
+          "QUANTITY_EXCEEDED": "Return quantity exceeds what's still returnable for this line.",
+          "LINE_NOT_FOUND": "One or more workorder lines could not be found.",
+          "VALIDATION": "Check the return details and try again."
         }
       },
       "CONSUME_PICKED_ITEMS": {
