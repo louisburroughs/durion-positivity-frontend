@@ -31,6 +31,7 @@ describe('BulkImportService', () => {
   let bulkLoadJobsServiceClass: typeof import('@durion-sdk/bulk-loader').BulkLoadJobsAPIService;
   let columnMappingServiceClass: typeof import('@durion-sdk/bulk-loader').ColumnMappingAPIService;
   let reviewQueueServiceClass: typeof import('@durion-sdk/bulk-loader').ReviewQueueAPIService;
+  let bulkLoaderConfigurationClass: typeof import('@durion-sdk/bulk-loader').Configuration;
   let authServiceClass: typeof import('../../../core/services/auth.service').AuthService;
   const apiStub = { get: vi.fn(), post: vi.fn(), put: vi.fn(), patch: vi.fn(), delete: vi.fn() };
   const authStub = { accessToken: vi.fn<() => string | null>(() => 'test-jwt') };
@@ -66,6 +67,7 @@ describe('BulkImportService', () => {
       BulkLoadJobsAPIService: bulkLoadJobsServiceClass,
       ColumnMappingAPIService: columnMappingServiceClass,
       ReviewQueueAPIService: reviewQueueServiceClass,
+      Configuration: bulkLoaderConfigurationClass,
     } = await import('@durion-sdk/bulk-loader'));
 
     TestBed.configureTestingModule({
@@ -76,6 +78,7 @@ describe('BulkImportService', () => {
         { provide: bulkLoadJobsServiceClass, useValue: bulkLoadJobsStub },
         { provide: columnMappingServiceClass, useValue: columnMappingStub },
         { provide: reviewQueueServiceClass, useValue: reviewQueueStub },
+        { provide: bulkLoaderConfigurationClass, useValue: { basePath: '/api/bulk-loader' } },
       ],
     });
     service = TestBed.inject(bulkImportServiceClass);
@@ -452,6 +455,24 @@ describe('BulkImportService', () => {
         { uploadUrl: '../../tus/019f4010' },
         { uploadUrl: 'https://evil.example/api/bulk-loader/v1/tus/abc' },
         { uploadUrl: `${window.location.origin}/tus/abc` },
+        { uploadUrl: trustedUrl },
+      ]);
+      const file = new File(['a,b'], 'test.csv', { type: 'text/csv' });
+
+      service.uploadFile('/api/bulk-loader/v1/bulk-jobs/job-001/tus', file).subscribe();
+      await Promise.resolve();
+
+      expect(tusState.resumeFromPreviousUpload).toHaveBeenCalledWith({ uploadUrl: trustedUrl });
+      expect(tusState.start).toHaveBeenCalled();
+    });
+
+    it('scopes trust to the bulk-loader module base, not the whole API base (issue #350)', async () => {
+      const trustedUrl = `${window.location.origin}/api/bulk-loader/v1/tus/abc`;
+      tusState.findPreviousUploads.mockResolvedValueOnce([
+        // Under the general /api/ prefix but a different module's route — must
+        // not be resumed now that the check is scoped to the injected
+        // BulkLoaderConfiguration.basePath rather than environment.apiBaseUrl.
+        { uploadUrl: `${window.location.origin}/api/other-module/v1/tus/abc` },
         { uploadUrl: trustedUrl },
       ]);
       const file = new File(['a,b'], 'test.csv', { type: 'text/csv' });

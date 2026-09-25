@@ -4,12 +4,12 @@ import { Upload } from 'tus-js-client';
 import {
   BulkLoadJobsAPIService,
   ColumnMappingAPIService,
+  Configuration as BulkLoaderConfiguration,
   ReviewQueueAPIService,
 } from '@durion-sdk/bulk-loader';
 import type { AuditRecordResponse, BulkLoadJobCreateRequest, BulkLoadJobResponse } from '@durion-sdk/bulk-loader';
 import { ApiBaseService } from '../../../core/services/api-base.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { environment } from '../../../../environments/environment';
 import {
   ACTIVE_JOB_STATUSES,
   ApproveColumnMappingsRequest,
@@ -74,6 +74,7 @@ const API_TO_FRONTEND_DOMAIN_TYPE: Record<ApiDomainType, DomainType> = {
 export class BulkImportService {
   private readonly api = inject(ApiBaseService);
   private readonly auth = inject(AuthService);
+  private readonly configuration = inject(BulkLoaderConfiguration);
   private readonly bulkLoadJobsService = inject(BulkLoadJobsAPIService);
   private readonly columnMappingService = inject(ColumnMappingAPIService);
   private readonly reviewQueueService = inject(ReviewQueueAPIService);
@@ -166,6 +167,16 @@ export class BulkImportService {
     );
   }
 
+  /**
+   * D6 (issue #350): `ReviewQueueAPIService.submitSingleCorrection()` now exists in
+   * `@durion-sdk/bulk-loader`, but its `CorrectionResultDto` response
+   * (`auditRecordId`, `status: ACCEPTED|REJECTED`, `rejectionReason?`) carries none of
+   * `entityType`, `rowNumber`, `reasonCodes` or the corrected `originalValues` that
+   * callers (e.g. `catalog-bulk-import-page.component.ts`) splice back into their audit
+   * row list wholesale. Calling the SDK method would silently blank those fields rather
+   * than migrate the endpoint, so this stays on `ApiBaseService` until the bulk-loader
+   * OpenAPI contract returns the full corrected record.
+   */
   submitCorrection(
     jobId: string,
     recordId: string,
@@ -191,7 +202,9 @@ export class BulkImportService {
       // tus-js-client resolves the creation response's Location header via
       // `new URL(location, endpoint)`, which throws when the endpoint is a
       // bare path like `/api/...` and the backend sends a relative Location.
-      const endpoint = new URL(uploadUrl, window.location.origin).toString();
+      // `document.baseURI` (not `window.location.origin`, SDK-11) supplies the
+      // absolute base the same way the browser resolves any relative URL.
+      const endpoint = new URL(uploadUrl, document.baseURI).toString();
 
       // Tracks whether the upload reached a terminal state (success/error) so
       // the teardown below only terminates genuinely cancelled uploads.
@@ -318,23 +331,24 @@ export class BulkImportService {
   }
 
   private buildTusUploadEndpoint(jobId: string): string {
-    return `${environment.apiBaseUrl}/bulk-loader/v1/bulk-jobs/${encodeURIComponent(jobId)}/tus`;
+    return `${this.configuration.basePath}/v1/bulk-jobs/${encodeURIComponent(jobId)}/tus`;
   }
 
   /**
-   * Accepts only stored tus upload URLs on our API origin under the apiBaseUrl
-   * path. tus-js-client replays stored URLs verbatim and onBeforeRequest
-   * attaches the JWT to whatever URL it targets, so a foreign or relative URL
-   * persisted in localStorage must never be resumed. The check is anchored to
-   * apiBaseUrl (not the creation endpoint's full path) because the backend
-   * issues upload URLs under /bulk-loader/v1/tus/, outside the endpoint path.
+   * Accepts only stored tus upload URLs under the bulk-loader module's own base path
+   * (the injected `BulkLoaderConfiguration.basePath`, not `environment.apiBaseUrl` read
+   * directly — SDK-06). tus-js-client replays stored URLs verbatim and onBeforeRequest
+   * attaches the JWT to whatever URL it targets, so a foreign or relative URL persisted
+   * in localStorage must never be resumed. The check is anchored to the module base
+   * (not the creation endpoint's full path) because the backend issues upload URLs
+   * under /bulk-loader/v1/tus/, outside the endpoint path.
    */
   private isTrustedUploadUrl(uploadUrl: string | null | undefined): boolean {
     if (!uploadUrl) {
       return false;
     }
 
-    const apiBase = new URL(environment.apiBaseUrl, window.location.origin);
+    const apiBase = new URL(this.configuration.basePath ?? '', document.baseURI);
     const apiPathPrefix = apiBase.pathname.endsWith('/') ? apiBase.pathname : `${apiBase.pathname}/`;
 
     try {
