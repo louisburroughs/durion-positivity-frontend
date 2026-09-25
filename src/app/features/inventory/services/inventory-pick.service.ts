@@ -151,11 +151,11 @@ export class InventoryPickService {
           pickTaskId: res.pickTaskId,
           matched: res.matched,
           matchStatus: res.matchStatus,
-          resolvedSkuId: res.resolvedSkuId,
-          resolvedLocationId: res.resolvedLocationId,
-          expectedProductCode: res.expectedProductCode,
-          expectedLocationCode: res.expectedLocationCode,
-          expectedLocationBarcode: res.expectedLocationBarcode,
+          resolvedSkuId: res.resolvedSkuId ?? undefined,
+          resolvedLocationId: res.resolvedLocationId ?? undefined,
+          expectedProductCode: res.expectedProductCode ?? undefined,
+          expectedLocationCode: res.expectedLocationCode ?? undefined,
+          expectedLocationBarcode: res.expectedLocationBarcode ?? undefined,
         })),
       );
   }
