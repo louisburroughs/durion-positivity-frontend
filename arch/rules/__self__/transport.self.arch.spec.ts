@@ -1,5 +1,5 @@
 import { FIXTURES } from '../../support/projects';
-import { sdk01, sdk02, sdk03, sdk04, sdk05, sdk06, sdk07, sdk08, sdk09, sdk10, sdk11 } from '../transport.rules';
+import { deepSdkImportFinder, sdk01, sdk02, sdk03, sdk04, sdk05, sdk06, sdk07, sdk08, sdk09, sdk10, sdk11 } from '../transport.rules';
 
 /**
  * Self-tests for transport.rules.ts (plan §6): each rule factory runs against the FIXTURES project
@@ -112,6 +112,16 @@ describe('[SDK-08] @durion-sdk/* is imported from the package root only', () => 
   it('stays quiet on a package-root @durion-sdk/x import', async () => {
     const keys = await sdk08(FIXTURES).keys();
     expect(keys.some((k) => k.startsWith(`${A}/fxlay-sdk08-compliant.ts`))).toBe(false);
+  });
+  it('allows the /configuration entry point only in app.config.ts', () => {
+    const src = `import { Configuration } from '@durion-sdk/accounting/configuration';`;
+    expect(deepSdkImportFinder({ path: 'src/app/app.config.ts', content: src })).toEqual([]);
+    expect(deepSdkImportFinder({ path: 'src/app/features/x/services/x.service.ts', content: src })).toEqual([
+      `'@durion-sdk/accounting/configuration'`,
+    ]);
+    expect(
+      deepSdkImportFinder({ path: 'src/app/app.config.ts', content: `import { X } from '@durion-sdk/accounting/other';` }),
+    ).toEqual([`'@durion-sdk/accounting/other'`]);
   });
 });
 
