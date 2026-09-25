@@ -4,6 +4,7 @@ import { Observable, throwError } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import {
   CaptureAmountRequest,
+  Configuration as InvoiceConfiguration,
   FinalizationRequest,
   GenerateReceiptRequest,
   InitiatePaymentRequest,
@@ -44,10 +45,12 @@ import {
 export class BillingTransportService {
   // Direct ApiBaseService usage inventory:
   // - ADR-0041 temporary exceptions pending SDK transport parity:
-  //   loadInvoiceArtifacts, elevate, createArtifactDownloadToken
+  //   loadInvoiceArtifacts, elevate, createArtifactDownloadToken (+ resolveArtifactDownloadUrl,
+  //   the same exception, which only reads Configuration and builds no request of its own)
   // - Temporary compatibility exceptions (outside ADR-0041):
   //   executeRefund (full refund path without amount), loadReceipt
   private readonly api = inject(ApiBaseService);
+  private readonly configuration = inject(InvoiceConfiguration);
   private readonly invoiceService = inject(InvoiceService);
   private readonly invoiceSearchService = inject(InvoiceSearchService);
   private readonly translate = inject(TranslateService);
@@ -97,6 +100,18 @@ export class BillingTransportService {
       `/invoice/v1/invoices/${invoiceId}/artifacts/${artifactRefId}/download-token`,
       {},
     );
+  }
+
+  /**
+   * Resolves the artifact's download URL: prefers the server-issued `downloadUrl`, falling back
+   * to a signed-token URL built from the injected InvoiceConfiguration's basePath rather than
+   * reading environment.apiBaseUrl directly (SDK-06). Same ADR-0041 exception as
+   * createArtifactDownloadToken above — no SDK operation exists for this URL either — so pages
+   * no longer need to own this transport detail themselves (issue #350 Wave 1).
+   */
+  resolveArtifactDownloadUrl(invoiceId: string, artifactRefId: string, token: ArtifactDownloadToken): string {
+    return token.downloadUrl
+      ?? `${this.configuration.basePath}/v1/invoices/${invoiceId}/artifacts/${artifactRefId}/download?token=${token.downloadToken}`;
   }
 
   initiateAndCapturePayment(

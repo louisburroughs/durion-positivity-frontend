@@ -4,7 +4,6 @@ import { Component, DestroyRef, OnInit, inject, signal, computed } from '@angula
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
-import { environment } from '../../../../../environments/environment';
 import {
   InvoiceDetail,
   InvoiceArtifact,
@@ -222,7 +221,7 @@ export class InvoiceDetailPageComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {
-          const url = res.downloadUrl ?? `${environment.apiBaseUrl}/invoice/v1/invoices/${invoiceId}/artifacts/${artifactRefId}/download?token=${res.downloadToken}`;
+          const url = this.billingService.resolveArtifactDownloadUrl(invoiceId, artifactRefId, res);
           const a = document.createElement('a');
           a.href = url;
           a.download = filename;
