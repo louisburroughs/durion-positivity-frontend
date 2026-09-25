@@ -163,12 +163,11 @@ export class AccountingService {
   }
 
   /**
-   * D4 (issue #380, supersedes #350): the backend's `EventEnvelopeContract`/`ContractField`
-   * response (`version`, `fields[{jsonPath,name,required,type,description,enumValues}]`) really
-   * has no `identifierStrategy`, `traceabilityIds`, `processingStatuses`, or
-   * `idempotencyOutcomes` (durion-positivity-backend#2207) — those are optional on the frontend
-   * model and the page renders a localized "not provided" state for the traceability tab instead
-   * of assuming they exist. That gap no longer blocks migrating off `ApiBaseService`.
+   * D4 (issue #380, #350 D-follow-up): the backend's `EventEnvelopeContract` now also returns
+   * `identifierStrategy`, `traceabilityIds`, `processingStatuses`, and `idempotencyOutcomes`
+   * (durion-positivity-backend#2207, #2223). They stay optional on the frontend model so an older
+   * backend build (or a field the server omits) still renders the localized "not provided" state
+   * per section instead of assuming a shape that isn't there.
    */
   getEventEnvelopeContract(): Observable<EventEnvelopeContract> {
     return this.accountingEventsService.getEventContract().pipe(
@@ -181,6 +180,38 @@ export class AccountingService {
           description: f.description,
         })),
         examples: dto.examples,
+        identifierStrategy: dto.identifierStrategy
+          ? {
+              idFormat: dto.identifierStrategy.idFormat,
+              eventIdMintedBy: dto.identifierStrategy.eventIdMintedBy,
+              domainKeyIdFormat: dto.identifierStrategy.domainKeyIdFormat,
+              notes: dto.identifierStrategy.notes,
+            }
+          : undefined,
+        traceabilityIds: dto.traceabilityIds?.map(t => ({
+          name: t.name,
+          description: t.description,
+          location: t.location,
+        })),
+        processingStatuses: dto.processingStatuses
+          ? {
+              statuses: dto.processingStatuses.statuses.map(s => ({ status: s.status, meaning: s.meaning })),
+              restSubmissionLifecycle: dto.processingStatuses.restSubmissionLifecycle,
+              kafkaFactLifecycle: dto.processingStatuses.kafkaFactLifecycle,
+            }
+          : undefined,
+        idempotencyOutcomes: dto.idempotencyOutcomes
+          ? {
+              restSubmission: dto.idempotencyOutcomes.restSubmission,
+              factConsumption: {
+                mechanism: dto.idempotencyOutcomes.factConsumption.mechanism,
+                outcomes: dto.idempotencyOutcomes.factConsumption.outcomes.map(o => ({
+                  outcome: o.outcome,
+                  description: o.description,
+                })),
+              },
+            }
+          : undefined,
       })),
     );
   }

@@ -71,3 +71,18 @@
 .state-panel--forbidden {
   background: var(--status-warning-bg);
 }
+
+.definition-list {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--space-1) var(--space-4);
+  margin: 0 0 var(--space-4);
+}
+
+.definition-list dt {
+  font-weight: 600;
+}
+
+.definition-list dd {
+  margin: 0;
+}
