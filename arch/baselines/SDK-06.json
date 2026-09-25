@@ -10,7 +10,7 @@
     "tracking": "#350"
   },
   {
-    "key": "src/app/features/bulk-import/services/bulk-import.service.ts :: 'apiBaseUrl'",
+    "key": "src/app/shared/bulk-import/services/bulk-import.service.ts :: 'apiBaseUrl'",
     "reason": "reads environment.apiBaseUrl directly instead of through ApiBaseService/app.config; migrates with PRD-sdk-migration-completion.md.",
     "tracking": "#350"
   },

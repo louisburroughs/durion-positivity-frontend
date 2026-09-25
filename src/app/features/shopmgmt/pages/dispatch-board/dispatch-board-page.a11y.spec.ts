@@ -7,6 +7,7 @@ import axe from 'axe-core';
 
 import { DispatchBoardPageComponent } from './dispatch-board-page.component';
 import { DispatchBoardService } from '../../services/dispatch-board.service';
+import { LOCATION_LOOKUP_SOURCE } from '../../../../shared/location-picker/location-lookup-source.tokens';
 import { WorkorderSummaryResourceTypeEnum } from '@durion-sdk/workorder';
 import type { DashboardResponse } from '../../models/dispatch-board.models';
 import { isoDateLocal } from '../../models/capacity-calendar.models';
@@ -116,6 +117,11 @@ describe('DispatchBoardPageComponent accessibility', () => {
       providers: [
         provideRouter([]),
         { provide: DispatchBoardService, useValue: dispatchBoardServiceStub },
+        // Stubs the embedded app-location-picker control's lookup source.
+        {
+          provide: LOCATION_LOOKUP_SOURCE,
+          useValue: { getAll: vi.fn().mockReturnValue(of([])), getById: vi.fn().mockReturnValue(of(null)) },
+        },
       ],
     }).compileComponents();
 

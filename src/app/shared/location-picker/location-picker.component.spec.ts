@@ -3,14 +3,14 @@ import { TranslateModule } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { LocationPickerComponent } from './location-picker.component';
-import { LocationService } from '../../services/location.service';
+import { LOCATION_LOOKUP_SOURCE } from './location-lookup-source.tokens';
 
 const locations = [
   { id: 'loc-1', name: 'Charlotte Depot', code: 'CLT', mailingAddress: '100 Main St, Charlotte, NC' },
   { id: 'loc-2', name: 'Raleigh Yard', code: 'RAL', addressLine1: '5 Oak Ave', city: 'Raleigh', state: 'NC' },
 ];
 
-const locationServiceStub = { getAllLocations: vi.fn(), getLocationById: vi.fn() };
+const locationServiceStub = { getAll: vi.fn(), getById: vi.fn() };
 
 describe('LocationPickerComponent', () => {
   let fixture: ComponentFixture<LocationPickerComponent>;
@@ -18,13 +18,13 @@ describe('LocationPickerComponent', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
-    locationServiceStub.getAllLocations.mockReturnValue(of(locations));
+    locationServiceStub.getAll.mockReturnValue(of(locations));
     // Default: an out-of-list id is not resolvable (keeps the unknown-id tests blank).
-    locationServiceStub.getLocationById.mockReturnValue(of(null));
+    locationServiceStub.getById.mockReturnValue(of(null));
 
     await TestBed.configureTestingModule({
       imports: [LocationPickerComponent, TranslateModule.forRoot()],
-      providers: [{ provide: LocationService, useValue: locationServiceStub }],
+      providers: [{ provide: LOCATION_LOOKUP_SOURCE, useValue: locationServiceStub }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(LocationPickerComponent);
@@ -70,17 +70,17 @@ describe('LocationPickerComponent', () => {
   });
 
   it('resolves a preset id not in the loaded list by id and shows its name (#147)', () => {
-    locationServiceStub.getLocationById.mockReturnValue(
+    locationServiceStub.getById.mockReturnValue(
       of({ id: 'loc-archived', name: 'Archived Depot', code: 'ARC' }),
     );
     fixture.componentRef.setInput('selectedId', 'loc-archived');
     fixture.detectChanges();
-    expect(locationServiceStub.getLocationById).toHaveBeenCalledWith('loc-archived');
+    expect(locationServiceStub.getById).toHaveBeenCalledWith('loc-archived');
     expect(component.displayValue()).toBe('Archived Depot');
   });
 
   it('stays blank without flipping to the list-load error when a preset out-of-list id cannot be resolved (#147)', () => {
-    locationServiceStub.getLocationById.mockReturnValue(throwError(() => ({ status: 500 })));
+    locationServiceStub.getById.mockReturnValue(throwError(() => ({ status: 500 })));
     fixture.componentRef.setInput('selectedId', 'loc-unreachable');
     fixture.detectChanges();
     // The list itself loaded fine, so a single failed by-id lookup must not show
@@ -142,7 +142,7 @@ describe('LocationPickerComponent', () => {
   });
 
   it('shows an error state when locations fail to load', () => {
-    locationServiceStub.getAllLocations.mockReturnValue(throwError(() => ({ status: 500 })));
+    locationServiceStub.getAll.mockReturnValue(throwError(() => ({ status: 500 })));
     const fx = TestBed.createComponent(LocationPickerComponent);
     fx.detectChanges();
     expect(fx.componentInstance.loadError()).toBe(true);

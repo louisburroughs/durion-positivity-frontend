@@ -8,6 +8,7 @@ import { WorkorderSummaryResourceTypeEnum } from '@durion-sdk/workorder';
 import { DispatchBoardPageComponent } from './dispatch-board-page.component';
 import { BayInventory, BayInventoryEntry, DispatchBoardService } from '../../services/dispatch-board.service';
 import { AuthService } from '../../../../core/services/auth.service';
+import { LOCATION_LOOKUP_SOURCE } from '../../../../shared/location-picker/location-lookup-source.tokens';
 import type {
   BayStatus,
   DashboardResponse,
@@ -198,6 +199,11 @@ describe('DispatchBoardPageComponent', () => {
         provideRouter([]),
         { provide: DispatchBoardService, useValue: dispatchBoardServiceStub },
         { provide: AuthService, useValue: authStub },
+        // Stubs the embedded app-location-picker control's lookup source.
+        {
+          provide: LOCATION_LOOKUP_SOURCE,
+          useValue: { getAll: vi.fn().mockReturnValue(of([])), getById: vi.fn().mockReturnValue(of(null)) },
+        },
       ],
     }).compileComponents();
 

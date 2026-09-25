@@ -40,6 +40,11 @@ import { AuthService } from './core/services/auth.service';
 import { LocaleService } from './core/services/locale.service';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { environment } from '../environments/environment';
+// These wire the `shared/**` lookup-widget injection tokens to their real,
+// feature-owned implementations (LAY-02: shared/** must not depend on
+// features/**, so the binding lives at the composition root instead).
+import { provideCrmCustomerLookupSource } from './features/crm/services/customer-lookup-source.provider';
+import { provideLocationLookupSource } from './features/location/services/location-lookup-source.provider';
 
 /**
  * No-op TranslateLoader used during SSR/build-time route extraction.
@@ -111,6 +116,8 @@ export const appConfig: ApplicationConfig = {
       fallbackLang: 'en-US'
     })),
     provideAppInitializer(() => inject(LocaleService).initialize()),
+    provideCrmCustomerLookupSource(),
+    provideLocationLookupSource(),
     { provide: AccountingConfiguration, useFactory: () => new AccountingConfiguration({ basePath: `${environment.apiBaseUrl}/accounting` }) },
     { provide: BulkLoaderConfiguration, useFactory: () => new BulkLoaderConfiguration({ basePath: `${environment.apiBaseUrl}/bulk-loader` }) },
     { provide: CatalogConfiguration, useFactory: () => new CatalogConfiguration({ basePath: `${environment.apiBaseUrl}/catalog` }) },

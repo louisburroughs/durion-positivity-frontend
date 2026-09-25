@@ -4,7 +4,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 import { LaborOverheadReport } from '../../../models/accounting.models';
 import { AccountingService } from '../../../services/accounting.service';
-import { LocationService } from '../../../../location/services/location.service';
+import { LOCATION_LOOKUP_SOURCE } from '../../../../../shared/location-picker/location-lookup-source.tokens';
 import { LocaleService } from '../../../../../core/services/locale.service';
 import { LaborOverheadReportPageComponent } from './labor-overhead-report-page.component';
 
@@ -73,8 +73,8 @@ describe('LaborOverheadReportPageComponent', () => {
     getLaborOverheadReport: vi.fn().mockReturnValue(of(sampleReport())),
   };
   const locationServiceStub = {
-    getAllLocations: vi.fn().mockReturnValue(of([])),
-    getLocationById: vi.fn().mockReturnValue(of(null)),
+    getAll: vi.fn().mockReturnValue(of([])),
+    getById: vi.fn().mockReturnValue(of(null)),
   };
 
   beforeEach(async () => {
@@ -84,7 +84,7 @@ describe('LaborOverheadReportPageComponent', () => {
       providers: [
         provideRouter([]),
         { provide: AccountingService, useValue: accountingServiceStub },
-        { provide: LocationService, useValue: locationServiceStub },
+        { provide: LOCATION_LOOKUP_SOURCE, useValue: locationServiceStub },
       ],
     }).compileComponents();
 

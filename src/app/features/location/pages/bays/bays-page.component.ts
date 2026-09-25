@@ -5,7 +5,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { LocationService } from '../../services/location.service';
-import { LocationPickerComponent } from '../../components/location-picker/location-picker.component';
+import { LocationPickerComponent } from '../../../../shared/location-picker/location-picker.component';
 
 @Component({
   selector: 'app-bays-page',
