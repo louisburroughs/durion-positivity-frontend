@@ -1,12 +1,13 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { provideRouter, ActivatedRoute } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { Subject, of, throwError } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { By } from '@angular/platform-browser';
 import { AppointmentDispatchAssignPageComponent } from './appointment-dispatch-assign-page.component';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AppointmentService } from '../../services/appointment.service';
+import type { AppointmentDetail } from '../../models/appointment.models';
 import enUS from '../../../../../assets/i18n/en-US.json';
 
 const stubService = {
@@ -225,5 +226,65 @@ describe('AppointmentDispatchAssignPageComponent [CAP-138]', () => {
     const assignmentItem = fixture.debugElement.query(By.css('.assignment-item'));
     expect(assignmentItem.nativeElement.textContent).not.toContain('m-unresolved');
     expect(assignmentItem.nativeElement.textContent).toContain(enUS.COMMON.NOT_AVAILABLE);
+  });
+
+  // PR #363 review: a route id revisited (A → B → A) must bump facilityLoadSeq on every entry,
+  // not only inside loadFacilityName, so a facility lookup still in flight from the FIRST visit
+  // to A can never land during the SECOND visit to A (ADR-0063 §1). Driven through Subjects
+  // (ADR-0035 §6) so the race is exercised explicitly rather than resolved synchronously.
+  it('a facility lookup pending from a previous visit to the same :id never overwrites the current one (A → B → A)', async () => {
+    vi.clearAllMocks();
+    const params = new Subject<{ id: string }>();
+    const readB = new Subject<AppointmentDetail>();
+    const readA2 = new Subject<AppointmentDetail>();
+    const facilityA1 = new Subject<string | undefined>();
+    const facilityCurrent = new Subject<string | undefined>();
+    let appointmentACalls = 0;
+    let facilityCalls = 0;
+
+    stubService.listAssignments.mockReturnValue(of([]));
+    stubService.getAppointment.mockImplementation((id: string) => {
+      if (id === 'appt-A') {
+        appointmentACalls++;
+        // First visit to A resolves synchronously (issuing facility lookup A1); the second
+        // visit's appointment read stays pending until the test resolves it.
+        return appointmentACalls === 1
+          ? of({ appointmentId: 'appt-A', status: 'SCHEDULED', facilityId: 'loc-1' })
+          : readA2.asObservable();
+      }
+      // B's own appointment read never resolves in this test, so it never issues a facility
+      // lookup of its own — the bug this guards against does not require one to.
+      return readB.asObservable();
+    });
+    stubService.getFacilityName.mockImplementation(() => {
+      facilityCalls++;
+      return facilityCalls === 1 ? facilityA1.asObservable() : facilityCurrent.asObservable();
+    });
+
+    await TestBed.configureTestingModule({
+      imports: [AppointmentDispatchAssignPageComponent, TranslateModule.forRoot()],
+      providers: [
+        provideRouter([]),
+        { provide: AppointmentService, useValue: stubService },
+        { provide: ActivatedRoute, useValue: { params: params.asObservable() } },
+      ],
+    }).compileComponents();
+    fixture = TestBed.createComponent(AppointmentDispatchAssignPageComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    params.next({ id: 'appt-A' }); // facility lookup A1 issued and left pending
+    params.next({ id: 'appt-B' }); // its own appointment read is left pending too
+    params.next({ id: 'appt-A' }); // back to A: a brand-new appointment read is now pending
+
+    facilityA1.next('Stale Shop');
+    facilityA1.complete();
+    expect(component.facilityName()).not.toBe('Stale Shop');
+
+    readA2.next({ appointmentId: 'appt-A', status: 'SCHEDULED', facilityId: 'loc-1' });
+    readA2.complete();
+    facilityCurrent.next('Current Shop');
+    facilityCurrent.complete();
+    expect(component.facilityName()).toBe('Current Shop');
   });
 });

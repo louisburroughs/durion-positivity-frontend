@@ -50,6 +50,10 @@ export class AppointmentDispatchAssignPageComponent implements OnInit {
       const id = String(params['id'] ?? '');
       this.appointmentId = id;
       this.facilityName.set(undefined);
+      // A route change — including back to an id already visited — invalidates every facility
+      // lookup issued before it, so a stale one still in flight from an earlier visit to this
+      // same id can never pass the id+seq guard below and land after we've moved on (ADR-0063 §1).
+      this.facilityLoadSeq++;
       if (!id) {
         return;
       }
