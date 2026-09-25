@@ -281,7 +281,10 @@ export const INVENTORY_LANDING_CONFIG: LandingPageConfig = {
           titleKey: 'INVENTORY.LANDING.CARD.SECURITY_PERMISSIONS.TITLE',
           descriptionKey: 'INVENTORY.LANDING.CARD.SECURITY_PERMISSIONS.DESCRIPTION',
           ctaKey: 'INVENTORY.LANDING.ACTION.OPEN_PAGE',
-          route: '/app/inventory/security/permissions',
+          // Page moved to features/security (#347); /app/inventory/security/permissions
+          // still resolves via a redirect in inventory.routes.ts, but this tile links
+          // straight to the canonical URL.
+          route: '/app/security/inventory-permissions',
           permissions: INVENTORY_PAGE.securityAdmin,
         },
       ],

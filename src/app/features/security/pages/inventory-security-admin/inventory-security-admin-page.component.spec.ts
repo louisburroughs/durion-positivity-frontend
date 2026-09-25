@@ -4,9 +4,9 @@ import { provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 import { InventorySecurityAdminPageComponent } from './inventory-security-admin-page.component';
-import { SecurityService } from '../../../../security/services/security.service';
-import { AuthService } from '../../../../../core/services/auth.service';
-import { PagedResponse, SecurityPermission } from '../../../../security/models/security.models';
+import { SecurityService } from '../../services/security.service';
+import { AuthService } from '../../../../core/services/auth.service';
+import { PagedResponse, SecurityPermission } from '../../models/security.models';
 
 const mockSecurityService = {
   getAllPermissions: vi.fn(),

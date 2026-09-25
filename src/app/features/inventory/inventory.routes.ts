@@ -215,12 +215,11 @@ export const INVENTORY_ROUTES: Routes = [
           ),
       },
       {
+        // Page moved to features/security (#347) — it administers the security
+        // permission registry, so it belongs with the feature that owns that
+        // data. This keeps the old /app/inventory URL working.
         path: 'security/permissions',
-        data: { permissions: INVENTORY_PAGE.securityAdmin },
-        loadComponent: () =>
-          import('./pages/security/inventory-security-admin/inventory-security-admin-page.component').then(
-            m => m.InventorySecurityAdminPageComponent,
-          ),
+        redirectTo: '/app/security/inventory-permissions',
       },
       {
         path: 'bulk-import/stock',

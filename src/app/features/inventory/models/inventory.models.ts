@@ -427,11 +427,8 @@ export interface ShortageResolutionResult {
   readonly resolvedAt?: string;
 }
 
-// Inventory Security (CAP-221 #87)
-export interface InventoryPermissionEntry {
-  permissionKey: string;
-  description: string;
-  category: string;
-  isCurrentUserGranted: boolean;
-}
+// Inventory Security (CAP-221 #87): InventoryPermissionEntry moved to
+// features/security/pages/inventory-security-admin/inventory-security-admin-page.component.ts
+// with the page itself (#347) — it displays SecurityService data, so it lives
+// with the feature that owns that data.
 

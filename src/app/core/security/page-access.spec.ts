@@ -115,6 +115,7 @@ const UNGATED_BY_DESIGN: Readonly<Record<string, string>> = {
   '/app/admin': 'landing page — static config, cards filtered individually',
   '/app/bulk-import': 'redirect to the job list',
   '/app/platform': 'redirect to the tenant list',
+  '/app/inventory/security/permissions': 'redirect to /app/security/inventory-permissions (#347)',
 
   // Primary read carries the backend's AUTHENTICATED sentinel: `isAuthenticated()`
   // or no `@PreAuthorize` at all, so the page cannot 403 on load.

@@ -47,6 +47,17 @@ export const SECURITY_ROUTES: Routes = [
           import('./pages/user-provision/user-provision-page.component')
             .then(m => m.UserProvisionPageComponent),
       },
+      {
+        // Moved from features/inventory (#347): administers the inventory-tagged
+        // subset of the security permission registry, so it belongs with the
+        // feature that owns SecurityService. /app/inventory/security/permissions
+        // redirects here (inventory.routes.ts).
+        path: 'inventory-permissions',
+        data: { permissions: SECURITY_PAGE.permissions },
+        loadComponent: () =>
+          import('./pages/inventory-security-admin/inventory-security-admin-page.component')
+            .then(m => m.InventorySecurityAdminPageComponent),
+      },
     ],
   },
 ];

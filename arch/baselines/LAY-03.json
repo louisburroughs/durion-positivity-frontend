@@ -40,16 +40,6 @@
     "tracking": "#347"
   },
   {
-    "key": "src/app/features/inventory/pages/security/inventory-security-admin/inventory-security-admin-page.component.ts -> src/app/features/security/models/security.models.ts",
-    "reason": "inventory-security-admin reads the security feature's models/service directly for the shared audit UI; no shared/ promotion decided yet.",
-    "tracking": "#347"
-  },
-  {
-    "key": "src/app/features/inventory/pages/security/inventory-security-admin/inventory-security-admin-page.component.ts -> src/app/features/security/services/security.service.ts",
-    "reason": "inventory-security-admin reads the security feature's models/service directly for the shared audit UI; no shared/ promotion decided yet.",
-    "tracking": "#347"
-  },
-  {
     "key": "src/app/features/shopmgmt/models/shop-dashboard.models.ts -> src/app/features/workexec/models/workexec.models.ts",
     "reason": "inventory fulfillment pages and shopmgmt read workexec's models/service directly for shared work-order state; no shared/ promotion decided yet (tracked separately from plan §8 decision 1).",
     "tracking": "#347"
