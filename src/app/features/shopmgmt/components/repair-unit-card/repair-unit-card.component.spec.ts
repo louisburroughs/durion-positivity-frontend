@@ -9,7 +9,7 @@ import {
   StatusBand,
   formatHours,
 } from '../../models/shop-dashboard.models';
-import type { WorkorderStatus } from '../../../workexec/models/workexec.models';
+import type { WorkorderStatus } from '../../../../shared/workorder-status/workorder-status.models';
 
 const IDLE_BAY: RepairUnitCard = {
   unitId: 'bay-3',

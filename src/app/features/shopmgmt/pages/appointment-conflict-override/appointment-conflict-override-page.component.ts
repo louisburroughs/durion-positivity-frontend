@@ -7,6 +7,7 @@ import { ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
 import { SHOPMGMT_PAGE } from '../../../../core/security/route-permissions';
 import { AppointmentService } from '../../services/appointment.service';
+import { appointmentStatusKey, conflictCodeKey } from '../../models/appointment.models';
 import type { AppointmentConflict, AppointmentDetail, Conflict, RescheduleRequest } from '../../models/appointment.models';
 
 @Component({
@@ -23,6 +24,8 @@ export class AppointmentConflictOverridePageComponent implements OnInit {
 
   readonly loading = signal(false);
   readonly appointment = signal<AppointmentDetail | null>(null);
+  /** Resolved the same way appointment-edit/appointment-reschedule do; `undefined` falls back to COMMON.NOT_AVAILABLE (ADR-0064 §5). */
+  readonly facilityName = signal<string | undefined>(undefined);
   readonly conflicts = signal<Conflict[]>([]);
   readonly showConflictPanel = signal(false);
   readonly overrideMode = signal(false);
@@ -64,11 +67,20 @@ export class AppointmentConflictOverridePageComponent implements OnInit {
     () => !this.auth.permissionsKnown() || this.auth.hasAnyPermission(SHOPMGMT_PAGE.conflictOverride),
   );
   readonly hasOverridableConflicts = computed(() => this.canOverride() && this.overridableConflicts().length > 0);
+  readonly statusKey = computed(() => appointmentStatusKey(this.appointment()?.status));
+
+  /** Bumped on every `loadFacilityName` call so a stale lookup for the same appointment id can never overwrite a newer one (ADR-0063 §1). */
+  private facilityLoadSeq = 0;
 
   ngOnInit(): void {
     this.route.params.subscribe(params => {
       const id = String(params['id'] ?? '');
       this.appointmentId = id;
+      this.facilityName.set(undefined);
+      // A route change — including back to an id already visited — invalidates every facility
+      // lookup issued before it, so a stale one still in flight from an earlier visit to this
+      // same id can never pass the id+seq guard below and land after we've moved on (ADR-0063 §1).
+      this.facilityLoadSeq++;
       if (!id) {
         return;
       }
@@ -84,6 +96,7 @@ export class AppointmentConflictOverridePageComponent implements OnInit {
           }
           this.appointment.set(appointment);
           this.loading.set(false);
+          this.loadFacilityName(id, appointment.facilityId);
         },
         error: () => {
           if (id !== this.appointmentId) {
@@ -96,11 +109,36 @@ export class AppointmentConflictOverridePageComponent implements OnInit {
     });
   }
 
+  conflictKey(code: string): string {
+    return conflictCodeKey(code);
+  }
+
+  private loadFacilityName(id: string, facilityId: string): void {
+    // Every call — including a second one for the same id after a reschedule/refresh — gets its
+    // own sequence number, so an earlier in-flight lookup can never win a race against a later
+    // one for the same appointment (ADR-0063 §1).
+    const seq = ++this.facilityLoadSeq;
+    if (!facilityId) {
+      this.facilityName.set(undefined);
+      return;
+    }
+    this.appointmentService.getFacilityName(facilityId).subscribe(name => {
+      // A route change to another :id, or a superseded lookup for this same id, must not paint a
+      // stale facility onto the one now on screen (ADR-0063 §1).
+      if (id !== this.appointmentId || seq !== this.facilityLoadSeq) return;
+      this.facilityName.set(name);
+    });
+  }
+
   submitReschedule(): void {
     if (this.rescheduleForm.invalid || !this.appointmentId) {
       this.rescheduleForm.markAllAsTouched();
       return;
     }
+
+    // Captured at issue time, never re-derived from the live signal in the callback below — the
+    // route can move to another appointment while this request is in flight (ADR-0063 §1).
+    const requestId = this.appointmentId;
 
     this.rescheduleLoading.set(true);
     this.rescheduleSuccess.set(false);
@@ -112,15 +150,18 @@ export class AppointmentConflictOverridePageComponent implements OnInit {
       reason: this.rescheduleForm.controls.reason.value,
     };
 
-    this.appointmentService.rescheduleAppointment(this.appointmentId, body).subscribe({
+    this.appointmentService.rescheduleAppointment(requestId, body).subscribe({
       next: (appointment) => {
+        if (requestId !== this.appointmentId) return; // stale success — the route moved on
         this.appointment.set(appointment);
+        this.loadFacilityName(requestId, appointment.facilityId);
         this.conflicts.set([]);
         this.showConflictPanel.set(false);
         this.rescheduleSuccess.set(true);
         this.rescheduleLoading.set(false);
       },
       error: (error: HttpErrorResponse) => {
+        if (requestId !== this.appointmentId) return; // stale error — the route moved on
         if (error.status === 409) {
           const conflictList = (error.error as { conflicts?: Conflict[] } | null)?.conflicts ?? [];
           this.conflicts.set(conflictList);
@@ -216,6 +257,7 @@ export class AppointmentConflictOverridePageComponent implements OnInit {
       next: (appointment) => {
         if (id === this.appointmentId) {
           this.appointment.set(appointment);
+          this.loadFacilityName(id, appointment.facilityId);
         }
       },
       // The override error already says what happened; a failed refresh keeps the last known state.

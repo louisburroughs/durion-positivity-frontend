@@ -5,10 +5,11 @@ import { Subject, of, throwError } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { By } from '@angular/platform-browser';
 import { AppointmentConflictOverridePageComponent } from './appointment-conflict-override-page.component';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../../../core/services/auth.service';
 import { AppointmentService } from '../../services/appointment.service';
 import type { AppointmentDetail } from '../../models/appointment.models';
+import enUS from '../../../../../assets/i18n/en-US.json';
 
 /** CAP-326: a booking that warned — one SOFT conflict recorded, still overridable. */
 const APPOINTMENT_WITH_SOFT_CONFLICT = {
@@ -43,6 +44,7 @@ const stubService = {
   getAppointment: vi.fn(),
   rescheduleAppointment: vi.fn(),
   executeOverride: vi.fn(),
+  getFacilityName: vi.fn(),
 };
 
 describe('AppointmentConflictOverridePageComponent [CAP-138]', () => {
@@ -58,6 +60,7 @@ describe('AppointmentConflictOverridePageComponent [CAP-138]', () => {
     stubService.getAppointment.mockReturnValue(of(APPOINTMENT_WITH_SOFT_CONFLICT));
     stubService.rescheduleAppointment.mockReturnValue(of({ appointmentId: 'appt-1', status: 'SCHEDULED', facilityId: 'loc-1' }));
     stubService.executeOverride.mockReturnValue(of({ appointmentId: 'appt-1', status: 'SCHEDULED', facilityId: 'loc-1' }));
+    stubService.getFacilityName.mockReturnValue(of('Downtown Shop'));
 
     await TestBed.configureTestingModule({
       imports: [AppointmentConflictOverridePageComponent, TranslateModule.forRoot()],
@@ -133,6 +136,7 @@ describe('AppointmentConflictOverridePageComponent [CAP-138]', () => {
       ),
     );
     stubService.executeOverride.mockReturnValue(of({ appointmentId: 'appt-1', status: 'SCHEDULED', facilityId: 'loc-1' }));
+    stubService.getFacilityName.mockReturnValue(of('Downtown Shop'));
 
     await TestBed.configureTestingModule({
       imports: [AppointmentConflictOverridePageComponent, TranslateModule.forRoot()],
@@ -184,6 +188,7 @@ describe('AppointmentConflictOverridePageComponent [CAP-138]', () => {
       ),
     );
     stubService.executeOverride.mockReturnValue(of(APPOINTMENT_WITH_SOFT_CONFLICT));
+    stubService.getFacilityName.mockReturnValue(of('Downtown Shop'));
 
     await TestBed.configureTestingModule({
       imports: [AppointmentConflictOverridePageComponent, TranslateModule.forRoot()],
@@ -268,6 +273,7 @@ describe('AppointmentConflictOverridePageComponent [CAP-138]', () => {
     );
     stubService.rescheduleAppointment.mockReturnValue(of(APPOINTMENT_WITH_SOFT_CONFLICT));
     stubService.executeOverride.mockReturnValue(of({}));
+    stubService.getFacilityName.mockReturnValue(of('Downtown Shop'));
 
     await TestBed.configureTestingModule({
       imports: [AppointmentConflictOverridePageComponent, TranslateModule.forRoot()],
@@ -325,6 +331,7 @@ describe('AppointmentConflictOverridePageComponent [CAP-138]', () => {
     );
     stubService.rescheduleAppointment.mockReturnValue(of(APPOINTMENT_WITH_SOFT_CONFLICT));
     stubService.executeOverride.mockReturnValue(of(APPOINTMENT_WITH_SOFT_CONFLICT));
+    stubService.getFacilityName.mockReturnValue(of('Downtown Shop'));
 
     await TestBed.configureTestingModule({
       imports: [AppointmentConflictOverridePageComponent, TranslateModule.forRoot()],
@@ -347,5 +354,138 @@ describe('AppointmentConflictOverridePageComponent [CAP-138]', () => {
     component.submitOverride();
     expect(stubService.executeOverride).not.toHaveBeenCalled();
     expect(component.overrideError()).toBe('SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.ERROR.NOTHING_TO_OVERRIDE');
+  });
+
+  // #358: the facility must be resolved and shown by name, never the raw locationId/facilityId UUID.
+  it('resolves the facility name via getFacilityName and renders it', async () => {
+    await setup();
+    expect(stubService.getFacilityName).toHaveBeenCalledWith('loc-1');
+    const summary = fixture.debugElement.query(By.css('.appointment-summary'));
+    expect(summary.nativeElement.textContent).toContain('Downtown Shop');
+  });
+
+  it('falls back to COMMON.NOT_AVAILABLE when the facility name cannot be resolved', async () => {
+    vi.clearAllMocks();
+    stubService.getAppointment.mockReturnValue(of(APPOINTMENT_WITH_SOFT_CONFLICT));
+    stubService.getFacilityName.mockReturnValue(of(undefined));
+
+    await TestBed.configureTestingModule({
+      imports: [AppointmentConflictOverridePageComponent, TranslateModule.forRoot()],
+      providers: [
+        provideRouter([]),
+        { provide: AppointmentService, useValue: stubService },
+        { provide: AuthService, useValue: authStub },
+        { provide: ActivatedRoute, useValue: { params: of({ id: 'appt-1' }) } },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(AppointmentConflictOverridePageComponent);
+    component = fixture.componentInstance;
+    // ADR-0035 §8: assert the real localized fallback, not merely the UUID's absence.
+    const translate = TestBed.inject(TranslateService);
+    translate.setTranslation('en-US', enUS);
+    translate.use('en-US');
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).not.toContain('loc-1');
+    expect(fixture.nativeElement.textContent).toContain(enUS.COMMON.NOT_AVAILABLE);
+  });
+
+  it('never renders the facility/location UUID as visible text, resolved or not', async () => {
+    await setup();
+    expect(fixture.nativeElement.textContent).not.toContain('loc-1');
+  });
+
+  // PR #363 review: a route id revisited (A → B → A) must bump facilityLoadSeq on every entry,
+  // not only inside loadFacilityName, so a facility lookup still in flight from the FIRST visit
+  // to A can never land during the SECOND visit to A (ADR-0063 §1). Driven through Subjects
+  // (ADR-0035 §6) so the race is exercised explicitly rather than resolved synchronously.
+  it('a facility lookup pending from a previous visit to the same :id never overwrites the current one (A → B → A)', async () => {
+    vi.clearAllMocks();
+    const params = new Subject<{ id: string }>();
+    const readB = new Subject<AppointmentDetail>();
+    const readA2 = new Subject<AppointmentDetail>();
+    const facilityA1 = new Subject<string | undefined>();
+    const facilityCurrent = new Subject<string | undefined>();
+    let appointmentACalls = 0;
+    let facilityCalls = 0;
+
+    stubService.getAppointment.mockImplementation((id: string) => {
+      if (id === 'appt-A') {
+        appointmentACalls++;
+        // First visit to A resolves synchronously (issuing facility lookup A1); the second visit's
+        // appointment read stays pending until the test resolves it.
+        return appointmentACalls === 1
+          ? of({ ...APPOINTMENT_WITH_SOFT_CONFLICT, appointmentId: 'appt-A', facilityId: 'loc-1' })
+          : readA2.asObservable();
+      }
+      // B's own appointment read never resolves in this test, so it never issues a facility
+      // lookup of its own — the bug this guards against does not require one to.
+      return readB.asObservable();
+    });
+    stubService.getFacilityName.mockImplementation(() => {
+      facilityCalls++;
+      return facilityCalls === 1 ? facilityA1.asObservable() : facilityCurrent.asObservable();
+    });
+
+    await TestBed.configureTestingModule({
+      imports: [AppointmentConflictOverridePageComponent, TranslateModule.forRoot()],
+      providers: [
+        provideRouter([]),
+        { provide: AppointmentService, useValue: stubService },
+        { provide: AuthService, useValue: authStub },
+        { provide: ActivatedRoute, useValue: { params: params.asObservable() } },
+      ],
+    }).compileComponents();
+    fixture = TestBed.createComponent(AppointmentConflictOverridePageComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    params.next({ id: 'appt-A' }); // facility lookup A1 issued and left pending
+    params.next({ id: 'appt-B' }); // its own appointment read is left pending too
+    params.next({ id: 'appt-A' }); // back to A: a brand-new appointment read is now pending
+
+    facilityA1.next('Stale Shop');
+    facilityA1.complete();
+    expect(component.facilityName()).not.toBe('Stale Shop');
+
+    readA2.next({ ...APPOINTMENT_WITH_SOFT_CONFLICT, appointmentId: 'appt-A', facilityId: 'loc-1' });
+    readA2.complete();
+    facilityCurrent.next('Current Shop');
+    facilityCurrent.complete();
+    expect(component.facilityName()).toBe('Current Shop');
+  });
+
+  // PR #363 review: appointmentStatusKey() must fall back to COMMON.NOT_AVAILABLE for a status
+  // outside APPOINTMENT_STATUS_CODES, and the fallback must render the real English copy
+  // (ADR-0035 §8), not merely the raw status string.
+  it('falls back to COMMON.NOT_AVAILABLE for a status the server sends outside the known catalog', async () => {
+    vi.clearAllMocks();
+    stubService.getAppointment.mockReturnValue(
+      of({ ...APPOINTMENT_WITH_SOFT_CONFLICT, status: 'SOME_FUTURE_STATUS' }),
+    );
+    stubService.getFacilityName.mockReturnValue(of('Downtown Shop'));
+
+    await TestBed.configureTestingModule({
+      imports: [AppointmentConflictOverridePageComponent, TranslateModule.forRoot()],
+      providers: [
+        provideRouter([]),
+        { provide: AppointmentService, useValue: stubService },
+        { provide: AuthService, useValue: authStub },
+        { provide: ActivatedRoute, useValue: { params: of({ id: 'appt-1' }) } },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(AppointmentConflictOverridePageComponent);
+    component = fixture.componentInstance;
+    const translate = TestBed.inject(TranslateService);
+    translate.setTranslation('en-US', enUS);
+    translate.use('en-US');
+    fixture.detectChanges();
+
+    expect(component.statusKey()).toBe('COMMON.NOT_AVAILABLE');
+    const summary = fixture.debugElement.query(By.css('.appointment-summary'));
+    expect(summary.nativeElement.textContent).not.toContain('SOME_FUTURE_STATUS');
+    expect(summary.nativeElement.textContent).toContain(enUS.COMMON.NOT_AVAILABLE);
   });
 });

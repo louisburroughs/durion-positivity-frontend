@@ -20,10 +20,10 @@ export const lay02 = (p: Project): ArchRule =>
 /** A feature must not depend on another feature (ADR-0010 §3, 0036 §2): one dependencyRule per domain. */
 export const lay03 = (p: Project): ArchRule =>
   combine(
-    { id: 'LAY-03', title: 'A feature must not depend on another feature (ADR-0010 §3, 0036 §2)', mode: 'ratchet' },
+    { id: 'LAY-03', title: 'A feature must not depend on another feature (ADR-0010 §3, 0036 §2)', mode: 'enforce' },
     featureDomains(p).map((d) =>
       dependencyRule(
-        { id: `LAY-03/${d}`, title: `feature '${d}' must not depend on another feature (ADR-0010 §3, 0036 §2)`, mode: 'ratchet' },
+        { id: `LAY-03/${d}`, title: `feature '${d}' must not depend on another feature (ADR-0010 §3, 0036 §2)`, mode: 'enforce' },
         p,
         {
           subject: selectors.feature(p, d),
@@ -82,11 +82,11 @@ const featureModels = (rp: Project): RegExp => new RegExp(`${selectors.features(
 /** A feature must not import another feature's `models/` (ADR-0036 §2): the stricter subset of LAY-03. */
 export const lay04 = (p: Project): ArchRule =>
   combine(
-    { id: 'LAY-04', title: "A feature must not import another feature's models/ (ADR-0036 §2)", mode: 'ratchet' },
+    { id: 'LAY-04', title: "A feature must not import another feature's models/ (ADR-0036 §2)", mode: 'enforce' },
     featureDomains(p).map((d) => {
       const ownModels = new RegExp(`${selectors.feature(p, d).source}models/`);
       return dependencyRule(
-        { id: `LAY-04/${d}`, title: `feature '${d}' must not import another feature's models/ (ADR-0036 §2)`, mode: 'ratchet' },
+        { id: `LAY-04/${d}`, title: `feature '${d}' must not import another feature's models/ (ADR-0036 §2)`, mode: 'enforce' },
         p,
         {
           subject: selectors.feature(p, d),

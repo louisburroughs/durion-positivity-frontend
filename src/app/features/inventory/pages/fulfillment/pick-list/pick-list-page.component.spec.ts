@@ -5,10 +5,10 @@ import { ActivatedRoute, provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { of, Subject, throwError } from 'rxjs';
 import { PickListPageComponent } from './pick-list-page.component';
-import { WorkexecService } from '../../../../workexec/services/workexec.service';
-import { PickListView, PickTaskLine } from '../../../../workexec/models/workexec.models';
+import { InventoryPickService } from '../../../services/inventory-pick.service';
+import { PickListView, PickTaskLine } from '../../../models/inventory-pick.models';
 
-const mockWorkexecService = {
+const mockPickService = {
   getWorkorderPickList: vi.fn(),
 };
 
@@ -39,7 +39,7 @@ async function setupPickList(workorderId: string | null = 'wo-001') {
     imports: [PickListPageComponent, TranslateModule.forRoot()],
     providers: [
       provideRouter([]),
-      { provide: WorkexecService, useValue: mockWorkexecService },
+      { provide: InventoryPickService, useValue: mockPickService },
       { provide: ActivatedRoute, useValue: buildRoute(workorderId) },
     ],
   }).compileComponents();
@@ -52,7 +52,7 @@ describe('PickListPageComponent', () => {
   });
 
   it('loaded task list sets state ready', async () => {
-    mockWorkexecService.getWorkorderPickList.mockReturnValue(of(pickListFixture));
+    mockPickService.getWorkorderPickList.mockReturnValue(of(pickListFixture));
     const component = await setupPickList();
 
     expect(component.state()).toBe('ready');
@@ -61,7 +61,7 @@ describe('PickListPageComponent', () => {
 
   it('empty tasks array sets state empty', async () => {
     const emptyList: PickListView = { ...pickListFixture, tasks: [] };
-    mockWorkexecService.getWorkorderPickList.mockReturnValue(of(emptyList));
+    mockPickService.getWorkorderPickList.mockReturnValue(of(emptyList));
     const component = await setupPickList();
 
     expect(component.state()).toBe('empty');
@@ -70,10 +70,10 @@ describe('PickListPageComponent', () => {
   // The adapter contract (#201) is that `tasks` is always an array, so this
   // page relies on it without guarding and treats an empty array as the empty
   // state. The service is mocked here; the header-only-cast regression itself
-  // is covered in workexec.service.spec.ts.
+  // is covered in inventory-pick.service.spec.ts.
   it('always receives tasks as an array from the adapter contract', async () => {
     const emptyList: PickListView = { ...pickListFixture, tasks: [] };
-    mockWorkexecService.getWorkorderPickList.mockReturnValue(of(emptyList));
+    mockPickService.getWorkorderPickList.mockReturnValue(of(emptyList));
     const component = await setupPickList();
 
     expect(Array.isArray(component.pickList()?.tasks)).toBe(true);
@@ -83,7 +83,7 @@ describe('PickListPageComponent', () => {
 
   // The service emits null when the workorder has no pick list yet (#286).
   it('no pick list (null) sets state empty, not error', async () => {
-    mockWorkexecService.getWorkorderPickList.mockReturnValue(of(null));
+    mockPickService.getWorkorderPickList.mockReturnValue(of(null));
     const component = await setupPickList();
 
     expect(component.state()).toBe('empty');
@@ -94,7 +94,7 @@ describe('PickListPageComponent', () => {
   // Only the service may decide a 404 means "no pick list"; one that reaches
   // the page (e.g. from the task read) is a real failure.
   it('a load error that reaches the page sets state error, even a 404', async () => {
-    mockWorkexecService.getWorkorderPickList.mockReturnValue(
+    mockPickService.getWorkorderPickList.mockReturnValue(
       throwError(() => new HttpErrorResponse({ status: 404, statusText: 'Not Found' })),
     );
     const component = await setupPickList();
@@ -104,7 +104,7 @@ describe('PickListPageComponent', () => {
   });
 
   it('reload() re-fetches pick list and sets state to ready', async () => {
-    mockWorkexecService.getWorkorderPickList
+    mockPickService.getWorkorderPickList
       .mockReturnValueOnce(throwError(() => new Error('initial fail')))
       .mockReturnValueOnce(of(pickListFixture));
 
@@ -120,7 +120,7 @@ describe('PickListPageComponent', () => {
   it('load error sets state.set("error") before errorKey.set() (ADR-0031)', async () => {
     const err = new Error('fail');
     const load$ = new Subject<PickListView>();
-    mockWorkexecService.getWorkorderPickList.mockReturnValue(load$.asObservable());
+    mockPickService.getWorkorderPickList.mockReturnValue(load$.asObservable());
 
     const component = await setupPickList();
     const stateSignal = component.state as WritableSignal<'idle' | 'loading' | 'empty' | 'ready' | 'error'>;

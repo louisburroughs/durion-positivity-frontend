@@ -65,6 +65,18 @@ export function conflictCodeKey(code: string): string {
     : 'SHOPMGMT.APPOINTMENT_CONFLICT_CODE.GENERIC';
 }
 
+/**
+ * Maps an appointment `status` to its translation key under `SHOPMGMT.APPOINTMENT_STATUS.*`,
+ * validated against `APPOINTMENT_STATUS_CODES` — a status the server sends outside that catalog
+ * falls back to `COMMON.NOT_AVAILABLE` rather than a raw-status key the missing-key fallback would
+ * expose as visible text (ADR-0064 §5).
+ */
+export function appointmentStatusKey(status: string | undefined | null): string {
+  return status && (APPOINTMENT_STATUS_CODES as readonly string[]).includes(status)
+    ? `SHOPMGMT.APPOINTMENT_STATUS.${status}`
+    : 'COMMON.NOT_AVAILABLE';
+}
+
 export interface AppointmentDetail {
   appointmentId: string;
   status: string;

@@ -62,9 +62,9 @@
         <label for="scan-input">{{ 'INVENTORY.FULFILLMENT.PICK_EXECUTE.FIELD.SCAN_INPUT' | translate }}</label>
         <div class="scan-row">
           <input id="scan-input" type="text" [value]="scanInput()" (input)="setScanInput($any($event.target).value)"
-            [attr.disabled]="state() === 'picking' ? true : null" />
+            [attr.disabled]="state() === 'picking' || !canExecute() ? true : null" />
           <button class="btn-primary" type="button" (click)="resolveScan()"
-            [disabled]="state() === 'picking' || !scanInput().trim()">
+            [disabled]="state() === 'picking' || !scanInput().trim() || !canExecute()">
             {{ 'INVENTORY.FULFILLMENT.PICK_EXECUTE.ACTION.RESOLVE_SCAN' | translate }}
           </button>
         </div>
@@ -85,11 +85,12 @@
         <div class="field-row">
           <label for="confirm-qty">{{ 'INVENTORY.FULFILLMENT.PICK_EXECUTE.FIELD.CONFIRM_QTY' | translate }}</label>
           <input id="confirm-qty" type="number" min="1" [max]="pendingLine()!.requestedQty" [value]="confirmQty()"
-            (input)="setConfirmQty(+$any($event.target).value)" [attr.disabled]="state() === 'picking' ? true : null" />
+            (input)="setConfirmQty(+$any($event.target).value)"
+            [attr.disabled]="state() === 'picking' || !canExecute() ? true : null" />
         </div>
 
         <button class="btn-primary" type="button" (click)="confirmLine()"
-          [disabled]="state() === 'picking' || confirmQty() <= 0">
+          [disabled]="state() === 'picking' || confirmQty() <= 0 || !canExecute()">
           {{ 'INVENTORY.FULFILLMENT.PICK_EXECUTE.ACTION.CONFIRM' | translate }}
         </button>
       </section>
@@ -102,7 +103,7 @@
 
       <div class="action-row">
         <button class="btn-primary" type="button" (click)="complete()"
-          [disabled]="state() === 'picking' || pendingLine() !== null || lines().length === 0">
+          [disabled]="state() === 'picking' || pendingLine() !== null || lines().length === 0 || !canExecute()">
           {{ 'INVENTORY.FULFILLMENT.PICK_EXECUTE.ACTION.COMPLETE' | translate }}
         </button>
       </div>

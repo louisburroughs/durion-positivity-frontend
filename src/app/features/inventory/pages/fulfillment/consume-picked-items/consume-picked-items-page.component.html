@@ -89,7 +89,7 @@
 
     <div class="action-bar">
       <button class="btn-primary" type="button" (click)="submit()"
-        [disabled]="!canSubmit() || state() === 'submitting'">
+        [disabled]="!canSubmit() || !canConsume() || state() === 'submitting'">
         {{ 'INVENTORY.FULFILLMENT.CONSUME_PICKED_ITEMS.ACTION.SUBMIT' | translate }}
       </button>
     </div>
