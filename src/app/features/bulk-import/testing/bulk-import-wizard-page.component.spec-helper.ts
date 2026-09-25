@@ -5,14 +5,17 @@ import { TranslateModule } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { BulkImportService } from '../../../shared/bulk-import/services/bulk-import.service';
-import { BulkLoadJob, DomainType } from '../../../shared/bulk-import/models/bulk-import.models';
+import { AuditRecordListResponse, BulkLoadJob, BulkLoadRecordAudit, DomainType } from '../../../shared/bulk-import/models/bulk-import.models';
+import { CorrectionSubmitEvent } from '../../../shared/bulk-import/components/bulk-import-error-records-table/bulk-import-error-records-table.component';
 
 type WizardComponentHarness = {
   state: () => string;
   errorKey: () => string | null;
   conflictJob: () => BulkLoadJob | null;
   job: () => BulkLoadJob | null;
+  auditRecords: () => BulkLoadRecordAudit[];
   onFileSelected: (file: File) => void;
+  onSubmitCorrection: (event: CorrectionSubmitEvent) => void;
 };
 
 interface WizardPageSpecOptions<TComponent> {
@@ -240,6 +243,40 @@ export function describeBulkImportWizardPage<TComponent>(options: WizardPageSpec
 
       expect(component.state()).toBe('error');
       expect(component.errorKey()).toBe('BULK_IMPORT.WIZARD.ERROR.POLL');
+    });
+
+    describe('onSubmitCorrection (issue #376)', () => {
+      const mockAuditRecord: BulkLoadRecordAudit = {
+        recordId: 'rec-001', jobId: 'job-001', entityType: 'RECORD',
+        rowNumber: 1, reviewStatus: 'PENDING', reasonCodes: ['INVALID'],
+        originalValues: { field: 'bad' },
+      };
+
+      beforeEach(() => {
+        const failedJob = buildActiveJob(options.domainType);
+        failedJob.status = 'FAILED';
+        mockBulkImportService.getActiveJobForDomain.mockReturnValue(of(failedJob));
+        mockBulkImportService.listAuditRecords.mockReturnValue(
+          of({ items: [mockAuditRecord], nextPageToken: null } as AuditRecordListResponse),
+        );
+        fixture.detectChanges();
+      });
+
+      it('re-reads the audit record list on success instead of splicing the narrow SDK response', () => {
+        mockBulkImportService.submitCorrection.mockReturnValue(of(undefined));
+        const correctedRecord: BulkLoadRecordAudit = { ...mockAuditRecord, reviewStatus: 'APPROVED' };
+        mockBulkImportService.listAuditRecords.mockReturnValue(
+          of({ items: [correctedRecord], nextPageToken: null } as AuditRecordListResponse),
+        );
+
+        component.onSubmitCorrection({ record: mockAuditRecord, request: { correctedValues: { field: 'good' } } });
+
+        expect(mockBulkImportService.submitCorrection).toHaveBeenCalledWith(
+          'job-001', 'rec-001', { correctedValues: { field: 'good' } },
+        );
+        expect(mockBulkImportService.listAuditRecords).toHaveBeenCalledWith('job-001', { reviewStatus: 'PENDING' });
+        expect(component.auditRecords()).toEqual([correctedRecord]);
+      });
     });
   });
 }

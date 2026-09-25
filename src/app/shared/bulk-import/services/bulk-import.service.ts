@@ -8,7 +8,6 @@ import {
   ReviewQueueAPIService,
 } from '@durion-sdk/bulk-loader';
 import type { AuditRecordResponse, BulkLoadJobCreateRequest, BulkLoadJobResponse } from '@durion-sdk/bulk-loader';
-import { ApiBaseService } from '../../../core/services/api-base.service';
 import { AuthService } from '../../../core/services/auth.service';
 import {
   ACTIVE_JOB_STATUSES,
@@ -36,18 +35,6 @@ type ApiDomainType =
   | 'VEHICLE'
   | 'VEHICLE_FITMENT';
 
-interface ApiAuditRecord {
-  id: string;
-  jobId: string;
-  entityType: string;
-  entityId?: string;
-  rowNumber: number;
-  reviewStatus: string;
-  reasonCodes: string;
-  originalValues: string;
-  createdAt?: string;
-}
-
 const FRONTEND_TO_API_DOMAIN_TYPE: Record<DomainType, ApiDomainType> = {
   CATALOG: 'CATALOG_PRODUCT',
   INVENTORY: 'INVENTORY_STOCK_COUNT',
@@ -72,7 +59,6 @@ const API_TO_FRONTEND_DOMAIN_TYPE: Record<ApiDomainType, DomainType> = {
 
 @Injectable({ providedIn: 'root' })
 export class BulkImportService {
-  private readonly api = inject(ApiBaseService);
   private readonly auth = inject(AuthService);
   private readonly configuration = inject(BulkLoaderConfiguration);
   private readonly bulkLoadJobsService = inject(BulkLoadJobsAPIService);
@@ -168,24 +154,25 @@ export class BulkImportService {
   }
 
   /**
-   * D6 (issue #350): `ReviewQueueAPIService.submitSingleCorrection()` now exists in
-   * `@durion-sdk/bulk-loader`, but its `CorrectionResultDto` response
-   * (`auditRecordId`, `status: ACCEPTED|REJECTED`, `rejectionReason?`) carries none of
-   * `entityType`, `rowNumber`, `reasonCodes` or the corrected `originalValues` that
-   * callers (e.g. `catalog-bulk-import-page.component.ts`) splice back into their audit
-   * row list wholesale. Calling the SDK method would silently blank those fields rather
-   * than migrate the endpoint, so this stays on `ApiBaseService` until the bulk-loader
-   * OpenAPI contract returns the full corrected record.
+   * (issue #376) `ReviewQueueAPIService.submitSingleCorrection()`'s `CorrectionResultDto`
+   * response (`auditRecordId`, `status: ACCEPTED|REJECTED`, `rejectionReason?`) carries
+   * none of `entityType`, `rowNumber`, `reasonCodes` or the corrected `originalValues`
+   * (backend #2205 tracks widening it), so callers must re-read the audit record list
+   * after this resolves rather than splice a record from this response.
    */
   submitCorrection(
     jobId: string,
     recordId: string,
     request: SubmitCorrectionRequest,
-  ): Observable<BulkLoadRecordAudit> {
-    return this.api.put<ApiAuditRecord>(
-      `/bulk-loader/v1/bulk-jobs/${encodeURIComponent(jobId)}/audit/${encodeURIComponent(recordId)}/correction`,
-      request,
-    ).pipe(map(record => this.toAuditRecord(record)));
+  ): Observable<void> {
+    const correctedData: Record<string, string> = {};
+    for (const [field, value] of Object.entries(request.correctedValues)) {
+      correctedData[field] = String(value);
+    }
+
+    return this.reviewQueueService
+      .submitSingleCorrection(jobId, { auditRecordId: recordId, correctedData })
+      .pipe(map(() => undefined as void));
   }
 
   /** Returns the API URL for downloading the error report CSV. */
@@ -316,7 +303,7 @@ export class BulkImportService {
     };
   }
 
-  private toAuditRecord(record: AuditRecordResponse | ApiAuditRecord): BulkLoadRecordAudit {
+  private toAuditRecord(record: AuditRecordResponse): BulkLoadRecordAudit {
     return {
       recordId: record.id ?? '',
       jobId: record.jobId ?? '',

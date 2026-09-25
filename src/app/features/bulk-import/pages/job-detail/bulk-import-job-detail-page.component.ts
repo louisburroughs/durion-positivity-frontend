@@ -80,10 +80,8 @@ export class BulkImportJobDetailPageComponent {
     this.service.submitCorrection(this.jobId, record.recordId, request)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: updated => {
-          this.auditRecords.update(records =>
-            records.map(r => r.recordId === updated.recordId ? updated : r),
-          );
+        next: () => {
+          this.loadAuditRecords();
           this.correctionPending.update(s => { const n = new Set(s); n.delete(record.recordId); return n; });
         },
         error: () => {

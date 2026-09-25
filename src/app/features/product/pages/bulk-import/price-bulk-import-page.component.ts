@@ -272,8 +272,8 @@ export class PriceBulkImportPageComponent implements OnInit, OnDestroy {
     this.service.submitCorrection(jobId, event.record.recordId, event.request)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: updated => {
-          this.auditRecords.update(records => records.map(r => r.recordId === updated.recordId ? updated : r));
+        next: () => {
+          this.loadAuditRecords();
           this.correctionPendingIds.update(s => { const n = new Set(s); n.delete(event.record.recordId); return n; });
         },
         error: () => {

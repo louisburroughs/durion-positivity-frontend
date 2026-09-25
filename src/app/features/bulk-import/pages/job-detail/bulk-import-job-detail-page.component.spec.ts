@@ -140,8 +140,7 @@ describe('BulkImportJobDetailPageComponent', () => {
       record: mockAuditRecord,
       request: { correctedValues: { sku: 'GOOD-SKU' } },
     };
-    const updatedRecord: BulkLoadRecordAudit = { ...mockAuditRecord, reviewStatus: 'APPROVED' };
-    mockService.submitCorrection.mockReturnValue(of(updatedRecord));
+    mockService.submitCorrection.mockReturnValue(of(undefined));
 
     component.onSubmitCorrection(event);
 
@@ -157,12 +156,28 @@ describe('BulkImportJobDetailPageComponent', () => {
       record: mockAuditRecord,
       request: { correctedValues: { sku: 'GOOD-SKU' } },
     };
-    const updatedRecord: BulkLoadRecordAudit = { ...mockAuditRecord, reviewStatus: 'APPROVED' };
-    mockService.submitCorrection.mockReturnValue(of(updatedRecord));
+    mockService.submitCorrection.mockReturnValue(of(undefined));
 
     component.onSubmitCorrection(event);
 
     expect(component.isCorrectionPending('rec-001')).toBe(false);
+  });
+
+  it('onSubmitCorrection re-reads the audit record list on success instead of splicing the narrow response (issue #376)', () => {
+    const event: CorrectionSubmitEvent = {
+      record: mockAuditRecord,
+      request: { correctedValues: { sku: 'GOOD-SKU' } },
+    };
+    mockService.submitCorrection.mockReturnValue(of(undefined));
+    const correctedRecord: BulkLoadRecordAudit = { ...mockAuditRecord, reviewStatus: 'APPROVED' };
+    mockService.listAuditRecords.mockReturnValue(
+      of({ items: [correctedRecord], nextPageToken: null } as AuditRecordListResponse),
+    );
+
+    component.onSubmitCorrection(event);
+
+    expect(mockService.listAuditRecords).toHaveBeenCalledWith('job-001');
+    expect(component.auditRecords()).toEqual([correctedRecord]);
   });
 
   it('onSubmitCorrection on error sets state to error first, then errorKey (ADR-0031)', () => {
