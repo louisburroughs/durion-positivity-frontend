@@ -1,17 +1,7 @@
 [
   {
-    "key": "src/app/features/accounting/services/accounting.service.ts :: '/accounting/v1/accounting'",
-    "reason": "D4: getEventEnvelopeContract() base path — the one remaining ApiBaseService call (see SDK-03).",
-    "tracking": "#350"
-  },
-  {
     "key": "src/app/features/billing/services/billing-transport.service.ts :: '/v1/invoices/'",
     "reason": "resolveArtifactDownloadUrl() fallback: no SDK operation returns a URL (downloadInvoiceArtifact streams the PDF body itself), so the public token-only download link is still hand-built, but now from the injected InvoiceConfiguration.basePath instead of environment.apiBaseUrl (SDK-06 fixed) — moved out of invoice-detail-page.component.ts so no page owns transport logic (issue #350 Wave 1).",
-    "tracking": "#350"
-  },
-  {
-    "key": "src/app/features/billing/services/billing-transport.service.ts :: '/v1/billing/invoices/'",
-    "reason": "executeRefund (no-amount branch; louisburroughs/durion-positivity-backend#2215) and loadReceipt (louisburroughs/durion-positivity-backend#2214) — live backend bugs, not SDK gaps (see SDK-03).",
     "tracking": "#350"
   },
   {
@@ -86,11 +76,6 @@
   },
   {
     "key": "src/app/features/workexec/services/workexec.service.ts :: '/v1/workorders/'",
-    "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "#350"
-  },
-  {
-    "key": "src/app/features/workexec/services/workexec.service.ts :: '/v1/workorders/estimates'",
     "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
     "tracking": "#350"
   }

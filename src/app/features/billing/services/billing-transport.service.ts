@@ -17,6 +17,7 @@ import {
   InvoiceArtifact as SdkInvoiceArtifact,
   InvoiceArtifactControllerService,
   InvoiceDetailsResponse,
+  InvoiceRefundResponseStatusEnum,
   InvoiceSearchResult,
   InvoiceSearchService,
   InvoiceService,
@@ -30,7 +31,6 @@ import {
   VoidPaymentRequest,
   VoidPaymentRequestReasonEnum,
 } from '@durion-sdk/invoice';
-import { ApiBaseService } from '../../../core/services/api-base.service';
 import {
   ArtifactDownloadToken,
   ElevateResponse,
@@ -43,15 +43,11 @@ import {
   PaymentMethod,
   PaymentTransactionRef,
   ReceiptRef,
+  RefundContext,
 } from '../models/billing.models';
 
 @Injectable({ providedIn: 'root' })
 export class BillingTransportService {
-  // Direct ApiBaseService usage inventory:
-  // - Temporary compatibility exceptions (outside ADR-0041), both live backend bugs:
-  //   executeRefund (full refund path without amount — louisburroughs/durion-positivity-backend#2215)
-  //   loadReceipt (no SDK read endpoint for receipt detail — louisburroughs/durion-positivity-backend#2214)
-  private readonly api = inject(ApiBaseService);
   private readonly configuration = inject(InvoiceConfiguration);
   private readonly invoiceService = inject(InvoiceService);
   private readonly invoiceSearchService = inject(InvoiceSearchService);
@@ -155,23 +151,20 @@ export class BillingTransportService {
     );
   }
 
+  /**
+   * Issue #381 / durion-positivity-backend#2215 ruling: `PaymentReversalService.refundPayment`
+   * (`POST /v1/invoices/{id}/payments/{pid}/refunds`) always requires `amount` — there is no
+   * implicit full refund and no prefill (Copilot #4106106128 removed the `invoice.total`-derived
+   * one). The caller (`PaymentVoidRefundPageComponent`) requires the operator to type an explicit
+   * amount, informed only by {@link loadRefundContext}'s prior-refunds total.
+   */
   executeRefund(
     invoiceId: string,
     paymentId: string,
     reason: string,
     authorityCode: string,
-    amount?: number,
+    amount: number,
   ): Observable<void> {
-    if (amount === undefined) {
-      // Live bug (outside ADR-0041): SDK refund contract requires amount, while billing UX still
-      // supports a full refund via omitted amount. Tracked in
-      // louisburroughs/durion-positivity-backend#2215.
-      return this.api.post<void>(
-        `/v1/billing/invoices/${invoiceId}/payments/${paymentId}/refund`,
-        { reason, authorityCode },
-      );
-    }
-
     const request: RefundPaymentRequest = {
       amount,
       reason: this.toRefundReason(reason),
@@ -183,7 +176,45 @@ export class BillingTransportService {
     );
   }
 
-  generateReceipt(invoiceId: string, request: UiGenerateReceiptRequest): Observable<{ receiptId: string }> {
+  /**
+   * Copilot #4106106128: `invoice.total` is the whole invoice, not the captured amount for
+   * `paymentId` — on a multiply-tendered invoice it includes other payment intents, so it is unsafe
+   * as a "refundable balance" proxy and this no longer derives or prefills one from it. There is
+   * also no SDK/backend operation that reads a single payment intent's captured amount after the
+   * fact: `PaymentService` exposes only `initiatePayment`/`capturePayment`, `pos-invoice` has no
+   * `GET .../payments/{paymentId}` controller method, and `InvoiceDetailsResponse` carries no
+   * payments breakdown (verified against `PaymentController.java` / `InvoiceDetailsResponse.java`
+   * on backend origin/main and the vendored `@durion-sdk/invoice` 0.63 types).
+   *
+   * Until that read exists (durion-positivity-backend#2226), this surfaces only this payment's
+   * prior (non-failed) refunds from `PaymentReversalService.listInvoiceRefunds`
+   * (`GET /v1/invoices/{invoiceId}/refunds`) as informational context — `InvoiceRefundResponseStatusEnum.Failed`
+   * never reduced the captured balance on the backend (`PaymentReversalServiceImpl`, verified
+   * against origin/main). The operator always enters an explicit amount
+   * (`PaymentVoidRefundPageComponent`, durion-positivity-backend#2215 ruling), and the server's own
+   * 422 remains authoritative when the real remaining balance is smaller. Re-add a full-refund
+   * balance/prefill once #2226 lands.
+   */
+  loadRefundContext(invoiceId: string, paymentId: string): Observable<RefundContext> {
+    return this.paymentReversalService.listInvoiceRefunds(invoiceId).pipe(
+      map(refunds => {
+        const priorRefundsTotal = refunds
+          .filter(refund =>
+            refund.paymentIntentId === paymentId
+            && refund.status !== InvoiceRefundResponseStatusEnum.Failed)
+          .reduce((sum, refund) => sum + (refund.amount ?? 0), 0);
+        return { priorRefundsTotal };
+      }),
+    );
+  }
+
+  /**
+   * `ReceiptService.generateReceipt` already returns the full `ReceiptResponse`
+   * (receiptId/reference/status) — the same shape `reprintReceipt` returns — so this maps it to
+   * `ReceiptRef` directly (issue #381) instead of the caller following up with a `loadReceipt`
+   * call to a GET route the backend does not have (durion-positivity-backend#2214).
+   */
+  generateReceipt(invoiceId: string, request: UiGenerateReceiptRequest): Observable<ReceiptRef> {
     const sdkRequest: GenerateReceiptRequest = {
       paymentIntentId: request.emailAddress ?? request.deliveryMethod ?? 'UNSPECIFIED',
       terminalId: 'WEB-UI',
@@ -192,14 +223,8 @@ export class BillingTransportService {
     };
 
     return this.receiptService.generateReceipt(invoiceId, sdkRequest).pipe(
-      map(result => ({ receiptId: result.receiptId ?? '' })),
+      map(result => this.toReceiptRef(invoiceId, result)),
     );
-  }
-
-  loadReceipt(invoiceId: string, receiptId: string): Observable<ReceiptRef> {
-    // Live bug (outside ADR-0041): SDK ReceiptService does not expose a read endpoint for
-    // retrieving receipt detail by ID. Tracked in louisburroughs/durion-positivity-backend#2214.
-    return this.api.get<ReceiptRef>(`/v1/billing/invoices/${invoiceId}/receipts/${receiptId}`);
   }
 
   reprintReceipt(invoiceId: string, receiptId: string): Observable<ReceiptRef> {

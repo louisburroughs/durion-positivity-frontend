@@ -13,6 +13,8 @@ import {
   InvoiceArtifactControllerService,
   InvoiceDetailsResponse,
   InvoiceDetailsResponseStatusEnum,
+  InvoiceRefundResponse,
+  InvoiceRefundResponseStatusEnum,
   InvoiceSearchResultStatusEnum,
   InvoiceSearchService,
   InvoiceService,
@@ -61,6 +63,7 @@ describe('BillingTransportService', () => {
   const paymentReversalServiceStub = {
     voidPayment: vi.fn(),
     refundPayment: vi.fn(),
+    listInvoiceRefunds: vi.fn(),
   };
 
   const receiptServiceStub = {
@@ -311,21 +314,64 @@ describe('BillingTransportService', () => {
     expect(result).toBeUndefined();
   });
 
-  it('keeps refund without an amount on the direct transport compatibility path', () => {
-    apiStub.post.mockReturnValueOnce(of(undefined));
+  describe('loadRefundContext (durion-positivity-backend#2215, Copilot #4106106128)', () => {
+    const refund = (overrides: Partial<InvoiceRefundResponse>): InvoiceRefundResponse => ({
+      id: 'refund-1',
+      paymentIntentId: 'pay-001',
+      amount: 10,
+      status: InvoiceRefundResponseStatusEnum.Completed,
+      ...overrides,
+    });
 
-    service.executeRefund('inv-001', 'pay-001', 'DAMAGE', 'AUTH-REFUND').subscribe();
+    it('sums non-failed prior refunds for this payment, without reading invoice.total', () => {
+      paymentReversalServiceStub.listInvoiceRefunds.mockReturnValueOnce(of([
+        refund({ id: 'r1', amount: 10, status: InvoiceRefundResponseStatusEnum.Completed }),
+        refund({ id: 'r2', amount: 5, status: InvoiceRefundResponseStatusEnum.Pending }),
+      ]));
 
-    expect(apiStub.post).toHaveBeenCalledWith(
-      '/v1/billing/invoices/inv-001/payments/pay-001/refund',
-      { reason: 'DAMAGE', authorityCode: 'AUTH-REFUND' },
-    );
-    expect(paymentReversalServiceStub.refundPayment).not.toHaveBeenCalled();
+      let result: unknown;
+      service.loadRefundContext('inv-001', 'pay-001').subscribe(value => {
+        result = value;
+      });
+
+      expect(paymentReversalServiceStub.listInvoiceRefunds).toHaveBeenCalledWith('inv-001');
+      expect(invoiceServiceStub.getInvoice).not.toHaveBeenCalled();
+      expect(result).toEqual({ priorRefundsTotal: 15 });
+    });
+
+    it('excludes FAILED refunds from the prior-refunds total', () => {
+      paymentReversalServiceStub.listInvoiceRefunds.mockReturnValueOnce(of([
+        refund({ id: 'r1', amount: 10, status: InvoiceRefundResponseStatusEnum.Completed }),
+        refund({ id: 'r2', amount: 40, status: InvoiceRefundResponseStatusEnum.Failed }),
+      ]));
+
+      let result: { priorRefundsTotal: number } | undefined;
+      service.loadRefundContext('inv-001', 'pay-001').subscribe(value => {
+        result = value;
+      });
+
+      expect(result?.priorRefundsTotal).toBe(10);
+    });
+
+    it('excludes refunds belonging to a different payment intent on the same invoice', () => {
+      paymentReversalServiceStub.listInvoiceRefunds.mockReturnValueOnce(of([
+        refund({ id: 'r1', paymentIntentId: 'pay-001', amount: 10 }),
+        refund({ id: 'r2', paymentIntentId: 'pay-999', amount: 50 }),
+      ]));
+
+      let result: { priorRefundsTotal: number } | undefined;
+      service.loadRefundContext('inv-001', 'pay-001').subscribe(value => {
+        result = value;
+      });
+
+      expect(result?.priorRefundsTotal).toBe(10);
+    });
   });
 
-  it('generates receipts through the receipt SDK client', () => {
+  it('generates receipts through the receipt SDK client and maps the full response to a ReceiptRef, issue #381 (no follow-up loadReceipt call)', () => {
     const receiptResponse: ReceiptResponse = {
       receiptId: 'rcpt-001',
+      reference: 'R-1001',
       status: ReceiptResponseStatusEnum.Generated,
     };
     receiptServiceStub.generateReceipt.mockReturnValueOnce(of(receiptResponse));
@@ -343,7 +389,8 @@ describe('BillingTransportService', () => {
     };
     expect(receiptServiceStub.generateReceipt).toHaveBeenCalledWith('inv-001', expectedRequest);
     expect(apiStub.post).not.toHaveBeenCalled();
-    expect(result).toEqual({ receiptId: 'rcpt-001' });
+    expect(apiStub.get).not.toHaveBeenCalled();
+    expect(result).toEqual({ receiptId: 'rcpt-001', invoiceId: 'inv-001', receiptNumber: 'R-1001' });
   });
 
   it('creates artifact download tokens through the invoice artifact SDK and maps the token response', () => {
@@ -381,16 +428,6 @@ describe('BillingTransportService', () => {
 
       expect(url).toBe('/api/invoice/v1/invoices/inv-001/artifacts/artifact-001/download?token=token-001');
     });
-  });
-
-  it('keeps receipt detail reads on the direct transport compatibility path', () => {
-    apiStub.get.mockReturnValueOnce(of({ receiptId: 'rcpt-001', invoiceId: 'inv-001' }));
-
-    service.loadReceipt('inv-001', 'rcpt-001').subscribe();
-
-    expect(apiStub.get).toHaveBeenCalledWith('/v1/billing/invoices/inv-001/receipts/rcpt-001');
-    expect(receiptServiceStub.generateReceipt).not.toHaveBeenCalled();
-    expect(receiptServiceStub.reprintReceipt).not.toHaveBeenCalled();
   });
 
   it('reprints receipts through the receipt SDK client and maps the response', () => {

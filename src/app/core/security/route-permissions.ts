@@ -543,6 +543,28 @@ export const BILLING_PAGE = {
   invoiceView: ['invoice:invoice:view'],
 } as const satisfies Record<string, readonly string[]>;
 
+/**
+ * `/app/billing` write controls: no frontend gate on refund or receipt generation/reprint.
+ *
+ * `PaymentReversalServiceImpl.refundPayment` and `ReceiptServiceImpl` (`pos-invoice`, verified
+ * against backend origin/main) enforce `SecurityContextHelper.hasAuthority(...)` inside the
+ * service body rather than a `@PreAuthorize` annotation, so both endpoints' generated
+ * `x-required-permissions` in `pos-invoice/openapi.yaml` read only `AUTHENTICATED`, and neither raw
+ * authority (`REFUND_PAYMENT`, `GENERATE_RECEIPT`) has an entry in the `PermissionCode` catalog that
+ * backs `PERMISSION_BY_BIT` — a real gap between the bit catalog and this module's own
+ * authorization, not one this frontend PR can close (durion-positivity-backend#2226). No
+ * `perm_bits` token — including the mock token built from the entire catalog — can decode to a
+ * grant for either code, so an `AuthService.hasAnyPermission()` gate here would permanently deny
+ * every real session while only a legacy no-`perm_bits` token stayed open, refusing operators the
+ * backend actually admits (Copilot #4106105951/#4106105999/#4106194893/#4106194936 on PR #383).
+ *
+ * The backend enforces both authorities regardless of any frontend gate; a 403 from
+ * `refundPayment` / `generateReceipt` / `reprintReceipt` is mapped to a localized "you don't have
+ * permission to …" error by the calling page instead (`PaymentVoidRefundPageComponent.executeRefund`,
+ * `ReceiptPageComponent.generateAndShow`/`reprint`). Re-add a catalog-backed `BILLING_SECTION` gate
+ * once #2226 registers `REFUND_PAYMENT`/`GENERATE_RECEIPT` in the permission catalog.
+ */
+
 /** `/app/order/*` — carts, lines, price overrides, cancellation. */
 export const ORDER_PAGE = {
   cartCreate: ['order:order:create'],

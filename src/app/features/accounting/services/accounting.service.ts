@@ -34,7 +34,6 @@ import {
   type PageCreditMemoResponse,
   type LaborOverheadCostReport,
 } from '@durion-sdk/accounting';
-import { ApiBaseService } from '../../../core/services/api-base.service';
 import {
   AccountingEventDetail,
   EVENT_PAYLOAD_REFERENCE_TYPES,
@@ -73,13 +72,6 @@ import type { JwtClaims } from '../../../core/models/auth.models';
 
 @Injectable({ providedIn: 'root' })
 export class AccountingService {
-  // Gateway routes accounting under /{module}/v1/{domain}, i.e. /api/accounting/v1/accounting/*
-  // (matches the SDK's AccountingConfiguration basePath of `${apiBaseUrl}/accounting`).
-  // The one remaining hand-rolled ApiBaseService call below (events/contract) must carry this
-  // full prefix; without the leading /accounting module segment it 404s.
-  private static readonly BASE = '/accounting/v1/accounting';
-
-  private readonly api = inject(ApiBaseService);
   private readonly authService = inject(AuthService);
   private readonly accountingEventsService = inject(AccountingEventsService);
   private readonly accountingExportsService = inject(AccountingExportsService);
@@ -171,16 +163,26 @@ export class AccountingService {
   }
 
   /**
-   * D4 (issue #350): `AccountingEventsService.getEventContract()` now exists in
-   * `@durion-sdk/accounting`, but its `EventEnvelopeContract`/`ContractField` response
-   * (`version`, `fields[{jsonPath,name,required,type,description,enumValues}]`) has no
-   * `identifierStrategy`, `traceabilityIds`, `processingStatuses` or `idempotencyOutcomes` —
-   * all consumed by `EventEnvelopeContractPageComponent`'s traceability/examples tabs. Calling
-   * the SDK method would silently drop those tabs' data rather than migrate the endpoint, so
-   * this stays on `ApiBaseService` until the accounting OpenAPI contract is widened to match.
+   * D4 (issue #380, supersedes #350): the backend's `EventEnvelopeContract`/`ContractField`
+   * response (`version`, `fields[{jsonPath,name,required,type,description,enumValues}]`) really
+   * has no `identifierStrategy`, `traceabilityIds`, `processingStatuses`, or
+   * `idempotencyOutcomes` (durion-positivity-backend#2207) — those are optional on the frontend
+   * model and the page renders a localized "not provided" state for the traceability tab instead
+   * of assuming they exist. That gap no longer blocks migrating off `ApiBaseService`.
    */
   getEventEnvelopeContract(): Observable<EventEnvelopeContract> {
-    return this.api.get<EventEnvelopeContract>(`${AccountingService.BASE}/events/contract`);
+    return this.accountingEventsService.getEventContract().pipe(
+      map(dto => ({
+        version: dto.version,
+        fields: (dto.fields ?? []).map(f => ({
+          name: f.name,
+          type: f.type,
+          required: f.required,
+          description: f.description,
+        })),
+        examples: dto.examples,
+      })),
+    );
   }
 
   // Posting Rules

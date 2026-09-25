@@ -46,6 +46,26 @@
   }
 
   @if (mode() === 'refund') {
+  @if (refundContextStatus() === 'PENDING') {
+  <p class="pvm__balance-status" aria-live="polite" data-testid="refund-context-loading">
+    {{ 'BILLING.PAYMENT.REFUND.PRIOR_REFUNDS_LOADING' | translate }}
+  </p>
+  }
+  @if (refundContextStatus() === 'FAILED') {
+  <div class="pvm__balance-status pvm__balance-status--error" role="alert" data-testid="refund-context-error">
+    <span>{{ 'BILLING.PAYMENT.ERROR.REFUND_CONTEXT_LOAD' | translate }}</span>
+    <button type="button" class="pvm__balance-retry" (click)="retryLoadRefundContext()">
+      {{ 'COMMON.RETRY' | translate }}
+    </button>
+  </div>
+  }
+  @if (refundContextStatus() === 'OK' && refundContext(); as context) {
+  <dl class="pvm__balance" data-testid="refund-prior-refunds">
+    <dt>{{ 'BILLING.PAYMENT.REFUND.PRIOR_REFUNDS_LABEL' | translate }}</dt>
+    <dd>{{ context.priorRefundsTotal | number: '1.2-2' }}</dd>
+  </dl>
+  }
+
   <form class="pvm__form" (submit)="$event.preventDefault()">
     <div class="pvm__field">
       <label class="pvm__label" for="refund-reason-input">{{ 'BILLING.PAYMENT.REFUND.REASON_LABEL' | translate
@@ -64,12 +84,20 @@
     <div class="pvm__field">
       <label class="pvm__label" for="refund-amount-input">{{ 'BILLING.PAYMENT.REFUND.AMOUNT_LABEL' | translate
         }}</label>
-      <input id="refund-amount-input" class="pvm__input" type="number" min="0" step="0.01"
-        [value]="refundAmount() ?? ''" (input)="setRefundAmount($any($event.target).value)" />
+      <input id="refund-amount-input" class="pvm__input" type="number" min="0.01" step="0.01"
+        [value]="refundAmount() ?? ''" (input)="setRefundAmount($any($event.target).value)"
+        (blur)="markRefundAmountTouched()"
+        [attr.aria-invalid]="refundAmountErrorKey() ? 'true' : null"
+        [attr.aria-describedby]="refundAmountErrorKey() ? 'refund-amount-error' : null" />
+      @if (refundAmountErrorKey(); as amountErrorKey) {
+      <p id="refund-amount-error" class="pvm__field-error" role="alert" data-testid="refund-amount-error">
+        {{ amountErrorKey | translate }}
+      </p>
+      }
     </div>
 
     <button type="button" class="pvm__refund-btn" [disabled]="!canSubmitRefund()"
-      (click)="executeRefund(refundReason(), refundAuthorityCode(), refundAmount() ?? undefined)">
+      (click)="markRefundAmountTouched(); executeRefund(refundReason(), refundAuthorityCode(), refundAmount())">
       {{ 'BILLING.PAYMENT.ACTION.REFUND' | translate }}
     </button>
   </form>

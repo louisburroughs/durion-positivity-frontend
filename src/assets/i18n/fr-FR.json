@@ -2988,7 +2988,8 @@
       "TRACE_TABLE_CAPTION": "Définitions des identifiants de traçabilité",
       "COL_NAME": "Name",
       "COL_TYPE": "Type",
-      "COL_REQUIRED": "Required"
+      "COL_REQUIRED": "Required",
+      "TRACEABILITY_NOT_PROVIDED": "Le backend ne fournit pas encore d’ID de traçabilité."
     },
     "INGESTION_SUBMIT": {
       "OVERLINE": "Outil d’exploitation",
@@ -6679,13 +6680,19 @@
         "TITLE": "Rembourser le paiement",
         "REASON_LABEL": "Raison",
         "AUTHORITY_LABEL": "Code d'autorisation",
-        "AMOUNT_LABEL": "Montant du remboursement (laisser vide pour un remboursement complet)"
+        "AMOUNT_LABEL": "Montant du remboursement (obligatoire)",
+        "PRIOR_REFUNDS_LOADING": "Chargement des remboursements antérieurs...",
+        "PRIOR_REFUNDS_LABEL": "Déjà remboursé"
       },
       "ERROR": {
         "CAPTURE": "Impossible de traiter le paiement. Veuillez réessayer.",
         "VOID": "Impossible d'annuler l'autorisation. Veuillez réessayer.",
         "REFUND": "Impossible de traiter le remboursement. Veuillez réessayer.",
-        "MISSING_IDS": "Référence de paiement ou de facture invalide."
+        "MISSING_IDS": "Référence de paiement ou de facture invalide.",
+        "REFUND_AMOUNT_REQUIRED": "Saisissez un montant de remboursement supérieur à zéro.",
+        "REFUND_AMOUNT_EXCEEDS_BALANCE": "Le montant du remboursement ne peut pas dépasser le solde remboursable.",
+        "REFUND_CONTEXT_LOAD": "Impossible de charger les remboursements antérieurs.",
+        "REFUND_PERMISSION_DENIED": "Vous n'avez pas la permission de rembourser ce paiement."
       }
     },
     "RECEIPT": {
@@ -6712,8 +6719,11 @@
       "ERROR": {
         "LOAD": "Impossible de charger le recu.",
         "GENERATE": "Impossible de generer le recu. Veuillez réessayer.",
+        "GENERATE_PERMISSION_DENIED": "Vous n'avez pas la permission de générer ce reçu.",
         "REPRINT": "Impossible de reimprimer le recu. Veuillez réessayer.",
-        "MISSING_INVOICE": "Aucun ID de facture fourni."
+        "REPRINT_PERMISSION_DENIED": "Vous n'avez pas la permission de réimprimer ce reçu.",
+        "MISSING_INVOICE": "Aucun ID de facture fourni.",
+        "NOT_AVAILABLE": "Ce reçu n’est pas disponible à l’affichage. Utilisez la réimpression pour en obtenir une copie."
       }
     },
     "INVOICE_STATUS": {

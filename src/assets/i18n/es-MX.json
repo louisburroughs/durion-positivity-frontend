@@ -2981,6 +2981,7 @@
       "TAB_EXAMPLES": "Examples",
       "EMPTY_FIELDS": "No hay campos de contrato disponibles.",
       "EMPTY_TRACEABILITY": "No hay ID de trazabilidad disponibles.",
+      "TRACEABILITY_NOT_PROVIDED": "El backend aún no proporciona ID de trazabilidad.",
       "EMPTY_EXAMPLES": "No hay ejemplos disponibles.",
       "FIELDS_TABLE_ARIA": "Tabla de campos del contrato",
       "FIELDS_TABLE_CAPTION": "Definiciones de campos del sobre",
@@ -6679,13 +6680,19 @@
         "TITLE": "Reembolsar pago",
         "REASON_LABEL": "Motivo",
         "AUTHORITY_LABEL": "Código de autorización",
-        "AMOUNT_LABEL": "Importe del reembolso (deje en blanco para reembolso completo)"
+        "AMOUNT_LABEL": "Importe del reembolso (obligatorio)",
+        "PRIOR_REFUNDS_LOADING": "Cargando reembolsos anteriores...",
+        "PRIOR_REFUNDS_LABEL": "Ya reembolsado"
       },
       "ERROR": {
         "CAPTURE": "No se pudo procesar el pago. Inténtelo de nuevo.",
         "VOID": "No se pudo anular la autorización. Inténtelo de nuevo.",
         "REFUND": "No se pudo procesar el reembolso. Inténtelo de nuevo.",
-        "MISSING_IDS": "Referencia de pago o factura no válida."
+        "MISSING_IDS": "Referencia de pago o factura no válida.",
+        "REFUND_AMOUNT_REQUIRED": "Ingrese un importe de reembolso mayor que cero.",
+        "REFUND_AMOUNT_EXCEEDS_BALANCE": "El importe del reembolso no puede superar el saldo reembolsable.",
+        "REFUND_CONTEXT_LOAD": "No se pudieron cargar los reembolsos anteriores.",
+        "REFUND_PERMISSION_DENIED": "No tiene permiso para reembolsar este pago."
       }
     },
     "RECEIPT": {
@@ -6712,8 +6719,11 @@
       "ERROR": {
         "LOAD": "No se pudo cargar el recibo.",
         "GENERATE": "No se pudo generar el recibo. Inténtelo de nuevo.",
+        "GENERATE_PERMISSION_DENIED": "No tiene permiso para generar este recibo.",
         "REPRINT": "No se pudo reimprimir el recibo. Inténtelo de nuevo.",
-        "MISSING_INVOICE": "No se proporciónó ID de factura."
+        "REPRINT_PERMISSION_DENIED": "No tiene permiso para reimprimir este recibo.",
+        "MISSING_INVOICE": "No se proporciónó ID de factura.",
+        "NOT_AVAILABLE": "Este recibo no está disponible para ver. Use reimprimir para obtener una copia."
       }
     },
     "INVOICE_STATUS": {

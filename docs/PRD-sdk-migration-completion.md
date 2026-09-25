@@ -141,12 +141,12 @@ Current inventory of non-spec application files still importing or injecting
 | `product/services/product-inventory.service.ts`       | ✅ Migrated                                           |
 | `product/services/product-location.service.ts`        | ✅ Migrated                                           |
 | `bulk-import/services/bulk-import.service.ts`         | ✅ Migrated (D6 exception)                            |
-| `accounting/services/accounting.service.ts`           | ✅ Migrated (D4 exception)                            |
+| `accounting/services/accounting.service.ts`           | ✅ Migrated (D4 resolved — issue #380)                |
 | `inventory/services/inventory.service.ts`             | 🔴 Blocked — D5: pervasive SDK/model field mismatches |
 | `inventory/services/inventory-cycle-count.service.ts` | ✅ Migrated                                           |
 | `inventory/services/inventory-receiving.service.ts`   | ✅ Migrated                                           |
 | `workexec/services/workexec.service.ts`               | ✅ Migrated (partial SDK gaps documented)             |
-| `billing/services/billing-transport.service.ts`       | ✅ Migrated                                           |
+| `billing/services/billing-transport.service.ts`       | ✅ Migrated (D7/D8 resolved — issue #381)              |
 
 #### Pages (status as of 2026-04-29)
 
@@ -181,11 +181,15 @@ The following exceptions are allowed at the start of this PRD:
 
 - `src/app/features/shell/services/chat-api.service.ts`
   - Reason: gateway/MCP traffic is intentionally outside the domain SDK migration.
-- `src/app/features/billing/services/billing-transport.service.ts`
-  - Reason: two live backend bugs remain (D7 `executeRefund` no-amount branch, D8
-    `loadReceipt`); every other method migrated to `@durion-sdk/invoice` (issue #350).
-  - These exceptions are tracked in `louisburroughs/durion-positivity-backend#2215` and
-    `#2214` respectively and must not expand.
+
+`accounting.service.ts` is no longer an approved exception: D4 (`getEventEnvelopeContract`)
+is resolved (issue #380) by migrating to the SDK's `getEventContract` and treating the
+fields it does not return as optional.
+
+`billing-transport.service.ts` is no longer an approved exception: D7 (`executeRefund`
+no-amount branch) and D8 (`loadReceipt`) are resolved (issue #381) — the page now requires
+an explicit refund amount and the receipt page shows a localized not-available state
+instead of calling either nonexistent route.
 
 No page component is an approved exception.
 
@@ -329,15 +333,15 @@ tracked follow-up decisions.
 | D1  | `shopmgmt/mechanic-roster` — `createEmployee`        | SDK contract mismatch; `createPerson` used; `role` dropped        | SDK alignment or form redesign    |
 | D2  | `people/work-session-submit` — `submitSession`       | `POST .../workSessions/{id}/submit` missing from SDK              | Backend OpenAPI update            |
 | D3  | `people/time-approval` — 5 operations                | Timekeeping approve/period/entries SDK operations absent          | Backend OpenAPI update            |
-| D4  | `accounting.service.ts` — `getEventEnvelopeContract` | `/v1/accounting/events/contract` not in SDK                       | SDK team to add endpoint          |
+| ~~D4~~ | ~~`accounting.service.ts` — `getEventEnvelopeContract`~~ | Resolved (issue #380): migrated to SDK `getEventContract()`; fields it does not return are optional | — |
 | D5  | `inventory.service.ts` — all                         | Pervasive field name mismatches between SDK DTOs and local models | Requires SDK model alignment      |
 | D6  | `bulk-import.service.ts` — `submitAuditCorrection`   | SDK endpoint pattern differs                                      | SDK team to align endpoint        |
 | —   | `workexec.service.ts` — `getWorkorderWipStatus`      | SDK path incompatible with legacy path                            | Consumer migration to new WIP API |
 | —   | `workexec.service.ts` — `getWorkorderInvoiceView`    | No SDK equivalent                                                 | SDK team to add endpoint          |
 | —   | `workexec.service.ts` — `requestInvoiceFinalization` | No SDK equivalent                                                 | SDK team to add endpoint          |
-| —   | `workexec.service.ts` — `listEstimatesForVehicle`    | No vehicle-scoped estimate listing in SDK                         | SDK team to add endpoint          |
-| D7  | `billing-transport.service.ts` — `executeRefund` (no-amount branch) | Live bug: SDK `RefundPaymentRequest` requires `amount`, but billing UX still supports a full refund via omitted amount | `louisburroughs/durion-positivity-backend#2215` |
-| D8  | `billing-transport.service.ts` — `loadReceipt`       | Live bug: `ReceiptService` has no read endpoint for receipt detail by ID | `louisburroughs/durion-positivity-backend#2214` |
+| ~~—~~ | ~~`workexec.service.ts` — `listEstimatesForVehicle`~~ | Resolved (issue #379): the vehicle filter exists on `searchEstimates`, which the frontend already used for text search | — |
+| ~~D7~~ | ~~`billing-transport.service.ts` — `executeRefund` (no-amount branch)~~ | Resolved (issue #381): the page now requires an explicit refund amount and always sends it through the SDK `refundPayment` | — |
+| ~~D8~~ | ~~`billing-transport.service.ts` — `loadReceipt`~~   | Resolved (issue #381): removed; the page uses `generateReceipt`'s full response directly and shows a localized not-available state for a receipt reached without generating/reprinting it | — |
 | —   | `chat-api.service.ts` — all                          | Permanent exception: gateway/MCP traffic                          | Never migrate                     |
 
 **Acceptance criteria:**

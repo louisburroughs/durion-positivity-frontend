@@ -1,15 +1,5 @@
 [
   {
-    "key": "src/app/features/accounting/services/accounting.service.ts -> src/app/core/services/api-base.service.ts",
-    "reason": "D4: getEventEnvelopeContract() only — SDK's getEventContract() response lacks identifierStrategy/traceabilityIds/processingStatuses/idempotencyOutcomes the page needs (searchVendors/getVendor/downloadExport migrated to @durion-sdk/accounting).",
-    "tracking": "#350"
-  },
-  {
-    "key": "src/app/features/billing/services/billing-transport.service.ts -> src/app/core/services/api-base.service.ts",
-    "reason": "executeRefund (no-amount branch; louisburroughs/durion-positivity-backend#2215) and loadReceipt (louisburroughs/durion-positivity-backend#2214) only — live backend bugs, not SDK gaps; loadInvoiceArtifacts/elevate/createArtifactDownloadToken migrated to @durion-sdk/invoice.",
-    "tracking": "#350"
-  },
-  {
     "key": "src/app/features/inventory/services/inventory-receiving.service.ts -> src/app/core/services/api-base.service.ts",
     "reason": "legacy ApiBaseService transport; migrates with PRD-sdk-migration-completion.md.",
     "tracking": "#350"
