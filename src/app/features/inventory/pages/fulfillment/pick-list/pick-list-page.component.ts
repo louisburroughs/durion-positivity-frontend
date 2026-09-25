@@ -3,8 +3,8 @@ import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
-import { PickListView } from '../../../../workexec/models/workexec.models';
-import { WorkexecService } from '../../../../workexec/services/workexec.service';
+import { PickListView } from '../../../models/inventory-pick.models';
+import { InventoryPickService } from '../../../services/inventory-pick.service';
 
 type PageState = 'idle' | 'loading' | 'ready' | 'error' | 'empty';
 
@@ -17,7 +17,7 @@ type PageState = 'idle' | 'loading' | 'ready' | 'error' | 'empty';
 })
 export class PickListPageComponent {
   private readonly route = inject(ActivatedRoute);
-  private readonly workexecService = inject(WorkexecService);
+  private readonly pickService = inject(InventoryPickService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly workorderId = this.route.snapshot.paramMap.get('workorderId');
 
@@ -42,7 +42,7 @@ export class PickListPageComponent {
 
     this.state.set('loading');
     this.errorKey.set(null);
-    this.workexecService
+    this.pickService
       .getWorkorderPickList(this.workorderId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({

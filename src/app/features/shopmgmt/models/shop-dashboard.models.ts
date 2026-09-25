@@ -1,4 +1,4 @@
-import type { WorkorderStatus } from '../../workexec/models/workexec.models';
+import type { WorkorderStatus } from '../../../shared/workorder-status/workorder-status.models';
 
 /**
  * View model for the Shop Manager Dashboard

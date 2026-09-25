@@ -3,8 +3,10 @@ import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
-import { PickedItemLine } from '../../../../workexec/models/workexec.models';
-import { WorkexecService } from '../../../../workexec/services/workexec.service';
+import { PickedItemLine } from '../../../models/inventory-pick.models';
+import { InventoryPickService } from '../../../services/inventory-pick.service';
+import { INVENTORY_PAGE } from '../../../../../core/security/route-permissions';
+import { AuthService } from '../../../../../core/services/auth.service';
 
 type PageState = 'idle' | 'loading' | 'ready' | 'submitting' | 'success' | 'error';
 
@@ -17,7 +19,8 @@ type PageState = 'idle' | 'loading' | 'ready' | 'submitting' | 'success' | 'erro
 })
 export class ConsumePickedItemsPageComponent {
   private readonly route = inject(ActivatedRoute);
-  private readonly workexecService = inject(WorkexecService);
+  private readonly pickService = inject(InventoryPickService);
+  private readonly auth = inject(AuthService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly state = signal<PageState>('idle');
@@ -27,6 +30,17 @@ export class ConsumePickedItemsPageComponent {
   readonly consumeQtys = signal<Partial<Record<string, number>>>({});
 
   readonly canSubmit = computed(() => Object.values(this.consumeQtys()).some(qty => (qty ?? 0) > 0));
+
+  /**
+   * The submit control gates on `workorder:parts:consume` — the authority
+   * `WorkorderPickedItemsController.consumeWorkorderPickedItems` actually
+   * enforces, not `inventory:pick_list:execute` (ADR-0040 §6a.1; issue #347
+   * group 5). Unknown permissions (legacy token) stay open, matching
+   * `canAccess()`'s own fallback.
+   */
+  readonly canConsume = computed(
+    () => !this.auth.permissionsKnown() || this.auth.hasAnyPermission(INVENTORY_PAGE.consumeItems),
+  );
 
   constructor() {
     this.loadPickedItems();
@@ -45,7 +59,7 @@ export class ConsumePickedItemsPageComponent {
 
   submit(): void {
     const workorderId = this.route.snapshot.paramMap.get('workorderId');
-    if (!workorderId || !this.canSubmit()) {
+    if (!workorderId || !this.canSubmit() || !this.canConsume()) {
       return;
     }
 
@@ -63,7 +77,7 @@ export class ConsumePickedItemsPageComponent {
     this.state.set('submitting');
     this.errorKey.set(null);
 
-    this.workexecService
+    this.pickService
       .consumePickedItems(workorderId, { lines })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -94,7 +108,7 @@ export class ConsumePickedItemsPageComponent {
     }
     this.errorKey.set(null);
 
-    this.workexecService
+    this.pickService
       .getPickedItems(workorderId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({

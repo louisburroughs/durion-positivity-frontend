@@ -1,10 +1,12 @@
 
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
-import { PickExecuteLine, PickListView } from '../../../../workexec/models/workexec.models';
-import { WorkexecService } from '../../../../workexec/services/workexec.service';
+import { PickExecuteLine, PickListView } from '../../../models/inventory-pick.models';
+import { InventoryPickService } from '../../../services/inventory-pick.service';
+import { INVENTORY_PAGE } from '../../../../../core/security/route-permissions';
+import { AuthService } from '../../../../../core/services/auth.service';
 
 type PageState = 'idle' | 'loading' | 'ready' | 'picking' | 'complete' | 'error';
 
@@ -17,8 +19,21 @@ type PageState = 'idle' | 'loading' | 'ready' | 'picking' | 'complete' | 'error'
 })
 export class PickExecutePageComponent {
   private readonly route = inject(ActivatedRoute);
-  private readonly workexecService = inject(WorkexecService);
+  private readonly pickService = inject(InventoryPickService);
+  private readonly auth = inject(AuthService);
   private readonly destroyRef = inject(DestroyRef);
+
+  /**
+   * Every mutation surface on this page (scan resolve, line confirm, complete)
+   * gates independently on `inventory:pick_list:execute` — the write authority
+   * the backend actually enforces (`WorkorderPickFacadeController`), not the
+   * `inventory:pick_list:view` the route itself used to carry (ADR-0040 §6a.1).
+   * Unknown permissions (legacy token, no `perm_bits` claim) stay open, matching
+   * `canAccess()`'s own fallback.
+   */
+  readonly canExecute = computed(
+    () => !this.auth.permissionsKnown() || this.auth.hasAnyPermission(INVENTORY_PAGE.pickExecute),
+  );
 
   readonly state = signal<PageState>('idle');
   readonly errorKey = signal<string | null>(null);
@@ -50,14 +65,14 @@ export class PickExecutePageComponent {
     const workorderId = this.route.snapshot.paramMap.get('workorderId');
     const scanValue = this.scanInput().trim();
     this.scanAttempted.set(true);
-    if (!workorderId || !scanValue) {
+    if (!workorderId || !scanValue || !this.canExecute()) {
       return;
     }
 
     this.state.set('picking');
     this.errorKey.set(null);
 
-    this.workexecService
+    this.pickService
       .resolvePickScan(workorderId, { scanValue })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -79,14 +94,14 @@ export class PickExecutePageComponent {
     const line = this.pendingLine();
     const quantity = this.confirmQty();
 
-    if (!workorderId || !line || quantity <= 0) {
+    if (!workorderId || !line || quantity <= 0 || !this.canExecute()) {
       return;
     }
 
     this.state.set('picking');
     this.errorKey.set(null);
 
-    this.workexecService
+    this.pickService
       .confirmPickLine(workorderId, {
         pickLineId: line.pickLineId,
         quantity,
@@ -112,14 +127,14 @@ export class PickExecutePageComponent {
 
   complete(): void {
     const workorderId = this.route.snapshot.paramMap.get('workorderId');
-    if (!workorderId) {
+    if (!workorderId || !this.canExecute()) {
       return;
     }
 
     this.state.set('picking');
     this.errorKey.set(null);
 
-    this.workexecService
+    this.pickService
       .completePickList(workorderId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -142,7 +157,7 @@ export class PickExecutePageComponent {
     this.state.set('loading');
     this.errorKey.set(null);
 
-    this.workexecService
+    this.pickService
       .getWorkorderPickList(workorderId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({

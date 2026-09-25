@@ -336,6 +336,131 @@ describe('count-plan form (issue #258)', () => {
   });
 });
 
+/**
+ * Issue #347 group 5: picking belongs to inventory, but on a workorder it is
+ * done by mechanics — a view permission must not double as a write gate.
+ * pick-list stays gated on `inventory:pick_list:view`; every write control on
+ * pick-execute and consume-items (and their method bodies) gates on the write
+ * authority its endpoint actually enforces (`inventory:pick_list:execute` and
+ * `workorder:parts:consume` respectively — see route-permissions.ts and
+ * INVENTORY_PAGE.consumeItems for why the two differ).
+ *
+ * Route/landing admission for those two pages is a second, independent
+ * requirement (`INVENTORY_PAGE.pickExecuteAccess` / `consumeItemsAccess`):
+ * `getWorkorderPickList`/`getPickTasks` (pick-execute) and `getPickedItems`
+ * (consume-items) are each `@PreAuthorize('inventory:pick_list:view')` on the
+ * backend with no execute/consume fallback, and each page fires that read
+ * unconditionally on construction. A session holding only the write authority
+ * would pass a write-only route guard and then 403 on its own first read
+ * before it could pick anything (PR #364 review finding; the same gap issue
+ * #258 fixed for cycle-count-plan-create). The route/landing gate therefore
+ * ANDs the view code onto the write code; the write-control gate stays
+ * write-only, so view still never enables a write control (ADR-0040 §6a.1).
+ */
+describe('fulfillment picking permissions (issue #347 group 5)', () => {
+  const inventoryPages = pagesOf(INVENTORY_ROUTES).map(page => ({
+    path: fullPath('/app/inventory', page),
+    page,
+  }));
+
+  const routeFor = (path: string): Route | undefined =>
+    inventoryPages.find(entry => entry.path === path)?.page;
+
+  const authFor = (permissions: readonly string[]): AuthService =>
+    ({
+      permissionsKnown: () => true,
+      hasPermission: (permission: string) => permissions.includes(permission),
+      hasAnyPermission: (codes: readonly string[]) =>
+        codes.some(code => permissions.includes(code)),
+    }) as unknown as AuthService;
+
+  const requirementFor = (route: Route) => ({
+    permissions: anyPermissions(route),
+    allPermissions: allPermissions(route),
+    roles: declaredRoles(route),
+  });
+
+  const canOpen = (permissions: readonly string[], path: string): boolean => {
+    const route = routeFor(path)!;
+    const auth = authFor(permissions);
+    // Both the group gate (/app/inventory) and the page's own gate must pass.
+    return (
+      canAccess(auth, { permissions: INVENTORY_PERMISSIONS }) &&
+      canAccess(auth, requirementFor(route))
+    );
+  };
+
+  const PICK_LIST = '/app/inventory/fulfillment/workorders/:workorderId/pick-list';
+  const PICK_EXECUTE = '/app/inventory/fulfillment/workorders/:workorderId/pick-execute';
+  const CONSUME_ITEMS = '/app/inventory/fulfillment/workorders/:workorderId/consume-items';
+
+  it('a view-only session can open the pick list but not execute or consume', () => {
+    const viewOnly = ['inventory:pick_list:view'];
+
+    expect(canOpen(viewOnly, PICK_LIST)).toBe(true);
+    expect(canOpen(viewOnly, PICK_EXECUTE)).toBe(false);
+    expect(canOpen(viewOnly, CONSUME_ITEMS)).toBe(false);
+  });
+
+  it('an execute+consume session without the pick-list view cannot open either write page (it would 403 on its own first read)', () => {
+    // The write authority alone satisfies the group gate and each write
+    // control, but not route admission: pick-execute's getWorkorderPickList/
+    // getPickTasks and consume-items' getPickedItems are each
+    // @PreAuthorize('inventory:pick_list:view') on the backend, with no
+    // execute/consume fallback, so a write-only session would pass a
+    // write-only route guard and then 403 immediately on load (PR #364 review
+    // finding).
+    const writeOnly = ['inventory:pick_list:execute', 'workorder:parts:consume'];
+
+    expect(canOpen(writeOnly, PICK_EXECUTE)).toBe(false);
+    expect(canOpen(writeOnly, CONSUME_ITEMS)).toBe(false);
+  });
+
+  it('an execute+consume+view session (mechanic-like) reaches execute and consume, and nothing else in inventory', () => {
+    // A mechanic's permission set as the product decision describes it: able to
+    // execute a pick and consume picked items, plus the pick-list view both
+    // pages' own reads require to load at all.
+    const mechanicLike = [
+      'inventory:pick_list:view',
+      'inventory:pick_list:execute',
+      'workorder:parts:consume',
+    ];
+
+    // The /app/inventory group gate admits it: inventory:pick_list:execute
+    // matches the 'inventory:' prefix in INVENTORY_PERMISSIONS.
+    expect(canAccess(authFor(mechanicLike), { permissions: INVENTORY_PERMISSIONS })).toBe(true);
+
+    expect(canOpen(mechanicLike, PICK_EXECUTE)).toBe(true);
+    expect(canOpen(mechanicLike, CONSUME_ITEMS)).toBe(true);
+    // The view code this session also holds admits the plain list page too.
+    expect(canOpen(mechanicLike, PICK_LIST)).toBe(true);
+
+    // Every other inventory page stays closed: this session widens nothing else.
+    // (The bare landing page is intentionally ungated by design — cards are
+    // filtered individually — so it is excluded here, not a widening.)
+    const otherPages = inventoryPages.filter(
+      ({ path }) =>
+        path !== PICK_EXECUTE && path !== CONSUME_ITEMS && path !== PICK_LIST && path !== '/app/inventory',
+    );
+    const opened = otherPages.filter(({ path }) => canOpen(mechanicLike, path)).map(({ path }) => path);
+
+    expect(opened).toEqual([]);
+  });
+
+  it('a view-only session opens nothing else in fulfillment either (the split between authorities)', () => {
+    const viewOnly = ['inventory:pick_list:view'];
+    const otherFulfillmentPages = inventoryPages.filter(
+      ({ path }) => path.includes('/fulfillment/') && path !== PICK_LIST,
+    );
+
+    const opened = otherFulfillmentPages
+      .filter(({ path }) => canOpen(viewOnly, path))
+      .map(({ path }) => path);
+
+    expect(opened).toEqual([]);
+  });
+});
+
 describe.each(LANDINGS)('$name landing page offers', ({ config }) => {
   /** Cards may point into another group (the admin landing opens /app/security). */
   const routeIndex: readonly { readonly path: string; readonly route: Route }[] = GROUPS.flatMap(

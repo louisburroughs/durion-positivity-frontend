@@ -4,7 +4,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { OpenWorkorderRosterComponent } from './open-workorder-roster.component';
 import { OpenWorkorderRow } from '../../models/shop-dashboard.models';
-import type { WorkorderStatus } from '../../../workexec/models/workexec.models';
+import type { WorkorderStatus } from '../../../../shared/workorder-status/workorder-status.models';
 
 const ON_BAY: OpenWorkorderRow = {
   workorderId: 'wo-1',
