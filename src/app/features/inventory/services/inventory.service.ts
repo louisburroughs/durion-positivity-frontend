@@ -202,11 +202,14 @@ export class InventoryDomainService {
     );
   }
 
-  // D5 follow-up: the SDK's listShortageOptions requires sku and shortQuantity (plus
-  // allocationId); neither is available at this call site's current shape, and
-  // resolveShortage's ShortageResolveRequest needs the same additional fields plus an
-  // idempotencyKey. Left on ApiBaseService pending an SDK model alignment or a wider
-  // page-level request shape.
+  // D5 follow-up (issue #378, backend #2206): `ShortageController` requires sku,
+  // shortQuantity, workorderLineId and siteId in addition to allocationId, and
+  // resolveShortage's request needs the same fields plus an idempotencyKey. Neither is
+  // available at this call site's current shape, and there is no cheap existing read to
+  // supply them, so `ShortageResolutionPageComponent` no longer calls either method —
+  // it shows a "not available yet" notice instead of sending a request that will 400.
+  // Left on ApiBaseService pending an SDK model alignment or a wider page-level request
+  // shape once backend #2206 lands.
   getShortageOptions(allocationLineId: string): Observable<ShortageOption[]> {
     const params = new HttpParams().set('allocationId', allocationLineId);
     return this.api.get<ShortageOption[]>(

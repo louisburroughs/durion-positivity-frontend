@@ -6277,6 +6277,7 @@
       },
       "SHORTAGE_RESOLUTION": {
         "TITLE": "Shortage Resolution",
+        "NOT_AVAILABLE": "Shortage resolution isn't available yet — the backend doesn't yet provide the data this page needs to compute options safely.",
         "STATE": {
           "LOADING": "Loading shortage options..."
         },

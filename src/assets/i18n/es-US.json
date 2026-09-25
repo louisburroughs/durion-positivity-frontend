@@ -6277,6 +6277,7 @@
       },
       "SHORTAGE_RESOLUTION": {
         "TITLE": "Resolución de Faltante",
+        "NOT_AVAILABLE": "La resolución de faltantes aún no está disponible; el backend todavía no provee los datos que esta página necesita para calcular opciones de forma segura.",
         "STATE": {
           "LOADING": "Cargando opciones de faltante..."
         },

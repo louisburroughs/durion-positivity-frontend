@@ -6277,6 +6277,7 @@
       },
       "SHORTAGE_RESOLUTION": {
         "TITLE": "Résolution de Rupture",
+        "NOT_AVAILABLE": "La résolution de rupture n'est pas encore disponible ; le backend ne fournit pas encore les données requises par cette page pour calculer les options en toute sécurité.",
         "STATE": {
           "LOADING": "Chargement des options de rupture..."
         },

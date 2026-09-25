@@ -1,13 +1,18 @@
 
-import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { Component } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
-import { ShortageOption, ShortageResolutionResult } from '../../../models/inventory.models';
-import { InventoryDomainService } from '../../../services/inventory.service';
 
-type PageState = 'idle' | 'loading' | 'ready' | 'submitting' | 'resolved' | 'error';
-
+/**
+ * (issue #378) `ShortageController.listShortageOptions`/`resolveShortage` require
+ * allocationId, sku, shortQuantity, workorderLineId and siteId (plus an
+ * idempotencyKey for resolve). This page's route only ever supplies workorderId and
+ * allocationLineId, and there is no cheap existing read to fill the rest: the
+ * reservation/allocation endpoints expose no GET-by-id, and the pick-list/pick-task
+ * responses carry neither an allocationId nor a workorderLineId to join against. Every
+ * call would 400, so this page shows a notice instead of calling the backend until
+ * backend #2206 supplies the missing data.
+ */
 @Component({
   selector: 'app-shortage-resolution-page',
   standalone: true,
@@ -15,96 +20,4 @@ type PageState = 'idle' | 'loading' | 'ready' | 'submitting' | 'resolved' | 'err
   templateUrl: './shortage-resolution-page.component.html',
   styleUrls: ['./shortage-resolution-page.component.css'],
 })
-export class ShortageResolutionPageComponent {
-  private readonly route = inject(ActivatedRoute);
-  private readonly inventoryService = inject(InventoryDomainService);
-  private readonly destroyRef = inject(DestroyRef);
-
-  readonly state = signal<PageState>('idle');
-  readonly errorKey = signal<string | null>(null);
-  readonly options = signal<ShortageOption[]>([]);
-  readonly selectedOptionId = signal<string | null>(null);
-  readonly result = signal<ShortageResolutionResult | null>(null);
-
-  readonly hasPartialWarning = computed(() =>
-    this.options().some(option => option.partialOptionsWarning),
-  );
-
-  constructor() {
-    this.loadOptions();
-  }
-
-  selectOption(optionId: string): void {
-    this.selectedOptionId.set(optionId);
-  }
-
-  reload(): void {
-    this.loadOptions();
-  }
-
-  confirm(): void {
-    const workorderId = this.route.snapshot.paramMap.get('workorderId');
-    const allocationLineId =
-      this.route.snapshot.paramMap.get('allocationLineId')
-      ?? this.route.snapshot.queryParamMap.get('allocationLineId');
-    const selectedOptionId = this.selectedOptionId();
-    const selectedOption = this.options().find(option => option.optionId === selectedOptionId);
-
-    if (!workorderId || !allocationLineId || !selectedOption) {
-      return;
-    }
-
-    this.state.set('submitting');
-    this.errorKey.set(null);
-
-    this.inventoryService
-      .resolveShortage({
-        workorderId,
-        allocationLineId,
-        optionId: selectedOption.optionId,
-        decisionType: selectedOption.decisionType,
-        clientRequestId: crypto.randomUUID(),
-      })
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: result => {
-          this.result.set(result);
-          this.state.set('resolved');
-        },
-        error: () => {
-          this.state.set('error');
-          this.errorKey.set('INVENTORY.FULFILLMENT.SHORTAGE_RESOLUTION.ERROR.SUBMIT');
-        },
-      });
-  }
-
-  private loadOptions(): void {
-    const workorderId = this.route.snapshot.paramMap.get('workorderId');
-    const allocationLineId =
-      this.route.snapshot.paramMap.get('allocationLineId')
-      ?? this.route.snapshot.queryParamMap.get('allocationLineId');
-
-    if (!workorderId || !allocationLineId) {
-      this.state.set('error');
-      this.errorKey.set('INVENTORY.FULFILLMENT.SHORTAGE_RESOLUTION.ERROR.MISSING_ID');
-      return;
-    }
-
-    this.state.set('loading');
-    this.errorKey.set(null);
-
-    this.inventoryService
-      .getShortageOptions(allocationLineId)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: options => {
-          this.options.set(options);
-          this.state.set('ready');
-        },
-        error: () => {
-          this.state.set('error');
-          this.errorKey.set('INVENTORY.FULFILLMENT.SHORTAGE_RESOLUTION.ERROR.LOAD');
-        },
-      });
-  }
-}
+export class ShortageResolutionPageComponent {}
