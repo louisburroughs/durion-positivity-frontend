@@ -45,11 +45,6 @@
     "tracking": "#350"
   },
   {
-    "key": "src/app/features/inventory/services/inventory.service.ts :: '/inventory/v1/inventory/putaway/tasks/'",
-    "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "#350"
-  },
-  {
     "key": "src/app/features/inventory/services/inventory.service.ts :: '/inventory/v1/inventory/replenishment/tasks'",
     "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
     "tracking": "#350"
