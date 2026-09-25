@@ -35,8 +35,13 @@ export interface CatalogProductSummary {
 export interface ProductCatalogSource {
   searchServices(query: string): Observable<readonly CatalogServiceSummary[]>;
   searchProducts(query: string): Observable<readonly CatalogProductSummary[]>;
-  /** The product's active MSRP amount, or null when none is active (e.g. a 404). */
-  getActiveMsrpAmount(productId: string): Observable<number | null>;
+  /**
+   * The product's active MSRP amount for a SKU, or null when none is active
+   * (e.g. a 404). Takes `CatalogProductSummary.sku`, never `.id` — the
+   * backing `ProductCatalogService.getActiveMsrp` is SKU-keyed, matching
+   * every other pricing read (`listMsrp`, `msrp.component.ts`).
+   */
+  getActiveMsrpAmount(sku: string): Observable<number | null>;
 }
 
 export const PRODUCT_CATALOG_SOURCE = new InjectionToken<ProductCatalogSource>('PRODUCT_CATALOG_SOURCE');

@@ -39,7 +39,13 @@ export interface TimeExportSource {
   ): Observable<{ readonly exportId: string; readonly status: string }>;
   getExportStatus(exportId: string): Observable<TimeExportJobStatus>;
   getExportHistory(params?: { pageIndex?: number; pageSize?: number }): Observable<readonly unknown[]>;
-  downloadExport(exportId: string): void;
+  /**
+   * Triggers the browser download. Returns an `Observable<void>` — rather than
+   * firing the download and forgetting it — so the page can subscribe and
+   * surface a chunk-load failure (the lazy `import()` behind this contract can
+   * reject) instead of leaving it as an unhandled rejection.
+   */
+  downloadExport(exportId: string): Observable<void>;
 }
 
 export const TIME_EXPORT_SOURCE = new InjectionToken<TimeExportSource>('TIME_EXPORT_SOURCE');

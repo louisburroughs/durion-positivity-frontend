@@ -600,7 +600,8 @@
         "REQUEST": "Impossible de demander l'exportation.",
         "EXPORT_FAILED": "L'exportation a échoué.",
         "REFRESH_STATUS": "Impossible d'actualiser l'état.",
-        "LOAD_HISTORY": "Impossible de charger l'historique des exportations."
+        "LOAD_HISTORY": "Impossible de charger l'historique des exportations.",
+        "DOWNLOAD": "Impossible de télécharger l'exportation."
       },
       "PAGE_TITLE": "Exporter le temps approuvé",
       "REQUEST_TITLE": "Demander une exportation",
@@ -6019,6 +6020,9 @@
             }
           },
           "RECEIVED_PROGRESS": "Progression de la réception"
+        },
+        "PANEL": {
+          "LOAD_FAILED": "Impossible de charger cette section. Essayez d'actualiser la page."
         }
       },
       "FORM": {

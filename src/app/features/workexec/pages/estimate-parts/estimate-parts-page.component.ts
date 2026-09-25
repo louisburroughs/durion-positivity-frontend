@@ -50,6 +50,11 @@ export class EstimatePartsPageComponent implements OnInit {
   readonly activeIndex   = signal(-1);
   private readonly searchChanges$ = new Subject<string>();
 
+  // Owns `unitPrice`/`priceState`: bumped on every selection (and on clear), so
+  // an in-flight active-MSRP lookup for a part the user has since replaced can
+  // never land and patch the now-selected (or SKU-less/cleared) part's price.
+  private msrpLookupSeq = 0;
+
   estimateId = '';
 
   readonly addForm = this.fb.nonNullable.group({
@@ -122,6 +127,11 @@ export class EstimatePartsPageComponent implements OnInit {
   }
 
   selectPart(part: ProductSummary): void {
+    // Own the lookup by this selection (ADR-0063 §1) — bumped before the
+    // SKU-less early return too, so a later stale MSRP response can never
+    // land against whatever selection replaced this one.
+    const lookupSeq = ++this.msrpLookupSeq;
+
     this.selectedPart.set(part);
     this.addForm.patchValue({ description: part.name, productId: part.id });
     this.searchResults.set([]);
@@ -130,11 +140,18 @@ export class EstimatePartsPageComponent implements OnInit {
     this.searchQuery.set(part.sku ? `${part.name} (${part.sku})` : part.name);
 
     // Auto-fill unit price from the product's active MSRP (no price on the summary/product).
+    // getActiveMsrpAmount is SKU-keyed — a part with no SKU has no price to look up.
+    if (!part.sku) {
+      this.priceState.set('none');
+      return;
+    }
+
     this.priceState.set('loading');
-    this.catalog.getActiveMsrpAmount(part.id)
+    this.catalog.getActiveMsrpAmount(part.sku)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: amount => {
+          if (lookupSeq !== this.msrpLookupSeq) return; // superseded by a later selection/clear
           if (amount != null) {
             this.addForm.patchValue({ unitPrice: amount });
             this.priceState.set('filled');
@@ -143,11 +160,15 @@ export class EstimatePartsPageComponent implements OnInit {
           }
         },
         // No active MSRP (e.g. 404) — leave the user-entered price untouched.
-        error: () => this.priceState.set('none'),
+        error: () => {
+          if (lookupSeq !== this.msrpLookupSeq) return;
+          this.priceState.set('none');
+        },
       });
   }
 
   clearSelectedPart(): void {
+    this.msrpLookupSeq++; // orphan any in-flight lookup for the part being cleared
     this.selectedPart.set(null);
     this.searchQuery.set('');
     this.searchResults.set([]);

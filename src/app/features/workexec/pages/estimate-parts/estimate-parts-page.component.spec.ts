@@ -41,8 +41,8 @@ describe('EstimatePartsPageComponent [Story 238]', () => {
           useFactory: (catalog: ProductCatalogService) => ({
             searchServices: (query: string) => catalog.searchServices(query),
             searchProducts: (query: string) => catalog.searchProducts(query),
-            getActiveMsrpAmount: (productId: string) =>
-              catalog.getActiveMsrp(productId).pipe(map(msrp => msrp?.amount ?? null)),
+            getActiveMsrpAmount: (sku: string) =>
+              catalog.getActiveMsrp(sku).pipe(map(msrp => msrp?.amount ?? null)),
           }),
           deps: [ProductCatalogService],
         },
@@ -122,5 +122,69 @@ describe('EstimatePartsPageComponent [Story 238]', () => {
 
     expect(component.saveState()).toBe('error');
     expect(component.errorMessage()).toContain('DRAFT');
+  });
+
+  it('looks up active MSRP by SKU, not by id, for a product whose id differs from its SKU (#366 followup)', () => {
+    fixture.detectChanges();
+    http.expectOne(`${BASE}/v1/workorders/estimates/est-123`).flush({
+      id: 'est-123', status: 'DRAFT', customerId: 'c', vehicleId: 'v', items: [],
+    });
+
+    component.selectPart({ id: 'product-uuid-1', sku: 'SKU-999', name: 'Brake Pad', category: 'parts' });
+
+    const req = http.expectOne(r => r.url.includes('/msrp/active'));
+    expect(req.request.url).toContain('SKU-999');
+    expect(req.request.url).not.toContain('product-uuid-1');
+    req.flush({ msrpId: 'm-1', productId: 'SKU-999', amount: '24.99', currency: 'USD', effectiveStartDate: '2024-01-01' });
+
+    expect(component.addForm.getRawValue().unitPrice).toBe(24.99);
+    expect(component.priceState()).toBe('filled');
+  });
+
+  it('skips the MSRP lookup when the selected part has no SKU', () => {
+    fixture.detectChanges();
+    http.expectOne(`${BASE}/v1/workorders/estimates/est-123`).flush({
+      id: 'est-123', status: 'DRAFT', customerId: 'c', vehicleId: 'v', items: [],
+    });
+
+    component.selectPart({ id: 'product-uuid-2', name: 'Unlabeled part', category: 'parts' });
+
+    http.expectNone(req => req.url.includes('/msrp/active'));
+    expect(component.priceState()).toBe('none');
+  });
+
+  /**
+   * PR #367 followup: an in-flight active-MSRP lookup for a previously-selected
+   * SKU part must not land after the user has since selected a different,
+   * SKU-less part and patch that (unrelated) part's unitPrice/priceState. The
+   * lookup is owned by the selection that issued it via a sequence counter.
+   */
+  it('ignores a stale MSRP response for a part selection the user has since replaced', () => {
+    fixture.detectChanges();
+    http.expectOne(`${BASE}/v1/workorders/estimates/est-123`).flush({
+      id: 'est-123', status: 'DRAFT', customerId: 'c', vehicleId: 'v', items: [],
+    });
+
+    // Select part A (has a SKU) — kicks off an MSRP lookup that stays pending
+    // until flushed below, standing in for the RxJS Subject the project's
+    // ordering-test convention (ADR-0035 §6) otherwise drives directly.
+    component.selectPart({ id: 'a-uuid', sku: 'SKU-A', name: 'Part A', category: 'parts' });
+    const lookupA = http.expectOne(r => r.url.includes('/msrp/active'));
+    expect(component.priceState()).toBe('loading');
+
+    // Before A's lookup resolves, the user selects a SKU-less part B — the
+    // early-return branch, which still must own the price fields going forward.
+    component.selectPart({ id: 'b-uuid', name: 'Part B', category: 'parts' });
+    http.expectNone(r => r.url.includes('/msrp/active'));
+    expect(component.priceState()).toBe('none');
+    expect(component.selectedPart()?.id).toBe('b-uuid');
+    const unitPriceBeforeResolve = component.addForm.getRawValue().unitPrice;
+
+    // A's stale lookup finally resolves — must be ignored, not applied to B.
+    lookupA.flush({ msrpId: 'm-1', productId: 'SKU-A', amount: '24.99', currency: 'USD', effectiveStartDate: '2024-01-01' });
+
+    expect(component.priceState()).toBe('none');
+    expect(component.addForm.getRawValue().unitPrice).toBe(unitPriceBeforeResolve);
+    expect(component.selectedPart()?.id).toBe('b-uuid');
   });
 });

@@ -600,7 +600,8 @@
         "REQUEST": "Failed to request export.",
         "EXPORT_FAILED": "Export failed.",
         "REFRESH_STATUS": "Failed to refresh status.",
-        "LOAD_HISTORY": "Failed to load export history."
+        "LOAD_HISTORY": "Failed to load export history.",
+        "DOWNLOAD": "Failed to download the export."
       },
       "PAGE_TITLE": "Export Approved Time",
       "REQUEST_TITLE": "Request Export",
@@ -6019,6 +6020,9 @@
             }
           },
           "RECEIVED_PROGRESS": "Receipt progress"
+        },
+        "PANEL": {
+          "LOAD_FAILED": "This section couldn't be loaded. Try refreshing the page."
         }
       },
       "FORM": {
