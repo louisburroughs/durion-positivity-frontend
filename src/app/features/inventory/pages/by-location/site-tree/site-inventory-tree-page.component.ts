@@ -15,6 +15,7 @@ import { FormsModule } from '@angular/forms';
 import { Subject, Subscription, of } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
 
+import { logger } from '../../../../../core/utils/logger';
 import { InventoryRollupApiService } from '../../../services/inventory-rollup.service';
 import {
   RollupError,
@@ -256,7 +257,7 @@ export class SiteInventoryTreePageComponent implements OnInit, OnDestroy {
     } else {
       this.state.set('error');
       this.errorKey.set('INVENTORY.BY_LOCATION.SITE_TREE.ERROR.UNKNOWN');
-      console.error('[SiteInventoryTreePage] Unexpected rollup error', rollupErr);
+      logger.error('[SiteInventoryTreePage] Unexpected rollup error', rollupErr);
     }
   }
 

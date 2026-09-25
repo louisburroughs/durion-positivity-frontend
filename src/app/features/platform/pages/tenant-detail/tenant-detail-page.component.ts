@@ -16,7 +16,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { canAccess } from '../../../../core/security/route-access';
 import { PlatformTenantService } from '../../services/platform-tenant.service';
 import { Tenant, TenantStatus } from '../../models/tenant.models';
-import { PlatformErrorOutcome, mapPlatformError } from '../../utils/platform-error.util';
+import { mapPlatformError } from '../../utils/platform-error.util';
 
 type PageState = 'idle' | 'loading' | 'ready' | 'error' | 'forbidden' | 'notFound';
 
@@ -129,7 +129,15 @@ export class TenantDetailPageComponent {
           const outcome = mapPlatformError(err, 'PLATFORM.TENANTS.ERROR.LOAD_ONE', {
             notFoundKey: 'PLATFORM.TENANTS.ERROR.NOT_FOUND',
           });
-          this.state.set(this.stateFor(outcome.kind));
+          // ADR-0031: state first, then the key. 403 and 404 render their own
+          // states, on load and after a lifecycle action alike.
+          if (outcome.kind === 'forbidden') {
+            this.state.set('forbidden');
+          } else if (outcome.kind === 'notFound') {
+            this.state.set('notFound');
+          } else {
+            this.state.set('error');
+          }
           this.errorKey.set(outcome.errorKey);
           this.errorDetail.set(outcome.detail);
         },
@@ -139,13 +147,6 @@ export class TenantDetailPageComponent {
   /** True while `id` is still the routed tenant and `generation` the latest load. */
   private isCurrent(id: string, generation: number): boolean {
     return this.tenantId() === id && generation === this.loadGeneration;
-  }
-
-  /** 403 and 404 render their own states, on load and after a lifecycle action alike. */
-  private stateFor(kind: PlatformErrorOutcome['kind']): PageState {
-    if (kind === 'forbidden') return 'forbidden';
-    if (kind === 'notFound') return 'notFound';
-    return 'error';
   }
 
   reload(): void {
@@ -210,13 +211,19 @@ export class TenantDetailPageComponent {
           conflictKey: 'PLATFORM.TENANTS.ERROR.TRANSITION_CONFLICT',
           notFoundKey: 'PLATFORM.TENANTS.ERROR.NOT_FOUND',
         });
-        const state = this.stateFor(outcome.kind);
-        if (state !== 'error') {
+        if (outcome.kind === 'forbidden' || outcome.kind === 'notFound') {
           // Forbidden or gone: the record on screen no longer describes
           // anything the operator may act on, so it goes with the controls.
           this.tenant.set(null);
         }
-        this.state.set(state);
+        // ADR-0031: state first, then the key.
+        if (outcome.kind === 'forbidden') {
+          this.state.set('forbidden');
+        } else if (outcome.kind === 'notFound') {
+          this.state.set('notFound');
+        } else {
+          this.state.set('error');
+        }
         this.errorKey.set(outcome.errorKey);
         this.errorDetail.set(outcome.detail);
       },

@@ -18,6 +18,7 @@ import { LocationAPIService } from '@durion-sdk/location';
 import type { LocationRef } from '@durion-sdk/location';
 import { ProductsAPIService } from '@durion-sdk/catalog';
 import type { ProductSummary } from '@durion-sdk/catalog';
+import { logger } from '../../../../../core/utils/logger';
 import { InventoryRollupApiService } from '../../../services/inventory-rollup.service';
 import type {
   RollupError,
@@ -472,7 +473,7 @@ export class LocationInventoryOverviewPageComponent implements OnInit {
           }
         },
         error: () => {
-          console.warn('[LocationInventoryOverview] Failed to load parent locations');
+          logger.warn('[LocationInventoryOverview] Failed to load parent locations');
           this.locationsLoaded.set(true);
         },
       });
@@ -603,12 +604,12 @@ export class LocationInventoryOverviewPageComponent implements OnInit {
       case 'validation':
         this.state.set('error');
         this.errorKey.set('INVENTORY.BY_LOCATION.ERROR.VALIDATION');
-        console.error('[LocationInventoryOverview] Rollup validation error:', err);
+        logger.error('[LocationInventoryOverview] Rollup validation error:', err);
         break;
       default:
         this.state.set('error');
         this.errorKey.set('INVENTORY.BY_LOCATION.ERROR.UNKNOWN');
-        console.error('[LocationInventoryOverview] Unexpected rollup error:', err);
+        logger.error('[LocationInventoryOverview] Unexpected rollup error:', err);
         break;
     }
   }

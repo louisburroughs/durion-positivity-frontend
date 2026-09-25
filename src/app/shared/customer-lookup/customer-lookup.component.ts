@@ -12,7 +12,7 @@ const MAX_SUGGESTIONS = 12;
 /**
  * Canonical customer display label: "Legal Name (DBA) · CUST-NUMBER",
  * omitting the DBA and/or number segments when absent. Mirrors `crm`'s
- * `partyLabel` (features/crm/util/crm-labels.ts); duplicated here in miniature
+ * `partyLabel` (features/crm/utils/crm-labels.ts); duplicated here in miniature
  * so `shared/customer-lookup` never depends on `features/crm` (LAY-02).
  */
 function formatLabel(result: CustomerLookupResult): string {

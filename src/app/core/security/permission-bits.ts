@@ -1,4 +1,5 @@
 import { PERMISSION_BY_BIT, PERMISSION_CATALOG_VERSION } from './permission-catalog';
+import { logger } from '../utils/logger';
 
 /**
  * permission-bits.ts
@@ -50,7 +51,7 @@ export function decodePermissionBits(permBits: string | null | undefined): Set<s
 
   const bytes = decodeBase64Url(permBits.trim());
   if (!bytes) {
-    console.warn('[permissions] Malformed perm_bits claim — treating as no permissions.');
+    logger.warn('[permissions] Malformed perm_bits claim — treating as no permissions.');
     return granted;
   }
 

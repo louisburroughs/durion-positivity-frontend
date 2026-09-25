@@ -16,6 +16,7 @@ import { JwtClaims, TenantSummary } from '../models/auth.models';
 import { PERMISSION_BY_BIT, PERMISSION_CATALOG_VERSION } from '../security/permission-catalog';
 import { decodePermissionBits, encodePermissionBits, isCatalogStale } from '../security/permission-bits';
 import { PLATFORM_TENANT_ID, tenantSlugFromHost } from '../security/tenant';
+import { logger } from '../utils/logger';
 
 // Fake JWT used only when environment.mockAuth === true.
 // Carries every catalog permission so mock sessions exercise the same
@@ -138,7 +139,7 @@ export class AuthService {
     if (!claims || claims.perm_bits === undefined) return null;
 
     if (isCatalogStale(claims.perm_ver)) {
-      console.warn(
+      logger.warn(
         `[AuthService] Token perm_ver ${claims.perm_ver} is newer than the bundled permission ` +
           `catalog (v${PERMISSION_CATALOG_VERSION}). Permissions added since then cannot be ` +
           'read; regenerate with scripts/security/generate-permission-catalog.mjs.',
@@ -177,7 +178,7 @@ export class AuthService {
   login(credentials: LoginRequest): Observable<TokenPairResponse> {
     if (environment.mockAuth) {
       // Mock mode: accept any credentials and return a fake session immediately.
-      console.warn('[AuthService] mockAuth is enabled – using fake credentials. Disable in environment.ts before connecting a real backend.');
+      logger.warn('[AuthService] mockAuth is enabled – using fake credentials. Disable in environment.ts before connecting a real backend.');
       const mockTokens = mockTokenPair();
       this.storeTokens(mockTokens.accessToken!, mockTokens.refreshToken!);
       return of(mockTokens);
@@ -417,7 +418,7 @@ export class AuthService {
       error: (err: unknown) => {
         // The tenant name is presentation only; the session stays usable
         // without it and the header simply shows no tenant.
-        console.warn('[AuthService] Could not load the session tenant', err);
+        logger.warn('[AuthService] Could not load the session tenant', err);
       },
     });
   }

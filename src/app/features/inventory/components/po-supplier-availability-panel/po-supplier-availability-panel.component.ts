@@ -11,7 +11,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CurrencyPipe } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
-import { integerAtLeast, notBlank } from '../../../../core/util/form-validators';
+import { integerAtLeast, notBlank } from '../../../../core/utils/form-validators';
 import {
   SupplierAvailability,
   SupplierAvailabilityLine,

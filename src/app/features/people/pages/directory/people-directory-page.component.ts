@@ -14,7 +14,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { PeopleAPIService, Person } from '@durion-sdk/people-contact';
-import { safeMailtoHref } from '../../../shell/util/mailto-href.util';
+import { safeMailtoHref } from '../../../shell/utils/mailto-href.util';
 
 type SortColumn = 'lastName' | 'firstName' | 'username' | 'primaryEmail';
 type SortDir = 'asc' | 'desc';

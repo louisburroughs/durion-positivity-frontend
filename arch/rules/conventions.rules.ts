@@ -36,7 +36,7 @@ export const con01Finder = (_f: Source): string[] => ['not under services/ folde
 
 export const con01 = (p: Project): ArchRule =>
   contentRule(
-    { id: 'CON-01', title: 'a *.service.ts under features/** lives in a services/ folder (ADR-0010 §5)', mode: 'ratchet' },
+    { id: 'CON-01', title: 'a *.service.ts under features/** lives in a services/ folder (ADR-0010 §5)', mode: 'enforce' },
     p,
     {
       subject: new RegExp(`${selectors.features(p).source}.*\\.service\\.ts$`),
@@ -304,7 +304,7 @@ export const con09Finder = (_f: Source): string[] => ['file under a util/ folder
 
 export const con09 = (p: Project): ArchRule =>
   contentRule(
-    { id: 'CON-09', title: 'only utils/ is used as the folder name, not util/ (hygiene, plan §8.4)', mode: 'ratchet' },
+    { id: 'CON-09', title: 'only utils/ is used as the folder name, not util/ (hygiene, plan §8.4)', mode: 'enforce' },
     p,
     { subject: new RegExp(`${appPrefix(p)}.*/util/`), finder: con09Finder },
   );

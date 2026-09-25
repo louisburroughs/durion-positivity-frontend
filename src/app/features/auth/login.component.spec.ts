@@ -7,7 +7,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { LastTenantService } from '../../core/services/last-tenant.service';
 import { ThemeService } from '../../core/services/theme.service';
 import { LoginComponent } from './login.component';
-import { Organization, OrganizationSearchService } from './organization-search.service';
+import { Organization, OrganizationSearchService } from './services/organization-search.service';
 import { TranslateModule } from '@ngx-translate/core';
 
 describe('LoginComponent', () => {

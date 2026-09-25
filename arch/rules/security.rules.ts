@@ -162,7 +162,7 @@ export function sec07Finder(f: Source): string[] {
 export const sec07 = (p: Project): ArchRule =>
   contentRule({ id: 'SEC-07', title: 'URL scheme validation lives only in markdown.util.ts (ADR-0065 §2)', mode: 'enforce' }, p, {
     subject: selectors.appTree(p),
-    except: [file(p, 'features/shell/util/markdown.util.ts')],
+    except: [file(p, 'features/shell/utils/markdown.util.ts')],
     finder: sec07Finder,
   });
 

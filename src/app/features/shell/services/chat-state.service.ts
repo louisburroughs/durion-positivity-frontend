@@ -2,6 +2,7 @@ import { computed, DestroyRef, effect, inject, Injectable, signal } from '@angul
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { catchError, concat, concatMap, EMPTY, Observable, Subject, tap, throwError } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
+import { logger } from '../../../core/utils/logger';
 import {
   blocksToDisplayText,
   ChatBlock,
@@ -10,7 +11,7 @@ import {
   ChatHistoryGroup,
   ChatMessage,
 } from '../models/chat.model';
-import { identityKey } from '../util/identity.util';
+import { identityKey } from '../utils/identity.util';
 import { CHAT_HISTORY_STORE } from './chat-history.store';
 
 /** Two-signal page state for the history load (ADR-0031). */
@@ -457,7 +458,7 @@ export class ChatStateService {
         // write for a reply that never reached the store. Placed BEFORE the merge,
         // so a failed WRITE lands in the same handler for the same reason.
         catchError((error: unknown) => {
-          console.error('chat: could not load the conversation to persist a reply');
+          logger.error('chat: could not load the conversation to persist a reply');
           return throwError(() => error);
         }),
         concatMap(stored => this.landStoredAnswer(target, stored, answer)),

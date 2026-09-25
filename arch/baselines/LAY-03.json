@@ -50,12 +50,12 @@
     "tracking": "#347"
   },
   {
-    "key": "src/app/features/people/pages/directory/people-directory-page.component.ts -> src/app/features/shell/util/mailto-href.util.ts",
+    "key": "src/app/features/people/pages/directory/people-directory-page.component.ts -> src/app/features/shell/utils/mailto-href.util.ts",
     "reason": "people pages reuse shell's mailto-href formatting util directly; a small cross-feature helper with no shared/ promotion decided yet.",
     "tracking": "#347"
   },
   {
-    "key": "src/app/features/people/pages/employee-register/employee-register-page.component.ts -> src/app/features/shell/util/mailto-href.util.ts",
+    "key": "src/app/features/people/pages/employee-register/employee-register-page.component.ts -> src/app/features/shell/utils/mailto-href.util.ts",
     "reason": "people pages reuse shell's mailto-href formatting util directly; a small cross-feature helper with no shared/ promotion decided yet.",
     "tracking": "#347"
   },
@@ -85,7 +85,7 @@
     "tracking": "#347"
   },
   {
-    "key": "src/app/features/workexec/pages/estimate-create/estimate-create-page.component.ts -> src/app/features/crm/util/crm-labels.ts",
+    "key": "src/app/features/workexec/pages/estimate-create/estimate-create-page.component.ts -> src/app/features/crm/utils/crm-labels.ts",
     "reason": "workexec's estimate pages read crm's labels/models/service directly instead of through a documented cross-feature contract.",
     "tracking": "#347"
   },
@@ -100,7 +100,7 @@
     "tracking": "#347"
   },
   {
-    "key": "src/app/features/workexec/pages/estimate-detail/estimate-detail-page.component.ts -> src/app/features/crm/util/crm-labels.ts",
+    "key": "src/app/features/workexec/pages/estimate-detail/estimate-detail-page.component.ts -> src/app/features/crm/utils/crm-labels.ts",
     "reason": "workexec's estimate pages read crm's labels/models/service directly instead of through a documented cross-feature contract.",
     "tracking": "#347"
   },
@@ -120,7 +120,7 @@
     "tracking": "#347"
   },
   {
-    "key": "src/app/features/workexec/pages/estimate-list/estimate-list-page.component.ts -> src/app/features/crm/util/crm-labels.ts",
+    "key": "src/app/features/workexec/pages/estimate-list/estimate-list-page.component.ts -> src/app/features/crm/utils/crm-labels.ts",
     "reason": "workexec's estimate pages read crm's labels/models/service directly instead of through a documented cross-feature contract.",
     "tracking": "#347"
   },

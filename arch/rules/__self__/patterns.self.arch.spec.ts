@@ -96,7 +96,7 @@ describe('[self] PAT-02 no takeUntilDestroyed inside an effect( callback', () =>
   });
 });
 
-describe("[self] PAT-03 errorKey.set(<non-null>) is immediately preceded by state.set('error')", () => {
+describe("[self] PAT-03 errorKey.set(<non-null>) is immediately preceded by an error-like state.set ('error', 'unreachable', or the forbidden/error split)", () => {
   const withStateSignal = (body: string): string => `
     class FxpatPage {
       readonly state = signal('idle');
@@ -114,7 +114,9 @@ describe("[self] PAT-03 errorKey.set(<non-null>) is immediately preceded by stat
 
   it('flags errorKey.set with no preceding state.set at all', () => {
     const findings = pat03Finder({ path: P, content: withStateSignal("this.errorKey.set('FXPAT.ERROR');") });
-    expect(findings).toEqual(['load :: errorKey.set not immediately preceded by state.set(\'error\')']);
+    expect(findings).toEqual([
+      "load :: errorKey.set not immediately preceded by an error-like state.set ('error', 'unreachable', or the forbidden/error split)",
+    ]);
   });
 
   it("flags errorKey.set preceded by state.set with a value other than 'error'", () => {
@@ -124,6 +126,11 @@ describe("[self] PAT-03 errorKey.set(<non-null>) is immediately preceded by stat
 
   it("is compliant when state.set('error') immediately precedes errorKey.set(...)", () => {
     const findings = pat03Finder({ path: P, content: withStateSignal("this.state.set('error');\n            this.errorKey.set('FXPAT.ERROR');") });
+    expect(findings).toEqual([]);
+  });
+
+  it("does not crash on, and accepts, a one-statement block { state.set('error'); } before errorKey.set", () => {
+    const findings = pat03Finder({ path: P, content: withStateSignal("{ this.state.set('error'); }\n            this.errorKey.set('FXPAT.ERROR');") });
     expect(findings).toEqual([]);
   });
 
@@ -152,6 +159,36 @@ describe("[self] PAT-03 errorKey.set(<non-null>) is immediately preceded by stat
       ),
     });
     expect(findings).toEqual([]);
+  });
+
+  it(
+    "is compliant with a lone if (…) { state.set('unreachable'); errorKey.set(…); return; } — " +
+      'not part of an if/else chain (real supplier-fleet-panel 422 shape)',
+    () => {
+      const findings = pat03Finder({
+        path: P,
+        content: withStateSignal(
+          [
+            "if (err.status === 422) {",
+            "  this.state.set('unreachable');",
+            "  this.errorKey.set('FXPAT.ERROR.UNREACHABLE');",
+            '  return;',
+            '}',
+          ].join('\n            '),
+        ),
+      });
+      expect(findings).toEqual([]);
+    },
+  );
+
+  it("still flags errorKey.set preceded by a lone state.set('idle') — widening is not a blanket literal carve-out", () => {
+    const findings = pat03Finder({
+      path: P,
+      content: withStateSignal("this.state.set('idle');\n            this.errorKey.set('FXPAT.ERROR');"),
+    });
+    expect(findings).toEqual([
+      "load :: errorKey.set not immediately preceded by an error-like state.set ('error', 'unreachable', or the forbidden/error split)",
+    ]);
   });
 
   it("is a false positive guard: does not fire when the class has no 'state' signal at all (a form-level errorKey, real location-edit-page shape)", () => {
@@ -206,6 +243,22 @@ describe('[self] PAT-04 catchError( in features/**/services/** must not return a
     expect(compliant).toEqual([]);
   });
 
+  it('does not treat a bookkeeping signal write (loading.set(false)) as recording the failure', () => {
+    const findings = pat04Finder({
+      path: 'src/app/features/fxpat/services/fxpat.service.ts',
+      content: `class FxpatService {
+        load() {
+          return this.http.get().pipe(catchError(() => { this.loading.set(false); return of([]); }));
+        }
+        reset() { this.loading.set(false); }
+        load2() {
+          return this.http.get().pipe(catchError(() => { this.reset(); return EMPTY; }));
+        }
+      }`,
+    });
+    expect(findings).toEqual(['load :: catchError returns of([])', 'load2 :: catchError returns EMPTY']);
+  });
+
   it('does not cross into a nested function when looking for the return', () => {
     const findings = pat04Finder({
       path: 'src/app/features/fxpat/services/fxpat.service.ts',
@@ -223,6 +276,77 @@ describe('[self] PAT-04 catchError( in features/**/services/** must not return a
       `,
     });
     expect(findings).toEqual([]);
+  });
+
+  it(
+    'is compliant when the catchError records the failure through an inline signal write ' +
+      "before returning EMPTY (real chat-state.service.ts refresh()/selectConversation() shape)",
+    () => {
+      const findings = pat04Finder({
+        path: 'src/app/features/fxpat/services/fxpat.service.ts',
+        content: `
+          class FxpatService {
+            refresh() {
+              return this.store.list().pipe(
+                catchError(() => {
+                  this._state.set('error');
+                  this._errorKey.set('FXPAT.ERROR.LOAD');
+                  return EMPTY;
+                }),
+              );
+            }
+          }
+        `,
+      });
+      expect(findings).toEqual([]);
+    },
+  );
+
+  it(
+    'is compliant when the catchError records the failure through a call to a same-class ' +
+      'method that itself writes a signal (real chat-state.service.ts write-queue shape)',
+    () => {
+      const findings = pat04Finder({
+        path: 'src/app/features/fxpat/services/fxpat.service.ts',
+        content: `
+          class FxpatService {
+            constructor() {
+              this.writes.pipe(
+                concatMap(entry => entry.work().pipe(
+                  catchError(() => {
+                    this.markUnpersisted(entry.scope);
+                    return EMPTY;
+                  }),
+                )),
+              );
+            }
+
+            private markUnpersisted(scope) {
+              this._unpersisted.update(scopes => [...scopes, scope]);
+            }
+          }
+        `,
+      });
+      expect(findings).toEqual([]);
+    },
+  );
+
+  it('still flags a bare catchError(() => EMPTY) with nothing recorded first', () => {
+    const findings = pat04Finder({
+      path: 'src/app/features/fxpat/services/fxpat.service.ts',
+      content: `
+        class FxpatService {
+          load() {
+            return this.http.get().pipe(
+              catchError(() => {
+                return EMPTY;
+              }),
+            );
+          }
+        }
+      `,
+    });
+    expect(findings).toEqual(['load :: catchError returns EMPTY']);
   });
 });
 

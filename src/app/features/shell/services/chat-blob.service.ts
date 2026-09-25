@@ -2,7 +2,7 @@ import { DestroyRef, effect, inject, Injectable } from '@angular/core';
 import { catchError, map, Observable, of, shareReplay, throwError } from 'rxjs';
 import { ApiBaseService } from '../../../core/services/api-base.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { identityKey } from '../util/identity.util';
+import { identityKey } from '../utils/identity.util';
 
 /** A URL carrying a scheme (`https:`, `mailto:`) points somewhere we do not authenticate to. */
 const HAS_SCHEME_RE = /^[a-z][a-z0-9+.-]*:/i;

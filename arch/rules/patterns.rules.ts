@@ -1,5 +1,5 @@
 import { calls, enclosing, insideCallback, parse, ts, walk, type Source } from '../support/ast';
-import { selectors, type Project, SPEC } from '../support/projects';
+import { file, selectors, type Project, SPEC } from '../support/projects';
 import { type ArchRule, contentRule } from '../support/rule';
 
 /**
@@ -64,13 +64,14 @@ export const pat02Finder = (f: Source): string[] =>
 
 export const pat02 = (p: Project): ArchRule =>
   contentRule(
-    { id: 'PAT-02', title: 'no takeUntilDestroyed inside an effect( callback (ADR-0033 §2)', mode: 'ratchet' },
+    { id: 'PAT-02', title: 'no takeUntilDestroyed inside an effect( callback (ADR-0033 §2)', mode: 'enforce' },
     p,
     { subject: selectors.appTree(p), finder: pat02Finder },
   );
 
 // ---------------------------------------------------------------------------------------------
-// PAT-03: errorKey.set(<non-null>) is immediately preceded by state.set('error') inside a
+// PAT-03: errorKey.set(<non-null>) is immediately preceded by an error-like state.set ('error',
+// 'unreachable', or the forbidden/error split) inside a
 // subscribe({ error }) callback (§11.4 tuning: scoped to the error callback; a computed
 // state.set(cond ? 'forbidden' : 'error') counts as compliant)
 // ---------------------------------------------------------------------------------------------
@@ -127,11 +128,23 @@ function isExhaustiveStateIf(stmt: ts.Statement): boolean {
   return branchOk(stmt.thenStatement) && branchOk(stmt.elseStatement);
 }
 
+/**
+ * Terminal, error-shaped state literals accepted immediately before `errorKey.set(...)`: ADR-0031
+ * §5's `'error'`, plus `'unreachable'` — the supplier-fleet panels' third state for "a dependency
+ * could not be reached", set and keyed the same way an `'error'` branch is (real
+ * `supplier-fleet-authorization-panel`/`supplier-fleet-lookup-panel` shape, a lone
+ * `if (…) { state.set('unreachable'); errorKey.set(…); return; }`, not part of an if/else chain).
+ * Not `'forbidden'`/`'notFound'`/other page states: widen this only for a demonstrated real shape.
+ */
+const ERROR_LIKE_STATE_LITERALS = new Set(['error', 'unreachable']);
+
 function isCompliantStatePrecede(prev: ts.Statement | undefined): boolean {
   if (!prev) return false;
   if (isStateSetLiteral(prev)) {
-    const expr = (prev as ts.ExpressionStatement).expression as ts.CallExpression;
-    return (expr.arguments[0] as ts.StringLiteral).text === 'error';
+    // isStateSetLiteral also accepts a one-statement block (`{ this.state.set('error'); }`).
+    const stmt = ts.isBlock(prev) ? prev.statements[0] : prev;
+    const expr = (stmt as ts.ExpressionStatement).expression as ts.CallExpression;
+    return ERROR_LIKE_STATE_LITERALS.has((expr.arguments[0] as ts.StringLiteral).text);
   }
   if (isExhaustiveStateIf(prev)) return true; // §11.4-style carve-out, generalised past the ternary shape
   if (ts.isExpressionStatement(prev) && ts.isCallExpression(prev.expression) && ts.isPropertyAccessExpression(prev.expression.expression)) {
@@ -178,7 +191,9 @@ export const pat03Finder = (f: Source): string[] => {
       }
       const idx = block.statements.indexOf(n);
       if (!isCompliantStatePrecede(block.statements[idx - 1])) {
-        findings.push(`${enclosingName(n)} :: errorKey.set not immediately preceded by state.set('error')`);
+        findings.push(
+          `${enclosingName(n)} :: errorKey.set not immediately preceded by an error-like state.set ('error', 'unreachable', or the forbidden/error split)`,
+        );
       }
     });
   }
@@ -189,8 +204,8 @@ export const pat03 = (p: Project): ArchRule =>
   contentRule(
     {
       id: 'PAT-03',
-      title: "errorKey.set(<non-null>) is immediately preceded by state.set('error') inside a subscribe({ error }) callback (ADR-0031 §1, §5)",
-      mode: 'ratchet',
+      title: "errorKey.set(<non-null>) is immediately preceded by an error-like state.set ('error', 'unreachable', or the forbidden/error split) inside a subscribe({ error }) callback (ADR-0031 §1, §5)",
+      mode: 'enforce',
     },
     p,
     {
@@ -244,6 +259,84 @@ function directReturns(fn: ts.ArrowFunction | ts.FunctionExpression): ts.Express
   return out;
 }
 
+/**
+ * Signals whose write records a failure: `errorKey`, `state`, `…Error`, `…Failed`, `unpersisted`
+ * (optionally `_`-prefixed). A write to anything else, such as `loading.set(false)`, is bookkeeping
+ * and does not make an empty fallback visible to the user.
+ */
+const FAILURE_SIGNAL = /^_?(state|errorKey|\w*error\w*|\w*fail\w*|unpersisted)$/i;
+
+/**
+ * A failure-recording signal write `this.<…>.<name>.set(...)`/`.update(...)` (see `FAILURE_SIGNAL`)
+ * whose property-access chain roots at `this`.
+ */
+function isSignalWriteCall(n: ts.Node): boolean {
+  if (!ts.isCallExpression(n) || !ts.isPropertyAccessExpression(n.expression)) return false;
+  if (n.expression.name.text !== 'set' && n.expression.name.text !== 'update') return false;
+  const target = n.expression.expression;
+  if (!ts.isPropertyAccessExpression(target) || !FAILURE_SIGNAL.test(target.name.text)) return false;
+  let root: ts.Expression = n.expression.expression;
+  while (ts.isPropertyAccessExpression(root)) root = root.expression;
+  return root.kind === ts.SyntaxKind.ThisKeyword;
+}
+
+/** Names of methods on `cls` whose body directly performs a signal write (see `isSignalWriteCall`). */
+function methodsThatRecordFailure(cls: ts.ClassDeclaration): Set<string> {
+  const names = new Set<string>();
+  for (const m of cls.members) {
+    if (!ts.isMethodDeclaration(m) || !m.name || !ts.isIdentifier(m.name) || !m.body) continue;
+    let recorded = false;
+    const visit = (n: ts.Node): void => {
+      if (recorded || ts.isFunctionLike(n)) return;
+      if (isSignalWriteCall(n)) {
+        recorded = true;
+        return;
+      }
+      ts.forEachChild(n, visit);
+    };
+    ts.forEachChild(m.body, visit);
+    if (recorded) names.add(m.name.text);
+  }
+  return names;
+}
+
+/**
+ * True when a `catchError` callback records the failure — an inline signal write
+ * (`this.<x>.set(...)`/`this.<x>.update(...)`) or a call to a same-class method that itself does —
+ * before returning an empty-value fallback. ADR-0064 §1's "never silently" concern is then
+ * satisfied through that side channel instead of the returned value, so the empty return is not a
+ * silent swallow (real `chat-state.service.ts` shape: the write-queue worker's `catchError` records
+ * through `markUnpersisted()`, which updates a tracking signal; its two queued reads (`refresh`,
+ * `selectConversation`) set `state`/`errorKey` inline before the same swallow, each keeping a
+ * persistent queue/subscription alive rather than degrading a value returned to a caller — the
+ * shape ADR-0064 §1 actually targets).
+ */
+function catchErrorRecordsFailure(cb: ts.ArrowFunction | ts.FunctionExpression, ret: ts.Expression): boolean {
+  if (!ts.isBlock(cb.body)) return false;
+  const cls = enclosing(cb, ts.isClassDeclaration);
+  const recordingMethods = cls ? methodsThatRecordFailure(cls) : new Set<string>();
+  let found = false;
+  const visit = (n: ts.Node): void => {
+    if (found || n.getStart() >= ret.getStart()) return;
+    if (n !== cb.body && ts.isFunctionLike(n)) return;
+    if (isSignalWriteCall(n)) {
+      found = true;
+      return;
+    }
+    if (ts.isCallExpression(n) && ts.isPropertyAccessExpression(n.expression)) {
+      let root: ts.Expression = n.expression.expression;
+      while (ts.isPropertyAccessExpression(root)) root = root.expression;
+      if (root.kind === ts.SyntaxKind.ThisKeyword && recordingMethods.has(n.expression.name.text)) {
+        found = true;
+        return;
+      }
+    }
+    ts.forEachChild(n, visit);
+  };
+  ts.forEachChild(cb.body, visit);
+  return found;
+}
+
 export const pat04Finder = (f: Source): string[] => {
   const findings: string[] = [];
   for (const c of calls(f, (c) => !c.isNew && c.name === 'catchError')) {
@@ -251,7 +344,7 @@ export const pat04Finder = (f: Source): string[] => {
     if (!cb || !(ts.isArrowFunction(cb) || ts.isFunctionExpression(cb))) continue;
     for (const ret of directReturns(cb)) {
       const shape = isEmptyOfCall(ret);
-      if (shape) findings.push(`${enclosingName(c.node)} :: catchError returns ${shape}`);
+      if (shape && !catchErrorRecordsFailure(cb, ret)) findings.push(`${enclosingName(c.node)} :: catchError returns ${shape}`);
     }
   }
   return findings;
@@ -261,8 +354,8 @@ export const pat04 = (p: Project): ArchRule =>
   contentRule(
     {
       id: 'PAT-04',
-      title: 'inside catchError( in features/**/services/**, never return of([])/of(new Map())/of(new Set())/of({})/EMPTY (ADR-0064 §1)',
-      mode: 'ratchet',
+      title: 'inside catchError( in features/**/services/**, never return of([])/of(new Map())/of(new Set())/of({})/EMPTY unless a failure-state signal is written first (ADR-0064 §1)',
+      mode: 'enforce',
     },
     p,
     { subject: new RegExp(`${selectors.features(p).source}.*/services/.*\\.ts$`), finder: pat04Finder },
@@ -379,17 +472,22 @@ export const pat07 = (p: Project): ArchRule =>
 // PAT-08: no console.* in production code, except an allowlisted logger location
 // ---------------------------------------------------------------------------------------------
 
-/** No allowlisted logger location exists yet — the plan's survey found none; every hit is debt. */
-const CONSOLE_ALLOWLIST: RegExp[] = [];
+/**
+ * `core/utils/logger.ts` is the one allowlisted `console.*` call site (#349): a tiny, deliberately
+ * non-DI wrapper (some callers, e.g. `core/security/permission-bits.ts`, are plain functions
+ * outside any injection context) that every genuine operational warning/error routes through
+ * instead of calling `console.*` directly.
+ */
+const CONSOLE_ALLOWLIST = (p: Project): RegExp[] => [file(p, 'core/utils/logger.ts')];
 
 export const pat08Finder = (f: Source): string[] =>
   calls(f, (c) => !c.isNew && c.callee.startsWith('console.')).map((c) => `${enclosingName(c.node)} :: ${c.callee}(...)`);
 
 export const pat08 = (p: Project): ArchRule =>
   contentRule(
-    { id: 'PAT-08', title: 'no console.* in production code, except an allowlisted logger location (best practice)', mode: 'ratchet' },
+    { id: 'PAT-08', title: 'no console.* in production code, except an allowlisted logger location (best practice)', mode: 'enforce' },
     p,
-    { subject: selectors.appTree(p), except: CONSOLE_ALLOWLIST, finder: pat08Finder },
+    { subject: selectors.appTree(p), except: CONSOLE_ALLOWLIST(p), finder: pat08Finder },
   );
 
 export type { Source };

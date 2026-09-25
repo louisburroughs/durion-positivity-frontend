@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { MdBlock, parseMarkdown } from '../../util/markdown.util';
+import { MdBlock, parseMarkdown } from '../../utils/markdown.util';
 import { AuthedImageDirective } from '../../directives/authed-image.directive';
 
 /**
