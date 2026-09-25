@@ -154,6 +154,34 @@ describe("[self] PAT-03 errorKey.set(<non-null>) is immediately preceded by stat
     expect(findings).toEqual([]);
   });
 
+  it(
+    "is compliant with a lone if (…) { state.set('unreachable'); errorKey.set(…); return; } — " +
+      'not part of an if/else chain (real supplier-fleet-panel 422 shape)',
+    () => {
+      const findings = pat03Finder({
+        path: P,
+        content: withStateSignal(
+          [
+            "if (err.status === 422) {",
+            "  this.state.set('unreachable');",
+            "  this.errorKey.set('FXPAT.ERROR.UNREACHABLE');",
+            '  return;',
+            '}',
+          ].join('\n            '),
+        ),
+      });
+      expect(findings).toEqual([]);
+    },
+  );
+
+  it("still flags errorKey.set preceded by a lone state.set('idle') — widening is not a blanket literal carve-out", () => {
+    const findings = pat03Finder({
+      path: P,
+      content: withStateSignal("this.state.set('idle');\n            this.errorKey.set('FXPAT.ERROR');"),
+    });
+    expect(findings).toEqual(["load :: errorKey.set not immediately preceded by state.set('error')"]);
+  });
+
   it("is a false positive guard: does not fire when the class has no 'state' signal at all (a form-level errorKey, real location-edit-page shape)", () => {
     const findings = pat03Finder({
       path: P,

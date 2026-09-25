@@ -127,11 +127,21 @@ function isExhaustiveStateIf(stmt: ts.Statement): boolean {
   return branchOk(stmt.thenStatement) && branchOk(stmt.elseStatement);
 }
 
+/**
+ * Terminal, error-shaped state literals accepted immediately before `errorKey.set(...)`: ADR-0031
+ * §5's `'error'`, plus `'unreachable'` — the supplier-fleet panels' third state for "a dependency
+ * could not be reached", set and keyed the same way an `'error'` branch is (real
+ * `supplier-fleet-authorization-panel`/`supplier-fleet-lookup-panel` shape, a lone
+ * `if (…) { state.set('unreachable'); errorKey.set(…); return; }`, not part of an if/else chain).
+ * Not `'forbidden'`/`'notFound'`/other page states: widen this only for a demonstrated real shape.
+ */
+const ERROR_LIKE_STATE_LITERALS = new Set(['error', 'unreachable']);
+
 function isCompliantStatePrecede(prev: ts.Statement | undefined): boolean {
   if (!prev) return false;
   if (isStateSetLiteral(prev)) {
     const expr = (prev as ts.ExpressionStatement).expression as ts.CallExpression;
-    return (expr.arguments[0] as ts.StringLiteral).text === 'error';
+    return ERROR_LIKE_STATE_LITERALS.has((expr.arguments[0] as ts.StringLiteral).text);
   }
   if (isExhaustiveStateIf(prev)) return true; // §11.4-style carve-out, generalised past the ternary shape
   if (ts.isExpressionStatement(prev) && ts.isCallExpression(prev.expression) && ts.isPropertyAccessExpression(prev.expression.expression)) {
@@ -190,7 +200,7 @@ export const pat03 = (p: Project): ArchRule =>
     {
       id: 'PAT-03',
       title: "errorKey.set(<non-null>) is immediately preceded by state.set('error') inside a subscribe({ error }) callback (ADR-0031 §1, §5)",
-      mode: 'ratchet',
+      mode: 'enforce',
     },
     p,
     {
