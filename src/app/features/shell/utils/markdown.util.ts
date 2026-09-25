@@ -13,6 +13,8 @@
  * so they never reach this parser.
  */
 
+import { hasUrlScheme, isSafeHref, normaliseHref } from '../../../shared/utils/safe-href.util';
+
 export type MdInline =
   | { readonly type: 'text'; readonly value: string }
   | { readonly type: 'code'; readonly value: string }
@@ -50,8 +52,6 @@ const RULE_RE = /^(?:-{3,}|\*{3,}|_{3,})$/;
 const INLINE_RE =
   /(\x60+)([^\x60]+?)\1|!\[([^\]]*)\]\(([^)\s]*)\)|\[([^\]]*)\]\(([^)\s]*)\)|\*\*([\s\S]+?)\*\*|(?<![A-Za-z0-9])__([\s\S]+?)__(?![A-Za-z0-9])|\*([^*\n]+?)\*|(?<![A-Za-z0-9])_([^_\n]+?)_(?![A-Za-z0-9])/g;
 
-/** Schemes an anchor may carry. Anything else renders as inert text. */
-const SAFE_SCHEME_RE = /^(?:https?:|mailto:)/i;
 /**
  * Schemes something the browser FETCHES may carry — an image source, a file
  * download. Narrower than the anchor set on purpose: `mailto:` is a navigation
@@ -59,13 +59,6 @@ const SAFE_SCHEME_RE = /^(?:https?:|mailto:)/i;
  * would be an allowlist that does not describe what the value is used for.
  */
 const FETCHABLE_SCHEME_RE = /^https?:/i;
-/** A scheme-looking prefix, used to tell `javascript:x` from a bare relative path. */
-const ANY_SCHEME_RE = /^[a-z][a-z0-9+.-]*:/i;
-/**
- * `//host/path` and `\\host\path` carry no scheme but still resolve to another
- * origin, so a scheme check alone would wave them through.
- */
-const ORIGIN_RELATIVE_RE = /^[/\\]{2}/;
 
 /** Parse a markdown document into blocks. Never throws; unknown syntax stays literal. */
 export function parseMarkdown(source: string): readonly MdBlock[] {
@@ -195,29 +188,10 @@ export function parseInline(source: string, depth = 0): readonly MdInline[] {
   return nodes;
 }
 
-/**
- * Browsers strip ASCII whitespace and control characters out of a URL before
- * resolving it, so `java\tscript:alert(1)` runs as `javascript:`. Validate — and
- * render — what the browser will actually see, never the raw source.
- */
-export function normaliseHref(href: string): string {
-  // eslint-disable-next-line no-control-regex -- stripping control characters is the point
-  return href.replace(/[\u0000-\u0020\u007f]/g, '');
-}
-
-/**
- * True when `href` may be used as an anchor target: an http(s)/mailto URL, or a
- * path relative to this app that carries no scheme and no other origin.
- * Everything else — `javascript:`, `data:`, `vbscript:`, `//evil.example` — is
- * rejected. Call it on the value returned by {@link normaliseHref}.
- */
-export function isSafeHref(href: string): boolean {
-  const candidate = normaliseHref(href);
-  if (candidate.length === 0) return false;
-  if (ORIGIN_RELATIVE_RE.test(candidate)) return false;
-  if (SAFE_SCHEME_RE.test(candidate)) return true;
-  return !ANY_SCHEME_RE.test(candidate);
-}
+// normaliseHref/isSafeHref: single source of truth is shared/utils/safe-href.util.ts
+// (SEC-07); re-exported here since chat-response.mapper.ts and callers elsewhere in
+// this file already import them from markdown.util.
+export { normaliseHref, isSafeHref };
 
 /**
  * True when `href` may be FETCHED by the app: an http(s) URL, or a path relative
@@ -227,7 +201,7 @@ export function isSafeHref(href: string): boolean {
 export function isFetchableHref(href: string): boolean {
   const candidate = normaliseHref(href);
   if (!isSafeHref(candidate)) return false;
-  return FETCHABLE_SCHEME_RE.test(candidate) || !ANY_SCHEME_RE.test(candidate);
+  return FETCHABLE_SCHEME_RE.test(candidate) || !hasUrlScheme(candidate);
 }
 
 function buildLink(text: string, href: string, depth = 0): MdInline {
@@ -241,7 +215,10 @@ function buildLink(text: string, href: string, depth = 0): MdInline {
   return {
     type: 'link',
     href: target,
-    external: SAFE_SCHEME_RE.test(target),
+    // isSafeHref(target) is true here; the only way that holds without the
+    // scheme allowlist matching is a scheme-less relative path (see isSafeHref
+    // in safe-href.util.ts), so "has a scheme" and "is http(s)/mailto" coincide.
+    external: hasUrlScheme(target),
     children,
   };
 }
