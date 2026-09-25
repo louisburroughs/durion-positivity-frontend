@@ -1,5 +1,5 @@
 import { calls, enclosing, insideCallback, parse, ts, walk, type Source } from '../support/ast';
-import { selectors, type Project, SPEC } from '../support/projects';
+import { file, selectors, type Project, SPEC } from '../support/projects';
 import { type ArchRule, contentRule } from '../support/rule';
 
 /**
@@ -64,7 +64,7 @@ export const pat02Finder = (f: Source): string[] =>
 
 export const pat02 = (p: Project): ArchRule =>
   contentRule(
-    { id: 'PAT-02', title: 'no takeUntilDestroyed inside an effect( callback (ADR-0033 §2)', mode: 'ratchet' },
+    { id: 'PAT-02', title: 'no takeUntilDestroyed inside an effect( callback (ADR-0033 §2)', mode: 'enforce' },
     p,
     { subject: selectors.appTree(p), finder: pat02Finder },
   );
@@ -379,17 +379,22 @@ export const pat07 = (p: Project): ArchRule =>
 // PAT-08: no console.* in production code, except an allowlisted logger location
 // ---------------------------------------------------------------------------------------------
 
-/** No allowlisted logger location exists yet — the plan's survey found none; every hit is debt. */
-const CONSOLE_ALLOWLIST: RegExp[] = [];
+/**
+ * `core/utils/logger.ts` is the one allowlisted `console.*` call site (#349): a tiny, deliberately
+ * non-DI wrapper (some callers, e.g. `core/security/permission-bits.ts`, are plain functions
+ * outside any injection context) that every genuine operational warning/error routes through
+ * instead of calling `console.*` directly.
+ */
+const CONSOLE_ALLOWLIST = (p: Project): RegExp[] => [file(p, 'core/utils/logger.ts')];
 
 export const pat08Finder = (f: Source): string[] =>
   calls(f, (c) => !c.isNew && c.callee.startsWith('console.')).map((c) => `${enclosingName(c.node)} :: ${c.callee}(...)`);
 
 export const pat08 = (p: Project): ArchRule =>
   contentRule(
-    { id: 'PAT-08', title: 'no console.* in production code, except an allowlisted logger location (best practice)', mode: 'ratchet' },
+    { id: 'PAT-08', title: 'no console.* in production code, except an allowlisted logger location (best practice)', mode: 'enforce' },
     p,
-    { subject: selectors.appTree(p), except: CONSOLE_ALLOWLIST, finder: pat08Finder },
+    { subject: selectors.appTree(p), except: CONSOLE_ALLOWLIST(p), finder: pat08Finder },
   );
 
 export type { Source };

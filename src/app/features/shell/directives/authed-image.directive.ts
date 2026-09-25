@@ -1,13 +1,11 @@
 import {
   computed,
-  DestroyRef,
   Directive,
   effect,
   inject,
   input,
   signal,
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ChatBlobService } from '../services/chat-blob.service';
 
 /**
@@ -31,7 +29,6 @@ import { ChatBlobService } from '../services/chat-blob.service';
 })
 export class AuthedImageDirective {
   private readonly blobs = inject(ChatBlobService);
-  private readonly destroyRef = inject(DestroyRef);
 
   readonly appAuthedSrc = input.required<string>();
 
@@ -48,13 +45,10 @@ export class AuthedImageDirective {
       this.failed.set(false);
       if (!source) return;
 
-      const subscription = this.blobs
-        .resolve(source)
-        .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe({
-          next: url => this.objectUrl.set(url),
-          error: () => this.failed.set(true),
-        });
+      const subscription = this.blobs.resolve(source).subscribe({
+        next: url => this.objectUrl.set(url),
+        error: () => this.failed.set(true),
+      });
       onCleanup(() => subscription.unsubscribe());
     });
   }

@@ -1,6 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { finalize } from 'rxjs';
+import { logger } from '../../../core/utils/logger';
 import { ChatErrorBlock } from '../models/chat.model';
 import { mapAnswerPayload } from '../utils/chat-response.mapper';
 import { ChatStateService, ChatTurnTarget } from './chat-state.service';
@@ -104,7 +105,7 @@ export class ChatSendService {
 
   private logChatFailure(error: unknown): void {
     if (error instanceof HttpErrorResponse) {
-      console.error('Chat backend request failed', {
+      logger.error('Chat backend request failed', {
         status: error.status,
         url: error.url,
         correlationId: error.headers.get(ChatSendService.CORRELATION_ID_HEADER),
@@ -114,7 +115,7 @@ export class ChatSendService {
       return;
     }
 
-    console.error('Chat backend request failed', { error });
+    logger.error('Chat backend request failed', { error });
   }
 }
 

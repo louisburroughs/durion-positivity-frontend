@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 import { CrmService } from '../../services/crm.service';
+import { logger } from '../../../../core/utils/logger';
 import {
   BillingTermsRef,
   DuplicateCandidate,
@@ -138,8 +139,7 @@ export class CreateCommercialAccountComponent implements OnInit {
     }).catch(err => {
       // Handle clipboard failures (permissions, insecure context, etc.)
       this.serverError.set(this.translate.instant('CRM.CREATE_COMMERCIAL.ERROR.CLIPBOARD_FAILED'));
-      // Optional: log for debugging without affecting UI flow
-      console.error('Failed to write party ID to clipboard:', err);
+      logger.error('Failed to write party ID to clipboard:', err);
     });
   }
 

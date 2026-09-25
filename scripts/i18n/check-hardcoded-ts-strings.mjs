@@ -20,7 +20,8 @@
  *
  *   - comments are stripped (they also break naive quote matching: an apostrophe
  *     in "the platform's own" opens a phantom string);
- *   - `console.*(...)` and `throw new *Error(...)` arguments are blanked, since
+ *   - `console.*(...)`, `logger.*(...)` (the PAT-08 allowlisted diagnostic sink in
+ *     `core/utils/logger.ts`) and `throw new *Error(...)` arguments are blanked, since
  *     those are diagnostics rather than UI;
  *   - `${...}` holes inside template literals are blanked, but the surrounding
  *     text is still scanned -- `` `Hello ${name}` `` is user-visible prose;
@@ -127,11 +128,13 @@ function stripComments(src) {
   return out.join('');
 }
 
-// console.error('…') and Error messages are diagnostics, not UI. `new Error(…)`
-// is blanked wherever it appears, not just after `throw`: the rejection path
+// console.error('…'), logger.error('…') (PAT-08's allowlisted wrapper around console.*,
+// core/utils/logger.ts) and Error messages are diagnostics, not UI. `new Error(…)` is
+// blanked wherever it appears, not just after `throw`: the rejection path
 // `throwError(() => new Error('No refresh token'))` is just as much a diagnostic.
 function blankDevSinks(src) {
   let s = blank(src, /console\.\w+\s*\([\s\S]*?\)\s*;/g);
+  s = blank(s, /\blogger\.\w+\s*\([\s\S]*?\)\s*;/g);
   s = blank(s, /new \w*Error\s*\([\s\S]*?\)/g);
   return s;
 }
