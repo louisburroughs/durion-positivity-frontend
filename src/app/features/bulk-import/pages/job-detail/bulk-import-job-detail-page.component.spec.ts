@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
-import { Subject, of, throwError } from 'rxjs';
+import { Observable, Subject, of, throwError } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { BulkImportJobDetailPageComponent } from './bulk-import-job-detail-page.component';
 import { BulkImportService } from '../../../../shared/bulk-import/services/bulk-import.service';
@@ -163,12 +163,12 @@ describe('BulkImportJobDetailPageComponent', () => {
     expect(component.isCorrectionPending('rec-001')).toBe(false);
   });
 
-  it('onSubmitCorrection re-reads the audit record list on success instead of splicing the narrow response (issue #376)', () => {
+  it('onSubmitCorrection re-reads the audit record list on success when submitCorrection resolves null (durion-positivity-backend#2205 fields absent)', () => {
     const event: CorrectionSubmitEvent = {
       record: mockAuditRecord,
       request: { correctedValues: { sku: 'GOOD-SKU' } },
     };
-    mockService.submitCorrection.mockReturnValue(of(undefined));
+    mockService.submitCorrection.mockReturnValue(of(null));
     const correctedRecord: BulkLoadRecordAudit = { ...mockAuditRecord, reviewStatus: 'APPROVED' };
     mockService.listAuditRecords.mockReturnValue(
       of({ items: [correctedRecord], nextPageToken: null } as AuditRecordListResponse),
@@ -178,6 +178,27 @@ describe('BulkImportJobDetailPageComponent', () => {
 
     expect(mockService.listAuditRecords).toHaveBeenCalledWith('job-001');
     expect(component.auditRecords()).toEqual([correctedRecord]);
+  });
+
+  it('onSubmitCorrection splices the returned row in place and skips the re-read when submitCorrection resolves a complete row (durion-positivity-backend#2205)', () => {
+    const event: CorrectionSubmitEvent = {
+      record: mockAuditRecord,
+      request: { correctedValues: { sku: 'GOOD-SKU' } },
+    };
+    const splicedRecord: BulkLoadRecordAudit = { ...mockAuditRecord, reviewStatus: 'APPROVED' };
+    mockService.submitCorrection.mockReturnValue(of(splicedRecord));
+    // reload$ is constructed eagerly (a cold Observable, same as a real HttpClient call), but
+    // must never be *subscribed* when a complete row is spliced — subscribing is what would
+    // actually issue the re-read.
+    mockService.listAuditRecords.mockReturnValue(
+      new Observable(() => { throw new Error('reload$ must not be subscribed when a row is spliced'); }),
+    );
+
+    component.onSubmitCorrection(event);
+
+    expect(component.auditRecords()).toEqual([splicedRecord]);
+    expect(component.state()).toBe('ready');
+    expect(component.isCorrectionPending('rec-001')).toBe(false);
   });
 
   it('onSubmitCorrection on error sets state to error first, then errorKey (ADR-0031)', () => {

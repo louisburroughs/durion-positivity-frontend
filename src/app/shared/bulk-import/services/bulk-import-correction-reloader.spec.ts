@@ -95,6 +95,40 @@ describe('BulkImportCorrectionReloader', () => {
     expect(pendingIds().has('rec-A')).toBe(false);
   });
 
+  it('splices the submit result via onSubmitResult and skips the reload when it returns false (durion-positivity-backend#2205)', () => {
+    const pendingIds = signal<Set<string>>(new Set());
+    const reloader = new BulkImportCorrectionReloader(pendingIds);
+    let reloadInvoked = false;
+    let spliced: { recordId: string } | undefined;
+
+    reloader.run('rec-1', of({ recordId: 'rec-1' }), {
+      reload$: of(undefined),
+      onReloadSuccess: () => { reloadInvoked = true; },
+      onSubmitError: () => { /* not reached */ },
+      onSubmitResult: result => { spliced = result; return false; },
+    }).subscribe();
+
+    expect(spliced).toEqual({ recordId: 'rec-1' });
+    expect(reloadInvoked).toBe(false);
+    expect(pendingIds().has('rec-1')).toBe(false);
+  });
+
+  it('falls back to the reload when onSubmitResult returns true (fields were null)', () => {
+    const pendingIds = signal<Set<string>>(new Set());
+    const reloader = new BulkImportCorrectionReloader(pendingIds);
+    let reloaded: number | undefined;
+
+    reloader.run('rec-1', of(null), {
+      reload$: of(42),
+      onReloadSuccess: result => { reloaded = result; },
+      onSubmitError: () => { /* not reached */ },
+      onSubmitResult: result => result === null,
+    }).subscribe();
+
+    expect(reloaded).toBe(42);
+    expect(pendingIds().has('rec-1')).toBe(false);
+  });
+
   it('onSubmitError is mandatory at the type level, so a REJECTED correction can never vanish silently (Copilot #4105840870)', () => {
     const pendingIds = signal<Set<string>>(new Set());
     const reloader = new BulkImportCorrectionReloader(pendingIds);
