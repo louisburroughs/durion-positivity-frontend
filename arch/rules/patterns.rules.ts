@@ -199,7 +199,7 @@ export const pat03 = (p: Project): ArchRule =>
   contentRule(
     {
       id: 'PAT-03',
-      title: "errorKey.set(<non-null>) is immediately preceded by state.set('error') inside a subscribe({ error }) callback (ADR-0031 §1, §5)",
+      title: "errorKey.set(<non-null>) is immediately preceded by an error-like state.set ('error', 'unreachable', or the forbidden/error split) inside a subscribe({ error }) callback (ADR-0031 §1, §5)",
       mode: 'enforce',
     },
     p,
@@ -349,7 +349,7 @@ export const pat04 = (p: Project): ArchRule =>
   contentRule(
     {
       id: 'PAT-04',
-      title: 'inside catchError( in features/**/services/**, never return of([])/of(new Map())/of(new Set())/of({})/EMPTY (ADR-0064 §1)',
+      title: 'inside catchError( in features/**/services/**, never return of([])/of(new Map())/of(new Set())/of({})/EMPTY unless a failure-state signal is written first (ADR-0064 §1)',
       mode: 'enforce',
     },
     p,
