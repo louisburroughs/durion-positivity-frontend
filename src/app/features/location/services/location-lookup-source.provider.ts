@@ -20,6 +20,19 @@ import type { LocationService } from './location.service';
  * actually runs, instead of being pulled into the initial bundle by
  * `app.config.ts`.
  */
+/**
+ * The location SDK keys a location by `id`, but older local models (and some callers' fixtures)
+ * used `locationId`. The pages that moved onto this source accepted both, so keep doing that
+ * rather than silently dropping rows that only carry `locationId`.
+ */
+export function toLocationLookupResult(row: unknown): LocationLookupResult | null {
+  if (!row || typeof row !== 'object') return null;
+  const rec = row as Record<string, unknown>;
+  const id = rec['id'] ?? rec['locationId'];
+  if (typeof id !== 'string' || !id) return null;
+  return { ...(rec as Partial<LocationLookupResult>), id };
+}
+
 export function provideLocationLookupSource(): Provider {
   return {
     provide: LOCATION_LOOKUP_SOURCE,
@@ -36,13 +49,15 @@ export function provideLocationLookupSource(): Provider {
         getAll: () =>
           from(getLocation()).pipe(
             switchMap(location =>
-              location.getAllLocations().pipe(map(rows => (rows as LocationLookupResult[]).filter(r => !!r?.id))),
+              location
+                .getAllLocations()
+                .pipe(map(rows => rows.map(toLocationLookupResult).filter((r): r is LocationLookupResult => r !== null))),
             ),
           ),
         getById: id =>
           from(getLocation()).pipe(
             switchMap(location =>
-              location.getLocationById(id).pipe(map(loc => (loc as LocationLookupResult | null) ?? null)),
+              location.getLocationById(id).pipe(map(toLocationLookupResult)),
             ),
           ),
       };

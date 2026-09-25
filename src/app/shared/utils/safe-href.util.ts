@@ -25,7 +25,7 @@ const ORIGIN_RELATIVE_RE = /^[/\\]{2}/;
  */
 export function normaliseHref(href: string): string {
   // eslint-disable-next-line no-control-regex -- stripping control characters is the point
-  return href.replace(/[\u0000- \u007f]/g, '');
+  return href.replace(/[\u0000-\u0020\u007f]/g, '');
 }
 
 /**
