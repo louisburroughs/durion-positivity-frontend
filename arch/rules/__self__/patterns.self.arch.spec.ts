@@ -234,6 +234,22 @@ describe('[self] PAT-04 catchError( in features/**/services/** must not return a
     expect(compliant).toEqual([]);
   });
 
+  it('does not treat a bookkeeping signal write (loading.set(false)) as recording the failure', () => {
+    const findings = pat04Finder({
+      path: 'src/app/features/fxpat/services/fxpat.service.ts',
+      content: `class FxpatService {
+        load() {
+          return this.http.get().pipe(catchError(() => { this.loading.set(false); return of([]); }));
+        }
+        reset() { this.loading.set(false); }
+        load2() {
+          return this.http.get().pipe(catchError(() => { this.reset(); return EMPTY; }));
+        }
+      }`,
+    });
+    expect(findings).toEqual(['load :: catchError returns of([])', 'load2 :: catchError returns EMPTY']);
+  });
+
   it('does not cross into a nested function when looking for the return', () => {
     const findings = pat04Finder({
       path: 'src/app/features/fxpat/services/fxpat.service.ts',

@@ -254,10 +254,22 @@ function directReturns(fn: ts.ArrowFunction | ts.FunctionExpression): ts.Express
   return out;
 }
 
-/** A signal write `<expr>.set(...)`/`<expr>.update(...)` whose property-access chain roots at `this`. */
+/**
+ * Signals whose write records a failure: `errorKey`, `state`, `…Error`, `…Failed`, `unpersisted`
+ * (optionally `_`-prefixed). A write to anything else, such as `loading.set(false)`, is bookkeeping
+ * and does not make an empty fallback visible to the user.
+ */
+const FAILURE_SIGNAL = /^_?(state|errorKey|\w*error\w*|\w*fail\w*|unpersisted)$/i;
+
+/**
+ * A failure-recording signal write `this.<…>.<name>.set(...)`/`.update(...)` (see `FAILURE_SIGNAL`)
+ * whose property-access chain roots at `this`.
+ */
 function isSignalWriteCall(n: ts.Node): boolean {
   if (!ts.isCallExpression(n) || !ts.isPropertyAccessExpression(n.expression)) return false;
   if (n.expression.name.text !== 'set' && n.expression.name.text !== 'update') return false;
+  const target = n.expression.expression;
+  if (!ts.isPropertyAccessExpression(target) || !FAILURE_SIGNAL.test(target.name.text)) return false;
   let root: ts.Expression = n.expression.expression;
   while (ts.isPropertyAccessExpression(root)) root = root.expression;
   return root.kind === ts.SyntaxKind.ThisKeyword;
