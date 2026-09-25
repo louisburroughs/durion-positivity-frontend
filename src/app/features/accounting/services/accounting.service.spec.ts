@@ -439,9 +439,23 @@ describe('AccountingService', () => {
 
       service.downloadExport('exp-1');
 
-      expect(anchor.href).toBe('/api/accounting/v1/accounting/export/download?exportId=exp-1');
+      expect(anchor.href).toBe('/api/accounting/v1/accounting/reports/export/exp-1/download');
       expect(anchor.download).toBe('time-export-exp-1.csv');
       expect(clickSpy).toHaveBeenCalledTimes(1);
+
+      createElementSpy.mockRestore();
+      appendSpy.mockRestore();
+    });
+
+    it('URL-encodes the exportId path segment [issue #368]', () => {
+      const clickSpy = vi.fn();
+      const anchor = { href: '', download: '', click: clickSpy, remove: vi.fn() } as unknown as HTMLAnchorElement;
+      const createElementSpy = vi.spyOn(document, 'createElement').mockReturnValue(anchor);
+      const appendSpy = vi.spyOn(document.body, 'append').mockImplementation(() => {});
+
+      service.downloadExport('exp/1 special');
+
+      expect(anchor.href).toBe('/api/accounting/v1/accounting/reports/export/exp%2F1%20special/download');
 
       createElementSpy.mockRestore();
       appendSpy.mockRestore();

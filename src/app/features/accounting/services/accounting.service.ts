@@ -400,10 +400,12 @@ export class AccountingService {
 
   downloadExport(exportId: string): void {
     // Trigger browser download via anchor element (appended to DOM for cross-browser reliability).
-    // NOTE: SDK gap — no download/streaming operation exists for the export job's file, so the
-    // URL is still hand-built, but from the injected AccountingConfiguration's basePath rather
-    // than reading environment.apiBaseUrl directly (SDK-06).
-    const url = `${this.configuration.basePath}/v1/accounting/export/download?exportId=${encodeURIComponent(exportId)}`;
+    // NOTE: SDK gap — ReportExportController#downloadExport (operationId downloadReportExport) has
+    // no SDK operation yet (backend #2216), so the URL is still hand-built, but from the injected
+    // AccountingConfiguration's basePath rather than reading environment.apiBaseUrl directly
+    // (SDK-06). Issue #368: the id is a path segment under /reports/export, not an ?exportId= query
+    // parameter.
+    const url = `${this.configuration.basePath}/v1/accounting/reports/export/${encodeURIComponent(exportId)}/download`;
     const a = document.createElement('a');
     a.href = url;
     a.download = `time-export-${exportId}.csv`;

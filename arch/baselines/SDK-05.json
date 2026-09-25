@@ -5,9 +5,9 @@
     "tracking": "#350"
   },
   {
-    "key": "src/app/features/accounting/services/accounting.service.ts :: '/v1/accounting/export/download?exportId='",
-    "reason": "downloadExport() has no SDK download/streaming operation; the URL is still hand-built, but now from the injected AccountingConfiguration.basePath instead of environment.apiBaseUrl (SDK-06 fixed).",
-    "tracking": "#350"
+    "key": "src/app/features/accounting/services/accounting.service.ts :: '/v1/accounting/reports/export/'",
+    "reason": "downloadExport() has no SDK download/streaming operation (backend #2216 will add downloadReportExport to the OpenAPI spec); the URL is still hand-built, but now from the injected AccountingConfiguration.basePath instead of environment.apiBaseUrl (SDK-06 fixed) and pointed at ReportExportController's real path with the id as a path segment (issue #368).",
+    "tracking": "#368"
   },
   {
     "key": "src/app/features/billing/services/billing-transport.service.ts :: '/invoice/v1/billing/auth/elevate'",
