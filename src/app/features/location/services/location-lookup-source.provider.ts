@@ -28,8 +28,8 @@ import type { LocationService } from './location.service';
 export function toLocationLookupResult(row: unknown): LocationLookupResult | null {
   if (!row || typeof row !== 'object') return null;
   const rec = row as Record<string, unknown>;
-  const id = rec['id'] ?? rec['locationId'];
-  if (typeof id !== 'string' || !id) return null;
+  const id = [rec['id'], rec['locationId']].find((v): v is string => typeof v === 'string' && v !== '');
+  if (!id) return null;
   return { ...(rec as Partial<LocationLookupResult>), id };
 }
 

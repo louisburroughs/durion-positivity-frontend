@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom, of } from 'rxjs';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { LOCATION_LOOKUP_SOURCE } from '../../../shared/location-picker/location-lookup-source.tokens';
 import { LocationService } from './location.service';
 import { provideLocationLookupSource, toLocationLookupResult } from './location-lookup-source.provider';
@@ -16,6 +16,11 @@ describe('toLocationLookupResult', () => {
     );
   });
 
+  it('falls back to locationId when id is present but unusable', () => {
+    expect(toLocationLookupResult({ id: '', locationId: 'loc-4' })?.id).toBe('loc-4');
+    expect(toLocationLookupResult({ id: 42, locationId: 'loc-5' })?.id).toBe('loc-5');
+  });
+
   it('drops rows with no usable id', () => {
     expect(toLocationLookupResult({ name: 'Nameless' })).toBeNull();
     expect(toLocationLookupResult(null)).toBeNull();
@@ -23,11 +28,13 @@ describe('toLocationLookupResult', () => {
 });
 
 describe('provideLocationLookupSource', () => {
+  const getLocationById = vi.fn();
   const setup = (rows: unknown[], byId: unknown) => {
+    getLocationById.mockReset().mockReturnValue(of(byId));
     TestBed.configureTestingModule({
       providers: [
         provideLocationLookupSource(),
-        { provide: LocationService, useValue: { getAllLocations: () => of(rows), getLocationById: () => of(byId) } },
+        { provide: LocationService, useValue: { getAllLocations: () => of(rows), getLocationById } },
       ],
     });
     return TestBed.inject(LOCATION_LOOKUP_SOURCE);
@@ -42,5 +49,6 @@ describe('provideLocationLookupSource', () => {
   it('normalizes getById', async () => {
     const source = setup([], { locationId: 'loc-3', name: 'South' });
     expect((await firstValueFrom(source.getById('loc-3')))?.id).toBe('loc-3');
+    expect(getLocationById).toHaveBeenCalledExactlyOnceWith('loc-3');
   });
 });
