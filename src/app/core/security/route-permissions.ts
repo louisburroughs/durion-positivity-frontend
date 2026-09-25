@@ -544,26 +544,46 @@ export const BILLING_PAGE = {
 } as const satisfies Record<string, readonly string[]>;
 
 /**
- * `/app/billing` write controls: no frontend gate on refund or receipt generation/reprint.
+ * `/app/billing` write controls.
  *
- * `PaymentReversalServiceImpl.refundPayment` and `ReceiptServiceImpl` (`pos-invoice`, verified
- * against backend origin/main) enforce `SecurityContextHelper.hasAuthority(...)` inside the
- * service body rather than a `@PreAuthorize` annotation, so both endpoints' generated
- * `x-required-permissions` in `pos-invoice/openapi.yaml` read only `AUTHENTICATED`, and neither raw
- * authority (`REFUND_PAYMENT`, `GENERATE_RECEIPT`) has an entry in the `PermissionCode` catalog that
- * backs `PERMISSION_BY_BIT` — a real gap between the bit catalog and this module's own
- * authorization, not one this frontend PR can close (durion-positivity-backend#2226). No
- * `perm_bits` token — including the mock token built from the entire catalog — can decode to a
- * grant for either code, so an `AuthService.hasAnyPermission()` gate here would permanently deny
- * every real session while only a legacy no-`perm_bits` token stayed open, refusing operators the
- * backend actually admits (Copilot #4106105951/#4106105999/#4106194893/#4106194936 on PR #383).
+ * durion-positivity-backend#2226 (catalog v92) registered the codes that were missing when this
+ * gate was first removed (PR #383, Copilot #4106105951/#4106105999/#4106194893/#4106194936): the
+ * catalog now decodes `invoice:payment:refund`, `invoice:payment:void`, `invoice:receipt:generate`,
+ * `invoice:receipt:reprint_override` and `invoice:payment:override` (bits 536–541, `permission-catalog.ts`
+ * regenerated from backend origin/main). `PaymentReversalServiceImpl`/`ReceiptServiceImpl` still
+ * enforce these via `SecurityContextHelper.hasAuthority(...)` in the service body rather than
+ * `@PreAuthorize`, so the *codes* are real but a page gate here can only ever be a client-side
+ * hint — the backend remains authoritative and a 403 is still mapped to a localized error by the
+ * calling page (`PaymentVoidRefundPageComponent.executeVoid`/`executeRefund`,
+ * `ReceiptPageComponent.generateAndShow`/`reprint`).
  *
- * The backend enforces both authorities regardless of any frontend gate; a 403 from
- * `refundPayment` / `generateReceipt` / `reprintReceipt` is mapped to a localized "you don't have
- * permission to …" error by the calling page instead (`PaymentVoidRefundPageComponent.executeRefund`,
- * `ReceiptPageComponent.generateAndShow`/`reprint`). Re-add a catalog-backed `BILLING_SECTION` gate
- * once #2226 registers `REFUND_PAYMENT`/`GENERATE_RECEIPT` in the permission catalog.
+ * Each control is gated independently of its method call (ADR-0040 §6a pattern, mirrored from
+ * `INVENTORY_PAGE.pickExecute`'s `canExecute`): a page computes
+ * `!auth.permissionsKnown() || auth.hasAnyPermission(BILLING_SECTION.xExecute)` to decide whether to
+ * *disable* the button, but always calls the transport method on click regardless of that
+ * computed value — the button is decorative, the request is what actually gets a 403. A legacy
+ * token without a `perm_bits` claim (`permissionsKnown() === false`) is treated as granted, exactly
+ * like `AuthService.canAccess()`, so it never locks out a session the backend would still admit.
+ *
+ * `receiptReprintOverride` is wired only where the page can actually know it applies:
+ * `ReceiptServiceImpl.reprintReceipt` requires it once `ReceiptViewResponse.reprintCount >= 5`
+ * (verified against backend origin/main), a count the page now has from `ReceiptService.getReceipt`
+ * (durion-positivity-backend#2214) — see `ReceiptPageComponent.canReprintPastCap`.
+ *
+ * `paymentOverride` backs a second, unrelated elevation: `PaymentReversalServiceImpl` requires it
+ * only after the void (24h) or refund (180d) window has elapsed since the payment intent was
+ * authorized/captured. Declared here for the catalog's sake; no page pre-warns on it yet because
+ * neither `PaymentVoidRefundPageComponent` mode reliably has the *authorization* timestamp today
+ * (`getInvoicePayment`'s `createdAt` is the payment intent's own creation, not necessarily the
+ * capture/authorization instant) — wire a pre-warn once that's confirmed against the entity.
  */
+export const BILLING_SECTION = {
+  refundExecute: ['invoice:payment:refund'],
+  voidExecute: ['invoice:payment:void'],
+  receiptGenerate: ['invoice:receipt:generate'],
+  receiptReprintOverride: ['invoice:receipt:reprint_override'],
+  paymentOverride: ['invoice:payment:override'],
+} as const satisfies Record<string, readonly string[]>;
 
 /** `/app/order/*` — carts, lines, price overrides, cancellation. */
 export const ORDER_PAGE = {
