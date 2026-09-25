@@ -36,6 +36,7 @@
 							[value]="getDraft(record.recordId, field)"
 							(input)="updateDraft(record.recordId, field, $any($event.target).value)"
 							[attr.placeholder]="record.originalValues[field] !== null && record.originalValues[field] !== undefined ? ('' + record.originalValues[field]) : ''"
+							[disabled]="readOnly"
 						/>
 					</div>
 					}
@@ -44,7 +45,7 @@
 					<button
 						class="error-records__submit-btn"
 						type="button"
-						[disabled]="!hasDraft(record.recordId) || pendingRecordIds.has(record.recordId)"
+						[disabled]="readOnly || !hasDraft(record.recordId) || pendingRecordIds.has(record.recordId)"
 						(click)="onSubmit(record)"
 					>
 						@if (pendingRecordIds.has(record.recordId)) {

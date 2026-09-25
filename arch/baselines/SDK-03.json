@@ -1,10 +1,5 @@
 [
   {
-    "key": "src/app/shared/bulk-import/services/bulk-import.service.ts -> src/app/core/services/api-base.service.ts",
-    "reason": "D6: submitCorrection() only — SDK's submitSingleCorrection() returns CorrectionResultDto (auditRecordId/status/rejectionReason), not the full corrected audit record callers splice back into their row list.",
-    "tracking": "#350"
-  },
-  {
     "key": "src/app/features/inventory/services/inventory-receiving.service.ts -> src/app/core/services/api-base.service.ts",
     "reason": "legacy ApiBaseService transport; migrates with PRD-sdk-migration-completion.md.",
     "tracking": "#350"

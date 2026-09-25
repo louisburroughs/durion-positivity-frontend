@@ -4,6 +4,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
 import { BulkImportService } from '../../../../shared/bulk-import/services/bulk-import.service';
+import { BulkImportCorrectionReloader } from '../../../../shared/bulk-import/services/bulk-import-correction-reloader';
 import { BulkImportErrorRecordsTableComponent, CorrectionSubmitEvent } from '../../../../shared/bulk-import/components/bulk-import-error-records-table/bulk-import-error-records-table.component';
 import {
   BulkLoadJob,
@@ -29,6 +30,7 @@ export class BulkImportJobDetailPageComponent {
   readonly job = signal<BulkLoadJob | null>(null);
   readonly auditRecords = signal<BulkLoadRecordAudit[]>([]);
   readonly correctionPending = signal<Set<string>>(new Set());
+  private readonly correctionReloader = new BulkImportCorrectionReloader(this.correctionPending);
 
   private jobId = '';
 
@@ -76,22 +78,25 @@ export class BulkImportJobDetailPageComponent {
 
   onSubmitCorrection(event: CorrectionSubmitEvent): void {
     const { record, request } = event;
-    this.correctionPending.update(s => { const n = new Set(s); n.add(record.recordId); return n; });
-    this.service.submitCorrection(this.jobId, record.recordId, request)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: updated => {
-          this.auditRecords.update(records =>
-            records.map(r => r.recordId === updated.recordId ? updated : r),
-          );
-          this.correctionPending.update(s => { const n = new Set(s); n.delete(record.recordId); return n; });
+    this.correctionReloader.run(
+      record.recordId,
+      this.service.submitCorrection(this.jobId, record.recordId, request),
+      {
+        reload$: this.service.listAuditRecords(this.jobId),
+        onReloadSuccess: result => {
+          this.auditRecords.set(result.items);
+          this.state.set('ready');
         },
-        error: () => {
+        onReloadError: () => {
+          this.state.set('error');
+          this.errorKey.set('BULK_IMPORT.JOB_DETAIL.ERROR.LOAD_AUDIT');
+        },
+        onSubmitError: () => {
           this.state.set('error');
           this.errorKey.set('BULK_IMPORT.JOB_DETAIL.ERROR.CORRECTION');
-          this.correctionPending.update(s => { const n = new Set(s); n.delete(record.recordId); return n; });
         },
-      });
+      },
+    ).pipe(takeUntilDestroyed(this.destroyRef)).subscribe();
   }
 
   cancelJob(): void {

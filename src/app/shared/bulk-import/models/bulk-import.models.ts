@@ -116,3 +116,20 @@ export interface AuditRecordListResponse {
 export interface SubmitCorrectionRequest {
   correctedValues: Record<string, unknown>;
 }
+
+/**
+ * Thrown by `BulkImportService.submitCorrection()` when the backend's
+ * `CorrectionResultDto.status` is `REJECTED`. This is a normal HTTP 200, not an SDK
+ * throw, so the service routes it through the Observable's error channel itself
+ * (issue #376 follow-up). `rejectionReason` is the server's free-text explanation;
+ * it is carried here for logging/future reason-code mapping only and must never be
+ * rendered to the user as-is (ADR-0064 §4-5) — surface the rejection through the
+ * caller's existing localized correction-error key instead.
+ */
+export class CorrectionRejectedError extends Error {
+  constructor(readonly rejectionReason?: string) {
+    // i18n-ignore-next-line: internal Error.message for logs/devtools only — never rendered; callers translate their own localized error key.
+    super('Correction was rejected by the server');
+    this.name = 'CorrectionRejectedError';
+  }
+}

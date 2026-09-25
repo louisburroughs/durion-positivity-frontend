@@ -2,17 +2,25 @@ import { Type } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
-import { of, throwError } from 'rxjs';
+import { Subject, of, throwError } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { BulkImportService } from '../../../shared/bulk-import/services/bulk-import.service';
-import { BulkLoadJob, DomainType } from '../../../shared/bulk-import/models/bulk-import.models';
+import { AuditRecordListResponse, BulkLoadJob, BulkLoadRecordAudit, CorrectionRejectedError, DomainType } from '../../../shared/bulk-import/models/bulk-import.models';
+import { CorrectionSubmitEvent } from '../../../shared/bulk-import/components/bulk-import-error-records-table/bulk-import-error-records-table.component';
 
 type WizardComponentHarness = {
   state: () => string;
   errorKey: () => string | null;
   conflictJob: () => BulkLoadJob | null;
   job: () => BulkLoadJob | null;
+  auditRecords: () => BulkLoadRecordAudit[];
+  auditReadFailed: () => boolean;
+  auditErrorKey: () => string | null;
+  correctionErrorKey: () => string | null;
+  correctionPendingIds: () => Set<string>;
   onFileSelected: (file: File) => void;
+  onSubmitCorrection: (event: CorrectionSubmitEvent) => void;
+  retryAuditLoad: () => void;
 };
 
 interface WizardPageSpecOptions<TComponent> {
@@ -240,6 +248,193 @@ export function describeBulkImportWizardPage<TComponent>(options: WizardPageSpec
 
       expect(component.state()).toBe('error');
       expect(component.errorKey()).toBe('BULK_IMPORT.WIZARD.ERROR.POLL');
+    });
+
+    describe('onSubmitCorrection (issue #376, ADR-0063 §4-5)', () => {
+      const mockAuditRecord: BulkLoadRecordAudit = {
+        recordId: 'rec-001', jobId: 'job-001', entityType: 'RECORD',
+        rowNumber: 1, reviewStatus: 'PENDING', reasonCodes: ['INVALID'],
+        originalValues: { field: 'bad' },
+      };
+      const mockAuditRecord2: BulkLoadRecordAudit = {
+        recordId: 'rec-002', jobId: 'job-001', entityType: 'RECORD',
+        rowNumber: 2, reviewStatus: 'PENDING', reasonCodes: ['INVALID'],
+        originalValues: { field: 'also bad' },
+      };
+
+      beforeEach(() => {
+        const failedJob = buildActiveJob(options.domainType);
+        failedJob.status = 'FAILED';
+        mockBulkImportService.getActiveJobForDomain.mockReturnValue(of(failedJob));
+        mockBulkImportService.listAuditRecords.mockReturnValue(
+          of({ items: [mockAuditRecord], nextPageToken: null } as AuditRecordListResponse),
+        );
+        fixture.detectChanges();
+      });
+
+      it('re-reads the audit record list on success instead of splicing the narrow SDK response', () => {
+        mockBulkImportService.submitCorrection.mockReturnValue(of(undefined));
+        const correctedRecord: BulkLoadRecordAudit = { ...mockAuditRecord, reviewStatus: 'APPROVED' };
+        mockBulkImportService.listAuditRecords.mockReturnValue(
+          of({ items: [correctedRecord], nextPageToken: null } as AuditRecordListResponse),
+        );
+
+        component.onSubmitCorrection({ record: mockAuditRecord, request: { correctedValues: { field: 'good' } } });
+
+        expect(mockBulkImportService.submitCorrection).toHaveBeenCalledWith(
+          'job-001', 'rec-001', { correctedValues: { field: 'good' } },
+        );
+        expect(mockBulkImportService.listAuditRecords).toHaveBeenCalledWith('job-001', { reviewStatus: 'PENDING' });
+        expect(component.auditRecords()).toEqual([correctedRecord]);
+      });
+
+      it('keeps the record pending until the re-read it triggered settles, not merely until the reload starts', () => {
+        const submit$ = new Subject<void>();
+        const reload$ = new Subject<AuditRecordListResponse>();
+        mockBulkImportService.submitCorrection.mockReturnValue(submit$);
+        mockBulkImportService.listAuditRecords.mockReturnValue(reload$);
+
+        component.onSubmitCorrection({ record: mockAuditRecord, request: { correctedValues: { field: 'good' } } });
+        expect(component.correctionPendingIds().has('rec-001')).toBe(true);
+
+        submit$.next(undefined);
+        submit$.complete();
+        // The reload has started but not landed yet: still pending, so the row
+        // cannot be resubmitted and stays out of the "corrected" set.
+        expect(mockBulkImportService.listAuditRecords).toHaveBeenCalledWith('job-001', { reviewStatus: 'PENDING' });
+        expect(component.correctionPendingIds().has('rec-001')).toBe(true);
+
+        const correctedRecord: BulkLoadRecordAudit = { ...mockAuditRecord, reviewStatus: 'APPROVED' };
+        reload$.next({ items: [correctedRecord], nextPageToken: null });
+        reload$.complete();
+
+        expect(component.correctionPendingIds().has('rec-001')).toBe(false);
+        expect(component.auditRecords()).toEqual([correctedRecord]);
+      });
+
+      it('settles the pending flag when the re-read itself fails', () => {
+        const submit$ = new Subject<void>();
+        const reload$ = new Subject<AuditRecordListResponse>();
+        mockBulkImportService.submitCorrection.mockReturnValue(submit$);
+        mockBulkImportService.listAuditRecords.mockReturnValue(reload$);
+
+        component.onSubmitCorrection({ record: mockAuditRecord, request: { correctedValues: { field: 'good' } } });
+        submit$.next(undefined);
+        submit$.complete();
+        expect(component.correctionPendingIds().has('rec-001')).toBe(true);
+
+        reload$.error(new Error('re-read failed'));
+
+        expect(component.correctionPendingIds().has('rec-001')).toBe(false);
+      });
+
+      it('ignores a stale re-read result when a newer correction reload has already landed', () => {
+        const submitA$ = new Subject<void>();
+        const submitB$ = new Subject<void>();
+        const reloadA$ = new Subject<AuditRecordListResponse>();
+        const reloadB$ = new Subject<AuditRecordListResponse>();
+        mockBulkImportService.submitCorrection
+          .mockReturnValueOnce(submitA$)
+          .mockReturnValueOnce(submitB$);
+        mockBulkImportService.listAuditRecords
+          .mockReturnValueOnce(reloadA$)
+          .mockReturnValueOnce(reloadB$);
+
+        component.onSubmitCorrection({ record: mockAuditRecord, request: { correctedValues: { field: 'a' } } });
+        submitA$.next(undefined);
+        submitA$.complete(); // issues reloadA — the first, soon-to-be-stale reload
+
+        component.onSubmitCorrection({ record: mockAuditRecord2, request: { correctedValues: { field: 'b' } } });
+        submitB$.next(undefined);
+        submitB$.complete(); // issues reloadB — the current reload
+
+        expect(component.correctionPendingIds()).toEqual(new Set(['rec-001', 'rec-002']));
+
+        // The newer reload lands first...
+        const afterB: BulkLoadRecordAudit = { ...mockAuditRecord2, reviewStatus: 'APPROVED' };
+        reloadB$.next({ items: [afterB], nextPageToken: null });
+        reloadB$.complete();
+        expect(component.auditRecords()).toEqual([afterB]);
+        expect(component.correctionPendingIds().has('rec-002')).toBe(false);
+
+        // ...then the stale reload lands late and must not overwrite the current data.
+        const afterA: BulkLoadRecordAudit = { ...mockAuditRecord, reviewStatus: 'APPROVED' };
+        reloadA$.next({ items: [afterA], nextPageToken: null });
+        reloadA$.complete();
+        expect(component.auditRecords()).toEqual([afterB]);
+        // The stale reload still releases its own record's pending flag so it never gets stuck.
+        expect(component.correctionPendingIds().has('rec-001')).toBe(false);
+      });
+
+      it('a failed re-read after a correction sets a failed-read state, keeps the stale rows visible but read-only, and a retry recovers (ADR-0064 §1-2, Copilot #4105840637 and siblings)', () => {
+        const submit$ = new Subject<void>();
+        const reload$ = new Subject<AuditRecordListResponse>();
+        mockBulkImportService.submitCorrection.mockReturnValue(submit$);
+        mockBulkImportService.listAuditRecords.mockReturnValue(reload$);
+
+        component.onSubmitCorrection({ record: mockAuditRecord, request: { correctedValues: { field: 'good' } } });
+        submit$.next(undefined);
+        submit$.complete();
+
+        reload$.error(new Error('re-read failed'));
+
+        // The read never "succeeds" with an empty/stale-as-valid result: the failure is signalled explicitly...
+        expect(component.auditReadFailed()).toBe(true);
+        expect(component.auditErrorKey()).toBe('BULK_IMPORT.WIZARD.ERROR.LOAD_RESULTS');
+        expect(component.state()).toBe('results');
+        // ...while the stale row stays visible instead of vanishing...
+        expect(component.auditRecords()).toEqual([mockAuditRecord]);
+        // ...and its pending guard is released so it isn't stuck forever.
+        expect(component.correctionPendingIds().has('rec-001')).toBe(false);
+
+        // Retry re-issues the read; a successful landing clears the failed-read state.
+        const recovered: BulkLoadRecordAudit = { ...mockAuditRecord, reviewStatus: 'APPROVED' };
+        mockBulkImportService.listAuditRecords.mockReturnValue(
+          of({ items: [recovered], nextPageToken: null } as AuditRecordListResponse),
+        );
+        component.retryAuditLoad();
+
+        expect(component.auditReadFailed()).toBe(false);
+        expect(component.auditErrorKey()).toBeNull();
+        expect(component.auditRecords()).toEqual([recovered]);
+      });
+
+      it('a REJECTED correction surfaces a localized error, never the server rejectionReason text, and releases the pending flag (Copilot #4105840870)', () => {
+        mockBulkImportService.submitCorrection.mockReturnValue(
+          throwError(() => new CorrectionRejectedError('sku already assigned to another record')),
+        );
+
+        component.onSubmitCorrection({ record: mockAuditRecord, request: { correctedValues: { field: 'good' } } });
+
+        expect(component.correctionErrorKey()).toBe('BULK_IMPORT.WIZARD.ERROR.CORRECTION');
+        expect(component.correctionErrorKey()).not.toContain('sku already assigned');
+        expect(component.correctionPendingIds().has('rec-001')).toBe(false);
+        // A rejection is a per-action error, not a page-level one: the results view stays up.
+        expect(component.state()).toBe('results');
+      });
+    });
+
+    describe('audit list load failure (ADR-0064 §1-2)', () => {
+      it('sets a failed-read state with a localized error and offers a retry when the initial audit load fails', () => {
+        const failedJob = buildActiveJob(options.domainType);
+        failedJob.status = 'FAILED';
+        mockBulkImportService.getActiveJobForDomain.mockReturnValue(of(failedJob));
+        mockBulkImportService.listAuditRecords.mockReturnValue(throwError(() => new Error('load failed')));
+
+        fixture.detectChanges();
+
+        expect(component.state()).toBe('results');
+        expect(component.auditReadFailed()).toBe(true);
+        expect(component.auditErrorKey()).toBe('BULK_IMPORT.WIZARD.ERROR.LOAD_RESULTS');
+
+        mockBulkImportService.listAuditRecords.mockReturnValue(
+          of({ items: [], nextPageToken: null } as AuditRecordListResponse),
+        );
+        component.retryAuditLoad();
+
+        expect(component.auditReadFailed()).toBe(false);
+        expect(component.auditErrorKey()).toBeNull();
+      });
     });
   });
 }

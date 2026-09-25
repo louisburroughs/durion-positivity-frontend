@@ -1,9 +1,11 @@
 
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { finalize } from 'rxjs/operators';
+import { INVENTORY_PAGE } from '../../../../../core/security/route-permissions';
+import { AuthService } from '../../../../../core/services/auth.service';
 import { PutawayTask } from '../../../models/inventory.models';
 import { InventoryDomainService } from '../../../services/inventory.service';
 
@@ -21,12 +23,24 @@ export class PutawayExecuteComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly auth = inject(AuthService);
 
   readonly state = signal<PageState>('idle');
   readonly errorKey = signal<string | null>(null);
   readonly task = signal<PutawayTask | null>(null);
   readonly targetStorageLocationId = signal('');
   readonly submitting = signal(false);
+
+  /**
+   * `executePutawayTask` is a write (`PutawayExecuteController.executePutaway`,
+   * `@PreAuthorize('inventory:putaway:execute')`), but the route only admits on
+   * `inventory:putaway:view`, so the submit control and `completePutaway` each
+   * gate on this write code independently (ADR-0040 §6a.1). Unknown-permission
+   * fallback matches `PickExecutePageComponent.canExecute` (issue #347 group 5).
+   */
+  readonly canExecute = computed(
+    () => !this.auth.permissionsKnown() || this.auth.hasAnyPermission(INVENTORY_PAGE.putawayExecute),
+  );
 
   constructor() {
     const taskId = this.route.snapshot.paramMap.get('taskId');
@@ -44,7 +58,7 @@ export class PutawayExecuteComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: tasks => {
-          const found = tasks.find(t => t.putawayTaskId === taskId) ?? null;
+          const found = tasks.find(t => t.taskId === taskId) ?? null;
           this.task.set(found);
           this.state.set(found ? 'ready' : 'empty');
         },
@@ -61,7 +75,7 @@ export class PutawayExecuteComponent {
 
   completePutaway(): void {
     const task = this.task();
-    if (!task) {
+    if (!task || !this.canExecute()) {
       return;
     }
 
@@ -69,9 +83,11 @@ export class PutawayExecuteComponent {
     this.errorKey.set(null);
 
     this.inventoryService
-      .completePutawayTask(task.putawayTaskId, {
-        putawayTaskId: task.putawayTaskId,
-        targetStorageLocationId: this.targetStorageLocationId(),
+      .executePutawayTask(task.taskId, {
+        skuId: task.productId,
+        sourceLocationId: task.sourceLocationId,
+        destinationLocationId: this.targetStorageLocationId(),
+        quantity: task.quantity,
       })
       .pipe(
         takeUntilDestroyed(this.destroyRef),

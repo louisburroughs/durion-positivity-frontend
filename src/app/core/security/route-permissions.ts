@@ -206,7 +206,24 @@ export const INVENTORY_PAGE = {
   receiving: ['inventory:receiving:view'],
   /** `crossDockReceivingLine` ANDs both authorities (`ReceivingController`). */
   receivingCrossDock: ['inventory:receiving:complete', 'inventory:issue:parts'],
+  /**
+   * Route/landing-nav admission for `putaway-execute` (and the task list). The
+   * page's own load — `getPutawayTasks`, unconditional in the constructor — is
+   * `@PreAuthorize('inventory:putaway:view')` on `PutawayTaskController`, so the
+   * view code alone is sufficient to reach the page.
+   *
+   * Not the write gate — use `putawayExecute` below for `completePutaway` and
+   * its submit control (Copilot #4105526174, ADR-0040 §6a.1).
+   */
   putaway: ['inventory:putaway:view'],
+  /**
+   * `completePutaway` is a write — `PutawayExecuteController.executePutaway` is
+   * `@PreAuthorize('inventory:putaway:execute')` — so the submit control and the
+   * method body both gate on this code independently, not the `putaway` view
+   * admission above (ADR-0040 §6a.1). This write-only set stays exactly what
+   * `PutawayExecuteComponent.canExecute` and its component/method tests check.
+   */
+  putawayExecute: ['inventory:putaway:execute'],
   /** `listReplenishmentTasks` is gated on the plain inventory view authority. */
   replenishment: ['inventory:on_hand:view'],
   cycleCount: ['inventory:cycle_count:view'],
