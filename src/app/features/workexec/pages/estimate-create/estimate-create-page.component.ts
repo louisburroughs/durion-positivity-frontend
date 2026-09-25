@@ -13,7 +13,7 @@ import type {
   VehicleResponse,
 } from '@durion-sdk/vehicle-inventory';
 import { vehicleLabel as crmVehicleLabel } from '../../../crm/util/crm-labels';
-import { CustomerLookupComponent } from '../../../crm/components/customer-lookup/customer-lookup.component';
+import { CustomerLookupComponent } from '../../../../shared/customer-lookup/customer-lookup.component';
 import { WorkexecService } from '../../services/workexec.service';
 import { PageState } from '../../models/workexec.models';
 

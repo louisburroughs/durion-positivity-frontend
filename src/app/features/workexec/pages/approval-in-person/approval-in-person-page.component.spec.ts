@@ -4,9 +4,11 @@ import { TranslateModule } from '@ngx-translate/core';
 import { provideRouter, ActivatedRoute } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { of } from 'rxjs';
 import { ApprovalInPersonPageComponent } from './approval-in-person-page.component';
 import { BASE_PATH } from '@durion-sdk/workorder';
 import { environment } from '../../../../../environments/environment';
+import { CUSTOMER_LOOKUP_SOURCE } from '../../../../shared/customer-lookup/customer-lookup.tokens';
 
 const BASE = environment.apiBaseUrl;
 const mockRoute = { snapshot: { paramMap: { get: (k: string) => k === 'estimateId' ? 'est-123' : null } } };
@@ -25,6 +27,11 @@ describe('ApprovalInPersonPageComponent [Story 270]', () => {
         provideHttpClientTesting(),
         { provide: ActivatedRoute, useValue: mockRoute },
         { provide: BASE_PATH, useValue: environment.apiBaseUrl },
+        // Stubs the embedded app-customer-lookup control's search source.
+        {
+          provide: CUSTOMER_LOOKUP_SOURCE,
+          useValue: { search: vi.fn().mockReturnValue(of([])), getById: vi.fn().mockReturnValue(of(null)) },
+        },
       ],
     }).compileComponents();
     fixture = TestBed.createComponent(ApprovalInPersonPageComponent);

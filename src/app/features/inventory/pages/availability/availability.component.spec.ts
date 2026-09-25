@@ -5,6 +5,7 @@ import { of, throwError } from 'rxjs';
 import { AvailabilityComponent } from './availability.component';
 import { InventoryDomainService } from '../../services/inventory.service';
 import { AvailabilityView } from '../../models/inventory.models';
+import { LOCATION_LOOKUP_SOURCE } from '../../../../shared/location-picker/location-lookup-source.tokens';
 
 describe('AvailabilityComponent', () => {
   const serviceStub = { queryAvailability: vi.fn() };
@@ -24,6 +25,11 @@ describe('AvailabilityComponent', () => {
       providers: [
         provideRouter([]),
         { provide: InventoryDomainService, useValue: serviceStub },
+        // Stubs the embedded app-location-picker control's lookup source.
+        {
+          provide: LOCATION_LOOKUP_SOURCE,
+          useValue: { getAll: vi.fn().mockReturnValue(of([])), getById: vi.fn().mockReturnValue(of(null)) },
+        },
       ],
     });
   });

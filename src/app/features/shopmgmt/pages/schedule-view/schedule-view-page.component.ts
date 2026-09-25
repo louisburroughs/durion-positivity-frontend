@@ -4,7 +4,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 
-import { LocationPickerComponent } from '../../../location/components/location-picker/location-picker.component';
+import { LocationPickerComponent } from '../../../../shared/location-picker/location-picker.component';
 import {
   BoardAppointment,
   CapacityCalendarView,

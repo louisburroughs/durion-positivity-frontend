@@ -6,8 +6,7 @@ import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { EstimateCreatePageComponent } from './estimate-create-page.component';
-import { CrmService } from '../../../crm/services/crm.service';
-import { PartyDetail } from '../../../crm/models/crm.models';
+import { CUSTOMER_LOOKUP_SOURCE } from '../../../../shared/customer-lookup/customer-lookup.tokens';
 import { BASE_PATH } from '@durion-sdk/workorder';
 import { BASE_PATH as VEHICLE_INVENTORY_BASE_PATH } from '@durion-sdk/vehicle-inventory';
 import { environment } from '../../../../../environments/environment';
@@ -37,13 +36,13 @@ describe('EstimateCreatePageComponent [Story 239]', () => {
         // New vehicles are created directly in the vehicle registry (ADR-0044 §6, #843).
         { provide: VEHICLE_INVENTORY_BASE_PATH, useValue: environment.apiBaseUrl },
         // Customer search + label resolution now live in the shared app-customer-lookup
-        // (bound to the customerId control). Stub CrmService so those don't hit HTTP;
-        // the vehicle list (CRMVehiclesService) stays real HTTP below.
+        // (bound to the customerId control). Stub its lookup source so those don't hit
+        // HTTP; the vehicle list (CRMVehiclesService) stays real HTTP below.
         {
-          provide: CrmService,
+          provide: CUSTOMER_LOOKUP_SOURCE,
           useValue: {
-            searchParties: vi.fn().mockReturnValue(of({ parties: [] as PartyDetail[] })),
-            getParty: vi.fn().mockReturnValue(of({ partyId: 'p', legalName: 'Party' } satisfies PartyDetail)),
+            search: vi.fn().mockReturnValue(of([])),
+            getById: vi.fn().mockReturnValue(of({ partyId: 'p', legalName: 'Party' })),
           },
         },
       ],

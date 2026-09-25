@@ -14,19 +14,9 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
-import { LocationService } from '../../services/location.service';
+import { LOCATION_LOOKUP_SOURCE, LocationLookupResult } from './location-lookup-source.tokens';
 
-interface PickerLocation {
-  id: string;
-  name?: string;
-  code?: string;
-  addressLine1?: string;
-  addressLine2?: string;
-  city?: string;
-  state?: string;
-  postalCode?: string;
-  mailingAddress?: string;
-}
+type PickerLocation = LocationLookupResult;
 
 let pickerSeq = 0;
 
@@ -35,11 +25,11 @@ let pickerSeq = 0;
   standalone: true,
   imports: [TranslatePipe],
   templateUrl: './location-picker.component.html',
-  styleUrls: ['./location-picker.component.css', '../../../../shared/styles/listbox.css'],
+  styleUrls: ['./location-picker.component.css', '../styles/listbox.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LocationPickerComponent implements OnDestroy {
-  private readonly locationService = inject(LocationService);
+  private readonly lookupSource = inject(LOCATION_LOOKUP_SOURCE);
   private readonly destroyRef = inject(DestroyRef);
 
   // Optional overrides; when unset the template resolves translated fallbacks.
@@ -115,11 +105,11 @@ export class LocationPickerComponent implements OnDestroy {
   });
 
   constructor() {
-    this.locationService.getAllLocations()
+    this.lookupSource.getAll()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (rows) => {
-          this.all.set((rows as PickerLocation[]).filter(r => !!r?.id));
+          this.all.set(rows.filter(r => !!r?.id));
           this.loadError.set(false);
           this.loaded.set(true);
         },
@@ -159,9 +149,8 @@ export class LocationPickerComponent implements OnDestroy {
         return; // fetch at most once per id
       }
       this.lastResolveId = id;
-      const sub = this.locationService.getLocationById(id).subscribe({
-        next: loc => {
-          const resolved = loc as PickerLocation | null;
+      const sub = this.lookupSource.getById(id).subscribe({
+        next: resolved => {
           // Ignore a stale response after the selection changed.
           if (resolved && this._selectedId() === id) {
             this.resolvedExtra.set({ ...resolved, id });

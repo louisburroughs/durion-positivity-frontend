@@ -8,7 +8,7 @@ import { Subject, debounceTime, distinctUntilChanged, switchMap, of, catchError 
 import { ProductsAPIService, ProductSummary } from '@durion-sdk/catalog';
 import { AvailabilityView } from '../../models/inventory.models';
 import { InventoryDomainService } from '../../services/inventory.service';
-import { LocationPickerComponent } from '../../../location/components/location-picker/location-picker.component';
+import { LocationPickerComponent } from '../../../../shared/location-picker/location-picker.component';
 
 type PageState = 'idle' | 'loading' | 'empty' | 'ready' | 'error';
 

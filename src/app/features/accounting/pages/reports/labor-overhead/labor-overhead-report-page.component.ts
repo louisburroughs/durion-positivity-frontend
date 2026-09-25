@@ -11,7 +11,7 @@ import { formatNumber } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
 import { LocaleService } from '../../../../../core/services/locale.service';
-import { LocationPickerComponent } from '../../../../location/components/location-picker/location-picker.component';
+import { LocationPickerComponent } from '../../../../../shared/location-picker/location-picker.component';
 import { LaborOverheadReport, LaborOverheadReportLine } from '../../../models/accounting.models';
 import { AccountingService } from '../../../services/accounting.service';
 

@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TranslateModule } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 import { AccountingService } from '../../../services/accounting.service';
+import { CUSTOMER_LOOKUP_SOURCE } from '../../../../../shared/customer-lookup/customer-lookup.tokens';
 import { CreditMemoCreatePageComponent } from './credit-memo-create-page.component';
 
 describe('CreditMemoCreatePageComponent', () => {
@@ -29,6 +30,11 @@ describe('CreditMemoCreatePageComponent', () => {
       imports: [CreditMemoCreatePageComponent, TranslateModule.forRoot()],
       providers: [
         { provide: AccountingService, useValue: accountingServiceStub },
+        // Stubs the embedded app-customer-lookup control's search source.
+        {
+          provide: CUSTOMER_LOOKUP_SOURCE,
+          useValue: { search: vi.fn().mockReturnValue(of([])), getById: vi.fn().mockReturnValue(of(null)) },
+        },
       ],
     }).compileComponents();
 

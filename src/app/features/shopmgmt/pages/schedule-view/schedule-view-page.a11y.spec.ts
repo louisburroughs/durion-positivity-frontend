@@ -7,7 +7,7 @@ import axe from 'axe-core';
 
 import { ScheduleViewPageComponent } from './schedule-view-page.component';
 import { CapacityCalendarService } from '../../services/capacity-calendar.service';
-import { LocationService } from '../../../location/services/location.service';
+import { LOCATION_LOOKUP_SOURCE } from '../../../../shared/location-picker/location-lookup-source.tokens';
 import {
   BayHourState,
   CapacityCalendarView,
@@ -120,8 +120,8 @@ const capacityStub = {
 };
 
 const locationServiceStub = {
-  getAllLocations: vi.fn(),
-  getLocationById: vi.fn(),
+  getAll: vi.fn(),
+  getById: vi.fn(),
 };
 
 async function violations(root: HTMLElement): Promise<axe.Result[]> {
@@ -138,15 +138,15 @@ describe('Capacity calendar a11y (rendered DOM)', () => {
     vi.clearAllMocks();
     capacityStub.getCalendar.mockReturnValue(of(VIEW));
     capacityStub.searchJobTypes.mockReturnValue(of({ options: [JOB], ok: true }));
-    locationServiceStub.getAllLocations.mockReturnValue(of([{ id: 'loc-1', name: 'Riverside' }]));
-    locationServiceStub.getLocationById.mockReturnValue(of(null));
+    locationServiceStub.getAll.mockReturnValue(of([{ id: 'loc-1', name: 'Riverside' }]));
+    locationServiceStub.getById.mockReturnValue(of(null));
 
     await TestBed.configureTestingModule({
       imports: [ScheduleViewPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
         { provide: CapacityCalendarService, useValue: capacityStub },
-        { provide: LocationService, useValue: locationServiceStub },
+        { provide: LOCATION_LOOKUP_SOURCE, useValue: locationServiceStub },
         {
           provide: ActivatedRoute,
           useValue: { queryParams: of({ locationId: 'loc-1' }) },

@@ -15,7 +15,7 @@ import { catchError, map } from 'rxjs/operators';
 import { v4 as uuidv4 } from 'uuid';
 import { InventoryLocationsService } from '@durion-sdk/inventory';
 import { LocationService, STORAGE_LOCATION_TYPES } from '../../services/location.service';
-import { LocationPickerComponent } from '../../components/location-picker/location-picker.component';
+import { LocationPickerComponent } from '../../../../shared/location-picker/location-picker.component';
 import { ModalDialogDirective } from '../../../../shared/modal-dialog.directive';
 
 interface LocationInventory {
