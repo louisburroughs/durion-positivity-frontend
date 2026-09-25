@@ -154,7 +154,7 @@ export const con04 = (p: Project): ArchRule =>
     {
       id: 'CON-04',
       title: 'a @Component under pages/**|components/** follows the four-file convention: .ts/.html/.css/.spec.ts (CLAUDE.md, ADR-0035)',
-      mode: 'ratchet',
+      mode: 'enforce',
     },
     p,
     { subject: selectors.ui(p), finder: con04Finder },
