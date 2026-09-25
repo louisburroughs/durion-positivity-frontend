@@ -70,7 +70,8 @@ export const pat02 = (p: Project): ArchRule =>
   );
 
 // ---------------------------------------------------------------------------------------------
-// PAT-03: errorKey.set(<non-null>) is immediately preceded by state.set('error') inside a
+// PAT-03: errorKey.set(<non-null>) is immediately preceded by an error-like state.set ('error',
+// 'unreachable', or the forbidden/error split) inside a
 // subscribe({ error }) callback (§11.4 tuning: scoped to the error callback; a computed
 // state.set(cond ? 'forbidden' : 'error') counts as compliant)
 // ---------------------------------------------------------------------------------------------

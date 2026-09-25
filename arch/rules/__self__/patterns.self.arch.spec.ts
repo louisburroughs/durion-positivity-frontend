@@ -96,7 +96,7 @@ describe('[self] PAT-02 no takeUntilDestroyed inside an effect( callback', () =>
   });
 });
 
-describe("[self] PAT-03 errorKey.set(<non-null>) is immediately preceded by state.set('error')", () => {
+describe("[self] PAT-03 errorKey.set(<non-null>) is immediately preceded by an error-like state.set ('error', 'unreachable', or the forbidden/error split)", () => {
   const withStateSignal = (body: string): string => `
     class FxpatPage {
       readonly state = signal('idle');
