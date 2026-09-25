@@ -166,11 +166,10 @@ export class PersonLocationAssignmentsPageComponent implements OnInit {
     return a.assignmentId;
   }
 
-  // The location SDK's LocationResponseDTO keys locations by `id`; older local
-  // models used `locationId`. Accept both so the display name resolves.
-  getLocationId(location: unknown): string {
-    const rec = location as Record<string, unknown>;
-    return String(rec['locationId'] ?? rec['id'] ?? '');
+  // LOCATION_LOOKUP_SOURCE.getAll() already filters out entries without an id
+  // (see location-lookup-source.provider.ts), so `id` is always present here.
+  getLocationId(location: LocationLookupResult): string {
+    return location.id;
   }
 
   // Memoized so table rows do an O(1) lookup per change-detection cycle
@@ -180,8 +179,7 @@ export class PersonLocationAssignmentsPageComponent implements OnInit {
     for (const location of this.availableLocations()) {
       const id = this.getLocationId(location);
       if (!id) continue;
-      const name = (location as Record<string, unknown>)['name'];
-      names.set(id, name ? String(name) : id);
+      names.set(id, location.name ? String(location.name) : id);
     }
     return names;
   });

@@ -30,8 +30,8 @@ const mockAssignments = [
 ];
 
 const mockLocations = [
-  { locationId: 'loc-001', name: 'Downtown Store', type: 'STORE' },
-  { locationId: 'loc-002', name: 'Warehouse', type: 'WAREHOUSE' },
+  { id: 'loc-001', name: 'Downtown Store' },
+  { id: 'loc-002', name: 'Warehouse' },
 ];
 
 // ── Stubs ─────────────────────────────────────────────────────────────────

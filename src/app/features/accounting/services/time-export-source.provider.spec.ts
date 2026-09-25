@@ -65,11 +65,11 @@ describe('provideAccountingTimeExportSource', () => {
     const source = TestBed.inject(TIME_EXPORT_SOURCE);
 
     source.downloadExport('exp-1');
-    // downloadExport resolves the lazy import before delegating; flush the microtask queue.
-    await Promise.resolve();
-    await Promise.resolve();
-
-    expect(stubAccounting.downloadExport).toHaveBeenCalledWith('exp-1');
+    // downloadExport resolves the lazy (real dynamic import()) module load before
+    // delegating, which outruns a fixed number of microtask flushes; poll instead.
+    await vi.waitFor(() => {
+      expect(stubAccounting.downloadExport).toHaveBeenCalledWith('exp-1');
+    });
   });
 
   it('caches the lazily-loaded AccountingService across calls', async () => {

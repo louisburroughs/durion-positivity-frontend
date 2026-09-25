@@ -5,7 +5,8 @@ import { Observable } from 'rxjs';
 export interface TimeExportRequestBody {
   readonly startDate: string;
   readonly endDate: string;
-  readonly locationIds: readonly string[];
+  // Mutable to match AccountingService.requestExport's parameter shape exactly.
+  readonly locationIds: string[];
   readonly format: 'CSV' | 'JSON';
 }
 
