@@ -188,7 +188,9 @@ export const pat03Finder = (f: Source): string[] => {
       }
       const idx = block.statements.indexOf(n);
       if (!isCompliantStatePrecede(block.statements[idx - 1])) {
-        findings.push(`${enclosingName(n)} :: errorKey.set not immediately preceded by state.set('error')`);
+        findings.push(
+          `${enclosingName(n)} :: errorKey.set not immediately preceded by an error-like state.set ('error', 'unreachable', or the forbidden/error split)`,
+        );
       }
     });
   }

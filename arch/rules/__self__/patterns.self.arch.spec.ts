@@ -114,7 +114,9 @@ describe("[self] PAT-03 errorKey.set(<non-null>) is immediately preceded by stat
 
   it('flags errorKey.set with no preceding state.set at all', () => {
     const findings = pat03Finder({ path: P, content: withStateSignal("this.errorKey.set('FXPAT.ERROR');") });
-    expect(findings).toEqual(['load :: errorKey.set not immediately preceded by state.set(\'error\')']);
+    expect(findings).toEqual([
+      "load :: errorKey.set not immediately preceded by an error-like state.set ('error', 'unreachable', or the forbidden/error split)",
+    ]);
   });
 
   it("flags errorKey.set preceded by state.set with a value other than 'error'", () => {
@@ -179,7 +181,9 @@ describe("[self] PAT-03 errorKey.set(<non-null>) is immediately preceded by stat
       path: P,
       content: withStateSignal("this.state.set('idle');\n            this.errorKey.set('FXPAT.ERROR');"),
     });
-    expect(findings).toEqual(["load :: errorKey.set not immediately preceded by state.set('error')"]);
+    expect(findings).toEqual([
+      "load :: errorKey.set not immediately preceded by an error-like state.set ('error', 'unreachable', or the forbidden/error split)",
+    ]);
   });
 
   it("is a false positive guard: does not fire when the class has no 'state' signal at all (a form-level errorKey, real location-edit-page shape)", () => {
