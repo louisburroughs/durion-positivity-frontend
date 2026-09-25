@@ -2628,7 +2628,16 @@
       "CONFIRM_CANCEL": "Confirmar cancelación",
       "ERROR": {
         "RESCHEDULE_FAILED": "No se pudo reprogramar la cita.",
-        "CANCELLATION_FAILED": "No se pudo cancelar la cita."
+        "CANCELLATION_FAILED": "No se pudo cancelar la cita.",
+        "LOAD": "No se pudo cargar la cita.",
+        "LOAD_NOT_FOUND": "No se encontró esta cita."
+      },
+      "AUDIT_EVENT": {
+        "SCHEDULE_CREATED": "Horario creado",
+        "SCHEDULE_UPDATED": "Horario actualizado",
+        "SCHEDULE_CANCELLED": "Horario cancelado",
+        "ASSIGNMENT_CREATED": "Asignación creada",
+        "ASSIGNMENT_REMOVED": "Asignación eliminada"
       }
     },
     "APPOINTMENT_RESCHEDULE": {
@@ -2641,9 +2650,14 @@
       "SELECT_REASON": "Seleccione un motivo",
       "REASONS": {
         "CUSTOMER_REQUEST": "Solicitud del cliente",
-        "FACILITY_UNAVAILABLE": "Instalación no disponible",
-        "TECHNICIAN_UNAVAILABLE": "Técnico no disponible",
-        "OTHER": "Otro"
+        "OTHER": "Otro",
+        "SHOP_CAPACITY": "Taller a capacidad máxima",
+        "EQUIPMENT_ISSUE": "Problema de equipo",
+        "MECHANIC_UNAVAILABLE": "Técnico no disponible",
+        "PARTS_DELAY": "Retraso de piezas",
+        "EMERGENCY": "Emergencia",
+        "MANAGER_DISCRETION": "A criterio del gerente",
+        "WEATHER": "Clima"
       },
       "NOTES": "Notas",
       "OVERRIDE_REASON": "Motivo de sobrescritura",
@@ -2651,8 +2665,17 @@
       "RESCHEDULE": "Reprogramar",
       "SUCCESS": "Cita reprogramada correctamente.",
       "ERROR": {
-        "LOAD_DETAILS": "No se pudieron cargar los detalles de la cita."
-      }
+        "LOAD_DETAILS": "No se pudieron cargar los detalles de la cita.",
+        "LOAD_NOT_FOUND": "No se encontró esta cita.",
+        "SUBMIT_FAILED": "No se pudo reprogramar la cita. Inténtelo de nuevo.",
+        "FIELD_START": "Ingrese una hora de inicio válida.",
+        "FIELD_END": "Ingrese una hora de finalización válida.",
+        "FIELD_REASON": "Seleccione un motivo de reprogramación.",
+        "FIELD_NOTES": "Ingrese notas válidas.",
+        "FIELD_INVALID": "Este valor no es válido."
+      },
+      "STATUS": "Estado",
+      "FACILITY": "Taller"
     },
     "LANDING": {
       "TITLE": "Gestión del Taller",
@@ -2831,6 +2854,28 @@
       "ERROR_LOCATIONS_LOAD": "No se pudieron verificar algunas ubicaciones; la lista puede estar incompleta.",
       "RETRY": "Reintentar",
       "RETRY_ARIA": "Reintentar la carga del panel del taller"
+    },
+    "APPOINTMENT_STATUS": {
+      "SCHEDULED": "Programada",
+      "CHECKED_IN": "Registrada",
+      "WORK_IN_PROGRESS": "Trabajo en curso",
+      "WAITING_FOR_PARTS": "Esperando piezas",
+      "QUALITY_CHECK": "Control de calidad",
+      "READY_FOR_PICKUP": "Lista para recoger",
+      "COMPLETED": "Completada",
+      "CANCELLED": "Cancelada",
+      "INVOICED": "Facturada",
+      "REOPENED": "Reabierta"
+    },
+    "APPOINTMENT_CONFLICT_CODE": {
+      "FACILITY_CLOSED": "El taller está cerrado en este horario.",
+      "OUTSIDE_OPERATING_HOURS": "Este horario está fuera del horario de atención del taller.",
+      "BAY_DOUBLE_BOOKED": "La bahía ya está reservada para este horario.",
+      "MECHANIC_UNAVAILABLE": "El técnico no está disponible en este horario.",
+      "FACILITY_NEAR_CAPACITY": "El taller está cerca de su capacidad máxima en este horario.",
+      "NO_COMPETENT_MECHANIC_ROSTERED": "No hay un técnico calificado programado para este horario.",
+      "COMPETENT_MECHANIC_UNAVAILABLE": "No hay un técnico calificado disponible para este horario.",
+      "GENERIC": "Hay un conflicto de programación con este horario."
     }
   },
   "ACCOUNTING": {

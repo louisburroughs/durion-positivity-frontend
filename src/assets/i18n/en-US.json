@@ -2628,7 +2628,16 @@
       "CONFIRM_CANCEL": "Confirm Cancellation",
       "ERROR": {
         "RESCHEDULE_FAILED": "Failed to reschedule appointment.",
-        "CANCELLATION_FAILED": "Failed to cancel appointment."
+        "CANCELLATION_FAILED": "Failed to cancel appointment.",
+        "LOAD": "Failed to load the appointment.",
+        "LOAD_NOT_FOUND": "This appointment could not be found."
+      },
+      "AUDIT_EVENT": {
+        "SCHEDULE_CREATED": "Schedule created",
+        "SCHEDULE_UPDATED": "Schedule updated",
+        "SCHEDULE_CANCELLED": "Schedule cancelled",
+        "ASSIGNMENT_CREATED": "Assignment created",
+        "ASSIGNMENT_REMOVED": "Assignment removed"
       }
     },
     "APPOINTMENT_RESCHEDULE": {
@@ -2641,9 +2650,14 @@
       "SELECT_REASON": "Select a reason",
       "REASONS": {
         "CUSTOMER_REQUEST": "Customer request",
-        "FACILITY_UNAVAILABLE": "Facility unavailable",
-        "TECHNICIAN_UNAVAILABLE": "Technician unavailable",
-        "OTHER": "Other"
+        "OTHER": "Other",
+        "SHOP_CAPACITY": "Shop at capacity",
+        "EQUIPMENT_ISSUE": "Equipment issue",
+        "MECHANIC_UNAVAILABLE": "Mechanic unavailable",
+        "PARTS_DELAY": "Parts delay",
+        "EMERGENCY": "Emergency",
+        "MANAGER_DISCRETION": "Manager discretion",
+        "WEATHER": "Weather"
       },
       "NOTES": "Notes",
       "OVERRIDE_REASON": "Override Reason",
@@ -2651,8 +2665,17 @@
       "RESCHEDULE": "Reschedule",
       "SUCCESS": "Appointment rescheduled successfully.",
       "ERROR": {
-        "LOAD_DETAILS": "Failed to load appointment details."
-      }
+        "LOAD_DETAILS": "Failed to load appointment details.",
+        "LOAD_NOT_FOUND": "This appointment could not be found.",
+        "SUBMIT_FAILED": "Failed to reschedule the appointment. Please try again.",
+        "FIELD_START": "Enter a valid start time.",
+        "FIELD_END": "Enter a valid end time.",
+        "FIELD_REASON": "Select a reschedule reason.",
+        "FIELD_NOTES": "Enter valid notes.",
+        "FIELD_INVALID": "This value is invalid."
+      },
+      "STATUS": "Status",
+      "FACILITY": "Facility"
     },
     "LANDING": {
       "TITLE": "Shop Management",
@@ -2831,6 +2854,28 @@
       "ERROR_LOCATIONS_LOAD": "Some locations could not be checked; the list may be incomplete.",
       "RETRY": "Retry",
       "RETRY_ARIA": "Retry loading the shop dashboard"
+    },
+    "APPOINTMENT_STATUS": {
+      "SCHEDULED": "Scheduled",
+      "CHECKED_IN": "Checked in",
+      "WORK_IN_PROGRESS": "Work in progress",
+      "WAITING_FOR_PARTS": "Waiting for parts",
+      "QUALITY_CHECK": "Quality check",
+      "READY_FOR_PICKUP": "Ready for pickup",
+      "COMPLETED": "Completed",
+      "CANCELLED": "Cancelled",
+      "INVOICED": "Invoiced",
+      "REOPENED": "Reopened"
+    },
+    "APPOINTMENT_CONFLICT_CODE": {
+      "FACILITY_CLOSED": "The facility is closed at this time.",
+      "OUTSIDE_OPERATING_HOURS": "This time is outside the facility's operating hours.",
+      "BAY_DOUBLE_BOOKED": "The bay is already booked for this time.",
+      "MECHANIC_UNAVAILABLE": "The technician is not available at this time.",
+      "FACILITY_NEAR_CAPACITY": "The facility is near capacity at this time.",
+      "NO_COMPETENT_MECHANIC_ROSTERED": "No qualified technician is rostered for this time.",
+      "COMPETENT_MECHANIC_UNAVAILABLE": "No qualified technician is available for this time.",
+      "GENERIC": "There is a scheduling conflict with this time."
     }
   },
   "ACCOUNTING": {
