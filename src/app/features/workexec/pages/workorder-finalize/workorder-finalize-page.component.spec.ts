@@ -88,7 +88,7 @@ describe('WorkorderFinalizePageComponent', () => {
       fixture.detectChanges();
 
       expect(component.pageState()).toBe('error');
-      expect(component.errorMessage()).toBe('Failed to load snapshot history. Please try again.');
+      expect(component.errorMessage()).toBe(enUS.WORKEXEC.ERROR.LOAD_SNAPSHOT_HISTORY);
     });
   });
 
@@ -185,8 +185,8 @@ describe('WorkorderFinalizePageComponent', () => {
     });
 
     it.each([
-      [409, 'An active billable snapshot already exists for this work order.'],
-      [500, 'Failed to finalize. Please try again.'],
+      [409, enUS.WORKEXEC.ERROR.SNAPSHOT_EXISTS],
+      [500, enUS.WORKEXEC.ERROR.FINALIZE],
     ] as const)('maps a %d failure to the matching translated error', async (status, message) => {
       workexecServiceStub.getSnapshotHistory.mockReturnValue(of([]));
       await setup();
