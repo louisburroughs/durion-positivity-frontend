@@ -1,14 +1,19 @@
 
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { Component, DestroyRef, Type, inject, signal } from '@angular/core';
+import { NgComponentOutlet } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { PurchaseOrderDetail } from '../../../models/inventory.models';
 import { InventoryPurchaseOrderService } from '../../../services/inventory-purchase-order.service';
-import { SupplierTransmissionPanelComponent } from '../../../../positivity/components/supplier-transmission-panel/supplier-transmission-panel.component';
-import { PurchaseOrderTransmissionTimelinePanelComponent } from '../../../../positivity/components/purchase-order-transmission-timeline-panel/purchase-order-transmission-timeline-panel.component';
+import { SUPPLIER_TRANSMISSION_PANELS } from '../../../../../shared/positivity/supplier-transmission-panels.tokens';
 
 type PageState = 'idle' | 'loading' | 'empty' | 'ready' | 'error';
+
+interface HostedPanelTypes {
+  readonly first: Type<unknown> | null;
+  readonly second: Type<unknown> | null;
+}
 
 /**
  * Purchase-order detail — the committed, read-only view of an order.
@@ -26,16 +31,14 @@ type PageState = 'idle' | 'loading' | 'empty' | 'ready' | 'error';
  * and their own generated client (ADR-0010). This page passes a purchase-order
  * id and nothing else — no supplier/order service is injected here and no
  * supplier/order model is imported, so a vendor outage degrades one section
- * only.
+ * only. Since #347, the panels themselves are positivity's, resolved through
+ * the `SUPPLIER_TRANSMISSION_PANELS` shared contract (LAY-03) and rendered
+ * with `NgComponentOutlet` rather than imported directly.
  */
 @Component({
   selector: 'app-po-detail',
   standalone: true,
-  imports: [
-    TranslatePipe,
-    SupplierTransmissionPanelComponent,
-    PurchaseOrderTransmissionTimelinePanelComponent,
-  ],
+  imports: [TranslatePipe, NgComponentOutlet],
   templateUrl: './po-detail.component.html',
   styleUrl: './po-detail.component.css',
 })
@@ -44,12 +47,23 @@ export class PoDetailComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly panelSource = inject(SUPPLIER_TRANSMISSION_PANELS);
 
   readonly state = signal<PageState>('idle');
   readonly errorKey = signal<string | null>(null);
   readonly order = signal<PurchaseOrderDetail | null>(null);
 
+  /** `first` hosts #191, `second` hosts #215 — see the template. */
+  readonly panelTypes = signal<HostedPanelTypes>({ first: null, second: null });
+
   constructor() {
+    this.panelSource.loadSupplierTransmissionPanel().then(type =>
+      this.panelTypes.update(current => ({ ...current, first: type })),
+    );
+    this.panelSource.loadPurchaseOrderTransmissionTimelinePanel().then(type =>
+      this.panelTypes.update(current => ({ ...current, second: type })),
+    );
+
     this.route.paramMap
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(params => {

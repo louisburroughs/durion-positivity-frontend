@@ -30,16 +30,6 @@
     "tracking": "#347"
   },
   {
-    "key": "src/app/features/inventory/pages/purchase-orders/po-detail/po-detail.component.ts -> src/app/features/positivity/components/purchase-order-transmission-timeline-panel/purchase-order-transmission-timeline-panel.component.ts",
-    "reason": "inventory's PO detail page reads positivity's supplier/PO transmission-timeline panels directly; no shared/ promotion decided yet.",
-    "tracking": "#347"
-  },
-  {
-    "key": "src/app/features/inventory/pages/purchase-orders/po-detail/po-detail.component.ts -> src/app/features/positivity/components/supplier-transmission-panel/supplier-transmission-panel.component.ts",
-    "reason": "inventory's PO detail page reads positivity's supplier/PO transmission-timeline panels directly; no shared/ promotion decided yet.",
-    "tracking": "#347"
-  },
-  {
     "key": "src/app/features/shopmgmt/models/shop-dashboard.models.ts -> src/app/features/workexec/models/workexec.models.ts",
     "reason": "inventory fulfillment pages and shopmgmt read workexec's models/service directly for shared work-order state; no shared/ promotion decided yet (tracked separately from plan §8 decision 1).",
     "tracking": "#347"

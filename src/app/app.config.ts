@@ -44,6 +44,7 @@ import { environment } from '../environments/environment';
 import { provideCrmCustomerLookupSource } from './features/crm/services/customer-lookup-source.provider';
 import { provideLocationLookupSource } from './features/location/services/location-lookup-source.provider';
 import { provideAccountingTimeExportSource } from './features/accounting/services/time-export-source.provider';
+import { providePositivitySupplierTransmissionPanels } from './features/positivity/services/supplier-transmission-panels.provider';
 
 /**
  * No-op TranslateLoader used during SSR/build-time route extraction.
@@ -118,6 +119,7 @@ export const appConfig: ApplicationConfig = {
     provideCrmCustomerLookupSource(),
     provideLocationLookupSource(),
     provideAccountingTimeExportSource(),
+    providePositivitySupplierTransmissionPanels(),
     { provide: AccountingConfiguration, useFactory: () => new AccountingConfiguration({ basePath: `${environment.apiBaseUrl}/accounting` }) },
     { provide: BulkLoaderConfiguration, useFactory: () => new BulkLoaderConfiguration({ basePath: `${environment.apiBaseUrl}/bulk-loader` }) },
     { provide: CatalogConfiguration, useFactory: () => new CatalogConfiguration({ basePath: `${environment.apiBaseUrl}/catalog` }) },
