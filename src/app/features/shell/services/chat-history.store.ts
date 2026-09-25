@@ -153,11 +153,8 @@ export class LocalChatHistoryStore implements ChatHistoryStore {
         id: conversation.id,
         title: conversation.title,
         preview: conversation.preview,
-        // ChatConversation.createdAt/updatedAt carry @serverGenerated (CON-07) even though this
-        // feature always sets them locally at construction (see ChatStateService); the fallback
-        // guards a value that is optional by type but not by this feature's own contract.
-        createdAt: (conversation.createdAt ?? new Date()).toISOString(),
-        updatedAt: (conversation.updatedAt ?? new Date()).toISOString(),
+        createdAt: conversation.createdAt.toISOString(),
+        updatedAt: conversation.updatedAt.toISOString(),
         pinned: conversation.pinned,
         // Carry the stored messages forward: metadata writes never touch them.
         messages: existing?.messages ?? [],
@@ -460,5 +457,5 @@ function isDateString(value: unknown): boolean {
 /** Pinned conversations lead; the rest fall back to most-recently-updated. */
 function byPinnedThenRecent(left: ChatConversation, right: ChatConversation): number {
   if (left.pinned !== right.pinned) return left.pinned ? -1 : 1;
-  return (right.updatedAt?.getTime() ?? 0) - (left.updatedAt?.getTime() ?? 0);
+  return right.updatedAt.getTime() - left.updatedAt.getTime();
 }

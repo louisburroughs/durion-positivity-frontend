@@ -541,9 +541,12 @@ graph cache. Without it the run took 64 s.
   `test/specs-and-server-fields`:
   - **CON-04** (#345) — the 9 remaining components got co-located specs testing real behavior
     (state transitions, error paths, key interactions); baseline emptied and deleted.
-  - **CON-07** (#346) — all 97 entries across 17 `models/**` files now carry `readonly`, `?`, and
-    `@serverGenerated`; consumers that assumed presence were made null-safe (`chat-history.store.ts`,
-    `chat-state.service.ts`); baseline emptied and deleted.
+  - **CON-07** (#346) — 95 of the 97 entries across 17 `models/**` files now carry `readonly`, `?`,
+    and `@serverGenerated`. `ChatConversation.createdAt`/`updatedAt` are client-set (see
+    `ChatStateService.ensureConversation()`), not server-provenance, so they carry `@clientGenerated`
+    instead and stay required — the finder now recognizes that tag as an exemption; the null-safe
+    fallbacks briefly added to `chat-history.store.ts`/`chat-state.service.ts` for the (incorrect)
+    optional case were reverted. Baseline emptied and deleted.
 
 ### 12.3 Defects fixed on this branch
 
