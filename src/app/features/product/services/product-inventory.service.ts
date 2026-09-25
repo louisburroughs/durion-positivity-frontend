@@ -29,16 +29,26 @@ export class ProductInventoryService {
     );
   }
 
+  // SDK gap: InventoryAvailabilityService.getInventoryLeadTime uses a locationId-scoped
+  // sourceType vocabulary (WAREHOUSE/SUPPLIER/TRANSIT) with no by-sku vendor-feed
+  // listing; it does not correspond to this vendor-feed FeedSourceType (MFR/DISTRIBUTOR)
+  // read, which has no other SDK match either. Left on ApiBaseService.
   queryAvailabilityBySku(sku: string, sourceType: FeedSourceType): Observable<SkuAvailability[]> {
     const params = new HttpParams().set('sku', sku).set('sourceType', sourceType);
     return this.api.get<SkuAvailability[]>('/inventory/v1/availability/by-sku', params);
   }
 
+  // SDK gap: getInventoryLeadTime keys by productId and a WAREHOUSE/SUPPLIER/TRANSIT
+  // sourceType, not this sku + MFR/DISTRIBUTOR vendor-feed shape. Left on ApiBaseService.
   queryLeadTime(sku: string, sourceType: FeedSourceType): Observable<LeadTime[]> {
     const params = new HttpParams().set('sku', sku).set('sourceType', sourceType);
     return this.api.get<LeadTime[]>('/inventory/v1/lead-time', params);
   }
 
+  // SDK gap: InventoryLocationsService.getLocationInventory(locationId, sku?, asOf?)
+  // matches this path/params but its LocationInventoryInquiryResponse carries only
+  // onHandQuantity/availableToPromiseQuantity -- no locationName or reserved, both
+  // required by the local LocationInventory model. Left on ApiBaseService.
   getLocationInventory(locationId: string, sku: string): Observable<LocationInventory> {
     const params = new HttpParams().set('sku', sku);
     return this.api.get<LocationInventory>(

@@ -2,7 +2,12 @@ import { Injectable, inject } from '@angular/core';
 import { HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { InventoryAvailabilityService, InventoryReferenceDataService } from '@durion-sdk/inventory';
+import {
+  InventoryAvailabilityService,
+  InventoryReferenceDataService,
+  ReasonCodeDto,
+  ReturnsService,
+} from '@durion-sdk/inventory';
 import { ApiBaseService } from '../../../core/services/api-base.service';
 import { pageContent } from '../../../core/util/spring-page';
 import {
@@ -55,6 +60,7 @@ export class InventoryDomainService {
   private readonly api = inject(ApiBaseService);
   private readonly refDataSdk = inject(InventoryReferenceDataService);
   private readonly availabilitySdk = inject(InventoryAvailabilityService);
+  private readonly returnsSdk = inject(ReturnsService);
 
   queryAvailability(
     sku: string,
@@ -98,6 +104,10 @@ export class InventoryDomainService {
     );
   }
 
+  // D5 follow-up (docs/PRD-sdk-migration-completion.md): InventoryLedgerEntryDto has no
+  // fromStorageLocationId/toStorageLocationId/workorderId/workorderLineId — the ledger detail
+  // page renders all four, and the SDK shape cannot produce them. Left on ApiBaseService
+  // pending an SDK model alignment rather than silently dropping them.
   queryLedger(filter: LedgerFilter): Observable<LedgerPageResponse> {
     let params = new HttpParams();
     if (filter.productSku != null) { params = params.set('productSku', filter.productSku); }
@@ -122,6 +132,11 @@ export class InventoryDomainService {
     );
   }
 
+  // D5 follow-up (docs/PRD-sdk-migration-completion.md): the generated putaway/
+  // replenishment/returnable-items/shortage operations describe a source/destination
+  // shape with no top-level site `locationId` and no `uom`, which this local model
+  // needs; migrating would silently drop or fabricate data rather than rename fields.
+  // Left on ApiBaseService pending SDK model alignment.
   getPutawayTasks(locationId?: string): Observable<PutawayTask[]> {
     let params = new HttpParams();
     if (locationId) {
@@ -145,6 +160,9 @@ export class InventoryDomainService {
     return this.api.get<ReplenishmentTask[]>('/inventory/v1/inventory/replenishment/tasks', params);
   }
 
+  // D5 follow-up: SDK's ReturnableItemDto has no `uom` and keys the returnable row by
+  // `itemId`, not `workorderLineId` (this endpoint is also a documented backend stub).
+  // Left on ApiBaseService pending SDK model alignment.
   getReturnableItems(workorderId: string): Observable<ReturnableItem[]> {
     const params = new HttpParams().set('workorderId', workorderId);
     return this.api.get<ReturnableItem[]>(
@@ -153,11 +171,17 @@ export class InventoryDomainService {
     );
   }
 
-  getReasonCodes(type: string): Observable<ReturnReasonCode[]> {
-    const params = new HttpParams().set('type', type);
-    return this.api.get<ReturnReasonCode[]>('/inventory/v1/inventory/returns/reason-codes', params);
+  // `type` is unused by the SDK's fixed reason-code catalog (no filter support) but
+  // stays in the signature so callers don't churn.
+  getReasonCodes(_type: string): Observable<ReturnReasonCode[]> {
+    return this.returnsSdk.listReturnReasonCodes().pipe(
+      map((codes: ReasonCodeDto[]) => codes.map(dto => this.toReturnReasonCode(dto))),
+    );
   }
 
+  // D5 follow-up: the SDK's ReturnSubmitRequest carries only workorderId + lines; it
+  // drops locationId/storageLocationId/reasonCode, which this request needs per line.
+  // Left on ApiBaseService pending SDK model alignment.
   submitReturnToStock(request: ReturnToStockRequest): Observable<ReturnToStockResult> {
     return this.api.post<ReturnToStockResult>(
       '/inventory/v1/inventory/returns/submit-to-stock',
@@ -165,6 +189,11 @@ export class InventoryDomainService {
     );
   }
 
+  // D5 follow-up: the SDK's listShortageOptions requires sku and shortQuantity (plus
+  // allocationId); neither is available at this call site's current shape, and
+  // resolveShortage's ShortageResolveRequest needs the same additional fields plus an
+  // idempotencyKey. Left on ApiBaseService pending an SDK model alignment or a wider
+  // page-level request shape.
   getShortageOptions(allocationLineId: string): Observable<ShortageOption[]> {
     const params = new HttpParams().set('allocationId', allocationLineId);
     return this.api.get<ShortageOption[]>(
@@ -178,5 +207,9 @@ export class InventoryDomainService {
       '/inventory/v1/inventory/shortage/resolve',
       request,
     );
+  }
+
+  private toReturnReasonCode(dto: ReasonCodeDto): ReturnReasonCode {
+    return { code: dto.code, label: dto.description };
   }
 }

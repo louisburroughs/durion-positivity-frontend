@@ -1,7 +1,11 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpParams } from '@angular/common/http';
 import { of } from 'rxjs';
-import { InventoryAvailabilityService, InventoryReferenceDataService } from '@durion-sdk/inventory';
+import {
+  InventoryAvailabilityService,
+  InventoryReferenceDataService,
+  ReturnsService,
+} from '@durion-sdk/inventory';
 import { ApiBaseService } from '../../../core/services/api-base.service';
 import { InventoryDomainService } from './inventory.service';
 import {
@@ -43,6 +47,9 @@ describe('InventoryDomainService', () => {
     listInventoryStorageLocations: vi.fn(),
     listInventoryLocationZones: vi.fn(),
   };
+  const returnsStub = {
+    listReturnReasonCodes: vi.fn(),
+  };
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -51,6 +58,7 @@ describe('InventoryDomainService', () => {
         { provide: ApiBaseService, useValue: apiStub },
         { provide: InventoryAvailabilityService, useValue: availabilityStub },
         { provide: InventoryReferenceDataService, useValue: refDataStub },
+        { provide: ReturnsService, useValue: returnsStub },
       ],
     });
     service = TestBed.inject(InventoryDomainService);
@@ -169,17 +177,23 @@ describe('InventoryDomainService', () => {
     const mockEntry: InventoryLedgerEntry = {
       ledgerEntryId: 'entry-001',
       timestamp: '2026-01-15T10:00:00Z',
-      movementType: 'RECEIPT',
+      movementType: 'GOODS_RECEIPT',
       productSku: 'SKU-001',
       quantityChange: 50,
       uom: 'EA',
+      fromLocationId: 'loc-01',
+      fromStorageLocationId: 'sl-01',
+      toLocationId: 'loc-02',
+      toStorageLocationId: 'sl-02',
+      actorId: 'user-1',
+      reasonCode: 'DAMAGE',
+      sourceTransactionId: 'txn-1',
+      workorderId: 'wo-1',
+      workorderLineId: 'wol-1',
     };
-    const mockPage: LedgerPageResponse = {
-      items: [mockEntry],
-      nextPageToken: null,
-    };
+    const mockPage: LedgerPageResponse = { items: [mockEntry], nextPageToken: null };
 
-    it('calls GET /inventory/v1/inventory/ledger with filter params', () => {
+    it('calls GET /inventory/v1/inventory/ledger with the filter fields as params', () => {
       apiStub.get.mockReturnValueOnce(of(mockPage));
 
       const filter: LedgerFilter = { locationId: 'loc-01', productSku: 'SKU-001' };
@@ -192,27 +206,22 @@ describe('InventoryDomainService', () => {
       expect((params as HttpParams).get('productSku')).toBe('SKU-001');
     });
 
-    it('includes dateFrom and dateTo params when provided', () => {
+    it('appends each movementType and passes dateFrom/dateTo through', () => {
       apiStub.get.mockReturnValueOnce(of(mockPage));
 
-      service.queryLedger({ dateFrom: '2026-01-01', dateTo: '2026-03-31' }).subscribe();
+      service.queryLedger({
+        dateFrom: '2026-01-01',
+        dateTo: '2026-03-31',
+        movementTypes: ['GOODS_RECEIPT', 'TRANSFER_OUT'],
+      }).subscribe();
 
       const [, params] = apiStub.get.mock.calls[0];
       expect((params as HttpParams).get('dateFrom')).toBe('2026-01-01');
       expect((params as HttpParams).get('dateTo')).toBe('2026-03-31');
+      expect((params as HttpParams).getAll('movementTypes')).toEqual(['GOODS_RECEIPT', 'TRANSFER_OUT']);
     });
 
-    it('omits filter params that are not provided', () => {
-      apiStub.get.mockReturnValueOnce(of(mockPage));
-
-      service.queryLedger({}).subscribe();
-
-      const [, params] = apiStub.get.mock.calls[0];
-      expect((params as HttpParams).has('locationId')).toBe(false);
-      expect((params as HttpParams).has('productSku')).toBe(false);
-    });
-
-    it('returns the LedgerPageResponse emitted by the API', () => {
+    it('returns the LedgerPageResponse emitted by the API, including storage-location and workorder fields', () => {
       apiStub.get.mockReturnValueOnce(of(mockPage));
 
       let result: LedgerPageResponse | undefined;
@@ -228,32 +237,25 @@ describe('InventoryDomainService', () => {
     const mockEntry: InventoryLedgerEntry = {
       ledgerEntryId: 'entry-001',
       timestamp: '2026-01-15T10:00:00Z',
-      movementType: 'RECEIPT',
+      movementType: 'GOODS_RECEIPT',
       productSku: 'SKU-001',
       quantityChange: 50,
       uom: 'EA',
+      fromStorageLocationId: 'sl-01',
+      toStorageLocationId: 'sl-02',
+      workorderId: 'wo-1',
+      workorderLineId: 'wol-1',
     };
 
-    it('calls GET /inventory/v1/inventory/ledger/{ledgerEntryId}', () => {
+    it('calls GET /inventory/v1/inventory/ledger/:id with the encoded entry id', () => {
       apiStub.get.mockReturnValueOnce(of(mockEntry));
 
-      service.getLedgerEntry('entry-001').subscribe();
+      service.getLedgerEntry('entry 001').subscribe();
 
-      expect(apiStub.get).toHaveBeenCalledOnce();
-      const [path] = apiStub.get.mock.calls[0];
-      expect(path).toBe('/inventory/v1/inventory/ledger/entry-001');
+      expect(apiStub.get).toHaveBeenCalledWith('/inventory/v1/inventory/ledger/entry%20001');
     });
 
-    it('URL-encodes the ledgerEntryId', () => {
-      apiStub.get.mockReturnValueOnce(of(mockEntry));
-
-      service.getLedgerEntry('entry/001').subscribe();
-
-      const [path] = apiStub.get.mock.calls[0];
-      expect(path).toBe('/inventory/v1/inventory/ledger/entry%2F001');
-    });
-
-    it('returns the InventoryLedgerEntry emitted by the API', () => {
+    it('returns the InventoryLedgerEntry emitted by the API, including storage-location and workorder fields', () => {
       apiStub.get.mockReturnValueOnce(of(mockEntry));
 
       let result: InventoryLedgerEntry | undefined;
@@ -462,29 +464,29 @@ describe('InventoryDomainService', () => {
   // ── getReasonCodes() ──────────────────────────────────────────────────
 
   describe('getReasonCodes()', () => {
-    const mockCodes: ReturnReasonCode[] = [
-      { code: 'DAMAGED', label: 'Damaged part' },
-      { code: 'UNUSED', label: 'Unused part' },
+    const sdkCodes = [
+      { code: 'DAMAGED', description: 'Damaged part', category: 'PHYSICAL' },
+      { code: 'UNUSED', description: 'Unused part', category: 'EXCESS' },
     ];
 
-    it('calls GET /inventory/v1/inventory/returns/reason-codes with type param', () => {
-      apiStub.get.mockReturnValueOnce(of(mockCodes));
+    it('calls listReturnReasonCodes with no arguments', () => {
+      returnsStub.listReturnReasonCodes.mockReturnValueOnce(of(sdkCodes));
 
       service.getReasonCodes('RETURN').subscribe();
 
-      expect(apiStub.get).toHaveBeenCalledOnce();
-      const [path, params] = apiStub.get.mock.calls[0];
-      expect(path).toBe('/inventory/v1/inventory/returns/reason-codes');
-      expect((params as HttpParams).get('type')).toBe('RETURN');
+      expect(returnsStub.listReturnReasonCodes).toHaveBeenCalledWith();
     });
 
-    it('returns the ReturnReasonCode array emitted by the API', () => {
-      apiStub.get.mockReturnValueOnce(of(mockCodes));
+    it('maps SDK reason-code DTOs to ReturnReasonCode (description -> label)', () => {
+      returnsStub.listReturnReasonCodes.mockReturnValueOnce(of(sdkCodes));
 
       let result: ReturnReasonCode[] | undefined;
       service.getReasonCodes('RETURN').subscribe(r => (result = r));
 
-      expect(result).toEqual(mockCodes);
+      expect(result).toEqual([
+        { code: 'DAMAGED', label: 'Damaged part' },
+        { code: 'UNUSED', label: 'Unused part' },
+      ]);
     });
   });
 

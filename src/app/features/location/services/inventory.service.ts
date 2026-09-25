@@ -46,6 +46,11 @@ export class InventoryService {
     ).pipe(map(page => pageContent<StorageLocationDto>(page)));
   }
 
+  // SDK gap: InventoryReferenceDataService.listInventoryStorageLocations is a
+  // documented placeholder (always empty until pos-location integration lands) and
+  // has no single-record get/create/update/deactivate counterpart. The four
+  // storage-location write operations below have no SDK equivalent at all.
+  // Left on ApiBaseService.
   getStorageLocation(storageLocationId: string): Observable<unknown> {
     return this.api.get<unknown>(`${InventoryService.BASE}/storage-locations/${storageLocationId}`);
   }
