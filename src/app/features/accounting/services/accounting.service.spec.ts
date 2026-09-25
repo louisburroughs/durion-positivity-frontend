@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom, of, throwError } from 'rxjs';
 import { ApiBaseService } from '../../../core/services/api-base.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -60,6 +61,10 @@ describe('AccountingService', () => {
     listExportHistory: vi.fn(),
   };
 
+  const financialReportingStub = {
+    downloadReportExport: vi.fn(),
+  };
+
   const invoicePaymentsStub = {
     getInvoiceStatus: vi.fn(),
   };
@@ -89,7 +94,7 @@ describe('AccountingService', () => {
         { provide: AccountingExportsService, useValue: accountingExportsStub },
         { provide: APPaymentsService, useValue: apPaymentsStub },
         { provide: CreditMemosService, useValue: { listCreditMemos: vi.fn() } },
-        { provide: FinancialReportingService, useValue: {} },
+        { provide: FinancialReportingService, useValue: financialReportingStub },
         { provide: LocationCostReportingService, useValue: locationCostReportingStub },
         { provide: InvoicePaymentsService, useValue: invoicePaymentsStub },
         { provide: PaymentApplicationsService, useValue: {} },
@@ -431,14 +436,14 @@ describe('AccountingService', () => {
     });
   });
 
-  describe('downloadExport() [issue #350, #373]', () => {
+  describe('downloadExport() [issue #350, #373, backend #2216]', () => {
     afterEach(() => {
       vi.useRealTimers();
     });
 
-    it('fetches the export as an authenticated blob (ADR-0041) and triggers the download from an object URL', async () => {
+    it('calls FinancialReportingService.downloadReportExport with the exact exportId (ADR-0041) and triggers the download from an object URL', async () => {
       const blob = new Blob(['csv bytes']);
-      apiBaseServiceStub.getBlob.mockReturnValueOnce(of(blob));
+      financialReportingStub.downloadReportExport.mockReturnValueOnce(of(blob));
       const clickSpy = vi.fn();
       const anchor = { href: '', download: '', click: clickSpy, remove: vi.fn() } as unknown as HTMLAnchorElement;
       const createElementSpy = vi.spyOn(document, 'createElement').mockReturnValue(anchor);
@@ -452,11 +457,16 @@ describe('AccountingService', () => {
       service.downloadExport('exp-1').subscribe(() => (completed = true));
 
       // A plain `<a href>` navigation bypasses HttpClient's auth interceptor and
-      // 401s; the download must go through the authenticated ApiBaseService.getBlob
-      // request instead (ADR-0041).
-      expect(apiBaseServiceStub.getBlob).toHaveBeenCalledWith(
-        '/v1/accounting/reports/export/exp-1/download',
-        { baseUrlOverride: '/api/accounting' },
+      // 401s; the download must go through the authenticated, generated SDK
+      // operation instead (ADR-0041), asking for the artifact's declared
+      // content type rather than the SDK's default Accept: application/json
+      // (backend #2216 closing comment: the server ignores this on success and
+      // always serves the artifact's real content type).
+      expect(financialReportingStub.downloadReportExport).toHaveBeenCalledWith(
+        'exp-1',
+        'body',
+        undefined,
+        { httpHeaderAccept: 'application/octet-stream' },
       );
       expect(createObjectURLSpy).toHaveBeenCalledWith(blob);
       expect(anchor.href).toBe(objectUrl);
@@ -473,34 +483,41 @@ describe('AccountingService', () => {
       appendSpy.mockRestore();
     });
 
-    it('URL-encodes the exportId path segment [issue #368]', () => {
-      apiBaseServiceStub.getBlob.mockReturnValueOnce(of(new Blob(['bytes'])));
-      const anchor = { href: '', download: '', click: vi.fn(), remove: vi.fn() } as unknown as HTMLAnchorElement;
-      const createElementSpy = vi.spyOn(document, 'createElement').mockReturnValue(anchor);
-      const appendSpy = vi.spyOn(document.body, 'append').mockImplementation(() => {});
-      vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:mock-url');
-      vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
-
-      service.downloadExport('exp/1 special').subscribe();
-
-      expect(apiBaseServiceStub.getBlob).toHaveBeenCalledWith(
-        '/v1/accounting/reports/export/exp%2F1%20special/download',
-        { baseUrlOverride: '/api/accounting' },
-      );
-
-      createElementSpy.mockRestore();
-      appendSpy.mockRestore();
-    });
-
-    it('propagates a fetch failure through the observable instead of triggering a download', async () => {
-      const failure = new Error('401');
-      apiBaseServiceStub.getBlob.mockReturnValueOnce(throwError(() => failure));
+    it('propagates a non-blob transport failure through the observable unchanged, instead of triggering a download', async () => {
+      const failure = new Error('network down');
+      financialReportingStub.downloadReportExport.mockReturnValueOnce(throwError(() => failure));
       const createElementSpy = vi.spyOn(document, 'createElement');
 
       await expect(firstValueFrom(service.downloadExport('exp-1'))).rejects.toBe(failure);
       expect(createElementSpy).not.toHaveBeenCalled();
 
       createElementSpy.mockRestore();
+    });
+
+    it('reads and parses a Blob ApiError body from a 404/409 response instead of leaking it as-is', async () => {
+      const apiErrorBlob = new Blob([JSON.stringify({ code: 'EXPORT_JOB_NOT_FOUND', message: 'Export job exp-1 was not found for tenant t-9' })], {
+        type: 'application/json',
+      });
+      const httpError = new HttpErrorResponse({ status: 404, error: apiErrorBlob });
+      financialReportingStub.downloadReportExport.mockReturnValueOnce(throwError(() => httpError));
+
+      const error = await firstValueFrom(service.downloadExport('exp-1')).catch((e: unknown) => e as Error);
+
+      expect(error).toBeInstanceOf(Error);
+      expect((error as Error).message).toBe('EXPORT_DOWNLOAD_FAILED:EXPORT_JOB_NOT_FOUND');
+      // The server-authored message must never reach the thrown error.
+      expect((error as Error).message).not.toContain('tenant t-9');
+    });
+
+    it('degrades a malformed/non-JSON Blob error body to the generic download-failed error', async () => {
+      const brokenBlob = new Blob(['<html>not json</html>'], { type: 'text/html' });
+      const httpError = new HttpErrorResponse({ status: 500, error: brokenBlob });
+      financialReportingStub.downloadReportExport.mockReturnValueOnce(throwError(() => httpError));
+
+      const error = await firstValueFrom(service.downloadExport('exp-1')).catch((e: unknown) => e as Error);
+
+      expect(error).toBeInstanceOf(Error);
+      expect((error as Error).message).toBe('EXPORT_DOWNLOAD_FAILED');
     });
   });
 
