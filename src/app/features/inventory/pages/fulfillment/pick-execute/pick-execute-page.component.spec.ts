@@ -195,6 +195,15 @@ describe('PickExecutePageComponent', () => {
       component.resolveScan();
       expect(mockPickService.resolvePickScan).toHaveBeenCalledTimes(1);
 
+      // The resolved line is now pending with its requested quantity: confirm must go through.
+      mockPickService.confirmPickLine.mockReturnValue(of({ ...executeLineFixture, confirmedQty: 5, status: 'PICKED' }));
+      expect(component.pendingLine()).toEqual(executeLineFixture);
+      component.confirmLine();
+      expect(mockPickService.confirmPickLine).toHaveBeenCalledExactlyOnceWith('wo-001', {
+        pickLineId: executeLineFixture.pickLineId,
+        quantity: executeLineFixture.requestedQty,
+      });
+
       component.complete();
       expect(mockPickService.completePickList).toHaveBeenCalledTimes(1);
     });
