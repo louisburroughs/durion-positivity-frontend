@@ -2672,7 +2672,8 @@
         "FIELD_END": "Saisissez une heure de fin valide.",
         "FIELD_REASON": "Sélectionnez un motif de report.",
         "FIELD_NOTES": "Saisissez des notes valides.",
-        "FIELD_INVALID": "Cette valeur est invalide."
+        "FIELD_INVALID": "Cette valeur est invalide.",
+        "READBACK_FAILED": "Le report a été effectué, mais impossible de confirmer le rendez-vous mis à jour. Actualisez la page pour voir son état actuel."
       },
       "STATUS": "Statut",
       "FACILITY": "Atelier"

@@ -2667,12 +2667,13 @@
       "ERROR": {
         "LOAD_DETAILS": "Impossible de charger les détails du rendez-vous.",
         "LOAD_NOT_FOUND": "Ce rendez-vous est introuvable.",
-        "SUBMIT_FAILED": "Échec de la reprise de rendez-vous. Veuillez réessayer.",
+        "SUBMIT_FAILED": "Échec de la replanification du rendez-vous. Veuillez réessayer.",
         "FIELD_START": "Entrez une heure de début valide.",
         "FIELD_END": "Entrez une heure de fin valide.",
         "FIELD_REASON": "Sélectionnez un motif de report.",
         "FIELD_NOTES": "Entrez des notes valides.",
-        "FIELD_INVALID": "Cette valeur est invalide."
+        "FIELD_INVALID": "Cette valeur est invalide.",
+        "READBACK_FAILED": "La replanification a été effectuée, mais nous n'avons pas pu confirmer le rendez-vous mis à jour. Actualisez la page pour voir son état actuel."
       },
       "STATUS": "État",
       "FACILITY": "Atelier"

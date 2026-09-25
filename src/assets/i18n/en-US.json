@@ -2672,7 +2672,8 @@
         "FIELD_END": "Enter a valid end time.",
         "FIELD_REASON": "Select a reschedule reason.",
         "FIELD_NOTES": "Enter valid notes.",
-        "FIELD_INVALID": "This value is invalid."
+        "FIELD_INVALID": "This value is invalid.",
+        "READBACK_FAILED": "The reschedule was submitted, but the updated appointment could not be confirmed. Refresh the page to see its current state."
       },
       "STATUS": "Status",
       "FACILITY": "Facility"

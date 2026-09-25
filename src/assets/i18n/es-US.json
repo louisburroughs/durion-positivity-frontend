@@ -2672,7 +2672,8 @@
         "FIELD_END": "Ingrese una hora de finalización válida.",
         "FIELD_REASON": "Seleccione un motivo de reprogramación.",
         "FIELD_NOTES": "Ingrese notas válidas.",
-        "FIELD_INVALID": "Este valor no es válido."
+        "FIELD_INVALID": "Este valor no es válido.",
+        "READBACK_FAILED": "Se envió la reprogramación, pero no se pudo confirmar la cita actualizada. Actualice la página para ver su estado actual."
       },
       "STATUS": "Estado",
       "FACILITY": "Taller"
