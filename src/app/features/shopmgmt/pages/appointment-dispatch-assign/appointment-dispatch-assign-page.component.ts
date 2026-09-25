@@ -1,12 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
 import { ActivatedRoute } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { AppointmentService } from '../../services/appointment.service';
-import { conflictCodeKey } from '../../models/appointment.models';
+import { appointmentStatusKey, conflictCodeKey } from '../../models/appointment.models';
 import type { AppointmentDetail, AssignmentDetail, Conflict } from '../../models/appointment.models';
 
 @Component({
@@ -19,6 +20,7 @@ import type { AppointmentDetail, AssignmentDetail, Conflict } from '../../models
 export class AppointmentDispatchAssignPageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly appointmentService = inject(AppointmentService);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly loading = signal(false);
   readonly appointment = signal<AppointmentDetail | null>(null);
@@ -38,7 +40,10 @@ export class AppointmentDispatchAssignPageComponent implements OnInit {
 
   private appointmentId = '';
 
-  readonly statusKey = computed(() => `SHOPMGMT.APPOINTMENT_STATUS.${this.appointment()?.status ?? ''}`);
+  /** Bumped on every `loadFacilityName` call so a stale lookup for the same appointment id can never overwrite a newer one (ADR-0063 §1). */
+  private facilityLoadSeq = 0;
+
+  readonly statusKey = computed(() => appointmentStatusKey(this.appointment()?.status));
 
   ngOnInit(): void {
     this.route.params.subscribe(params => {
@@ -75,16 +80,23 @@ export class AppointmentDispatchAssignPageComponent implements OnInit {
   }
 
   private loadFacilityName(id: string, facilityId: string): void {
+    // Every call — including a route going A → B → A, or a same-id reload — gets its own
+    // sequence number, so an older in-flight lookup can never win a race against a newer one for
+    // the same appointment (ADR-0063 §1).
+    const seq = ++this.facilityLoadSeq;
     if (!facilityId) {
       this.facilityName.set(undefined);
       return;
     }
-    this.appointmentService.getFacilityName(facilityId).subscribe(name => {
-      // A route change to another :id while this was in flight must not paint the previous
-      // appointment's facility onto the one now on screen (ADR-0063 §1).
-      if (id !== this.appointmentId) return;
-      this.facilityName.set(name);
-    });
+    this.appointmentService
+      .getFacilityName(facilityId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(name => {
+        // A route change to another :id, or a superseded lookup for this same id, must not paint
+        // a stale facility onto the one now on screen (ADR-0063 §1).
+        if (id !== this.appointmentId || seq !== this.facilityLoadSeq) return;
+        this.facilityName.set(name);
+      });
   }
 
   submitAssignment(): void {

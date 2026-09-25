@@ -56,6 +56,7 @@
     @for (conflict of conflicts(); track conflict) {
       <article class="conflict-item"
         [ngClass]="conflict.severity === 'HARD' ? 'hard-conflict' : 'soft-conflict'">
+        <span class="severity-badge">{{ (conflict.severity === 'HARD' ? 'SHOPMGMT.APPOINTMENT_CREATE.HARD' : 'SHOPMGMT.APPOINTMENT_CREATE.SOFT') | translate }}</span>
         <strong>{{ conflictKey(conflict.code) | translate }}</strong>
       </article>
     }

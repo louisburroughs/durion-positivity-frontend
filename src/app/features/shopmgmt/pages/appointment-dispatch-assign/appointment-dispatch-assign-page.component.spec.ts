@@ -5,8 +5,9 @@ import { of, throwError } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { By } from '@angular/platform-browser';
 import { AppointmentDispatchAssignPageComponent } from './appointment-dispatch-assign-page.component';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AppointmentService } from '../../services/appointment.service';
+import enUS from '../../../../../assets/i18n/en-US.json';
 
 const stubService = {
   getAppointment: vi.fn(),
@@ -179,9 +180,14 @@ describe('AppointmentDispatchAssignPageComponent [CAP-138]', () => {
 
     fixture = TestBed.createComponent(AppointmentDispatchAssignPageComponent);
     component = fixture.componentInstance;
+    // ADR-0035 §8: assert the real localized fallback, not merely the UUID's absence.
+    const translate = TestBed.inject(TranslateService);
+    translate.setTranslation('en-US', enUS);
+    translate.use('en-US');
     fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent).not.toContain('loc-1');
+    expect(fixture.nativeElement.textContent).toContain(enUS.COMMON.NOT_AVAILABLE);
   });
 
   it('never renders the facility/location UUID or a raw mechanic UUID as visible text', async () => {
@@ -210,8 +216,14 @@ describe('AppointmentDispatchAssignPageComponent [CAP-138]', () => {
 
     fixture = TestBed.createComponent(AppointmentDispatchAssignPageComponent);
     component = fixture.componentInstance;
+    // ADR-0035 §8: assert the real localized fallback, not merely the UUID's absence.
+    const translate = TestBed.inject(TranslateService);
+    translate.setTranslation('en-US', enUS);
+    translate.use('en-US');
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.textContent).not.toContain('m-unresolved');
+    const assignmentItem = fixture.debugElement.query(By.css('.assignment-item'));
+    expect(assignmentItem.nativeElement.textContent).not.toContain('m-unresolved');
+    expect(assignmentItem.nativeElement.textContent).toContain(enUS.COMMON.NOT_AVAILABLE);
   });
 });
