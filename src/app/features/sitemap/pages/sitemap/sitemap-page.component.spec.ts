@@ -49,15 +49,22 @@ describe('SitemapPageComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('shows only the main group for a non-admin user with known, zero permissions', async () => {
+  it('shows only the main group, reduced to the open dashboard, for a non-admin user with known, zero permissions', async () => {
     // Known (non-null), empty permissions — a genuinely unprivileged session, as
     // opposed to a legacy token with no perm_bits claim at all (see the next
     // test): with permissions known, a permission-gated page/section is denied
     // outright rather than falling back to "open".
+    //
+    // PR #367 followup: every other main-group mount (people, product, ...) is
+    // permission-gated in app.routes.ts, and a non-standalone child page that
+    // declares no permission of its own (e.g. /app/people/timekeeping/work-session)
+    // still inherits that mount's guard at runtime (rolesChildGuard runs against
+    // the mount node itself on the way down) — it must not admit the section on
+    // its own, so only the ungated dashboard root remains.
     await setup([], []);
     const groups = component.groups();
     expect(groups.map(g => g.headingKey)).toEqual(['SITEMAP.GROUP.MAIN']);
-    expect(groups[0].sections.length).toBe(3);
+    expect(groups[0].sections.map(s => s.section.route)).toEqual(['/app']);
     expect(component.state()).toBe('ready');
   });
 
@@ -104,6 +111,22 @@ describe('SitemapPageComponent', () => {
 
   it('still hides the whole security section from a non-admin with no relevant permission', async () => {
     await setup([], ['people-contact:person:view']);
+    const routes = component.groups().flatMap(g => g.sections.map(v => v.section.route));
+    expect(routes).not.toContain('/app/security');
+  });
+
+  /**
+   * PR #367 followup: the previous "admit via any accessible child page" rule
+   * didn't distinguish `/app/security/inventory-permissions` (a standalone
+   * sibling route — its own permission gate is the whole gate) from
+   * `/app/security/audit-logs` (nested inside the ROLE_ADMIN-gated
+   * `/app/security` mount, which `rolesChildGuard` still enforces even though
+   * the page also declares `security:audit:view`). A non-admin holding only the
+   * nested page's permission must not see the section — they cannot reach it,
+   * since the mount's own guard still refuses them.
+   */
+  it('does not admit a section via a non-standalone child page permission alone', async () => {
+    await setup([], ['security:audit:view']);
     const routes = component.groups().flatMap(g => g.sections.map(v => v.section.route));
     expect(routes).not.toContain('/app/security');
   });

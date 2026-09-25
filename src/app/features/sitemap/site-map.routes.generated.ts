@@ -5,11 +5,12 @@
 // Every reachable route under the authenticated /app shell, with a derived label
 // (English, kept for stable sorting — never rendered), its translation key
 // (SITEMAP.LABEL.*, what the sitemap page actually renders), dynamic-param flag,
-// and required roles/permissions.
+// whether it's declared directly under /app rather than inside a group's
+// loadChildren mount (standalone), and required roles/permissions.
 import type { SiteMapMountEntry, SiteMapRouteEntry } from './models/site-map-section.model';
 
 export const SITE_MAP_ROUTES: readonly SiteMapRouteEntry[] = [
-  { route: '/app', label: "", labelKey: "", dynamic: false },
+  { route: '/app', label: "", labelKey: "", dynamic: false, standalone: true },
   { route: '/app/accounting', label: "", labelKey: "", dynamic: false },
   { route: '/app/accounting/credit-memos', label: "Credit Memos", labelKey: "SITEMAP.LABEL.CREDIT_MEMOS", dynamic: false, permissions: ['accounting:credit-memo:read'] },
   { route: '/app/accounting/credit-memos/:memoId', label: "Credit Memos", labelKey: "SITEMAP.LABEL.CREDIT_MEMOS", dynamic: true, permissions: ['accounting:credit-memo:read'] },
@@ -135,7 +136,7 @@ export const SITE_MAP_ROUTES: readonly SiteMapRouteEntry[] = [
   { route: '/app/security', label: "", labelKey: "", dynamic: false, roles: ['ROLE_ADMIN'], permissions: ['security:role:view'] },
   { route: '/app/security/audit', label: "Audit", labelKey: "SITEMAP.LABEL.AUDIT", dynamic: false, roles: ['ROLE_ADMIN'], permissions: ['shop:schedule:view', 'appointments:view'] },
   { route: '/app/security/audit-logs', label: "Audit Logs", labelKey: "SITEMAP.LABEL.AUDIT_LOGS", dynamic: false, roles: ['ROLE_ADMIN'], permissions: ['security:audit:view'] },
-  { route: '/app/security/inventory-permissions', label: "Inventory Permissions", labelKey: "SITEMAP.LABEL.INVENTORY_PERMISSIONS", dynamic: false, permissions: ['security:permission:view'] },
+  { route: '/app/security/inventory-permissions', label: "Inventory Permissions", labelKey: "SITEMAP.LABEL.INVENTORY_PERMISSIONS", dynamic: false, standalone: true, permissions: ['security:permission:view'] },
   { route: '/app/security/permissions', label: "Permissions", labelKey: "SITEMAP.LABEL.PERMISSIONS", dynamic: false, roles: ['ROLE_ADMIN'], permissions: ['security:permission:view'] },
   { route: '/app/security/roles/:name', label: "Roles", labelKey: "SITEMAP.LABEL.ROLES", dynamic: true, roles: ['ROLE_ADMIN'], permissions: ['security:role:view'] },
   { route: '/app/security/users/provision', label: "Provision", labelKey: "SITEMAP.LABEL.PROVISION", dynamic: false, roles: ['ROLE_ADMIN'], permissions: ['security:user:create'] },
@@ -152,7 +153,7 @@ export const SITE_MAP_ROUTES: readonly SiteMapRouteEntry[] = [
   { route: '/app/shopmgmt/mechanics/roster', label: "Roster", labelKey: "SITEMAP.LABEL.ROSTER", dynamic: false, permissions: ['shop:technician:view'] },
   { route: '/app/shopmgmt/schedule', label: "Schedule", labelKey: "SITEMAP.LABEL.SCHEDULE", dynamic: false, permissions: ['shop:schedule:view'] },
   { route: '/app/shopmgmt/shop-dashboard', label: "Shop Dashboard", labelKey: "SITEMAP.LABEL.SHOP_DASHBOARD", dynamic: false, permissions: ['workorder:dashboard:view'] },
-  { route: '/app/sitemap', label: "", labelKey: "", dynamic: false },
+  { route: '/app/sitemap', label: "", labelKey: "", dynamic: false, standalone: true },
   { route: '/app/workexec', label: "", labelKey: "", dynamic: false },
   { route: '/app/workexec/estimate-list', label: "Estimate List", labelKey: "SITEMAP.LABEL.ESTIMATE_LIST", dynamic: false, permissions: ['workorder:estimate:view'] },
   { route: '/app/workexec/estimates/:estimateId', label: "Estimates", labelKey: "SITEMAP.LABEL.ESTIMATES", dynamic: true, permissions: ['workorder:estimate:view'] },

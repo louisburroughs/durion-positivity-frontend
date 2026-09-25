@@ -300,9 +300,18 @@ export function deriveLabelKey(route) {
 
 /**
  * Recursively walk a Routes array literal, accumulating full paths.
- * @returns array of { route, roles, dynamic, params }
+ *
+ * `standalone` tracks whether the current position is still directly under
+ * `/app`'s own declared children — i.e. we have not yet recursed into a
+ * group's `loadChildren` mount, whose target route tree inherits that mount's
+ * own route-guard requirement (`rolesChildGuard`) on top of anything declared
+ * per-page. It starts `true` for the top-level call (the `/app` shell's own
+ * children array) and a `children:` layout wrapper preserves it, but crossing
+ * a `loadChildren` boundary flips it to `false` for everything below.
+ *
+ * @returns array of { route, roles, dynamic, standalone, params }
  */
-function walkRoutes(arrayLiteral, basePath, inheritedRoles, currentDir) {
+function walkRoutes(arrayLiteral, basePath, inheritedRoles, currentDir, standalone = true) {
   const out = [];
   for (const el of arrayLiteral.elements) {
     if (!ts.isObjectLiteralExpression(el)) continue;
@@ -336,13 +345,14 @@ function walkRoutes(arrayLiteral, basePath, inheritedRoles, currentDir) {
             `${childFile} (referenced by loadChildren on route "${full}").`,
         );
       }
-      out.push(...walkRoutes(childArray, full, roles, dirname(childFile)));
+      out.push(...walkRoutes(childArray, full, roles, dirname(childFile), false));
       continue; // the mount point itself is not a page
     }
 
     if (children && ts.isArrayLiteralExpression(children)) {
-      // Layout/wrapper node — its own path is a prefix, not a page.
-      out.push(...walkRoutes(children, full, roles, currentDir));
+      // Layout/wrapper node — its own path is a prefix, not a page. No mount
+      // boundary crossed, so `standalone` carries through unchanged.
+      out.push(...walkRoutes(children, full, roles, currentDir, standalone));
       continue;
     }
 
@@ -354,6 +364,7 @@ function walkRoutes(arrayLiteral, basePath, inheritedRoles, currentDir) {
         permissions: permissionsFromData(data, 'permissions'),
         allPermissions: permissionsFromData(data, 'allPermissions'),
         dynamic: paramsOf(full).length > 0,
+        standalone,
         params: paramsOf(full),
       });
     }

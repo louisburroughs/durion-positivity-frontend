@@ -103,14 +103,22 @@ export class SitemapPageComponent {
     });
 
     // A section is admitted either by its own (mount) requirement, or — since a
-    // page can be registered as a sibling route rather than nested under its
-    // section's guarded mount (e.g. `/app/security/inventory-permissions`,
+    // page can be registered as a *standalone* sibling route rather than nested
+    // under its section's guarded mount (e.g. `/app/security/inventory-permissions`,
     // permission-gated on its own, sits next to the ROLE_ADMIN-gated `/app/security`
-    // mount) — by having at least one accessible child page. Otherwise a
-    // permitted user for that one page would never see it listed at all.
+    // mount) — by having at least one accessible standalone child page, whose own
+    // gate is the whole gate. A non-standalone child page (nested inside the
+    // mount's route tree, e.g. `/app/security/audit-logs`) still inherits the
+    // mount's route-guard requirement even if it declares its own permission, so
+    // it must never admit the section on its own — otherwise a non-admin holding
+    // just that page's permission would see a section whose other pages, and the
+    // mount's own guard, would still refuse them.
     const visible = DATA.sections
       .map(buildView)
-      .filter(view => canSee(sectionRequirement(view.section)) || view.pages.length > 0);
+      .filter(
+        view =>
+          canSee(sectionRequirement(view.section)) || view.pages.some(page => page.standalone),
+      );
 
     return GROUP_ORDER.map(group => ({
       headingKey: GROUP_HEADING_KEYS[group],

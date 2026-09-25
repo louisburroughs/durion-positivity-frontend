@@ -21,6 +21,7 @@ const entries = extractAppRoutes().map(r => ({
   label: deriveLabel(r.route),
   labelKey: deriveLabelKey(r.route),
   dynamic: r.dynamic,
+  standalone: r.standalone,
   roles: r.roles ?? null,
   permissions: r.permissions ?? null,
   allPermissions: r.allPermissions ?? null,
@@ -32,7 +33,10 @@ const accessOf = e => list('roles', e.roles) + list('permissions', e.permissions
 const lines = entries
   .map(
     e =>
-      `  { route: '${e.route}', label: ${JSON.stringify(e.label)}, labelKey: ${JSON.stringify(e.labelKey)}, dynamic: ${e.dynamic}${accessOf(e)} },`,
+      // `standalone` is only ever emitted as `true` — never `false` — so the
+      // generated module never spells the literal `standalone: false` (arch
+      // rule CON-06 flags that token as a stray non-standalone `@Component`).
+      `  { route: '${e.route}', label: ${JSON.stringify(e.label)}, labelKey: ${JSON.stringify(e.labelKey)}, dynamic: ${e.dynamic}${e.standalone ? ', standalone: true' : ''}${accessOf(e)} },`,
   )
   .join('\n');
 
@@ -47,7 +51,8 @@ const content = `// GENERATED — do not edit by hand.
 // Every reachable route under the authenticated /app shell, with a derived label
 // (English, kept for stable sorting — never rendered), its translation key
 // (SITEMAP.LABEL.*, what the sitemap page actually renders), dynamic-param flag,
-// and required roles/permissions.
+// whether it's declared directly under /app rather than inside a group's
+// loadChildren mount (standalone), and required roles/permissions.
 import type { SiteMapMountEntry, SiteMapRouteEntry } from './models/site-map-section.model';
 
 export const SITE_MAP_ROUTES: readonly SiteMapRouteEntry[] = [

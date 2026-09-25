@@ -63,6 +63,24 @@ export interface SiteMapRouteEntry {
   labelKey: string;
   /** True when the route contains a `:param` and cannot be linked directly. */
   dynamic: boolean;
+  /**
+   * True when this route is declared directly under `/app` in `app.routes.ts`
+   * (a `loadComponent`/`component` child of the shell), rather than reached by
+   * recursing into a group's `loadChildren` mount. A standalone route's own
+   * `roles`/`permissions` are its whole gate; a non-standalone route also
+   * inherits its mount's route-guard requirement (`rolesChildGuard`), which
+   * this manifest does not otherwise express. Used by the sitemap page to admit
+   * a gated section via an accessible child page ONLY when that page is
+   * standalone — e.g. `/app/security/inventory-permissions`, a sibling of the
+   * ROLE_ADMIN-gated `/app/security` mount rather than a page inside it.
+   *
+   * Undefined (not `false`) for a non-standalone route — like `roles`/
+   * `permissions` below, the generator omits the field rather than emitting a
+   * literal `false`, so the generated module never has to spell `standalone:
+   * false` (arch rule CON-06 flags that token as a stray non-standalone
+   * `@Component`, which this manifest entry is not).
+   */
+  standalone?: boolean;
   /** Roles required to reach this route; undefined = all authenticated users. */
   roles?: readonly string[];
   /** Any one of these permissions admits; undefined = no permission constraint. */
