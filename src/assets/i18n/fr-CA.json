@@ -756,7 +756,7 @@
       "RETRY": "Réessayer",
       "SUBMITTING": "Soumission…",
       "SUCCESS": "Le temps de travail a été soumis avec succès.",
-      "CORRELATION_ID": "Identifiant de corrélation :",
+      "SESSION_REFERENCE": "Référence de session :",
       "FAILED": "Échec de la soumission.",
       "CODE": "Code :",
       "REFERENCE": "Référence :",

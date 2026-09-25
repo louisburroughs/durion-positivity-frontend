@@ -60,11 +60,6 @@
     "tracking": "#350"
   },
   {
-    "key": "src/app/features/people/services/people.service.ts :: '/people/v1/people/workSessions/'",
-    "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "#350"
-  },
-  {
     "key": "src/app/features/shell/services/chat-api.service.ts :: '/mcp-server/v1/mcp/chat'",
     "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
     "tracking": "#350"

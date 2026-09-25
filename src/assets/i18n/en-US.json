@@ -756,7 +756,7 @@
       "RETRY": "Retry",
       "SUBMITTING": "Submitting…",
       "SUCCESS": "Job time submitted successfully.",
-      "CORRELATION_ID": "Correlation ID:",
+      "SESSION_REFERENCE": "Session reference:",
       "FAILED": "Submission failed.",
       "CODE": "Code:",
       "REFERENCE": "Reference:",

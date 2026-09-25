@@ -62,8 +62,8 @@
   <output aria-live="polite" class="card" data-testid="result-panel">
     @if (submitState() === 'SUBMITTED') {
     <p class="success-msg">{{ 'PEOPLE.WORK_SESSION_SUBMIT.SUCCESS' | translate }}</p>
-    @if (correlationId()) {
-    <p>{{ 'PEOPLE.WORK_SESSION_SUBMIT.CORRELATION_ID' | translate }} <code data-testid="correlation-id">{{ correlationId() }}</code></p>
+    @if (submissionReference()) {
+    <p>{{ 'PEOPLE.WORK_SESSION_SUBMIT.SESSION_REFERENCE' | translate }} <code data-testid="session-reference">{{ submissionReference() }}</code></p>
     }
     }
     @if (submitState() === 'FAILED') {

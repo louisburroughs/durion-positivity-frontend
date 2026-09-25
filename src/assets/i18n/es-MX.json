@@ -756,7 +756,7 @@
       "RETRY": "Reintentar",
       "SUBMITTING": "Enviando…",
       "SUCCESS": "El tiempo de trabajo se envió correctamente.",
-      "CORRELATION_ID": "ID de correlación:",
+      "SESSION_REFERENCE": "Referencia de sesión:",
       "FAILED": "Error en el envío.",
       "CODE": "Código:",
       "REFERENCE": "Referencia:",
