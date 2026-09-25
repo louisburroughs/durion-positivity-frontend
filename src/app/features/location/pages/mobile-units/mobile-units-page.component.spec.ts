@@ -6,6 +6,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TranslateModule } from '@ngx-translate/core';
 import { MobileUnitsPageComponent } from './mobile-units-page.component';
 import { LocationService } from '../../services/location.service';
+import { LOCATION_LOOKUP_SOURCE } from '../../../../shared/location-picker/location-lookup-source.tokens';
 
 const units = [
   { id: 'u-1', name: 'Van A', baseLocationId: 'loc-1' },
@@ -14,10 +15,15 @@ const units = [
 ];
 
 const locationServiceStub = {
-  getAllLocations: vi.fn().mockReturnValue(of([{ id: 'loc-1', name: 'Depot' }])),
   listMobileUnits: vi.fn().mockReturnValue(of(units)),
   createMobileUnit: vi.fn(),
   replaceCoverageRules: vi.fn(),
+};
+
+// Stubs the embedded app-location-picker control's lookup source.
+const locationLookupSourceStub = {
+  getAll: vi.fn().mockReturnValue(of([{ id: 'loc-1', name: 'Depot' }])),
+  getById: vi.fn().mockReturnValue(of(null)),
 };
 
 describe('MobileUnitsPageComponent', () => {
@@ -26,7 +32,7 @@ describe('MobileUnitsPageComponent', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
-    locationServiceStub.getAllLocations.mockReturnValue(of([{ id: 'loc-1', name: 'Depot' }]));
+    locationLookupSourceStub.getAll.mockReturnValue(of([{ id: 'loc-1', name: 'Depot' }]));
     locationServiceStub.listMobileUnits.mockReturnValue(of(units));
     locationServiceStub.createMobileUnit.mockReturnValue(of({ mobileUnitId: 'mu-2' }));
     locationServiceStub.replaceCoverageRules.mockReturnValue(of({ success: true }));
@@ -36,6 +42,7 @@ describe('MobileUnitsPageComponent', () => {
       providers: [
         provideRouter([]),
         { provide: LocationService, useValue: locationServiceStub },
+        { provide: LOCATION_LOOKUP_SOURCE, useValue: locationLookupSourceStub },
       ],
     }).compileComponents();
 
@@ -140,6 +147,7 @@ describe('MobileUnitsPageComponent (deep link)', () => {
       providers: [
         provideRouter([]),
         { provide: LocationService, useValue: locationServiceStub },
+        { provide: LOCATION_LOOKUP_SOURCE, useValue: locationLookupSourceStub },
         {
           provide: ActivatedRoute,
           useValue: { queryParams: of({ locationId: 'loc-1' }) },

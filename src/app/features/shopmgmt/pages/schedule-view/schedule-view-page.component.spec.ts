@@ -17,7 +17,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { ScheduleViewPageComponent } from './schedule-view-page.component';
 import { CapacityCalendarService } from '../../services/capacity-calendar.service';
-import { LocationService } from '../../../location/services/location.service';
+import { LOCATION_LOOKUP_SOURCE } from '../../../../shared/location-picker/location-lookup-source.tokens';
 import {
   BayHourState,
   CapacityCalendarView,
@@ -137,8 +137,8 @@ const capacityStub = {
 };
 
 const locationServiceStub = {
-  getAllLocations: vi.fn(),
-  getLocationById: vi.fn(),
+  getAll: vi.fn(),
+  getById: vi.fn(),
 };
 
 // ── Suite ───────────────────────────────────────────────────────────────────
@@ -153,7 +153,7 @@ describe('ScheduleViewPageComponent', () => {
       providers: [
         provideRouter([]),
         { provide: CapacityCalendarService, useValue: capacityStub },
-        { provide: LocationService, useValue: locationServiceStub },
+        { provide: LOCATION_LOOKUP_SOURCE, useValue: locationServiceStub },
         { provide: ActivatedRoute, useValue: { queryParams: of(queryParams) } },
       ],
     }).compileComponents();
@@ -175,8 +175,8 @@ describe('ScheduleViewPageComponent', () => {
       of(view({ job: request.job })),
     );
     capacityStub.searchJobTypes.mockReturnValue(of({ options: [ALIGNMENT_JOB], ok: true }));
-    locationServiceStub.getAllLocations.mockReturnValue(of([{ id: 'loc-1', name: 'Riverside' }]));
-    locationServiceStub.getLocationById.mockReturnValue(of(null));
+    locationServiceStub.getAll.mockReturnValue(of([{ id: 'loc-1', name: 'Riverside' }]));
+    locationServiceStub.getById.mockReturnValue(of(null));
   });
 
   afterEach(() => {

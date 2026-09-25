@@ -5,11 +5,20 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, of } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, switchMap, tap } from 'rxjs/operators';
-import { CrmService } from '../../services/crm.service';
-import { PartyDetail } from '../../models/crm.models';
-import { partyLabel } from '../../utils/crm-labels';
+import { CUSTOMER_LOOKUP_SOURCE, CustomerLookupResult } from './customer-lookup.tokens';
 
 const MAX_SUGGESTIONS = 12;
+
+/**
+ * Canonical customer display label: "Legal Name (DBA) · CUST-NUMBER",
+ * omitting the DBA and/or number segments when absent. Mirrors `crm`'s
+ * `partyLabel` (features/crm/utils/crm-labels.ts); duplicated here in miniature
+ * so `shared/customer-lookup` never depends on `features/crm` (LAY-02).
+ */
+function formatLabel(result: CustomerLookupResult): string {
+  const num = result.customerNumber ? ` · ${result.customerNumber}` : '';
+  return result.dba ? `${result.legalName} (${result.dba})${num}` : `${result.legalName}${num}`;
+}
 
 /**
  * Reusable customer typeahead bound as a reactive-form control. The control
@@ -34,7 +43,7 @@ const MAX_SUGGESTIONS = 12;
   ],
 })
 export class CustomerLookupComponent implements ControlValueAccessor {
-  private readonly crm = inject(CrmService);
+  private readonly lookupSource = inject(CUSTOMER_LOOKUP_SOURCE);
   private readonly destroyRef = inject(DestroyRef);
 
   @Input() inputId = 'customer-lookup';
@@ -48,7 +57,7 @@ export class CustomerLookupComponent implements ControlValueAccessor {
   @Input() required = false;
   @Input() placeholder?: string;
 
-  readonly suggestions = signal<PartyDetail[]>([]);
+  readonly suggestions = signal<CustomerLookupResult[]>([]);
   readonly query        = signal('');
   readonly showList     = signal(false);
   readonly loading      = signal(false);
@@ -68,11 +77,11 @@ export class CustomerLookupComponent implements ControlValueAccessor {
         debounceTime(250),
         distinctUntilChanged(),
         tap(() => this.loading.set(true)),
-        switchMap(q => this.crm.searchParties(q).pipe(catchError(() => of({ parties: [] as PartyDetail[] })))),
+        switchMap(q => this.lookupSource.search(q).pipe(catchError(() => of([] as CustomerLookupResult[])))),
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe(res => {
-        this.suggestions.set((res.parties ?? []).slice(0, MAX_SUGGESTIONS));
+        this.suggestions.set((res ?? []).slice(0, MAX_SUGGESTIONS));
         this.activeIndex.set(-1);
         this.loading.set(false);
       });
@@ -87,9 +96,9 @@ export class CustomerLookupComponent implements ControlValueAccessor {
       return;
     }
     // Resolve a readable label for a pre-populated id.
-    this.crm.getParty(next)
+    this.lookupSource.getById(next)
       .pipe(catchError(() => of(null)), takeUntilDestroyed(this.destroyRef))
-      .subscribe(party => { if (party) this.query.set(partyLabel(party)); });
+      .subscribe(result => { if (result) this.query.set(formatLabel(result)); });
   }
 
   registerOnChange(fn: (value: string) => void): void { this.onChange = fn; }
@@ -139,10 +148,10 @@ export class CustomerLookupComponent implements ControlValueAccessor {
     }
   }
 
-  select(party: PartyDetail): void {
+  select(party: CustomerLookupResult): void {
     const id = party.partyId ?? '';
     this.value.set(id);
-    this.query.set(partyLabel(party));
+    this.query.set(formatLabel(party));
     this.onChange(id);
     this.showList.set(false);
     this.activeIndex.set(-1);

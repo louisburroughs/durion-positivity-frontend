@@ -12,7 +12,7 @@ import {
 import { TranslatePipe } from '@ngx-translate/core';
 import { CreditMemo } from '../../../models/accounting.models';
 import { AccountingService } from '../../../services/accounting.service';
-import { CustomerLookupComponent } from '../../../../crm/components/customer-lookup/customer-lookup.component';
+import { CustomerLookupComponent } from '../../../../../shared/customer-lookup/customer-lookup.component';
 
 function creditAmountWithinBalanceValidator(): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {

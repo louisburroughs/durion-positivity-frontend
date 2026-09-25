@@ -5,6 +5,7 @@ import { BehaviorSubject, Subject, of, throwError } from 'rxjs';
 import { EstimateListItem } from '../../models/workexec.models';
 import { WorkexecService } from '../../services/workexec.service';
 import { CrmService } from '../../../crm/services/crm.service';
+import { CUSTOMER_LOOKUP_SOURCE } from '../../../../shared/customer-lookup/customer-lookup.tokens';
 import { EstimateListPageComponent } from './estimate-list-page.component';
 
 describe('EstimateListPageComponent', () => {
@@ -17,8 +18,18 @@ describe('EstimateListPageComponent', () => {
     listEstimatesForVehicle: vi.fn(),
   };
 
+  // Resolves each estimate row's customer display name (EstimateListPageComponent's
+  // own CRM lookup — a genuine cross-feature business dependency, not the embedded
+  // app-customer-lookup control below).
   const crmMock = {
     getParty: vi.fn(),
+  };
+
+  // Stubs the embedded app-customer-lookup control's search source; its own
+  // search/select behavior is covered by CustomerLookupComponent's own spec.
+  const customerLookupSourceMock = {
+    search: vi.fn().mockReturnValue(of([])),
+    getById: vi.fn().mockReturnValue(of(null)),
   };
 
   beforeEach(async () => {
@@ -35,6 +46,7 @@ describe('EstimateListPageComponent', () => {
         provideRouter([]),
         { provide: WorkexecService, useValue: serviceMock },
         { provide: CrmService, useValue: crmMock },
+        { provide: CUSTOMER_LOOKUP_SOURCE, useValue: customerLookupSourceMock },
         {
           provide: ActivatedRoute,
           useValue: {

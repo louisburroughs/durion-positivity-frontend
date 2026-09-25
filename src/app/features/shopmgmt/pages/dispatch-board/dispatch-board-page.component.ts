@@ -45,7 +45,7 @@ import {
   TechnicianShifts,
   TechnicianSkills,
 } from '../../services/dispatch-board.service';
-import { LocationPickerComponent } from '../../../location/components/location-picker/location-picker.component';
+import { LocationPickerComponent } from '../../../../shared/location-picker/location-picker.component';
 import { AuthService } from '../../../../core/services/auth.service';
 import { SHOPMGMT_PAGE, WORKEXEC_PAGE } from '../../../../core/security/route-permissions';
 import { ModalDialogDirective } from '../../../../shared/modal-dialog.directive';

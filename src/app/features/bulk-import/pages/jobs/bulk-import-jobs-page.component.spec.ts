@@ -4,8 +4,8 @@ import { TranslateModule } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { BulkImportJobsPageComponent } from './bulk-import-jobs-page.component';
-import { BulkImportService } from '../../services/bulk-import.service';
-import { BulkLoadJob, JobListResponse } from '../../models/bulk-import.models';
+import { BulkImportService } from '../../../../shared/bulk-import/services/bulk-import.service';
+import { BulkLoadJob, JobListResponse } from '../../../../shared/bulk-import/models/bulk-import.models';
 
 const mockJob: BulkLoadJob = {
   jobId: 'job-001',

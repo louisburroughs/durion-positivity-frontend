@@ -6,6 +6,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { StorageLocationsPageComponent } from './storage-locations-page.component';
 import { LocationService } from '../../services/location.service';
+import { LOCATION_LOOKUP_SOURCE } from '../../../../shared/location-picker/location-lookup-source.tokens';
 import { InventoryLocationsService } from '@durion-sdk/inventory';
 
 // Location-service storage model: Spring page wrapper, `type`/`barcode`, no `code`.
@@ -18,10 +19,15 @@ const STORAGE_PAGE = {
 };
 
 const locationServiceStub = {
-  getAllLocations: vi.fn(),
   listStorageLocations: vi.fn(),
   createStorageLocation: vi.fn(),
   deactivateStorageLocation: vi.fn(),
+};
+
+// Stubs the embedded app-location-picker control's lookup source.
+const locationLookupSourceStub = {
+  getAll: vi.fn(),
+  getById: vi.fn(),
 };
 
 const inventoryServiceStub = {
@@ -29,10 +35,11 @@ const inventoryServiceStub = {
 };
 
 function resetLocationStub() {
-  locationServiceStub.getAllLocations.mockReturnValue(of([
+  locationLookupSourceStub.getAll.mockReturnValue(of([
     { id: 'loc-1', name: 'Depot' },
     { id: 'LOC-001', name: 'Main Warehouse' },
   ]));
+  locationLookupSourceStub.getById.mockReturnValue(of(null));
   locationServiceStub.listStorageLocations.mockReturnValue(of({ content: [{ id: 's-1' }], totalElements: 1 }));
   locationServiceStub.createStorageLocation.mockReturnValue(of({ id: 'SL-NEW' }));
   locationServiceStub.deactivateStorageLocation.mockReturnValue(of({}));
@@ -64,6 +71,7 @@ describe('StorageLocationsPageComponent', () => {
       providers: [
         provideRouter([]),
         { provide: LocationService, useValue: locationServiceStub },
+        { provide: LOCATION_LOOKUP_SOURCE, useValue: locationLookupSourceStub },
         { provide: InventoryLocationsService, useValue: inventoryServiceStub },
       ],
     }).compileComponents();
@@ -147,6 +155,7 @@ describe('StorageLocationsPageComponent [CAP-214 #103] (location selected)', () 
       providers: [
         provideRouter([]),
         { provide: LocationService, useValue: locationServiceStub },
+        { provide: LOCATION_LOOKUP_SOURCE, useValue: locationLookupSourceStub },
         { provide: InventoryLocationsService, useValue: inventoryServiceStub },
         {
           provide: ActivatedRoute,
