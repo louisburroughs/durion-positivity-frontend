@@ -25,6 +25,24 @@ export const APPOINTMENT_STATUS_CODES = [
   'REOPENED',
 ] as const;
 
+/**
+ * Reschedule reason codes (`RescheduleAppointmentRequestReasonEnum`, `@durion-sdk/shop-manager`) —
+ * shared by appointment-reschedule-page and appointment-edit-page so both offer exactly what the
+ * server's enum accepts, never free text (durion-positivity-frontend#359 review). Translated via
+ * `SHOPMGMT.APPOINTMENT_RESCHEDULE.REASONS.*`.
+ */
+export const RESCHEDULE_REASON_CODES = [
+  'CUSTOMER_REQUEST',
+  'SHOP_CAPACITY',
+  'EQUIPMENT_ISSUE',
+  'MECHANIC_UNAVAILABLE',
+  'PARTS_DELAY',
+  'WEATHER',
+  'EMERGENCY',
+  'MANAGER_DISCRETION',
+  'OTHER',
+] as const;
+
 /** The recorded scheduling-conflict codes `SchedulingConflictEvaluator` emits. */
 const KNOWN_CONFLICT_CODES: ReadonlySet<string> = new Set([
   'FACILITY_CLOSED',

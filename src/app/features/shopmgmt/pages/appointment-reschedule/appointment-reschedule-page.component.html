@@ -72,15 +72,9 @@
       <select id="reason" name="reason" formControlName="reason"
         [attr.aria-describedby]="fieldErrorKeyFor('reason') ? 'reason-error' : null">
         <option value="">{{ 'SHOPMGMT.APPOINTMENT_RESCHEDULE.SELECT_REASON' | translate }}</option>
-        <option value="CUSTOMER_REQUEST">{{ 'SHOPMGMT.APPOINTMENT_RESCHEDULE.REASONS.CUSTOMER_REQUEST' | translate }}</option>
-        <option value="SHOP_CAPACITY">{{ 'SHOPMGMT.APPOINTMENT_RESCHEDULE.REASONS.SHOP_CAPACITY' | translate }}</option>
-        <option value="EQUIPMENT_ISSUE">{{ 'SHOPMGMT.APPOINTMENT_RESCHEDULE.REASONS.EQUIPMENT_ISSUE' | translate }}</option>
-        <option value="MECHANIC_UNAVAILABLE">{{ 'SHOPMGMT.APPOINTMENT_RESCHEDULE.REASONS.MECHANIC_UNAVAILABLE' | translate }}</option>
-        <option value="PARTS_DELAY">{{ 'SHOPMGMT.APPOINTMENT_RESCHEDULE.REASONS.PARTS_DELAY' | translate }}</option>
-        <option value="WEATHER">{{ 'SHOPMGMT.APPOINTMENT_RESCHEDULE.REASONS.WEATHER' | translate }}</option>
-        <option value="EMERGENCY">{{ 'SHOPMGMT.APPOINTMENT_RESCHEDULE.REASONS.EMERGENCY' | translate }}</option>
-        <option value="MANAGER_DISCRETION">{{ 'SHOPMGMT.APPOINTMENT_RESCHEDULE.REASONS.MANAGER_DISCRETION' | translate }}</option>
-        <option value="OTHER">{{ 'SHOPMGMT.APPOINTMENT_RESCHEDULE.REASONS.OTHER' | translate }}</option>
+        @for (code of rescheduleReasonCodes; track code) {
+          <option [value]="code">{{ 'SHOPMGMT.APPOINTMENT_RESCHEDULE.REASONS.' + code | translate }}</option>
+        }
       </select>
       @if (fieldErrorKeyFor('reason'); as key) {
         <div class="field-error" id="reason-error">{{ key | translate }}</div>

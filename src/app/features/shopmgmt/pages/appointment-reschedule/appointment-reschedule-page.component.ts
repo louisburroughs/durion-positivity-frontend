@@ -9,7 +9,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { switchMap, map, catchError, of } from 'rxjs';
 import { AppointmentService } from '../../services/appointment.service';
 import type { AppointmentDetail, Conflict, TimeSlot } from '../../models/appointment.models';
-import { conflictCodeKey } from '../../models/appointment.models';
+import { conflictCodeKey, RESCHEDULE_REASON_CODES } from '../../models/appointment.models';
 import { toDatetimeLocalValue, fromDatetimeLocalValue } from '../../../../core/utils/local-date';
 import { AuthService } from '../../../../core/services/auth.service';
 import { SHOPMGMT_PAGE } from '../../../../core/security/route-permissions';
@@ -64,6 +64,9 @@ export class AppointmentReschedulePageComponent {
   readonly versionMismatch = signal(false);
   readonly fieldErrors = signal<FieldError[]>([]);
 
+  /** The enum-backed reason options this form's select offers (ADR-driven — #359 review). */
+  readonly rescheduleReasonCodes = RESCHEDULE_REASON_CODES;
+
   readonly form = new FormGroup({
     scheduledStartDateTime: new FormControl('', Validators.required),
     scheduledEndDateTime: new FormControl(''),
@@ -95,6 +98,17 @@ export class AppointmentReschedulePageComponent {
           this.errorKey.set(null);
           this.appointment.set(null);
           this.facilityName.set(undefined);
+          // A pending submit for the previous :id must not leave this appointment's page stuck
+          // mid-mutation once the route moves on — reset every submit-scoped signal the stale
+          // request's callback could otherwise land into (ADR-0063 §3).
+          this.submitLoading.set(false);
+          this.successMessage.set(null);
+          this.submitErrorKey.set(null);
+          this.conflicts.set([]);
+          this.suggestedAlternatives.set([]);
+          this.hasHardConflict.set(false);
+          this.versionMismatch.set(false);
+          this.fieldErrors.set([]);
           // A load failure must not terminate this outer stream (switchMap unsubscribes/completes
           // on an upstream error) — catch it inside the inner observable so a later :id still
           // issues its own getAppointment (ADR-0063 §1).

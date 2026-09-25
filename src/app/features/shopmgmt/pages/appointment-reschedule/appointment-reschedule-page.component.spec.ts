@@ -32,6 +32,8 @@
  *   23. write-permission gating — control disabled + submit() refuses (ADR-0040 §6a)
  *   24. withdraws success and surfaces a readback failure when the post-submit re-read fails
  *   25. ignores a stale reschedule response after the route moves to another :id
+ *   26. resets submitLoading/success/errors/conflicts on a route change mid-submit, so the next
+ *       appointment's page is idle/enabled rather than stuck (ADR-0063 §3)
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TestBed, ComponentFixture } from '@angular/core/testing';
@@ -690,6 +692,61 @@ describe('AppointmentReschedulePageComponent [CAP-249/#333]', () => {
     reschedule$.complete();
     fixture.detectChanges();
 
+    expect(component.successMessage()).toBeNull();
+    expect(component.appointment()?.appointmentId).toBe('appt-2');
+  });
+
+  // 26 ────────────────────────────────────────────────────────────────────
+
+  it('resets submitLoading/success/errors/conflicts on a route change mid-submit, leaving the next appointment idle and enabled (ADR-0063 §3)', () => {
+    const reschedule$ = new Subject<typeof STUB_APPOINTMENT>();
+    const params$ = new Subject<{ id: string }>();
+    appointmentServiceStub.rescheduleAppointment.mockReturnValueOnce(reschedule$);
+
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      imports: [AppointmentReschedulePageComponent, TranslateModule.forRoot()],
+      providers: [
+        provideRouter([]),
+        { provide: AppointmentService, useValue: appointmentServiceStub },
+        { provide: AuthService, useValue: authStub },
+        { provide: ActivatedRoute, useValue: { params: params$ } },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(AppointmentReschedulePageComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+    params$.next({ id: 'appt-1' });
+    fixture.detectChanges();
+
+    component.form.patchValue(VALID_FORM_VALUES);
+    component.submit();
+    // A submit for appt-1 is now in flight — every submit-scoped signal reflects it.
+    expect(component.submitLoading()).toBe(true);
+
+    // The route moves on to a different appointment before appt-1's reschedule answers.
+    appointmentServiceStub.getAppointment.mockReturnValueOnce(
+      of({ ...STUB_APPOINTMENT, appointmentId: 'appt-2', status: 'SCHEDULED' }),
+    );
+    params$.next({ id: 'appt-2' });
+    fixture.detectChanges();
+
+    // appt-2's page must come up idle/enabled, not stuck mid-submit for appt-1's pending request.
+    expect(component.submitLoading()).toBe(false);
+    expect(component.successMessage()).toBeNull();
+    expect(component.submitErrorKey()).toBeNull();
+    expect(component.conflicts()).toEqual([]);
+    expect(component.hasHardConflict()).toBe(false);
+    expect(component.versionMismatch()).toBe(false);
+    const btn: HTMLButtonElement | null = fixture.nativeElement.querySelector('button[type="submit"]');
+    expect(btn?.disabled).toBe(false);
+
+    // The stale appt-1 answer now lands; it must not resurrect any state on appt-2's page.
+    reschedule$.next({ ...STUB_APPOINTMENT, appointmentId: 'appt-1' });
+    reschedule$.complete();
+    fixture.detectChanges();
+    expect(component.submitLoading()).toBe(false);
     expect(component.successMessage()).toBeNull();
     expect(component.appointment()?.appointmentId).toBe('appt-2');
   });

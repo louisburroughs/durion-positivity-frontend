@@ -25,17 +25,21 @@
  *   18. renders an error state when the initial load fails (state()/errorKey(), no raw status/facility)
  *   19. resolves the facility name the way schedule-view/dispatch-board do, falling back to NOT_AVAILABLE
  *   20. never renders the raw status enum, a timestamp, or a UUID as visible text
+ *   21. reschedule reason select only offers the RescheduleAppointmentRequest enum values (#359 review)
+ *   22. resets rescheduleLoading/showRescheduleModal/success/errors/conflicts on a route change
+ *       mid-submit, leaving the next appointment idle rather than stuck (ADR-0063 §3)
  */
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { provideRouter, ActivatedRoute } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { Subject, of, throwError } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { By } from '@angular/platform-browser';
 import { AppointmentEditPageComponent } from './appointment-edit-page.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { AuthService } from '../../../../core/services/auth.service';
 import { AppointmentService } from '../../services/appointment.service';
+import { RESCHEDULE_REASON_CODES } from '../../models/appointment.models';
 
 // ---------------------------------------------------------------------------
 // Stubs
@@ -517,5 +521,83 @@ describe('AppointmentEditPageComponent [CAP-137/#332]', () => {
     const text = fixture.nativeElement.textContent as string;
     expect(text).not.toContain('appt-42');
     expect(text).not.toContain('2026-05-01T09:00:00Z');
+  });
+
+  // 21. reschedule reason is enum-backed, never free text (#359 review)
+  it('renders the reschedule reason as a select offering only the RescheduleAppointmentRequest enum values', async () => {
+    await setup();
+    component.openReschedule();
+    fixture.detectChanges();
+
+    // The reason field must be a <select>, not a free-text input the SDK's
+    // RescheduleAppointmentRequestReasonEnum could never accept.
+    expect(fixture.nativeElement.querySelector('input[name="reason"]')).toBeNull();
+    const select: HTMLSelectElement | null = fixture.nativeElement.querySelector('select[name="reason"]');
+    expect(select).not.toBeNull();
+
+    const values = Array.from(select!.options).map(o => o.value).filter(v => v !== '');
+    expect(values).toEqual([...RESCHEDULE_REASON_CODES]);
+    // Every value must be a real enum member — no stray literal snuck in alongside them.
+    values.forEach(v => expect(RESCHEDULE_REASON_CODES).toContain(v));
+  });
+
+  // 22. resets mutation state on a route change mid-submit (ADR-0063 §3)
+  it('resets rescheduleLoading/showRescheduleModal/success/errors/conflicts on a route change mid-submit, leaving the next appointment idle (ADR-0063 §3)', async () => {
+    const params$ = new Subject<{ id: string }>();
+    const reschedule$ = new Subject<typeof STUB_SCHEDULED>();
+    vi.clearAllMocks();
+    appointmentServiceStub.getAppointment.mockReturnValueOnce(of(STUB_SCHEDULED));
+    appointmentServiceStub.getFacilityName.mockReturnValue(of('Downtown Shop'));
+    appointmentServiceStub.searchAudit.mockReturnValue(of(STUB_AUDIT));
+    appointmentServiceStub.rescheduleAppointment.mockReturnValueOnce(reschedule$);
+
+    await TestBed.configureTestingModule({
+      imports: [AppointmentEditPageComponent, TranslateModule.forRoot()],
+      providers: [
+        provideRouter([]),
+        { provide: AppointmentService, useValue: appointmentServiceStub },
+        { provide: AuthService, useValue: authStub },
+        { provide: ActivatedRoute, useValue: { params: params$ } },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(AppointmentEditPageComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+    params$.next({ id: 'appt-42' });
+    fixture.detectChanges();
+
+    component.openReschedule();
+    component.rescheduleForm.setValue({
+      scheduledStartDateTime: '2026-05-02T09:00',
+      scheduledEndDateTime: '2026-05-02T10:00',
+      reason: 'CUSTOMER_REQUEST',
+    });
+    component.submitReschedule();
+    // A reschedule submit for appt-42 is now in flight.
+    expect(component.rescheduleLoading()).toBe(true);
+    expect(component.showRescheduleModal()).toBe(true);
+
+    // The route moves to a different appointment before appt-42's reschedule answers.
+    appointmentServiceStub.getAppointment.mockReturnValueOnce(of({ ...STUB_SCHEDULED, appointmentId: 'appt-99' }));
+    appointmentServiceStub.searchAudit.mockReturnValueOnce(of([]));
+    params$.next({ id: 'appt-99' });
+    fixture.detectChanges();
+
+    // appt-99's page must come up idle — no stale modal open, no stuck loading state, no stale results.
+    expect(component.rescheduleLoading()).toBe(false);
+    expect(component.showRescheduleModal()).toBe(false);
+    expect(component.rescheduleSuccess()).toBe(false);
+    expect(component.rescheduleErrorKey()).toBeNull();
+    expect(component.rescheduleConflicts()).toEqual([]);
+    expect(fixture.debugElement.query(By.css('.reschedule-modal'))).toBeNull();
+
+    // The stale appt-42 answer now lands; it must not resurrect appt-99's reschedule state.
+    reschedule$.next({ ...STUB_SCHEDULED, appointmentId: 'appt-42' });
+    reschedule$.complete();
+    fixture.detectChanges();
+    expect(component.showRescheduleModal()).toBe(false);
+    expect(component.rescheduleLoading()).toBe(false);
+    expect(component.appointment()?.appointmentId).toBe('appt-99');
   });
 });

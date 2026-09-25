@@ -9,7 +9,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { switchMap, map, catchError, of } from 'rxjs';
 import { AppointmentService } from '../../services/appointment.service';
 import type { AppointmentDetail, AuditEntry, Conflict } from '../../models/appointment.models';
-import { conflictCodeKey } from '../../models/appointment.models';
+import { conflictCodeKey, RESCHEDULE_REASON_CODES } from '../../models/appointment.models';
 import { toDatetimeLocalValue, fromDatetimeLocalValue } from '../../../../core/utils/local-date';
 import { ModalDialogDirective } from '../../../../shared/modal-dialog.directive';
 import { AuthService } from '../../../../core/services/auth.service';
@@ -48,6 +48,9 @@ export class AppointmentEditPageComponent {
   readonly rescheduleErrorKey = signal<string | null>(null);
   readonly cancelErrorKey = signal<string | null>(null);
   readonly rescheduleConflicts = signal<Conflict[]>([]);
+
+  /** The enum-backed reason options this form's select offers (ADR-driven — #359 review). */
+  readonly rescheduleReasonCodes = RESCHEDULE_REASON_CODES;
 
   readonly rescheduleForm = new FormGroup({
     scheduledStartDateTime: new FormControl('', Validators.required),
@@ -89,6 +92,18 @@ export class AppointmentEditPageComponent {
           this.facilityName.set(undefined);
           this.auditEntries.set([]);
           this.auditUnavailable.set(false);
+          // A pending reschedule/cancel for the previous :id must not leave this appointment's
+          // modals/loading state stuck once the route moves on — reset every mutation-scoped
+          // signal the stale request's callback could otherwise land into (ADR-0063 §3).
+          this.showRescheduleModal.set(false);
+          this.showCancelModal.set(false);
+          this.rescheduleLoading.set(false);
+          this.cancelLoading.set(false);
+          this.rescheduleSuccess.set(false);
+          this.cancelSuccess.set(false);
+          this.rescheduleErrorKey.set(null);
+          this.cancelErrorKey.set(null);
+          this.rescheduleConflicts.set([]);
           // A load failure must not terminate this outer stream (switchMap unsubscribes/completes
           // on an upstream error) — catch it inside the inner observable so a later :id still
           // issues its own getAppointment (ADR-0063 §1).
