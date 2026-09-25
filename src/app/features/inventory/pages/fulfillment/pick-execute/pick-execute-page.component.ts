@@ -105,6 +105,18 @@ export class PickExecutePageComponent {
   readonly confirmQty = signal(0);
 
   /**
+   * Whether `confirmQty` is a real, in-range amount to pick (issue #374
+   * finding 2) — finite, positive, and no more than what remains on the
+   * active task. The input's `max` attribute isn't a programmatic guard, so
+   * both the confirm button's `disabled` binding and `confirmLine()` itself
+   * gate on this same computed rather than duplicating the condition.
+   */
+  readonly confirmQtyValid = computed(() => {
+    const quantity = this.confirmQty();
+    return Number.isFinite(quantity) && quantity > 0 && quantity <= this.activeTaskRemainingQty();
+  });
+
+  /**
    * The pick task with a confirm/complete command in flight (including its
    * post-mutation poll) — `null` when nothing is pending. Only ever one task
    * at a time: the scan/confirm/complete controls exist solely for the active
@@ -140,7 +152,11 @@ export class PickExecutePageComponent {
    * issuing its read so a stale readback can never revert a fresher one).
    */
   private tasksReadSeq = 0;
-  /** Guards writes to `scanResult` from `resolveScan()` only. */
+  /** Guards writes to `scanResult`/`state` from a `resolveScan()` in flight.
+   * `selectTask()` and `loadPickList()` also bump it — switching tasks or
+   * (re)loading abandons any outstanding scan, so its late success or
+   * failure settles quietly instead of hitting the wrong task or the page
+   * (issue #374 finding 1). */
   private scanReqSeq = 0;
   /** Guards the task-scoped busy/error/form-reset UI a confirm or complete
    * action owns; independent of `tasksReadSeq` because it answers "is this
@@ -170,6 +186,16 @@ export class PickExecutePageComponent {
     }
     if (leavingTaskId !== null && this.taskStatus()?.taskId === leavingTaskId) {
       this.taskStatus.set(null);
+    }
+    // Abandon any outstanding scan for the task being left — its result or
+    // error belongs to a task no longer on screen and must not repopulate
+    // the confirm UI, or land on the page-level error state, once it lands
+    // late (issue #374 finding 1; ADR-0063 §1-2). `applyScanResult`/
+    // `applyScanError` key off this counter, so bumping it here is enough
+    // for a stale scan to settle quietly.
+    ++this.scanReqSeq;
+    if (this.state() === 'mutating') {
+      this.state.set('ready');
     }
     this.activeTaskId.set(taskId);
     this.resetScanState();
@@ -226,7 +252,11 @@ export class PickExecutePageComponent {
     const task = this.activeTask();
     const quantity = this.confirmQty();
 
-    if (!workorderId || !task || !this.scanMatched() || quantity <= 0 || !this.canExecute()) {
+    // Re-checked here, not only via the button's `disabled` binding: the
+    // input's `max` attribute is not a programmatic guard, so a caller
+    // reaching this method directly could still send an over-pick, NaN, or
+    // infinite quantity to the write facade (issue #374 finding 2).
+    if (!workorderId || !task || !this.scanMatched() || !this.confirmQtyValid() || !this.canExecute()) {
       return;
     }
 
@@ -417,9 +447,16 @@ export class PickExecutePageComponent {
 
   /** The post-mutation `getPickTasks` readback itself failing — a workorder-wide
    * problem (issue #374 finding 6), kept on the page-level `state`/`errorKey`
-   * machine (ADR-0031 §1) rather than the task-scoped `taskStatus`. */
+   * machine (ADR-0031 §1) rather than the task-scoped `taskStatus`. Gated by
+   * the same ownership check as the success path (issue #374 finding 3): if
+   * a newer mutation, task switch, or reload has since taken over this
+   * obligation, the stale failure settles quietly instead of replacing
+   * whatever the mechanic is now looking at with a refresh error. */
   private applyRefreshError(taskId: string, mutSeq: number): void {
-    if (mutSeq === this.mutationSeq && this.pendingTaskId() === taskId) {
+    if (mutSeq !== this.mutationSeq) {
+      return; // superseded — obligation already settled by selectTask() or a newer mutation
+    }
+    if (this.pendingTaskId() === taskId) {
       this.pendingTaskId.set(null);
     }
     this.state.set('error');
@@ -460,9 +497,11 @@ export class PickExecutePageComponent {
 
     this.state.set('loading');
     this.errorKey.set(null);
-    // A full (re)load abandons any in-flight confirm/complete poll — its
-    // task is about to be replaced by fresh server data (ADR-0063 §2/§7).
+    // A full (re)load abandons any in-flight confirm/complete poll and any
+    // outstanding scan — both belong to state that's about to be replaced by
+    // fresh server data (issue #374 finding 1; ADR-0063 §2/§7).
     ++this.mutationSeq;
+    ++this.scanReqSeq;
     this.pendingTaskId.set(null);
     this.taskStatus.set(null);
     const seq = ++this.tasksReadSeq;

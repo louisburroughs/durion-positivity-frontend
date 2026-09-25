@@ -127,7 +127,7 @@
         </div>
 
         <button class="btn-primary" type="button" (click)="confirmLine()"
-          [disabled]="activeTaskBusy() || confirmQty() <= 0 || !canExecute()">
+          [disabled]="activeTaskBusy() || !confirmQtyValid() || !canExecute()">
           {{ 'INVENTORY.FULFILLMENT.PICK_EXECUTE.ACTION.CONFIRM' | translate }}
         </button>
       </section>

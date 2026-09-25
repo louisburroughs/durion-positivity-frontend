@@ -372,6 +372,169 @@ describe('PickExecutePageComponent', () => {
       expect(component.scanResult()).toBeNull();
       expect(component.state()).toBe('ready'); // unstuck, not left busy forever
     });
+
+    it('a resolveScan error for task A settles quietly after switching to task B, not as a page-level error (issue #374 finding 1)', async () => {
+      const scan$ = new Subject<ScanResolveResult>();
+      mockPickService.resolvePickScan.mockReturnValue(scan$);
+      const component = await setupPickExecute();
+
+      component.setScannedSkuId('SKU-A');
+      component.setScannedLocationId('bin-A');
+      component.resolveScan();
+      expect(component.state()).toBe('mutating');
+
+      // The mechanic switches away before the scan settles — this abandons
+      // the scan's ownership immediately, unsticking the busy state without
+      // waiting on the late response.
+      component.selectTask('task-B');
+      expect(component.state()).toBe('ready');
+
+      // Task A's scan now fails, long after the mechanic moved on. Before
+      // the fix, `scanReqSeq` was never bumped by `selectTask()`, so this
+      // late failure would still match and push task B's page into a
+      // page-level error.
+      scan$.error(new Error('scan failed'));
+
+      expect(component.state()).toBe('ready');
+      expect(component.errorKey()).toBeNull();
+      expect(component.activeTaskId()).toBe('task-B');
+    });
+
+    it('a getPickTasks readback failure superseded by a task switch settles quietly, not as a page-level error (issue #374 finding 3)', async () => {
+      const readyToClose: PickTaskLine = { ...taskA, pickedQty: 5, status: 'PENDING' };
+      mockPickService.getWorkorderPickList.mockReturnValue(
+        of({ ...pickListFixture, tasks: [readyToClose, taskB] }),
+      );
+      mockPickService.completePickTask.mockReturnValue(of(readyToClose));
+      const readback$ = new Subject<PickTaskLine[]>();
+      mockPickService.getPickTasks.mockReturnValue(readback$);
+      const component = await setupPickExecute();
+
+      component.completeTask();
+      expect(component.pendingTaskId()).toBe('task-A');
+
+      // The mechanic switches to task B before the post-mutation readback
+      // resolves — this abandons the obligation (ADR-0063 §2/§4).
+      component.selectTask('task-B');
+      expect(component.pendingTaskId()).toBeNull();
+
+      // The abandoned readback now fails. Before the fix, `applyRefreshError`
+      // ignored `mutSeq` entirely and would still push the page into
+      // `error`, replacing task B's working view with a refresh error.
+      readback$.error(new Error('refresh failed'));
+
+      expect(component.state()).toBe('ready');
+      expect(component.errorKey()).toBeNull();
+      expect(component.activeTaskId()).toBe('task-B');
+    });
+  });
+
+  // issue #374 finding 1: a full (re)load must also abandon any in-flight
+  // scan — its late arrival must not repopulate the confirm UI over
+  // freshly-reloaded data.
+  describe('reload() abandons an in-flight scan (issue #374 finding 1)', () => {
+    it('a scan resolved after reload() does not repopulate scanResult', async () => {
+      const scan$ = new Subject<ScanResolveResult>();
+      mockPickService.resolvePickScan.mockReturnValue(scan$);
+      const component = await setupPickExecute();
+
+      component.setScannedSkuId('SKU-A');
+      component.setScannedLocationId('bin-A');
+      component.resolveScan();
+      expect(component.state()).toBe('mutating');
+
+      // A full reload starts before the scan resolves.
+      mockPickService.getWorkorderPickList.mockReturnValue(of(pickListFixture));
+      component.reload();
+      expect(component.state()).toBe('ready'); // reload's own (synchronous) load already settled
+
+      // The abandoned scan now lands. Before the fix, `loadPickList()` never
+      // bumped `scanReqSeq`, so this late success would still repopulate the
+      // confirm UI over the reloaded page.
+      scan$.next(scanMatchedA);
+      scan$.complete();
+
+      expect(component.scanResult()).toBeNull();
+      expect(component.state()).toBe('ready');
+    });
+  });
+
+  // issue #374 finding 2: confirmLine() must reject an over-pick, NaN, or
+  // infinite quantity itself — the input's `max` attribute is not a
+  // programmatic guard, so it never blocks calling this method directly.
+  describe('confirmLine validates quantity before calling the facade (issue #374 finding 2)', () => {
+    beforeEach(() => {
+      mockPickService.resolvePickScan.mockReturnValue(of(scanMatchedA));
+    });
+
+    it('refuses a quantity beyond what remains on the task (over-pick)', async () => {
+      const component = await setupPickExecute(); // taskA: requestedQty 5, pickedQty 0
+      component.setScannedSkuId('SKU-A');
+      component.setScannedLocationId('bin-A');
+      component.resolveScan();
+      component.setConfirmQty(6); // > activeTaskRemainingQty() (5)
+
+      component.confirmLine();
+
+      expect(mockPickService.confirmPickLine).not.toHaveBeenCalled();
+    });
+
+    it('refuses a NaN quantity', async () => {
+      const component = await setupPickExecute();
+      component.setScannedSkuId('SKU-A');
+      component.setScannedLocationId('bin-A');
+      component.resolveScan();
+      component.setConfirmQty(NaN);
+
+      component.confirmLine();
+
+      expect(mockPickService.confirmPickLine).not.toHaveBeenCalled();
+    });
+
+    it('refuses an infinite quantity', async () => {
+      const component = await setupPickExecute();
+      component.setScannedSkuId('SKU-A');
+      component.setScannedLocationId('bin-A');
+      component.resolveScan();
+      component.setConfirmQty(Infinity);
+
+      component.confirmLine();
+
+      expect(mockPickService.confirmPickLine).not.toHaveBeenCalled();
+    });
+
+    it('allows a valid, in-range quantity through to the facade', async () => {
+      const confirmedTask: PickTaskLine = { ...taskA, pickedQty: 5, status: 'PICKED' };
+      mockPickService.confirmPickLine.mockReturnValue(of(confirmedTask));
+      mockPickService.getPickTasks.mockReturnValue(of([confirmedTask, taskB]));
+      const component = await setupPickExecute();
+      component.setScannedSkuId('SKU-A');
+      component.setScannedLocationId('bin-A');
+      component.resolveScan();
+      component.setConfirmQty(5); // == activeTaskRemainingQty()
+
+      component.confirmLine();
+
+      expect(mockPickService.confirmPickLine).toHaveBeenCalledExactlyOnceWith('wo-001', 'task-A', 5);
+    });
+
+    it('disables the confirm control in the template for an over-pick quantity, not only via the input max attribute', async () => {
+      const fixture = await setupPickExecuteFixture('wo-001', [EXECUTE]);
+      const component = fixture.componentInstance;
+      component.setScannedSkuId('SKU-A');
+      component.setScannedLocationId('bin-A');
+      component.resolveScan();
+      component.setConfirmQty(6);
+      fixture.detectChanges();
+
+      const confirmButton: HTMLButtonElement | null =
+        fixture.nativeElement.querySelector('.pending-section button.btn-primary');
+      expect(confirmButton?.disabled).toBe(true);
+
+      component.setConfirmQty(5);
+      fixture.detectChanges();
+      expect(confirmButton?.disabled).toBe(false);
+    });
   });
 
   // ADR-0040 §6a.1/§6a.5: every write control gates on inventory:pick_list:execute
