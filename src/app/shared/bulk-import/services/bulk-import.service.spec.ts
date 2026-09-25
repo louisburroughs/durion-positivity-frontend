@@ -37,7 +37,7 @@ describe('BulkImportService', () => {
   const authStub = { accessToken: vi.fn<() => string | null>(() => 'test-jwt') };
   const bulkLoadJobsStub = { createBulkLoadJob: vi.fn(), getBulkLoadJob: vi.fn(), listBulkLoadJobs: vi.fn(), cancelBulkLoadJob: vi.fn(), retryBulkLoadJob: vi.fn() };
   const columnMappingStub = { getColumnMappings: vi.fn(), approveColumnMappings: vi.fn() };
-  const reviewQueueStub = { listAuditRecords: vi.fn(), downloadErrorReport: vi.fn(), submitCorrections: vi.fn() };
+  const reviewQueueStub = { listAuditRecords: vi.fn(), downloadErrorReport: vi.fn(), submitCorrections: vi.fn(), submitSingleCorrection: vi.fn() };
 
   beforeEach(async () => {
     tusState.instances.length = 0;
@@ -355,30 +355,59 @@ describe('BulkImportService', () => {
   });
 
   describe('submitCorrection()', () => {
-    it('calls PUT /bulk-loader/v1/bulk-jobs/:id/audit/:recordId/correction and maps ApiAuditRecord', () => {
+    it('calls ReviewQueueAPIService.submitSingleCorrection with auditRecordId and correctedData', () => {
       const req: SubmitCorrectionRequest = { correctedValues: { sku: 'FIXED-SKU' } };
-      const rawApiAuditRecord = {
-        id: 'rec-001',
-        jobId: 'job-001',
-        entityType: 'PRODUCT',
-        rowNumber: 1,
-        reviewStatus: 'PENDING',
-        reasonCodes: 'INVALID_SKU,MISSING_FIELD',
-        originalValues: '{"sku":"OLD"}',
-      };
-      apiStub.put.mockReturnValue(of(rawApiAuditRecord));
+      reviewQueueStub.submitSingleCorrection.mockReturnValue(of({
+        auditRecordId: 'rec-001',
+        status: 'ACCEPTED',
+      }));
 
-      let result: BulkLoadRecordAudit | undefined;
-      service.submitCorrection('job-001', 'rec-001', req).subscribe(value => {
-        result = value;
+      let completed = false;
+      service.submitCorrection('job-001', 'rec-001', req).subscribe(() => {
+        completed = true;
       });
 
-      expect(apiStub.put).toHaveBeenCalledWith(
-        '/bulk-loader/v1/bulk-jobs/job-001/audit/rec-001/correction',
-        req,
-      );
-      expect(result?.reasonCodes).toEqual(['INVALID_SKU', 'MISSING_FIELD']);
-      expect(result?.originalValues).toEqual({ sku: 'OLD' });
+      expect(reviewQueueStub.submitSingleCorrection).toHaveBeenCalledWith('job-001', {
+        auditRecordId: 'rec-001',
+        correctedData: { sku: 'FIXED-SKU' },
+      });
+      expect(completed).toBe(true);
+    });
+
+    it('stringifies non-string corrected values before sending correctedData', () => {
+      const req: SubmitCorrectionRequest = { correctedValues: { quantity: 42 } };
+      reviewQueueStub.submitSingleCorrection.mockReturnValue(of({
+        auditRecordId: 'rec-001',
+        status: 'ACCEPTED',
+      }));
+
+      service.submitCorrection('job-001', 'rec-001', req).subscribe();
+
+      expect(reviewQueueStub.submitSingleCorrection).toHaveBeenCalledWith('job-001', {
+        auditRecordId: 'rec-001',
+        correctedData: { quantity: '42' },
+      });
+    });
+
+    it('routes a REJECTED result through the error channel instead of resolving as success (Copilot #4105525794)', async () => {
+      const { CorrectionRejectedError } = await import('../models/bulk-import.models');
+      const req: SubmitCorrectionRequest = { correctedValues: { sku: 'BAD-SKU' } };
+      reviewQueueStub.submitSingleCorrection.mockReturnValue(of({
+        auditRecordId: 'rec-001',
+        status: 'REJECTED',
+        rejectionReason: 'sku already assigned',
+      }));
+
+      let completed = false;
+      let caught: unknown;
+      service.submitCorrection('job-001', 'rec-001', req).subscribe({
+        next: () => { completed = true; },
+        error: err => { caught = err; },
+      });
+
+      expect(completed).toBe(false);
+      expect(caught).toBeInstanceOf(CorrectionRejectedError);
+      expect((caught as InstanceType<typeof CorrectionRejectedError>).rejectionReason).toBe('sku already assigned');
     });
   });
 

@@ -4,6 +4,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { interval, Subscription, switchMap } from 'rxjs';
 import { TranslatePipe } from '@ngx-translate/core';
 import { BulkImportService } from '../../../../shared/bulk-import/services/bulk-import.service';
+import { BulkImportCorrectionReloader } from '../../../../shared/bulk-import/services/bulk-import-correction-reloader';
 import {
   ACTIVE_JOB_STATUSES,
   ApproveColumnMappingsRequest,
@@ -50,6 +51,10 @@ export class PeopleBulkImportPageComponent implements OnInit, OnDestroy {
   readonly uploadProgress = signal<number>(0);
   readonly conflictJob = signal<BulkLoadJob | null>(null);
   readonly correctionPendingIds = signal<Set<string>>(new Set());
+  readonly auditReadFailed = signal<boolean>(false);
+  readonly auditErrorKey = signal<string | null>(null);
+  readonly correctionErrorKey = signal<string | null>(null);
+  private readonly correctionReloader = new BulkImportCorrectionReloader(this.correctionPendingIds);
 
   readonly domainType = DOMAIN_TYPE;
   private uploadAbort: (() => void) | null = null;
@@ -258,29 +263,51 @@ export class PeopleBulkImportPageComponent implements OnInit, OnDestroy {
       .subscribe({
         next: result => {
           this.auditRecords.set(result.items);
+          this.auditReadFailed.set(false);
+          this.auditErrorKey.set(null);
           this.state.set('results');
         },
         error: () => {
+          this.auditReadFailed.set(true);
+          this.auditErrorKey.set('BULK_IMPORT.WIZARD.ERROR.LOAD_RESULTS');
           this.state.set('results');
         },
       });
   }
 
+  /** Re-issues the audit list read after a failed initial load or re-read (ADR-0064 §1-2). */
+  retryAuditLoad(): void {
+    this.loadAuditRecords();
+  }
+
   onSubmitCorrection(event: CorrectionSubmitEvent): void {
     const jobId = this.job()?.jobId;
     if (!jobId) { return; }
-    this.correctionPendingIds.update(s => { const n = new Set(s); n.add(event.record.recordId); return n; });
-    this.service.submitCorrection(jobId, event.record.recordId, event.request)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: updated => {
-          this.auditRecords.update(records => records.map(r => r.recordId === updated.recordId ? updated : r));
-          this.correctionPendingIds.update(s => { const n = new Set(s); n.delete(event.record.recordId); return n; });
+    this.correctionErrorKey.set(null);
+    this.correctionReloader.run(
+      event.record.recordId,
+      this.service.submitCorrection(jobId, event.record.recordId, event.request),
+      {
+        reload$: this.service.listAuditRecords(jobId, { reviewStatus: 'PENDING' }),
+        onReloadSuccess: result => {
+          this.auditRecords.set(result.items);
+          this.auditReadFailed.set(false);
+          this.auditErrorKey.set(null);
+          this.state.set('results');
         },
-        error: () => {
-          this.correctionPendingIds.update(s => { const n = new Set(s); n.delete(event.record.recordId); return n; });
+        onReloadError: () => {
+          // Keep the stale rows visible but read-only (ADR-0064): a failed re-read
+          // must never look like a successful one.
+          this.auditReadFailed.set(true);
+          this.auditErrorKey.set('BULK_IMPORT.WIZARD.ERROR.LOAD_RESULTS');
+          this.state.set('results');
         },
-      });
+        onSubmitError: () => {
+          // Never surface the server's rejectionReason text directly (ADR-0064 §4-5).
+          this.correctionErrorKey.set('BULK_IMPORT.WIZARD.ERROR.CORRECTION');
+        },
+      },
+    ).pipe(takeUntilDestroyed(this.destroyRef)).subscribe();
   }
 
   downloadErrorReport(): void {

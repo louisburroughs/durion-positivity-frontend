@@ -4,6 +4,7 @@ import { of } from 'rxjs';
 import {
   InventoryAvailabilityService,
   InventoryReferenceDataService,
+  PutawayExecutionService,
   ReturnsService,
 } from '@durion-sdk/inventory';
 import { ApiBaseService } from '../../../core/services/api-base.service';
@@ -15,8 +16,8 @@ import {
   LedgerPageResponse,
   LocationRef,
   LocationZone,
-  PutawayCompleteRequest,
-  PutawayResult,
+  PutawayExecuteRequest,
+  PutawayExecutionResult,
   PutawayTask,
   ReplenishmentTask,
   ReturnReasonCode,
@@ -50,6 +51,9 @@ describe('InventoryDomainService', () => {
   const returnsStub = {
     listReturnReasonCodes: vi.fn(),
   };
+  const putawayExecutionStub = {
+    executePutaway: vi.fn(),
+  };
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -59,6 +63,7 @@ describe('InventoryDomainService', () => {
         { provide: InventoryAvailabilityService, useValue: availabilityStub },
         { provide: InventoryReferenceDataService, useValue: refDataStub },
         { provide: ReturnsService, useValue: returnsStub },
+        { provide: PutawayExecutionService, useValue: putawayExecutionStub },
       ],
     });
     service = TestBed.inject(InventoryDomainService);
@@ -270,12 +275,11 @@ describe('InventoryDomainService', () => {
   describe('getPutawayTasks()', () => {
     const mockTasks: PutawayTask[] = [
       {
-        putawayTaskId: 'task-001',
-        locationId: 'loc-01',
-        stagingStorageLocationId: 'sl-staging',
-        productSku: 'SKU-001',
+        taskId: 'task-001',
+        sourceReceiptId: 'receipt-01',
+        productId: 'sku-001',
         quantity: 10,
-        uom: 'EA',
+        sourceLocationId: 'sl-staging',
         status: 'PENDING',
       },
     ];
@@ -310,44 +314,47 @@ describe('InventoryDomainService', () => {
     });
   });
 
-  // ── completePutawayTask() ──────────────────────────────────────────────
+  // ── executePutawayTask() (issue #377) ──────────────────────────────────
 
-  describe('completePutawayTask()', () => {
-    const mockBody: PutawayCompleteRequest = {
-      putawayTaskId: 'task-001',
-      targetStorageLocationId: 'sl-target',
+  describe('executePutawayTask()', () => {
+    const mockRequest: PutawayExecuteRequest = {
+      skuId: 'sku-001',
+      sourceLocationId: 'sl-staging',
+      destinationLocationId: 'sl-target',
+      quantity: 10,
     };
-    const mockResult: PutawayResult = {
-      putawayTaskId: 'task-001',
-      status: 'COMPLETED',
+    const mockSdkResponse = {
       ledgerEntryId: 'le-001',
+      taskId: 'task-001',
+      skuId: 'sku-001',
+      sourceLocationId: 'sl-staging',
+      destinationLocationId: 'sl-target',
+      quantityMoved: 10,
+      transactionType: 'PUT_AWAY',
+      status: 'COMPLETED',
+      executedAt: '2026-09-25T00:00:00Z',
+      actorId: 'user-001',
     };
+    const mockResult: PutawayExecutionResult = { ...mockSdkResponse };
 
-    it('calls POST /inventory/v1/inventory/putaway/tasks/{taskId}/complete', () => {
-      apiStub.post.mockReturnValueOnce(of(mockResult));
+    it('calls PutawayExecutionService.executePutaway with skuId/sourceLocationId/destinationLocationId/quantity', () => {
+      putawayExecutionStub.executePutaway.mockReturnValueOnce(of(mockSdkResponse));
 
-      service.completePutawayTask('task-001', mockBody).subscribe();
+      service.executePutawayTask('task-001', mockRequest).subscribe();
 
-      expect(apiStub.post).toHaveBeenCalledOnce();
-      const [path, body] = apiStub.post.mock.calls[0];
-      expect(path).toBe('/inventory/v1/inventory/putaway/tasks/task-001/complete');
-      expect(body).toEqual(mockBody);
+      expect(putawayExecutionStub.executePutaway).toHaveBeenCalledWith('task-001', {
+        skuId: 'sku-001',
+        sourceLocationId: 'sl-staging',
+        destinationLocationId: 'sl-target',
+        quantity: 10,
+      });
     });
 
-    it('URL-encodes the taskId', () => {
-      apiStub.post.mockReturnValueOnce(of(mockResult));
+    it('returns the mapped PutawayExecutionResult emitted by the SDK', () => {
+      putawayExecutionStub.executePutaway.mockReturnValueOnce(of(mockSdkResponse));
 
-      service.completePutawayTask('task/001', mockBody).subscribe();
-
-      const [path] = apiStub.post.mock.calls[0];
-      expect(path).toBe('/inventory/v1/inventory/putaway/tasks/task%2F001/complete');
-    });
-
-    it('returns the PutawayResult emitted by the API', () => {
-      apiStub.post.mockReturnValueOnce(of(mockResult));
-
-      let result: PutawayResult | undefined;
-      service.completePutawayTask('task-001', mockBody).subscribe(r => (result = r));
+      let result: PutawayExecutionResult | undefined;
+      service.executePutawayTask('task-001', mockRequest).subscribe(r => (result = r));
 
       expect(result).toEqual(mockResult);
     });

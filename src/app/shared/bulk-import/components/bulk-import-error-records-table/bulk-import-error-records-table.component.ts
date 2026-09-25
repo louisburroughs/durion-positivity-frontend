@@ -19,6 +19,8 @@ export interface CorrectionSubmitEvent {
 export class BulkImportErrorRecordsTableComponent {
   @Input() records: BulkLoadRecordAudit[] = [];
   @Input() pendingRecordIds: Set<string> = new Set();
+  /** True when the caller's audit re-read failed: rows stay visible but every field/submit is disabled (ADR-0064). */
+  @Input() readOnly = false;
   @Output() readonly submitCorrection = new EventEmitter<CorrectionSubmitEvent>();
 
   private readonly correctionDraft = signal<Record<string, Record<string, unknown>>>({});  // signal is readonly by interface, field stays

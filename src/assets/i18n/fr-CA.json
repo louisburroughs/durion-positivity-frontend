@@ -4351,7 +4351,7 @@
       "IDLE": "Selectionnez un client ou un vehicule pour voir les estimations.",
       "EMPTY": "Aucune estimation trouvee.",
       "ERROR": {
-        "LOAD": "Impossible de charger les estimations. Veuillez reessayer."
+        "LOAD": "Impossible de charger les estimations. Veuillez réessayer."
       },
       "CARD": {
         "ARIA_LABEL": "Estimation pour le client",
@@ -4435,7 +4435,7 @@
       "ERROR": {
         "LOAD": "Impossible de charger la facture.",
         "MISSING_WORKORDER_ID": "Aucun ID de workorder fourni.",
-        "SUBMIT": "Impossible de demander la finalisation. Veuillez reessayer."
+        "SUBMIT": "Impossible de demander la finalisation. Veuillez réessayer."
       },
       "COLUMN": {
         "DESCRIPTION": "Description",
@@ -5768,7 +5768,7 @@
             "SKU": "UGS",
             "STAGING_LOCATION": "Préparation",
             "TARGET_LOCATION": "Destination",
-            "QTY_UOM": "Qté / UOM",
+            "QUANTITY": "Quantité",
             "STATUS": "Statut"
           }
         },
@@ -6277,6 +6277,7 @@
       },
       "SHORTAGE_RESOLUTION": {
         "TITLE": "Résolution de Rupture",
+        "NOT_AVAILABLE": "La résolution de rupture n'est pas encore disponible; le backend ne fournit pas encore les données requises par cette page pour calculer les options en toute sécurité.",
         "STATE": {
           "LOADING": "Chargement des options de rupture..."
         },
@@ -6622,9 +6623,9 @@
       },
       "ERROR": {
         "NOT_FOUND": "Facture introuvable.",
-        "LOAD": "Impossible de charger la facture. Veuillez reessayer.",
+        "LOAD": "Impossible de charger la facture. Veuillez réessayer.",
         "ALREADY_ISSUED": "La facture est deja emise.",
-        "ISSUE": "Impossible d'emettre la facture. Veuillez reessayer."
+        "ISSUE": "Impossible d'emettre la facture. Veuillez réessayer."
       },
       "ELEVATION": {
         "ARIA_LABEL": "Elevation du gestionnaire requise",
@@ -6636,8 +6637,8 @@
         "VERIFYING": "Verification...",
         "ERROR": {
           "EMPLOYEE_REQUIRED": "Le numero d'employe du gestionnaire est requis.",
-          "NOT_AUTHORIZED": "Ce numero d'employe n'est pas un gestionnaire autorise. Veuillez reessayer.",
-          "GENERIC": "Echec de l'elevation. Contactez votre gestionnaire."
+          "NOT_AUTHORIZED": "Ce numero d'employe n'est pas un gestionnaire autorise. Veuillez réessayer.",
+          "GENERIC": "Échec de l'elevation. Contactez votre gestionnaire."
         }
       }
     },
@@ -6710,8 +6711,8 @@
       "IDLE": "Aucun recu genere pour le moment.",
       "ERROR": {
         "LOAD": "Impossible de charger le recu.",
-        "GENERATE": "Impossible de generer le recu. Veuillez reessayer.",
-        "REPRINT": "Impossible de reimprimer le recu. Veuillez reessayer.",
+        "GENERATE": "Impossible de generer le recu. Veuillez réessayer.",
+        "REPRINT": "Impossible de reimprimer le recu. Veuillez réessayer.",
         "MISSING_INVOICE": "Aucun ID de facture fourni."
       }
     },
@@ -6800,7 +6801,7 @@
       "WARNING": "Cette action est irreversible.",
       "ERROR": {
         "LOAD": "Impossible de charger les details de la commande.",
-        "SUBMIT": "Impossible d'annuler la commande. Veuillez reessayer."
+        "SUBMIT": "Impossible d'annuler la commande. Veuillez réessayer."
       },
       "FIELD": {
         "STATUS": "Statut",
@@ -6986,7 +6987,7 @@
       "EMPTY": "Aucun travail d'importation trouve.",
       "REFRESH": "Actualiser",
       "ERROR": {
-        "LOAD": "Impossible de charger les travaux. Veuillez reessayer."
+        "LOAD": "Impossible de charger les travaux. Veuillez réessayer."
       },
       "FILTERS": {
         "ARIA_LABEL": "Filtrer les travaux",
@@ -7012,14 +7013,14 @@
       "LOADING": "Chargement des details du travail…",
       "BACK": "Retour aux travaux",
       "CANCEL": "Annuler le travail",
-      "RETRY": "Reessayer",
+      "RETRY": "Réessayer",
       "DOWNLOAD_ERRORS": "Telecharger le rapport d'erreurs",
       "ERROR": {
         "LOAD": "Impossible de charger les details du travail.",
         "LOAD_AUDIT": "Impossible de charger les enregistrements d'erreurs.",
         "CANCEL": "Impossible d'annuler le travail.",
-        "RETRY": "Impossible de reessayer le travail.",
-        "CORRECTION": "Impossible de soumettre la correction. Veuillez reessayer."
+        "RETRY": "Impossible de réessayer le travail.",
+        "CORRECTION": "Impossible de soumettre la correction. Veuillez réessayer."
       },
       "META": {
         "ARIA_LABEL": "Metadonnees du travail",
@@ -7072,17 +7073,22 @@
       },
       "ERROR": {
         "LOAD": "Impossible de verifier l'etat du travail actif.",
-        "UPLOAD": "Echec du televersement du fichier. Veuillez reessayer.",
+        "UPLOAD": "Échec du téléversement du fichier. Veuillez réessayer.",
         "CREATE_SESSION": "Impossible de demarrer la session d'importation.",
         "LOAD_MAPPINGS": "Impossible de charger les mappages de colonnes.",
         "APPROVE_MAPPINGS": "Impossible d'approuver les mappages de colonnes.",
-        "RETRY": "Impossible de reessayer le travail.",
-        "POLL": "Impossible d'obtenir le statut d'importation. Veuillez actualiser."
+        "RETRY": "Impossible de réessayer le travail.",
+        "POLL": "Impossible d'obtenir le statut d'importation. Veuillez actualiser.",
+        "LOAD_RESULTS": "Impossible de charger les enregistrements d'erreur. Veuillez réessayer.",
+        "CORRECTION": "Échec de l'envoi de la correction. Veuillez réessayer."
       },
       "CONFLICT": {
         "TITLE": "Importation active en cours",
         "MESSAGE": "Un travail d'importation actif existe pour un autre domaine. Veuillez attendre sa fin avant de commencer une nouvelle importation.",
         "VIEW_JOB": "Voir le travail actif"
+      },
+      "ERROR_RECORDS": {
+        "RETRY": "Réessayer"
       },
       "STEP": {
         "UPLOAD": {
@@ -7168,7 +7174,7 @@
       "SUCCESS": "Reussies",
       "FAILURES": "Echouees",
       "DOWNLOAD_ERRORS": "Telecharger le rapport d'erreurs",
-      "RETRY": "Reessayer les lignes en echec"
+      "RETRY": "Réessayer les lignes en échec"
     },
     "ERROR_RECORDS": {
       "ARIA_LABEL": "Enregistrements d'erreurs",

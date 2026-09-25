@@ -122,28 +122,45 @@ export interface ReceiptResultLine {
   varianceQty?: number;
 }
 
-// Putaway (CAP-217 #95)
+// Putaway (CAP-217 #95). Field names mirror the backend's PutawayTaskResponse
+// (issue #377 verification) — there is no separate `uom` or top-level `locationId`.
 export interface PutawayTask {
-  putawayTaskId: string;
-  locationId: string;
-  stagingStorageLocationId: string;
-  targetStorageLocationId?: string;
-  productSku: string;
+  taskId: string;
+  sourceReceiptId: string;
+  productId: string;
   quantity: number;
-  uom: string;
+  sourceLocationId: string;
+  suggestedDestinationLocationId?: string;
+  actualDestinationLocationId?: string;
   status: string;
-  sourceDocumentId?: string;
+  assigneeId?: string;
+  /** @serverGenerated */
+  readonly createdAt?: string;
+  /** @serverGenerated */
+  readonly updatedAt?: string;
 }
 
-export interface PutawayCompleteRequest {
-  putawayTaskId: string;
-  targetStorageLocationId: string;
+/** Matches the backend's `PutawayExecutionRequest` (`PutawayExecuteController`). */
+export interface PutawayExecuteRequest {
+  skuId: string;
+  sourceLocationId: string;
+  destinationLocationId: string;
+  quantity: number;
 }
 
-export interface PutawayResult {
-  putawayTaskId: string;
+/** Matches the backend's `PutawayExecutionResponse`. */
+export interface PutawayExecutionResult {
+  ledgerEntryId: string;
+  taskId: string;
+  skuId: string;
+  sourceLocationId?: string;
+  destinationLocationId: string;
+  quantityMoved: number;
+  transactionType: string;
   status: string;
-  ledgerEntryId?: string;
+  /** @serverGenerated */
+  readonly executedAt?: string;
+  actorId?: string;
 }
 
 // Replenishment (CAP-217 #94)
