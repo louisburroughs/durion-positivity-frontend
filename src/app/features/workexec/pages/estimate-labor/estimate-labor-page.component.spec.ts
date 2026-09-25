@@ -4,9 +4,12 @@ import { ComponentFixture } from '@angular/core/testing';
 import { provideRouter, ActivatedRoute } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { map } from 'rxjs/operators';
 import { EstimateLaborPageComponent } from './estimate-labor-page.component';
 import { BASE_PATH } from '@durion-sdk/workorder';
 import { environment } from '../../../../../environments/environment';
+import { ProductCatalogService } from '../../../product/services/product-catalog.service';
+import { PRODUCT_CATALOG_SOURCE } from '../../../../shared/product-catalog/product-catalog-source.tokens';
 
 const BASE = environment.apiBaseUrl;
 const mockRoute = { snapshot: { paramMap: { get: (k: string) => k === 'estimateId' ? 'est-123' : null } } };
@@ -25,6 +28,21 @@ describe('EstimateLaborPageComponent [Story 237]', () => {
         provideHttpClientTesting(),
         { provide: ActivatedRoute, useValue: mockRoute },
         { provide: BASE_PATH, useValue: environment.apiBaseUrl },
+        // Real ProductCatalogService (real HTTP, captured by HttpTestingController
+        // below), wired synchronously instead of through the app's lazy `import()`
+        // adapter (provideProductCatalogSource) — see estimate-detail-page's spec
+        // for why. The adapter's own mapping is covered by
+        // product-catalog-source.provider.spec.ts.
+        {
+          provide: PRODUCT_CATALOG_SOURCE,
+          useFactory: (catalog: ProductCatalogService) => ({
+            searchServices: (query: string) => catalog.searchServices(query),
+            searchProducts: (query: string) => catalog.searchProducts(query),
+            getActiveMsrpAmount: (productId: string) =>
+              catalog.getActiveMsrp(productId).pipe(map(msrp => msrp?.amount ?? null)),
+          }),
+          deps: [ProductCatalogService],
+        },
       ],
     }).compileComponents();
     fixture = TestBed.createComponent(EstimateLaborPageComponent);

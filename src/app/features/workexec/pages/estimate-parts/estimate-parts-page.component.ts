@@ -8,8 +8,10 @@ import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { WorkexecService } from '../../services/workexec.service';
 import { EstimateItemResponse, EstimateResponse, PageState } from '../../models/workexec.models';
-import { ProductCatalogService } from '../../../product/services/product-catalog.service';
-import { ProductSummary } from '../../../product/models/product.models';
+import {
+  CatalogProductSummary as ProductSummary,
+  PRODUCT_CATALOG_SOURCE,
+} from '../../../../shared/product-catalog/product-catalog-source.tokens';
 
 /**
  * EstimatePartsPageComponent — Story 238 (CAP-002)
@@ -26,7 +28,7 @@ import { ProductSummary } from '../../../product/models/product.models';
 export class EstimatePartsPageComponent implements OnInit {
   private readonly translate = inject(TranslateService);
   private readonly workexec    = inject(WorkexecService);
-  private readonly catalog      = inject(ProductCatalogService);
+  private readonly catalog      = inject(PRODUCT_CATALOG_SOURCE);
   private readonly route       = inject(ActivatedRoute);
   private readonly router      = inject(Router);
   private readonly fb          = inject(FormBuilder);
@@ -42,7 +44,7 @@ export class EstimatePartsPageComponent implements OnInit {
   // Catalog part search (name / SKU) — mirrors the product catalog list search.
   readonly searchQuery   = signal('');
   readonly searchState   = signal<'idle' | 'loading' | 'empty' | 'ready' | 'error'>('idle');
-  readonly searchResults = signal<ProductSummary[]>([]);
+  readonly searchResults = signal<readonly ProductSummary[]>([]);
   readonly selectedPart  = signal<ProductSummary | null>(null);
   readonly priceState    = signal<'idle' | 'loading' | 'filled' | 'none'>('idle');
   readonly activeIndex   = signal(-1);
@@ -129,12 +131,12 @@ export class EstimatePartsPageComponent implements OnInit {
 
     // Auto-fill unit price from the product's active MSRP (no price on the summary/product).
     this.priceState.set('loading');
-    this.catalog.getActiveMsrp(part.id)
+    this.catalog.getActiveMsrpAmount(part.id)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: msrp => {
-          if (msrp?.amount != null) {
-            this.addForm.patchValue({ unitPrice: msrp.amount });
+        next: amount => {
+          if (amount != null) {
+            this.addForm.patchValue({ unitPrice: amount });
             this.priceState.set('filled');
           } else {
             this.priceState.set('none');

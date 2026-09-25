@@ -23,20 +23,5 @@
     "key": "src/app/features/shopmgmt/services/shop-dashboard.service.ts -> src/app/features/workexec/models/workexec.models.ts",
     "reason": "inventory fulfillment pages and shopmgmt read workexec's models/service directly for shared work-order state; no shared/ promotion decided yet (tracked separately from plan §8 decision 1).",
     "tracking": "#347"
-  },
-  {
-    "key": "src/app/features/workexec/pages/estimate-detail/estimate-detail-page.component.ts -> src/app/features/crm/models/crm.models.ts",
-    "reason": "workexec's estimate pages read crm's labels/models/service directly instead of through a documented cross-feature contract.",
-    "tracking": "#347"
-  },
-  {
-    "key": "src/app/features/workexec/pages/estimate-labor/estimate-labor-page.component.ts -> src/app/features/product/models/product.models.ts",
-    "reason": "workexec's estimate-labor/estimate-parts pages read product's models/catalog service directly instead of through a documented cross-feature contract.",
-    "tracking": "#347"
-  },
-  {
-    "key": "src/app/features/workexec/pages/estimate-parts/estimate-parts-page.component.ts -> src/app/features/product/models/product.models.ts",
-    "reason": "workexec's estimate-labor/estimate-parts pages read product's models/catalog service directly instead of through a documented cross-feature contract.",
-    "tracking": "#347"
   }
 ]

@@ -7,6 +7,8 @@ import { vi } from 'vitest';
 import { EstimateDetailPageComponent } from './estimate-detail-page.component';
 import { BASE_PATH } from '@durion-sdk/workorder';
 import { environment } from '../../../../../environments/environment';
+import { CrmService } from '../../../crm/services/crm.service';
+import { CUSTOMER_DIRECTORY_SOURCE } from '../../../../shared/customer-directory/customer-directory-source.tokens';
 
 const BASE = environment.apiBaseUrl;
 const mockRoute = { snapshot: { paramMap: { get: (k: string) => k === 'estimateId' ? 'est-123' : null } } };
@@ -39,6 +41,20 @@ describe('EstimateDetailPageComponent [Story 236]', () => {
         provideHttpClientTesting(),
         { provide: ActivatedRoute, useValue: mockRoute },
         { provide: BASE_PATH, useValue: environment.apiBaseUrl },
+        // Real CrmService (real HTTP, captured by HttpTestingController below),
+        // wired synchronously instead of through the app's lazy `import()`
+        // adapter (provideCrmCustomerDirectorySource) — this spec drives HTTP
+        // requests synchronously via fake timers, which a real dynamic import's
+        // async module load does not fit. The adapter's own mapping is covered
+        // by customer-directory-source.provider.spec.ts.
+        {
+          provide: CUSTOMER_DIRECTORY_SOURCE,
+          useFactory: (crm: CrmService) => ({
+            getById: (partyId: string) => crm.getParty(partyId),
+            getContacts: (partyId: string) => crm.getContactsWithRoles(partyId),
+          }),
+          deps: [CrmService],
+        },
       ],
     }).compileComponents();
     const translate = TestBed.inject(TranslateService);

@@ -8,8 +8,10 @@ import { combineLatest, EMPTY, forkJoin, of, Subscription, switchMap } from 'rxj
 import { catchError, distinctUntilChanged, map } from 'rxjs/operators';
 import { EstimateListItem } from '../../models/workexec.models';
 import { WorkexecService } from '../../services/workexec.service';
-import { CrmService } from '../../../crm/services/crm.service';
-import { partyLabel } from '../../../crm/utils/crm-labels';
+import {
+  CUSTOMER_DIRECTORY_SOURCE,
+  customerDirectoryLabel,
+} from '../../../../shared/customer-directory/customer-directory-source.tokens';
 import { CustomerLookupComponent } from '../../../../shared/customer-lookup/customer-lookup.component';
 
 @Component({
@@ -21,7 +23,7 @@ import { CustomerLookupComponent } from '../../../../shared/customer-lookup/cust
 })
 export class EstimateListPageComponent {
   private readonly workexec = inject(WorkexecService);
-  private readonly crm = inject(CrmService);
+  private readonly customerDirectory = inject(CUSTOMER_DIRECTORY_SOURCE);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
@@ -114,8 +116,8 @@ export class EstimateListPageComponent {
 
     forkJoin(
       missing.map(id =>
-        this.crm.getParty(id).pipe(
-          map(party => [id, partyLabel(party)] as const),
+        this.customerDirectory.getById(id).pipe(
+          map(entry => [id, customerDirectoryLabel(entry)] as const),
           catchError(() => of([id, id] as const)),
         ),
       ),
