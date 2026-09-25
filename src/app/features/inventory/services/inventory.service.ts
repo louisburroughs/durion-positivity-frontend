@@ -4,10 +4,7 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import {
   InventoryAvailabilityService,
-  InventoryLedgerEntryDto,
-  InventoryLedgerService,
   InventoryReferenceDataService,
-  LedgerPage,
   ReasonCodeDto,
   ReturnsService,
 } from '@durion-sdk/inventory';
@@ -63,7 +60,6 @@ export class InventoryDomainService {
   private readonly api = inject(ApiBaseService);
   private readonly refDataSdk = inject(InventoryReferenceDataService);
   private readonly availabilitySdk = inject(InventoryAvailabilityService);
-  private readonly ledgerSdk = inject(InventoryLedgerService);
   private readonly returnsSdk = inject(ReturnsService);
 
   queryAvailability(
@@ -108,27 +104,31 @@ export class InventoryDomainService {
     );
   }
 
+  // D5 follow-up (docs/PRD-sdk-migration-completion.md): InventoryLedgerEntryDto has no
+  // fromStorageLocationId/toStorageLocationId/workorderId/workorderLineId — the ledger detail
+  // page renders all four, and the SDK shape cannot produce them. Left on ApiBaseService
+  // pending an SDK model alignment rather than silently dropping them.
   queryLedger(filter: LedgerFilter): Observable<LedgerPageResponse> {
-    return this.ledgerSdk
-      .listInventoryLedger(
-        filter.productSku,
-        filter.locationId,
-        filter.storageLocationId,
-        filter.dateFrom,
-        filter.dateTo,
-        filter.sourceTransactionId,
-        filter.workorderId,
-        filter.workorderLineId,
-        filter.movementTypes,
-        filter.pageToken,
-        filter.pageSize,
-      )
-      .pipe(map(page => this.toLedgerPageResponse(page)));
+    let params = new HttpParams();
+    if (filter.productSku != null) { params = params.set('productSku', filter.productSku); }
+    if (filter.locationId != null) { params = params.set('locationId', filter.locationId); }
+    if (filter.storageLocationId != null) { params = params.set('storageLocationId', filter.storageLocationId); }
+    if (filter.dateFrom != null) { params = params.set('dateFrom', filter.dateFrom); }
+    if (filter.dateTo != null) { params = params.set('dateTo', filter.dateTo); }
+    if (filter.sourceTransactionId != null) { params = params.set('sourceTransactionId', filter.sourceTransactionId); }
+    if (filter.workorderId != null) { params = params.set('workorderId', filter.workorderId); }
+    if (filter.workorderLineId != null) { params = params.set('workorderLineId', filter.workorderLineId); }
+    if (filter.pageSize != null) { params = params.set('pageSize', String(filter.pageSize)); }
+    if (filter.pageToken != null) { params = params.set('pageToken', filter.pageToken); }
+    if (filter.movementTypes != null && filter.movementTypes.length > 0) {
+      filter.movementTypes.forEach(t => { params = params.append('movementTypes', t); });
+    }
+    return this.api.get<LedgerPageResponse>('/inventory/v1/inventory/ledger', params);
   }
 
   getLedgerEntry(ledgerEntryId: string): Observable<InventoryLedgerEntry> {
-    return this.ledgerSdk.getInventoryLedgerEntry(ledgerEntryId).pipe(
-      map(dto => this.toLedgerEntry(dto)),
+    return this.api.get<InventoryLedgerEntry>(
+      `/inventory/v1/inventory/ledger/${encodeURIComponent(ledgerEntryId)}`,
     );
   }
 
@@ -207,30 +207,6 @@ export class InventoryDomainService {
       '/inventory/v1/inventory/shortage/resolve',
       request,
     );
-  }
-
-  private toLedgerPageResponse(page: LedgerPage): LedgerPageResponse {
-    const entries = (page.entries ?? []) as InventoryLedgerEntryDto[];
-    return {
-      items: entries.map(dto => this.toLedgerEntry(dto)),
-      nextPageToken: page.nextPageToken ?? null,
-    };
-  }
-
-  private toLedgerEntry(dto: InventoryLedgerEntryDto): InventoryLedgerEntry {
-    return {
-      ledgerEntryId: dto.ledgerEntryId,
-      timestamp: dto.timestamp,
-      movementType: dto.eventType,
-      productSku: dto.stockItemId,
-      quantityChange: dto.changeInQuantity,
-      uom: dto.unitOfMeasure ?? '',
-      fromLocationId: dto.fromLocationId,
-      toLocationId: dto.toLocationId,
-      actorId: dto.transactionUserId,
-      reasonCode: dto.reasonCode,
-      sourceTransactionId: dto.sourceTransactionId,
-    };
   }
 
   private toReturnReasonCode(dto: ReasonCodeDto): ReturnReasonCode {

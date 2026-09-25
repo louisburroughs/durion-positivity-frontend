@@ -40,6 +40,16 @@
     "tracking": "#350"
   },
   {
+    "key": "src/app/features/inventory/services/inventory.service.ts :: '/inventory/v1/inventory/ledger'",
+    "reason": "InventoryLedgerEntryDto (@durion-sdk/inventory) has no fromStorageLocationId/toStorageLocationId/workorderId/workorderLineId, which the ledger detail page renders; D5 follow-up, kept on ApiBaseService pending SDK model alignment.",
+    "tracking": "#350"
+  },
+  {
+    "key": "src/app/features/inventory/services/inventory.service.ts :: '/inventory/v1/inventory/ledger/'",
+    "reason": "InventoryLedgerEntryDto (@durion-sdk/inventory) has no fromStorageLocationId/toStorageLocationId/workorderId/workorderLineId, which the ledger detail page renders; D5 follow-up, kept on ApiBaseService pending SDK model alignment.",
+    "tracking": "#350"
+  },
+  {
     "key": "src/app/features/inventory/services/inventory.service.ts :: '/inventory/v1/inventory/putaway/tasks'",
     "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
     "tracking": "#350"
