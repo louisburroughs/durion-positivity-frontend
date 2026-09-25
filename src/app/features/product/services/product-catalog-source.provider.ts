@@ -1,6 +1,7 @@
 import { EnvironmentInjector, Provider, inject, runInInjectionContext } from '@angular/core';
-import { from } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Observable, from, of, throwError } from 'rxjs';
+import { catchError, map, switchMap } from 'rxjs/operators';
 import {
   PRODUCT_CATALOG_SOURCE,
   ProductCatalogSource,
@@ -36,9 +37,23 @@ export function provideProductCatalogSource(): Provider {
           from(getCatalog()).pipe(switchMap(catalog => catalog.searchServices(query))),
         searchProducts: query =>
           from(getCatalog()).pipe(switchMap(catalog => catalog.searchProducts(query))),
-        getActiveMsrpAmount: sku =>
+        getActiveMsrpAmount: (sku): Observable<number | null> =>
           from(getCatalog()).pipe(
-            switchMap(catalog => catalog.getActiveMsrp(sku).pipe(map(msrp => msrp?.amount ?? null))),
+            switchMap(catalog =>
+              catalog.getActiveMsrp(sku).pipe(
+                map(msrp => msrp?.amount ?? null),
+                // The contract promises null for "no active MSRP", but
+                // ProductCatalogService.getActiveMsrp lets a 404 through as an
+                // Rx error rather than a null value — map exactly that case to
+                // null here; any other failure (network, 5xx, auth) still
+                // propagates so the caller's error branch fires.
+                catchError((err: unknown) =>
+                  err instanceof HttpErrorResponse && err.status === 404
+                    ? of(null)
+                    : throwError(() => err),
+                ),
+              ),
+            ),
           ),
       };
     },

@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
-import { firstValueFrom, of } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
+import { firstValueFrom, of, throwError } from 'rxjs';
 import { provideProductCatalogSource } from './product-catalog-source.provider';
 import { ProductCatalogService } from './product-catalog.service';
 import { PRODUCT_CATALOG_SOURCE } from '../../../shared/product-catalog/product-catalog-source.tokens';
@@ -83,5 +84,24 @@ describe('provideProductCatalogSource', () => {
     const amount = await firstValueFrom(source.getActiveMsrpAmount('prod-1'));
 
     expect(amount).toBeNull();
+  });
+
+  it('maps a 404 from getActiveMsrp to null (no active MSRP)', async () => {
+    stubCatalog.getActiveMsrp.mockReturnValue(
+      throwError(() => new HttpErrorResponse({ status: 404, statusText: 'Not Found' })),
+    );
+    const source = TestBed.inject(PRODUCT_CATALOG_SOURCE);
+
+    const amount = await firstValueFrom(source.getActiveMsrpAmount('prod-1'));
+
+    expect(amount).toBeNull();
+  });
+
+  it('propagates a non-404 error from getActiveMsrp instead of swallowing it to null', async () => {
+    const serverError = new HttpErrorResponse({ status: 500, statusText: 'Server Error' });
+    stubCatalog.getActiveMsrp.mockReturnValue(throwError(() => serverError));
+    const source = TestBed.inject(PRODUCT_CATALOG_SOURCE);
+
+    await expect(firstValueFrom(source.getActiveMsrpAmount('prod-1'))).rejects.toBe(serverError);
   });
 });
