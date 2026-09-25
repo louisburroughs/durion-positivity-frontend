@@ -55,6 +55,20 @@ tbody tr:nth-child(even) {
   background: color-mix(in srgb, var(--brand-primary) 14%, var(--cardBackground));
 }
 
+.row-active {
+  outline: 2px solid var(--link-color);
+  outline-offset: -2px;
+}
+
+.select-task-btn {
+  min-height: 24px;
+  min-width: 24px;
+}
+
+.banner-complete {
+  margin-bottom: 1rem;
+}
+
 .field-row {
   display: grid;
   gap: 0.35rem;

@@ -1,9 +1,11 @@
 /**
  * Fulfillment picking models: pick list / mechanic picking / consume-picked-items.
  * Source of truth: durion-positivity-backend/pos-workorder/openapi.yaml
- * (`WorkorderPickFacadeController`, `WorkorderPickedItemsController`) plus the
- * legacy `/workexec/v1/workorders/{workorderId}/picks/*` endpoints still served
- * off `ApiBaseService` (see `services/inventory-pick.service.ts`).
+ * (`WorkorderPickFacadeController`, `WorkorderPickedItemsController`), all
+ * served through the generated `@durion-sdk/workorder` `WorkorderPickFacadeService`
+ * / `WorkorderPickedItemsService` (see `services/inventory-pick.service.ts`).
+ * The legacy `/workexec/v1/workorders/{workorderId}/picks/*` endpoints never
+ * existed behind the gateway (issue #369) and are gone.
  *
  * Picking belongs to inventory even though a mechanic performs it on a
  * workorder (issue #347, group 5) — moved out of `features/workexec` so the pages
@@ -59,21 +61,22 @@ export interface ConsumptionResult {
   consumedLineCount: number;
 }
 
-// Mechanic Picking (CAP-218 #244)
-export interface PickExecuteLine {
-  pickLineId: string;
-  pickTaskId: string;
-  productSku: string;
-  requestedQty: number;
-  confirmedQty: number;
-  status: string;
-}
-
+// Mechanic Picking (CAP-218 #244) — per pick task (issue #369): the SDK's
+// `WorkorderPickFacadeService` models scan-resolve/confirm/complete at
+// pick-task granularity, not a whole pick list, and `pickLineId` equals
+// `pickTaskId` in the current single-line-per-task backend model.
 export interface ScanResolveRequest {
-  scanValue: string;
+  scannedSkuId: string;
+  scannedLocationId: string;
 }
 
-export interface PickConfirmRequest {
-  pickLineId: string;
-  quantity: number;
+/** Evaluative only (ADR-0064 §1) — resolving a scan records no state; `matched`
+ * plus `matchStatus` ('MATCHED' | 'SKU_MISMATCH' | 'LOCATION_MISMATCH' | 'NO_MATCH')
+ * drive the confirm step's gating. */
+export interface ScanResolveResult {
+  pickTaskId: string;
+  matched: boolean;
+  matchStatus?: string;
+  resolvedSkuId?: string;
+  resolvedLocationId?: string;
 }

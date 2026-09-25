@@ -30,11 +30,6 @@
     "tracking": "#350"
   },
   {
-    "key": "src/app/features/inventory/services/inventory-pick.service.ts :: '/workexec/v1/workorders/'",
-    "reason": "resolvePickScan/confirmPickLine/completePickList only — hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03), moved here from workexec.service.ts (issue #347 group 5); migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "#350"
-  },
-  {
     "key": "src/app/features/inventory/services/inventory-receiving.service.ts :: '/inventory/v1/receiving/workorders'",
     "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
     "tracking": "#350"

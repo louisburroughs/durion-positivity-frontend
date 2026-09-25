@@ -3,13 +3,38 @@ import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
-import { PickExecuteLine, PickListView } from '../../../models/inventory-pick.models';
+import { timer } from 'rxjs';
+import { PickListView, PickTaskLine, ScanResolveResult } from '../../../models/inventory-pick.models';
 import { InventoryPickService } from '../../../services/inventory-pick.service';
 import { INVENTORY_PAGE } from '../../../../../core/security/route-permissions';
 import { AuthService } from '../../../../../core/services/auth.service';
 
-type PageState = 'idle' | 'loading' | 'ready' | 'picking' | 'complete' | 'error';
+type PageState = 'idle' | 'loading' | 'ready' | 'mutating' | 'error';
 
+/** The backend's terminal "done" value for a pick task (PickTaskStatus.PICKED in
+ * pos-inventory) — set on the replica as soon as any confirm applies, and always
+ * true once `completeTask()` succeeds. Mirrors pos-inventory's own `allPicked`
+ * check (`PickListServiceImpl#confirmPickTask`), never a local quantity comparison. */
+const PICK_TASK_STATUS_PICKED = 'PICKED';
+
+const SCAN_RESULT_KEY_BASE = 'INVENTORY.FULFILLMENT.PICK_EXECUTE.SCAN_RESULT.';
+
+/** A command error or stalled-poll message scoped to the task it belongs to —
+ * never rendered unless that task is still the active one (issue #374 finding 6). */
+interface TaskStatusMessage {
+  taskId: string;
+  kind: 'error' | 'stalled';
+  key: string;
+}
+
+/**
+ * Per-pick-task mechanic execution (issue #369): rebuilt from a whole-pick-list
+ * page to a per-task one because the SDK's `WorkorderPickFacadeService` models
+ * scan-resolve/confirm/complete at pick-task granularity, not list-wide. The
+ * mechanic selects one of the workorder's pick tasks as `activeTaskId`, scans
+ * against it, confirms a quantity, and completes it; other tasks stay listed
+ * and selectable throughout.
+ */
 @Component({
   selector: 'app-pick-execute-page',
   standalone: true,
@@ -24,12 +49,12 @@ export class PickExecutePageComponent {
   private readonly destroyRef = inject(DestroyRef);
 
   /**
-   * Every mutation surface on this page (scan resolve, line confirm, complete)
-   * gates independently on `inventory:pick_list:execute` — the write authority
-   * the backend actually enforces (`WorkorderPickFacadeController`), not the
-   * `inventory:pick_list:view` the route itself used to carry (ADR-0040 §6a.1).
-   * Unknown permissions (legacy token, no `perm_bits` claim) stay open, matching
-   * `canAccess()`'s own fallback.
+   * Every mutation surface on this page (scan resolve, line confirm, task
+   * complete) gates independently on `inventory:pick_list:execute` — the write
+   * authority the backend actually enforces (`WorkorderPickFacadeController`),
+   * not the `inventory:pick_list:view` the route itself used to carry
+   * (ADR-0040 §6a.1). Unknown permissions (legacy token, no `perm_bits` claim)
+   * stay open, matching `canAccess()`'s own fallback.
    */
   readonly canExecute = computed(
     () => !this.auth.permissionsKnown() || this.auth.hasAnyPermission(INVENTORY_PAGE.pickExecute),
@@ -38,19 +63,156 @@ export class PickExecutePageComponent {
   readonly state = signal<PageState>('idle');
   readonly errorKey = signal<string | null>(null);
   readonly pickList = signal<PickListView | null>(null);
-  readonly lines = signal<PickExecuteLine[]>([]);
-  readonly scanInput = signal('');
+  readonly tasks = signal<PickTaskLine[]>([]);
+
+  readonly activeTaskId = signal<string | null>(null);
+  readonly activeTask = computed(
+    () => this.tasks().find(t => t.pickTaskId === this.activeTaskId()) ?? null,
+  );
+  readonly activeTaskRemainingQty = computed(() => {
+    const task = this.activeTask();
+    return task ? Math.max(task.requestedQty - task.pickedQty, 0) : 0;
+  });
+
+  /**
+   * Gated on the backend's own completion status (issue #374 finding 2), not a
+   * local quantity comparison — `pickedQty >= requestedQty` can be true on the
+   * stale pre-readback snapshot the instant a confirm is queued (202 PENDING),
+   * showing "all complete" before the command has actually applied.
+   */
+  readonly allTasksComplete = computed(() => {
+    const tasks = this.tasks();
+    return tasks.length > 0 && tasks.every(t => t.status === PICK_TASK_STATUS_PICKED);
+  });
+
+  readonly scannedSkuId = signal('');
+  readonly scannedLocationId = signal('');
   readonly scanAttempted = signal(false);
-  readonly pendingLine = signal<PickExecuteLine | null>(null);
+  readonly scanResult = signal<ScanResolveResult | null>(null);
+  /** Whether the current `scanResult` cleared the active task to confirm. */
+  readonly scanMatched = computed(() => this.scanResult()?.matched === true);
+  readonly scanResultKey = computed(() => {
+    const result = this.scanResult();
+    if (!result) return null;
+    if (result.matched) return `${SCAN_RESULT_KEY_BASE}MATCHED`;
+    const status = result.matchStatus;
+    if (status === 'SKU_MISMATCH' || status === 'LOCATION_MISMATCH' || status === 'NO_MATCH') {
+      return `${SCAN_RESULT_KEY_BASE}${status}`;
+    }
+    return `${SCAN_RESULT_KEY_BASE}UNKNOWN`;
+  });
+
   readonly confirmQty = signal(0);
+
+  /**
+   * Whether `confirmQty` is a real, in-range amount to pick (issue #374
+   * finding 2) — finite, positive, and no more than what remains on the
+   * active task. The input's `max` attribute isn't a programmatic guard, so
+   * both the confirm button's `disabled` binding and `confirmLine()` itself
+   * gate on this same computed rather than duplicating the condition.
+   */
+  readonly confirmQtyValid = computed(() => {
+    const quantity = this.confirmQty();
+    return Number.isFinite(quantity) && quantity > 0 && quantity <= this.activeTaskRemainingQty();
+  });
+
+  /**
+   * The pick task with a confirm/complete command in flight (including its
+   * post-mutation poll) — `null` when nothing is pending. Only ever one task
+   * at a time: the scan/confirm/complete controls exist solely for the active
+   * task, and `selectTask()` abandons a leaving task's poll (issue #374 finding 5).
+   */
+  readonly pendingTaskId = signal<string | null>(null);
+  /** A command error or stalled-poll message, scoped to the task it belongs
+   * to (issue #374 finding 6) — never a page-wide `errorKey`. */
+  readonly taskStatus = signal<TaskStatusMessage | null>(null);
+
+  /** Whether the *active* task specifically has a confirm/complete in flight —
+   * drives disabling its own controls without blocking a switch to another task. */
+  readonly activeTaskPending = computed(
+    () => this.pendingTaskId() !== null && this.pendingTaskId() === this.activeTaskId(),
+  );
+  /** The active task's own command error/stalled message, or `null` if the
+   * current `taskStatus()` belongs to a task the mechanic has since left. */
+  readonly activeTaskStatus = computed(() => {
+    const status = this.taskStatus();
+    return status && status.taskId === this.activeTaskId() ? status : null;
+  });
+  /** Combines the scan-resolve page-level busy flag with the active task's own
+   * confirm/complete pending flag for a single disable condition in the template. */
+  readonly activeTaskBusy = computed(() => this.state() === 'mutating' || this.activeTaskPending());
+
+  private static readonly MUTATION_POLL_MAX_ATTEMPTS = 5;
+  private static readonly MUTATION_POLL_BACKOFF_MS = [500, 1000, 2000, 4000];
+
+  /**
+   * Guards writes to `tasks` — shared by the initial load, `reload()`, and
+   * every post-mutation readback (ADR-0063 §2: one source, "the pick-tasks
+   * reader", reused from four call sites; each bumps this counter before
+   * issuing its read so a stale readback can never revert a fresher one).
+   */
+  private tasksReadSeq = 0;
+  /** Guards writes to `scanResult`/`state` from a `resolveScan()` in flight.
+   * `selectTask()` and `loadPickList()` also bump it — switching tasks or
+   * (re)loading abandons any outstanding scan, so its late success or
+   * failure settles quietly instead of hitting the wrong task or the page
+   * (issue #374 finding 1). */
+  private scanReqSeq = 0;
+  /** Guards the task-scoped busy/error/form-reset UI a confirm or complete
+   * action owns; independent of `tasksReadSeq` because it answers "is this
+   * still the mutation the active task is waiting on", not "is this still
+   * the freshest tasks read". Also the poll-cancellation switch (issue #374
+   * finding 5): `selectTask()` bumps it when leaving a task with a pending
+   * mutation, so that mutation's post-mutation poll stops scheduling further
+   * attempts (ADR-0063 §2/§4). */
+  private mutationSeq = 0;
 
   constructor() {
     this.loadPickList();
   }
 
-  setScanInput(value: string): void {
-    this.scanInput.set(value);
+  selectTask(taskId: string): void {
+    if (taskId === this.activeTaskId()) {
+      return;
+    }
+    const leavingTaskId = this.activeTaskId();
+    if (leavingTaskId !== null && this.pendingTaskId() === leavingTaskId) {
+      // The mechanic switched away from a task with a confirm/complete still
+      // polling — abandon it; no further retry attempts are useful once its
+      // controls are off screen (ADR-0063 §2/§4: this call owns settling the
+      // obligation now, so no page-wide error or stuck busy state follows).
+      ++this.mutationSeq;
+      this.pendingTaskId.set(null);
+    }
+    if (leavingTaskId !== null && this.taskStatus()?.taskId === leavingTaskId) {
+      this.taskStatus.set(null);
+    }
+    // Abandon any outstanding scan for the task being left — its result or
+    // error belongs to a task no longer on screen and must not repopulate
+    // the confirm UI, or land on the page-level error state, once it lands
+    // late (issue #374 finding 1; ADR-0063 §1-2). `applyScanResult`/
+    // `applyScanError` key off this counter, so bumping it here is enough
+    // for a stale scan to settle quietly.
+    ++this.scanReqSeq;
+    if (this.state() === 'mutating') {
+      this.state.set('ready');
+    }
+    this.activeTaskId.set(taskId);
+    this.resetScanState();
+    const task = this.tasks().find(t => t.pickTaskId === taskId);
+    this.confirmQty.set(task ? Math.max(task.requestedQty - task.pickedQty, 0) : 0);
+  }
+
+  setScannedSkuId(value: string): void {
+    this.scannedSkuId.set(value);
     this.scanAttempted.set(false);
+    this.scanResult.set(null);
+  }
+
+  setScannedLocationId(value: string): void {
+    this.scannedLocationId.set(value);
+    this.scanAttempted.set(false);
+    this.scanResult.set(null);
   }
 
   setConfirmQty(quantity: number): void {
@@ -63,87 +225,272 @@ export class PickExecutePageComponent {
 
   resolveScan(): void {
     const workorderId = this.route.snapshot.paramMap.get('workorderId');
-    const scanValue = this.scanInput().trim();
+    const task = this.activeTask();
+    const scannedSkuId = this.scannedSkuId().trim();
+    const scannedLocationId = this.scannedLocationId().trim();
     this.scanAttempted.set(true);
-    if (!workorderId || !scanValue || !this.canExecute()) {
+    if (!workorderId || !task || !scannedSkuId || !scannedLocationId || !this.canExecute()) {
       return;
     }
 
-    this.state.set('picking');
+    const taskId = task.pickTaskId;
+    const seq = ++this.scanReqSeq;
+    this.state.set('mutating');
     this.errorKey.set(null);
 
     this.pickService
-      .resolvePickScan(workorderId, { scanValue })
+      .resolvePickScan(workorderId, taskId, { scannedSkuId, scannedLocationId })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: resolvedLines => {
-          this.lines.set(resolvedLines);
-          this.pendingLine.set(resolvedLines[0] ?? null);
-          this.confirmQty.set(resolvedLines[0]?.requestedQty ?? 0);
-          this.state.set('ready');
-        },
-        error: () => {
-          this.state.set('error');
-          this.errorKey.set('INVENTORY.FULFILLMENT.PICK_EXECUTE.ERROR.RESOLVE_SCAN');
-        },
+        next: result => this.applyScanResult(result, taskId, seq),
+        error: () => this.applyScanError(seq),
       });
   }
 
   confirmLine(): void {
     const workorderId = this.route.snapshot.paramMap.get('workorderId');
-    const line = this.pendingLine();
+    const task = this.activeTask();
     const quantity = this.confirmQty();
 
-    if (!workorderId || !line || quantity <= 0 || !this.canExecute()) {
+    // Re-checked here, not only via the button's `disabled` binding: the
+    // input's `max` attribute is not a programmatic guard, so a caller
+    // reaching this method directly could still send an over-pick, NaN, or
+    // infinite quantity to the write facade (issue #374 finding 2).
+    if (!workorderId || !task || !this.scanMatched() || !this.confirmQtyValid() || !this.canExecute()) {
       return;
     }
 
-    this.state.set('picking');
-    this.errorKey.set(null);
+    const taskId = task.pickTaskId;
+    const priorPickedQty = task.pickedQty;
+    const seq = ++this.mutationSeq;
+    this.pendingTaskId.set(taskId);
+    this.clearTaskStatus(taskId);
 
     this.pickService
-      .confirmPickLine(workorderId, {
-        pickLineId: line.pickLineId,
-        quantity,
-      })
+      .confirmPickLine(workorderId, taskId, quantity)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: confirmedLine => {
-          const updated = this.lines().map(item =>
-            item.pickLineId === confirmedLine.pickLineId ? confirmedLine : item,
-          );
-          this.lines.set(updated);
-          this.pendingLine.set(null);
-          this.confirmQty.set(0);
-          this.scanInput.set('');
-          this.state.set('ready');
-        },
-        error: () => {
-          this.state.set('error');
-          this.errorKey.set('INVENTORY.FULFILLMENT.PICK_EXECUTE.ERROR.CONFIRM');
-        },
+        next: () =>
+          this.pollForTaskUpdate(
+            workorderId,
+            taskId,
+            seq,
+            // Settle on *this* command's result: the picked quantity reaching what
+            // this confirm added (or the task closing), not merely any change, which
+            // a concurrent update could also produce.
+            t => t.pickedQty >= priorPickedQty + quantity || t.status === PICK_TASK_STATUS_PICKED,
+            1,
+          ),
+        error: () => this.applyMutationError(taskId, seq, 'INVENTORY.FULFILLMENT.PICK_EXECUTE.ERROR.CONFIRM'),
       });
   }
 
-  complete(): void {
+  /**
+   * Disabled in the template until the active task has nothing left to pick
+   * (issue #374 finding 1) — re-checked here too, so a mechanic can't complete
+   * a task blind, bypassing scan/confirm, by calling this method directly.
+   */
+  completeTask(): void {
     const workorderId = this.route.snapshot.paramMap.get('workorderId');
-    if (!workorderId || !this.canExecute()) {
+    const task = this.activeTask();
+    if (!workorderId || !task || !this.canExecute() || this.activeTaskRemainingQty() > 0) {
       return;
     }
 
-    this.state.set('picking');
-    this.errorKey.set(null);
+    const taskId = task.pickTaskId;
+    const seq = ++this.mutationSeq;
+    this.pendingTaskId.set(taskId);
+    this.clearTaskStatus(taskId);
 
     this.pickService
-      .completePickList(workorderId)
+      .completePickTask(workorderId, taskId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: () => this.state.set('complete'),
-        error: () => {
-          this.state.set('error');
-          this.errorKey.set('INVENTORY.FULFILLMENT.PICK_EXECUTE.ERROR.COMPLETE');
-        },
+        next: () =>
+          this.pollForTaskUpdate(
+            workorderId,
+            taskId,
+            seq,
+            // Completion is only allowed once nothing remains to pick, so the
+            // quantity condition already holds before the command applies; only
+            // the backend's terminal status proves this complete landed.
+            t => t.status === PICK_TASK_STATUS_PICKED,
+            1,
+          ),
+        error: () => this.applyMutationError(taskId, seq, 'INVENTORY.FULFILLMENT.PICK_EXECUTE.ERROR.COMPLETE'),
       });
+  }
+
+  private applyScanResult(result: ScanResolveResult, taskId: string, seq: number): void {
+    // A newer scan (from this task or another) superseded this one entirely —
+    // that read owns settling the busy state; drop this one (ADR-0063 §1/§2).
+    if (seq !== this.scanReqSeq) {
+      return;
+    }
+    // The mechanic switched to a different task before this scan resolved:
+    // the busy obligation is still owed and settles below (§4), but the
+    // result itself belongs to a task that's no longer on screen and must
+    // not clobber whatever the now-active task's scan section shows (§3).
+    if (taskId === this.activeTaskId()) {
+      this.scanResult.set(result);
+      if (result.matched) {
+        this.confirmQty.set(this.activeTaskRemainingQty());
+      }
+    }
+    this.state.set('ready');
+  }
+
+  private applyScanError(seq: number): void {
+    if (seq !== this.scanReqSeq) {
+      return;
+    }
+    this.state.set('error');
+    this.errorKey.set('INVENTORY.FULFILLMENT.PICK_EXECUTE.ERROR.RESOLVE_SCAN');
+  }
+
+  /**
+   * confirmPickLine/completePickTask queue an async command (202 PENDING) — a
+   * single immediate readback can land before the command has actually
+   * applied (issue #374 finding 5). Re-reads `getPickTasks` through the
+   * shared `tasksReadSeq` guard (ADR-0063 §5) and keeps retrying, with
+   * backoff, up to `MUTATION_POLL_MAX_ATTEMPTS`, until `isSettled` confirms
+   * the task reflects the command. `selectTask()` bumps `mutationSeq` to
+   * cancel further attempts if the mechanic moves on; `takeUntilDestroyed`
+   * cancels on page destroy.
+   */
+  private pollForTaskUpdate(
+    workorderId: string,
+    taskId: string,
+    mutSeq: number,
+    isSettled: (task: PickTaskLine) => boolean,
+    attempt: number,
+  ): void {
+    const readSeq = ++this.tasksReadSeq;
+    this.pickService
+      .getPickTasks(workorderId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: tasks => {
+          // The refreshed task list is the authoritative server state for
+          // the whole workorder (not per-selection data): apply it whenever
+          // it's still the freshest tasks read, regardless of which task is
+          // active now, and regardless of whether this mutation is current.
+          if (readSeq === this.tasksReadSeq) {
+            this.applyTasks(tasks);
+          }
+          // A newer confirm/complete, or a task switch, has since taken over
+          // (or abandoned) settling this obligation — stop here without
+          // scheduling another attempt (ADR-0063 §2/§4).
+          if (mutSeq !== this.mutationSeq) {
+            return;
+          }
+          const updated = tasks.find(t => t.pickTaskId === taskId);
+          if (updated && isSettled(updated)) {
+            this.settleMutationSuccess(taskId, mutSeq);
+            return;
+          }
+          if (attempt >= PickExecutePageComponent.MUTATION_POLL_MAX_ATTEMPTS) {
+            this.settleMutationExhausted(taskId, mutSeq);
+            return;
+          }
+          const delayMs =
+            PickExecutePageComponent.MUTATION_POLL_BACKOFF_MS[
+              Math.min(attempt - 1, PickExecutePageComponent.MUTATION_POLL_BACKOFF_MS.length - 1)
+            ];
+          timer(delayMs)
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe(() => {
+              if (mutSeq !== this.mutationSeq) {
+                return; // cancelled — task switch or a newer mutation (ADR-0063 §2)
+              }
+              this.pollForTaskUpdate(workorderId, taskId, mutSeq, isSettled, attempt + 1);
+            });
+        },
+        error: () => this.applyRefreshError(taskId, mutSeq),
+      });
+  }
+
+  private settleMutationSuccess(taskId: string, mutSeq: number): void {
+    if (mutSeq !== this.mutationSeq) {
+      return;
+    }
+    this.pendingTaskId.set(null);
+    this.clearTaskStatus(taskId);
+    // The mechanic switched away from this task before it settled: the busy
+    // obligation is still paid above: the now-irrelevant task's form must
+    // not clobber whatever the active task's scan/confirm section shows
+    // (ADR-0063 §3).
+    if (taskId === this.activeTaskId()) {
+      this.resetScanState();
+      const refreshed = this.tasks().find(t => t.pickTaskId === taskId);
+      this.confirmQty.set(refreshed ? Math.max(refreshed.requestedQty - refreshed.pickedQty, 0) : 0);
+    }
+  }
+
+  private settleMutationExhausted(taskId: string, mutSeq: number): void {
+    if (mutSeq !== this.mutationSeq) {
+      return;
+    }
+    this.pendingTaskId.set(null);
+    this.taskStatus.set({
+      taskId,
+      kind: 'stalled',
+      key: 'INVENTORY.FULFILLMENT.PICK_EXECUTE.ERROR.STILL_PROCESSING',
+    });
+  }
+
+  /** A confirm/complete command failure — scoped to its task (issue #374
+   * finding 6), never a page-wide `errorKey`, so a late failure for a task
+   * the mechanic has since left doesn't surface as a page error over
+   * whichever task is now active. */
+  private applyMutationError(taskId: string, mutSeq: number, key: string): void {
+    if (mutSeq !== this.mutationSeq) {
+      return; // superseded — obligation already settled by selectTask() or a newer mutation
+    }
+    this.pendingTaskId.set(null);
+    this.taskStatus.set({ taskId, kind: 'error', key });
+  }
+
+  /** The post-mutation `getPickTasks` readback itself failing — a workorder-wide
+   * problem (issue #374 finding 6), kept on the page-level `state`/`errorKey`
+   * machine (ADR-0031 §1) rather than the task-scoped `taskStatus`. Gated by
+   * the same ownership check as the success path (issue #374 finding 3): if
+   * a newer mutation, task switch, or reload has since taken over this
+   * obligation, the stale failure settles quietly instead of replacing
+   * whatever the mechanic is now looking at with a refresh error. */
+  private applyRefreshError(taskId: string, mutSeq: number): void {
+    if (mutSeq !== this.mutationSeq) {
+      return; // superseded — obligation already settled by selectTask() or a newer mutation
+    }
+    if (this.pendingTaskId() === taskId) {
+      this.pendingTaskId.set(null);
+    }
+    this.state.set('error');
+    this.errorKey.set('INVENTORY.FULFILLMENT.PICK_EXECUTE.ERROR.REFRESH');
+  }
+
+  private clearTaskStatus(taskId: string): void {
+    if (this.taskStatus()?.taskId === taskId) {
+      this.taskStatus.set(null);
+    }
+  }
+
+  private resetScanState(): void {
+    this.scannedSkuId.set('');
+    this.scannedLocationId.set('');
+    this.scanAttempted.set(false);
+    this.scanResult.set(null);
+  }
+
+  private applyTasks(tasks: PickTaskLine[]): void {
+    this.tasks.set(tasks);
+    const activeId = this.activeTaskId();
+    if (activeId && !tasks.some(t => t.pickTaskId === activeId)) {
+      this.activeTaskId.set(null);
+    }
+    if (!this.activeTaskId() && tasks.length > 0) {
+      this.selectTask(tasks[0].pickTaskId);
+    }
   }
 
   private loadPickList(): void {
@@ -156,35 +503,45 @@ export class PickExecutePageComponent {
 
     this.state.set('loading');
     this.errorKey.set(null);
+    // A full (re)load abandons any in-flight confirm/complete poll and any
+    // outstanding scan — both belong to state that's about to be replaced by
+    // fresh server data (issue #374 finding 1; ADR-0063 §2/§7).
+    ++this.mutationSeq;
+    ++this.scanReqSeq;
+    this.pendingTaskId.set(null);
+    this.taskStatus.set(null);
+    const seq = ++this.tasksReadSeq;
 
     this.pickService
       .getWorkorderPickList(workorderId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: pickList => {
-          // Nothing to execute without a pick list; this page has no empty state.
-          if (!pickList) {
-            this.state.set('error');
-            this.errorKey.set('INVENTORY.FULFILLMENT.PICK_EXECUTE.ERROR.LOAD');
-            return;
-          }
-          this.pickList.set(pickList);
-          this.lines.set(
-            pickList.tasks.map(task => ({
-              pickLineId: task.pickTaskId,
-              pickTaskId: task.pickTaskId,
-              productSku: task.productSku,
-              requestedQty: task.requestedQty,
-              confirmedQty: task.pickedQty,
-              status: task.status,
-            })),
-          );
-          this.state.set('ready');
-        },
-        error: () => {
-          this.state.set('error');
-          this.errorKey.set('INVENTORY.FULFILLMENT.PICK_EXECUTE.ERROR.LOAD');
-        },
+        next: pickList => this.applyPickList(pickList, seq),
+        error: () => this.applyLoadError(seq),
       });
+  }
+
+  private applyPickList(pickList: PickListView | null, seq: number): void {
+    if (seq !== this.tasksReadSeq) {
+      return; // superseded by a later load/reload
+    }
+    // Nothing to execute without a pick list; this page has no empty state.
+    if (!pickList) {
+      this.state.set('error');
+      this.errorKey.set('INVENTORY.FULFILLMENT.PICK_EXECUTE.ERROR.LOAD');
+      return;
+    }
+    this.pickList.set(pickList);
+    this.applyTasks(pickList.tasks);
+    this.state.set('ready');
+    this.errorKey.set(null);
+  }
+
+  private applyLoadError(seq: number): void {
+    if (seq !== this.tasksReadSeq) {
+      return;
+    }
+    this.state.set('error');
+    this.errorKey.set('INVENTORY.FULFILLMENT.PICK_EXECUTE.ERROR.LOAD');
   }
 }

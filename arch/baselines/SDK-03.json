@@ -15,11 +15,6 @@
     "tracking": "#350"
   },
   {
-    "key": "src/app/features/inventory/services/inventory-pick.service.ts -> src/app/core/services/api-base.service.ts",
-    "reason": "resolvePickScan/confirmPickLine/completePickList only — legacy ApiBaseService transport carried over from workexec.service.ts (SDK migrates with PRD-sdk-migration-completion.md); see class docblock for why these three specifically can't move to WorkorderPickFacadeService yet.",
-    "tracking": "#350"
-  },
-  {
     "key": "src/app/features/inventory/services/inventory-receiving.service.ts -> src/app/core/services/api-base.service.ts",
     "reason": "legacy ApiBaseService transport; migrates with PRD-sdk-migration-completion.md.",
     "tracking": "#350"
