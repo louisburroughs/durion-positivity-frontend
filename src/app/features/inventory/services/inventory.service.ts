@@ -5,6 +5,8 @@ import { map } from 'rxjs/operators';
 import {
   InventoryAvailabilityService,
   InventoryReferenceDataService,
+  PutawayExecutionResponse as SdkPutawayExecutionResponse,
+  PutawayExecutionService,
   ReasonCodeDto,
   ReturnsService,
 } from '@durion-sdk/inventory';
@@ -17,8 +19,8 @@ import {
   LedgerPageResponse,
   LocationRef,
   LocationZone,
-  PutawayCompleteRequest,
-  PutawayResult,
+  PutawayExecuteRequest,
+  PutawayExecutionResult,
   PutawayTask,
   ReturnReasonCode,
   ReturnToStockRequest,
@@ -61,6 +63,7 @@ export class InventoryDomainService {
   private readonly refDataSdk = inject(InventoryReferenceDataService);
   private readonly availabilitySdk = inject(InventoryAvailabilityService);
   private readonly returnsSdk = inject(ReturnsService);
+  private readonly putawayExecutionSdk = inject(PutawayExecutionService);
 
   queryAvailability(
     sku: string,
@@ -145,11 +148,21 @@ export class InventoryDomainService {
     return this.api.get<PutawayTask[]>('/inventory/v1/inventory/putaway/tasks', params);
   }
 
-  completePutawayTask(taskId: string, body: PutawayCompleteRequest): Observable<PutawayResult> {
-    return this.api.post<PutawayResult>(
-      `/inventory/v1/inventory/putaway/tasks/${encodeURIComponent(taskId)}/complete`,
-      body,
-    );
+  /**
+   * (issue #377) The backend has no `/putaway/tasks/{taskId}/complete` endpoint;
+   * `PutawayExecuteController` only exposes `POST .../tasks/{taskId}/execute`, whose
+   * `PutawayExecutionRequest` (skuId/sourceLocationId/destinationLocationId/quantity)
+   * matches the SDK's `PutawayExecutionService.executePutaway` exactly.
+   */
+  executePutawayTask(taskId: string, request: PutawayExecuteRequest): Observable<PutawayExecutionResult> {
+    return this.putawayExecutionSdk
+      .executePutaway(taskId, {
+        skuId: request.skuId,
+        sourceLocationId: request.sourceLocationId,
+        destinationLocationId: request.destinationLocationId,
+        quantity: request.quantity,
+      })
+      .pipe(map(response => this.toPutawayExecutionResult(response)));
   }
 
   getReplenishmentTasks(locationId?: string): Observable<ReplenishmentTask[]> {
@@ -211,5 +224,20 @@ export class InventoryDomainService {
 
   private toReturnReasonCode(dto: ReasonCodeDto): ReturnReasonCode {
     return { code: dto.code, label: dto.description };
+  }
+
+  private toPutawayExecutionResult(response: SdkPutawayExecutionResponse): PutawayExecutionResult {
+    return {
+      ledgerEntryId: response.ledgerEntryId,
+      taskId: response.taskId,
+      skuId: response.skuId,
+      sourceLocationId: response.sourceLocationId,
+      destinationLocationId: response.destinationLocationId,
+      quantityMoved: response.quantityMoved,
+      transactionType: response.transactionType,
+      status: response.status,
+      executedAt: response.executedAt,
+      actorId: response.actorId,
+    };
   }
 }

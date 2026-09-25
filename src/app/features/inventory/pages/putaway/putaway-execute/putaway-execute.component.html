@@ -35,13 +35,13 @@
     <h1 id="putaway-execute-title">{{ 'INVENTORY.PUTAWAY.EXECUTE.TITLE' | translate }}</h1>
     <dl class="detail-grid">
       <dt>{{ 'INVENTORY.PUTAWAY.EXECUTE.FIELD.SKU' | translate }}</dt>
-      <dd>{{ task()!.productSku }}</dd>
+      <dd>{{ task()!.productId }}</dd>
 
       <dt>{{ 'INVENTORY.PUTAWAY.EXECUTE.FIELD.QUANTITY' | translate }}</dt>
-      <dd>{{ task()!.quantity }} {{ task()!.uom }}</dd>
+      <dd>{{ task()!.quantity }}</dd>
 
       <dt>{{ 'INVENTORY.PUTAWAY.EXECUTE.FIELD.STAGING_LOCATION' | translate }}</dt>
-      <dd>{{ task()!.stagingStorageLocationId }}</dd>
+      <dd>{{ task()!.sourceLocationId }}</dd>
     </dl>
   </section>
 

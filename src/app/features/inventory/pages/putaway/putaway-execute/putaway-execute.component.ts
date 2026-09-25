@@ -44,7 +44,7 @@ export class PutawayExecuteComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: tasks => {
-          const found = tasks.find(t => t.putawayTaskId === taskId) ?? null;
+          const found = tasks.find(t => t.taskId === taskId) ?? null;
           this.task.set(found);
           this.state.set(found ? 'ready' : 'empty');
         },
@@ -69,9 +69,11 @@ export class PutawayExecuteComponent {
     this.errorKey.set(null);
 
     this.inventoryService
-      .completePutawayTask(task.putawayTaskId, {
-        putawayTaskId: task.putawayTaskId,
-        targetStorageLocationId: this.targetStorageLocationId(),
+      .executePutawayTask(task.taskId, {
+        skuId: task.productId,
+        sourceLocationId: task.sourceLocationId,
+        destinationLocationId: this.targetStorageLocationId(),
+        quantity: task.quantity,
       })
       .pipe(
         takeUntilDestroyed(this.destroyRef),

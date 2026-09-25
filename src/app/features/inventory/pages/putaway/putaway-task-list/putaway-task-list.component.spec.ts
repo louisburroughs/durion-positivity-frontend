@@ -7,12 +7,11 @@ import { InventoryDomainService } from '../../../services/inventory.service';
 import { PutawayTask } from '../../../models/inventory.models';
 
 const task: PutawayTask = {
-  putawayTaskId: 'pt-001',
-  locationId: 'loc-1',
-  stagingStorageLocationId: 'ssl-1',
-  productSku: 'SKU-001',
+  taskId: 'pt-001',
+  sourceReceiptId: 'receipt-1',
+  productId: 'sku-001',
   quantity: 5,
-  uom: 'EA',
+  sourceLocationId: 'ssl-1',
   status: 'PENDING',
 };
 

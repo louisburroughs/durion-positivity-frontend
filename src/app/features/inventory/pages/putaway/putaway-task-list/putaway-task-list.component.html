@@ -50,15 +50,15 @@
           </tr>
         </thead>
         <tbody>
-          @for (task of tasks(); track task.putawayTaskId) {
-          <tr role="row" class="table-row-action" tabindex="0" (click)="selectTask(task.putawayTaskId)"
-            (keydown.enter)="selectTask(task.putawayTaskId)"
-            [attr.aria-label]="('INVENTORY.PUTAWAY.TASKS.ROW.ARIA' | translate) + ': ' + task.productSku + ', ' + task.quantity + ' ' + task.uom">
-            <td>{{ task.putawayTaskId }}</td>
-            <td>{{ task.productSku }}</td>
-            <td>{{ task.stagingStorageLocationId }}</td>
-            <td>{{ task.targetStorageLocationId ?? '—' }}</td>
-            <td>{{ task.quantity }} {{ task.uom }}</td>
+          @for (task of tasks(); track task.taskId) {
+          <tr role="row" class="table-row-action" tabindex="0" (click)="selectTask(task.taskId)"
+            (keydown.enter)="selectTask(task.taskId)"
+            [attr.aria-label]="('INVENTORY.PUTAWAY.TASKS.ROW.ARIA' | translate) + ': ' + task.productId + ', ' + task.quantity">
+            <td>{{ task.taskId }}</td>
+            <td>{{ task.productId }}</td>
+            <td>{{ task.sourceLocationId }}</td>
+            <td>{{ task.suggestedDestinationLocationId ?? '—' }}</td>
+            <td>{{ task.quantity }}</td>
             <td class="badge-cell">
               @switch (task.status) {
               @case ('PENDING') {

@@ -8,7 +8,7 @@ import { PutawayTask } from '../../../models/inventory.models';
 
 const mockInventoryService = {
   getPutawayTasks: vi.fn(),
-  completePutawayTask: vi.fn(),
+  executePutawayTask: vi.fn(),
 };
 
 const mockRoute = {
@@ -16,12 +16,11 @@ const mockRoute = {
 };
 
 const task: PutawayTask = {
-  putawayTaskId: 'task-001',
-  locationId: 'loc-001',
-  stagingStorageLocationId: 'sl-001',
-  productSku: 'SKU-001',
+  taskId: 'task-001',
+  sourceReceiptId: 'receipt-001',
+  productId: 'sku-001',
   quantity: 10,
-  uom: 'EA',
+  sourceLocationId: 'sl-001',
   status: 'PENDING',
 };
 
@@ -50,7 +49,7 @@ describe('PutawayExecuteComponent', () => {
   });
 
   it('should set error state before errorKey on complete failure', () => {
-    mockInventoryService.completePutawayTask.mockReturnValue(throwError(() => new Error('fail')));
+    mockInventoryService.executePutawayTask.mockReturnValue(throwError(() => new Error('fail')));
     const fixture = TestBed.createComponent(PutawayExecuteComponent);
     const component = fixture.componentInstance;
     const calls: string[] = [];
@@ -65,5 +64,30 @@ describe('PutawayExecuteComponent', () => {
     const keyIdx = calls.findIndex(c => c.startsWith('errorKey:'));
     expect(errIdx).toBeGreaterThanOrEqual(0);
     expect(keyIdx).toBeGreaterThan(errIdx);
+  });
+
+  it('calls executePutawayTask with skuId/sourceLocationId/destinationLocationId/quantity from the task (issue #377)', () => {
+    mockInventoryService.executePutawayTask.mockReturnValue(of({
+      ledgerEntryId: 'le-001',
+      taskId: 'task-001',
+      skuId: 'sku-001',
+      sourceLocationId: 'sl-001',
+      destinationLocationId: 'sl-target',
+      quantityMoved: 10,
+      transactionType: 'PUT_AWAY',
+      status: 'COMPLETED',
+    }));
+    const fixture = TestBed.createComponent(PutawayExecuteComponent);
+    const component = fixture.componentInstance;
+    component.updateTargetLocation('sl-target');
+
+    component.completePutaway();
+
+    expect(mockInventoryService.executePutawayTask).toHaveBeenCalledWith('task-001', {
+      skuId: 'sku-001',
+      sourceLocationId: 'sl-001',
+      destinationLocationId: 'sl-target',
+      quantity: 10,
+    });
   });
 });
