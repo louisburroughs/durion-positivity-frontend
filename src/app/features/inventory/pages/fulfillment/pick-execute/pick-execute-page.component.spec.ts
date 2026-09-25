@@ -735,6 +735,45 @@ describe('PickExecutePageComponent', () => {
       expect(mockPickService.getPickTasks).toHaveBeenCalledTimes(3);
     });
 
+    it('a concurrent partial change does not settle a confirm; only this command\'s quantity does', async () => {
+      mockPickService.resolvePickScan.mockReturnValue(of(scanMatchedA));
+      mockPickService.confirmPickLine.mockReturnValue(of(taskA));
+      const concurrent: PickTaskLine = { ...taskA, pickedQty: taskA.pickedQty + 1, status: 'PENDING' };
+      const applied: PickTaskLine = { ...taskA, pickedQty: taskA.pickedQty + 5, status: 'PENDING' };
+      mockPickService.getPickTasks
+        .mockReturnValueOnce(of([concurrent, taskB])) // someone else picked 1: not this command
+        .mockReturnValueOnce(of([applied, taskB])); // this command's +5 landed
+      const component = await setupPickExecute();
+
+      component.setScannedSkuId('SKU-A');
+      component.setScannedLocationId('bin-A');
+      component.resolveScan();
+      component.setConfirmQty(5);
+      component.confirmLine();
+
+      expect(component.activeTaskPending()).toBe(true); // +1 is not this confirm's result
+      vi.advanceTimersByTime(500);
+      expect(mockPickService.getPickTasks).toHaveBeenCalledTimes(2);
+      expect(component.activeTaskPending()).toBe(false);
+    });
+
+    it('a complete does not settle on quantity alone, only on the PICKED status', async () => {
+      mockPickService.completePickTask.mockReturnValue(of(taskA));
+      const readyToClose: PickTaskLine = { ...taskA, pickedQty: 5, status: 'PENDING' };
+      const closed: PickTaskLine = { ...readyToClose, status: 'PICKED' };
+      mockPickService.getWorkorderPickList.mockReturnValue(of({ ...pickListFixture, tasks: [readyToClose, taskB] }));
+      mockPickService.getPickTasks
+        .mockReturnValueOnce(of([readyToClose, taskB])) // full quantity, but the complete hasn't applied
+        .mockReturnValueOnce(of([closed, taskB]));
+      const component = await setupPickExecute();
+
+      component.completeTask();
+      expect(component.activeTaskPending()).toBe(true);
+      vi.advanceTimersByTime(500);
+      expect(mockPickService.getPickTasks).toHaveBeenCalledTimes(2);
+      expect(component.activeTaskPending()).toBe(false);
+    });
+
     it('shows a localized still-processing message after exhausting all attempts', async () => {
       mockPickService.completePickTask.mockReturnValue(of(taskA));
       const notYetApplied: PickTaskLine = { ...taskA, status: 'PENDING' };

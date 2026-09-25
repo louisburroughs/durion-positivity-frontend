@@ -275,7 +275,10 @@ export class PickExecutePageComponent {
             workorderId,
             taskId,
             seq,
-            t => t.pickedQty !== priorPickedQty || t.status === PICK_TASK_STATUS_PICKED,
+            // Settle on *this* command's result: the picked quantity reaching what
+            // this confirm added (or the task closing), not merely any change, which
+            // a concurrent update could also produce.
+            t => t.pickedQty >= priorPickedQty + quantity || t.status === PICK_TASK_STATUS_PICKED,
             1,
           ),
         error: () => this.applyMutationError(taskId, seq, 'INVENTORY.FULFILLMENT.PICK_EXECUTE.ERROR.CONFIRM'),
@@ -308,7 +311,10 @@ export class PickExecutePageComponent {
             workorderId,
             taskId,
             seq,
-            t => t.status === PICK_TASK_STATUS_PICKED || t.pickedQty >= t.requestedQty,
+            // Completion is only allowed once nothing remains to pick, so the
+            // quantity condition already holds before the command applies; only
+            // the backend's terminal status proves this complete landed.
+            t => t.status === PICK_TASK_STATUS_PICKED,
             1,
           ),
         error: () => this.applyMutationError(taskId, seq, 'INVENTORY.FULFILLMENT.PICK_EXECUTE.ERROR.COMPLETE'),
