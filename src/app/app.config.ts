@@ -9,30 +9,27 @@ import { firstValueFrom, Observable, of } from 'rxjs';
 import { TranslateLoader, TranslateModule, TranslationObject } from '@ngx-translate/core';
 import { TranslateHttpLoader, TRANSLATE_HTTP_LOADER_CONFIG } from '@ngx-translate/http-loader';
 
-// Configuration is imported from each package's public entry point. A deep
-// '<pkg>/configuration' import would trim the generated barrel (which
-// re-exports every API class) out of the initial bundle, but it cannot work
-// with the packages as they are built: ng-package.json declares a single entry
-// point, so the published dist exposes only '.' in its "exports" map and the
-// subpath does not resolve. Getting that win needs a real ng-packagr secondary
-// entry point in the SDK — one that owns configuration.ts outright, so the
-// class is not emitted into two chunks — or PURE annotations from the
-// generator. See durion-positivity-frontend#197.
-import { Configuration as AccountingConfiguration } from '@durion-sdk/accounting';
-import { Configuration as BulkLoaderConfiguration } from '@durion-sdk/bulk-loader';
-import { Configuration as CatalogConfiguration } from '@durion-sdk/catalog';
-import { Configuration as CustomerConfiguration } from '@durion-sdk/customer';
-import { Configuration as InventoryConfiguration } from '@durion-sdk/inventory';
-import { Configuration as InvoiceConfiguration } from '@durion-sdk/invoice';
-import { Configuration as LocationConfiguration } from '@durion-sdk/location';
-import { Configuration as OrderConfiguration } from '@durion-sdk/order';
-import { Configuration as PeopleConfiguration } from '@durion-sdk/people';
-import { Configuration as PeopleContactConfiguration } from '@durion-sdk/people-contact';
-import { Configuration as SecurityConfiguration } from '@durion-sdk/security';
-import { Configuration as ShopManagerConfiguration } from '@durion-sdk/shop-manager';
-import { Configuration as SupplierConfiguration } from '@durion-sdk/supplier';
-import { Configuration as VehicleInventoryConfiguration } from '@durion-sdk/vehicle-inventory';
-import { Configuration as WorkorderConfiguration } from '@durion-sdk/workorder';
+// Configuration comes from each package's `/configuration` secondary entry
+// point, which holds only Configuration, BASE_PATH and their helpers. Importing
+// it from the primary entry instead pulls that package's whole service module
+// into `main`, so every service a lazy page uses would load at startup
+// (durion-positivity-frontend#334). The primary entry re-exports the same class
+// from the subpath, so services injected elsewhere see these providers.
+import { Configuration as AccountingConfiguration } from '@durion-sdk/accounting/configuration';
+import { Configuration as BulkLoaderConfiguration } from '@durion-sdk/bulk-loader/configuration';
+import { Configuration as CatalogConfiguration } from '@durion-sdk/catalog/configuration';
+import { Configuration as CustomerConfiguration } from '@durion-sdk/customer/configuration';
+import { Configuration as InventoryConfiguration } from '@durion-sdk/inventory/configuration';
+import { Configuration as InvoiceConfiguration } from '@durion-sdk/invoice/configuration';
+import { Configuration as LocationConfiguration } from '@durion-sdk/location/configuration';
+import { Configuration as OrderConfiguration } from '@durion-sdk/order/configuration';
+import { Configuration as PeopleConfiguration } from '@durion-sdk/people/configuration';
+import { Configuration as PeopleContactConfiguration } from '@durion-sdk/people-contact/configuration';
+import { Configuration as SecurityConfiguration } from '@durion-sdk/security/configuration';
+import { Configuration as ShopManagerConfiguration } from '@durion-sdk/shop-manager/configuration';
+import { Configuration as SupplierConfiguration } from '@durion-sdk/supplier/configuration';
+import { Configuration as VehicleInventoryConfiguration } from '@durion-sdk/vehicle-inventory/configuration';
+import { Configuration as WorkorderConfiguration } from '@durion-sdk/workorder/configuration';
 
 import { routes } from './app.routes';
 import { clearChunkReloadGuard, recoverFromChunkError } from './core/router/chunk-error-recovery';

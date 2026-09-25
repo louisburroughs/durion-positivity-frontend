@@ -110,14 +110,26 @@ export const sdk07 = (p: Project): ArchRule =>
   );
 
 /** [SDK-08] @durion-sdk/* is imported from the package root only, no deep @durion-sdk/x/… paths (ADR-0041 §1). */
+/**
+ * The one sanctioned subpath is `@durion-sdk/<pkg>/configuration`, and only in `app.config.ts`: that
+ * secondary entry point exists so startup can provide `Configuration` without pulling the package's
+ * services into `main` (#334).
+ */
 const deepSdkImportFinder: Finder = (f) =>
   importSpecifiers(f)
     .filter((i) => /^@durion-sdk\/[^/]+\/.+/.test(i.module))
+    .filter((i) => !(/^src\/app\/app\.config\.ts$/.test(f.path) && /^@durion-sdk\/[^/]+\/configuration$/.test(i.module)))
     .map((i) => `'${i.module}'`);
+
+export { deepSdkImportFinder };
 
 export const sdk08 = (p: Project): ArchRule =>
   contentRule(
-    { id: 'SDK-08', title: '@durion-sdk/* is imported from the package root only (ADR-0041 §1)', mode: 'enforce' },
+    {
+      id: 'SDK-08',
+      title: '@durion-sdk/* is imported from the package root only, except the /configuration entry point in app.config.ts (ADR-0041 §1)',
+      mode: 'enforce',
+    },
     p,
     { subject: selectors.appTree(p), finder: deepSdkImportFinder },
   );
