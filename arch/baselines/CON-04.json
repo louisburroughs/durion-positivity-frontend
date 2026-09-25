@@ -1,6 +1,6 @@
 [
   {
-    "key": "src/app/features/bulk-import/components/bulk-import-upload-progress/bulk-import-upload-progress.component.ts :: missing spec",
+    "key": "src/app/shared/bulk-import/components/bulk-import-upload-progress/bulk-import-upload-progress.component.ts :: missing spec",
     "reason": "component predates the mandatory co-located spec convention; write the missing *.spec.ts.",
     "tracking": "#345"
   },

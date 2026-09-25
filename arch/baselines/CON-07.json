@@ -90,17 +90,17 @@
     "tracking": "#346"
   },
   {
-    "key": "src/app/features/bulk-import/models/bulk-import.models.ts :: BulkLoadJob.completedAt :: missing @serverGenerated",
+    "key": "src/app/shared/bulk-import/models/bulk-import.models.ts :: BulkLoadJob.completedAt :: missing @serverGenerated",
     "reason": "predates the @serverGenerated JSDoc convention (ADR-0034 \u00a73); add the tag when this model is next touched.",
     "tracking": "#346"
   },
   {
-    "key": "src/app/features/bulk-import/models/bulk-import.models.ts :: BulkLoadJob.createdAt :: missing @serverGenerated",
+    "key": "src/app/shared/bulk-import/models/bulk-import.models.ts :: BulkLoadJob.createdAt :: missing @serverGenerated",
     "reason": "predates the @serverGenerated JSDoc convention (ADR-0034 \u00a73); add the tag when this model is next touched.",
     "tracking": "#346"
   },
   {
-    "key": "src/app/features/bulk-import/models/bulk-import.models.ts :: BulkLoadRecordAudit.createdAt :: missing @serverGenerated",
+    "key": "src/app/shared/bulk-import/models/bulk-import.models.ts :: BulkLoadRecordAudit.createdAt :: missing @serverGenerated",
     "reason": "predates the @serverGenerated JSDoc convention (ADR-0034 \u00a73); add the tag when this model is next touched.",
     "tracking": "#346"
   },

@@ -4,8 +4,8 @@ import { provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { BulkImportService } from '../services/bulk-import.service';
-import { BulkLoadJob, DomainType } from '../models/bulk-import.models';
+import { BulkImportService } from '../../../shared/bulk-import/services/bulk-import.service';
+import { BulkLoadJob, DomainType } from '../../../shared/bulk-import/models/bulk-import.models';
 
 type WizardComponentHarness = {
   state: () => string;
