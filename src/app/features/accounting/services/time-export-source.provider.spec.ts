@@ -64,12 +64,19 @@ describe('provideAccountingTimeExportSource', () => {
   it('forwards downloadExport once AccountingService resolves', async () => {
     const source = TestBed.inject(TIME_EXPORT_SOURCE);
 
-    source.downloadExport('exp-1');
-    // downloadExport resolves the lazy (real dynamic import()) module load before
-    // delegating, which outruns a fixed number of microtask flushes; poll instead.
-    await vi.waitFor(() => {
-      expect(stubAccounting.downloadExport).toHaveBeenCalledWith('exp-1');
+    await firstValueFrom(source.downloadExport('exp-1'));
+
+    expect(stubAccounting.downloadExport).toHaveBeenCalledWith('exp-1');
+  });
+
+  it('surfaces a downloadExport failure through the observable error channel, not an unhandled rejection', async () => {
+    const source = TestBed.inject(TIME_EXPORT_SOURCE);
+    const failure = new Error('download failed');
+    stubAccounting.downloadExport.mockImplementation(() => {
+      throw failure;
     });
+
+    await expect(firstValueFrom(source.downloadExport('exp-1'))).rejects.toBe(failure);
   });
 
   it('caches the lazily-loaded AccountingService across calls', async () => {

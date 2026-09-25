@@ -152,7 +152,17 @@ export class TimeExportPageComponent {
   downloadExport(): void {
     const id = this.exportId();
     if (!id) return;
-    this.timeExportSource.downloadExport(id);
+    this.exportError.set(null);
+    this.timeExportSource.downloadExport(id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        // Lazy-chunk load failure (the accounting bundle behind this contract
+        // couldn't be fetched) — surface it on the same error panel every
+        // other export action uses, instead of an unhandled rejection.
+        error: () => {
+          this.exportError.set(this.translate.instant('PEOPLE.TIME_EXPORT.ERROR.DOWNLOAD'));
+        },
+      });
   }
 
   loadHistory(): void {

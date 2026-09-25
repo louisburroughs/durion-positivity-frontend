@@ -26,7 +26,7 @@ describe('TimeExportPageComponent', () => {
       requestExport: vi.fn().mockReturnValue(of({ exportId: 'exp-1', status: 'QUEUED' })),
       getExportStatus: vi.fn().mockReturnValue(of({ status: 'READY' })),
       getExportHistory: vi.fn().mockReturnValue(of([])),
-      downloadExport: vi.fn(),
+      downloadExport: vi.fn().mockReturnValue(of(undefined)),
     };
     locationService = {
       getAll: vi.fn().mockReturnValue(of([{ locationId: 'loc-1', name: 'Main Shop' }])),
@@ -114,6 +114,27 @@ describe('TimeExportPageComponent', () => {
     const rows = fixture.nativeElement.querySelectorAll('[data-testid="history-row"]');
     expect(table).toBeTruthy();
     expect(rows.length).toBe(1);
+  });
+
+  it('T10: downloadExport subscribes to the source and requires no error panel on success', () => {
+    component.exportId.set('exp-1');
+    component.downloadExport();
+    fixture.detectChanges();
+
+    expect(accountingService.downloadExport).toHaveBeenCalledWith('exp-1');
+    expect(fixture.nativeElement.querySelector('[data-testid="export-error"]')).toBeNull();
+  });
+
+  it('T11: shows export-error when downloadExport rejects (lazy-chunk load failure)', () => {
+    accountingService.downloadExport.mockReturnValue(throwError(() => new Error('chunk load failed')));
+    component.exportId.set('exp-1');
+
+    component.downloadExport();
+    fixture.detectChanges();
+
+    const errEl = fixture.nativeElement.querySelector('[data-testid="export-error"]');
+    expect(errEl).toBeTruthy();
+    expect(component.exportError()).toBeTruthy();
   });
 
   it('T9: shows history-empty when historyItems is empty', () => {

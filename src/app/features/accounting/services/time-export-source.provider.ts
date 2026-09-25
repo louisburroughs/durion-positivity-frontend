@@ -1,6 +1,6 @@
 import { EnvironmentInjector, Provider, inject, runInInjectionContext } from '@angular/core';
-import { from } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { Observable, from } from 'rxjs';
+import { map, switchMap } from 'rxjs/operators';
 import {
   TIME_EXPORT_SOURCE,
   TimeExportRequestBody,
@@ -40,9 +40,8 @@ export function provideAccountingTimeExportSource(): Provider {
           from(getAccounting()).pipe(switchMap(accounting => accounting.getExportStatus(exportId))),
         getExportHistory: (params?: { pageIndex?: number; pageSize?: number }) =>
           from(getAccounting()).pipe(switchMap(accounting => accounting.getExportHistory(params))),
-        downloadExport: (exportId: string) => {
-          void getAccounting().then(accounting => accounting.downloadExport(exportId));
-        },
+        downloadExport: (exportId: string): Observable<void> =>
+          from(getAccounting()).pipe(map(accounting => accounting.downloadExport(exportId))),
       };
     },
   };

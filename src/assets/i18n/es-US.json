@@ -600,7 +600,8 @@
         "REQUEST": "No se pudo solicitar la exportación.",
         "EXPORT_FAILED": "La exportación falló.",
         "REFRESH_STATUS": "No se pudo actualizar el estado.",
-        "LOAD_HISTORY": "No se pudo cargar el historial de exportaciones."
+        "LOAD_HISTORY": "No se pudo cargar el historial de exportaciones.",
+        "DOWNLOAD": "No se pudo descargar la exportación."
       },
       "PAGE_TITLE": "Exportar tiempo aprobado",
       "REQUEST_TITLE": "Solicitar exportación",
