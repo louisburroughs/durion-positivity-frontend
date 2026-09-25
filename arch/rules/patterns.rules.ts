@@ -254,6 +254,72 @@ function directReturns(fn: ts.ArrowFunction | ts.FunctionExpression): ts.Express
   return out;
 }
 
+/** A signal write `<expr>.set(...)`/`<expr>.update(...)` whose property-access chain roots at `this`. */
+function isSignalWriteCall(n: ts.Node): boolean {
+  if (!ts.isCallExpression(n) || !ts.isPropertyAccessExpression(n.expression)) return false;
+  if (n.expression.name.text !== 'set' && n.expression.name.text !== 'update') return false;
+  let root: ts.Expression = n.expression.expression;
+  while (ts.isPropertyAccessExpression(root)) root = root.expression;
+  return root.kind === ts.SyntaxKind.ThisKeyword;
+}
+
+/** Names of methods on `cls` whose body directly performs a signal write (see `isSignalWriteCall`). */
+function methodsThatRecordFailure(cls: ts.ClassDeclaration): Set<string> {
+  const names = new Set<string>();
+  for (const m of cls.members) {
+    if (!ts.isMethodDeclaration(m) || !m.name || !ts.isIdentifier(m.name) || !m.body) continue;
+    let recorded = false;
+    const visit = (n: ts.Node): void => {
+      if (recorded || ts.isFunctionLike(n)) return;
+      if (isSignalWriteCall(n)) {
+        recorded = true;
+        return;
+      }
+      ts.forEachChild(n, visit);
+    };
+    ts.forEachChild(m.body, visit);
+    if (recorded) names.add(m.name.text);
+  }
+  return names;
+}
+
+/**
+ * True when a `catchError` callback records the failure — an inline signal write
+ * (`this.<x>.set(...)`/`this.<x>.update(...)`) or a call to a same-class method that itself does —
+ * before returning an empty-value fallback. ADR-0064 §1's "never silently" concern is then
+ * satisfied through that side channel instead of the returned value, so the empty return is not a
+ * silent swallow (real `chat-state.service.ts` shape: the write-queue worker's `catchError` records
+ * through `markUnpersisted()`, which updates a tracking signal; its two queued reads (`refresh`,
+ * `selectConversation`) set `state`/`errorKey` inline before the same swallow, each keeping a
+ * persistent queue/subscription alive rather than degrading a value returned to a caller — the
+ * shape ADR-0064 §1 actually targets).
+ */
+function catchErrorRecordsFailure(cb: ts.ArrowFunction | ts.FunctionExpression, ret: ts.Expression): boolean {
+  if (!ts.isBlock(cb.body)) return false;
+  const cls = enclosing(cb, ts.isClassDeclaration);
+  const recordingMethods = cls ? methodsThatRecordFailure(cls) : new Set<string>();
+  let found = false;
+  const visit = (n: ts.Node): void => {
+    if (found || n.getStart() >= ret.getStart()) return;
+    if (n !== cb.body && ts.isFunctionLike(n)) return;
+    if (isSignalWriteCall(n)) {
+      found = true;
+      return;
+    }
+    if (ts.isCallExpression(n) && ts.isPropertyAccessExpression(n.expression)) {
+      let root: ts.Expression = n.expression.expression;
+      while (ts.isPropertyAccessExpression(root)) root = root.expression;
+      if (root.kind === ts.SyntaxKind.ThisKeyword && recordingMethods.has(n.expression.name.text)) {
+        found = true;
+        return;
+      }
+    }
+    ts.forEachChild(n, visit);
+  };
+  ts.forEachChild(cb.body, visit);
+  return found;
+}
+
 export const pat04Finder = (f: Source): string[] => {
   const findings: string[] = [];
   for (const c of calls(f, (c) => !c.isNew && c.name === 'catchError')) {
@@ -261,7 +327,7 @@ export const pat04Finder = (f: Source): string[] => {
     if (!cb || !(ts.isArrowFunction(cb) || ts.isFunctionExpression(cb))) continue;
     for (const ret of directReturns(cb)) {
       const shape = isEmptyOfCall(ret);
-      if (shape) findings.push(`${enclosingName(c.node)} :: catchError returns ${shape}`);
+      if (shape && !catchErrorRecordsFailure(cb, ret)) findings.push(`${enclosingName(c.node)} :: catchError returns ${shape}`);
     }
   }
   return findings;
@@ -272,7 +338,7 @@ export const pat04 = (p: Project): ArchRule =>
     {
       id: 'PAT-04',
       title: 'inside catchError( in features/**/services/**, never return of([])/of(new Map())/of(new Set())/of({})/EMPTY (ADR-0064 §1)',
-      mode: 'ratchet',
+      mode: 'enforce',
     },
     p,
     { subject: new RegExp(`${selectors.features(p).source}.*/services/.*\\.ts$`), finder: pat04Finder },

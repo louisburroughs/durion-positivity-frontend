@@ -252,6 +252,77 @@ describe('[self] PAT-04 catchError( in features/**/services/** must not return a
     });
     expect(findings).toEqual([]);
   });
+
+  it(
+    'is compliant when the catchError records the failure through an inline signal write ' +
+      "before returning EMPTY (real chat-state.service.ts refresh()/selectConversation() shape)",
+    () => {
+      const findings = pat04Finder({
+        path: 'src/app/features/fxpat/services/fxpat.service.ts',
+        content: `
+          class FxpatService {
+            refresh() {
+              return this.store.list().pipe(
+                catchError(() => {
+                  this._state.set('error');
+                  this._errorKey.set('FXPAT.ERROR.LOAD');
+                  return EMPTY;
+                }),
+              );
+            }
+          }
+        `,
+      });
+      expect(findings).toEqual([]);
+    },
+  );
+
+  it(
+    'is compliant when the catchError records the failure through a call to a same-class ' +
+      'method that itself writes a signal (real chat-state.service.ts write-queue shape)',
+    () => {
+      const findings = pat04Finder({
+        path: 'src/app/features/fxpat/services/fxpat.service.ts',
+        content: `
+          class FxpatService {
+            constructor() {
+              this.writes.pipe(
+                concatMap(entry => entry.work().pipe(
+                  catchError(() => {
+                    this.markUnpersisted(entry.scope);
+                    return EMPTY;
+                  }),
+                )),
+              );
+            }
+
+            private markUnpersisted(scope) {
+              this._unpersisted.update(scopes => [...scopes, scope]);
+            }
+          }
+        `,
+      });
+      expect(findings).toEqual([]);
+    },
+  );
+
+  it('still flags a bare catchError(() => EMPTY) with nothing recorded first', () => {
+    const findings = pat04Finder({
+      path: 'src/app/features/fxpat/services/fxpat.service.ts',
+      content: `
+        class FxpatService {
+          load() {
+            return this.http.get().pipe(
+              catchError(() => {
+                return EMPTY;
+              }),
+            );
+          }
+        }
+      `,
+    });
+    expect(findings).toEqual(['load :: catchError returns EMPTY']);
+  });
 });
 
 describe('[self] PAT-05 no UTC-unsafe date shapes', () => {
