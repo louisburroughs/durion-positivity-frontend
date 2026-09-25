@@ -180,17 +180,17 @@ describe('CreateCommercialAccountComponent', () => {
     expect(component.duplicates()).toEqual([]);
   });
 
-  it('treats a failed duplicate check as no duplicates and still creates the account', async () => {
+  it('blocks account creation when the duplicate check fails', async () => {
     await setup();
     fixture.detectChanges();
     fillRequiredFields();
     crmServiceStub.checkCommercialAccountDuplicates.mockReturnValue(throwError(() => new Error('down')));
-    crmServiceStub.createCommercialAccount.mockReturnValue(of({ partyId: 'party-3', legalName: 'Acme Tire Co' }));
 
     component.submit();
 
-    expect(crmServiceStub.createCommercialAccount).toHaveBeenCalled();
-    expect(component.state()).toBe('success');
+    expect(crmServiceStub.createCommercialAccount).not.toHaveBeenCalled();
+    expect(component.state()).toBe('error');
+    expect(component.serverError()).toBe(enUS.CRM.CREATE_COMMERCIAL.ERROR.DUPLICATE_CHECK_FAILED);
   });
 
   it('routes a 403 create failure to access-denied', async () => {

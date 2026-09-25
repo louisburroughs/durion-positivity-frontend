@@ -1559,7 +1559,8 @@
         "BILLING_TERMS_REQUIRED": "Billing terms are required.",
         "CLIPBOARD_UNSUPPORTED": "Copying to clipboard is not supported in this environment. Please copy the ID manually.",
         "CLIPBOARD_FAILED": "Unable to copy the party ID to the clipboard. Please copy it manually.",
-        "CREATE_FAILED": "Account creation failed ({{status}}). Please try again."
+        "CREATE_FAILED": "Account creation failed ({{status}}). Please try again.",
+        "DUPLICATE_CHECK_FAILED": "Could not check for duplicate accounts. Please try again."
       }
     },
     "MERGE_PARTIES": {
