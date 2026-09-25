@@ -100,11 +100,6 @@
     "tracking": "#350"
   },
   {
-    "key": "src/app/features/location/services/inventory.service.ts :: '/inventory/v1/inventory'",
-    "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "#350"
-  },
-  {
     "key": "src/app/features/people/services/people.service.ts :: '/people/v1/people/workSessions/'",
     "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
     "tracking": "#350"

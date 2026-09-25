@@ -30,11 +30,6 @@
     "tracking": "#350"
   },
   {
-    "key": "src/app/features/location/services/inventory.service.ts -> src/app/core/services/api-base.service.ts",
-    "reason": "legacy ApiBaseService transport; migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "#350"
-  },
-  {
     "key": "src/app/features/people/services/people.service.ts -> src/app/core/services/api-base.service.ts",
     "reason": "D2: submitWorkSession() only — SDK's WorkSessionsAPIService.submitWorkSession() returns WorkSessionDto, which has no correlationId, the field WorkSessionSubmitPageComponent renders back to the user.",
     "tracking": "#350"

@@ -2,7 +2,6 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { InventoryReferenceDataService, LocationSyncService } from '@durion-sdk/inventory';
-import { ApiBaseService } from '../../../core/services/api-base.service';
 import { pageContent } from '../../../core/utils/spring-page';
 import {
   LocationDto,
@@ -16,20 +15,8 @@ type SyncLogOutcome = 'OK' | 'PARTIAL' | 'FAILED' | 'INVALID_PAYLOAD';
 
 @Injectable({ providedIn: 'root' })
 export class InventoryService {
-  private readonly api = inject(ApiBaseService);
   private readonly refDataSdk = inject(InventoryReferenceDataService);
   private readonly locationSyncSdk = inject(LocationSyncService);
-
-  // Gateway routes the inventory module under /{module}/v1/{domain}, i.e.
-  // /api/inventory/v1/inventory/* (matches the SDK's InventoryConfiguration
-  // basePath of `${apiBaseUrl}/inventory`). Without the leading /inventory
-  // module segment these calls 404. Still used by the storage-location
-  // write operations, which the generated SDK does not yet expose.
-  private static readonly BASE = '/inventory/v1/inventory';
-
-  private idempotencyOptions(key?: string) {
-    return key ? { headers: { 'Idempotency-Key': key } } : undefined;
-  }
 
   listInventoryLocations(params?: { pageIndex?: number; pageSize?: number }): Observable<LocationDto[]> {
     return (this.refDataSdk.listInventoryLocations(undefined, params?.pageIndex, params?.pageSize) as Observable<unknown>).pipe(
@@ -46,38 +33,17 @@ export class InventoryService {
     ).pipe(map(page => pageContent<StorageLocationDto>(page)));
   }
 
-  // SDK gap: InventoryReferenceDataService.listInventoryStorageLocations is a
-  // documented placeholder (always empty until pos-location integration lands) and
-  // has no single-record get/create/update/deactivate counterpart. The four
-  // storage-location write operations below have no SDK equivalent at all.
-  // Left on ApiBaseService.
-  getStorageLocation(storageLocationId: string): Observable<unknown> {
-    return this.api.get<unknown>(`${InventoryService.BASE}/storage-locations/${storageLocationId}`);
-  }
-
-  createStorageLocation(body: unknown, idempotencyKey?: string): Observable<unknown> {
-    return this.api.post<unknown>(
-      `${InventoryService.BASE}/storage-locations`,
-      body,
-      this.idempotencyOptions(idempotencyKey),
-    );
-  }
-
-  updateStorageLocation(storageLocationId: string, body: unknown, idempotencyKey?: string): Observable<unknown> {
-    return this.api.put<unknown>(
-      `${InventoryService.BASE}/storage-locations/${storageLocationId}`,
-      body,
-      this.idempotencyOptions(idempotencyKey),
-    );
-  }
-
-  deactivateStorageLocation(storageLocationId: string, body: unknown, idempotencyKey?: string): Observable<unknown> {
-    return this.api.post<unknown>(
-      `${InventoryService.BASE}/storage-locations/${storageLocationId}/deactivate`,
-      body,
-      this.idempotencyOptions(idempotencyKey),
-    );
-  }
+  // Issue #371: getStorageLocation/createStorageLocation/updateStorageLocation/
+  // deactivateStorageLocation used to live here, hand-built against
+  // `/inventory/v1/inventory/storage-locations/...` — pos-inventory's read-only
+  // placeholder module, not the storage-location owner. Storage-location CRUD lives in
+  // pos-location's StorageLocationController (`/v1/locations/{siteId}/storage-locations`,
+  // gateway `/location/**`) and was unreachable at this path (404). None of the four
+  // methods had any caller (grep confirmed), so they were removed rather than repointed;
+  // the real, site-scoped operations are LocationService.listStorageLocations/
+  // createStorageLocation/deactivateStorageLocation (src/app/features/location/services/
+  // location.service.ts), backed by @durion-sdk/location's StorageLocationAPIService and
+  // already used by StorageLocationsPageComponent with siteId = the selected location.
 
   listStorageTypes(): Observable<string[]> {
     return this.refDataSdk.listStorageTypes();
