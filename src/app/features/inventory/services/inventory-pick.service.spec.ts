@@ -16,6 +16,7 @@ import {
   HttpClientTestingModule,
   HttpTestingController,
 } from '@angular/common/http/testing';
+import { it } from 'vitest';
 import { of, throwError } from 'rxjs';
 import { BASE_PATH, WorkorderPickFacadeService, WorkorderPickTaskResponse } from '@durion-sdk/workorder';
 import { InventoryPickService } from './inventory-pick.service';
@@ -25,6 +26,7 @@ import {
   ConsumePickedItemsRequest,
   ConsumptionResult,
   PickListView,
+  PickTaskLine,
   PickedItemLine,
 } from '../models/inventory-pick.models';
 
@@ -256,7 +258,45 @@ describe('InventoryPickService', () => {
       service = TestBed.inject(InventoryPickService);
     });
 
-    it('resolvePickScan calls the facade with workorderId, pickTaskId, and the scanned SKU/location', () => {
+    // #2217: the pick-execute page sends the scanned product/location codes a
+    // barcode scanner reads off the part and the bin — not their UUIDs.
+    it('resolvePickScan calls the facade with workorderId, pickTaskId, and the scanned product/location codes', () => {
+      facade.resolvePickScan.mockReturnValue(of({
+        matchStatus: 'MATCHED',
+        matched: true,
+        pickListId: 'pl-001',
+        pickTaskId: 'task-001',
+        resolvedLocationId: 'bin-001',
+        resolvedSkuId: 'SKU-001',
+        expectedProductCode: 'UPC-001',
+        expectedLocationCode: 'A-01-03',
+        expectedLocationBarcode: 'LOC-BARCODE-001',
+      }));
+
+      let result: unknown;
+      service
+        .resolvePickScan('wo-001', 'task-001', { scannedProductCode: 'UPC-001', scannedLocationCode: 'A-01-03' })
+        .subscribe(value => (result = value));
+
+      expect(facade.resolvePickScan).toHaveBeenCalledExactlyOnceWith('wo-001', 'task-001', {
+        scannedProductCode: 'UPC-001',
+        scannedLocationCode: 'A-01-03',
+      });
+      expect(result).toEqual({
+        pickTaskId: 'task-001',
+        matched: true,
+        matchStatus: 'MATCHED',
+        resolvedSkuId: 'SKU-001',
+        resolvedLocationId: 'bin-001',
+        expectedProductCode: 'UPC-001',
+        expectedLocationCode: 'A-01-03',
+        expectedLocationBarcode: 'LOC-BARCODE-001',
+      });
+    });
+
+    // The UUID pair is still accepted by the backend as an alternative to the
+    // scanned codes (#2217) — only the fields the caller supplied are forwarded.
+    it('resolvePickScan calls the facade with only the UUID pair when codes are not supplied', () => {
       facade.resolvePickScan.mockReturnValue(of({
         matchStatus: 'MATCHED',
         matched: true,
@@ -266,22 +306,36 @@ describe('InventoryPickService', () => {
         resolvedSkuId: 'SKU-001',
       }));
 
-      let result: unknown;
       service
         .resolvePickScan('wo-001', 'task-001', { scannedSkuId: 'SKU-001', scannedLocationId: 'bin-001' })
-        .subscribe(value => (result = value));
+        .subscribe();
 
       expect(facade.resolvePickScan).toHaveBeenCalledExactlyOnceWith('wo-001', 'task-001', {
         scannedSkuId: 'SKU-001',
         scannedLocationId: 'bin-001',
       });
-      expect(result).toEqual({
+    });
+
+    it.each([
+      'SKU_MISMATCH',
+      'LOCATION_MISMATCH',
+      'NO_MATCH',
+      'PRODUCT_CODE_UNAVAILABLE',
+      'LOCATION_CODE_UNAVAILABLE',
+    ])('resolvePickScan maps a %s matchStatus through unchanged', (matchStatus) => {
+      facade.resolvePickScan.mockReturnValue(of({
+        matchStatus,
+        matched: false,
+        pickListId: 'pl-001',
         pickTaskId: 'task-001',
-        matched: true,
-        matchStatus: 'MATCHED',
-        resolvedSkuId: 'SKU-001',
-        resolvedLocationId: 'bin-001',
-      });
+      }));
+
+      let result: { matchStatus?: string } | undefined;
+      service
+        .resolvePickScan('wo-001', 'task-001', { scannedProductCode: 'UPC-001', scannedLocationCode: 'A-01-03' })
+        .subscribe(value => (result = value));
+
+      expect(result?.matchStatus).toBe(matchStatus);
     });
 
     it('resolvePickScan propagates a facade failure', () => {
@@ -289,7 +343,7 @@ describe('InventoryPickService', () => {
 
       let failed = false;
       service
-        .resolvePickScan('wo-001', 'task-001', { scannedSkuId: 'SKU-001', scannedLocationId: 'bin-001' })
+        .resolvePickScan('wo-001', 'task-001', { scannedProductCode: 'UPC-001', scannedLocationCode: 'A-01-03' })
         .subscribe({ error: () => (failed = true) });
 
       expect(failed).toBe(true);
@@ -353,6 +407,48 @@ describe('InventoryPickService', () => {
           sortOrder: 1,
         },
       ]);
+    });
+
+    // #2221: storageLocationCode/storageLocationBarcode/productCode are
+    // replicated from pos-location/pos-catalog; map them straight through when
+    // present. A task last updated before they were replicated carries null,
+    // handled by the page falling back to COMMON.NOT_AVAILABLE, never the raw
+    // storageLocationId UUID (ADR-0064 §5).
+    it('getPickTasks maps storageLocationCode/storageLocationBarcode/productCode through when present', () => {
+      facade.getPickTasks.mockReturnValue(of([{
+        ...taskFixture,
+        storageLocationCode: 'A-01-03',
+        storageLocationBarcode: 'LOC-BARCODE-001',
+        productCode: 'UPC-001',
+      }]));
+
+      let result: unknown;
+      service.getPickTasks('wo-001').subscribe(value => (result = value));
+
+      expect(result).toEqual([
+        {
+          pickTaskId: 'task-001',
+          productSku: 'SKU-001',
+          requestedQty: 5,
+          pickedQty: 2,
+          uom: 'EA',
+          storageLocationId: 'bin-001',
+          storageLocationCode: 'A-01-03',
+          storageLocationBarcode: 'LOC-BARCODE-001',
+          productCode: 'UPC-001',
+          status: 'IN_PROGRESS',
+          sortOrder: 1,
+        },
+      ]);
+    });
+
+    it('getPickTasks leaves storageLocationCode undefined when the task carries none (pre-replication row)', () => {
+      facade.getPickTasks.mockReturnValue(of([taskFixture]));
+
+      let result: PickTaskLine[] | undefined;
+      service.getPickTasks('wo-001').subscribe(value => (result = value));
+
+      expect(result?.[0].storageLocationCode).toBeUndefined();
     });
   });
 });

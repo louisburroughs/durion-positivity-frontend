@@ -89,19 +89,20 @@
       }
 
       <div class="field-row">
-        <label for="scan-sku">{{ 'INVENTORY.FULFILLMENT.PICK_EXECUTE.FIELD.SCAN_SKU' | translate }}</label>
-        <input id="scan-sku" type="text" [value]="scannedSkuId()" (input)="setScannedSkuId($any($event.target).value)"
+        <label for="scan-product-code">{{ 'INVENTORY.FULFILLMENT.PICK_EXECUTE.FIELD.SCAN_PRODUCT_CODE' | translate }}</label>
+        <input #scanProductCodeInput id="scan-product-code" type="text" [value]="scannedProductCode()"
+          (input)="setScannedProductCode($any($event.target).value)" (keydown.enter)="onProductCodeEnter($event)"
           [attr.disabled]="activeTaskBusy() || !canExecute() ? true : null" />
       </div>
       <div class="field-row">
-        <label for="scan-location">{{ 'INVENTORY.FULFILLMENT.PICK_EXECUTE.FIELD.SCAN_LOCATION' | translate }}</label>
-        <input id="scan-location" type="text" [value]="scannedLocationId()"
-          (input)="setScannedLocationId($any($event.target).value)"
+        <label for="scan-location-code">{{ 'INVENTORY.FULFILLMENT.PICK_EXECUTE.FIELD.SCAN_LOCATION_CODE' | translate }}</label>
+        <input #scanLocationCodeInput id="scan-location-code" type="text" [value]="scannedLocationCode()"
+          (input)="setScannedLocationCode($any($event.target).value)" (keydown.enter)="onLocationCodeEnter($event)"
           [attr.disabled]="activeTaskBusy() || !canExecute() ? true : null" />
       </div>
       <div class="action-row">
         <button class="btn-primary" type="button" (click)="resolveScan()"
-          [disabled]="activeTaskBusy() || !scannedSkuId().trim() || !scannedLocationId().trim() || !canExecute()">
+          [disabled]="activeTaskBusy() || !scannedProductCode().trim() || !scannedLocationCode().trim() || !canExecute()">
           {{ 'INVENTORY.FULFILLMENT.PICK_EXECUTE.ACTION.RESOLVE_SCAN' | translate }}
         </button>
       </div>

@@ -1,6 +1,7 @@
 
-import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, ElementRef, ViewChild, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { timer } from 'rxjs';
@@ -18,6 +19,29 @@ type PageState = 'idle' | 'loading' | 'ready' | 'mutating' | 'error';
 const PICK_TASK_STATUS_PICKED = 'PICKED';
 
 const SCAN_RESULT_KEY_BASE = 'INVENTORY.FULFILLMENT.PICK_EXECUTE.SCAN_RESULT.';
+
+/** Every non-match `MatchStatus` the backend can answer with (#2217) — the two
+ * *_UNAVAILABLE statuses mean "cannot verify a code-based scan against this
+ * task yet", not "wrong part"/"wrong bin"; they still render their own
+ * localized message rather than falling through to UNKNOWN. */
+const KNOWN_SCAN_MISMATCH_STATUSES = new Set([
+  'SKU_MISMATCH',
+  'LOCATION_MISMATCH',
+  'NO_MATCH',
+  'PRODUCT_CODE_UNAVAILABLE',
+  'LOCATION_CODE_UNAVAILABLE',
+]);
+
+/** The backend's error code for a caller whose location scope does not cover
+ * the workorder's own site (#2204/#2225) — now enforced on every pick-facade
+ * endpoint (read and write alike). Answered as a plain 403 wherever a
+ * permission failure would otherwise land, so it is distinguished by its
+ * `error.code`, not solely by status. */
+const LOCATION_SCOPE_DENIED_CODE = 'LOCATION_SCOPE_DENIED';
+
+function isLocationScopeDenied(err: unknown): boolean {
+  return err instanceof HttpErrorResponse && err.status === 403 && err.error?.code === LOCATION_SCOPE_DENIED_CODE;
+}
 
 /** A command error or stalled-poll message scoped to the task it belongs to —
  * never rendered unless that task is still the active one (issue #374 finding 6). */
@@ -47,6 +71,13 @@ export class PickExecutePageComponent {
   private readonly pickService = inject(InventoryPickService);
   private readonly auth = inject(AuthService);
   private readonly destroyRef = inject(DestroyRef);
+
+  /** A scanner types the code then sends Enter — these refs drive the
+   * product→location autofocus flow without relying on the static HTML
+   * `autofocus` attribute, which only fires once per element insertion, not
+   * every time a new task is selected or a scan resolves (#2217). */
+  @ViewChild('scanProductCodeInput') private readonly productCodeInputRef?: ElementRef<HTMLInputElement>;
+  @ViewChild('scanLocationCodeInput') private readonly locationCodeInputRef?: ElementRef<HTMLInputElement>;
 
   /**
    * Every mutation surface on this page (scan resolve, line confirm, task
@@ -85,8 +116,12 @@ export class PickExecutePageComponent {
     return tasks.length > 0 && tasks.every(t => t.status === PICK_TASK_STATUS_PICKED);
   });
 
-  readonly scannedSkuId = signal('');
-  readonly scannedLocationId = signal('');
+  /** Scanned product code (EAN/UPC) and location code (name or barcode) —
+   * the two fields a barcode scanner drives (#2217). The UUID pair the SDK
+   * still accepts has no input on this page; nothing here fabricates a UUID
+   * from a scanned code. */
+  readonly scannedProductCode = signal('');
+  readonly scannedLocationCode = signal('');
   readonly scanAttempted = signal(false);
   readonly scanResult = signal<ScanResolveResult | null>(null);
   /** Whether the current `scanResult` cleared the active task to confirm. */
@@ -96,7 +131,7 @@ export class PickExecutePageComponent {
     if (!result) return null;
     if (result.matched) return `${SCAN_RESULT_KEY_BASE}MATCHED`;
     const status = result.matchStatus;
-    if (status === 'SKU_MISMATCH' || status === 'LOCATION_MISMATCH' || status === 'NO_MATCH') {
+    if (status && KNOWN_SCAN_MISMATCH_STATUSES.has(status)) {
       return `${SCAN_RESULT_KEY_BASE}${status}`;
     }
     return `${SCAN_RESULT_KEY_BASE}UNKNOWN`;
@@ -199,20 +234,44 @@ export class PickExecutePageComponent {
     }
     this.activeTaskId.set(taskId);
     this.resetScanState();
+    this.focusProductCodeInput();
     const task = this.tasks().find(t => t.pickTaskId === taskId);
     this.confirmQty.set(task ? Math.max(task.requestedQty - task.pickedQty, 0) : 0);
   }
 
-  setScannedSkuId(value: string): void {
-    this.scannedSkuId.set(value);
+  setScannedProductCode(value: string): void {
+    this.scannedProductCode.set(value);
     this.scanAttempted.set(false);
     this.scanResult.set(null);
   }
 
-  setScannedLocationId(value: string): void {
-    this.scannedLocationId.set(value);
+  setScannedLocationCode(value: string): void {
+    this.scannedLocationCode.set(value);
     this.scanAttempted.set(false);
     this.scanResult.set(null);
+  }
+
+  /** Enter in the product-code field moves to the location-code field instead
+   * of submitting — a scan gun sends Enter after every code, so the first
+   * Enter must advance the flow, not fire a half-filled resolve (#2217). */
+  onProductCodeEnter(event: Event): void {
+    event.preventDefault();
+    this.focusLocationCodeInput();
+  }
+
+  /** Enter in the location-code field submits — this is the second scan of
+   * the product→location pair, so both fields are expected to be filled. */
+  onLocationCodeEnter(event: Event): void {
+    event.preventDefault();
+    this.resolveScan();
+  }
+
+  private focusProductCodeInput(): void {
+    queueMicrotask(() => this.productCodeInputRef?.nativeElement.focus());
+  }
+
+  private focusLocationCodeInput(): void {
+    queueMicrotask(() => this.locationCodeInputRef?.nativeElement.focus());
   }
 
   setConfirmQty(quantity: number): void {
@@ -226,10 +285,10 @@ export class PickExecutePageComponent {
   resolveScan(): void {
     const workorderId = this.route.snapshot.paramMap.get('workorderId');
     const task = this.activeTask();
-    const scannedSkuId = this.scannedSkuId().trim();
-    const scannedLocationId = this.scannedLocationId().trim();
+    const scannedProductCode = this.scannedProductCode().trim();
+    const scannedLocationCode = this.scannedLocationCode().trim();
     this.scanAttempted.set(true);
-    if (!workorderId || !task || !scannedSkuId || !scannedLocationId || !this.canExecute()) {
+    if (!workorderId || !task || !scannedProductCode || !scannedLocationCode || !this.canExecute()) {
       return;
     }
 
@@ -237,13 +296,19 @@ export class PickExecutePageComponent {
     const seq = ++this.scanReqSeq;
     this.state.set('mutating');
     this.errorKey.set(null);
+    // Clear immediately (#2217) — a scan-gun flow never needs to re-see the
+    // codes it just submitted, and the next attempt (this task or another)
+    // starts from an empty pair, refocused on the product-code field.
+    this.scannedProductCode.set('');
+    this.scannedLocationCode.set('');
+    this.focusProductCodeInput();
 
     this.pickService
-      .resolvePickScan(workorderId, taskId, { scannedSkuId, scannedLocationId })
+      .resolvePickScan(workorderId, taskId, { scannedProductCode, scannedLocationCode })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: result => this.applyScanResult(result, taskId, seq),
-        error: () => this.applyScanError(seq),
+        error: err => this.applyScanError(seq, err),
       });
   }
 
@@ -281,7 +346,7 @@ export class PickExecutePageComponent {
             t => t.pickedQty >= priorPickedQty + quantity || t.status === PICK_TASK_STATUS_PICKED,
             1,
           ),
-        error: () => this.applyMutationError(taskId, seq, 'INVENTORY.FULFILLMENT.PICK_EXECUTE.ERROR.CONFIRM'),
+        error: err => this.applyMutationError(taskId, seq, err, 'INVENTORY.FULFILLMENT.PICK_EXECUTE.ERROR.CONFIRM'),
       });
   }
 
@@ -317,7 +382,7 @@ export class PickExecutePageComponent {
             t => t.status === PICK_TASK_STATUS_PICKED,
             1,
           ),
-        error: () => this.applyMutationError(taskId, seq, 'INVENTORY.FULFILLMENT.PICK_EXECUTE.ERROR.COMPLETE'),
+        error: err => this.applyMutationError(taskId, seq, err, 'INVENTORY.FULFILLMENT.PICK_EXECUTE.ERROR.COMPLETE'),
       });
   }
 
@@ -340,12 +405,16 @@ export class PickExecutePageComponent {
     this.state.set('ready');
   }
 
-  private applyScanError(seq: number): void {
+  private applyScanError(seq: number, err: unknown): void {
     if (seq !== this.scanReqSeq) {
       return;
     }
     this.state.set('error');
-    this.errorKey.set('INVENTORY.FULFILLMENT.PICK_EXECUTE.ERROR.RESOLVE_SCAN');
+    this.errorKey.set(
+      isLocationScopeDenied(err)
+        ? 'INVENTORY.FULFILLMENT.PICK_EXECUTE.ERROR.LOCATION_SCOPE_DENIED'
+        : 'INVENTORY.FULFILLMENT.PICK_EXECUTE.ERROR.RESOLVE_SCAN',
+    );
   }
 
   /**
@@ -406,7 +475,7 @@ export class PickExecutePageComponent {
               this.pollForTaskUpdate(workorderId, taskId, mutSeq, isSettled, attempt + 1);
             });
         },
-        error: () => this.applyRefreshError(taskId, mutSeq),
+        error: err => this.applyRefreshError(taskId, mutSeq, err),
       });
   }
 
@@ -439,16 +508,30 @@ export class PickExecutePageComponent {
     });
   }
 
-  /** A confirm/complete command failure — scoped to its task (issue #374
+  /**
+   * A confirm/complete command failure — scoped to its task (issue #374
    * finding 6), never a page-wide `errorKey`, so a late failure for a task
    * the mechanic has since left doesn't surface as a page error over
-   * whichever task is now active. */
-  private applyMutationError(taskId: string, mutSeq: number, key: string): void {
+   * whichever task is now active.
+   *
+   * A `LOCATION_SCOPE_DENIED` 403 is the one exception: it means the
+   * caller's location scope no longer covers this workorder's site at all
+   * (#2204/#2225), not that this one command failed, so it is surfaced
+   * page-wide instead of scoped to the task, matching the read-side handling
+   * below (ADR-0064 §6).
+   */
+  private applyMutationError(taskId: string, mutSeq: number, err: unknown, fallbackKey: string): void {
     if (mutSeq !== this.mutationSeq) {
       return; // superseded — obligation already settled by selectTask() or a newer mutation
     }
     this.pendingTaskId.set(null);
-    this.taskStatus.set({ taskId, kind: 'error', key });
+    if (isLocationScopeDenied(err)) {
+      this.clearTaskStatus(taskId);
+      this.state.set('error');
+      this.errorKey.set('INVENTORY.FULFILLMENT.PICK_EXECUTE.ERROR.LOCATION_SCOPE_DENIED');
+      return;
+    }
+    this.taskStatus.set({ taskId, kind: 'error', key: fallbackKey });
   }
 
   /** The post-mutation `getPickTasks` readback itself failing — a workorder-wide
@@ -458,7 +541,7 @@ export class PickExecutePageComponent {
    * a newer mutation, task switch, or reload has since taken over this
    * obligation, the stale failure settles quietly instead of replacing
    * whatever the mechanic is now looking at with a refresh error. */
-  private applyRefreshError(taskId: string, mutSeq: number): void {
+  private applyRefreshError(taskId: string, mutSeq: number, err: unknown): void {
     if (mutSeq !== this.mutationSeq) {
       return; // superseded — obligation already settled by selectTask() or a newer mutation
     }
@@ -466,7 +549,11 @@ export class PickExecutePageComponent {
       this.pendingTaskId.set(null);
     }
     this.state.set('error');
-    this.errorKey.set('INVENTORY.FULFILLMENT.PICK_EXECUTE.ERROR.REFRESH');
+    this.errorKey.set(
+      isLocationScopeDenied(err)
+        ? 'INVENTORY.FULFILLMENT.PICK_EXECUTE.ERROR.LOCATION_SCOPE_DENIED'
+        : 'INVENTORY.FULFILLMENT.PICK_EXECUTE.ERROR.REFRESH',
+    );
   }
 
   private clearTaskStatus(taskId: string): void {
@@ -476,8 +563,8 @@ export class PickExecutePageComponent {
   }
 
   private resetScanState(): void {
-    this.scannedSkuId.set('');
-    this.scannedLocationId.set('');
+    this.scannedProductCode.set('');
+    this.scannedLocationCode.set('');
     this.scanAttempted.set(false);
     this.scanResult.set(null);
   }
@@ -517,7 +604,7 @@ export class PickExecutePageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: pickList => this.applyPickList(pickList, seq),
-        error: () => this.applyLoadError(seq),
+        error: err => this.applyLoadError(seq, err),
       });
   }
 
@@ -537,11 +624,15 @@ export class PickExecutePageComponent {
     this.errorKey.set(null);
   }
 
-  private applyLoadError(seq: number): void {
+  private applyLoadError(seq: number, err: unknown): void {
     if (seq !== this.tasksReadSeq) {
       return;
     }
     this.state.set('error');
-    this.errorKey.set('INVENTORY.FULFILLMENT.PICK_EXECUTE.ERROR.LOAD');
+    this.errorKey.set(
+      isLocationScopeDenied(err)
+        ? 'INVENTORY.FULFILLMENT.PICK_EXECUTE.ERROR.LOCATION_SCOPE_DENIED'
+        : 'INVENTORY.FULFILLMENT.PICK_EXECUTE.ERROR.LOAD',
+    );
   }
 }

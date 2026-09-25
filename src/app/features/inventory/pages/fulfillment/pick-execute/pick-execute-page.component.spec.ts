@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { Subject, of, throwError } from 'rxjs';
@@ -113,8 +114,8 @@ describe('PickExecutePageComponent', () => {
   it('selectTask switches the active task and resets the scan/confirm form', async () => {
     mockPickService.resolvePickScan.mockReturnValue(of(scanMatchedA));
     const component = await setupPickExecute();
-    component.setScannedSkuId('SKU-A');
-    component.setScannedLocationId('bin-A');
+    component.setScannedProductCode('SKU-A');
+    component.setScannedLocationCode('bin-A');
     component.resolveScan();
     expect(component.scanMatched()).toBe(true);
 
@@ -122,7 +123,7 @@ describe('PickExecutePageComponent', () => {
 
     expect(component.activeTaskId()).toBe('task-B');
     expect(component.scanResult()).toBeNull();
-    expect(component.scannedSkuId()).toBe('');
+    expect(component.scannedProductCode()).toBe('');
     expect(component.confirmQty()).toBe(3); // taskB.requestedQty - taskB.pickedQty
   });
 
@@ -130,13 +131,13 @@ describe('PickExecutePageComponent', () => {
     mockPickService.resolvePickScan.mockReturnValue(of(scanMatchedA));
     const component = await setupPickExecute();
 
-    component.setScannedSkuId('SKU-A');
-    component.setScannedLocationId('bin-A');
+    component.setScannedProductCode('SKU-A');
+    component.setScannedLocationCode('bin-A');
     component.resolveScan();
 
     expect(mockPickService.resolvePickScan).toHaveBeenCalledExactlyOnceWith('wo-001', 'task-A', {
-      scannedSkuId: 'SKU-A',
-      scannedLocationId: 'bin-A',
+      scannedProductCode: 'SKU-A',
+      scannedLocationCode: 'bin-A',
     });
     expect(component.scanMatched()).toBe(true);
     expect(component.scanResultKey()).toBe('INVENTORY.FULFILLMENT.PICK_EXECUTE.SCAN_RESULT.MATCHED');
@@ -150,20 +151,42 @@ describe('PickExecutePageComponent', () => {
     );
     const component = await setupPickExecute();
 
-    component.setScannedSkuId('SKU-A');
-    component.setScannedLocationId('bin-WRONG');
+    component.setScannedProductCode('SKU-A');
+    component.setScannedLocationCode('bin-WRONG');
     component.resolveScan();
 
     expect(component.scanMatched()).toBe(false);
     expect(component.scanResultKey()).toBe('INVENTORY.FULFILLMENT.PICK_EXECUTE.SCAN_RESULT.LOCATION_MISMATCH');
   });
 
+  // #2217: PRODUCT_CODE_UNAVAILABLE / LOCATION_CODE_UNAVAILABLE mean "this
+  // task carries no replicated code to verify a code-based scan against yet"
+  // — cannot verify, not wrong — and each renders its own localized message.
+  describe.each([
+    ['PRODUCT_CODE_UNAVAILABLE'],
+    ['LOCATION_CODE_UNAVAILABLE'],
+  ])('resolveScan success (%s)', (matchStatus) => {
+    it('surfaces the matching SCAN_RESULT key', async () => {
+      mockPickService.resolvePickScan.mockReturnValue(
+        of({ pickTaskId: 'task-A', matched: false, matchStatus }),
+      );
+      const component = await setupPickExecute();
+
+      component.setScannedProductCode('SKU-A');
+      component.setScannedLocationCode('bin-A');
+      component.resolveScan();
+
+      expect(component.scanMatched()).toBe(false);
+      expect(component.scanResultKey()).toBe(`INVENTORY.FULFILLMENT.PICK_EXECUTE.SCAN_RESULT.${matchStatus}`);
+    });
+  });
+
   it('resolveScan error sets state error before errorKey (ADR-0031)', async () => {
     mockPickService.resolvePickScan.mockReturnValue(throwError(() => new Error('scan failed')));
     const component = await setupPickExecute();
 
-    component.setScannedSkuId('SKU-A');
-    component.setScannedLocationId('bin-A');
+    component.setScannedProductCode('SKU-A');
+    component.setScannedLocationCode('bin-A');
 
     const calls: string[] = [];
     const origState = component.state.set.bind(component.state);
@@ -193,8 +216,8 @@ describe('PickExecutePageComponent', () => {
     mockPickService.getPickTasks.mockReturnValue(of([confirmedTask, taskB]));
     const component = await setupPickExecute();
 
-    component.setScannedSkuId('SKU-A');
-    component.setScannedLocationId('bin-A');
+    component.setScannedProductCode('SKU-A');
+    component.setScannedLocationCode('bin-A');
     component.resolveScan();
     component.setConfirmQty(5);
 
@@ -213,8 +236,8 @@ describe('PickExecutePageComponent', () => {
     mockPickService.confirmPickLine.mockReturnValue(throwError(() => new Error('confirm failed')));
     const component = await setupPickExecute();
 
-    component.setScannedSkuId('SKU-A');
-    component.setScannedLocationId('bin-A');
+    component.setScannedProductCode('SKU-A');
+    component.setScannedLocationCode('bin-A');
     component.resolveScan();
     component.setConfirmQty(5);
     component.confirmLine();
@@ -319,8 +342,8 @@ describe('PickExecutePageComponent', () => {
       const component = await setupPickExecute();
 
       // Resolve a scan for task A and confirm it — held open via the Subject.
-      component.setScannedSkuId('SKU-A');
-      component.setScannedLocationId('bin-A');
+      component.setScannedProductCode('SKU-A');
+      component.setScannedLocationCode('bin-A');
       component.resolveScan();
       component.setConfirmQty(5);
       component.confirmLine();
@@ -359,8 +382,8 @@ describe('PickExecutePageComponent', () => {
       mockPickService.resolvePickScan.mockReturnValue(scan$);
       const component = await setupPickExecute();
 
-      component.setScannedSkuId('SKU-A');
-      component.setScannedLocationId('bin-A');
+      component.setScannedProductCode('SKU-A');
+      component.setScannedLocationCode('bin-A');
       component.resolveScan();
       expect(component.state()).toBe('mutating');
 
@@ -378,8 +401,8 @@ describe('PickExecutePageComponent', () => {
       mockPickService.resolvePickScan.mockReturnValue(scan$);
       const component = await setupPickExecute();
 
-      component.setScannedSkuId('SKU-A');
-      component.setScannedLocationId('bin-A');
+      component.setScannedProductCode('SKU-A');
+      component.setScannedLocationCode('bin-A');
       component.resolveScan();
       expect(component.state()).toBe('mutating');
 
@@ -438,8 +461,8 @@ describe('PickExecutePageComponent', () => {
       mockPickService.resolvePickScan.mockReturnValue(scan$);
       const component = await setupPickExecute();
 
-      component.setScannedSkuId('SKU-A');
-      component.setScannedLocationId('bin-A');
+      component.setScannedProductCode('SKU-A');
+      component.setScannedLocationCode('bin-A');
       component.resolveScan();
       expect(component.state()).toBe('mutating');
 
@@ -469,8 +492,8 @@ describe('PickExecutePageComponent', () => {
 
     it('refuses a quantity beyond what remains on the task (over-pick)', async () => {
       const component = await setupPickExecute(); // taskA: requestedQty 5, pickedQty 0
-      component.setScannedSkuId('SKU-A');
-      component.setScannedLocationId('bin-A');
+      component.setScannedProductCode('SKU-A');
+      component.setScannedLocationCode('bin-A');
       component.resolveScan();
       component.setConfirmQty(6); // > activeTaskRemainingQty() (5)
 
@@ -481,8 +504,8 @@ describe('PickExecutePageComponent', () => {
 
     it('refuses a NaN quantity', async () => {
       const component = await setupPickExecute();
-      component.setScannedSkuId('SKU-A');
-      component.setScannedLocationId('bin-A');
+      component.setScannedProductCode('SKU-A');
+      component.setScannedLocationCode('bin-A');
       component.resolveScan();
       component.setConfirmQty(NaN);
 
@@ -493,8 +516,8 @@ describe('PickExecutePageComponent', () => {
 
     it('refuses an infinite quantity', async () => {
       const component = await setupPickExecute();
-      component.setScannedSkuId('SKU-A');
-      component.setScannedLocationId('bin-A');
+      component.setScannedProductCode('SKU-A');
+      component.setScannedLocationCode('bin-A');
       component.resolveScan();
       component.setConfirmQty(Infinity);
 
@@ -508,8 +531,8 @@ describe('PickExecutePageComponent', () => {
       mockPickService.confirmPickLine.mockReturnValue(of(confirmedTask));
       mockPickService.getPickTasks.mockReturnValue(of([confirmedTask, taskB]));
       const component = await setupPickExecute();
-      component.setScannedSkuId('SKU-A');
-      component.setScannedLocationId('bin-A');
+      component.setScannedProductCode('SKU-A');
+      component.setScannedLocationCode('bin-A');
       component.resolveScan();
       component.setConfirmQty(5); // == activeTaskRemainingQty()
 
@@ -521,8 +544,8 @@ describe('PickExecutePageComponent', () => {
     it('disables the confirm control in the template for an over-pick quantity, not only via the input max attribute', async () => {
       const fixture = await setupPickExecuteFixture('wo-001', [EXECUTE]);
       const component = fixture.componentInstance;
-      component.setScannedSkuId('SKU-A');
-      component.setScannedLocationId('bin-A');
+      component.setScannedProductCode('SKU-A');
+      component.setScannedLocationCode('bin-A');
       component.resolveScan();
       component.setConfirmQty(6);
       fixture.detectChanges();
@@ -551,8 +574,8 @@ describe('PickExecutePageComponent', () => {
 
       expect(component.canExecute()).toBe(true);
 
-      component.setScannedSkuId('SKU-A');
-      component.setScannedLocationId('bin-A');
+      component.setScannedProductCode('SKU-A');
+      component.setScannedLocationCode('bin-A');
       component.resolveScan();
       expect(mockPickService.resolvePickScan).toHaveBeenCalledTimes(1);
 
@@ -570,8 +593,8 @@ describe('PickExecutePageComponent', () => {
 
       expect(component.canExecute()).toBe(false);
 
-      component.setScannedSkuId('SKU-A');
-      component.setScannedLocationId('bin-A');
+      component.setScannedProductCode('SKU-A');
+      component.setScannedLocationCode('bin-A');
       component.resolveScan();
       expect(mockPickService.resolvePickScan).not.toHaveBeenCalled();
 
@@ -709,8 +732,8 @@ describe('PickExecutePageComponent', () => {
         .mockReturnValueOnce(of([applied, taskB])); // attempt 3: applied
       const component = await setupPickExecute();
 
-      component.setScannedSkuId('SKU-A');
-      component.setScannedLocationId('bin-A');
+      component.setScannedProductCode('SKU-A');
+      component.setScannedLocationCode('bin-A');
       component.resolveScan();
       component.setConfirmQty(5);
       component.confirmLine();
@@ -745,8 +768,8 @@ describe('PickExecutePageComponent', () => {
         .mockReturnValueOnce(of([applied, taskB])); // this command's +5 landed
       const component = await setupPickExecute();
 
-      component.setScannedSkuId('SKU-A');
-      component.setScannedLocationId('bin-A');
+      component.setScannedProductCode('SKU-A');
+      component.setScannedLocationCode('bin-A');
       component.resolveScan();
       component.setConfirmQty(5);
       component.confirmLine();
@@ -814,8 +837,8 @@ describe('PickExecutePageComponent', () => {
       mockPickService.getPickTasks.mockReturnValue(of([stillPending, taskB]));
       const component = await setupPickExecute();
 
-      component.setScannedSkuId('SKU-A');
-      component.setScannedLocationId('bin-A');
+      component.setScannedProductCode('SKU-A');
+      component.setScannedLocationCode('bin-A');
       component.resolveScan();
       component.setConfirmQty(5);
       component.confirmLine();
@@ -896,6 +919,156 @@ describe('PickExecutePageComponent', () => {
       expect(component.errorKey()).toBe('INVENTORY.FULFILLMENT.PICK_EXECUTE.ERROR.REFRESH');
       expect(component.pendingTaskId()).toBeNull();
       expect(component.activeTaskStatus()).toBeNull(); // not task-scoped — it's the shared read
+    });
+  });
+
+  // #2217: a mechanic's scanner sends Enter after every code — the first
+  // Enter (product code) must advance to the location-code field rather than
+  // firing a half-filled resolve; the second (location code) submits. Fields
+  // clear immediately once the scan is issued, ready for the next attempt.
+  describe('scanner Enter flow (#2217)', () => {
+    it('Enter in the product-code field moves focus to the location-code field without submitting', async () => {
+      const fixture = await setupPickExecuteFixture('wo-001', [EXECUTE]);
+      fixture.detectChanges();
+
+      const productInput: HTMLInputElement = fixture.nativeElement.querySelector('#scan-product-code');
+      const locationInput: HTMLInputElement = fixture.nativeElement.querySelector('#scan-location-code');
+      productInput.value = 'UPC-001';
+      productInput.dispatchEvent(new Event('input'));
+      productInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+      fixture.detectChanges();
+      await Promise.resolve(); // flush the queued focus() call
+
+      expect(document.activeElement).toBe(locationInput);
+      expect(mockPickService.resolvePickScan).not.toHaveBeenCalled();
+    });
+
+    it('Enter in the location-code field submits the scan', async () => {
+      mockPickService.resolvePickScan.mockReturnValue(of(scanMatchedA));
+      const fixture = await setupPickExecuteFixture('wo-001', [EXECUTE]);
+      const component = fixture.componentInstance;
+      fixture.detectChanges();
+
+      component.setScannedProductCode('SKU-A');
+      component.setScannedLocationCode('bin-A');
+      fixture.detectChanges();
+
+      const locationInput: HTMLInputElement = fixture.nativeElement.querySelector('#scan-location-code');
+      locationInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+
+      expect(mockPickService.resolvePickScan).toHaveBeenCalledExactlyOnceWith('wo-001', 'task-A', {
+        scannedProductCode: 'SKU-A',
+        scannedLocationCode: 'bin-A',
+      });
+    });
+
+    it('switching to another task refocuses the product-code field', async () => {
+      const fixture = await setupPickExecuteFixture('wo-001', [EXECUTE]);
+      fixture.detectChanges();
+
+      const productInput: HTMLInputElement = fixture.nativeElement.querySelector('#scan-product-code');
+      productInput.blur();
+      fixture.componentInstance.selectTask('task-B');
+      fixture.detectChanges();
+      await Promise.resolve(); // flush the queued focus() call
+
+      expect(document.activeElement).toBe(productInput);
+    });
+
+    it('clears both scan fields immediately once the scan is issued', async () => {
+      mockPickService.resolvePickScan.mockReturnValue(of(scanMatchedA));
+      const component = await setupPickExecute();
+
+      component.setScannedProductCode('SKU-A');
+      component.setScannedLocationCode('bin-A');
+      component.resolveScan();
+
+      expect(component.scannedProductCode()).toBe('');
+      expect(component.scannedLocationCode()).toBe('');
+    });
+  });
+
+  // #2204/#2225: every pick-facade endpoint is now location-scoped. A
+  // LOCATION_SCOPE_DENIED 403 means the caller's location scope no longer
+  // covers this workorder's site at all — a page-wide condition, never a
+  // per-task one, even when it surfaces from a per-task mutation.
+  describe('LOCATION_SCOPE_DENIED maps to a localized error (#2204/#2225)', () => {
+    const scopeDenied = () =>
+      new HttpErrorResponse({ status: 403, statusText: 'Forbidden', error: { code: 'LOCATION_SCOPE_DENIED' } });
+
+    it('the initial load', async () => {
+      mockPickService.getWorkorderPickList.mockReturnValue(throwError(() => scopeDenied()));
+      const component = await setupPickExecute();
+
+      expect(component.state()).toBe('error');
+      expect(component.errorKey()).toBe('INVENTORY.FULFILLMENT.PICK_EXECUTE.ERROR.LOCATION_SCOPE_DENIED');
+    });
+
+    it('resolveScan', async () => {
+      mockPickService.resolvePickScan.mockReturnValue(throwError(() => scopeDenied()));
+      const component = await setupPickExecute();
+      component.setScannedProductCode('SKU-A');
+      component.setScannedLocationCode('bin-A');
+
+      component.resolveScan();
+
+      expect(component.state()).toBe('error');
+      expect(component.errorKey()).toBe('INVENTORY.FULFILLMENT.PICK_EXECUTE.ERROR.LOCATION_SCOPE_DENIED');
+    });
+
+    it('confirmLine surfaces it page-wide, not scoped to the task', async () => {
+      mockPickService.resolvePickScan.mockReturnValue(of(scanMatchedA));
+      mockPickService.confirmPickLine.mockReturnValue(throwError(() => scopeDenied()));
+      const component = await setupPickExecute();
+      component.setScannedProductCode('SKU-A');
+      component.setScannedLocationCode('bin-A');
+      component.resolveScan();
+      component.setConfirmQty(5);
+
+      component.confirmLine();
+
+      expect(component.state()).toBe('error');
+      expect(component.errorKey()).toBe('INVENTORY.FULFILLMENT.PICK_EXECUTE.ERROR.LOCATION_SCOPE_DENIED');
+      expect(component.pendingTaskId()).toBeNull();
+      expect(component.activeTaskStatus()).toBeNull(); // not task-scoped
+    });
+
+    it('completeTask surfaces it page-wide', async () => {
+      const fullyPicked: PickTaskLine = { ...taskA, pickedQty: 5, status: 'PICKED' };
+      mockPickService.getWorkorderPickList.mockReturnValue(
+        of({ ...pickListFixture, tasks: [fullyPicked, taskB] }),
+      );
+      mockPickService.completePickTask.mockReturnValue(throwError(() => scopeDenied()));
+      const component = await setupPickExecute();
+
+      component.completeTask();
+
+      expect(component.state()).toBe('error');
+      expect(component.errorKey()).toBe('INVENTORY.FULFILLMENT.PICK_EXECUTE.ERROR.LOCATION_SCOPE_DENIED');
+    });
+
+    it('the post-mutation readback failing with the same code maps too', async () => {
+      const readyToClose: PickTaskLine = { ...taskA, pickedQty: 5, status: 'PENDING' };
+      mockPickService.getWorkorderPickList.mockReturnValue(
+        of({ ...pickListFixture, tasks: [readyToClose, taskB] }),
+      );
+      mockPickService.completePickTask.mockReturnValue(of(readyToClose));
+      mockPickService.getPickTasks.mockReturnValue(throwError(() => scopeDenied()));
+      const component = await setupPickExecute();
+
+      component.completeTask();
+
+      expect(component.state()).toBe('error');
+      expect(component.errorKey()).toBe('INVENTORY.FULFILLMENT.PICK_EXECUTE.ERROR.LOCATION_SCOPE_DENIED');
+    });
+
+    it('a plain 403 without the scope-denied code keeps the generic load error', async () => {
+      mockPickService.getWorkorderPickList.mockReturnValue(
+        throwError(() => new HttpErrorResponse({ status: 403, statusText: 'Forbidden' })),
+      );
+      const component = await setupPickExecute();
+
+      expect(component.errorKey()).toBe('INVENTORY.FULFILLMENT.PICK_EXECUTE.ERROR.LOAD');
     });
   });
 });

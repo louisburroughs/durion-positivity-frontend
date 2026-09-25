@@ -34,7 +34,7 @@ function buildRoute(workorderId: string | null) {
   };
 }
 
-async function setupPickList(workorderId: string | null = 'wo-001') {
+async function setupPickListFixture(workorderId: string | null = 'wo-001') {
   await TestBed.configureTestingModule({
     imports: [PickListPageComponent, TranslateModule.forRoot()],
     providers: [
@@ -43,7 +43,11 @@ async function setupPickList(workorderId: string | null = 'wo-001') {
       { provide: ActivatedRoute, useValue: buildRoute(workorderId) },
     ],
   }).compileComponents();
-  return TestBed.createComponent(PickListPageComponent).componentInstance;
+  return TestBed.createComponent(PickListPageComponent);
+}
+
+async function setupPickList(workorderId: string | null = 'wo-001') {
+  return (await setupPickListFixture(workorderId)).componentInstance;
 }
 
 describe('PickListPageComponent', () => {
@@ -144,5 +148,57 @@ describe('PickListPageComponent', () => {
     const errorKeyIndex = calls.findIndex(call => call.startsWith('key:'));
     expect(errorStateIndex).toBeGreaterThanOrEqual(0);
     expect(errorKeyIndex).toBeGreaterThan(errorStateIndex);
+  });
+
+  // #2221: existing tasks stay null until their next pick-task fact replicates
+  // storageLocationCode — the raw storageLocationId UUID must never leak into
+  // rendered text as a fallback (ADR-0064 §5).
+  describe('location column falls back to COMMON.NOT_AVAILABLE, never the raw storageLocationId (#2221)', () => {
+    it('shows the location code when present', async () => {
+      const withCode: PickTaskLine = { ...pickTaskLine, storageLocationId: 'loc-uuid-001', storageLocationCode: 'A-01-03' };
+      mockPickService.getWorkorderPickList.mockReturnValue(of({ ...pickListFixture, tasks: [withCode] }));
+      const fixture = await setupPickListFixture();
+      fixture.detectChanges();
+
+      const text = fixture.nativeElement.textContent as string;
+      expect(text).toContain('A-01-03');
+      expect(text).not.toContain('loc-uuid-001');
+    });
+
+    it('falls back to COMMON.NOT_AVAILABLE, never the raw storageLocationId, when no code exists yet', async () => {
+      const withoutCode: PickTaskLine = { ...pickTaskLine, storageLocationId: 'loc-uuid-001' };
+      mockPickService.getWorkorderPickList.mockReturnValue(of({ ...pickListFixture, tasks: [withoutCode] }));
+      const fixture = await setupPickListFixture();
+      fixture.detectChanges();
+
+      const text = fixture.nativeElement.textContent as string;
+      expect(text).not.toContain('loc-uuid-001');
+      expect(text).toContain('COMMON.NOT_AVAILABLE');
+    });
+  });
+
+  // #2204/#2225: the pick-facade reads are now location-scoped.
+  describe('LOCATION_SCOPE_DENIED maps to a localized error (#2204/#2225)', () => {
+    it('a 403 with the scope-denied code sets the dedicated error key', async () => {
+      mockPickService.getWorkorderPickList.mockReturnValue(
+        throwError(
+          () => new HttpErrorResponse({ status: 403, statusText: 'Forbidden', error: { code: 'LOCATION_SCOPE_DENIED' } }),
+        ),
+      );
+      const component = await setupPickList();
+
+      expect(component.state()).toBe('error');
+      expect(component.errorKey()).toBe('INVENTORY.FULFILLMENT.PICK_LIST.ERROR.LOCATION_SCOPE_DENIED');
+    });
+
+    it('a plain 403 without the scope-denied code keeps the generic load error', async () => {
+      mockPickService.getWorkorderPickList.mockReturnValue(
+        throwError(() => new HttpErrorResponse({ status: 403, statusText: 'Forbidden' })),
+      );
+      const component = await setupPickList();
+
+      expect(component.state()).toBe('error');
+      expect(component.errorKey()).toBe('INVENTORY.FULFILLMENT.PICK_LIST.ERROR.LOAD');
+    });
   });
 });

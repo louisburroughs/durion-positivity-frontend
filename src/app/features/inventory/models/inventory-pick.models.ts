@@ -31,7 +31,14 @@ export interface PickTaskLine {
   pickedQty: number;
   uom: string;
   storageLocationId?: string;
+  /** The task's human-readable location name/code, replicated from
+   * `pos-location` (#2221). Null on a task last updated before scan codes
+   * were replicated — never fall back to `storageLocationId` (ADR-0064 §5). */
   storageLocationCode?: string;
+  /** The location's scannable barcode, when replicated (#2221). */
+  storageLocationBarcode?: string;
+  /** The SKU's scannable EAN/UPC code, when replicated (#2217/#2221). */
+  productCode?: string;
   status: string;
   sortOrder?: number;
 }
@@ -65,18 +72,38 @@ export interface ConsumptionResult {
 // `WorkorderPickFacadeService` models scan-resolve/confirm/complete at
 // pick-task granularity, not a whole pick list, and `pickLineId` equals
 // `pickTaskId` in the current single-line-per-task backend model.
+//
+// #2217: a mechanic's scanner reads the printed product/location code off the
+// part and the bin, not their internal UUIDs, so `resolvePickScan` now takes
+// a scanned product code and a scanned location code as the primary inputs.
+// Exactly one of scannedSkuId/scannedProductCode and exactly one of
+// scannedLocationId/scannedLocationCode may be supplied; the UUID pair is
+// kept as an alternative the SDK still accepts, though the pick-execute page
+// only ever sends the code pair.
 export interface ScanResolveRequest {
-  scannedSkuId: string;
-  scannedLocationId: string;
+  scannedSkuId?: string;
+  scannedLocationId?: string;
+  scannedProductCode?: string;
+  scannedLocationCode?: string;
 }
 
 /** Evaluative only (ADR-0064 §1) — resolving a scan records no state; `matched`
- * plus `matchStatus` ('MATCHED' | 'SKU_MISMATCH' | 'LOCATION_MISMATCH' | 'NO_MATCH')
- * drive the confirm step's gating. */
+ * plus `matchStatus` drive the confirm step's gating. `matchStatus` mirrors
+ * the backend's `MatchStatus` (#2217): 'MATCHED' (both scans matched);
+ * 'SKU_MISMATCH' (location matched, product did not); 'LOCATION_MISMATCH'
+ * (product matched, location did not); 'NO_MATCH' (neither matched);
+ * 'PRODUCT_CODE_UNAVAILABLE' / 'LOCATION_CODE_UNAVAILABLE' (a code was
+ * scanned but the task carries no replicated code to compare against yet —
+ * "cannot verify", not "wrong part/bin"). `expectedProductCode` /
+ * `expectedLocationCode` / `expectedLocationBarcode` tell the mechanic what
+ * the task actually expected. */
 export interface ScanResolveResult {
   pickTaskId: string;
   matched: boolean;
   matchStatus?: string;
   resolvedSkuId?: string;
   resolvedLocationId?: string;
+  expectedProductCode?: string;
+  expectedLocationCode?: string;
+  expectedLocationBarcode?: string;
 }
