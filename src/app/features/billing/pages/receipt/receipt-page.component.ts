@@ -2,6 +2,7 @@ import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { DatePipe } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { TranslatePipe } from '@ngx-translate/core';
 import { GenerateReceiptRequest, ReceiptRef } from '../../models/billing.models';
 import { BillingTransportService } from '../../services/billing-transport.service';
@@ -72,9 +73,13 @@ export class ReceiptPageComponent implements OnInit {
           this.receipt.set(receipt);
           this.state.set('ready');
         },
-        error: () => {
+        error: (err: unknown) => {
           this.state.set('error');
-          this.errorKey.set('BILLING.RECEIPT.ERROR.GENERATE');
+          this.errorKey.set(
+            err instanceof HttpErrorResponse && err.status === 403
+              ? 'BILLING.RECEIPT.ERROR.GENERATE_PERMISSION_DENIED'
+              : 'BILLING.RECEIPT.ERROR.GENERATE',
+          );
         },
       });
   }
@@ -106,9 +111,11 @@ export class ReceiptPageComponent implements OnInit {
   }
 
   /**
-   * No frontend permission gate: below its 5-reprint cap the backend's `reprintReceipt` needs only
-   * an authenticated caller, and past the cap `SUPERVISOR_OVERRIDE` (which no token carries today,
-   * durion-positivity-backend#2226). A 403 maps to the page's error state.
+   * No frontend permission gate: `GENERATE_RECEIPT` (which also covers reprint) has no catalog
+   * entry, so no `perm_bits` token can decode to a grant for it — a frontend gate would permanently
+   * deny every real session (`route-permissions.ts`, durion-positivity-backend#2226). Below its
+   * 5-reprint cap the backend's `reprintReceipt` needs only an authenticated caller, and past the
+   * cap `SUPERVISOR_OVERRIDE`. A 403 maps to a localized permission error instead of the generic one.
    */
   reprint(): void {
     const receiptId = this.receiptId() ?? this.receipt()?.receiptId;
@@ -129,9 +136,13 @@ export class ReceiptPageComponent implements OnInit {
           this.receipt.set(receipt);
           this.state.set('ready');
         },
-        error: () => {
+        error: (err: unknown) => {
           this.state.set('error');
-          this.errorKey.set('BILLING.RECEIPT.ERROR.REPRINT');
+          this.errorKey.set(
+            err instanceof HttpErrorResponse && err.status === 403
+              ? 'BILLING.RECEIPT.ERROR.REPRINT_PERMISSION_DENIED'
+              : 'BILLING.RECEIPT.ERROR.REPRINT',
+          );
         },
       });
   }

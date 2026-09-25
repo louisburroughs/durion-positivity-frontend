@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
-import { Observable, forkJoin, throwError } from 'rxjs';
+import { Observable, throwError } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import {
   ArtifactDownloadToken as SdkArtifactDownloadToken,
@@ -43,7 +43,7 @@ import {
   PaymentMethod,
   PaymentTransactionRef,
   ReceiptRef,
-  RefundBalance,
+  RefundContext,
 } from '../models/billing.models';
 
 @Injectable({ providedIn: 'root' })
@@ -154,9 +154,9 @@ export class BillingTransportService {
   /**
    * Issue #381 / durion-positivity-backend#2215 ruling: `PaymentReversalService.refundPayment`
    * (`POST /v1/invoices/{id}/payments/{pid}/refunds`) always requires `amount` — there is no
-   * implicit full refund. The caller (`PaymentVoidRefundPageComponent`) requires the operator to
-   * confirm an explicit amount, whether typed for a partial refund or prefilled from
-   * {@link loadRefundBalance} for a full one.
+   * implicit full refund and no prefill (Copilot #4106106128 removed the `invoice.total`-derived
+   * one). The caller (`PaymentVoidRefundPageComponent`) requires the operator to type an explicit
+   * amount, informed only by {@link loadRefundContext}'s prior-refunds total.
    */
   executeRefund(
     invoiceId: string,
@@ -177,40 +177,33 @@ export class BillingTransportService {
   }
 
   /**
-   * durion-positivity-backend#2215 ruling: the full-refund path computes
-   * `capturedAmount - sum(non-failed prior refunds)` rather than posting an implicit amount.
-   * Prior refunds come from `PaymentReversalService.listInvoiceRefunds`
-   * (`GET /v1/invoices/{invoiceId}/refunds`), filtered to this payment intent and to refunds whose
-   * status isn't `FAILED` (`InvoiceRefundResponseStatusEnum.Failed` never reduced the captured
-   * balance on the backend — `PaymentReversalServiceImpl`, verified against origin/main).
+   * Copilot #4106106128: `invoice.total` is the whole invoice, not the captured amount for
+   * `paymentId` — on a multiply-tendered invoice it includes other payment intents, so it is unsafe
+   * as a "refundable balance" proxy and this no longer derives or prefills one from it. There is
+   * also no SDK/backend operation that reads a single payment intent's captured amount after the
+   * fact: `PaymentService` exposes only `initiatePayment`/`capturePayment`, `pos-invoice` has no
+   * `GET .../payments/{paymentId}` controller method, and `InvoiceDetailsResponse` carries no
+   * payments breakdown (verified against `PaymentController.java` / `InvoiceDetailsResponse.java`
+   * on backend origin/main and the vendored `@durion-sdk/invoice` 0.63 types).
    *
-   * There is no SDK/backend operation that reads a single payment intent's captured amount after
-   * the fact: `PaymentService` exposes only `initiatePayment`/`capturePayment`, and
-   * `InitiatePaymentResponse.capturedAmount` is returned solely at that write time; `pos-invoice`
-   * has no `GET .../payments/{paymentId}` controller method, and `InvoiceDetailsResponse`
-   * (`InvoiceService.getInvoice`) carries no payments breakdown (verified against
-   * `PaymentController.java` / `InvoiceDetailsResponse.java` on backend origin/main and the
-   * vendored `@durion-sdk/invoice` 0.63 types — both agree). Until the backend exposes a
-   * payment-intent read, this uses the invoice's grand total as the closest available
-   * captured-amount proxy — exact for the single-payment invoices this page is reached from today,
-   * approximate for a multiply-tendered one. The operator always sees and can edit the prefilled
-   * figure before submitting (never a silent full refund — `PaymentVoidRefundPageComponent`), and
-   * the server's own 422 remains authoritative when the real remaining balance is smaller.
+   * Until that read exists (durion-positivity-backend#2226), this surfaces only this payment's
+   * prior (non-failed) refunds from `PaymentReversalService.listInvoiceRefunds`
+   * (`GET /v1/invoices/{invoiceId}/refunds`) as informational context — `InvoiceRefundResponseStatusEnum.Failed`
+   * never reduced the captured balance on the backend (`PaymentReversalServiceImpl`, verified
+   * against origin/main). The operator always enters an explicit amount
+   * (`PaymentVoidRefundPageComponent`, durion-positivity-backend#2215 ruling), and the server's own
+   * 422 remains authoritative when the real remaining balance is smaller. Re-add a full-refund
+   * balance/prefill once #2226 lands.
    */
-  loadRefundBalance(invoiceId: string, paymentId: string): Observable<RefundBalance> {
-    return forkJoin({
-      invoice: this.invoiceService.getInvoice(invoiceId),
-      refunds: this.paymentReversalService.listInvoiceRefunds(invoiceId),
-    }).pipe(
-      map(({ invoice, refunds }) => {
-        const capturedAmount = invoice.total ?? 0;
+  loadRefundContext(invoiceId: string, paymentId: string): Observable<RefundContext> {
+    return this.paymentReversalService.listInvoiceRefunds(invoiceId).pipe(
+      map(refunds => {
         const priorRefundsTotal = refunds
           .filter(refund =>
             refund.paymentIntentId === paymentId
             && refund.status !== InvoiceRefundResponseStatusEnum.Failed)
           .reduce((sum, refund) => sum + (refund.amount ?? 0), 0);
-        const refundableBalance = Math.max(0, capturedAmount - priorRefundsTotal);
-        return { capturedAmount, priorRefundsTotal, refundableBalance };
+        return { priorRefundsTotal };
       }),
     );
   }

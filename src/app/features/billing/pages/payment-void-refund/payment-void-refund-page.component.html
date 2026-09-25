@@ -46,38 +46,24 @@
   }
 
   @if (mode() === 'refund') {
-  @if (!canRefund()) {
-  <div class="pvm__error" role="alert" data-testid="refund-permission-denied">
-    {{ 'BILLING.PAYMENT.ERROR.REFUND_PERMISSION_DENIED' | translate }}
-  </div>
-  }
-
-  @if (refundBalanceStatus() === 'PENDING') {
-  <p class="pvm__balance-status" aria-live="polite" data-testid="refund-balance-loading">
-    {{ 'BILLING.PAYMENT.REFUND.BALANCE_LOADING' | translate }}
+  @if (refundContextStatus() === 'PENDING') {
+  <p class="pvm__balance-status" aria-live="polite" data-testid="refund-context-loading">
+    {{ 'BILLING.PAYMENT.REFUND.PRIOR_REFUNDS_LOADING' | translate }}
   </p>
   }
-  @if (refundBalanceStatus() === 'FAILED') {
-  <div class="pvm__balance-status pvm__balance-status--error" role="alert" data-testid="refund-balance-error">
-    <span>{{ 'BILLING.PAYMENT.ERROR.REFUND_BALANCE_LOAD' | translate }}</span>
-    <button type="button" class="pvm__balance-retry" (click)="retryLoadRefundBalance()">
+  @if (refundContextStatus() === 'FAILED') {
+  <div class="pvm__balance-status pvm__balance-status--error" role="alert" data-testid="refund-context-error">
+    <span>{{ 'BILLING.PAYMENT.ERROR.REFUND_CONTEXT_LOAD' | translate }}</span>
+    <button type="button" class="pvm__balance-retry" (click)="retryLoadRefundContext()">
       {{ 'COMMON.RETRY' | translate }}
     </button>
   </div>
   }
-  @if (refundBalanceStatus() === 'OK' && refundBalance(); as balance) {
-  <dl class="pvm__balance" data-testid="refund-balance">
-    <dt>{{ 'BILLING.PAYMENT.REFUND.CAPTURED_LABEL' | translate }}</dt>
-    <dd>{{ balance.capturedAmount | number: '1.2-2' }}</dd>
+  @if (refundContextStatus() === 'OK' && refundContext(); as context) {
+  <dl class="pvm__balance" data-testid="refund-prior-refunds">
     <dt>{{ 'BILLING.PAYMENT.REFUND.PRIOR_REFUNDS_LABEL' | translate }}</dt>
-    <dd>{{ balance.priorRefundsTotal | number: '1.2-2' }}</dd>
-    <dt>{{ 'BILLING.PAYMENT.REFUND.BALANCE_LABEL' | translate }}</dt>
-    <dd>{{ balance.refundableBalance | number: '1.2-2' }}</dd>
+    <dd>{{ context.priorRefundsTotal | number: '1.2-2' }}</dd>
   </dl>
-  <button type="button" class="pvm__full-refund-btn" [disabled]="!canRefund() || balance.refundableBalance <= 0"
-    (click)="useFullRefundBalance()">
-    {{ 'BILLING.PAYMENT.ACTION.FULL_REFUND' | translate }}
-  </button>
   }
 
   <form class="pvm__form" (submit)="$event.preventDefault()">

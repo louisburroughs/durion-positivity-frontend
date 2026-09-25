@@ -111,7 +111,10 @@
 }
 
 .pvm__balance-status--error {
+  background: var(--status-error-bg);
   color: var(--status-error-fg);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
 }
 
 .pvm__balance-retry {
@@ -119,7 +122,9 @@
   background: transparent;
   color: var(--link-color);
   font-weight: 600;
-  padding: 0;
+  min-width: 24px;
+  min-height: 24px;
+  padding: var(--space-1) var(--space-2);
 }
 
 .pvm__balance {
@@ -137,21 +142,6 @@
 .pvm__balance dd {
   margin: 0;
   font-weight: 600;
-}
-
-.pvm__full-refund-btn {
-  align-self: flex-start;
-  padding: var(--space-2) var(--space-4);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--currentTextColor);
-  font-weight: 600;
-}
-
-.pvm__full-refund-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
 }
 
 .pvm__ready {

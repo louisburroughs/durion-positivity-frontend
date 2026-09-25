@@ -314,7 +314,7 @@ describe('BillingTransportService', () => {
     expect(result).toBeUndefined();
   });
 
-  describe('loadRefundBalance (durion-positivity-backend#2215)', () => {
+  describe('loadRefundContext (durion-positivity-backend#2215, Copilot #4106106128)', () => {
     const refund = (overrides: Partial<InvoiceRefundResponse>): InvoiceRefundResponse => ({
       id: 'refund-1',
       paymentIntentId: 'pay-001',
@@ -323,66 +323,48 @@ describe('BillingTransportService', () => {
       ...overrides,
     });
 
-    it('derives the balance as capturedAmount (invoice total) minus non-failed prior refunds for this payment', () => {
-      invoiceServiceStub.getInvoice.mockReturnValueOnce(of({ ...invoiceResponse, total: 100 }));
+    it('sums non-failed prior refunds for this payment, without reading invoice.total', () => {
       paymentReversalServiceStub.listInvoiceRefunds.mockReturnValueOnce(of([
         refund({ id: 'r1', amount: 10, status: InvoiceRefundResponseStatusEnum.Completed }),
         refund({ id: 'r2', amount: 5, status: InvoiceRefundResponseStatusEnum.Pending }),
       ]));
 
       let result: unknown;
-      service.loadRefundBalance('inv-001', 'pay-001').subscribe(value => {
+      service.loadRefundContext('inv-001', 'pay-001').subscribe(value => {
         result = value;
       });
 
-      expect(invoiceServiceStub.getInvoice).toHaveBeenCalledWith('inv-001');
       expect(paymentReversalServiceStub.listInvoiceRefunds).toHaveBeenCalledWith('inv-001');
-      expect(result).toEqual({ capturedAmount: 100, priorRefundsTotal: 15, refundableBalance: 85 });
+      expect(invoiceServiceStub.getInvoice).not.toHaveBeenCalled();
+      expect(result).toEqual({ priorRefundsTotal: 15 });
     });
 
     it('excludes FAILED refunds from the prior-refunds total', () => {
-      invoiceServiceStub.getInvoice.mockReturnValueOnce(of({ ...invoiceResponse, total: 100 }));
       paymentReversalServiceStub.listInvoiceRefunds.mockReturnValueOnce(of([
         refund({ id: 'r1', amount: 10, status: InvoiceRefundResponseStatusEnum.Completed }),
         refund({ id: 'r2', amount: 40, status: InvoiceRefundResponseStatusEnum.Failed }),
       ]));
 
-      let result: { priorRefundsTotal: number; refundableBalance: number } | undefined;
-      service.loadRefundBalance('inv-001', 'pay-001').subscribe(value => {
+      let result: { priorRefundsTotal: number } | undefined;
+      service.loadRefundContext('inv-001', 'pay-001').subscribe(value => {
         result = value;
       });
 
       expect(result?.priorRefundsTotal).toBe(10);
-      expect(result?.refundableBalance).toBe(90);
     });
 
     it('excludes refunds belonging to a different payment intent on the same invoice', () => {
-      invoiceServiceStub.getInvoice.mockReturnValueOnce(of({ ...invoiceResponse, total: 100 }));
       paymentReversalServiceStub.listInvoiceRefunds.mockReturnValueOnce(of([
         refund({ id: 'r1', paymentIntentId: 'pay-001', amount: 10 }),
         refund({ id: 'r2', paymentIntentId: 'pay-999', amount: 50 }),
       ]));
 
       let result: { priorRefundsTotal: number } | undefined;
-      service.loadRefundBalance('inv-001', 'pay-001').subscribe(value => {
+      service.loadRefundContext('inv-001', 'pay-001').subscribe(value => {
         result = value;
       });
 
       expect(result?.priorRefundsTotal).toBe(10);
-    });
-
-    it('floors the balance at zero rather than going negative', () => {
-      invoiceServiceStub.getInvoice.mockReturnValueOnce(of({ ...invoiceResponse, total: 10 }));
-      paymentReversalServiceStub.listInvoiceRefunds.mockReturnValueOnce(of([
-        refund({ id: 'r1', amount: 25, status: InvoiceRefundResponseStatusEnum.Completed }),
-      ]));
-
-      let result: { refundableBalance: number } | undefined;
-      service.loadRefundBalance('inv-001', 'pay-001').subscribe(value => {
-        result = value;
-      });
-
-      expect(result?.refundableBalance).toBe(0);
     });
   });
 

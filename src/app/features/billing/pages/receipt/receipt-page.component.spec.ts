@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
@@ -267,6 +268,60 @@ describe('ReceiptPageComponent', () => {
       billingTransportStub.reprintReceipt.mockReturnValue(of({ receiptId: 'rcpt-001', reference: 'R-1', status: 'ISSUED' }));
       component.reprint();
       expect(billingTransportStub.reprintReceipt).toHaveBeenCalledWith('inv-001', 'rcpt-001');
+    });
+  });
+
+  describe('403 mapped to a localized permission error, not a frontend gate (Copilot #4106105999/#4106194893/#4106194936, durion-positivity-backend#2226)', () => {
+    it('maps a 403 from generateAndShow to a localized permission error', async () => {
+      TestBed.resetTestingModule();
+      await TestBed.configureTestingModule({
+        imports: [ReceiptPageComponent, TranslateModule.forRoot()],
+        providers: [
+          provideRouter([]),
+          { provide: BillingTransportService, useValue: billingTransportStub },
+          { provide: ActivatedRoute, useValue: routeStubWith('inv-001', null) },
+          { provide: AuthService, useValue: authStub },
+        ],
+      }).compileComponents();
+      fixture = TestBed.createComponent(ReceiptPageComponent);
+      component = fixture.componentInstance;
+      fixture.detectChanges();
+
+      billingTransportStub.generateReceipt.mockReturnValue(
+        throwError(() => new HttpErrorResponse({ status: 403 })),
+      );
+
+      component.generateAndShow({ deliveryMethod: 'PRINT' });
+
+      expect(component.state()).toBe('error');
+      expect(component.errorKey()).toBe('BILLING.RECEIPT.ERROR.GENERATE_PERMISSION_DENIED');
+    });
+
+    it('maps a 403 from reprint to a localized permission error', () => {
+      fixture = TestBed.createComponent(ReceiptPageComponent);
+      component = fixture.componentInstance;
+      fixture.detectChanges();
+
+      billingTransportStub.reprintReceipt.mockReturnValue(
+        throwError(() => new HttpErrorResponse({ status: 403 })),
+      );
+
+      component.reprint();
+
+      expect(component.state()).toBe('error');
+      expect(component.errorKey()).toBe('BILLING.RECEIPT.ERROR.REPRINT_PERMISSION_DENIED');
+    });
+
+    it('a non-403 failure from generateAndShow keeps the generic error key', () => {
+      fixture = TestBed.createComponent(ReceiptPageComponent);
+      component = fixture.componentInstance;
+      fixture.detectChanges();
+
+      billingTransportStub.generateReceipt.mockReturnValue(throwError(() => new Error('boom')));
+
+      component.generateAndShow({ deliveryMethod: 'PRINT' });
+
+      expect(component.errorKey()).toBe('BILLING.RECEIPT.ERROR.GENERATE');
     });
   });
 });

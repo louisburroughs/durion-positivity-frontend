@@ -6657,8 +6657,7 @@
         "CAPTURE": "Autoriser et capturer",
         "VOID": "Annuler l'autorisation",
         "REFUND": "Traiter le remboursement",
-        "PRINT_RECEIPT": "Imprimer le reçu",
-        "FULL_REFUND": "Rembourser le solde complet"
+        "PRINT_RECEIPT": "Imprimer le reçu"
       },
       "MODE": {
         "LABEL": "Sélectionner l'action de paiement"
@@ -6682,10 +6681,8 @@
         "REASON_LABEL": "Raison",
         "AUTHORITY_LABEL": "Code d'autorisation",
         "AMOUNT_LABEL": "Montant du remboursement (obligatoire)",
-        "BALANCE_LOADING": "Chargement du solde remboursable...",
-        "CAPTURED_LABEL": "Montant capturé",
-        "PRIOR_REFUNDS_LABEL": "Déjà remboursé",
-        "BALANCE_LABEL": "Solde remboursable"
+        "PRIOR_REFUNDS_LOADING": "Chargement des remboursements antérieurs...",
+        "PRIOR_REFUNDS_LABEL": "Déjà remboursé"
       },
       "ERROR": {
         "CAPTURE": "Impossible de traiter le paiement. Veuillez réessayer.",
@@ -6694,7 +6691,7 @@
         "MISSING_IDS": "Référence de paiement ou de facture invalide.",
         "REFUND_AMOUNT_REQUIRED": "Saisissez un montant de remboursement supérieur à zéro.",
         "REFUND_AMOUNT_EXCEEDS_BALANCE": "Le montant du remboursement ne peut pas dépasser le solde remboursable.",
-        "REFUND_BALANCE_LOAD": "Impossible de charger le solde remboursable.",
+        "REFUND_CONTEXT_LOAD": "Impossible de charger les remboursements antérieurs.",
         "REFUND_PERMISSION_DENIED": "Vous n'avez pas la permission de rembourser ce paiement."
       }
     },
@@ -6722,7 +6719,9 @@
       "ERROR": {
         "LOAD": "Impossible de charger le recu.",
         "GENERATE": "Impossible de generer le recu. Veuillez réessayer.",
+        "GENERATE_PERMISSION_DENIED": "Vous n'avez pas la permission de générer ce reçu.",
         "REPRINT": "Impossible de reimprimer le recu. Veuillez réessayer.",
+        "REPRINT_PERMISSION_DENIED": "Vous n'avez pas la permission de réimprimer ce reçu.",
         "MISSING_INVOICE": "Aucun ID de facture fourni.",
         "NOT_AVAILABLE": "Ce reçu n’est pas disponible à l’affichage. Utilisez la réimpression pour en obtenir une copie."
       }

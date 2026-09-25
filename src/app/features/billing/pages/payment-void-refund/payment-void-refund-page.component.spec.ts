@@ -4,12 +4,9 @@ import { ActivatedRoute, provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { Subject, of, throwError } from 'rxjs';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { AuthService } from '../../../../core/services/auth.service';
-import { RefundBalance } from '../../models/billing.models';
+import { RefundContext } from '../../models/billing.models';
 import { BillingTransportService } from '../../services/billing-transport.service';
 import { PaymentVoidRefundPageComponent } from './payment-void-refund-page.component';
-
-const REFUND_PAYMENT = 'REFUND_PAYMENT';
 
 const routeStub = {
   snapshot: {
@@ -27,10 +24,8 @@ const routeStub = {
   },
 };
 
-const balanceFixture: RefundBalance = {
-  capturedAmount: 100,
+const contextFixture: RefundContext = {
   priorRefundsTotal: 20,
-  refundableBalance: 80,
 };
 
 describe('PaymentVoidRefundPageComponent', () => {
@@ -40,19 +35,7 @@ describe('PaymentVoidRefundPageComponent', () => {
   const billingTransportStub = {
     executeVoid: vi.fn(),
     executeRefund: vi.fn(),
-    loadRefundBalance: vi.fn(),
-  };
-
-  /** Permissions known, refund authority held, unless a test narrows this before `setup()`. */
-  const authStub = {
-    known: true,
-    granted: [REFUND_PAYMENT] as readonly string[],
-    permissionsKnown(): boolean {
-      return this.known;
-    },
-    hasAnyPermission(required: readonly string[]): boolean {
-      return required.some(code => this.granted.includes(code));
-    },
+    loadRefundContext: vi.fn(),
   };
 
   function setup(): void {
@@ -64,10 +47,8 @@ describe('PaymentVoidRefundPageComponent', () => {
   beforeEach(async () => {
     billingTransportStub.executeVoid.mockReset();
     billingTransportStub.executeRefund.mockReset();
-    billingTransportStub.loadRefundBalance.mockReset();
-    billingTransportStub.loadRefundBalance.mockReturnValue(of(balanceFixture));
-    authStub.known = true;
-    authStub.granted = [REFUND_PAYMENT];
+    billingTransportStub.loadRefundContext.mockReset();
+    billingTransportStub.loadRefundContext.mockReturnValue(of(contextFixture));
 
     await TestBed.configureTestingModule({
       imports: [PaymentVoidRefundPageComponent, TranslateModule.forRoot()],
@@ -75,7 +56,6 @@ describe('PaymentVoidRefundPageComponent', () => {
         provideRouter([]),
         { provide: BillingTransportService, useValue: billingTransportStub },
         { provide: ActivatedRoute, useValue: routeStub },
-        { provide: AuthService, useValue: authStub },
       ],
     }).compileComponents();
 
@@ -138,8 +118,27 @@ describe('PaymentVoidRefundPageComponent', () => {
     expect(component.errorKey()).toBe('BILLING.PAYMENT.ERROR.REFUND_AMOUNT_EXCEEDS_BALANCE');
   });
 
-  it('sets ready state on successful refund, sending the entered amount explicitly (issue #381)', () => {
+  it('maps a 403 from executeRefund to a localized permission error instead of a frontend gate (Copilot #4106105951/#4106105999/#4106194893/#4106194936, durion-positivity-backend#2226)', () => {
+    billingTransportStub.executeRefund.mockReturnValue(
+      throwError(() => new HttpErrorResponse({ status: 403 })),
+    );
+
+    component.executeRefund('test reason', 'AUTH1', 42.5);
+
+    expect(component.state()).toBe('error');
+    expect(component.errorKey()).toBe('BILLING.PAYMENT.ERROR.REFUND_PERMISSION_DENIED');
+    expect(billingTransportStub.executeRefund).toHaveBeenCalledWith(
+      'inv-001',
+      'pay-001',
+      'test reason',
+      'AUTH1',
+      42.5,
+    );
+  });
+
+  it('sets ready state on successful refund, sending the entered amount explicitly (issue #381), and re-reads the prior-refunds context (ADR-0063 §5)', () => {
     billingTransportStub.executeRefund.mockReturnValue(of(undefined));
+    billingTransportStub.loadRefundContext.mockClear();
 
     component.executeRefund('reason', 'AUTH1', 42.5);
 
@@ -151,6 +150,7 @@ describe('PaymentVoidRefundPageComponent', () => {
       'AUTH1',
       42.5,
     );
+    expect(billingTransportStub.loadRefundContext).toHaveBeenCalledWith('inv-001', 'pay-001');
   });
 
   it('sets error state before errorKey and never calls the service when refund amount is missing (issue #381: no more implicit full refund)', () => {
@@ -180,14 +180,13 @@ describe('PaymentVoidRefundPageComponent', () => {
     expect(billingTransportStub.executeRefund).not.toHaveBeenCalled();
   });
 
-  it('sets error state and never calls the service when the amount exceeds the loaded refundable balance', () => {
-    component.setMode('refund');
+  it('sends the entered amount through even when it exceeds the prior-refunds context — no client-side balance check (Copilot #4106106128: no safe local figure to validate against; the server 422 is authoritative)', () => {
+    billingTransportStub.executeRefund.mockReturnValue(of(undefined));
+    component.setMode('refund'); // loads the prior-refunds context, informational only
 
     component.executeRefund('reason', 'AUTH1', 999);
 
-    expect(component.state()).toBe('error');
-    expect(component.errorKey()).toBe('BILLING.PAYMENT.ERROR.REFUND_AMOUNT_EXCEEDS_BALANCE');
-    expect(billingTransportStub.executeRefund).not.toHaveBeenCalled();
+    expect(billingTransportStub.executeRefund).toHaveBeenCalledWith('inv-001', 'pay-001', 'reason', 'AUTH1', 999);
   });
 
   it('canSubmitRefund() is false with no amount entered and true once a positive amount is entered', () => {
@@ -246,78 +245,52 @@ describe('PaymentVoidRefundPageComponent', () => {
     expect(stateOrder).toBeLessThan(errorKeyOrder);
   });
 
-  describe('refund balance (durion-positivity-backend#2215)', () => {
-    it('loads the balance once refund mode is entered', () => {
-      expect(billingTransportStub.loadRefundBalance).not.toHaveBeenCalled();
+  describe('refund context (durion-positivity-backend#2215, Copilot #4106106128)', () => {
+    it('loads the prior-refunds context once refund mode is entered', () => {
+      expect(billingTransportStub.loadRefundContext).not.toHaveBeenCalled();
 
       component.setMode('refund');
 
-      expect(billingTransportStub.loadRefundBalance).toHaveBeenCalledWith('inv-001', 'pay-001');
-      expect(component.refundBalanceStatus()).toBe('OK');
-      expect(component.refundBalance()).toEqual(balanceFixture);
+      expect(billingTransportStub.loadRefundContext).toHaveBeenCalledWith('inv-001', 'pay-001');
+      expect(component.refundContextStatus()).toBe('OK');
+      expect(component.refundContext()).toEqual(contextFixture);
     });
 
-    it('derives the balance as capturedAmount minus non-failed prior refunds (excludes failed ones at the source)', () => {
-      // The transport service is the one summing refunds and excluding FAILED ones; this
-      // component-level test asserts the page renders whatever balance it is handed, unmodified.
-      component.setMode('refund');
-
-      expect(component.refundBalance()?.refundableBalance).toBe(80);
-    });
-
-    it('sets a FAILED status and never crashes when the balance load errors', () => {
-      billingTransportStub.loadRefundBalance.mockReturnValue(throwError(() => new Error('load failed')));
+    it('sets a FAILED status and never crashes when the context load errors', () => {
+      billingTransportStub.loadRefundContext.mockReturnValue(throwError(() => new Error('load failed')));
 
       component.setMode('refund');
 
-      expect(component.refundBalanceStatus()).toBe('FAILED');
-      expect(component.refundBalance()).toBeNull();
+      expect(component.refundContextStatus()).toBe('FAILED');
+      expect(component.refundContext()).toBeNull();
     });
 
-    it('retryLoadRefundBalance() re-issues the read after a failure', () => {
-      billingTransportStub.loadRefundBalance.mockReturnValueOnce(throwError(() => new Error('load failed')));
+    it('retryLoadRefundContext() re-issues the read after a failure', () => {
+      billingTransportStub.loadRefundContext.mockReturnValueOnce(throwError(() => new Error('load failed')));
       component.setMode('refund');
-      expect(component.refundBalanceStatus()).toBe('FAILED');
+      expect(component.refundContextStatus()).toBe('FAILED');
 
-      billingTransportStub.loadRefundBalance.mockReturnValue(of(balanceFixture));
-      component.retryLoadRefundBalance();
+      billingTransportStub.loadRefundContext.mockReturnValue(of(contextFixture));
+      component.retryLoadRefundContext();
 
-      expect(component.refundBalanceStatus()).toBe('OK');
-      expect(component.refundBalance()).toEqual(balanceFixture);
+      expect(component.refundContextStatus()).toBe('OK');
+      expect(component.refundContext()).toEqual(contextFixture);
     });
 
-    it('a superseded balance read never lands (ADR-0063 request-keyed ownership)', () => {
-      const first$ = new Subject<RefundBalance>();
-      billingTransportStub.loadRefundBalance.mockReturnValueOnce(first$);
+    it('a superseded context read never lands (ADR-0063 request-keyed ownership)', () => {
+      const first$ = new Subject<RefundContext>();
+      billingTransportStub.loadRefundContext.mockReturnValueOnce(first$);
       component.setMode('refund'); // issues the first (still-pending) read
 
-      const second: RefundBalance = { capturedAmount: 5, priorRefundsTotal: 0, refundableBalance: 5 };
-      billingTransportStub.loadRefundBalance.mockReturnValueOnce(of(second));
-      component.retryLoadRefundBalance(); // supersedes it — the retry lands first
+      const second: RefundContext = { priorRefundsTotal: 5 };
+      billingTransportStub.loadRefundContext.mockReturnValueOnce(of(second));
+      component.retryLoadRefundContext(); // supersedes it — the retry lands first
 
-      expect(component.refundBalance()?.refundableBalance).toBe(5);
+      expect(component.refundContext()?.priorRefundsTotal).toBe(5);
 
       // The stale first read landing after the retry must not overwrite the current value.
-      first$.next(balanceFixture);
-      expect(component.refundBalance()?.refundableBalance).toBe(5);
-    });
-
-    it('useFullRefundBalance() prefills the amount from the balance without submitting (operator confirms before sending)', () => {
-      component.setMode('refund');
-
-      component.useFullRefundBalance();
-
-      expect(component.refundAmount()).toBe(80);
-      expect(billingTransportStub.executeRefund).not.toHaveBeenCalled();
-    });
-
-    it('useFullRefundBalance() is a no-op before the balance has loaded', () => {
-      billingTransportStub.loadRefundBalance.mockReturnValue(throwError(() => new Error('load failed')));
-      component.setMode('refund');
-
-      component.useFullRefundBalance();
-
-      expect(component.refundAmount()).toBeNull();
+      first$.next(contextFixture);
+      expect(component.refundContext()?.priorRefundsTotal).toBe(5);
     });
   });
 
@@ -329,14 +302,6 @@ describe('PaymentVoidRefundPageComponent', () => {
     it('shows the required key once touched with no amount', () => {
       component.markRefundAmountTouched();
       expect(component.refundAmountErrorKey()).toBe('BILLING.PAYMENT.ERROR.REFUND_AMOUNT_REQUIRED');
-    });
-
-    it('shows the exceeds-balance key once touched with an amount over the loaded balance', () => {
-      component.setMode('refund');
-      component.markRefundAmountTouched();
-      component.setRefundAmount('500');
-
-      expect(component.refundAmountErrorKey()).toBe('BILLING.PAYMENT.ERROR.REFUND_AMOUNT_EXCEEDS_BALANCE');
     });
 
     it('clears once a valid amount is entered', () => {
@@ -361,53 +326,20 @@ describe('PaymentVoidRefundPageComponent', () => {
     });
   });
 
-  describe('refund permission gate (ADR-0040 §6a)', () => {
-    it('disables the refund control and refuses the method when the permission is denied', async () => {
-      TestBed.resetTestingModule();
-      authStub.known = true;
-      authStub.granted = [];
-      await TestBed.configureTestingModule({
-        imports: [PaymentVoidRefundPageComponent, TranslateModule.forRoot()],
-        providers: [
-          provideRouter([]),
-          { provide: BillingTransportService, useValue: billingTransportStub },
-          { provide: ActivatedRoute, useValue: routeStub },
-          { provide: AuthService, useValue: authStub },
-        ],
-      }).compileComponents();
-      setup();
+  describe('no frontend permission gate (Copilot #4106105951/#4106105999/#4106194893/#4106194936, durion-positivity-backend#2226)', () => {
+    it('enables the refund control on form validity alone — REFUND_PAYMENT has no catalog entry to gate on', () => {
       component.setMode('refund');
       fixture.detectChanges();
 
-      expect(component.canRefund()).toBe(false);
-      expect(component.canSubmitRefund()).toBe(false);
-      expect(fixture.nativeElement.querySelector('.pvm__refund-btn').disabled).toBe(true);
-      expect(fixture.nativeElement.querySelector('[data-testid="refund-permission-denied"]')).toBeTruthy();
+      expect(fixture.nativeElement.querySelector('[data-testid="refund-permission-denied"]')).toBeNull();
+      expect(fixture.nativeElement.querySelector('.pvm__refund-btn').disabled).toBe(true); // form incomplete
 
       component.refundReason.set('reason');
       component.refundAuthorityCode.set('AUTH1');
       component.setRefundAmount('25');
-      component.executeRefund('reason', 'AUTH1', 25);
+      fixture.detectChanges();
 
-      expect(billingTransportStub.executeRefund).not.toHaveBeenCalled();
-    });
-
-    it('follows the unknown-permission (legacy token) fallback and stays open', async () => {
-      TestBed.resetTestingModule();
-      authStub.known = false;
-      authStub.granted = [];
-      await TestBed.configureTestingModule({
-        imports: [PaymentVoidRefundPageComponent, TranslateModule.forRoot()],
-        providers: [
-          provideRouter([]),
-          { provide: BillingTransportService, useValue: billingTransportStub },
-          { provide: ActivatedRoute, useValue: routeStub },
-          { provide: AuthService, useValue: authStub },
-        ],
-      }).compileComponents();
-      setup();
-
-      expect(component.canRefund()).toBe(true);
+      expect(fixture.nativeElement.querySelector('.pvm__refund-btn').disabled).toBe(false);
     });
   });
 });

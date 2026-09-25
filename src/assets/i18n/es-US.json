@@ -6657,7 +6657,6 @@
         "CAPTURE": "Autorizar y capturar",
         "VOID": "Anular autorización",
         "REFUND": "Procesar reembolso",
-        "FULL_REFUND": "Reembolsar saldo completo",
         "PRINT_RECEIPT": "Imprimir recibo"
       },
       "MODE": {
@@ -6682,10 +6681,8 @@
         "REASON_LABEL": "Motivo",
         "AUTHORITY_LABEL": "Código de autorización",
         "AMOUNT_LABEL": "Importe del reembolso (obligatorio)",
-        "BALANCE_LOADING": "Cargando saldo reembolsable...",
-        "CAPTURED_LABEL": "Importe capturado",
-        "PRIOR_REFUNDS_LABEL": "Ya reembolsado",
-        "BALANCE_LABEL": "Saldo reembolsable"
+        "PRIOR_REFUNDS_LOADING": "Cargando reembolsos anteriores...",
+        "PRIOR_REFUNDS_LABEL": "Ya reembolsado"
       },
       "ERROR": {
         "CAPTURE": "No se pudo procesar el pago. Inténtelo de nuevo.",
@@ -6694,7 +6691,7 @@
         "MISSING_IDS": "Referencia de pago o factura no válida.",
         "REFUND_AMOUNT_REQUIRED": "Ingrese un importe de reembolso mayor que cero.",
         "REFUND_AMOUNT_EXCEEDS_BALANCE": "El importe del reembolso no puede superar el saldo reembolsable.",
-        "REFUND_BALANCE_LOAD": "No se pudo cargar el saldo reembolsable.",
+        "REFUND_CONTEXT_LOAD": "No se pudieron cargar los reembolsos anteriores.",
         "REFUND_PERMISSION_DENIED": "No tiene permiso para reembolsar este pago."
       }
     },
@@ -6722,7 +6719,9 @@
       "ERROR": {
         "LOAD": "No se pudo cargar el recibo.",
         "GENERATE": "No se pudo generar el recibo. Inténtelo de nuevo.",
+        "GENERATE_PERMISSION_DENIED": "No tiene permiso para generar este recibo.",
         "REPRINT": "No se pudo reimprimir el recibo. Inténtelo de nuevo.",
+        "REPRINT_PERMISSION_DENIED": "No tiene permiso para reimprimir este recibo.",
         "MISSING_INVOICE": "No se proporciónó ID de factura.",
         "NOT_AVAILABLE": "Este recibo no está disponible para ver. Use reimprimir para obtener una copia."
       }

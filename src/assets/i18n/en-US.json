@@ -6657,7 +6657,6 @@
         "CAPTURE": "Authorize & Capture",
         "VOID": "Void Authorization",
         "REFUND": "Process Refund",
-        "FULL_REFUND": "Refund Full Balance",
         "PRINT_RECEIPT": "Print Receipt"
       },
       "MODE": {
@@ -6682,10 +6681,8 @@
         "REASON_LABEL": "Reason",
         "AUTHORITY_LABEL": "Authority Code",
         "AMOUNT_LABEL": "Refund Amount (required)",
-        "BALANCE_LOADING": "Loading refundable balance...",
-        "CAPTURED_LABEL": "Amount Captured",
-        "PRIOR_REFUNDS_LABEL": "Already Refunded",
-        "BALANCE_LABEL": "Refundable Balance"
+        "PRIOR_REFUNDS_LOADING": "Loading prior refunds...",
+        "PRIOR_REFUNDS_LABEL": "Already Refunded"
       },
       "ERROR": {
         "CAPTURE": "Unable to process payment. Please try again.",
@@ -6694,7 +6691,7 @@
         "MISSING_IDS": "Invalid payment or invoice reference.",
         "REFUND_AMOUNT_REQUIRED": "Enter a refund amount greater than zero.",
         "REFUND_AMOUNT_EXCEEDS_BALANCE": "Refund amount cannot exceed the refundable balance.",
-        "REFUND_BALANCE_LOAD": "Unable to load the refundable balance.",
+        "REFUND_CONTEXT_LOAD": "Unable to load prior refunds.",
         "REFUND_PERMISSION_DENIED": "You do not have permission to refund this payment."
       }
     },
@@ -6722,7 +6719,9 @@
       "ERROR": {
         "LOAD": "Unable to load receipt.",
         "GENERATE": "Unable to generate receipt. Please try again.",
+        "GENERATE_PERMISSION_DENIED": "You do not have permission to generate this receipt.",
         "REPRINT": "Unable to reprint receipt. Please try again.",
+        "REPRINT_PERMISSION_DENIED": "You do not have permission to reprint this receipt.",
         "MISSING_INVOICE": "No invoice ID provided.",
         "NOT_AVAILABLE": "This receipt is not available to view. Use reprint to get a copy."
       }

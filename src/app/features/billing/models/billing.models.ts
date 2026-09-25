@@ -231,19 +231,21 @@ export interface GenerateReceiptRequest {
   emailAddress?: string;
 }
 
-// ── Issue #2215 ruling: refund balance ─────────────────────────────────────
+// ── Issue #2215 ruling / Copilot #4106106128: prior-refunds context ────────
 
 /**
- * The figure the operator confirms before a full refund is submitted (durion-positivity-backend
- * issue #2215 ruling): `capturedAmount` minus the sum of non-failed prior refunds against this
- * payment. `amount` sent to `refundPayment` is always explicit — this is a UI prefill, never a
- * silent submission — and the server's own 422 (amount exceeds the remaining balance) remains
- * authoritative regardless of what this computes.
+ * Context shown to the operator before they enter a refund amount (durion-positivity-backend
+ * issue #2215 ruling): the sum of this payment's non-failed prior refunds, from
+ * `PaymentReversalService.listInvoiceRefunds`. `amount` sent to `refundPayment` is always explicit
+ * and operator-entered — this is informational only, never a prefill or a balance the frontend
+ * validates against, because `invoice.total` (the only captured-amount proxy available today) is
+ * the whole invoice, not this payment's captured amount, so it is unsafe on a multiply-tendered
+ * invoice (Copilot #4106106128). The server's own 422 (amount exceeds the remaining refundable
+ * balance) remains authoritative. Re-add a full-refund balance/prefill once the backend exposes a
+ * per-payment captured-amount read (durion-positivity-backend#2226).
  */
-export interface RefundBalance {
-  readonly capturedAmount: number;
+export interface RefundContext {
   readonly priorRefundsTotal: number;
-  readonly refundableBalance: number;
 }
 
 export interface ReceiptRef {
