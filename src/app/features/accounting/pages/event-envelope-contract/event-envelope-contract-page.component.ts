@@ -6,7 +6,7 @@ import { EventEnvelopeContract } from '../../models/accounting.models';
 import { AccountingService } from '../../services/accounting.service';
 
 type ContractState = 'loading' | 'ready' | 'forbidden' | 'error';
-type ContractTab = 'fields' | 'traceability' | 'examples';
+type ContractTab = 'fields' | 'traceability' | 'identifiers' | 'statuses' | 'idempotency' | 'examples';
 
 @Component({
   selector: 'app-event-envelope-contract-page',
