@@ -128,6 +128,16 @@ export const INVENTORY_PERMISSIONS = permissionsInDomains(
   'order:purchase_order:create',
   'bulkImport:upload:execute',
   'security:permission:view',
+  /**
+   * `consume-picked-items` (fulfillment) is the one inventory-hosted page whose
+   * write endpoint is enforced by pos-workorder, not pos-inventory:
+   * `WorkorderPickedItemsController.consumeWorkorderPickedItems` is
+   * `@PreAuthorize('workorder:parts:consume')`, not an `inventory:pick_list:*`
+   * code (verified against pos-workorder; see INVENTORY_PAGE.consumeItems and
+   * issue #347 group 5). Full code, not a prefix — no other workexec page lives
+   * under /app/inventory.
+   */
+  'workorder:parts:consume',
 );
 
 /**
@@ -211,6 +221,25 @@ export const INVENTORY_PAGE = {
   /** `listCycleCountAdjustments` uses `hasAnyAuthority` over both codes. */
   adjustments: ['inventory:adjustment:view', 'inventory:adjustment:approve'],
   pickList: ['inventory:pick_list:view'],
+  /**
+   * `pick-execute` exists to write (scan-resolve/confirm/complete on
+   * `WorkorderPickFacadeController`, each `@PreAuthorize('inventory:pick_list:execute')`),
+   * so it is gated on the write, not the `pickList` view its initial pick-list
+   * read also happens to need (ADR-0040 §6a.1). Fixes issue #347 group 5: a
+   * mechanic reaching this page previously needed `inventory:pick_list:view`
+   * only, the same read authority as the list page.
+   */
+  pickExecute: ['inventory:pick_list:execute'],
+  /**
+   * `consume-picked-items` exists to write. Its actual backend enforcement is
+   * `WorkorderPickedItemsController.consumeWorkorderPickedItems` →
+   * `@PreAuthorize('workorder:parts:consume')` — a workexec-domain code, not
+   * `inventory:pick_list:execute` — so it is gated on that, matching what the
+   * endpoint enforces (ADR-0040 §6a.1). Its own read (`getPickedItems`) still
+   * needs `inventory:pick_list:view`; see INVENTORY_PERMISSIONS for why the
+   * write code is folded into the group gate.
+   */
+  consumeItems: ['workorder:parts:consume'],
   returnToStock: ['inventory:return:view'],
   shortageResolution: ['inventory:shortage:view'],
   /** Purchase orders live under /app/inventory but are served by pos-order. */

@@ -240,7 +240,7 @@ export const INVENTORY_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'INVENTORY.LANDING.CARD.PICK_EXECUTE.DESCRIPTION',
           ctaKey: 'INVENTORY.LANDING.ACTION.EXECUTE_PICK',
           buildCommands: WO('pick-execute'),
-          permissions: INVENTORY_PAGE.pickList,
+          permissions: INVENTORY_PAGE.pickExecute,
         },
         {
           kind: 'guided',
@@ -258,7 +258,7 @@ export const INVENTORY_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'INVENTORY.LANDING.CARD.CONSUME_ITEMS.DESCRIPTION',
           ctaKey: 'INVENTORY.LANDING.ACTION.OPEN_CONSUME',
           buildCommands: WO('consume-items'),
-          permissions: INVENTORY_PAGE.pickList,
+          permissions: INVENTORY_PAGE.consumeItems,
         },
         {
           kind: 'guided',
