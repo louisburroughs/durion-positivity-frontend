@@ -1,5 +1,4 @@
 import { TestBed } from '@angular/core/testing';
-import { HttpParams } from '@angular/common/http';
 import { of } from 'rxjs';
 import { ApiBaseService } from '../../../core/services/api-base.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -7,12 +6,14 @@ import {
   AccountingEventsService,
   AccountingExportsService,
   APPaymentsService,
+  Configuration as AccountingConfiguration,
   CreditMemosService,
   FinancialReportingService,
   LocationCostReportingService,
   InvoicePaymentsService,
   PaymentApplicationsService,
   PostingRulesService,
+  VendorDirectoryAPIService,
 } from '@durion-sdk/accounting';
 import { AccountingService } from './accounting.service';
 import {
@@ -70,6 +71,11 @@ describe('AccountingService', () => {
     currentUserClaims: vi.fn(),
   };
 
+  const vendorDirectoryStub = {
+    searchVendors: vi.fn(),
+    getVendorById: vi.fn(),
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
     authServiceStub.currentUserClaims.mockReset();
@@ -87,6 +93,8 @@ describe('AccountingService', () => {
         { provide: InvoicePaymentsService, useValue: invoicePaymentsStub },
         { provide: PaymentApplicationsService, useValue: {} },
         { provide: PostingRulesService, useValue: {} },
+        { provide: VendorDirectoryAPIService, useValue: vendorDirectoryStub },
+        { provide: AccountingConfiguration, useValue: { basePath: '/api/accounting' } },
       ],
     });
     service = TestBed.inject(AccountingService);
@@ -210,7 +218,6 @@ describe('AccountingService', () => {
         processedAt: undefined,
         journalEntryId: undefined,
         errorMessage: undefined,
-        organizationId: undefined,
         sourceSystem: undefined,
         transactionDate: undefined,
         payload: { invoiceId: 'inv-001' },
@@ -386,43 +393,58 @@ describe('AccountingService', () => {
   });
 
   describe('searchVendors() [issue #816]', () => {
-    it('should GET /vendors with name and limit params', () => {
-      apiBaseServiceStub.get.mockReturnValueOnce(
+    it('should call VendorDirectoryAPIService.searchVendors with name and limit params', () => {
+      vendorDirectoryStub.searchVendors.mockReturnValueOnce(
         of([{ vendorId: 'v-001', name: 'Acme Auto Parts', status: 'ACTIVE' }]),
       );
 
       let result: VendorDirectoryEntry[] | undefined;
       service.searchVendors('acme').subscribe(r => (result = r));
 
-      const [path, params] = apiBaseServiceStub.get.mock.calls[0];
-      expect(path).toBe('/accounting/v1/accounting/vendors');
-      expect((params as HttpParams).get('name')).toBe('acme');
-      expect((params as HttpParams).get('limit')).toBe('20');
+      expect(vendorDirectoryStub.searchVendors).toHaveBeenCalledWith('acme', 20);
       expect(result?.[0].vendorId).toBe('v-001');
       expect(result?.[0].name).toBe('Acme Auto Parts');
+      expect(result?.[0].status).toBe('ACTIVE');
     });
 
     it('should omit the name param for a blank term (list-all)', () => {
-      apiBaseServiceStub.get.mockReturnValueOnce(of([]));
+      vendorDirectoryStub.searchVendors.mockReturnValueOnce(of([]));
 
       service.searchVendors('   ').subscribe();
 
-      const [, params] = apiBaseServiceStub.get.mock.calls[0];
-      expect((params as HttpParams).has('name')).toBe(false);
+      expect(vendorDirectoryStub.searchVendors).toHaveBeenCalledWith(undefined, 20);
     });
   });
 
   describe('getVendor() [issue #816]', () => {
-    it('should GET /vendors/{vendorId}', () => {
-      apiBaseServiceStub.get.mockReturnValueOnce(
+    it('should call VendorDirectoryAPIService.getVendorById(vendorId)', () => {
+      vendorDirectoryStub.getVendorById.mockReturnValueOnce(
         of({ vendorId: 'v-001', name: 'Acme Auto Parts' }),
       );
 
       let result: VendorDirectoryEntry | undefined;
       service.getVendor('v-001').subscribe(r => (result = r));
 
-      expect(apiBaseServiceStub.get).toHaveBeenCalledWith('/accounting/v1/accounting/vendors/v-001');
+      expect(vendorDirectoryStub.getVendorById).toHaveBeenCalledWith('v-001');
       expect(result?.name).toBe('Acme Auto Parts');
+    });
+  });
+
+  describe('downloadExport() [issue #350]', () => {
+    it('builds the download URL from the injected AccountingConfiguration basePath, not environment.apiBaseUrl', () => {
+      const clickSpy = vi.fn();
+      const anchor = { href: '', download: '', click: clickSpy, remove: vi.fn() } as unknown as HTMLAnchorElement;
+      const createElementSpy = vi.spyOn(document, 'createElement').mockReturnValue(anchor);
+      const appendSpy = vi.spyOn(document.body, 'append').mockImplementation(() => {});
+
+      service.downloadExport('exp-1');
+
+      expect(anchor.href).toBe('/api/accounting/v1/accounting/export/download?exportId=exp-1');
+      expect(anchor.download).toBe('time-export-exp-1.csv');
+      expect(clickSpy).toHaveBeenCalledTimes(1);
+
+      createElementSpy.mockRestore();
+      appendSpy.mockRestore();
     });
   });
 

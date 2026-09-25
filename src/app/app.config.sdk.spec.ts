@@ -14,6 +14,7 @@ import { PeopleAPIService } from '@durion-sdk/people-contact';
 import { AdminAccountStateAPIService } from '@durion-sdk/security';
 import { AppointmentAssignmentsService } from '@durion-sdk/shop-manager';
 import { SupplierAuthConfigsService } from '@durion-sdk/supplier';
+import { PlatformTenantAPIService } from '@durion-sdk/tenant';
 import { VehicleAPIService } from '@durion-sdk/vehicle-inventory';
 import { ApprovalConfigurationAPIService } from '@durion-sdk/workorder';
 
@@ -40,6 +41,7 @@ const CASES: [string, abstract new (...args: never[]) => { configuration: { base
   ['security-service', AdminAccountStateAPIService],
   ['shop-manager', AppointmentAssignmentsService],
   ['supplier', SupplierAuthConfigsService],
+  ['tenant', PlatformTenantAPIService],
   ['vehicle-inventory', VehicleAPIService],
   ['workorder', ApprovalConfigurationAPIService],
 ];

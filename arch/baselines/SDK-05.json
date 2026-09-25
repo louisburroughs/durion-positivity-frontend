@@ -1,12 +1,12 @@
 [
   {
     "key": "src/app/features/accounting/services/accounting.service.ts :: '/accounting/v1/accounting'",
-    "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
+    "reason": "D4: getEventEnvelopeContract() base path — the one remaining ApiBaseService call (see SDK-03).",
     "tracking": "#350"
   },
   {
-    "key": "src/app/features/billing/pages/invoice-detail/invoice-detail-page.component.ts :: '/invoice/v1/invoices/'",
-    "reason": "reads environment.apiBaseUrl and hardcodes an invoice path directly for a document-download URL, bypassing ApiBaseService entirely; migrates with PRD-sdk-migration-completion.md.",
+    "key": "src/app/features/accounting/services/accounting.service.ts :: '/v1/accounting/export/download?exportId='",
+    "reason": "downloadExport() has no SDK download/streaming operation; the URL is still hand-built, but now from the injected AccountingConfiguration.basePath instead of environment.apiBaseUrl (SDK-06 fixed).",
     "tracking": "#350"
   },
   {
@@ -20,6 +20,11 @@
     "tracking": "#350"
   },
   {
+    "key": "src/app/features/billing/services/billing-transport.service.ts :: '/v1/invoices/'",
+    "reason": "resolveArtifactDownloadUrl() fallback for createArtifactDownloadToken (same ADR-0041 exception, no SDK operation exists); built from the injected InvoiceConfiguration.basePath instead of environment.apiBaseUrl (SDK-06 fixed) — moved out of invoice-detail-page.component.ts so no page owns transport logic (issue #350 Wave 1).",
+    "tracking": "#350"
+  },
+  {
     "key": "src/app/features/billing/services/billing-transport.service.ts :: '/v1/billing/invoices/'",
     "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
     "tracking": "#350"
@@ -27,6 +32,11 @@
   {
     "key": "src/app/shared/bulk-import/services/bulk-import.service.ts :: '/api/bulk-loader/v1/bulk-jobs/'",
     "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
+    "tracking": "#350"
+  },
+  {
+    "key": "src/app/shared/bulk-import/services/bulk-import.service.ts :: '/v1/bulk-jobs/'",
+    "reason": "buildTusUploadEndpoint()/isTrustedUploadUrl() no longer read environment.apiBaseUrl or window.location.origin directly (SDK-06/SDK-11 fixed) but still concatenate a hardcoded /v1 suffix onto the injected BulkLoaderConfiguration.basePath — no SDK operation exists for tus session creation itself.",
     "tracking": "#350"
   },
   {
@@ -91,16 +101,6 @@
   },
   {
     "key": "src/app/features/people/services/people.service.ts :: '/people/v1/people/workSessions/'",
-    "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "#350"
-  },
-  {
-    "key": "src/app/features/platform/services/platform-account.service.ts :: '/tenant/v1/platform/accounts'",
-    "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "#350"
-  },
-  {
-    "key": "src/app/features/platform/services/platform-tenant.service.ts :: '/tenant/v1/platform/tenants'",
     "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
     "tracking": "#350"
   },

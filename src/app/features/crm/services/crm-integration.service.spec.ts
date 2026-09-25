@@ -61,7 +61,6 @@ describe('CrmIntegrationService', () => {
             eventType: 'InvoiceIssued',
             status: 'SUSPENDED',
             receivedAt: '2026-01-01T00:00:00Z',
-            organizationId: 'org-abc',
           },
         ],
         totalElements: 1,
@@ -95,7 +94,6 @@ describe('CrmIntegrationService', () => {
         eventType: 'PaymentReceived',
         status: 'PROCESSED',
         receivedAt: '2026-01-02T00:00:00Z',
-        organizationId: 'org-abc',
       };
       accountingEventsStub.getAccountingEvent.mockReturnValueOnce(of(response));
 

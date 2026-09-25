@@ -1,16 +1,17 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import {
   APPaymentsService,
   AccountingEventsService,
   AccountingExportsService,
+  Configuration as AccountingConfiguration,
   CreditMemosService,
   FinancialReportingService,
   LocationCostReportingService,
   InvoicePaymentsService,
   PaymentApplicationsService,
   PostingRulesService,
+  VendorDirectoryAPIService,
   AccountingEventResponse,
   InvoiceStatusResponse,
   ReprocessingAttemptHistoryResponse,
@@ -21,6 +22,7 @@ import {
   CreditMemoResponse,
   APPaymentResponse,
   VendorBillSummaryResponse,
+  VendorResponse,
   AccountingEventSubmitRequest as SdkAccountingEventSubmitRequest,
   ReprocessEventRequest,
   PostingRuleSetCreateRequest as SdkPostingRuleSetCreateRequest,
@@ -32,7 +34,6 @@ import {
   type LaborOverheadCostReport,
 } from '@durion-sdk/accounting';
 import { ApiBaseService } from '../../../core/services/api-base.service';
-import { environment } from '../../../../environments/environment';
 import {
   AccountingEventDetail,
   EVENT_PAYLOAD_REFERENCE_TYPES,
@@ -73,11 +74,12 @@ import type { JwtClaims } from '../../../core/models/auth.models';
 export class AccountingService {
   // Gateway routes accounting under /{module}/v1/{domain}, i.e. /api/accounting/v1/accounting/*
   // (matches the SDK's AccountingConfiguration basePath of `${apiBaseUrl}/accounting`).
-  // The two hand-rolled ApiBaseService calls below (events/contract, export/download) must
-  // carry this full prefix; without the leading /accounting module segment they 404.
+  // The one remaining hand-rolled ApiBaseService call below (events/contract) must carry this
+  // full prefix; without the leading /accounting module segment it 404s.
   private static readonly BASE = '/accounting/v1/accounting';
 
   private readonly api = inject(ApiBaseService);
+  private readonly configuration = inject(AccountingConfiguration);
   private readonly authService = inject(AuthService);
   private readonly accountingEventsService = inject(AccountingEventsService);
   private readonly accountingExportsService = inject(AccountingExportsService);
@@ -88,6 +90,7 @@ export class AccountingService {
   private readonly invoicePaymentsService = inject(InvoicePaymentsService);
   private readonly paymentApplicationsService = inject(PaymentApplicationsService);
   private readonly postingRulesService = inject(PostingRulesService);
+  private readonly vendorDirectoryService = inject(VendorDirectoryAPIService);
 
   // Events / Ingestion
 
@@ -167,6 +170,15 @@ export class AccountingService {
       .pipe(map(dtos => dtos.map(dto => this.toReprocessingAttemptHistory(dto))));
   }
 
+  /**
+   * D4 (issue #350): `AccountingEventsService.getEventContract()` now exists in
+   * `@durion-sdk/accounting`, but its `EventEnvelopeContract`/`ContractField` response
+   * (`version`, `fields[{jsonPath,name,required,type,description,enumValues}]`) has no
+   * `identifierStrategy`, `traceabilityIds`, `processingStatuses` or `idempotencyOutcomes` —
+   * all consumed by `EventEnvelopeContractPageComponent`'s traceability/examples tabs. Calling
+   * the SDK method would silently drop those tabs' data rather than migrate the endpoint, so
+   * this stays on `ApiBaseService` until the accounting OpenAPI contract is widened to match.
+   */
   getEventEnvelopeContract(): Observable<EventEnvelopeContract> {
     return this.api.get<EventEnvelopeContract>(`${AccountingService.BASE}/events/contract`);
   }
@@ -285,26 +297,22 @@ export class AccountingService {
    * Vendor directory (issue #816): name typeahead search over the AP vendor
    * directory. Case-insensitive contains match, ordered by name, capped
    * server-side (default 20, max 100) — so there is no client row cap.
-   * NOTE: SDK gap — hand-rolled until GET /v1/accounting/vendors lands in a
-   * regenerated @durion-sdk/accounting.
    */
   searchVendors(name: string, limit = 20): Observable<VendorDirectoryEntry[]> {
-    let params = new HttpParams().set('limit', limit);
     const term = name.trim();
-    if (term) {
-      params = params.set('name', term);
-    }
-    return this.api.get<VendorDirectoryEntry[]>(`${AccountingService.BASE}/vendors`, params);
+    return this.vendorDirectoryService
+      .searchVendors(term || undefined, limit)
+      .pipe(map(vendors => vendors.map(v => this.toVendorDirectoryEntry(v))));
   }
 
   /**
    * Vendor directory (issue #816): resolve a single vendor by id, e.g. to
-   * label a deep-linked ?vendorId=. Same SDK gap as searchVendors.
+   * label a deep-linked ?vendorId=.
    */
   getVendor(vendorId: string): Observable<VendorDirectoryEntry> {
-    return this.api.get<VendorDirectoryEntry>(
-      `${AccountingService.BASE}/vendors/${encodeURIComponent(vendorId)}`,
-    );
+    return this.vendorDirectoryService
+      .getVendorById(vendorId)
+      .pipe(map(v => this.toVendorDirectoryEntry(v)));
   }
 
   executePayment(req: VendorPaymentRequest): Observable<VendorPaymentResult> {
@@ -391,8 +399,11 @@ export class AccountingService {
   }
 
   downloadExport(exportId: string): void {
-    // Trigger browser download via anchor element (appended to DOM for cross-browser reliability)
-    const url = `${environment.apiBaseUrl}${AccountingService.BASE}/export/download?exportId=${encodeURIComponent(exportId)}`;
+    // Trigger browser download via anchor element (appended to DOM for cross-browser reliability).
+    // NOTE: SDK gap — no download/streaming operation exists for the export job's file, so the
+    // URL is still hand-built, but from the injected AccountingConfiguration's basePath rather
+    // than reading environment.apiBaseUrl directly (SDK-06).
+    const url = `${this.configuration.basePath}/v1/accounting/export/download?exportId=${encodeURIComponent(exportId)}`;
     const a = document.createElement('a');
     a.href = url;
     a.download = `time-export-${exportId}.csv`;
@@ -413,7 +424,6 @@ export class AccountingService {
       processedAt: dto.processedAt,
       journalEntryId: dto.journalEntryId,
       errorMessage: dto.errorMessage,
-      organizationId: dto.organizationId,
       sourceSystem: dto.sourceSystem,
       transactionDate: dto.transactionDate,
       payload: this.toRecord(dto.payload),
@@ -595,6 +605,15 @@ export class AccountingService {
       totalAmount: dto.totalAmount,
       openAmount: dto.openAmount,
       status: dto.status as string as VendorBill['status'],
+    };
+  }
+
+  private toVendorDirectoryEntry(dto: VendorResponse): VendorDirectoryEntry {
+    return {
+      vendorId: dto.vendorId,
+      name: dto.name,
+      vendorNumber: dto.vendorNumber,
+      status: dto.status as VendorDirectoryEntry['status'],
     };
   }
 

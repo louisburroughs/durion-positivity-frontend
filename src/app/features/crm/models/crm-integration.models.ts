@@ -11,7 +11,6 @@ export interface AccountingEventListItem {
   eventType: string;
   processingStatus: AccountingEventStatus;
   receivedAt: string;
-  organizationId?: string;
 }
 
 export interface AccountingEventListResponse {
@@ -25,7 +24,6 @@ export interface AccountingEventResponse {
   eventType: string;
   processingStatus: AccountingEventStatus;
   receivedAt: string;
-  organizationId?: string;
   payload?: Record<string, unknown>;
 }
 

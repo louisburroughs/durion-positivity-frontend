@@ -28,6 +28,7 @@ import { Configuration as PeopleContactConfiguration } from '@durion-sdk/people-
 import { Configuration as SecurityConfiguration } from '@durion-sdk/security/configuration';
 import { Configuration as ShopManagerConfiguration } from '@durion-sdk/shop-manager/configuration';
 import { Configuration as SupplierConfiguration } from '@durion-sdk/supplier/configuration';
+import { Configuration as TenantConfiguration } from '@durion-sdk/tenant/configuration';
 import { Configuration as VehicleInventoryConfiguration } from '@durion-sdk/vehicle-inventory/configuration';
 import { Configuration as WorkorderConfiguration } from '@durion-sdk/workorder/configuration';
 
@@ -128,6 +129,10 @@ export const appConfig: ApplicationConfig = {
     { provide: SecurityConfiguration, useFactory: () => new SecurityConfiguration({ basePath: `${environment.apiBaseUrl}/security-service` }) },
     { provide: ShopManagerConfiguration, useFactory: () => new ShopManagerConfiguration({ basePath: `${environment.apiBaseUrl}/shop-manager` }) },
     { provide: SupplierConfiguration, useFactory: () => new SupplierConfiguration({ basePath: `${environment.apiBaseUrl}/supplier` }) },
+    // Root-provided like the rest: the tenant SDK's services are providedIn 'root', so a
+    // route-scoped Configuration would never reach them. The /configuration entry keeps
+    // the tenant services themselves in the lazy platform chunk (SDK-10 allows only this).
+    { provide: TenantConfiguration, useFactory: () => new TenantConfiguration({ basePath: `${environment.apiBaseUrl}/tenant` }) },
     { provide: VehicleInventoryConfiguration, useFactory: () => new VehicleInventoryConfiguration({ basePath: `${environment.apiBaseUrl}/vehicle-inventory` }) },
     { provide: WorkorderConfiguration, useFactory: () => new WorkorderConfiguration({ basePath: `${environment.apiBaseUrl}/workorder` }) },
   ],

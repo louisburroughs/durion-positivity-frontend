@@ -1,17 +1,17 @@
 [
   {
     "key": "src/app/features/accounting/services/accounting.service.ts -> src/app/core/services/api-base.service.ts",
-    "reason": "legacy ApiBaseService transport; migrates with PRD-sdk-migration-completion.md.",
+    "reason": "D4: getEventEnvelopeContract() only — SDK's getEventContract() response lacks identifierStrategy/traceabilityIds/processingStatuses/idempotencyOutcomes the page needs (searchVendors/getVendor/downloadExport migrated to @durion-sdk/accounting).",
     "tracking": "#350"
   },
   {
     "key": "src/app/features/billing/services/billing-transport.service.ts -> src/app/core/services/api-base.service.ts",
-    "reason": "legacy ApiBaseService transport; migrates with PRD-sdk-migration-completion.md.",
+    "reason": "documented ADR-0041 exceptions (loadInvoiceArtifacts, elevate, createArtifactDownloadToken) plus the executeRefund/loadReceipt compatibility paths; no SDK operation exists for any of them.",
     "tracking": "#350"
   },
   {
     "key": "src/app/shared/bulk-import/services/bulk-import.service.ts -> src/app/core/services/api-base.service.ts",
-    "reason": "legacy ApiBaseService transport; migrates with PRD-sdk-migration-completion.md.",
+    "reason": "D6: submitCorrection() only — SDK's submitSingleCorrection() returns CorrectionResultDto (auditRecordId/status/rejectionReason), not the full corrected audit record callers splice back into their row list.",
     "tracking": "#350"
   },
   {
@@ -31,17 +31,7 @@
   },
   {
     "key": "src/app/features/people/services/people.service.ts -> src/app/core/services/api-base.service.ts",
-    "reason": "legacy ApiBaseService transport; migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "#350"
-  },
-  {
-    "key": "src/app/features/platform/services/platform-account.service.ts -> src/app/core/services/api-base.service.ts",
-    "reason": "legacy ApiBaseService transport; migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "#350"
-  },
-  {
-    "key": "src/app/features/platform/services/platform-tenant.service.ts -> src/app/core/services/api-base.service.ts",
-    "reason": "legacy ApiBaseService transport; migrates with PRD-sdk-migration-completion.md.",
+    "reason": "D2: submitWorkSession() only — SDK's WorkSessionsAPIService.submitWorkSession() returns WorkSessionDto, which has no correlationId, the field WorkSessionSubmitPageComponent renders back to the user.",
     "tracking": "#350"
   },
   {

@@ -1,16 +1,15 @@
 import { TestBed } from '@angular/core/testing';
-import { HttpParams } from '@angular/common/http';
 import { of } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { ApiBaseService } from '../../../core/services/api-base.service';
+import { PlatformTenantAPIService, TenantResponse } from '@durion-sdk/tenant';
 import { PlatformTenantService } from './platform-tenant.service';
 import { Tenant } from '../models/tenant.models';
 
-const tenant: Tenant = {
+const tenantDto: TenantResponse = {
   id: '01990000-0000-7000-8000-00000000c001',
   slug: 'acme-tire',
   displayName: 'Acme Tire & Auto',
-  status: 'ACTIVE',
+  status: 'ACTIVE' as TenantResponse['status'],
   accountId: '01990000-0000-7000-8000-00000000a001',
   cell: 'us-east-1',
   initialAdminEmail: 'owner@acme.example',
@@ -18,54 +17,69 @@ const tenant: Tenant = {
   updatedAt: '2026-09-10T12:00:00Z',
 };
 
+const tenant: Tenant = {
+  id: tenantDto.id,
+  slug: tenantDto.slug,
+  displayName: tenantDto.displayName,
+  status: 'ACTIVE',
+  accountId: tenantDto.accountId,
+  cell: tenantDto.cell ?? null,
+  initialAdminEmail: tenantDto.initialAdminEmail,
+  createdAt: tenantDto.createdAt,
+  updatedAt: tenantDto.updatedAt,
+  activatedAt: null,
+  suspendedAt: null,
+  decommissionedAt: null,
+};
+
 describe('PlatformTenantService', () => {
   let service: PlatformTenantService;
   const api = {
-    get: vi.fn(),
-    post: vi.fn(),
+    listTenants: vi.fn(),
+    getTenant: vi.fn(),
+    createTenant: vi.fn(),
+    suspendTenant: vi.fn(),
+    reactivateTenant: vi.fn(),
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
     TestBed.configureTestingModule({
-      providers: [PlatformTenantService, { provide: ApiBaseService, useValue: api }],
+      providers: [PlatformTenantService, { provide: PlatformTenantAPIService, useValue: api }],
     });
     service = TestBed.inject(PlatformTenantService);
   });
 
   it('lists tenants from the platform tenant API without a filter', () => {
-    api.get.mockReturnValueOnce(of([tenant]));
+    api.listTenants.mockReturnValueOnce(of([tenantDto]));
 
     let result: Tenant[] | undefined;
     service.listTenants().subscribe(r => (result = r));
 
-    expect(api.get).toHaveBeenCalledWith('/tenant/v1/platform/tenants', undefined);
+    expect(api.listTenants).toHaveBeenCalledWith(undefined);
     expect(result).toEqual([tenant]);
   });
 
-  it('passes the lifecycle status as a query parameter when filtering', () => {
-    api.get.mockReturnValueOnce(of([]));
+  it('passes the lifecycle status through to the SDK call when filtering', () => {
+    api.listTenants.mockReturnValueOnce(of([]));
 
     service.listTenants('SUSPENDED').subscribe();
 
-    const [path, params] = api.get.mock.calls[0] as [string, HttpParams];
-    expect(path).toBe('/tenant/v1/platform/tenants');
-    expect(params.get('status')).toBe('SUSPENDED');
-    expect(params.keys()).toEqual(['status']);
+    expect(api.listTenants).toHaveBeenCalledWith('SUSPENDED');
   });
 
   it('reads one tenant by id', () => {
-    api.get.mockReturnValueOnce(of(tenant));
+    api.getTenant.mockReturnValueOnce(of(tenantDto));
 
     let result: Tenant | undefined;
     service.getTenant(tenant.id).subscribe(r => (result = r));
 
-    expect(api.get).toHaveBeenCalledWith(`/tenant/v1/platform/tenants/${tenant.id}`);
+    expect(api.getTenant).toHaveBeenCalledWith(tenant.id);
     expect(result).toEqual(tenant);
   });
 
   it('registers a tenant with the request body as given — no tenant id of its own', () => {
-    api.post.mockReturnValueOnce(of(tenant));
+    api.createTenant.mockReturnValueOnce(of(tenantDto));
     const request = {
       slug: 'acme-tire',
       displayName: 'Acme Tire & Auto',
@@ -75,25 +89,37 @@ describe('PlatformTenantService', () => {
 
     service.createTenant(request).subscribe();
 
-    expect(api.post).toHaveBeenCalledWith('/tenant/v1/platform/tenants', request);
-    expect(api.post.mock.calls[0][2]).toBeUndefined();
+    expect(api.createTenant).toHaveBeenCalledWith(request);
   });
 
-  it('suspends and reactivates through the lifecycle sub-resources with an empty body', () => {
-    api.post.mockReturnValue(of(tenant));
+  it('suspends and reactivates through the SDK lifecycle operations', () => {
+    api.suspendTenant.mockReturnValue(of(tenantDto));
+    api.reactivateTenant.mockReturnValue(of(tenantDto));
 
     service.suspendTenant(tenant.id).subscribe();
     service.reactivateTenant(tenant.id).subscribe();
 
-    expect(api.post).toHaveBeenNthCalledWith(1, `/tenant/v1/platform/tenants/${tenant.id}/suspend`, null);
-    expect(api.post).toHaveBeenNthCalledWith(2, `/tenant/v1/platform/tenants/${tenant.id}/reactivate`, null);
+    expect(api.suspendTenant).toHaveBeenNthCalledWith(1, tenant.id);
+    expect(api.reactivateTenant).toHaveBeenNthCalledWith(1, tenant.id);
   });
 
-  it('URL-encodes the id segment', () => {
-    api.get.mockReturnValueOnce(of(tenant));
+  it('passes the raw id through to the SDK call, letting it own URL-encoding', () => {
+    api.getTenant.mockReturnValueOnce(of(tenantDto));
 
     service.getTenant('a/b').subscribe();
 
-    expect(api.get).toHaveBeenCalledWith('/tenant/v1/platform/tenants/a%2Fb');
+    expect(api.getTenant).toHaveBeenCalledWith('a/b');
+  });
+
+  it('normalizes null cell/activatedAt/suspendedAt/decommissionedAt fields', () => {
+    api.getTenant.mockReturnValueOnce(of({ ...tenantDto, cell: undefined }));
+
+    let result: Tenant | undefined;
+    service.getTenant(tenant.id).subscribe(r => (result = r));
+
+    expect(result?.cell).toBeNull();
+    expect(result?.activatedAt).toBeNull();
+    expect(result?.suspendedAt).toBeNull();
+    expect(result?.decommissionedAt).toBeNull();
   });
 });

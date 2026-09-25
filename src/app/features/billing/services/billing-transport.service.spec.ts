@@ -3,6 +3,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { of } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  Configuration as InvoiceConfiguration,
   GenerateReceiptRequest,
   InitiatePaymentRequestPaymentFlowEnum,
   InitiatePaymentResponse,
@@ -109,6 +110,7 @@ describe('BillingTransportService', () => {
         { provide: PaymentService, useValue: paymentServiceStub },
         { provide: PaymentReversalService, useValue: paymentReversalServiceStub },
         { provide: ReceiptService, useValue: receiptServiceStub },
+        { provide: InvoiceConfiguration, useValue: { basePath: '/api/invoice' } },
       ],
     });
     service = TestBed.inject(BillingTransportService);
@@ -330,6 +332,25 @@ describe('BillingTransportService', () => {
     );
     expect(receiptServiceStub.generateReceipt).not.toHaveBeenCalled();
     expect(result).toEqual(tokenResponse);
+  });
+
+  describe('resolveArtifactDownloadUrl()', () => {
+    it('prefers the server-issued downloadUrl over building one', () => {
+      const url = service.resolveArtifactDownloadUrl('inv-001', 'artifact-001', {
+        downloadToken: 'token-001',
+        downloadUrl: 'https://example.test/download/token-001',
+      });
+
+      expect(url).toBe('https://example.test/download/token-001');
+    });
+
+    it('falls back to a URL built from the injected InvoiceConfiguration basePath, not environment.apiBaseUrl (issue #350)', () => {
+      const url = service.resolveArtifactDownloadUrl('inv-001', 'artifact-001', {
+        downloadToken: 'token-001',
+      });
+
+      expect(url).toBe('/api/invoice/v1/invoices/inv-001/artifacts/artifact-001/download?token=token-001');
+    });
   });
 
   it('keeps receipt detail reads on the direct transport compatibility path', () => {

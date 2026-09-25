@@ -117,7 +117,6 @@ export interface EventPayloadReference {
 }
 
 export interface AccountingEventDetail extends AccountingEventListItem {
-  organizationId?: string;
   sourceSystem?: string;
   schemaVersion?: string;
   transactionDate?: string;

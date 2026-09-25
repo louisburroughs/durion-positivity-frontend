@@ -62,7 +62,6 @@ export class CrmIntegrationService {
       eventType: event.eventType,
       processingStatus: event.status as AccountingEventStatus,
       receivedAt: event.receivedAt,
-      organizationId: event.organizationId,
     };
   }
 

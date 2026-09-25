@@ -95,6 +95,7 @@ describe('InvoiceDetailPageComponent', () => {
     loadInvoiceDetail: ReturnType<typeof vi.fn>;
     loadInvoiceArtifacts: ReturnType<typeof vi.fn>;
     createArtifactDownloadToken: ReturnType<typeof vi.fn>;
+    resolveArtifactDownloadUrl: ReturnType<typeof vi.fn>;
     elevate: ReturnType<typeof vi.fn>;
     issueInvoice: ReturnType<typeof vi.fn>;
   };
@@ -110,6 +111,7 @@ describe('InvoiceDetailPageComponent', () => {
         downloadToken: 'token-001',
         downloadUrl: 'https://cdn.example.com/invoice.pdf',
       })),
+      resolveArtifactDownloadUrl: vi.fn((_invoiceId, _artifactRefId, token) => token.downloadUrl),
       elevate: vi.fn().mockReturnValue(of({ elevationToken: 'elev-001' })),
       // Backend finalize transitions DRAFT → FINALIZED (no ISSUED transition).
       issueInvoice: vi.fn().mockReturnValue(of({ ...invoiceFixture, status: 'FINALIZED' })),
@@ -358,5 +360,27 @@ describe('InvoiceDetailPageComponent', () => {
 
     expect(component.issueState()).toBe('error');
     expect(host.textContent).toContain('Invoice has already been issued.');
+  });
+
+  it('downloads an artifact through the service, never building the URL itself (issue #350)', () => {
+    fixture.detectChanges();
+
+    const clickSpy = vi.fn();
+    const anchor = { href: '', download: '', target: '', rel: '', click: clickSpy } as unknown as HTMLAnchorElement;
+    const createElementSpy = vi.spyOn(document, 'createElement').mockReturnValue(anchor);
+
+    component.downloadArtifact('artifact-001', 'invoice.pdf');
+
+    expect(billingTransportStub.createArtifactDownloadToken).toHaveBeenCalledWith(INVOICE_ID, 'artifact-001');
+    expect(billingTransportStub.resolveArtifactDownloadUrl).toHaveBeenCalledWith(
+      INVOICE_ID,
+      'artifact-001',
+      { downloadToken: 'token-001', downloadUrl: 'https://cdn.example.com/invoice.pdf' },
+    );
+    expect(anchor.href).toBe('https://cdn.example.com/invoice.pdf');
+    expect(anchor.download).toBe('invoice.pdf');
+    expect(clickSpy).toHaveBeenCalledTimes(1);
+
+    createElementSpy.mockRestore();
   });
 });

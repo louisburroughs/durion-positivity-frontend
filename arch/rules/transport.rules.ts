@@ -149,7 +149,18 @@ export const sdk09 = (p: Project): ArchRule =>
   );
 
 /** [SDK-10] @durion-sdk/tenant may be imported only under features/platform/** (ADR-0062 §7). */
-const tenantSdkFinder: Finder = (f) => importSpecifiers(f).filter((i) => i.module === '@durion-sdk/tenant').map(() => "'@durion-sdk/tenant'");
+/**
+ * Matches `@durion-sdk/tenant` and any subpath. The one exception outside features/platform is the
+ * root `src/app/app.config.ts` providing `Configuration` from `@durion-sdk/tenant/configuration`:
+ * the tenant services are `providedIn: 'root'`, so their Configuration must be root-provided too.
+ */
+const tenantSdkFinder: Finder = (f) =>
+  importSpecifiers(f)
+    .filter((i) => /^@durion-sdk\/tenant(\/|$)/.test(i.module))
+    .filter((i) => !(/^src\/app\/app\.config\.ts$/.test(f.path) && i.module === '@durion-sdk/tenant/configuration'))
+    .map((i) => `'${i.module}'`);
+
+export { tenantSdkFinder };
 
 export const sdk10 = (p: Project): ArchRule =>
   contentRule(
@@ -158,7 +169,11 @@ export const sdk10 = (p: Project): ArchRule =>
     { subject: selectors.appTree(p), except: [selectors.feature(p, 'platform')], finder: tenantSdkFinder },
   );
 
-/** [SDK-11] window.location.origin must not be used to build URLs (ADR-0041 §2). Baselined. */
+/**
+ * [SDK-11] window.location.origin must not be used to build URLs (ADR-0041 §2). The one
+ * offender (bulk-import.service.ts's tus upload URL) now uses `document.baseURI` plus the
+ * injected SDK Configuration's basePath instead; zero debt promotes this to Enforce.
+ */
 const windowLocationOriginFinder: Finder = (f: Source) => {
   const out: string[] = [];
   walk(f, (n) => {
@@ -171,7 +186,7 @@ const windowLocationOriginFinder: Finder = (f: Source) => {
 
 export const sdk11 = (p: Project): ArchRule =>
   contentRule(
-    { id: 'SDK-11', title: 'window.location.origin must not be used to build URLs (ADR-0041 §2)', mode: 'ratchet' },
+    { id: 'SDK-11', title: 'window.location.origin must not be used to build URLs (ADR-0041 §2)', mode: 'enforce' },
     p,
     { subject: selectors.appTree(p), finder: windowLocationOriginFinder },
   );

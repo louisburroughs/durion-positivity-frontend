@@ -215,6 +215,15 @@ export class PeopleService {
     return this.workSessionsApi.stopWorkSessionBreak(sessionId);
   }
 
+  /**
+   * D2 (issue #350): `WorkSessionsAPIService.submitWorkSession()` now exists in
+   * `@durion-sdk/people`, but its `WorkSessionDto` response (`sessionId`, `personId`,
+   * `status`, timestamps, minute totals) has no `correlationId` — the field
+   * `WorkSessionSubmitPageComponent` reads back and renders for support follow-up.
+   * Calling the SDK method would silently drop that value rather than migrate the
+   * endpoint, so this stays on `ApiBaseService` until the people OpenAPI contract
+   * returns a correlation id on submit.
+   */
   submitWorkSession(sessionId: string, request: WorkSessionSubmitRequest): Observable<Record<string, unknown> | null> {
     return this.api.post<Record<string, unknown> | null>(
       `/people/v1/people/workSessions/${encodeURIComponent(sessionId)}/submit`,
