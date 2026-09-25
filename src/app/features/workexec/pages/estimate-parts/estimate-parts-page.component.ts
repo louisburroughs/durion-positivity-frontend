@@ -130,8 +130,14 @@ export class EstimatePartsPageComponent implements OnInit {
     this.searchQuery.set(part.sku ? `${part.name} (${part.sku})` : part.name);
 
     // Auto-fill unit price from the product's active MSRP (no price on the summary/product).
+    // getActiveMsrpAmount is SKU-keyed — a part with no SKU has no price to look up.
+    if (!part.sku) {
+      this.priceState.set('none');
+      return;
+    }
+
     this.priceState.set('loading');
-    this.catalog.getActiveMsrpAmount(part.id)
+    this.catalog.getActiveMsrpAmount(part.sku)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: amount => {

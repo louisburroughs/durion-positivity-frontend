@@ -41,8 +41,8 @@ describe('EstimatePartsPageComponent [Story 238]', () => {
           useFactory: (catalog: ProductCatalogService) => ({
             searchServices: (query: string) => catalog.searchServices(query),
             searchProducts: (query: string) => catalog.searchProducts(query),
-            getActiveMsrpAmount: (productId: string) =>
-              catalog.getActiveMsrp(productId).pipe(map(msrp => msrp?.amount ?? null)),
+            getActiveMsrpAmount: (sku: string) =>
+              catalog.getActiveMsrp(sku).pipe(map(msrp => msrp?.amount ?? null)),
           }),
           deps: [ProductCatalogService],
         },
@@ -122,5 +122,34 @@ describe('EstimatePartsPageComponent [Story 238]', () => {
 
     expect(component.saveState()).toBe('error');
     expect(component.errorMessage()).toContain('DRAFT');
+  });
+
+  it('looks up active MSRP by SKU, not by id, for a product whose id differs from its SKU (#366 followup)', () => {
+    fixture.detectChanges();
+    http.expectOne(`${BASE}/v1/workorders/estimates/est-123`).flush({
+      id: 'est-123', status: 'DRAFT', customerId: 'c', vehicleId: 'v', items: [],
+    });
+
+    component.selectPart({ id: 'product-uuid-1', sku: 'SKU-999', name: 'Brake Pad', category: 'parts' });
+
+    const req = http.expectOne(r => r.url.includes('/msrp/active'));
+    expect(req.request.url).toContain('SKU-999');
+    expect(req.request.url).not.toContain('product-uuid-1');
+    req.flush({ msrpId: 'm-1', productId: 'SKU-999', amount: '24.99', currency: 'USD', effectiveStartDate: '2024-01-01' });
+
+    expect(component.addForm.getRawValue().unitPrice).toBe(24.99);
+    expect(component.priceState()).toBe('filled');
+  });
+
+  it('skips the MSRP lookup when the selected part has no SKU', () => {
+    fixture.detectChanges();
+    http.expectOne(`${BASE}/v1/workorders/estimates/est-123`).flush({
+      id: 'est-123', status: 'DRAFT', customerId: 'c', vehicleId: 'v', items: [],
+    });
+
+    component.selectPart({ id: 'product-uuid-2', name: 'Unlabeled part', category: 'parts' });
+
+    http.expectNone(req => req.url.includes('/msrp/active'));
+    expect(component.priceState()).toBe('none');
   });
 });

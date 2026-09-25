@@ -36,9 +36,9 @@ export function provideProductCatalogSource(): Provider {
           from(getCatalog()).pipe(switchMap(catalog => catalog.searchServices(query))),
         searchProducts: query =>
           from(getCatalog()).pipe(switchMap(catalog => catalog.searchProducts(query))),
-        getActiveMsrpAmount: productId =>
+        getActiveMsrpAmount: sku =>
           from(getCatalog()).pipe(
-            switchMap(catalog => catalog.getActiveMsrp(productId).pipe(map(msrp => msrp?.amount ?? null))),
+            switchMap(catalog => catalog.getActiveMsrp(sku).pipe(map(msrp => msrp?.amount ?? null))),
           ),
       };
     },
