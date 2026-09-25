@@ -65,7 +65,7 @@ export const ten02 = (p: Project): ArchRule =>
 // ── TEN-03 ───────────────────────────────────────────────────────────────────────────────────────
 
 /**
- * The login contract. `core/util/form-validators.ts` is a deviation from the plan's literal list:
+ * The login contract. `core/utils/form-validators.ts` is a deviation from the plan's literal list:
  * it exports the shared `tenantSlug` reactive-form validator consumed by both the login page and
  * `features/platform` tenant-create page. It normalises/validates the slug the user typed — it
  * never reads one from a route or forwards one to a request — so it belongs with the contract it
@@ -76,7 +76,7 @@ export const ten03Allow = (p: Project): RegExp[] => [
   file(p, 'core/services/last-tenant.service.ts'),
   file(p, 'core/models/auth.models.ts'),
   file(p, 'core/security/tenant.ts'),
-  file(p, 'core/util/form-validators.ts'),
+  file(p, 'core/utils/form-validators.ts'),
   under(p, 'features/auth'),
   under(p, 'features/platform'),
 ];
@@ -129,7 +129,7 @@ export const ten04 = (p: Project): ArchRule =>
 // ── TEN-05 ───────────────────────────────────────────────────────────────────────────────────────
 
 export const ten05Allow = (p: Project): RegExp[] => [
-  file(p, 'features/shell/util/identity.util.ts'),
+  file(p, 'features/shell/utils/identity.util.ts'),
   file(p, 'features/shell/services/chat-history.store.ts'),
   file(p, 'features/shell/services/chat-blob.service.ts'),
 ];

@@ -7,7 +7,7 @@ import { Subject, of } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, switchMap, tap } from 'rxjs/operators';
 import { CrmService } from '../../services/crm.service';
 import { PartyDetail } from '../../models/crm.models';
-import { partyLabel } from '../../util/crm-labels';
+import { partyLabel } from '../../utils/crm-labels';
 
 const MAX_SUGGESTIONS = 12;
 

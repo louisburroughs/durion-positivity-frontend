@@ -10,7 +10,7 @@ import { JwtClaims } from '../../../../core/models/auth.models';
 import { ApiBaseService } from '../../../../core/services/api-base.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { ChatBlock, ChatMessage, ChatTableBlock } from '../../models/chat.model';
-import { coerceBlocks } from '../../util/chat-response.mapper';
+import { coerceBlocks } from '../../utils/chat-response.mapper';
 import { ChatMessageComponent } from './chat-message.component';
 
 /** Stands in for the authenticated blob fetch the renderers now go through. */

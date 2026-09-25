@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { finalize } from 'rxjs';
 import { ChatErrorBlock } from '../models/chat.model';
-import { mapAnswerPayload } from '../util/chat-response.mapper';
+import { mapAnswerPayload } from '../utils/chat-response.mapper';
 import { ChatStateService, ChatTurnTarget } from './chat-state.service';
 import { ChatApiService } from './chat-api.service';
 

@@ -3,8 +3,8 @@ import { isPlatformBrowser } from '@angular/common';
 import { Observable, of, throwError } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
 import { ChatBlock, ChatConversation, ChatMessage } from '../models/chat.model';
-import { coerceBlocks } from '../util/chat-response.mapper';
-import { encodeIdentityPart } from '../util/identity.util';
+import { coerceBlocks } from '../utils/chat-response.mapper';
+import { encodeIdentityPart } from '../utils/identity.util';
 
 /**
  * Conversation persistence seam

@@ -528,18 +528,13 @@ graph cache. Without it the run took 64 s.
   | SDK-06 | 4 | #350 |
   | SDK-11 | 1 | #350 |
   | TEN-08 | 6 | #339 |
-  | CON-01 | 1 | #348 |
   | CON-04 | 9 | #345 |
   | CON-07 | 97 | #346 |
-  | CON-09 | 7 | #348 |
-  | PAT-02 | 1 | #349 |
-  | PAT-03 | 4 | #351 |
-  | PAT-04 | 3 | #352 |
-  | PAT-08 | 10 | #349 |
 
 - **Warn:** SDK-09 (20), CON-03 (83), PAT-06, I18N-09.
 - **Enforce:** everything else, including the rules that started as Ratchet but reached zero
-  on this branch: TEN-07, SEC-08, SEC-09, CON-02, PAT-05, I18N-05 and I18N-07.
+  on this branch: TEN-07, SEC-08, SEC-09, CON-02, PAT-05, I18N-05, I18N-07, and (on the
+  `chore/arch-hygiene` follow-up branch) CON-01, CON-09, PAT-02, PAT-03, PAT-04 and PAT-08.
 
 ### 12.3 Defects fixed on this branch
 

@@ -11,7 +11,7 @@ import { CRMVehiclesService } from '@durion-sdk/customer';
 import { WorkexecService } from '../../services/workexec.service';
 import { CrmService } from '../../../crm/services/crm.service';
 import { Relationship } from '../../../crm/models/crm.models';
-import { partyLabel, vehicleLabel } from '../../../crm/util/crm-labels';
+import { partyLabel, vehicleLabel } from '../../../crm/utils/crm-labels';
 import {
   EstimateItemResponse,
   EstimateResponse,

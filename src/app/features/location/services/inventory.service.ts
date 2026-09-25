@@ -3,7 +3,7 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { InventoryReferenceDataService, LocationSyncService } from '@durion-sdk/inventory';
 import { ApiBaseService } from '../../../core/services/api-base.service';
-import { pageContent } from '../../../core/util/spring-page';
+import { pageContent } from '../../../core/utils/spring-page';
 import {
   LocationDto,
   LocationSyncRunResponse,

@@ -4,7 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
 import { normalizeTenantSlug } from '../../../../core/security/tenant';
-import { notBlank, tenantSlug } from '../../../../core/util/form-validators';
+import { notBlank, tenantSlug } from '../../../../core/utils/form-validators';
 import { canAccess } from '../../../../core/security/route-access';
 import { PLATFORM_PAGE } from '../../../../core/security/route-permissions';
 import { AuthService } from '../../../../core/services/auth.service';

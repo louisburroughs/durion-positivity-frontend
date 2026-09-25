@@ -9,8 +9,8 @@ import { AuthService } from '../../core/services/auth.service';
 import { LastTenantService } from '../../core/services/last-tenant.service';
 import { ThemeService } from '../../core/services/theme.service';
 import { normalizeTenantSlug } from '../../core/security/tenant';
-import { tenantSlug } from '../../core/util/form-validators';
-import { MIN_QUERY_LENGTH, Organization, OrganizationSearchService } from './organization-search.service';
+import { tenantSlug } from '../../core/utils/form-validators';
+import { MIN_QUERY_LENGTH, Organization, OrganizationSearchService } from './services/organization-search.service';
 
 /** How long to let someone keep typing before asking the server. */
 const SEARCH_DEBOUNCE_MS = 250;

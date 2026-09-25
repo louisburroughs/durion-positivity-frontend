@@ -10,7 +10,7 @@ import {
   ChatHistoryGroup,
   ChatMessage,
 } from '../models/chat.model';
-import { identityKey } from '../util/identity.util';
+import { identityKey } from '../utils/identity.util';
 import { CHAT_HISTORY_STORE } from './chat-history.store';
 
 /** Two-signal page state for the history load (ADR-0031). */
