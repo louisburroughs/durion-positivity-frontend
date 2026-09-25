@@ -3,14 +3,26 @@ import { ActivatedRoute, provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 import { PickExecutePageComponent } from './pick-execute-page.component';
-import { WorkexecService } from '../../../../workexec/services/workexec.service';
-import { PickExecuteLine, PickListView, PickTaskLine } from '../../../../workexec/models/workexec.models';
+import { InventoryPickService } from '../../../services/inventory-pick.service';
+import { PickExecuteLine, PickListView, PickTaskLine } from '../../../models/inventory-pick.models';
+import { AuthService } from '../../../../../core/services/auth.service';
+import { INVENTORY_PAGE } from '../../../../../core/security/route-permissions';
 
-const mockWorkexecService = {
+const mockPickService = {
   getWorkorderPickList: vi.fn(),
   resolvePickScan: vi.fn(),
   confirmPickLine: vi.fn(),
   completePickList: vi.fn(),
+};
+
+const EXECUTE = INVENTORY_PAGE.pickExecute[0];
+
+/** `null` = token with no permission claim (permissions unknown), as in AuthService. */
+const session: { permissions: string[] | null } = { permissions: null };
+const authStub = {
+  permissionsKnown: () => session.permissions !== null,
+  hasAnyPermission: (permissions: readonly string[]) =>
+    permissions.some(p => session.permissions?.includes(p) ?? false),
 };
 
 const pickTaskLine: PickTaskLine = {
@@ -44,12 +56,14 @@ function buildRoute(workorderId: string | null = 'wo-001') {
   };
 }
 
-async function setupPickExecute(workorderId: string | null = 'wo-001') {
+async function setupPickExecute(workorderId: string | null = 'wo-001', permissions: string[] | null = null) {
+  session.permissions = permissions;
   await TestBed.configureTestingModule({
     imports: [PickExecutePageComponent, TranslateModule.forRoot()],
     providers: [
       provideRouter([]),
-      { provide: WorkexecService, useValue: mockWorkexecService },
+      { provide: InventoryPickService, useValue: mockPickService },
+      { provide: AuthService, useValue: authStub },
       { provide: ActivatedRoute, useValue: buildRoute(workorderId) },
     ],
   }).compileComponents();
@@ -59,7 +73,7 @@ async function setupPickExecute(workorderId: string | null = 'wo-001') {
 describe('PickExecutePageComponent', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockWorkexecService.getWorkorderPickList.mockReturnValue(of(pickListFixture));
+    mockPickService.getWorkorderPickList.mockReturnValue(of(pickListFixture));
   });
 
   it('initial load sets state ready and populates lines', async () => {
@@ -70,7 +84,7 @@ describe('PickExecutePageComponent', () => {
   });
 
   it('no pick list (null) sets state error with the load key', async () => {
-    mockWorkexecService.getWorkorderPickList.mockReturnValue(of(null));
+    mockPickService.getWorkorderPickList.mockReturnValue(of(null));
     const component = await setupPickExecute();
 
     expect(component.state()).toBe('error');
@@ -79,7 +93,7 @@ describe('PickExecutePageComponent', () => {
   });
 
   it('scan resolve success sets pendingLine', async () => {
-    mockWorkexecService.resolvePickScan.mockReturnValue(of([executeLineFixture]));
+    mockPickService.resolvePickScan.mockReturnValue(of([executeLineFixture]));
     const component = await setupPickExecute();
 
     component.setScanInput('BARCODE-123');
@@ -89,7 +103,7 @@ describe('PickExecutePageComponent', () => {
   });
 
   it('scan error sets state error before errorKey (ADR-0031)', async () => {
-    mockWorkexecService.resolvePickScan.mockReturnValue(
+    mockPickService.resolvePickScan.mockReturnValue(
       throwError(() => new Error('scan failed')),
     );
     const component = await setupPickExecute();
@@ -120,7 +134,7 @@ describe('PickExecutePageComponent', () => {
   });
 
   it('complete success sets state to complete', async () => {
-    mockWorkexecService.completePickList.mockReturnValue(
+    mockPickService.completePickList.mockReturnValue(
       of({ status: 'COMPLETE' }),
     );
     const component = await setupPickExecute();
@@ -139,7 +153,7 @@ describe('PickExecutePageComponent', () => {
   });
 
   it('SCAN_NO_MATCH is shown after resolveScan returns no match', async () => {
-    mockWorkexecService.resolvePickScan.mockReturnValue(of([]));
+    mockPickService.resolvePickScan.mockReturnValue(of([]));
     const component = await setupPickExecute();
 
     component.setScanInput('barcode-123');
@@ -150,7 +164,7 @@ describe('PickExecutePageComponent', () => {
   });
 
   it('setScanInput resets scanAttempted to false', async () => {
-    mockWorkexecService.resolvePickScan.mockReturnValue(of([]));
+    mockPickService.resolvePickScan.mockReturnValue(of([]));
     const component = await setupPickExecute();
 
     component.setScanInput('barcode-123');
@@ -160,5 +174,44 @@ describe('PickExecutePageComponent', () => {
     component.setScanInput('new-scan');
 
     expect(component.scanAttempted()).toBe(false);
+  });
+
+  // ADR-0040 §6a.1/§6a.5: every write control gates on inventory:pick_list:execute
+  // independently, matching what WorkorderPickFacadeController enforces — not the
+  // inventory:pick_list:view the route used to carry (issue #347 group 5).
+  describe('permissions (inventory:pick_list:execute)', () => {
+    it('allows scan/confirm/complete for a session holding inventory:pick_list:execute', async () => {
+      mockPickService.resolvePickScan.mockReturnValue(of([executeLineFixture]));
+      mockPickService.completePickList.mockReturnValue(of({ status: 'COMPLETE' }));
+      const component = await setupPickExecute('wo-001', [EXECUTE]);
+
+      expect(component.canExecute()).toBe(true);
+
+      component.setScanInput('BARCODE-123');
+      component.resolveScan();
+      expect(mockPickService.resolvePickScan).toHaveBeenCalledTimes(1);
+
+      component.complete();
+      expect(mockPickService.completePickList).toHaveBeenCalledTimes(1);
+    });
+
+    it('refuses scan/confirm/complete for a view-only session (the pre-fix authority)', async () => {
+      const component = await setupPickExecute('wo-001', ['inventory:pick_list:view']);
+
+      expect(component.canExecute()).toBe(false);
+
+      component.setScanInput('BARCODE-123');
+      component.resolveScan();
+      expect(mockPickService.resolvePickScan).not.toHaveBeenCalled();
+
+      component.complete();
+      expect(mockPickService.completePickList).not.toHaveBeenCalled();
+    });
+
+    it('treats an unknown permission claim (legacy token) as granted, matching canAccess()', async () => {
+      const component = await setupPickExecute('wo-001', null);
+
+      expect(component.canExecute()).toBe(true);
+    });
   });
 });

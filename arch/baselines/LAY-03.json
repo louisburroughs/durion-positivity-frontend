@@ -1,35 +1,5 @@
 [
   {
-    "key": "src/app/features/inventory/pages/fulfillment/consume-picked-items/consume-picked-items-page.component.ts -> src/app/features/workexec/models/workexec.models.ts",
-    "reason": "inventory fulfillment pages and shopmgmt read workexec's models/service directly for shared work-order state; no shared/ promotion decided yet (tracked separately from plan §8 decision 1).",
-    "tracking": "#347"
-  },
-  {
-    "key": "src/app/features/inventory/pages/fulfillment/consume-picked-items/consume-picked-items-page.component.ts -> src/app/features/workexec/services/workexec.service.ts",
-    "reason": "inventory fulfillment pages and shopmgmt read workexec's models/service directly for shared work-order state; no shared/ promotion decided yet (tracked separately from plan §8 decision 1).",
-    "tracking": "#347"
-  },
-  {
-    "key": "src/app/features/inventory/pages/fulfillment/pick-execute/pick-execute-page.component.ts -> src/app/features/workexec/models/workexec.models.ts",
-    "reason": "inventory fulfillment pages and shopmgmt read workexec's models/service directly for shared work-order state; no shared/ promotion decided yet (tracked separately from plan §8 decision 1).",
-    "tracking": "#347"
-  },
-  {
-    "key": "src/app/features/inventory/pages/fulfillment/pick-execute/pick-execute-page.component.ts -> src/app/features/workexec/services/workexec.service.ts",
-    "reason": "inventory fulfillment pages and shopmgmt read workexec's models/service directly for shared work-order state; no shared/ promotion decided yet (tracked separately from plan §8 decision 1).",
-    "tracking": "#347"
-  },
-  {
-    "key": "src/app/features/inventory/pages/fulfillment/pick-list/pick-list-page.component.ts -> src/app/features/workexec/models/workexec.models.ts",
-    "reason": "inventory fulfillment pages and shopmgmt read workexec's models/service directly for shared work-order state; no shared/ promotion decided yet (tracked separately from plan §8 decision 1).",
-    "tracking": "#347"
-  },
-  {
-    "key": "src/app/features/inventory/pages/fulfillment/pick-list/pick-list-page.component.ts -> src/app/features/workexec/services/workexec.service.ts",
-    "reason": "inventory fulfillment pages and shopmgmt read workexec's models/service directly for shared work-order state; no shared/ promotion decided yet (tracked separately from plan §8 decision 1).",
-    "tracking": "#347"
-  },
-  {
     "key": "src/app/features/inventory/pages/purchase-orders/po-detail/po-detail.component.ts -> src/app/features/positivity/components/purchase-order-transmission-timeline-panel/purchase-order-transmission-timeline-panel.component.ts",
     "reason": "inventory's PO detail page reads positivity's supplier/PO transmission-timeline panels directly; no shared/ promotion decided yet.",
     "tracking": "#347"
@@ -72,16 +42,6 @@
   {
     "key": "src/app/features/people/pages/time-export/time-export-page.component.ts -> src/app/features/location/services/location.service.ts",
     "reason": "people pages (person-location-assignments, time-export) call location's service directly instead of through a documented cross-feature contract.",
-    "tracking": "#347"
-  },
-  {
-    "key": "src/app/features/shopmgmt/models/shop-dashboard.models.ts -> src/app/features/workexec/models/workexec.models.ts",
-    "reason": "inventory fulfillment pages and shopmgmt read workexec's models/service directly for shared work-order state; no shared/ promotion decided yet (tracked separately from plan §8 decision 1).",
-    "tracking": "#347"
-  },
-  {
-    "key": "src/app/features/shopmgmt/services/shop-dashboard.service.ts -> src/app/features/workexec/models/workexec.models.ts",
-    "reason": "inventory fulfillment pages and shopmgmt read workexec's models/service directly for shared work-order state; no shared/ promotion decided yet (tracked separately from plan §8 decision 1).",
     "tracking": "#347"
   },
   {

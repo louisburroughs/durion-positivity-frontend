@@ -3,12 +3,24 @@ import { ActivatedRoute, provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 import { ConsumePickedItemsPageComponent } from './consume-picked-items-page.component';
-import { WorkexecService } from '../../../../workexec/services/workexec.service';
-import { PickedItemLine } from '../../../../workexec/models/workexec.models';
+import { InventoryPickService } from '../../../services/inventory-pick.service';
+import { PickedItemLine } from '../../../models/inventory-pick.models';
+import { AuthService } from '../../../../../core/services/auth.service';
+import { INVENTORY_PAGE } from '../../../../../core/security/route-permissions';
 
-const mockWorkexecService = {
+const mockPickService = {
   getPickedItems: vi.fn(),
   consumePickedItems: vi.fn(),
+};
+
+const CONSUME = INVENTORY_PAGE.consumeItems[0];
+
+/** `null` = token with no permission claim (permissions unknown), as in AuthService. */
+const session: { permissions: string[] | null } = { permissions: null };
+const authStub = {
+  permissionsKnown: () => session.permissions !== null,
+  hasAnyPermission: (permissions: readonly string[]) =>
+    permissions.some(p => session.permissions?.includes(p) ?? false),
 };
 
 const pickedItemsFixture: PickedItemLine[] = [
@@ -34,12 +46,14 @@ function buildRoute(workorderId: string | null = 'wo-001') {
   };
 }
 
-async function setupConsumeItems(workorderId: string | null = 'wo-001') {
+async function setupConsumeItems(workorderId: string | null = 'wo-001', permissions: string[] | null = null) {
+  session.permissions = permissions;
   await TestBed.configureTestingModule({
     imports: [ConsumePickedItemsPageComponent, TranslateModule.forRoot()],
     providers: [
       provideRouter([]),
-      { provide: WorkexecService, useValue: mockWorkexecService },
+      { provide: InventoryPickService, useValue: mockPickService },
+      { provide: AuthService, useValue: authStub },
       { provide: ActivatedRoute, useValue: buildRoute(workorderId) },
     ],
   }).compileComponents();
@@ -49,11 +63,13 @@ async function setupConsumeItems(workorderId: string | null = 'wo-001') {
 async function setupConsumeItemsFixture(
   workorderId: string | null = 'wo-001',
 ): Promise<ComponentFixture<ConsumePickedItemsPageComponent>> {
+  session.permissions = null;
   await TestBed.configureTestingModule({
     imports: [ConsumePickedItemsPageComponent, TranslateModule.forRoot()],
     providers: [
       provideRouter([]),
-      { provide: WorkexecService, useValue: mockWorkexecService },
+      { provide: InventoryPickService, useValue: mockPickService },
+      { provide: AuthService, useValue: authStub },
       { provide: ActivatedRoute, useValue: buildRoute(workorderId) },
     ],
   }).compileComponents();
@@ -66,7 +82,7 @@ describe('ConsumePickedItemsPageComponent', () => {
   });
 
   it('loads picked items on init and sets state ready', async () => {
-    mockWorkexecService.getPickedItems.mockReturnValue(of(pickedItemsFixture));
+    mockPickService.getPickedItems.mockReturnValue(of(pickedItemsFixture));
     const component = await setupConsumeItems();
 
     expect(component.state()).toBe('ready');
@@ -74,7 +90,7 @@ describe('ConsumePickedItemsPageComponent', () => {
   });
 
   it('canSubmit is false when all consume qtys are 0', async () => {
-    mockWorkexecService.getPickedItems.mockReturnValue(of(pickedItemsFixture));
+    mockPickService.getPickedItems.mockReturnValue(of(pickedItemsFixture));
     const component = await setupConsumeItems();
 
     // consumeQtys reset to {} after load
@@ -82,7 +98,7 @@ describe('ConsumePickedItemsPageComponent', () => {
   });
 
   it('canSubmit is true when at least one consume qty > 0', async () => {
-    mockWorkexecService.getPickedItems.mockReturnValue(of(pickedItemsFixture));
+    mockPickService.getPickedItems.mockReturnValue(of(pickedItemsFixture));
     const component = await setupConsumeItems();
 
     component.consumeQtys.set({ 'pi-001': 3 });
@@ -91,8 +107,8 @@ describe('ConsumePickedItemsPageComponent', () => {
   });
 
   it('submit success enters success state', async () => {
-    mockWorkexecService.getPickedItems.mockReturnValue(of(pickedItemsFixture));
-    mockWorkexecService.consumePickedItems.mockReturnValue(
+    mockPickService.getPickedItems.mockReturnValue(of(pickedItemsFixture));
+    mockPickService.consumePickedItems.mockReturnValue(
       of({ referenceId: 'ref-001', consumedLineCount: 1 }),
     );
     const component = await setupConsumeItems();
@@ -104,8 +120,8 @@ describe('ConsumePickedItemsPageComponent', () => {
   });
 
   it('error sets state error before errorKey (ADR-0031)', async () => {
-    mockWorkexecService.getPickedItems.mockReturnValue(of(pickedItemsFixture));
-    mockWorkexecService.consumePickedItems.mockReturnValue(
+    mockPickService.getPickedItems.mockReturnValue(of(pickedItemsFixture));
+    mockPickService.consumePickedItems.mockReturnValue(
       throwError(() => new Error('submit failed')),
     );
     const component = await setupConsumeItems();
@@ -136,7 +152,7 @@ describe('ConsumePickedItemsPageComponent', () => {
   });
 
   it('load error sets state error before errorKey (ADR-0031)', async () => {
-    mockWorkexecService.getPickedItems.mockReturnValue(
+    mockPickService.getPickedItems.mockReturnValue(
       throwError(() => new Error('network error')),
     );
     const component = await setupConsumeItems();
@@ -148,7 +164,7 @@ describe('ConsumePickedItemsPageComponent', () => {
   });
 
   it('renders consume qty input default as 0 when no quantity is preset', async () => {
-    mockWorkexecService.getPickedItems.mockReturnValue(of(pickedItemsFixture));
+    mockPickService.getPickedItems.mockReturnValue(of(pickedItemsFixture));
     const fixture = await setupConsumeItemsFixture();
 
     fixture.detectChanges();
@@ -156,5 +172,43 @@ describe('ConsumePickedItemsPageComponent', () => {
     const input: HTMLInputElement | null = fixture.nativeElement.querySelector('#consume-qty-pi-001');
     expect(input).not.toBeNull();
     expect(input?.value).toBe('0');
+  });
+
+  // ADR-0040 §6a.1/§6a.5: the submit control and submit() gate on
+  // workorder:parts:consume — what WorkorderPickedItemsController actually
+  // enforces — not inventory:pick_list:execute (issue #347 group 5).
+  describe('permissions (workorder:parts:consume)', () => {
+    it('allows submit for a session holding workorder:parts:consume', async () => {
+      mockPickService.getPickedItems.mockReturnValue(of(pickedItemsFixture));
+      mockPickService.consumePickedItems.mockReturnValue(of({ referenceId: 'ref-001', consumedLineCount: 1 }));
+      const component = await setupConsumeItems('wo-001', [CONSUME]);
+
+      expect(component.canConsume()).toBe(true);
+
+      component.consumeQtys.set({ 'pi-001': 3 });
+      component.submit();
+
+      expect(mockPickService.consumePickedItems).toHaveBeenCalledTimes(1);
+      expect(component.state()).toBe('success');
+    });
+
+    it('refuses submit for a session holding only inventory:pick_list:execute (the split between authorities)', async () => {
+      mockPickService.getPickedItems.mockReturnValue(of(pickedItemsFixture));
+      const component = await setupConsumeItems('wo-001', ['inventory:pick_list:execute']);
+
+      expect(component.canConsume()).toBe(false);
+
+      component.consumeQtys.set({ 'pi-001': 3 });
+      component.submit();
+
+      expect(mockPickService.consumePickedItems).not.toHaveBeenCalled();
+    });
+
+    it('treats an unknown permission claim (legacy token) as granted, matching canAccess()', async () => {
+      mockPickService.getPickedItems.mockReturnValue(of(pickedItemsFixture));
+      const component = await setupConsumeItems('wo-001', null);
+
+      expect(component.canConsume()).toBe(true);
+    });
   });
 });

@@ -5,6 +5,7 @@
  *
  * Capabilities: CAP-002 (Estimates), CAP-003 (Customer Approval Workflow)
  */
+import type { WorkorderStatus } from '../../../shared/workorder-status/workorder-status.models';
 
 // ── Estimate status ──────────────────────────────────────────────────────────
 
@@ -299,16 +300,9 @@ export interface ApproveEstimateRequest {
 // ── CAP-004: Workorder types (Stories 231, 230, 229, 228, 227, 226) ──────────
 
 // Mirrors the backend WorkorderStatus enum / SDK WorkorderDetailResponseStatusEnum.
-export type WorkorderStatus =
-  | 'DRAFT'
-  | 'APPROVED'
-  | 'ASSIGNED'
-  | 'WORK_IN_PROGRESS'
-  | 'AWAITING_PARTS'
-  | 'AWAITING_APPROVAL'
-  | 'READY_FOR_PICKUP'
-  | 'COMPLETED'
-  | 'CANCELLED';
+// Defined in shared/ (also used by shopmgmt's dashboard) and re-exported here so
+// workexec's own many internal usages are unaffected (ADR-0036 §2).
+export type { WorkorderStatus };
 
 export type ChangeRequestStatus =
   | 'AWAITING_ADVISOR_REVIEW'
@@ -683,69 +677,6 @@ export interface WorkorderSnapshotHistoryEntry {
   notes?: string;
 }
 
-// Pick List (CAP-218 #92)
-export interface PickListView {
-  workorderId: string;
-  pickListId: string;
-  status: string;
-  /** @serverGenerated */
-  readonly createdAt?: string;
-  tasks: PickTaskLine[];
-}
-
-export interface PickTaskLine {
-  pickTaskId: string;
-  productSku: string;
-  productDisplayName?: string;
-  requestedQty: number;
-  pickedQty: number;
-  uom: string;
-  storageLocationId?: string;
-  storageLocationCode?: string;
-  status: string;
-  sortOrder?: number;
-}
-
-// Consume Picked Items (CAP-218 #243)
-export interface PickedItemLine {
-  pickedItemId: string;
-  workorderLineId?: string;
-  productSku: string;
-  qtyPicked: number;
-  qtyConsumed: number;
-  status: string;
-}
-
-export interface ConsumePickedItemsRequest {
-  lines: ConsumePickedItemsLine[];
-}
-
-export interface ConsumePickedItemsLine {
-  pickedItemId: string;
-  quantity: number;
-}
-
-export interface ConsumptionResult {
-  referenceId: string;
-  readonly consumedAt?: string;
-  consumedLineCount: number;
-}
-
-// Mechanic Picking (CAP-218 #244)
-export interface PickExecuteLine {
-  pickLineId: string;
-  pickTaskId: string;
-  productSku: string;
-  requestedQty: number;
-  confirmedQty: number;
-  status: string;
-}
-
-export interface ScanResolveRequest {
-  scanValue: string;
-}
-
-export interface PickConfirmRequest {
-  pickLineId: string;
-  quantity: number;
-}
+// Pick List / Picked Items / Mechanic Picking (CAP-218 #92, #243, #244) moved to
+// features/inventory/models/inventory-pick.models.ts — picking belongs to inventory,
+// even though a mechanic performs it on a work order (issue #347, group 5).
