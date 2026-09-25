@@ -6218,44 +6218,58 @@
         "STATE": {
           "LOADING": "Cargando datos de ejecución de surtido...",
           "AWAITING_SCAN": "Escanee un artículo para comenzar la confirmación.",
-          "SCAN_NO_MATCH": "Ninguna línea coincide con ese escaneo."
+          "SCAN_NO_MATCH": "Ninguna tarea de surtido coincide con ese escaneo.",
+          "NO_TASK_SELECTED": "Seleccione una tarea de surtido para comenzar."
         },
         "SECTION": {
-          "PICK_LINES": "Progreso de Líneas de Surtido",
+          "TASKS": "Tareas de Surtido",
           "SCAN": "Escaneo Activo",
           "CONFIRM": "Confirmar Cantidad Surtida"
         },
         "TABLE": {
-          "ARIA": "Progreso de ejecución de surtido",
+          "ARIA": "Progreso de tareas de surtido",
           "HEADER": {
             "SKU": "SKU",
+            "LOCATION": "Ubicación",
             "REQUESTED": "Solicitado",
-            "CONFIRMED": "Confirmado",
-            "STATUS": "Estado"
+            "PICKED": "Surtido",
+            "STATUS": "Estado",
+            "ACTION": "Acción"
           }
         },
         "FIELD": {
-          "SCAN_INPUT": "Escanee el código de barras o ingrese número de parte",
+          "SCAN_SKU": "ID de SKU escaneado",
+          "SCAN_LOCATION": "ID de ubicación escaneada",
           "SKU": "SKU",
           "REQUESTED": "Solicitado",
-          "ALREADY_CONFIRMED": "Ya confirmado",
+          "ALREADY_PICKED": "Ya surtido",
           "CONFIRM_QTY": "Cantidad a confirmar"
         },
         "ACTION": {
+          "SELECT_TASK": "Seleccionar tarea",
+          "SELECTED_TASK": "Tarea seleccionada",
           "RESOLVE_SCAN": "Resolver escaneo",
           "CONFIRM": "Confirmar",
-          "COMPLETE": "Completar surtido"
+          "COMPLETE_TASK": "Completar tarea"
         },
-        "COMPLETE": {
-          "TITLE": "Surtido Completado",
-          "DESCRIPTION": "Todas las líneas de surtido se completaron."
+        "ALL_COMPLETE": {
+          "TITLE": "Todas las Tareas Surtidas",
+          "DESCRIPTION": "Todas las tareas de surtido de esta orden de trabajo se completaron."
         },
         "ERROR": {
           "MISSING_ID": "Se requiere ID de orden de trabajo.",
           "LOAD": "No se pudieron cargar los datos de ejecución de surtido.",
           "RESOLVE_SCAN": "No se pudo resolver el valor escaneado.",
           "CONFIRM": "No se pudo confirmar la cantidad surtida.",
-          "COMPLETE": "No se pudo completar el surtido."
+          "COMPLETE": "No se pudo completar la tarea de surtido.",
+          "REFRESH": "No se pudo actualizar el estado de la tarea de surtido."
+        },
+        "SCAN_RESULT": {
+          "MATCHED": "El escaneo coincide con el SKU y la ubicación esperados.",
+          "SKU_MISMATCH": "El SKU escaneado no coincide con la pieza esperada.",
+          "LOCATION_MISMATCH": "La ubicación escaneada no coincide con el contenedor esperado.",
+          "NO_MATCH": "El escaneo no coincide con esta tarea de surtido.",
+          "UNKNOWN": "No se pudo determinar el resultado del escaneo."
         }
       },
       "SHORTAGE_RESOLUTION": {

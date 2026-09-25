@@ -6218,44 +6218,58 @@
         "STATE": {
           "LOADING": "Chargement des données d'exécution de prélèvement...",
           "AWAITING_SCAN": "Scannez un article pour commencer la confirmation.",
-          "SCAN_NO_MATCH": "Aucune ligne de prélèvement ne correspond à ce scan."
+          "SCAN_NO_MATCH": "Aucune tâche de prélèvement ne correspond à ce scan.",
+          "NO_TASK_SELECTED": "Sélectionnez une tâche de prélèvement pour commencer."
         },
         "SECTION": {
-          "PICK_LINES": "Progression des Lignes de Prélèvement",
+          "TASKS": "Tâches de Prélèvement",
           "SCAN": "Scan Actif",
           "CONFIRM": "Confirmer la Quantité Prélevée"
         },
         "TABLE": {
-          "ARIA": "Progression de l'exécution du prélèvement",
+          "ARIA": "Progression des tâches de prélèvement",
           "HEADER": {
             "SKU": "SKU",
+            "LOCATION": "Emplacement",
             "REQUESTED": "Demandée",
-            "CONFIRMED": "Confirmée",
-            "STATUS": "Statut"
+            "PICKED": "Prélevée",
+            "STATUS": "Statut",
+            "ACTION": "Action"
           }
         },
         "FIELD": {
-          "SCAN_INPUT": "Scannez le code-barres ou entrez le numéro de pièce",
+          "SCAN_SKU": "ID de SKU scanné",
+          "SCAN_LOCATION": "ID d'emplacement scanné",
           "SKU": "SKU",
           "REQUESTED": "Demandée",
-          "ALREADY_CONFIRMED": "Déjà confirmée",
+          "ALREADY_PICKED": "Déjà prélevée",
           "CONFIRM_QTY": "Quantité à confirmer"
         },
         "ACTION": {
+          "SELECT_TASK": "Sélectionner la tâche",
+          "SELECTED_TASK": "Tâche sélectionnée",
           "RESOLVE_SCAN": "Résoudre le scan",
           "CONFIRM": "Confirmer",
-          "COMPLETE": "Terminer le prélèvement"
+          "COMPLETE_TASK": "Terminer la tâche"
         },
-        "COMPLETE": {
-          "TITLE": "Prélèvement Terminé",
-          "DESCRIPTION": "Toutes les lignes de prélèvement ont été terminées."
+        "ALL_COMPLETE": {
+          "TITLE": "Toutes les Tâches Prélevées",
+          "DESCRIPTION": "Toutes les tâches de prélèvement de cet ordre de travail ont été terminées."
         },
         "ERROR": {
           "MISSING_ID": "L'ID d'ordre de travail est requis.",
           "LOAD": "Impossible de charger les données d'exécution de prélèvement.",
           "RESOLVE_SCAN": "Impossible de résoudre la valeur scannée.",
           "CONFIRM": "Impossible de confirmer la quantité prélevée.",
-          "COMPLETE": "Impossible de terminer le prélèvement."
+          "COMPLETE": "Impossible de terminer la tâche de prélèvement.",
+          "REFRESH": "Impossible d'actualiser l'état de la tâche de prélèvement."
+        },
+        "SCAN_RESULT": {
+          "MATCHED": "Le scan correspond au SKU et à l'emplacement attendus.",
+          "SKU_MISMATCH": "Le SKU scanné ne correspond pas à la pièce attendue.",
+          "LOCATION_MISMATCH": "L'emplacement scanné ne correspond pas au bac attendu.",
+          "NO_MATCH": "Le scan ne correspond pas à cette tâche de prélèvement.",
+          "UNKNOWN": "Le résultat du scan n'a pas pu être déterminé."
         }
       },
       "SHORTAGE_RESOLUTION": {

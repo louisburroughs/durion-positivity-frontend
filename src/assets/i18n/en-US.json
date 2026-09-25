@@ -6218,44 +6218,58 @@
         "STATE": {
           "LOADING": "Loading pick execution data...",
           "AWAITING_SCAN": "Scan an item to begin confirmation.",
-          "SCAN_NO_MATCH": "No pick line matched that scan."
+          "SCAN_NO_MATCH": "No pick task matched that scan.",
+          "NO_TASK_SELECTED": "Select a pick task to begin."
         },
         "SECTION": {
-          "PICK_LINES": "Pick Line Progress",
+          "TASKS": "Pick Tasks",
           "SCAN": "Active Scan",
           "CONFIRM": "Confirm Picked Quantity"
         },
         "TABLE": {
-          "ARIA": "Pick execution progress",
+          "ARIA": "Pick task progress",
           "HEADER": {
             "SKU": "SKU",
+            "LOCATION": "Location",
             "REQUESTED": "Requested",
-            "CONFIRMED": "Confirmed",
-            "STATUS": "Status"
+            "PICKED": "Picked",
+            "STATUS": "Status",
+            "ACTION": "Action"
           }
         },
         "FIELD": {
-          "SCAN_INPUT": "Scan barcode or enter part number",
+          "SCAN_SKU": "Scanned SKU ID",
+          "SCAN_LOCATION": "Scanned Location ID",
           "SKU": "SKU",
           "REQUESTED": "Requested",
-          "ALREADY_CONFIRMED": "Already Confirmed",
+          "ALREADY_PICKED": "Already Picked",
           "CONFIRM_QTY": "Quantity to Confirm"
         },
         "ACTION": {
+          "SELECT_TASK": "Select task",
+          "SELECTED_TASK": "Selected task",
           "RESOLVE_SCAN": "Resolve Scan",
           "CONFIRM": "Confirm",
-          "COMPLETE": "Complete Picking"
+          "COMPLETE_TASK": "Complete Task"
         },
-        "COMPLETE": {
-          "TITLE": "Picking Complete",
-          "DESCRIPTION": "All pick lines have been completed."
+        "ALL_COMPLETE": {
+          "TITLE": "All Tasks Picked",
+          "DESCRIPTION": "Every pick task on this workorder has been completed."
         },
         "ERROR": {
           "MISSING_ID": "Workorder ID is required.",
           "LOAD": "Failed to load pick execution data.",
           "RESOLVE_SCAN": "Failed to resolve scanned value.",
           "CONFIRM": "Failed to confirm picked quantity.",
-          "COMPLETE": "Failed to complete picking."
+          "COMPLETE": "Failed to complete the pick task.",
+          "REFRESH": "Failed to refresh pick task status."
+        },
+        "SCAN_RESULT": {
+          "MATCHED": "Scan matched the expected SKU and location.",
+          "SKU_MISMATCH": "Scanned SKU does not match the expected part.",
+          "LOCATION_MISMATCH": "Scanned location does not match the expected bin.",
+          "NO_MATCH": "Scan did not match this pick task.",
+          "UNKNOWN": "Scan result could not be determined."
         }
       },
       "SHORTAGE_RESOLUTION": {
