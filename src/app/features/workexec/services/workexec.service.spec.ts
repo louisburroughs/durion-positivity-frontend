@@ -314,6 +314,29 @@ describe('WorkexecService', () => {
     expect(result).toEqual(links);
   });
 
+  it('substitutePart — posts originalPartId/substitutePartId/reason to WorkorderPartAdjustmentsService.substitutePart (SDK-05)', () => {
+    service.substitutePart('wo-1', { originalPartId: 'part-1', substitutePartId: 'part-7', reason: 'Out of stock' }, 'sub-idem-key').subscribe();
+    const r = http.expectOne(`${BASE}/v1/workorders/wo-1/parts/substitute`);
+    expect(r.request.method).toBe('POST');
+    expect(r.request.body).toEqual({
+      originalPartId: 'part-1',
+      substitutePartId: 'part-7',
+      reason: 'Out of stock',
+    });
+    r.flush({ id: 'adj-1', workorderId: 'wo-1' });
+  });
+
+  it('substitutePart — defaults reason to empty string when omitted', () => {
+    service.substitutePart('wo-1', { originalPartId: 'part-1', substitutePartId: 'part-7' }).subscribe();
+    const r = http.expectOne(`${BASE}/v1/workorders/wo-1/parts/substitute`);
+    expect(r.request.body).toEqual({
+      originalPartId: 'part-1',
+      substitutePartId: 'part-7',
+      reason: '',
+    });
+    r.flush({ id: 'adj-1', workorderId: 'wo-1' });
+  });
+
   // ── CAP-248: Stories 259, 260, 261 ───────────────────────────────────────
 
   describe('CAP-248 service methods', () => {
