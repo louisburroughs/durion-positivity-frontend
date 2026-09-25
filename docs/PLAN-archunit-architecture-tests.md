@@ -529,8 +529,6 @@ graph cache. Without it the run took 64 s.
   | SDK-11 | 1 | #350 |
   | TEN-08 | 6 | #339 |
   | CON-01 | 1 | #348 |
-  | CON-04 | 9 | #345 |
-  | CON-07 | 97 | #346 |
   | CON-09 | 7 | #348 |
   | PAT-02 | 1 | #349 |
   | PAT-03 | 4 | #351 |
@@ -539,7 +537,16 @@ graph cache. Without it the run took 64 s.
 
 - **Warn:** SDK-09 (20), CON-03 (83), PAT-06, I18N-09.
 - **Enforce:** everything else, including the rules that started as Ratchet but reached zero
-  on this branch: TEN-07, SEC-08, SEC-09, CON-02, PAT-05, I18N-05 and I18N-07.
+  on this branch: TEN-07, SEC-08, SEC-09, CON-02, PAT-05, I18N-05 and I18N-07, plus two promoted on
+  `test/specs-and-server-fields`:
+  - **CON-04** (#345) — the 9 remaining components got co-located specs testing real behavior
+    (state transitions, error paths, key interactions); baseline emptied and deleted.
+  - **CON-07** (#346) — 95 of the 97 entries across 17 `models/**` files now carry `readonly`, `?`,
+    and `@serverGenerated`. `ChatConversation.createdAt`/`updatedAt` are client-set (see
+    `ChatStateService.ensureConversation()`), not server-provenance, so they carry `@clientGenerated`
+    instead and stay required — the finder now recognizes that tag as an exemption; the null-safe
+    fallbacks briefly added to `chat-history.store.ts`/`chat-state.service.ts` for the (incorrect)
+    optional case were reverted. Baseline emptied and deleted.
 
 ### 12.3 Defects fixed on this branch
 

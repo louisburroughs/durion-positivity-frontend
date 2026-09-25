@@ -58,7 +58,8 @@ export interface PriceCatalogImport {
   /** When the vendor was called. */
   fetchedAt: string | null;
   /** Null while in progress or after a failed fetch. */
-  completedAt: string | null;
+  /** @serverGenerated */
+  readonly completedAt?: string | null;
   sourceDocumentId: string | null;
   /** Vendor catalog document date, date-only `YYYY-MM-DD` (ADR-0038), when stated. */
   sourceDocumentDate: string | null;

@@ -36,8 +36,10 @@ export interface BulkLoadJob {
   processedRows?: number;
   successCount?: number;
   failureCount?: number;
+  /** @serverGenerated */
   readonly createdAt?: string;
   readonly startedAt?: string;
+  /** @serverGenerated */
   readonly completedAt?: string;
 }
 
@@ -62,6 +64,7 @@ export interface BulkLoadRecordAudit {
   reasonCodes: string[];
   originalValues: Record<string, unknown>;
   correctedValues?: Record<string, unknown>;
+  /** @serverGenerated */
   readonly createdAt?: string;
 }
 

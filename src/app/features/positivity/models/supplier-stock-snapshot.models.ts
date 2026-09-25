@@ -38,7 +38,8 @@ export interface StockSnapshotSummary {
   /** Platform time: when this platform called the vendor. */
   fetchedAt: string | null;
   /** Platform time: when storing the snapshot finished. Null after a failure. */
-  completedAt: string | null;
+  /** @serverGenerated */
+  readonly completedAt?: string | null;
   status: StockSnapshotStatus | null;
   protocolVersion: string | null;
   linesReported: number | null;
