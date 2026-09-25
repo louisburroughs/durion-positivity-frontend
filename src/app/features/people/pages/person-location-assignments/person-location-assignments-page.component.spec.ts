@@ -5,7 +5,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { of, throwError, NEVER } from 'rxjs';
 
 import { PersonLocationAssignmentsPageComponent } from './person-location-assignments-page.component';
-import { LocationService } from '../../../location/services/location.service';
+import { LOCATION_LOOKUP_SOURCE } from '../../../../shared/location-picker/location-lookup-source.tokens';
 import { PeopleService } from '../../services/people.service';
 
 // ── Fixtures ──────────────────────────────────────────────────────────────
@@ -42,8 +42,8 @@ const stubStaffingService = {
   endLocationAssignment: vi.fn(),
 };
 
-const stubLocationService = {
-  getAllLocations: vi.fn(),
+const stubLocationLookup = {
+  getAll: vi.fn(),
 };
 
 const PERSON_ROUTE = {
@@ -60,7 +60,7 @@ async function setup(): Promise<ComponentFixture<PersonLocationAssignmentsPageCo
     providers: [
       provideRouter([]),
       { provide: PeopleService, useValue: stubStaffingService },
-      { provide: LocationService, useValue: stubLocationService },
+      { provide: LOCATION_LOOKUP_SOURCE, useValue: stubLocationLookup },
       { provide: ActivatedRoute, useValue: PERSON_ROUTE },
     ],
   }).compileComponents();
@@ -82,7 +82,7 @@ describe('PersonLocationAssignmentsPageComponent [CAP-119 #150]', () => {
 
   it('T1: shows loading-indicator while getAssignments is pending', async () => {
     stubStaffingService.getLocationAssignments.mockReturnValue(NEVER);
-    stubLocationService.getAllLocations.mockReturnValue(of(mockLocations));
+    stubLocationLookup.getAll.mockReturnValue(of(mockLocations));
 
     const fixture = await setup();
     fixture.detectChanges();
@@ -95,7 +95,7 @@ describe('PersonLocationAssignmentsPageComponent [CAP-119 #150]', () => {
 
   it('T2: renders two assignment-item rows after successful load', async () => {
     stubStaffingService.getLocationAssignments.mockReturnValue(of(mockAssignments));
-    stubLocationService.getAllLocations.mockReturnValue(of(mockLocations));
+    stubLocationLookup.getAll.mockReturnValue(of(mockLocations));
 
     const fixture = await setup();
     fixture.detectChanges();
@@ -108,7 +108,7 @@ describe('PersonLocationAssignmentsPageComponent [CAP-119 #150]', () => {
 
   it('T3: shows empty-state when no assignments are returned', async () => {
     stubStaffingService.getLocationAssignments.mockReturnValue(of([]));
-    stubLocationService.getAllLocations.mockReturnValue(of(mockLocations));
+    stubLocationLookup.getAll.mockReturnValue(of(mockLocations));
 
     const fixture = await setup();
     fixture.detectChanges();
@@ -123,7 +123,7 @@ describe('PersonLocationAssignmentsPageComponent [CAP-119 #150]', () => {
     stubStaffingService.getLocationAssignments.mockReturnValue(
       throwError(() => new Error('network error')),
     );
-    stubLocationService.getAllLocations.mockReturnValue(of(mockLocations));
+    stubLocationLookup.getAll.mockReturnValue(of(mockLocations));
 
     const fixture = await setup();
     fixture.detectChanges();
@@ -136,7 +136,7 @@ describe('PersonLocationAssignmentsPageComponent [CAP-119 #150]', () => {
 
   it('T5: openCreateDialog makes the create-dialog visible', async () => {
     stubStaffingService.getLocationAssignments.mockReturnValue(of(mockAssignments));
-    stubLocationService.getAllLocations.mockReturnValue(of(mockLocations));
+    stubLocationLookup.getAll.mockReturnValue(of(mockLocations));
 
     const fixture = await setup();
     fixture.detectChanges();
@@ -154,7 +154,7 @@ describe('PersonLocationAssignmentsPageComponent [CAP-119 #150]', () => {
 
   it('T6: submitCreate does not call createPersonLocationAssignment when form is invalid', async () => {
     stubStaffingService.getLocationAssignments.mockReturnValue(of(mockAssignments));
-    stubLocationService.getAllLocations.mockReturnValue(of(mockLocations));
+    stubLocationLookup.getAll.mockReturnValue(of(mockLocations));
 
     const fixture = await setup();
     fixture.detectChanges();
@@ -170,7 +170,7 @@ describe('PersonLocationAssignmentsPageComponent [CAP-119 #150]', () => {
   it('T7: submitCreate calls createPersonLocationAssignment with correct personId and body', async () => {
     stubStaffingService.getLocationAssignments.mockReturnValue(of(mockAssignments));
     stubStaffingService.createLocationAssignment.mockReturnValue(of({}));
-    stubLocationService.getAllLocations.mockReturnValue(of(mockLocations));
+    stubLocationLookup.getAll.mockReturnValue(of(mockLocations));
 
     const fixture = await setup();
     fixture.detectChanges();
@@ -192,7 +192,7 @@ describe('PersonLocationAssignmentsPageComponent [CAP-119 #150]', () => {
     stubStaffingService.createLocationAssignment.mockReturnValue(
       throwError(() => ({ status: 409, error: { message: 'Overlap' } })),
     );
-    stubLocationService.getAllLocations.mockReturnValue(of(mockLocations));
+    stubLocationLookup.getAll.mockReturnValue(of(mockLocations));
 
     const fixture = await setup();
     fixture.detectChanges();
@@ -211,7 +211,7 @@ describe('PersonLocationAssignmentsPageComponent [CAP-119 #150]', () => {
 
   it('T9: openEndDialog makes the end-confirm-dialog visible', async () => {
     stubStaffingService.getLocationAssignments.mockReturnValue(of(mockAssignments));
-    stubLocationService.getAllLocations.mockReturnValue(of(mockLocations));
+    stubLocationLookup.getAll.mockReturnValue(of(mockLocations));
 
     const fixture = await setup();
     fixture.detectChanges();
@@ -231,7 +231,7 @@ describe('PersonLocationAssignmentsPageComponent [CAP-119 #150]', () => {
   it('T10: confirmEnd calls endPersonLocationAssignment with the selected assignment id', async () => {
     stubStaffingService.getLocationAssignments.mockReturnValue(of(mockAssignments));
     stubStaffingService.endLocationAssignment.mockReturnValue(of({}));
-    stubLocationService.getAllLocations.mockReturnValue(of(mockLocations));
+    stubLocationLookup.getAll.mockReturnValue(of(mockLocations));
 
     const fixture = await setup();
     fixture.detectChanges();
@@ -247,7 +247,7 @@ describe('PersonLocationAssignmentsPageComponent [CAP-119 #150]', () => {
 
   it('T11: closeEndDialog removes the end-confirm-dialog from the DOM', async () => {
     stubStaffingService.getLocationAssignments.mockReturnValue(of(mockAssignments));
-    stubLocationService.getAllLocations.mockReturnValue(of(mockLocations));
+    stubLocationLookup.getAll.mockReturnValue(of(mockLocations));
 
     const fixture = await setup();
     fixture.detectChanges();
