@@ -187,9 +187,27 @@ is resolved (issue #380) by migrating to the SDK's `getEventContract` and treati
 fields it does not return as optional.
 
 `billing-transport.service.ts` is no longer an approved exception: D7 (`executeRefund`
-no-amount branch) and D8 (`loadReceipt`) are resolved (issue #381) — the page now requires
-an explicit refund amount and the receipt page shows a localized not-available state
-instead of calling either nonexistent route.
+no-amount branch) and D8 (`loadReceipt`) are resolved (issue #381) — the page still requires
+an explicit refund amount on every request, and the receipt page now calls a real backend
+route for both gaps.
+
+durion-positivity-backend#2226/#2215/#2214 (#350 follow-up, this PR) close the remaining
+gaps that #381 left as informational-only:
+
+- The frontend permission catalog (`core/security/permission-catalog.ts`) is regenerated
+  from backend `origin/main` at catalog version 92 (bits 536–541 added), restoring the
+  `BILLING_SECTION` gates on refund, void and receipt-generate in `route-permissions.ts`
+  that PR #383 had to drop when those codes didn't exist yet. Each gate is independent of
+  its method call (the request-vs-button pattern in `INVENTORY_PAGE.pickExecute`), so an
+  unknown-permission (legacy) token still stays open.
+- `loadRefundContext` now reads `PaymentService.getInvoicePayment`'s `refundableAmount`
+  instead of summing `listInvoiceRefunds`, so the page can prefill a full-balance refund for
+  the operator to confirm, not just show a prior-refunds total.
+- D8 above is now resolved as an actual read: `ReceiptService.getReceipt` (#2214) loads a
+  deep-linked receipt directly, replacing the not-available state.
+- `generateReceipt` had a latent bug (not part of #381's resolution): it sent the delivery
+  method/email selection as `paymentIntentId` instead of a real payment-intent id. Fixed by
+  resolving the invoice's captured payment intent via `listInvoicePayments` first.
 
 No page component is an approved exception.
 
@@ -341,7 +359,7 @@ tracked follow-up decisions.
 | —   | `workexec.service.ts` — `requestInvoiceFinalization` | No SDK equivalent                                                 | SDK team to add endpoint          |
 | ~~—~~ | ~~`workexec.service.ts` — `listEstimatesForVehicle`~~ | Resolved (issue #379): the vehicle filter exists on `searchEstimates`, which the frontend already used for text search | — |
 | ~~D7~~ | ~~`billing-transport.service.ts` — `executeRefund` (no-amount branch)~~ | Resolved (issue #381): the page now requires an explicit refund amount and always sends it through the SDK `refundPayment` | — |
-| ~~D8~~ | ~~`billing-transport.service.ts` — `loadReceipt`~~   | Resolved (issue #381): removed; the page uses `generateReceipt`'s full response directly and shows a localized not-available state for a receipt reached without generating/reprinting it | — |
+| ~~D8~~ | ~~`billing-transport.service.ts` — `loadReceipt`~~   | Resolved twice: issue #381 removed it (no backend GET existed yet) and showed a not-available state; durion-positivity-backend#2214 (this PR, #350 follow-up) added `ReceiptService.getReceipt`, so `loadReceipt` is back as a real read-only call | — |
 | —   | `chat-api.service.ts` — all                          | Permanent exception: gateway/MCP traffic                          | Never migrate                     |
 
 **Acceptance criteria:**

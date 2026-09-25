@@ -102,6 +102,13 @@
   text-decoration: underline;
 }
 
+.receipt__permission-hint,
+.receipt__reprint-warning {
+  margin: 0;
+  color: var(--status-warning-fg);
+  font-size: 0.85rem;
+}
+
 .receipt__error {
   background: var(--status-error-bg); color: var(--status-error-fg);
   border-radius: var(--radius-sm);

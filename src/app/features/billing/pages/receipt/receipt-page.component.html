@@ -13,17 +13,16 @@
 
   @if (state() === 'error' && errorKey()) {
   <div class="receipt__error" role="alert">{{ errorKey()! | translate }}</div>
-  @if (errorKey() === 'BILLING.RECEIPT.ERROR.NOT_AVAILABLE' && receiptId()) {
-  <div class="receipt__actions" data-testid="receipt-not-available">
-    <button type="button" class="receipt__reprint-btn" (click)="reprint()">
-      {{ 'BILLING.RECEIPT.ACTION.REPRINT' | translate }}
-    </button>
-  </div>
-  }
   }
 
-  @if (state() === 'idle' || state() === 'error') {
+  @if (state() === 'idle' || (state() === 'error' && !receipt())) {
   <p class="receipt__idle">{{ 'BILLING.RECEIPT.IDLE' | translate }}</p>
+
+  @if (!canGeneratePermission()) {
+  <p class="receipt__permission-hint" role="note" data-testid="generate-permission-hint">
+    {{ 'BILLING.RECEIPT.ERROR.GENERATE_PERMISSION_DENIED' | translate }}
+  </p>
+  }
 
   <form class="receipt__form" (submit)="$event.preventDefault()">
     <div class="receipt__field">
@@ -58,33 +57,93 @@
   </output>
   }
 
-  @if (state() === 'ready' && receipt()) {
+  @if ((state() === 'ready' || state() === 'error') && receipt(); as r) {
   <article class="receipt__detail">
     <div class="receipt__field-row">
       <span>{{ 'BILLING.RECEIPT.FIELD.RECEIPT_NUMBER' | translate }}</span>
-      <strong>{{ receipt()!.receiptNumber || receipt()!.receiptId }}</strong>
+      <strong>{{ r.receiptNumber || r.receiptId }}</strong>
     </div>
     <div class="receipt__field-row">
       <span>{{ 'BILLING.RECEIPT.FIELD.INVOICE_REF' | translate }}</span>
-      <strong>{{ receipt()!.invoiceId }}</strong>
+      <strong>{{ r.invoiceId }}</strong>
     </div>
+    @if (r.status) {
+    <div class="receipt__field-row">
+      <span>{{ 'BILLING.RECEIPT.FIELD.STATUS' | translate }}</span>
+      <strong>{{ r.status }}</strong>
+    </div>
+    }
     <div class="receipt__field-row">
       <span>{{ 'BILLING.RECEIPT.FIELD.GENERATED_AT' | translate }}</span>
-      <strong>{{ receipt()!.generatedAt | date:'medium' }}</strong>
+      <strong>{{ (r.generatedAt ?? r.createdAt) | date:'medium' }}</strong>
     </div>
-    @if (receipt()!.emailedTo) {
+    @if (r.paidAmount !== undefined) {
+    <div class="receipt__field-row">
+      <span>{{ 'BILLING.RECEIPT.FIELD.PAID_AMOUNT' | translate }}</span>
+      <strong>{{ r.paidAmount | number: '1.2-2' }}</strong>
+    </div>
+    }
+    @if (r.paymentMethod) {
+    <div class="receipt__field-row">
+      <span>{{ 'BILLING.RECEIPT.FIELD.PAYMENT_METHOD' | translate }}</span>
+      <strong>{{ r.paymentMethod }}</strong>
+    </div>
+    }
+    @if (r.cashierId) {
+    <div class="receipt__field-row">
+      <span>{{ 'BILLING.RECEIPT.FIELD.CASHIER' | translate }}</span>
+      <strong>{{ r.cashierId }}</strong>
+    </div>
+    }
+    @if (r.terminalId) {
+    <div class="receipt__field-row">
+      <span>{{ 'BILLING.RECEIPT.FIELD.TERMINAL' | translate }}</span>
+      <strong>{{ r.terminalId }}</strong>
+    </div>
+    }
+    @if (r.emailedTo) {
     <div class="receipt__field-row">
       <span>{{ 'BILLING.RECEIPT.FIELD.EMAILED_TO' | translate }}</span>
-      <strong>{{ receipt()!.emailedTo }}</strong>
+      <strong>{{ r.emailedTo }}</strong>
+    </div>
+    }
+    @if (r.deliveryMethod) {
+    <div class="receipt__field-row">
+      <span>{{ 'BILLING.RECEIPT.FIELD.DELIVERY_METHOD' | translate }}</span>
+      <strong>{{ 'BILLING.RECEIPT.DELIVERY.' + r.deliveryMethod | translate }}</strong>
+    </div>
+    }
+    @if (r.deliveryEmailAddress) {
+    <div class="receipt__field-row">
+      <span>{{ 'BILLING.RECEIPT.FIELD.DELIVERY_EMAIL' | translate }}</span>
+      <strong>{{ r.deliveryEmailAddress }}</strong>
+    </div>
+    }
+    @if (r.reprintCount !== undefined) {
+    <div class="receipt__field-row" data-testid="receipt-reprint-count">
+      <span>{{ 'BILLING.RECEIPT.FIELD.REPRINT_COUNT' | translate }}</span>
+      <strong>{{ r.reprintCount }}</strong>
+    </div>
+    }
+    @if (r.lastReprintedBy) {
+    <div class="receipt__field-row">
+      <span>{{ 'BILLING.RECEIPT.FIELD.LAST_REPRINT_BY' | translate }}</span>
+      <strong>{{ r.lastReprintedBy }}</strong>
     </div>
     }
 
+    @if (reprintOverrideNeeded()) {
+    <p class="receipt__reprint-warning" role="note" data-testid="reprint-cap-warning">
+      {{ 'BILLING.RECEIPT.REPRINT_CAP_WARNING' | translate }}
+    </p>
+    }
+
     <div class="receipt__actions">
-      <button type="button" class="receipt__reprint-btn" (click)="reprint()">
+      <button type="button" class="receipt__reprint-btn" [disabled]="!canReprint()" (click)="reprint()">
         {{ 'BILLING.RECEIPT.ACTION.REPRINT' | translate }}
       </button>
-      @if (receipt()!.pdfUrl) {
-      <a class="receipt__pdf-link" [href]="receipt()!.pdfUrl" target="_blank" rel="noopener noreferrer">
+      @if (r.pdfUrl) {
+      <a class="receipt__pdf-link" [href]="r.pdfUrl" target="_blank" rel="noopener noreferrer">
         {{ 'BILLING.RECEIPT.ACTION.VIEW_PDF' | translate }}
       </a>
       }
