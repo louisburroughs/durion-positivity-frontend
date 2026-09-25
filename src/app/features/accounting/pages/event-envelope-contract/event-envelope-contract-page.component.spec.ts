@@ -8,15 +8,15 @@ import { EventEnvelopeContractPageComponent } from './event-envelope-contract-pa
 describe('EventEnvelopeContractPageComponent', () => {
   let fixture: ComponentFixture<EventEnvelopeContractPageComponent>;
 
+  // Matches the real backend response (durion-positivity-backend#2207): only `version`,
+  // `fields`, and `examples` — no traceabilityIds/processingStatuses/idempotencyOutcomes/
+  // identifierStrategy. Issue #380: the page previously assumed those were always present and
+  // crashed reading `value.traceabilityIds.length`.
   const accountingServiceStub = {
     getEventEnvelopeContract: vi.fn().mockReturnValue(
       of({
-        contractVersion: 'v1',
-        identifierStrategy: 'UUIDv7',
+        version: 'v1',
         fields: [{ name: 'eventId', type: 'string', required: true }],
-        traceabilityIds: [],
-        processingStatuses: [],
-        idempotencyOutcomes: [],
       }),
     ),
   };
@@ -70,5 +70,32 @@ describe('EventEnvelopeContractPageComponent', () => {
     tabs[1].click();
     fixture.detectChanges();
     expect(fixture.componentInstance.activeTab()).toBe('traceability');
+  });
+
+  it('renders a localized "not provided" state on the traceability tab instead of crashing when the backend omits traceabilityIds (issue #380)', () => {
+    fixture.detectChanges();
+    const tabs = fixture.nativeElement.querySelectorAll('[role="tab"]');
+    expect(() => tabs[1].click()).not.toThrow();
+    fixture.detectChanges();
+
+    const notProvided = fixture.nativeElement.querySelector('[data-testid="traceability-not-provided"]');
+    expect(notProvided).toBeTruthy();
+  });
+
+  it('renders the traceability table when the backend does provide traceabilityIds', () => {
+    accountingServiceStub.getEventEnvelopeContract.mockReturnValueOnce(
+      of({
+        version: 'v1',
+        fields: [{ name: 'eventId', type: 'string', required: true }],
+        traceabilityIds: [{ name: 'correlationId', type: 'string' }],
+      }),
+    );
+    fixture.detectChanges();
+    const tabs = fixture.nativeElement.querySelectorAll('[role="tab"]');
+    tabs[1].click();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[data-testid="traceability-not-provided"]')).toBeFalsy();
+    expect(fixture.nativeElement.textContent).toContain('correlationId');
   });
 });

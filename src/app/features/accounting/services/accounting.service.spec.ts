@@ -20,6 +20,7 @@ import { AccountingService } from './accounting.service';
 import {
   AccountingEventDetail,
   AccountingEventListItem,
+  EventEnvelopeContract,
   EventProcessingLogEntry,
   IngestionListFilters,
   IngestionProcessingStatus,
@@ -49,6 +50,7 @@ describe('AccountingService', () => {
     getEventReprocessingHistory: vi.fn(),
     listAccountingEvents: vi.fn(),
     getEventProcessingLog: vi.fn(),
+    getEventContract: vi.fn(),
   };
 
   const apPaymentsStub = {
@@ -353,6 +355,39 @@ describe('AccountingService', () => {
 
       expect(accountingEventsStub.getEventProcessingLog).toHaveBeenCalledWith('evt-001');
       expect(result).toEqual(fixture);
+    });
+  });
+
+  describe('getEventEnvelopeContract() [issue #380]', () => {
+    it('should call accountingEventsService.getEventContract() and map fields, dropping unsupported traceability/processing/idempotency/identifier data', () => {
+      accountingEventsStub.getEventContract.mockReturnValueOnce(
+        of({
+          version: 'v1',
+          fields: [
+            { jsonPath: '$.eventId', name: 'eventId', type: 'string', required: true, description: 'Event id', enumValues: null },
+          ],
+          examples: [{ eventId: 'evt-1' }],
+        }),
+      );
+
+      let result: EventEnvelopeContract | undefined;
+      service.getEventEnvelopeContract().subscribe((r: EventEnvelopeContract) => (result = r));
+
+      expect(accountingEventsStub.getEventContract).toHaveBeenCalledWith();
+      expect(result).toEqual({
+        version: 'v1',
+        fields: [{ name: 'eventId', type: 'string', required: true, description: 'Event id' }],
+        examples: [{ eventId: 'evt-1' }],
+      });
+      expect((result as { traceabilityIds?: unknown })?.traceabilityIds).toBeUndefined();
+    });
+
+    it('should never call ApiBaseService for the event envelope contract (fully migrated to the SDK)', () => {
+      accountingEventsStub.getEventContract.mockReturnValueOnce(of({ version: 'v1', fields: [] }));
+
+      service.getEventEnvelopeContract().subscribe();
+
+      expect(apiBaseServiceStub.get).not.toHaveBeenCalled();
     });
   });
 

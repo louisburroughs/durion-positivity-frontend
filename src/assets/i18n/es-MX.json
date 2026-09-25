@@ -2981,6 +2981,7 @@
       "TAB_EXAMPLES": "Examples",
       "EMPTY_FIELDS": "No hay campos de contrato disponibles.",
       "EMPTY_TRACEABILITY": "No hay ID de trazabilidad disponibles.",
+      "TRACEABILITY_NOT_PROVIDED": "El backend aún no proporciona ID de trazabilidad.",
       "EMPTY_EXAMPLES": "No hay ejemplos disponibles.",
       "FIELDS_TABLE_ARIA": "Tabla de campos del contrato",
       "FIELDS_TABLE_CAPTION": "Definiciones de campos del sobre",

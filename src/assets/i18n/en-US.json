@@ -2981,6 +2981,7 @@
       "TAB_EXAMPLES": "Examples",
       "EMPTY_FIELDS": "No contract fields are available.",
       "EMPTY_TRACEABILITY": "No traceability IDs are available.",
+      "TRACEABILITY_NOT_PROVIDED": "The backend does not provide traceability IDs yet.",
       "EMPTY_EXAMPLES": "No examples are available.",
       "FIELDS_TABLE_ARIA": "Contract fields table",
       "FIELDS_TABLE_CAPTION": "Envelope field definitions",

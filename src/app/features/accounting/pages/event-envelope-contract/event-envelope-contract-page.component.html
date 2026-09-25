@@ -58,7 +58,10 @@
 
   @if (activeTab() === 'traceability') {
   <section class="table-scroll-container" role="tabpanel">
-    @if (value.traceabilityIds.length === 0) {
+    @if (!value.traceabilityIds) {
+    <div class="state-panel" data-testid="traceability-not-provided">{{
+      'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.TRACEABILITY_NOT_PROVIDED' | translate }}</div>
+    } @else if (value.traceabilityIds.length === 0) {
     <div class="state-panel">{{ 'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.EMPTY_TRACEABILITY' | translate }}</div>
     } @else {
     <table class="ledger-table" [attr.aria-label]="'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.TRACE_TABLE_ARIA' | translate">

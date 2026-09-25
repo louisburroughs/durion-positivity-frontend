@@ -140,19 +140,22 @@ export interface TraceabilityIdDefinition {
   source?: string;
 }
 
-export interface EventEnvelopeExample {
-  name: string;
-  json: string;
-}
-
+/**
+ * Backend `GET /v1/accounting/events/contract` (`AccountingEventsService.getEventContract`)
+ * only returns `version`, `fields`, and `examples` today — `identifierStrategy`,
+ * `traceabilityIds`, `processingStatuses`, and `idempotencyOutcomes` are not part of the
+ * response (durion-positivity-backend#2207) and must stay optional so a consumer never assumes
+ * they are present (issue #380). `examples` is untyped JSON on the backend (`Array<any>`), so it
+ * stays `unknown[]` here rather than claiming a shape the API does not guarantee.
+ */
 export interface EventEnvelopeContract {
-  contractVersion: string;
-  identifierStrategy: string;
+  version: string;
   fields: EnvelopeFieldDefinition[];
-  traceabilityIds: TraceabilityIdDefinition[];
-  processingStatuses: string[];
-  idempotencyOutcomes: string[];
-  examples?: EventEnvelopeExample[];
+  examples?: unknown[];
+  identifierStrategy?: string;
+  traceabilityIds?: TraceabilityIdDefinition[];
+  processingStatuses?: string[];
+  idempotencyOutcomes?: string[];
 }
 
 export interface AccountingEventSubmitRequest {

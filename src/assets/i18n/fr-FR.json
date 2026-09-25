@@ -2981,6 +2981,7 @@
       "TAB_EXAMPLES": "Examples",
       "EMPTY_FIELDS": "Aucun champ de contrat disponible.",
       "EMPTY_TRACEABILITY": "Aucun ID de traçabilité disponible.",
+      "TRACEABILITY_NOT_PROVIDED": "Le backend ne fournit pas encore d’ID de traçabilité.",
       "EMPTY_EXAMPLES": "Aucun exemple disponible.",
       "FIELDS_TABLE_ARIA": "Tableau des champs du contrat",
       "FIELDS_TABLE_CAPTION": "Définitions des champs de l’enveloppe",
