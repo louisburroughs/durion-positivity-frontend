@@ -57,9 +57,13 @@ export class ReceiptPageComponent implements OnInit {
     () => !this.auth.permissionsKnown() || this.auth.hasAnyPermission(BILLING_SECTION.receiptReprintOverride),
   );
 
+  /** The payment to document, when the page is reached from the capture page (query param). */
+  private paymentId: string | undefined;
+
   ngOnInit(): void {
     const invoiceId = this.route.snapshot.paramMap.get('invoiceId') ?? '';
     const receiptId = this.route.snapshot.paramMap.get('receiptId');
+    this.paymentId = this.route.snapshot.queryParamMap?.get('paymentId') ?? undefined;
 
     this.invoiceId.set(invoiceId);
     this.receiptId.set(receiptId);
@@ -110,7 +114,7 @@ export class ReceiptPageComponent implements OnInit {
     this.errorKey.set(null);
 
     this.billingService
-      .generateReceipt(this.invoiceId(), delivery ?? {})
+      .generateReceipt(this.invoiceId(), delivery ?? {}, this.paymentId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: receipt => {

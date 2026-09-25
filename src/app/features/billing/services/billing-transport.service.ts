@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
-import { Observable, throwError } from 'rxjs';
+import { Observable, throwError, of } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import {
   ArtifactDownloadToken as SdkArtifactDownloadToken,
@@ -207,10 +207,14 @@ export class BillingTransportService {
    * recording an actual email/print delivery is `recordReceiptEmailDelivery`/
    * `recordReceiptPrintDelivery`, separate endpoints this PR does not wire up.
    */
-  generateReceipt(invoiceId: string, _request: UiGenerateReceiptRequest): Observable<ReceiptRef> {
-    return this.paymentService.listInvoicePayments(invoiceId).pipe(
-      switchMap(payments => {
-        const capturedIntent = this.mostRecentCapturedPayment(payments);
+  generateReceipt(invoiceId: string, _request: UiGenerateReceiptRequest, paymentId?: string): Observable<ReceiptRef> {
+    // The payment the operator just captured, when the caller knows it (the capture page passes
+    // it through); otherwise fall back to the invoice's most recent CAPTURED intent.
+    const intent$: Observable<{ paymentId?: string } | undefined> = paymentId
+      ? of({ paymentId })
+      : this.paymentService.listInvoicePayments(invoiceId).pipe(map(payments => this.mostRecentCapturedPayment(payments)));
+    return intent$.pipe(
+      switchMap(capturedIntent => {
         if (!capturedIntent?.paymentId) {
           return throwError(() => new Error(
             `No captured payment intent found for invoice ${invoiceId}; cannot generate a receipt.`,

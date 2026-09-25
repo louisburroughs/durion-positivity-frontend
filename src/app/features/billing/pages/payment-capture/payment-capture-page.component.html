@@ -81,7 +81,7 @@
       <strong>{{ (transaction()!.capturedAt || transaction()!.createdAt) | date:'medium' }}</strong>
     </div>
 
-    <a class="payment-capture__receipt-link" [routerLink]="['/app/billing/invoices', invoiceId(), 'receipts']">
+    <a class="payment-capture__receipt-link" [routerLink]="['/app/billing/invoices', invoiceId(), 'receipts']" [queryParams]="{ paymentId: transaction()!.paymentId }">
       {{ 'BILLING.PAYMENT.ACTION.PRINT_RECEIPT' | translate }}
     </a>
   </section>

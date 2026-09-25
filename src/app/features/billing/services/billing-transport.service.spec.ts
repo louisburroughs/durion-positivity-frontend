@@ -380,6 +380,21 @@ describe('BillingTransportService', () => {
       ...overrides,
     });
 
+    it('uses the payment id the caller supplies (from the capture page) without listing payments', () => {
+      receiptServiceStub.generateReceipt.mockReturnValueOnce(
+        of({ receiptId: 'rcpt-002', reference: 'R-1002', status: ReceiptResponseStatusEnum.Generated }),
+      );
+      paymentServiceStub.listInvoicePayments.mockClear();
+
+      service.generateReceipt('inv-001', { deliveryMethod: 'PRINT' }, 'pay-supplied').subscribe();
+
+      expect(paymentServiceStub.listInvoicePayments).not.toHaveBeenCalled();
+      expect(receiptServiceStub.generateReceipt).toHaveBeenCalledWith(
+        'inv-001',
+        expect.objectContaining({ paymentIntentId: 'pay-supplied' }),
+      );
+    });
+
     it('resolves the real payment-intent id from listInvoicePayments and never sends the delivery selection as paymentIntentId', () => {
       const receiptResponse: ReceiptResponse = {
         receiptId: 'rcpt-001',

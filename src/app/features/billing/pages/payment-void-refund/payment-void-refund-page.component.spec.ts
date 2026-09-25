@@ -410,5 +410,15 @@ describe('PaymentVoidRefundPageComponent', () => {
       expect(c.canSubmitVoid()).toBe(false);
       expect(fixture.nativeElement.querySelector('[data-testid="void-permission-hint"]')).toBeTruthy();
     });
+
+    it('refuses executeVoid/executeRefund in the method too, not only on the button (ADR-0040 §6a.2)', async () => {
+      const c = await freshComponentWith([]);
+
+      c.executeVoid('reason', 'AUTH1');
+      c.executeRefund('reason', 'AUTH1', 10);
+
+      expect(billingTransportStub.executeVoid).not.toHaveBeenCalled();
+      expect(billingTransportStub.executeRefund).not.toHaveBeenCalled();
+    });
   });
 });

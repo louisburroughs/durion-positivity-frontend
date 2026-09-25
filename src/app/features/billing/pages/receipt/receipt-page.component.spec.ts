@@ -161,7 +161,7 @@ describe('ReceiptPageComponent', () => {
 
     component.generateAndShow({ deliveryMethod: 'PRINT' });
 
-    expect(billingTransportStub.generateReceipt).toHaveBeenCalledWith('inv-001', { deliveryMethod: 'PRINT' });
+    expect(billingTransportStub.generateReceipt).toHaveBeenCalledWith('inv-001', { deliveryMethod: 'PRINT' }, undefined);
     expect(component.state()).toBe('ready');
     expect(component.receipt()).toEqual(receiptFixture);
     expect(component.receiptId()).toBe('rcpt-001');

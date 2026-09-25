@@ -147,6 +147,10 @@ export class PaymentVoidRefundPageComponent implements OnInit {
   }
 
   executeVoid(reason: string, authorityCode: string): void {
+    // Re-checked here, not only on the button (ADR-0040 §6a.2).
+    if (!this.canVoid()) {
+      return;
+    }
     if (!this.invoiceId() || !this.paymentId()) {
       this.state.set('error');
       this.errorKey.set('BILLING.PAYMENT.ERROR.MISSING_IDS');
@@ -189,6 +193,10 @@ export class PaymentVoidRefundPageComponent implements OnInit {
    * against this payment sees the updated balance.
    */
   executeRefund(reason: string, authorityCode: string, amount: number | null): void {
+    // Re-checked here, not only on the button (ADR-0040 §6a.2).
+    if (!this.canRefund()) {
+      return;
+    }
     if (!this.invoiceId() || !this.paymentId()) {
       this.state.set('error');
       this.errorKey.set('BILLING.PAYMENT.ERROR.MISSING_IDS');
