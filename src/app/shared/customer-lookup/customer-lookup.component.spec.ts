@@ -2,10 +2,9 @@ import { TestBed, ComponentFixture, fakeAsync, tick } from '@angular/core/testin
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { of } from 'rxjs';
 import { CustomerLookupComponent } from './customer-lookup.component';
-import { CrmService } from '../../services/crm.service';
-import { PartyDetail } from '../../models/crm.models';
+import { CUSTOMER_LOOKUP_SOURCE, CustomerLookupResult } from './customer-lookup.tokens';
 
-const PARTIES: PartyDetail[] = [
+const PARTIES: CustomerLookupResult[] = [
   { partyId: 'p1', legalName: 'Acme Tire Co', dba: 'Acme', customerNumber: 'CUST-CP-001' },
   { partyId: 'p2', legalName: 'Blue Ridge Landscaping', customerNumber: 'CUST-CP-004' },
 ];
@@ -13,16 +12,16 @@ const PARTIES: PartyDetail[] = [
 describe('CustomerLookupComponent', () => {
   let fixture: ComponentFixture<CustomerLookupComponent>;
   let component: CustomerLookupComponent;
-  let searchParties: ReturnType<typeof vi.fn>;
-  let getParty: ReturnType<typeof vi.fn>;
+  let search: ReturnType<typeof vi.fn>;
+  let getById: ReturnType<typeof vi.fn>;
 
   beforeEach(async () => {
-    searchParties = vi.fn().mockReturnValue(of({ parties: PARTIES }));
-    getParty = vi.fn().mockReturnValue(of(PARTIES[1]));
+    search = vi.fn().mockReturnValue(of(PARTIES));
+    getById = vi.fn().mockReturnValue(of(PARTIES[1]));
 
     await TestBed.configureTestingModule({
       imports: [CustomerLookupComponent, TranslateModule.forRoot()],
-      providers: [{ provide: CrmService, useValue: { searchParties, getParty } }],
+      providers: [{ provide: CUSTOMER_LOOKUP_SOURCE, useValue: { search, getById } }],
     }).compileComponents();
 
     TestBed.inject(TranslateService).use('en-US');
@@ -52,9 +51,9 @@ describe('CustomerLookupComponent', () => {
 
   it('searches server-side (debounced) on input', fakeAsync(() => {
     component.onInput('blue');
-    expect(searchParties).not.toHaveBeenCalled(); // debounced
+    expect(search).not.toHaveBeenCalled(); // debounced
     tick(250);
-    expect(searchParties).toHaveBeenCalledWith('blue');
+    expect(search).toHaveBeenCalledWith('blue');
     expect(component.suggestions().map(p => p.partyId)).toEqual(['p1', 'p2']);
   }));
 
@@ -81,10 +80,10 @@ describe('CustomerLookupComponent', () => {
     tick(250);
   }));
 
-  it('writeValue resolves a readable label via getParty', () => {
+  it('writeValue resolves a readable label via getById', () => {
     component.writeValue('p2');
     expect(component.value()).toBe('p2');
-    expect(getParty).toHaveBeenCalledWith('p2');
+    expect(getById).toHaveBeenCalledWith('p2');
     expect(component.query()).toContain('Blue Ridge Landscaping');
   });
 
@@ -92,7 +91,7 @@ describe('CustomerLookupComponent', () => {
     component.writeValue('');
     expect(component.value()).toBe('');
     expect(component.query()).toBe('');
-    expect(getParty).not.toHaveBeenCalled();
+    expect(getById).not.toHaveBeenCalled();
   });
 
   it('Enter selects the active suggestion', fakeAsync(() => {

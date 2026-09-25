@@ -5,12 +5,18 @@ import { of } from 'rxjs';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { BaysPageComponent } from './bays-page.component';
 import { LocationService } from '../../services/location.service';
+import { LOCATION_LOOKUP_SOURCE } from '../../../../shared/location-picker/location-lookup-source.tokens';
 
 const locationServiceStub = {
-  getAllLocations: vi.fn().mockReturnValue(of([{ id: 'loc-1', name: 'Depot' }])),
   listBays: vi.fn().mockReturnValue(of([{ id: 'bay-1', name: 'Bay 1' }])),
   createBay: vi.fn().mockReturnValue(of({})),
   patchBay: vi.fn().mockReturnValue(of({})),
+};
+
+// Stubs the embedded app-location-picker control's lookup source.
+const locationLookupSourceStub = {
+  getAll: vi.fn().mockReturnValue(of([{ id: 'loc-1', name: 'Depot' }])),
+  getById: vi.fn().mockReturnValue(of(null)),
 };
 
 describe('BaysPageComponent', () => {
@@ -28,6 +34,7 @@ describe('BaysPageComponent', () => {
       providers: [
         provideRouter([]),
         { provide: LocationService, useValue: locationServiceStub },
+        { provide: LOCATION_LOOKUP_SOURCE, useValue: locationLookupSourceStub },
       ],
     }).compileComponents();
 

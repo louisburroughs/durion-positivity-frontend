@@ -5,7 +5,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { WorkexecService } from '../../services/workexec.service';
 import { EstimateResponse, PageState } from '../../models/workexec.models';
-import { CustomerLookupComponent } from '../../../crm/components/customer-lookup/customer-lookup.component';
+import { CustomerLookupComponent } from '../../../../shared/customer-lookup/customer-lookup.component';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 /**

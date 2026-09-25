@@ -3,8 +3,8 @@ import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal, OnInit 
 import { RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
-import { BulkImportService } from '../../services/bulk-import.service';
-import { BulkLoadJob, DomainType, JobStatus } from '../../models/bulk-import.models';
+import { BulkImportService } from '../../../../shared/bulk-import/services/bulk-import.service';
+import { BulkLoadJob, DomainType, JobStatus } from '../../../../shared/bulk-import/models/bulk-import.models';
 
 type PageState = 'idle' | 'loading' | 'ready' | 'empty' | 'error';
 

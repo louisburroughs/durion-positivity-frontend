@@ -4,9 +4,9 @@ import { TranslateModule } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { BulkImportJobDetailPageComponent } from './bulk-import-job-detail-page.component';
-import { BulkImportService } from '../../services/bulk-import.service';
-import { AuditRecordListResponse, BulkLoadJob, BulkLoadRecordAudit } from '../../models/bulk-import.models';
-import { CorrectionSubmitEvent } from '../../components/bulk-import-error-records-table/bulk-import-error-records-table.component';
+import { BulkImportService } from '../../../../shared/bulk-import/services/bulk-import.service';
+import { AuditRecordListResponse, BulkLoadJob, BulkLoadRecordAudit } from '../../../../shared/bulk-import/models/bulk-import.models';
+import { CorrectionSubmitEvent } from '../../../../shared/bulk-import/components/bulk-import-error-records-table/bulk-import-error-records-table.component';
 
 const mockJob: BulkLoadJob = {
   jobId: 'job-001',

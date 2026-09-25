@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import enUS from '../../../../../assets/i18n/en-US.json';
-import { LocationService } from '../../../location/services/location.service';
+import { LOCATION_LOOKUP_SOURCE } from '../../../../shared/location-picker/location-lookup-source.tokens';
 import { Subject, of, throwError } from 'rxjs';
 import { WorkorderWipView } from '../../models/workexec.models';
 import { WorkexecService } from '../../services/workexec.service';
@@ -20,21 +20,21 @@ describe('WipStatusPageComponent', () => {
     { id: 'loc-2', name: 'Raleigh North', city: 'Raleigh', state: 'NC' },
   ];
   const locationServiceStub = {
-    getAllLocations: vi.fn(),
-    getLocationById: vi.fn(),
+    getAll: vi.fn(),
+    getById: vi.fn(),
   };
 
   beforeEach(async () => {
     serviceMock.listActiveWorkorders.mockReset();
-    locationServiceStub.getAllLocations.mockReset().mockReturnValue(of(locations));
-    locationServiceStub.getLocationById.mockReset().mockReturnValue(of(null));
+    locationServiceStub.getAll.mockReset().mockReturnValue(of(locations));
+    locationServiceStub.getById.mockReset().mockReturnValue(of(null));
 
     await TestBed.configureTestingModule({
       imports: [WipStatusPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
         { provide: WorkexecService, useValue: serviceMock },
-        { provide: LocationService, useValue: locationServiceStub },
+        { provide: LOCATION_LOOKUP_SOURCE, useValue: locationServiceStub },
         { provide: ActivatedRoute, useValue: {} },
       ],
     }).compileComponents();
@@ -60,7 +60,7 @@ describe('WipStatusPageComponent', () => {
     const el = fixture.nativeElement as HTMLElement;
     const picker = el.querySelector<HTMLInputElement>('[data-testid="wip-location-picker"] input[role="combobox"]');
 
-    expect(locationServiceStub.getAllLocations).toHaveBeenCalled();
+    expect(locationServiceStub.getAll).toHaveBeenCalled();
     expect(picker).not.toBeNull();
     expect(picker?.placeholder).toBe(enUS.WORKEXEC.WIP.LOCATION.PLACEHOLDER);
     expect(el.querySelector('[data-testid="wip-location-input"]')).toBeNull();

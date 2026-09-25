@@ -10,7 +10,7 @@ import { EstimateListItem } from '../../models/workexec.models';
 import { WorkexecService } from '../../services/workexec.service';
 import { CrmService } from '../../../crm/services/crm.service';
 import { partyLabel } from '../../../crm/util/crm-labels';
-import { CustomerLookupComponent } from '../../../crm/components/customer-lookup/customer-lookup.component';
+import { CustomerLookupComponent } from '../../../../shared/customer-lookup/customer-lookup.component';
 
 @Component({
   selector: 'app-estimate-list-page',

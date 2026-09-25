@@ -6,9 +6,11 @@ import { provideRouter, ActivatedRoute } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { vi } from 'vitest';
+import { of } from 'rxjs';
 import { ApprovalDigitalPageComponent } from './approval-digital-page.component';
 import { BASE_PATH } from '@durion-sdk/workorder';
 import { environment } from '../../../../../environments/environment';
+import { CUSTOMER_LOOKUP_SOURCE } from '../../../../shared/customer-lookup/customer-lookup.tokens';
 
 const BASE = environment.apiBaseUrl;
 const mockRoute = { snapshot: { paramMap: { get: (k: string) => k === 'estimateId' ? 'est-123' : null } } };
@@ -36,6 +38,11 @@ describe('ApprovalDigitalPageComponent [Story 271]', () => {
         provideHttpClientTesting(),
         { provide: ActivatedRoute, useValue: mockRoute },
         { provide: BASE_PATH, useValue: environment.apiBaseUrl },
+        // Stubs the embedded app-customer-lookup control's search source.
+        {
+          provide: CUSTOMER_LOOKUP_SOURCE,
+          useValue: { search: vi.fn().mockReturnValue(of([])), getById: vi.fn().mockReturnValue(of(null)) },
+        },
       ],
     }).compileComponents();
     const translate = TestBed.inject(TranslateService);

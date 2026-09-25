@@ -3,7 +3,7 @@ import { Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { interval, Subscription, switchMap } from 'rxjs';
 import { TranslatePipe } from '@ngx-translate/core';
-import { BulkImportService } from '../../../bulk-import/services/bulk-import.service';
+import { BulkImportService } from '../../../../shared/bulk-import/services/bulk-import.service';
 import {
   ACTIVE_JOB_STATUSES,
   ApproveColumnMappingsRequest,
@@ -12,13 +12,13 @@ import {
   BulkLoadRecordAudit,
   ColumnMappingOverride,
   DomainType,
-} from '../../../bulk-import/models/bulk-import.models';
-import { BulkImportColumnMappingTableComponent } from '../../../bulk-import/components/bulk-import-column-mapping-table/bulk-import-column-mapping-table.component';
-import { BulkImportErrorRecordsTableComponent, CorrectionSubmitEvent } from '../../../bulk-import/components/bulk-import-error-records-table/bulk-import-error-records-table.component';
-import { BulkImportFileDropComponent } from '../../../bulk-import/components/bulk-import-file-drop/bulk-import-file-drop.component';
-import { BulkImportProgressStepperComponent } from '../../../bulk-import/components/bulk-import-progress-stepper/bulk-import-progress-stepper.component';
-import { BulkImportResultsSummaryComponent } from '../../../bulk-import/components/bulk-import-results-summary/bulk-import-results-summary.component';
-import { BulkImportUploadProgressComponent } from '../../../bulk-import/components/bulk-import-upload-progress/bulk-import-upload-progress.component';
+} from '../../../../shared/bulk-import/models/bulk-import.models';
+import { BulkImportColumnMappingTableComponent } from '../../../../shared/bulk-import/components/bulk-import-column-mapping-table/bulk-import-column-mapping-table.component';
+import { BulkImportErrorRecordsTableComponent, CorrectionSubmitEvent } from '../../../../shared/bulk-import/components/bulk-import-error-records-table/bulk-import-error-records-table.component';
+import { BulkImportFileDropComponent } from '../../../../shared/bulk-import/components/bulk-import-file-drop/bulk-import-file-drop.component';
+import { BulkImportProgressStepperComponent } from '../../../../shared/bulk-import/components/bulk-import-progress-stepper/bulk-import-progress-stepper.component';
+import { BulkImportResultsSummaryComponent } from '../../../../shared/bulk-import/components/bulk-import-results-summary/bulk-import-results-summary.component';
+import { BulkImportUploadProgressComponent } from '../../../../shared/bulk-import/components/bulk-import-upload-progress/bulk-import-upload-progress.component';
 
 type WizardState = 'idle' | 'loading' | 'upload' | 'uploading' | 'mapping' | 'progress' | 'results' | 'conflict' | 'error';
 
