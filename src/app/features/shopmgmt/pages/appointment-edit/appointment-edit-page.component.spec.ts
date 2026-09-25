@@ -34,6 +34,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { By } from '@angular/platform-browser';
 import { AppointmentEditPageComponent } from './appointment-edit-page.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { AuthService } from '../../../../core/services/auth.service';
 import { AppointmentService } from '../../services/appointment.service';
 
 // ---------------------------------------------------------------------------
@@ -85,6 +86,18 @@ const appointmentServiceStub = {
   viewSchedule: vi.fn(),
 };
 
+/** Permissions known and both write authorities held, unless a test narrows it (ADR-0040 §6a). */
+const authStub = {
+  known: true,
+  granted: ['appointments:reschedule', 'appointments:cancel'] as readonly string[],
+  permissionsKnown(): boolean {
+    return this.known;
+  },
+  hasAnyPermission(required: readonly string[]): boolean {
+    return required.some(code => this.granted.includes(code));
+  },
+};
+
 // ---------------------------------------------------------------------------
 // Suite
 // ---------------------------------------------------------------------------
@@ -106,6 +119,7 @@ describe('AppointmentEditPageComponent [CAP-137/#332]', () => {
       providers: [
         provideRouter([]),
         { provide: AppointmentService, useValue: appointmentServiceStub },
+        { provide: AuthService, useValue: authStub },
         { provide: ActivatedRoute, useValue: { params: of({ id: 'appt-42' }) } },
       ],
     }).compileComponents();
@@ -117,6 +131,8 @@ describe('AppointmentEditPageComponent [CAP-137/#332]', () => {
 
   afterEach(() => {
     vi.clearAllMocks();
+    authStub.known = true;
+    authStub.granted = ['appointments:reschedule', 'appointments:cancel'];
     TestBed.resetTestingModule();
   });
 
@@ -156,6 +172,73 @@ describe('AppointmentEditPageComponent [CAP-137/#332]', () => {
     expect(buttons.length).toBeGreaterThanOrEqual(2);
   });
 
+  // 5b. write-permission gating (ADR-0040 §6a) — independent of the route's read permission
+  it('disables Reschedule and refuses openReschedule/submitReschedule when appointments:reschedule is not granted', async () => {
+    authStub.granted = ['appointments:cancel'];
+    try {
+      await setup(STUB_SCHEDULED);
+      const rescheduleBtn = fixture.debugElement.queryAll(By.css('.actions-row button'))[0].nativeElement as HTMLButtonElement;
+      expect(rescheduleBtn.disabled).toBe(true);
+
+      component.openReschedule();
+      expect(component.showRescheduleModal()).toBe(false);
+
+      component.rescheduleForm.setValue({
+        scheduledStartDateTime: '2026-05-02T09:00',
+        scheduledEndDateTime: '2026-05-02T10:00',
+        reason: 'CUSTOMER_REQUEST',
+      });
+      component.submitReschedule();
+      expect(appointmentServiceStub.rescheduleAppointment).not.toHaveBeenCalled();
+    } finally {
+      authStub.granted = ['appointments:reschedule', 'appointments:cancel'];
+    }
+  });
+
+  it('disables Cancel and refuses openCancel/submitCancel when appointments:cancel is not granted', async () => {
+    authStub.granted = ['appointments:reschedule'];
+    try {
+      await setup(STUB_SCHEDULED);
+      const cancelBtn = fixture.debugElement.queryAll(By.css('.actions-row button'))[1].nativeElement as HTMLButtonElement;
+      expect(cancelBtn.disabled).toBe(true);
+
+      component.openCancel();
+      expect(component.showCancelModal()).toBe(false);
+
+      component.cancelForm.setValue({ cancellationReason: 'OTHER', notes: '' });
+      component.submitCancel();
+      expect(appointmentServiceStub.cancelAppointment).not.toHaveBeenCalled();
+    } finally {
+      authStub.granted = ['appointments:reschedule', 'appointments:cancel'];
+    }
+  });
+
+  it('splits the two write authorities — granting only appointments:reschedule enables Reschedule but not Cancel', async () => {
+    authStub.granted = ['appointments:reschedule'];
+    try {
+      await setup(STUB_SCHEDULED);
+      const buttons = fixture.debugElement.queryAll(By.css('.actions-row button'));
+      expect((buttons[0].nativeElement as HTMLButtonElement).disabled).toBe(false);
+      expect((buttons[1].nativeElement as HTMLButtonElement).disabled).toBe(true);
+    } finally {
+      authStub.granted = ['appointments:reschedule', 'appointments:cancel'];
+    }
+  });
+
+  it('treats unknown permissions (legacy token, no perm_bits claim) as granted, matching canAccess()', async () => {
+    authStub.known = false;
+    authStub.granted = [];
+    try {
+      await setup(STUB_SCHEDULED);
+      const buttons = fixture.debugElement.queryAll(By.css('.actions-row button'));
+      expect((buttons[0].nativeElement as HTMLButtonElement).disabled).toBe(false);
+      expect((buttons[1].nativeElement as HTMLButtonElement).disabled).toBe(false);
+    } finally {
+      authStub.known = true;
+      authStub.granted = ['appointments:reschedule', 'appointments:cancel'];
+    }
+  });
+
   // 6. .audit-entry items render, translated event + NOT_AVAILABLE actor
   it('renders .audit-entry elements for each audit record, never the raw actor id', async () => {
     await setup();
@@ -183,6 +266,7 @@ describe('AppointmentEditPageComponent [CAP-137/#332]', () => {
       providers: [
         provideRouter([]),
         { provide: AppointmentService, useValue: appointmentServiceStub },
+        { provide: AuthService, useValue: authStub },
         { provide: ActivatedRoute, useValue: { params: of({ id: 'appt-42' }) } },
       ],
     }).compileComponents();
@@ -229,13 +313,11 @@ describe('AppointmentEditPageComponent [CAP-137/#332]', () => {
 
     const modal = fixture.debugElement.query(By.css('.reschedule-modal'));
     expect(modal).toBeNull();
-    // `ModalDialogDirective.ngOnDestroy` (unmodified by this PR) calls the native `close()`, which
-    // is what performs opener-focus restoration per the HTML spec; this asserts that call actually
-    // ran (the dialog is not left dangling open) rather than the element being torn out from under
-    // it. Full restore-to-opener identity was verified against a vanilla `<dialog>` in isolation,
-    // but proved unreliable to assert end-to-end in this Zone.js/Chromium harness — see the PR
-    // description.
     expect(dialogEl.open).toBe(false);
+    // `ModalDialogDirective.ngOnDestroy` restores focus to the element that had it before
+    // `showModal()` ran (ADR-0029 §9) — asserted directly rather than only inferring it from the
+    // dialog being closed.
+    expect(document.activeElement).toBe(openBtn);
   });
 
   // 10. calls rescheduleAppointment with a converted UTC instant on submit
@@ -382,6 +464,7 @@ describe('AppointmentEditPageComponent [CAP-137/#332]', () => {
       providers: [
         provideRouter([]),
         { provide: AppointmentService, useValue: appointmentServiceStub },
+        { provide: AuthService, useValue: authStub },
         { provide: ActivatedRoute, useValue: { params: of({ id: 'appt-42' }) } },
       ],
     }).compileComponents();
@@ -416,6 +499,7 @@ describe('AppointmentEditPageComponent [CAP-137/#332]', () => {
       providers: [
         provideRouter([]),
         { provide: AppointmentService, useValue: appointmentServiceStub },
+        { provide: AuthService, useValue: authStub },
         { provide: ActivatedRoute, useValue: { params: of({ id: 'appt-42' }) } },
       ],
     }).compileComponents();

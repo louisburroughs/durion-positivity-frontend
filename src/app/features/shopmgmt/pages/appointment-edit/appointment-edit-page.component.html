@@ -42,12 +42,17 @@
     </div>
   }
   <div class="actions-row">
-    @if (canModify()) {
+    @if (canReschedule()) {
       <button class="btn-primary" (click)="openReschedule()">{{ 'SHOPMGMT.APPOINTMENT_EDIT.RESCHEDULE' | translate }}</button>
-      <button class="btn-danger" (click)="openCancel()">{{ 'SHOPMGMT.APPOINTMENT_EDIT.CANCEL_APPOINTMENT' | translate }}</button>
     } @else {
       <button class="btn-primary" disabled>{{ 'SHOPMGMT.APPOINTMENT_EDIT.RESCHEDULE' | translate }}</button>
+    }
+    @if (canCancel()) {
+      <button class="btn-danger" (click)="openCancel()">{{ 'SHOPMGMT.APPOINTMENT_EDIT.CANCEL_APPOINTMENT' | translate }}</button>
+    } @else {
       <button class="btn-danger" disabled>{{ 'SHOPMGMT.APPOINTMENT_EDIT.CANCEL_APPOINTMENT' | translate }}</button>
+    }
+    @if (!canModify()) {
       <span class="actions-helper-text">
         {{ 'SHOPMGMT.APPOINTMENT_EDIT.CANNOT_MODIFY' | translate: { status: (statusKey() | translate) } }}
       </span>
