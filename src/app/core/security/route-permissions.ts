@@ -541,16 +541,11 @@ export const BILLING_PAGE = {
  * `!permissionsKnown() || hasAnyPermission(...)`) and denies once permissions are known, matching
  * the backend's own behavior for every caller today (durion-positivity-backend#2215).
  *
- * `reprintReceipt` itself enforces no dedicated authority below its 5-reprint cap
- * (`isAuthenticated()` only; `SUPERVISOR_OVERRIDE` — also uncatalogued — applies only past the cap,
- * which this page cannot read in advance since there is no receipt-detail GET,
- * durion-positivity-backend#2214). `receiptReprint` reuses `GENERATE_RECEIPT`, the one named write
- * authority this controller does enforce, as the closest available frontend guard until the backend
- * registers a reprint-specific code.
+ * `reprintReceipt` has no gate here: below its 5-reprint cap the backend needs only an authenticated
+ * caller (durion-positivity-backend#2226).
  */
 export const BILLING_SECTION = {
   refundExecute: ['REFUND_PAYMENT'],
-  receiptReprint: ['GENERATE_RECEIPT'],
 } as const satisfies Record<string, readonly string[]>;
 
 /** `/app/order/*` — carts, lines, price overrides, cancellation. */

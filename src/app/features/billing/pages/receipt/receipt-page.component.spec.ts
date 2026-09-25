@@ -245,8 +245,8 @@ describe('ReceiptPageComponent', () => {
     });
   });
 
-  describe('reprint permission gate (ADR-0040 §6a)', () => {
-    it('disables both reprint controls and refuses the method when the permission is denied', async () => {
+  describe('reprint needs no named permission (backend: authenticated below the cap)', () => {
+    it('offers reprint to a user whose known permissions include no billing codes', async () => {
       TestBed.resetTestingModule();
       authStub.known = true;
       authStub.granted = [];
@@ -264,35 +264,9 @@ describe('ReceiptPageComponent', () => {
       component = fixture.componentInstance;
       fixture.detectChanges();
 
-      expect(component.canReprint()).toBe(false);
-      expect(fixture.nativeElement.querySelector('[data-testid="reprint-permission-denied"]')).toBeTruthy();
-      expect(fixture.nativeElement.querySelector('.receipt__reprint-btn').disabled).toBe(true);
-
+      billingTransportStub.reprintReceipt.mockReturnValue(of({ receiptId: 'rcpt-001', reference: 'R-1', status: 'ISSUED' }));
       component.reprint();
-
-      expect(billingTransportStub.reprintReceipt).not.toHaveBeenCalled();
-    });
-
-    it('follows the unknown-permission (legacy token) fallback and stays open', async () => {
-      TestBed.resetTestingModule();
-      authStub.known = false;
-      authStub.granted = [];
-      await TestBed.configureTestingModule({
-        imports: [ReceiptPageComponent, TranslateModule.forRoot()],
-        providers: [
-          provideRouter([]),
-          { provide: BillingTransportService, useValue: billingTransportStub },
-          { provide: ActivatedRoute, useValue: routeStubWith('inv-001', 'rcpt-001') },
-          { provide: AuthService, useValue: authStub },
-        ],
-      }).compileComponents();
-
-      fixture = TestBed.createComponent(ReceiptPageComponent);
-      component = fixture.componentInstance;
-      fixture.detectChanges();
-
-      expect(component.canReprint()).toBe(true);
-      expect(fixture.nativeElement.querySelector('[data-testid="reprint-permission-denied"]')).toBeNull();
+      expect(billingTransportStub.reprintReceipt).toHaveBeenCalledWith('inv-001', 'rcpt-001');
     });
   });
 });

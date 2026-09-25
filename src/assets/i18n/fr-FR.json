@@ -6723,8 +6723,7 @@
         "GENERATE": "Impossible de generer le recu. Veuillez reessayer.",
         "REPRINT": "Impossible de reimprimer le recu. Veuillez reessayer.",
         "MISSING_INVOICE": "Aucun ID de facture fourni.",
-        "NOT_AVAILABLE": "Ce reçu n’est pas disponible à l’affichage. Utilisez la réimpression pour en obtenir une copie.",
-        "REPRINT_PERMISSION_DENIED": "Vous n'avez pas la permission de réimprimer ce reçu."
+        "NOT_AVAILABLE": "Ce reçu n’est pas disponible à l’affichage. Utilisez la réimpression pour en obtenir une copie."
       }
     },
     "INVOICE_STATUS": {

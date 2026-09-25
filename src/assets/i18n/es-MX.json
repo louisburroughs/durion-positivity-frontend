@@ -6723,8 +6723,7 @@
         "GENERATE": "No se pudo generar el recibo. Inténtelo de nuevo.",
         "REPRINT": "No se pudo reimprimir el recibo. Inténtelo de nuevo.",
         "MISSING_INVOICE": "No se proporciónó ID de factura.",
-        "NOT_AVAILABLE": "Este recibo no está disponible para ver. Use reimprimir para obtener una copia.",
-        "REPRINT_PERMISSION_DENIED": "No tiene permiso para reimprimir este recibo."
+        "NOT_AVAILABLE": "Este recibo no está disponible para ver. Use reimprimir para obtener una copia."
       }
     },
     "INVOICE_STATUS": {
