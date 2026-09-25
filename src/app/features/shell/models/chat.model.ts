@@ -113,7 +113,9 @@ export interface ChatConversation {
   readonly title: string;
   /** First line of the latest assistant turn, for the history rail. */
   readonly preview: string;
+  /** @clientGenerated — set locally by ChatStateService.ensureConversation(), never from the backend. */
   readonly createdAt: Date;
+  /** @clientGenerated — set locally alongside createdAt; never from the backend. */
   readonly updatedAt: Date;
   readonly pinned: boolean;
 }

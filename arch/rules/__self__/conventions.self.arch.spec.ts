@@ -154,6 +154,20 @@ describe('[self] CON-07 server-generated timestamp fields are readonly, optional
     expect(compliant).toEqual([]);
   });
 
+  it('a field tagged @clientGenerated is exempt even though it is required and untagged with @serverGenerated', () => {
+    const exempt = con07Finder({
+      path: fx('features/fxcon/models/fxcon-timestamps.models.ts'),
+      content: [
+        'export interface FxconRecord {',
+        '  readonly id: string;',
+        '  /** @clientGenerated - set locally, never read from the backend. */',
+        '  readonly createdAt: string;',
+        '}',
+      ].join('\n'),
+    });
+    expect(exempt).toEqual([]);
+  });
+
   it('a filter/request field with the same name but not in models/** is out of the rule\'s file scope (subject, not tested here)', () => {
     // The subject regex (selectors.models) is what keeps request/filter DTOs living outside models/**
     // out of scope; the finder itself only looks at property names, which is exercised above.

@@ -1559,7 +1559,8 @@
         "BILLING_TERMS_REQUIRED": "Les conditions de facturation sont requises.",
         "CLIPBOARD_UNSUPPORTED": "La copie dans le presse-papiers n'est pas prise en charge dans cet environnement. Copiez l'identifiant manuellement.",
         "CLIPBOARD_FAILED": "Impossible de copier l'identifiant de la partie dans le presse-papiers. Copiez-le manuellement.",
-        "CREATE_FAILED": "Échec de la création du compte ({{status}}). Veuillez réessayer."
+        "CREATE_FAILED": "Échec de la création du compte ({{status}}). Veuillez réessayer.",
+        "DUPLICATE_CHECK_FAILED": "Impossible de vérifier les comptes en double. Veuillez réessayer."
       }
     },
     "MERGE_PARTIES": {

@@ -105,7 +105,8 @@ export interface SupplierFleetAuthorization {
   authorizedAmount: number | null;
   /** ISO-4217 code as delivered. Never localised into a symbol. */
   currency: string | null;
-  readonly requestedAt: string | null;
+  /** @serverGenerated */
+  readonly requestedAt?: string | null;
   readonly decidedAt: string | null;
   /** Null when the backend sends a token this model does not know. */
   completionApproval: SupplierFleetCompletionApprovalState | null;

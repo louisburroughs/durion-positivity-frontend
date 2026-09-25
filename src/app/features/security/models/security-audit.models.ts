@@ -34,5 +34,6 @@ export interface AuditExportJob {
   jobId: string;
   status: string;
   downloadUrl?: string;
+  /** @serverGenerated */
   readonly completedAt?: string;
 }

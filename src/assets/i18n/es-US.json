@@ -1559,7 +1559,8 @@
         "BILLING_TERMS_REQUIRED": "Las condiciones de facturación son obligatorias.",
         "CLIPBOARD_UNSUPPORTED": "Copiar al portapapeles no es compatible en este entorno. Copie el ID manualmente.",
         "CLIPBOARD_FAILED": "No se pudo copiar el ID de la parte al portapapeles. Cópielo manualmente.",
-        "CREATE_FAILED": "No se pudo crear la cuenta ({{status}}). Inténtelo de nuevo."
+        "CREATE_FAILED": "No se pudo crear la cuenta ({{status}}). Inténtelo de nuevo.",
+        "DUPLICATE_CHECK_FAILED": "No se pudo verificar cuentas duplicadas. Inténtelo de nuevo."
       }
     },
     "MERGE_PARTIES": {

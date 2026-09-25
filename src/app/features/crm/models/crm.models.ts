@@ -37,6 +37,7 @@ export interface CreateCommercialAccountResponse {
   partyId: string;
   legalName: string;
   dba?: string;
+  /** @serverGenerated */
   readonly createdAt?: string;
   readonly createdBy?: string;
 }
@@ -53,6 +54,7 @@ export interface MergePartiesResponse {
   losingPartyId: string;
   mergedPartyAlias?: string;
   status?: string;
+  /** @serverGenerated */
   readonly completedAt?: string;
 }
 
@@ -109,6 +111,7 @@ export interface CreatePersonResponse {
   personId: string;
   firstName: string;
   lastName: string;
+  /** @serverGenerated */
   readonly createdAt?: string;
   readonly createdBy?: string;
 }
@@ -136,6 +139,7 @@ export interface CreatePartyRelationshipResponse {
   roles?: RelationshipRole[];
   effectiveStartDate?: string;
   effectiveEndDate?: string;
+  /** @serverGenerated */
   readonly createdAt?: string;
   previousPrimaryDemoted?: boolean;
 }
@@ -228,6 +232,7 @@ export interface PartyDetail {
   vehicleCount?: number;
   vehicles?: VehicleRef[];
   mergedIntoPartyId?: string;
+  /** @serverGenerated */
   readonly createdAt?: string;
   readonly createdBy?: string;
 }
@@ -260,7 +265,9 @@ export interface BillingRules {
   paymentTerms: string;
   creditLimit?: number;
   notes?: string;
+  /** @serverGenerated */
   readonly createdAt?: string;
+  /** @serverGenerated */
   readonly updatedAt?: string;
 }
 
