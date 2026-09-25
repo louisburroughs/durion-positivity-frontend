@@ -79,7 +79,10 @@ export class CreateCommercialAccountComponent implements OnInit {
           this.createAccount();
         }
       },
-      error: () => this.createAccount(),
+      error: () => {
+        this.state.set('error');
+        this.serverError.set(this.translate.instant('CRM.CREATE_COMMERCIAL.ERROR.DUPLICATE_CHECK_FAILED'));
+      },
     });
   }
 

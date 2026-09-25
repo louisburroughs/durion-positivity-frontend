@@ -5,8 +5,10 @@ export interface SecurityRole {
   description?: string;
   status?: string;
   grantedPermissions?: SecurityPermission[];
-  createdAt?: string;
-  updatedAt?: string;
+  /** @serverGenerated */
+  readonly createdAt?: string;
+  /** @serverGenerated */
+  readonly updatedAt?: string;
 }
 
 export interface SecurityPermission {
@@ -29,7 +31,8 @@ export interface RoleAssignment {
   id: string;
   userId: string;
   roleName: string;
-  createdAt?: string;
+  /** @serverGenerated */
+  readonly createdAt?: string;
 }
 
 export interface SecurityApiError {

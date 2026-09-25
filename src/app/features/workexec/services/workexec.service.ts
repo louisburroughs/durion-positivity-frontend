@@ -287,6 +287,19 @@ export class WorkexecService {
   }
 
   /**
+   * Adapts local SubstitutePartRequest to SDK SubstitutePartRequest. Field names match
+   * 1:1 (originalPartId/substitutePartId); `reason` is required by the SDK but optional
+   * locally, so an absent reason defaults to ''.
+   */
+  private toSdkSubstitutePartRequest(r: SubstitutePartRequest): import('@durion-sdk/workorder').SubstitutePartRequest {
+    return {
+      originalPartId: r.originalPartId,
+      substitutePartId: r.substitutePartId,
+      reason: r.reason ?? '',
+    };
+  }
+
+  /**
    * Adapts local ConsumePickedItemsRequest (lines with pickedItemId/quantity) to SDK
    * ConsumePickedItemsRequest (items with pickTaskId/quantityToConsume).
    */
@@ -1094,11 +1107,11 @@ export class WorkexecService {
    * Story 221
    */
   substitutePart(workorderId: string, request: SubstitutePartRequest, idempotencyKey?: string): Observable<PartUsageResponse> {
-    return this.api.post<PartUsageResponse>(
-      `/v1/workorders/${workorderId}/parts/substitute`,
-      request,
-      this.idempotencyOptions(idempotencyKey),
-    );
+    return this.workorderPartAdjustments.substitutePart(
+      workorderId,
+      this.toSdkSubstitutePartRequest(request),
+      idempotencyKey,
+    ) as Observable<PartUsageResponse>;
   }
 
   /**
@@ -1174,6 +1187,15 @@ export class WorkexecService {
     return this.workorderPickedItems.consumeWorkorderPickedItems(workorderId, this.toSdkConsumePickedItemsRequest(request)) as unknown as Observable<ConsumptionResult>;
   }
 
+  // SDK follow-up: WorkorderPickFacadeService now models scan-resolve and confirm at
+  // pick-task granularity (`resolvePickScan(workorderId, pickTaskId, {scannedSkuId,
+  // scannedLocationId})` -> single matchStatus verdict; `confirmPickLine(workorderId,
+  // pickTaskId, pickLineId, ...)` -> WorkorderPickTaskResponse), and there is no
+  // whole-list `completePickList` — only a per-task `completePickTask`. The local
+  // request/response shapes here (scanValue -> PickExecuteLine[], pickLineId+quantity
+  // -> single PickExecuteLine, list-wide complete) are list-level and would need a
+  // page-level redesign to track pickTaskId per line before this can migrate safely.
+  // Left on ApiBaseService.
   resolvePickScan(workorderId: string, req: ScanResolveRequest): Observable<PickExecuteLine[]> {
     return this.api.post<PickExecuteLine[]>(
       `/workexec/v1/workorders/${encodeURIComponent(workorderId)}/picks/resolve-scan`,
@@ -1283,6 +1305,10 @@ export class WorkexecService {
   /**
    * POST /v1/workorders/{workorderId}/finalize
    * Creates billable scope snapshot (Story 216).
+   *
+   * SDK gap: no `finalize`/billable-scope-snapshot operation exists in
+   * `@durion-sdk/workorder` (distinct from `requestInvoiceFinalization`'s
+   * `/invoice/finalize`, also absent from the SDK below). Left on ApiBaseService.
    */
   finalizeWorkorder(
     workorderId: string,

@@ -154,7 +154,7 @@ export const con04 = (p: Project): ArchRule =>
     {
       id: 'CON-04',
       title: 'a @Component under pages/**|components/** follows the four-file convention: .ts/.html/.css/.spec.ts (CLAUDE.md, ADR-0035)',
-      mode: 'ratchet',
+      mode: 'enforce',
     },
     p,
     { subject: selectors.ui(p), finder: con04Finder },
@@ -231,11 +231,16 @@ export const con07Finder = (f: Source): string[] => {
   const findings: string[] = [];
   walk(sf, (n) => {
     if (!ts.isPropertySignature(n) || !n.name || !ts.isIdentifier(n.name) || !SERVER_TIMESTAMP_FIELDS.has(n.name.text)) return;
+    const trivia = leadingTrivia(sf, n);
+    // A field tagged @clientGenerated is, despite the name, set locally by the feature and never
+    // read from or sent to the backend — it is out of scope for a server-provenance rule (ADR-0034
+    // only governs fields the server produces). See ChatConversation.createdAt/updatedAt.
+    if (trivia.includes('@clientGenerated')) return;
     const iface = ts.isInterfaceDeclaration(n.parent) ? n.parent.name.text : 'anonymous';
     const isReadonly = n.modifiers?.some((m) => m.kind === ts.SyntaxKind.ReadonlyKeyword);
     const isOptional = !!n.questionToken;
     if (!isReadonly || !isOptional) findings.push(`${iface}.${n.name.text} :: not readonly/optional`);
-    if (!leadingTrivia(sf, n).includes('@serverGenerated')) findings.push(`${iface}.${n.name.text} :: missing @serverGenerated`);
+    if (!trivia.includes('@serverGenerated')) findings.push(`${iface}.${n.name.text} :: missing @serverGenerated`);
   });
   return findings;
 };
@@ -245,7 +250,7 @@ export const con07 = (p: Project): ArchRule =>
     {
       id: 'CON-07',
       title: 'server-generated timestamp fields in models/** interfaces are readonly, optional, and carry @serverGenerated (ADR-0034 §1, §3)',
-      mode: 'ratchet',
+      mode: 'enforce',
     },
     p,
     { subject: selectors.models(p), finder: con07Finder },

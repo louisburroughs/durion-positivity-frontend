@@ -201,7 +201,7 @@ permanent allowlist.
 | SDK-05 | **No hardcoded backend paths.** No string or template literal in `src/app/**` matching `^/?(api/)?[a-z][a-z-]*/v\d+(/|$)` or `^/v\d+/`, except `app.config.ts` (SDK `basePath` wiring) and `api-base.service.ts` | 0041 §2 | `adhereTo` on `stringLiterals` (comments excluded) | 44 literals in 13 files (12 `ApiBaseService`-backed services + `invoice-detail-page`) | Ratchet; shrinks with SDK-03 |
 | SDK-06 | `environment.apiBaseUrl` may be read only in `app.config.ts` and `api-base.service.ts` | 0041 §3–4 | `adhereTo`: property-access `apiBaseUrl` | 5 reads in 4 files (bulk-import tus URL, invoice-detail page, accounting export, shell `GATEWAY_BASE_URL`) | Ratchet |
 | SDK-07 | No absolute `http(s)://` literals in `src/app/**` (`server.ts` is out of scope) | 0041 | `adhereTo` on `stringLiterals` | 0 | Enforce |
-| SDK-08 | `@durion-sdk/*` is imported from the package root only, with no deep `@durion-sdk/x/…` paths | 0041 §1 (generated surface is the contract) | `adhereTo` on `importSpecifiers` | 0 | Enforce |
+| SDK-08 | `@durion-sdk/*` is imported from the package root only, with no deep `@durion-sdk/x/…` paths, except the `/configuration` entry point imported in `app.config.ts` (#334) | 0041 §1 (generated surface is the contract) | `adhereTo` on `importSpecifiers` | 0 | Enforce |
 | SDK-09 | `@durion-sdk/*` in `pages/**`/`components/**` means page-level SDK injection is a "temporary shortcut" | 0041 §3 (SHOULD) | `adhereTo` | 20 files (25 imports) | **Warn** until SDK-03 < 5, then Ratchet (§8.2) |
 | SDK-10 | `@durion-sdk/tenant` may be imported only under `features/platform/**` | 0062 §7 | `adhereTo` | 0 | Enforce |
 | SDK-11 | `window.location.origin` must not be used to build URLs | 0041 §2 | `adhereTo` | 2 in 1 file (`bulk-import.service`) | Ratchet |
@@ -528,13 +528,19 @@ graph cache. Without it the run took 64 s.
   | SDK-06 | 4 | #350 |
   | SDK-11 | 1 | #350 |
   | TEN-08 | 6 | #339 |
-  | CON-04 | 9 | #345 |
-  | CON-07 | 97 | #346 |
 
 - **Warn:** SDK-09 (20), CON-03 (83), PAT-06, I18N-09.
 - **Enforce:** everything else, including the rules that started as Ratchet but reached zero
-  on this branch: TEN-07, SEC-08, SEC-09, CON-02, PAT-05, I18N-05, I18N-07, and (on the
-  `chore/arch-hygiene` follow-up branch) CON-01, CON-09, PAT-02, PAT-03, PAT-04 and PAT-08.
+  on this branch: TEN-07, SEC-08, SEC-09, CON-02, PAT-05, I18N-05 and I18N-07, plus CON-01, CON-09, PAT-02, PAT-03, PAT-04 and PAT-08
+  (`chore/arch-hygiene`, #348/#349/#351/#352) and two promoted on `test/specs-and-server-fields`:
+  - **CON-04** (#345) — the 9 remaining components got co-located specs testing real behavior
+    (state transitions, error paths, key interactions); baseline emptied and deleted.
+  - **CON-07** (#346) — 95 of the 97 entries across 17 `models/**` files now carry `readonly`, `?`,
+    and `@serverGenerated`. `ChatConversation.createdAt`/`updatedAt` are client-set (see
+    `ChatStateService.ensureConversation()`), not server-provenance, so they carry `@clientGenerated`
+    instead and stay required — the finder now recognizes that tag as an exemption; the null-safe
+    fallbacks briefly added to `chat-history.store.ts`/`chat-state.service.ts` for the (incorrect)
+    optional case were reverted. Baseline emptied and deleted.
 
 ### 12.3 Defects fixed on this branch
 

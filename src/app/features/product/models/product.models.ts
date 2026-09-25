@@ -56,6 +56,8 @@ export interface UomConversion {
   toUom: string;
   conversionFactor: number;
   active: boolean;
-  createdAt: string;
-  updatedAt: string;
+  /** @serverGenerated */
+  readonly createdAt?: string;
+  /** @serverGenerated */
+  readonly updatedAt?: string;
 }

@@ -203,7 +203,8 @@ export interface PostingRuleSet {
   eventType?: string;
   description?: string;
   versions?: PostingRuleVersion[];
-  createdAt?: string;
+  /** @serverGenerated */
+  readonly createdAt?: string;
   createdBy?: string;
   modifiedAt?: string;
   modifiedBy?: string;
@@ -215,7 +216,8 @@ export interface PostingRuleSetListItem {
   eventType?: string;
   latestVersionNumber?: number;
   latestState?: RuleSetStatus;
-  updatedAt?: string;
+  /** @serverGenerated */
+  readonly updatedAt?: string;
   updatedBy?: string;
 }
 
@@ -382,7 +384,8 @@ export interface VendorPaymentResult {
   glPostedAt?: string;
   glPostError?: string;
   memo?: string;
-  createdAt?: string;
+  /** @serverGenerated */
+  readonly createdAt?: string;
   createdBy?: string;
   allocations?: Array<{
     vendorBillId?: string;
