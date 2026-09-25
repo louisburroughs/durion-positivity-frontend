@@ -6656,6 +6656,7 @@
         "CAPTURE": "Autorizar y capturar",
         "VOID": "Anular autorización",
         "REFUND": "Procesar reembolso",
+        "FULL_REFUND": "Reembolsar saldo completo",
         "PRINT_RECEIPT": "Imprimir recibo"
       },
       "MODE": {
@@ -6679,14 +6680,21 @@
         "TITLE": "Reembolsar pago",
         "REASON_LABEL": "Motivo",
         "AUTHORITY_LABEL": "Código de autorización",
-        "AMOUNT_LABEL": "Importe del reembolso (obligatorio)"
+        "AMOUNT_LABEL": "Importe del reembolso (obligatorio)",
+        "BALANCE_LOADING": "Cargando saldo reembolsable...",
+        "CAPTURED_LABEL": "Importe capturado",
+        "PRIOR_REFUNDS_LABEL": "Ya reembolsado",
+        "BALANCE_LABEL": "Saldo reembolsable"
       },
       "ERROR": {
         "CAPTURE": "No se pudo procesar el pago. Inténtelo de nuevo.",
         "VOID": "No se pudo anular la autorización. Inténtelo de nuevo.",
         "REFUND": "No se pudo procesar el reembolso. Inténtelo de nuevo.",
         "MISSING_IDS": "Referencia de pago o factura no válida.",
-        "REFUND_AMOUNT_REQUIRED": "Ingrese un importe de reembolso."
+        "REFUND_AMOUNT_REQUIRED": "Ingrese un importe de reembolso mayor que cero.",
+        "REFUND_AMOUNT_EXCEEDS_BALANCE": "El importe del reembolso no puede superar el saldo reembolsable.",
+        "REFUND_BALANCE_LOAD": "No se pudo cargar el saldo reembolsable.",
+        "REFUND_PERMISSION_DENIED": "No tiene permiso para reembolsar este pago."
       }
     },
     "RECEIPT": {
@@ -6715,7 +6723,8 @@
         "GENERATE": "No se pudo generar el recibo. Inténtelo de nuevo.",
         "REPRINT": "No se pudo reimprimir el recibo. Inténtelo de nuevo.",
         "MISSING_INVOICE": "No se proporciónó ID de factura.",
-        "NOT_AVAILABLE": "Este recibo no está disponible para ver. Use reimprimir para obtener una copia."
+        "NOT_AVAILABLE": "Este recibo no está disponible para ver. Use reimprimir para obtener una copia.",
+        "REPRINT_PERMISSION_DENIED": "No tiene permiso para reimprimir este recibo."
       }
     },
     "INVOICE_STATUS": {

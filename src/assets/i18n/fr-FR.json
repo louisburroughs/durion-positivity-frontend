@@ -6656,6 +6656,7 @@
         "CAPTURE": "Autoriser et capturer",
         "VOID": "Annuler l'autorisation",
         "REFUND": "Traiter le remboursement",
+        "FULL_REFUND": "Rembourser le solde complet",
         "PRINT_RECEIPT": "Imprimer le reçu"
       },
       "MODE": {
@@ -6679,14 +6680,21 @@
         "TITLE": "Rembourser le paiement",
         "REASON_LABEL": "Raison",
         "AUTHORITY_LABEL": "Code d'autorisation",
-        "AMOUNT_LABEL": "Montant du remboursement (obligatoire)"
+        "AMOUNT_LABEL": "Montant du remboursement (obligatoire)",
+        "BALANCE_LOADING": "Chargement du solde remboursable...",
+        "CAPTURED_LABEL": "Montant capturé",
+        "PRIOR_REFUNDS_LABEL": "Déjà remboursé",
+        "BALANCE_LABEL": "Solde remboursable"
       },
       "ERROR": {
         "CAPTURE": "Impossible de traiter le paiement. Veuillez réessayer.",
         "VOID": "Impossible d'annuler l'autorisation. Veuillez réessayer.",
         "REFUND": "Impossible de traiter le remboursement. Veuillez réessayer.",
         "MISSING_IDS": "Référence de paiement ou de facture invalide.",
-        "REFUND_AMOUNT_REQUIRED": "Saisissez un montant de remboursement."
+        "REFUND_AMOUNT_REQUIRED": "Saisissez un montant de remboursement supérieur à zéro.",
+        "REFUND_AMOUNT_EXCEEDS_BALANCE": "Le montant du remboursement ne peut pas dépasser le solde remboursable.",
+        "REFUND_BALANCE_LOAD": "Impossible de charger le solde remboursable.",
+        "REFUND_PERMISSION_DENIED": "Vous n'avez pas la permission de rembourser ce paiement."
       }
     },
     "RECEIPT": {
@@ -6715,7 +6723,8 @@
         "GENERATE": "Impossible de generer le recu. Veuillez reessayer.",
         "REPRINT": "Impossible de reimprimer le recu. Veuillez reessayer.",
         "MISSING_INVOICE": "Aucun ID de facture fourni.",
-        "NOT_AVAILABLE": "Ce reçu n’est pas disponible à l’affichage. Utilisez la réimpression pour en obtenir une copie."
+        "NOT_AVAILABLE": "Ce reçu n’est pas disponible à l’affichage. Utilisez la réimpression pour en obtenir une copie.",
+        "REPRINT_PERMISSION_DENIED": "Vous n'avez pas la permission de réimprimer ce reçu."
       }
     },
     "INVOICE_STATUS": {

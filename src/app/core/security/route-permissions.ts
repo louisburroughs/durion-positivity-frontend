@@ -526,6 +526,33 @@ export const BILLING_PAGE = {
   invoiceView: ['invoice:invoice:view'],
 } as const satisfies Record<string, readonly string[]>;
 
+/**
+ * Write controls *inside* `/app/billing` pages, as opposed to the page gate in {@link BILLING_PAGE}.
+ *
+ * `PaymentReversalServiceImpl.refundPayment` and `ReceiptServiceImpl` (`pos-invoice`, verified
+ * against backend origin/main) enforce `SecurityContextHelper.hasAuthority(...)` inside the
+ * service body rather than a `@PreAuthorize` annotation, so both endpoints' generated
+ * `x-required-permissions` in `pos-invoice/openapi.yaml` read only `AUTHENTICATED`, and neither raw
+ * authority below (`REFUND_PAYMENT`, `GENERATE_RECEIPT`) has an entry in the `PermissionCode`
+ * catalog that backs `PERMISSION_BY_BIT` — a real gap between the bit catalog and this module's own
+ * authorization, not one this frontend PR can close. These are the literal strings the backend
+ * checks (ADR-0040 §6a.2), used here even though no `perm_bits` token can currently decode to a
+ * grant for them; the gate still follows the standard unknown-permission fallback (§6a.3:
+ * `!permissionsKnown() || hasAnyPermission(...)`) and denies once permissions are known, matching
+ * the backend's own behavior for every caller today (durion-positivity-backend#2215).
+ *
+ * `reprintReceipt` itself enforces no dedicated authority below its 5-reprint cap
+ * (`isAuthenticated()` only; `SUPERVISOR_OVERRIDE` — also uncatalogued — applies only past the cap,
+ * which this page cannot read in advance since there is no receipt-detail GET,
+ * durion-positivity-backend#2214). `receiptReprint` reuses `GENERATE_RECEIPT`, the one named write
+ * authority this controller does enforce, as the closest available frontend guard until the backend
+ * registers a reprint-specific code.
+ */
+export const BILLING_SECTION = {
+  refundExecute: ['REFUND_PAYMENT'],
+  receiptReprint: ['GENERATE_RECEIPT'],
+} as const satisfies Record<string, readonly string[]>;
+
 /** `/app/order/*` — carts, lines, price overrides, cancellation. */
 export const ORDER_PAGE = {
   cartCreate: ['order:order:create'],

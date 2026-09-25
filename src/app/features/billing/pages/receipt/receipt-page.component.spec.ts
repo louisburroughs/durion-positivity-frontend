@@ -3,9 +3,12 @@ import { ActivatedRoute, provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { AuthService } from '../../../../core/services/auth.service';
 import { ReceiptRef } from '../../models/billing.models';
 import { BillingTransportService } from '../../services/billing-transport.service';
 import { ReceiptPageComponent } from './receipt-page.component';
+
+const GENERATE_RECEIPT = 'GENERATE_RECEIPT';
 
 const receiptFixture: ReceiptRef = {
   receiptId: 'rcpt-001',
@@ -44,9 +47,23 @@ describe('ReceiptPageComponent', () => {
     reprintReceipt: vi.fn(),
   };
 
+  /** Permissions known, reprint authority held, unless a test narrows this before `setup()`. */
+  const authStub = {
+    known: true,
+    granted: [GENERATE_RECEIPT] as readonly string[],
+    permissionsKnown(): boolean {
+      return this.known;
+    },
+    hasAnyPermission(required: readonly string[]): boolean {
+      return required.some(code => this.granted.includes(code));
+    },
+  };
+
   beforeEach(async () => {
     billingTransportStub.generateReceipt.mockReset();
     billingTransportStub.reprintReceipt.mockReset();
+    authStub.known = true;
+    authStub.granted = [GENERATE_RECEIPT];
 
     await TestBed.configureTestingModule({
       imports: [ReceiptPageComponent, TranslateModule.forRoot()],
@@ -54,6 +71,7 @@ describe('ReceiptPageComponent', () => {
         provideRouter([]),
         { provide: BillingTransportService, useValue: billingTransportStub },
         { provide: ActivatedRoute, useValue: routeStubWith('inv-001', 'rcpt-001') },
+        { provide: AuthService, useValue: authStub },
       ],
     }).compileComponents();
   });
@@ -99,6 +117,7 @@ describe('ReceiptPageComponent', () => {
         provideRouter([]),
         { provide: BillingTransportService, useValue: billingTransportStub },
         { provide: ActivatedRoute, useValue: routeStubWith('inv-001', null) },
+        { provide: AuthService, useValue: authStub },
       ],
     }).compileComponents();
 
@@ -120,6 +139,7 @@ describe('ReceiptPageComponent', () => {
         { provide: BillingTransportService, useValue: billingTransportStub },
         // No receiptId in the route so ngOnInit leaves state 'idle' instead of pre-empting it.
         { provide: ActivatedRoute, useValue: routeStubWith('inv-001', null) },
+        { provide: AuthService, useValue: authStub },
       ],
     }).compileComponents();
     billingTransportStub.generateReceipt.mockReturnValue(of(receiptFixture));
@@ -184,6 +204,7 @@ describe('ReceiptPageComponent', () => {
         provideRouter([]),
         { provide: BillingTransportService, useValue: billingTransportStub },
         { provide: ActivatedRoute, useValue: routeStubWith(null, null) },
+        { provide: AuthService, useValue: authStub },
       ],
     }).compileComponents();
 
@@ -207,6 +228,7 @@ describe('ReceiptPageComponent', () => {
           provideRouter([]),
           { provide: BillingTransportService, useValue: billingTransportStub },
           { provide: ActivatedRoute, useValue: routeStubWith('', 'rcpt-001') },
+          { provide: AuthService, useValue: authStub },
         ],
       }).compileComponents();
     });
@@ -220,6 +242,57 @@ describe('ReceiptPageComponent', () => {
       expect(component.errorKey()).toBe('BILLING.RECEIPT.ERROR.MISSING_INVOICE');
       expect(billingTransportStub.generateReceipt).not.toHaveBeenCalled();
       expect(billingTransportStub.reprintReceipt).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('reprint permission gate (ADR-0040 §6a)', () => {
+    it('disables both reprint controls and refuses the method when the permission is denied', async () => {
+      TestBed.resetTestingModule();
+      authStub.known = true;
+      authStub.granted = [];
+      await TestBed.configureTestingModule({
+        imports: [ReceiptPageComponent, TranslateModule.forRoot()],
+        providers: [
+          provideRouter([]),
+          { provide: BillingTransportService, useValue: billingTransportStub },
+          { provide: ActivatedRoute, useValue: routeStubWith('inv-001', 'rcpt-001') },
+          { provide: AuthService, useValue: authStub },
+        ],
+      }).compileComponents();
+
+      fixture = TestBed.createComponent(ReceiptPageComponent);
+      component = fixture.componentInstance;
+      fixture.detectChanges();
+
+      expect(component.canReprint()).toBe(false);
+      expect(fixture.nativeElement.querySelector('[data-testid="reprint-permission-denied"]')).toBeTruthy();
+      expect(fixture.nativeElement.querySelector('.receipt__reprint-btn').disabled).toBe(true);
+
+      component.reprint();
+
+      expect(billingTransportStub.reprintReceipt).not.toHaveBeenCalled();
+    });
+
+    it('follows the unknown-permission (legacy token) fallback and stays open', async () => {
+      TestBed.resetTestingModule();
+      authStub.known = false;
+      authStub.granted = [];
+      await TestBed.configureTestingModule({
+        imports: [ReceiptPageComponent, TranslateModule.forRoot()],
+        providers: [
+          provideRouter([]),
+          { provide: BillingTransportService, useValue: billingTransportStub },
+          { provide: ActivatedRoute, useValue: routeStubWith('inv-001', 'rcpt-001') },
+          { provide: AuthService, useValue: authStub },
+        ],
+      }).compileComponents();
+
+      fixture = TestBed.createComponent(ReceiptPageComponent);
+      component = fixture.componentInstance;
+      fixture.detectChanges();
+
+      expect(component.canReprint()).toBe(true);
+      expect(fixture.nativeElement.querySelector('[data-testid="reprint-permission-denied"]')).toBeNull();
     });
   });
 });

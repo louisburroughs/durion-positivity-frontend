@@ -11,11 +11,17 @@
   </div>
   }
 
+  @if (!canReprint()) {
+  <div class="receipt__error" role="alert" data-testid="reprint-permission-denied">
+    {{ 'BILLING.RECEIPT.ERROR.REPRINT_PERMISSION_DENIED' | translate }}
+  </div>
+  }
+
   @if (state() === 'error' && errorKey()) {
   <div class="receipt__error" role="alert">{{ errorKey()! | translate }}</div>
   @if (errorKey() === 'BILLING.RECEIPT.ERROR.NOT_AVAILABLE' && receiptId()) {
   <div class="receipt__actions" data-testid="receipt-not-available">
-    <button type="button" class="receipt__reprint-btn" (click)="reprint()">
+    <button type="button" class="receipt__reprint-btn" [disabled]="!canReprint()" (click)="reprint()">
       {{ 'BILLING.RECEIPT.ACTION.REPRINT' | translate }}
     </button>
   </div>
@@ -80,7 +86,7 @@
     }
 
     <div class="receipt__actions">
-      <button type="button" class="receipt__reprint-btn" (click)="reprint()">
+      <button type="button" class="receipt__reprint-btn" [disabled]="!canReprint()" (click)="reprint()">
         {{ 'BILLING.RECEIPT.ACTION.REPRINT' | translate }}
       </button>
       @if (receipt()!.pdfUrl) {

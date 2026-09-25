@@ -97,6 +97,63 @@
   padding: var(--space-3) var(--space-4);
 }
 
+.pvm__field-error {
+  margin: 0;
+  color: var(--status-error-fg);
+  font-size: 0.85rem;
+}
+
+.pvm__balance-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--handleColor);
+}
+
+.pvm__balance-status--error {
+  color: var(--status-error-fg);
+}
+
+.pvm__balance-retry {
+  border: none;
+  background: transparent;
+  color: var(--link-color);
+  font-weight: 600;
+  padding: 0;
+}
+
+.pvm__balance {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: var(--space-1) var(--space-4);
+  margin: 0;
+}
+
+.pvm__balance dt {
+  color: var(--handleColor);
+  font-size: 0.85rem;
+}
+
+.pvm__balance dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.pvm__full-refund-btn {
+  align-self: flex-start;
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--currentTextColor);
+  font-weight: 600;
+}
+
+.pvm__full-refund-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .pvm__ready {
   color: var(--link-color);
   font-weight: 600;

@@ -231,6 +231,21 @@ export interface GenerateReceiptRequest {
   emailAddress?: string;
 }
 
+// ── Issue #2215 ruling: refund balance ─────────────────────────────────────
+
+/**
+ * The figure the operator confirms before a full refund is submitted (durion-positivity-backend
+ * issue #2215 ruling): `capturedAmount` minus the sum of non-failed prior refunds against this
+ * payment. `amount` sent to `refundPayment` is always explicit — this is a UI prefill, never a
+ * silent submission — and the server's own 422 (amount exceeds the remaining balance) remains
+ * authoritative regardless of what this computes.
+ */
+export interface RefundBalance {
+  readonly capturedAmount: number;
+  readonly priorRefundsTotal: number;
+  readonly refundableBalance: number;
+}
+
 export interface ReceiptRef {
   readonly receiptId: string;
   readonly invoiceId: string;

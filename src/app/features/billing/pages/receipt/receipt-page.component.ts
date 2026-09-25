@@ -1,8 +1,10 @@
-import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { TranslatePipe } from '@ngx-translate/core';
+import { AuthService } from '../../../../core/services/auth.service';
+import { BILLING_SECTION } from '../../../../core/security/route-permissions';
 import { GenerateReceiptRequest, ReceiptRef } from '../../models/billing.models';
 import { BillingTransportService } from '../../services/billing-transport.service';
 
@@ -17,6 +19,7 @@ export class ReceiptPageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly billingService = inject(BillingTransportService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly auth = inject(AuthService);
 
   readonly invoiceId = signal<string>('');
   readonly receiptId = signal<string | null>(null);
@@ -25,6 +28,15 @@ export class ReceiptPageComponent implements OnInit {
   readonly receipt = signal<ReceiptRef | null>(null);
   readonly deliveryMethod = signal<'PRINT' | 'EMAIL' | 'NONE'>('PRINT');
   readonly emailAddress = signal<string>('');
+
+  /**
+   * `reprintReceipt` — the code the backend enforces (`route-permissions.ts`
+   * `BILLING_SECTION.receiptReprint` docblock has the full verification) and the
+   * ADR-0040 §6a.3 unknown-permission fallback, matching `canAccess()`.
+   */
+  readonly canReprint = computed(
+    () => !this.auth.permissionsKnown() || this.auth.hasAnyPermission(BILLING_SECTION.receiptReprint),
+  );
 
   ngOnInit(): void {
     const invoiceId = this.route.snapshot.paramMap.get('invoiceId') ?? '';
@@ -105,6 +117,9 @@ export class ReceiptPageComponent implements OnInit {
   }
 
   reprint(): void {
+    if (!this.canReprint()) {
+      return;
+    }
     const receiptId = this.receiptId() ?? this.receipt()?.receiptId;
     if (!receiptId) {
       this.state.set('error');
