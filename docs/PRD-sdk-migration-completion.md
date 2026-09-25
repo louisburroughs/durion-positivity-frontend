@@ -182,9 +182,10 @@ The following exceptions are allowed at the start of this PRD:
 - `src/app/features/shell/services/chat-api.service.ts`
   - Reason: gateway/MCP traffic is intentionally outside the domain SDK migration.
 - `src/app/features/billing/services/billing-transport.service.ts`
-  - Reason: documented temporary exceptions remain where invoice transport parity is not
-    yet complete.
-  - These exceptions are still in scope for cleanup under this PRD and must not expand.
+  - Reason: two live backend bugs remain (D7 `executeRefund` no-amount branch, D8
+    `loadReceipt`); every other method migrated to `@durion-sdk/invoice` (issue #350).
+  - These exceptions are tracked in `louisburroughs/durion-positivity-backend#2215` and
+    `#2214` respectively and must not expand.
 
 No page component is an approved exception.
 
@@ -335,6 +336,8 @@ tracked follow-up decisions.
 | —   | `workexec.service.ts` — `getWorkorderInvoiceView`    | No SDK equivalent                                                 | SDK team to add endpoint          |
 | —   | `workexec.service.ts` — `requestInvoiceFinalization` | No SDK equivalent                                                 | SDK team to add endpoint          |
 | —   | `workexec.service.ts` — `listEstimatesForVehicle`    | No vehicle-scoped estimate listing in SDK                         | SDK team to add endpoint          |
+| D7  | `billing-transport.service.ts` — `executeRefund` (no-amount branch) | Live bug: SDK `RefundPaymentRequest` requires `amount`, but billing UX still supports a full refund via omitted amount | `louisburroughs/durion-positivity-backend#2215` |
+| D8  | `billing-transport.service.ts` — `loadReceipt`       | Live bug: `ReceiptService` has no read endpoint for receipt detail by ID | `louisburroughs/durion-positivity-backend#2214` |
 | —   | `chat-api.service.ts` — all                          | Permanent exception: gateway/MCP traffic                          | Never migrate                     |
 
 **Acceptance criteria:**

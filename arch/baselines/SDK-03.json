@@ -6,7 +6,7 @@
   },
   {
     "key": "src/app/features/billing/services/billing-transport.service.ts -> src/app/core/services/api-base.service.ts",
-    "reason": "documented ADR-0041 exceptions (loadInvoiceArtifacts, elevate, createArtifactDownloadToken) plus the executeRefund/loadReceipt compatibility paths; no SDK operation exists for any of them.",
+    "reason": "executeRefund (no-amount branch; louisburroughs/durion-positivity-backend#2215) and loadReceipt (louisburroughs/durion-positivity-backend#2214) only — live backend bugs, not SDK gaps; loadInvoiceArtifacts/elevate/createArtifactDownloadToken migrated to @durion-sdk/invoice.",
     "tracking": "#350"
   },
   {

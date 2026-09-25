@@ -3,14 +3,19 @@ import { TranslateService } from '@ngx-translate/core';
 import { Observable, throwError } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import {
+  ArtifactDownloadToken as SdkArtifactDownloadToken,
+  BillingAuthorizationService,
   CaptureAmountRequest,
   Configuration as InvoiceConfiguration,
+  ElevateRequest as SdkElevateRequest,
   FinalizationRequest,
   GenerateReceiptRequest,
   InitiatePaymentRequest,
   InitiatePaymentRequestPaymentFlowEnum,
   InitiatePaymentResponse,
   InitiatePaymentResponseStatusEnum,
+  InvoiceArtifact as SdkInvoiceArtifact,
+  InvoiceArtifactControllerService,
   InvoiceDetailsResponse,
   InvoiceSearchResult,
   InvoiceSearchService,
@@ -28,7 +33,6 @@ import {
 import { ApiBaseService } from '../../../core/services/api-base.service';
 import {
   ArtifactDownloadToken,
-  ElevateRequest,
   ElevateResponse,
   GenerateReceiptRequest as UiGenerateReceiptRequest,
   InvoiceArtifact,
@@ -44,15 +48,15 @@ import {
 @Injectable({ providedIn: 'root' })
 export class BillingTransportService {
   // Direct ApiBaseService usage inventory:
-  // - ADR-0041 temporary exceptions pending SDK transport parity:
-  //   loadInvoiceArtifacts, elevate, createArtifactDownloadToken (+ resolveArtifactDownloadUrl,
-  //   the same exception, which only reads Configuration and builds no request of its own)
-  // - Temporary compatibility exceptions (outside ADR-0041):
-  //   executeRefund (full refund path without amount), loadReceipt
+  // - Temporary compatibility exceptions (outside ADR-0041), both live backend bugs:
+  //   executeRefund (full refund path without amount — louisburroughs/durion-positivity-backend#2215)
+  //   loadReceipt (no SDK read endpoint for receipt detail — louisburroughs/durion-positivity-backend#2214)
   private readonly api = inject(ApiBaseService);
   private readonly configuration = inject(InvoiceConfiguration);
   private readonly invoiceService = inject(InvoiceService);
   private readonly invoiceSearchService = inject(InvoiceSearchService);
+  private readonly invoiceArtifactService = inject(InvoiceArtifactControllerService);
+  private readonly billingAuthorizationService = inject(BillingAuthorizationService);
   private readonly translate = inject(TranslateService);
   private readonly paymentService = inject(PaymentService);
   private readonly paymentReversalService = inject(PaymentReversalService);
@@ -71,17 +75,14 @@ export class BillingTransportService {
   }
 
   loadInvoiceArtifacts(invoiceId: string): Observable<InvoiceArtifact[]> {
-    // ADR-0041 temporary exception: SDK invoice transport does not yet expose artifact listing.
-    // Direct call to the pos-invoice route (gateway /invoice/** -> /v1/invoices/...).
-    return this.api.get<InvoiceArtifact[]>(`/invoice/v1/invoices/${invoiceId}/artifacts`);
+    return this.invoiceArtifactService.listInvoiceArtifacts(invoiceId).pipe(
+      map(artifacts => artifacts.map(artifact => this.toInvoiceArtifact(artifact))),
+    );
   }
 
   elevate(managerEmployeeNumber: string, invoiceId: string): Observable<ElevateResponse> {
-    // ADR-0041 temporary exception: SDK does not yet expose elevation token transport.
-    // No gateway /billing route exists; the elevate endpoint lives on the invoice service
-    // (gateway /invoice/** -> pos-invoice /v1/billing/auth/elevate).
-    const body: ElevateRequest = { managerEmployeeNumber, invoiceId };
-    return this.api.post<ElevateResponse>('/invoice/v1/billing/auth/elevate', body);
+    const request: SdkElevateRequest = { managerEmployeeNumber, invoiceId };
+    return this.billingAuthorizationService.elevateManagerApproval(request);
   }
 
   issueInvoice(invoiceId: string, request: IssueInvoiceRequest): Observable<InvoiceDetail> {
@@ -94,20 +95,18 @@ export class BillingTransportService {
   }
 
   createArtifactDownloadToken(invoiceId: string, artifactRefId: string): Observable<ArtifactDownloadToken> {
-    // ADR-0041 temporary exception: SDK does not yet expose artifact download-token creation.
-    // Direct call to the pos-invoice route (gateway /invoice/** -> /v1/invoices/...).
-    return this.api.post<ArtifactDownloadToken>(
-      `/invoice/v1/invoices/${invoiceId}/artifacts/${artifactRefId}/download-token`,
-      {},
+    return this.invoiceArtifactService.createArtifactDownloadToken(invoiceId, artifactRefId).pipe(
+      map(result => this.toArtifactDownloadToken(result)),
     );
   }
 
   /**
    * Resolves the artifact's download URL: prefers the server-issued `downloadUrl`, falling back
    * to a signed-token URL built from the injected InvoiceConfiguration's basePath rather than
-   * reading environment.apiBaseUrl directly (SDK-06). Same ADR-0041 exception as
-   * createArtifactDownloadToken above — no SDK operation exists for this URL either — so pages
-   * no longer need to own this transport detail themselves (issue #350 Wave 1).
+   * reading environment.apiBaseUrl directly (SDK-06). The SDK has no operation that returns a
+   * URL — `InvoiceArtifactDownloadControllerService.downloadInvoiceArtifact` streams the PDF body
+   * itself, which isn't useful for an anchor href — so this still builds the public, token-only
+   * download link by hand, matching the `download-token` endpoint's own path exactly (issue #350).
    */
   resolveArtifactDownloadUrl(invoiceId: string, artifactRefId: string, token: ArtifactDownloadToken): string {
     return token.downloadUrl
@@ -164,8 +163,9 @@ export class BillingTransportService {
     amount?: number,
   ): Observable<void> {
     if (amount === undefined) {
-      // Temporary compatibility exception (outside ADR-0041): SDK refund contract requires amount,
-      // while billing UX still supports full refund via omitted amount.
+      // Live bug (outside ADR-0041): SDK refund contract requires amount, while billing UX still
+      // supports a full refund via omitted amount. Tracked in
+      // louisburroughs/durion-positivity-backend#2215.
       return this.api.post<void>(
         `/v1/billing/invoices/${invoiceId}/payments/${paymentId}/refund`,
         { reason, authorityCode },
@@ -197,8 +197,8 @@ export class BillingTransportService {
   }
 
   loadReceipt(invoiceId: string, receiptId: string): Observable<ReceiptRef> {
-    // Temporary compatibility exception (outside ADR-0041): SDK ReceiptService does not expose a
-    // read endpoint for retrieving receipt detail by ID.
+    // Live bug (outside ADR-0041): SDK ReceiptService does not expose a read endpoint for
+    // retrieving receipt detail by ID. Tracked in louisburroughs/durion-positivity-backend#2214.
     return this.api.get<ReceiptRef>(`/v1/billing/invoices/${invoiceId}/receipts/${receiptId}`);
   }
 
@@ -304,6 +304,22 @@ export class BillingTransportService {
       default:
         return RefundPaymentRequestReasonEnum.Other;
     }
+  }
+
+  private toInvoiceArtifact(source: SdkInvoiceArtifact): InvoiceArtifact {
+    return {
+      artifactRefId: source.artifactRefId ?? '',
+      fileName: source.fileName,
+      mimeType: source.mimeType,
+      createdAt: source.createdAt,
+    };
+  }
+
+  private toArtifactDownloadToken(source: SdkArtifactDownloadToken): ArtifactDownloadToken {
+    return {
+      downloadToken: source.downloadToken ?? '',
+      expiresAt: source.expiresAt,
+    };
   }
 
   private toReceiptRef(invoiceId: string, source: ReceiptResponse): ReceiptRef {
