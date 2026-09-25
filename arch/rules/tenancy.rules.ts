@@ -256,10 +256,14 @@ export function ten08Finder(f: Source): string[] {
   return out;
 }
 
-/** No new organizationId field is introduced anywhere (ADR-0062 §4); existing debt is baselined. */
+/**
+ * No `organizationId` field is introduced anywhere (ADR-0062 §4, ADR-0023 §2). The last
+ * remnant usages (accounting event list/detail, CRM integration events — display-only,
+ * never sent in a request) were removed under issue #339; zero debt promotes this to Enforce.
+ */
 export const ten08 = (p: Project): ArchRule =>
   contentRule(
-    { id: 'TEN-08', title: 'no new organizationId field (ADR-0062 §4, ADR-0023 §2)', mode: 'ratchet' },
+    { id: 'TEN-08', title: 'no organizationId field (ADR-0062 §4, ADR-0023 §2)', mode: 'enforce' },
     p,
     { subject: selectors.appTree(p), finder: ten08Finder },
   );
