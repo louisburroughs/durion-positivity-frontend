@@ -231,21 +231,26 @@ export interface GenerateReceiptRequest {
   emailAddress?: string;
 }
 
-// ── Issue #2215 ruling / Copilot #4106106128: prior-refunds context ────────
+// ── Issue #2215 ruling / durion-positivity-backend#2226: per-payment refund context ─────────
 
 /**
- * Context shown to the operator before they enter a refund amount (durion-positivity-backend
- * issue #2215 ruling): the sum of this payment's non-failed prior refunds, from
- * `PaymentReversalService.listInvoiceRefunds`. `amount` sent to `refundPayment` is always explicit
- * and operator-entered — this is informational only, never a prefill or a balance the frontend
- * validates against, because `invoice.total` (the only captured-amount proxy available today) is
- * the whole invoice, not this payment's captured amount, so it is unsafe on a multiply-tendered
- * invoice (Copilot #4106106128). The server's own 422 (amount exceeds the remaining refundable
- * balance) remains authoritative. Re-add a full-refund balance/prefill once the backend exposes a
- * per-payment captured-amount read (durion-positivity-backend#2226).
+ * Context shown to the operator before they enter a refund amount, from
+ * `PaymentService.getInvoicePayment` (durion-positivity-backend#2226, superseding the
+ * `listInvoiceRefunds`-derived `priorRefundsTotal` this replaces — that was only ever a stand-in
+ * for the real per-payment balance Copilot #4106106128 found `invoice.total` unsafe to derive).
+ *
+ * `refundableAmount` is `capturedAmount` minus non-failed refunds, and is `null` unless the
+ * payment intent's `status` is `CAPTURED` (a payment that is still `AUTHORIZED`, or already
+ * `VOIDED`/`REFUNDED` in full, has no refundable balance to offer). The page uses it to prefill a
+ * "refund full balance" amount for the operator to confirm, never to silently submit — the
+ * server's own 422 (amount exceeds the remaining refundable balance) remains authoritative for a
+ * partial refund entered by hand.
  */
 export interface RefundContext {
-  readonly priorRefundsTotal: number;
+  readonly capturedAmount: number;
+  readonly refundedAmount: number;
+  readonly refundableAmount: number | null;
+  readonly status: PaymentStatus;
 }
 
 export interface ReceiptRef {
@@ -265,4 +270,34 @@ export interface ReceiptRef {
    * @serverGenerated - set by server; do not include in request payloads.
    */
   readonly pdfUrl?: string;
+  /**
+   * Fields populated only when this ref came from `ReceiptService.getReceipt`
+   * (durion-positivity-backend#2214) rather than a fresh `generateReceipt`/`reprintReceipt`
+   * response — a deep-linked receipt is read-only detail, not a new print/email event, so
+   * `generatedAt`/`emailedTo` above stay unset for it. Card brand and last-4 are deliberately not
+   * exposed by `ReceiptViewResponse`.
+   */
+  readonly status?: 'GENERATED';
+  readonly paidAmount?: number;
+  readonly paymentMethod?: string;
+  readonly cashierId?: string;
+  readonly terminalId?: string;
+  readonly deliveryMethod?: 'PRINT' | 'EMAIL';
+  readonly deliveryStatus?: 'SUCCESS' | 'FAILED';
+  readonly deliveryEmailAddress?: string;
+  /** Reprint count as of the last load; drives {@link RECEIPT_REPRINT_OVERRIDE_THRESHOLD}. */
+  readonly reprintCount?: number;
+  readonly lastReprintedBy?: string;
+  readonly lastReprintReason?: string;
+  /**
+   * @serverGenerated - set by server; do not include in request payloads.
+   */
+  readonly createdAt?: string;
 }
+
+/**
+ * `ReceiptServiceImpl.reprintReceipt` (backend origin/main) requires
+ * `invoice:receipt:reprint_override` once `reprintCount >= 5`. Mirrored here so the page can
+ * pre-warn/gate before the request, not just map the resulting 403.
+ */
+export const RECEIPT_REPRINT_OVERRIDE_THRESHOLD = 5;

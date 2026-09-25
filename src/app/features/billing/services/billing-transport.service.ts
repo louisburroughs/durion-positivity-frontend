@@ -17,14 +17,16 @@ import {
   InvoiceArtifact as SdkInvoiceArtifact,
   InvoiceArtifactControllerService,
   InvoiceDetailsResponse,
-  InvoiceRefundResponseStatusEnum,
   InvoiceSearchResult,
   InvoiceSearchService,
   InvoiceService,
+  PaymentIntentResponse,
+  PaymentIntentResponseStatusEnum,
   PaymentReversalService,
   PaymentService,
   ReceiptResponse,
   ReceiptService,
+  ReceiptViewResponse,
   RefundPaymentRequest,
   RefundPaymentRequestReasonEnum,
   ReprintReceiptRequest,
@@ -153,10 +155,11 @@ export class BillingTransportService {
 
   /**
    * Issue #381 / durion-positivity-backend#2215 ruling: `PaymentReversalService.refundPayment`
-   * (`POST /v1/invoices/{id}/payments/{pid}/refunds`) always requires `amount` — there is no
-   * implicit full refund and no prefill (Copilot #4106106128 removed the `invoice.total`-derived
-   * one). The caller (`PaymentVoidRefundPageComponent`) requires the operator to type an explicit
-   * amount, informed only by {@link loadRefundContext}'s prior-refunds total.
+   * (`POST /v1/invoices/{id}/payments/{pid}/refunds`) always requires an explicit `amount` — there
+   * is no implicit "refund everything" flow on the backend. The caller
+   * (`PaymentVoidRefundPageComponent`) lets the operator prefill that amount from
+   * {@link loadRefundContext}'s `refundableAmount` for a full-balance refund, or type a smaller
+   * one for a partial refund, but always submits an explicit amount the operator has confirmed.
    */
   executeRefund(
     invoiceId: string,
@@ -177,52 +180,52 @@ export class BillingTransportService {
   }
 
   /**
-   * Copilot #4106106128: `invoice.total` is the whole invoice, not the captured amount for
-   * `paymentId` — on a multiply-tendered invoice it includes other payment intents, so it is unsafe
-   * as a "refundable balance" proxy and this no longer derives or prefills one from it. There is
-   * also no SDK/backend operation that reads a single payment intent's captured amount after the
-   * fact: `PaymentService` exposes only `initiatePayment`/`capturePayment`, `pos-invoice` has no
-   * `GET .../payments/{paymentId}` controller method, and `InvoiceDetailsResponse` carries no
-   * payments breakdown (verified against `PaymentController.java` / `InvoiceDetailsResponse.java`
-   * on backend origin/main and the vendored `@durion-sdk/invoice` 0.63 types).
-   *
-   * Until that read exists (durion-positivity-backend#2226), this surfaces only this payment's
-   * prior (non-failed) refunds from `PaymentReversalService.listInvoiceRefunds`
-   * (`GET /v1/invoices/{invoiceId}/refunds`) as informational context — `InvoiceRefundResponseStatusEnum.Failed`
-   * never reduced the captured balance on the backend (`PaymentReversalServiceImpl`, verified
-   * against origin/main). The operator always enters an explicit amount
-   * (`PaymentVoidRefundPageComponent`, durion-positivity-backend#2215 ruling), and the server's own
-   * 422 remains authoritative when the real remaining balance is smaller. Re-add a full-refund
-   * balance/prefill once #2226 lands.
+   * durion-positivity-backend#2226 added `PaymentService.getInvoicePayment`
+   * (`GET /v1/invoices/{invoiceId}/payments/{paymentId}`), which returns the payment intent's
+   * `capturedAmount`, `refundedAmount` and `refundableAmount` directly — superseding the
+   * `listInvoiceRefunds`-derived `priorRefundsTotal` this replaced (Copilot #4106106128 had found
+   * `invoice.total` unsafe as a captured-amount proxy on a multiply-tendered invoice; that gap is
+   * what #2226 closed). `refundableAmount` is `null` unless the intent is `CAPTURED`.
    */
   loadRefundContext(invoiceId: string, paymentId: string): Observable<RefundContext> {
-    return this.paymentReversalService.listInvoiceRefunds(invoiceId).pipe(
-      map(refunds => {
-        const priorRefundsTotal = refunds
-          .filter(refund =>
-            refund.paymentIntentId === paymentId
-            && refund.status !== InvoiceRefundResponseStatusEnum.Failed)
-          .reduce((sum, refund) => sum + (refund.amount ?? 0), 0);
-        return { priorRefundsTotal };
-      }),
+    return this.paymentService.getInvoicePayment(invoiceId, paymentId).pipe(
+      map(payment => this.toRefundContext(payment)),
     );
   }
 
   /**
-   * `ReceiptService.generateReceipt` already returns the full `ReceiptResponse`
-   * (receiptId/reference/status) — the same shape `reprintReceipt` returns — so this maps it to
-   * `ReceiptRef` directly (issue #381) instead of the caller following up with a `loadReceipt`
-   * call to a GET route the backend does not have (durion-positivity-backend#2214).
+   * Issue #381 bug fix: `GenerateReceiptRequest.paymentIntentId` must be a real payment-intent
+   * UUID (verified against `@durion-sdk/invoice` types) — the prior implementation sent the UI's
+   * delivery-method selection or email address instead, which the backend would reject as an
+   * unknown payment intent. There is no route param carrying a payment id here
+   * (`invoices/:invoiceId/receipts`), so this resolves it from
+   * `PaymentService.listInvoicePayments(invoiceId)` (durion-positivity-backend#2226), preferring
+   * the most recently updated `CAPTURED` intent — the only status a receipt can document.
+   *
+   * `_request`'s `deliveryMethod`/`emailAddress` are UI-only today: `GenerateReceiptRequest` (the
+   * real SDK request shape, verified against `@durion-sdk/invoice` types) has no delivery field —
+   * recording an actual email/print delivery is `recordReceiptEmailDelivery`/
+   * `recordReceiptPrintDelivery`, separate endpoints this PR does not wire up.
    */
-  generateReceipt(invoiceId: string, request: UiGenerateReceiptRequest): Observable<ReceiptRef> {
-    const sdkRequest: GenerateReceiptRequest = {
-      paymentIntentId: request.emailAddress ?? request.deliveryMethod ?? 'UNSPECIFIED',
-      terminalId: 'WEB-UI',
-      templateId: 'DEFAULT',
-      templateVersion: '1',
-    };
+  generateReceipt(invoiceId: string, _request: UiGenerateReceiptRequest): Observable<ReceiptRef> {
+    return this.paymentService.listInvoicePayments(invoiceId).pipe(
+      switchMap(payments => {
+        const capturedIntent = this.mostRecentCapturedPayment(payments);
+        if (!capturedIntent?.paymentId) {
+          return throwError(() => new Error(
+            `No captured payment intent found for invoice ${invoiceId}; cannot generate a receipt.`,
+          ));
+        }
 
-    return this.receiptService.generateReceipt(invoiceId, sdkRequest).pipe(
+        const sdkRequest: GenerateReceiptRequest = {
+          paymentIntentId: capturedIntent.paymentId,
+          terminalId: 'WEB-UI',
+          templateId: 'DEFAULT',
+          templateVersion: '1',
+        };
+
+        return this.receiptService.generateReceipt(invoiceId, sdkRequest);
+      }),
       map(result => this.toReceiptRef(invoiceId, result)),
     );
   }
@@ -234,6 +237,18 @@ export class BillingTransportService {
 
     return this.receiptService.reprintReceipt(invoiceId, receiptId, request).pipe(
       map(result => this.toReceiptRef(invoiceId, result)),
+    );
+  }
+
+  /**
+   * Receipt deep-link load (durion-positivity-backend#2214): `ReceiptService.getReceipt` is a
+   * read-only GET, unlike `generateReceipt`/`reprintReceipt`, which both side-effect. This is what
+   * `ReceiptPageComponent` now calls when a `receiptId` already appears in the route (a deep link
+   * or a reload) instead of showing a not-available state.
+   */
+  loadReceipt(invoiceId: string, receiptId: string): Observable<ReceiptRef> {
+    return this.receiptService.getReceipt(invoiceId, receiptId).pipe(
+      map(result => this.toReceiptDetail(result)),
     );
   }
 
@@ -274,20 +289,58 @@ export class BillingTransportService {
   }
 
   private toPaymentStatus(status?: InitiatePaymentResponseStatusEnum): PaymentTransactionRef['status'] {
+    return this.toPaymentStatusFromString(status);
+  }
+
+  /**
+   * `InitiatePaymentResponseStatusEnum` and `PaymentIntentResponseStatusEnum` are two distinct
+   * generated enums with identical string values (verified against `@durion-sdk/invoice` types),
+   * so this maps by string rather than duplicating the switch per enum.
+   */
+  private toPaymentStatusFromString(status?: string): PaymentTransactionRef['status'] {
     switch (status) {
-      case InitiatePaymentResponseStatusEnum.Pending:
+      case 'PENDING':
         return 'INITIATED';
-      case InitiatePaymentResponseStatusEnum.Authorized:
+      case 'AUTHORIZED':
         return 'AUTHORIZED';
-      case InitiatePaymentResponseStatusEnum.Captured:
+      case 'CAPTURED':
         return 'CAPTURED';
-      case InitiatePaymentResponseStatusEnum.Voided:
+      case 'VOIDED':
         return 'VOIDED';
-      case InitiatePaymentResponseStatusEnum.CaptureFailed:
-      case InitiatePaymentResponseStatusEnum.Expired:
+      case 'CAPTURE_FAILED':
+      case 'EXPIRED':
       default:
         return 'FAILED';
     }
+  }
+
+  /**
+   * `refundableAmount` is `capturedAmount` minus non-failed refunds and is `null` unless the
+   * intent's `status` is `CAPTURED` (`@durion-sdk/invoice` docblock, verified). Passed through as
+   * `null` rather than defaulted to 0 so the page can tell "not captured, no balance to refund"
+   * apart from "captured, fully refunded already".
+   */
+  private toRefundContext(source: PaymentIntentResponse): RefundContext {
+    return {
+      capturedAmount: source.capturedAmount ?? 0,
+      refundedAmount: source.refundedAmount ?? 0,
+      refundableAmount: source.refundableAmount ?? null,
+      status: this.toPaymentStatusFromString(source.status),
+    };
+  }
+
+  /**
+   * A receipt documents exactly one payment intent, and only a `CAPTURED` one can be refunded or
+   * receipted (`ReceiptServiceImpl`/`PaymentReversalServiceImpl` both require it, verified against
+   * backend origin/main). When more than one exists (a re-tendered invoice), this prefers the most
+   * recently updated — the newest capture is the one a cashier at the terminal is generating a
+   * receipt for.
+   */
+  private mostRecentCapturedPayment(payments: readonly PaymentIntentResponse[]): PaymentIntentResponse | undefined {
+    return payments
+      .filter(payment => payment.status === PaymentIntentResponseStatusEnum.Captured)
+      .sort((a, b) => (b.updatedAt ?? '').localeCompare(a.updatedAt ?? ''))
+      .at(0);
   }
 
   private toVoidReason(reason: string): VoidPaymentRequestReasonEnum {
@@ -352,6 +405,31 @@ export class BillingTransportService {
       receiptId: source.receiptId ?? '',
       invoiceId,
       receiptNumber: source.reference,
+    };
+  }
+
+  /**
+   * `ReceiptViewResponse` (durion-positivity-backend#2214) carries no card brand or last-4 — the
+   * backend does not store them (`paymentMethod` is the gateway/processor name, e.g. "stripe").
+   */
+  private toReceiptDetail(source: ReceiptViewResponse): ReceiptRef {
+    return {
+      receiptId: source.receiptId,
+      invoiceId: source.invoiceId,
+      paymentId: source.paymentIntentId,
+      receiptNumber: source.reference,
+      status: source.status as ReceiptRef['status'],
+      paidAmount: source.paidAmount,
+      paymentMethod: source.paymentMethod,
+      cashierId: source.cashierId,
+      terminalId: source.terminalId,
+      deliveryMethod: source.deliveryMethod as ReceiptRef['deliveryMethod'],
+      deliveryStatus: source.deliveryStatus as ReceiptRef['deliveryStatus'],
+      deliveryEmailAddress: source.deliveryEmailAddress,
+      reprintCount: source.reprintCount,
+      lastReprintedBy: source.lastReprintedBy,
+      lastReprintReason: source.lastReprintReason,
+      createdAt: source.createdAt,
     };
   }
 
