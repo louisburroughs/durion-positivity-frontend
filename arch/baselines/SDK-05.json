@@ -5,11 +5,6 @@
     "tracking": "#350"
   },
   {
-    "key": "src/app/features/accounting/services/accounting.service.ts :: '/v1/accounting/reports/export/'",
-    "reason": "downloadExport() has no SDK download/streaming operation (backend #2216 will add downloadReportExport to the OpenAPI spec); the URL is still hand-built, but now from the injected AccountingConfiguration.basePath instead of environment.apiBaseUrl (SDK-06 fixed) and pointed at ReportExportController's real path with the id as a path segment (issue #368).",
-    "tracking": "#368"
-  },
-  {
     "key": "src/app/features/billing/services/billing-transport.service.ts :: '/v1/invoices/'",
     "reason": "resolveArtifactDownloadUrl() fallback: no SDK operation returns a URL (downloadInvoiceArtifact streams the PDF body itself), so the public token-only download link is still hand-built, but now from the injected InvoiceConfiguration.basePath instead of environment.apiBaseUrl (SDK-06 fixed) — moved out of invoice-detail-page.component.ts so no page owns transport logic (issue #350 Wave 1).",
     "tracking": "#350"

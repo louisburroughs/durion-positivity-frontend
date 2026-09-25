@@ -1,10 +1,11 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, map } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Observable, catchError, from, map, of, switchMap, throwError } from 'rxjs';
 import {
   APPaymentsService,
   AccountingEventsService,
   AccountingExportsService,
-  Configuration as AccountingConfiguration,
+  ApiError,
   CreditMemosService,
   FinancialReportingService,
   LocationCostReportingService,
@@ -79,7 +80,6 @@ export class AccountingService {
   private static readonly BASE = '/accounting/v1/accounting';
 
   private readonly api = inject(ApiBaseService);
-  private readonly configuration = inject(AccountingConfiguration);
   private readonly authService = inject(AuthService);
   private readonly accountingEventsService = inject(AccountingEventsService);
   private readonly accountingExportsService = inject(AccountingExportsService);
@@ -402,29 +402,67 @@ export class AccountingService {
    * Fetches the export as an authenticated Blob and triggers the browser download
    * from an object URL, rather than a plain `<a href>` navigation: an anchor click
    * is fetched by the browser directly, not by `HttpClient`, so `authInterceptor`
-   * never attaches the bearer token and the (now-correct) URL 401s (ADR-0041; same
-   * reasoning as ChatBlobService). NOTE: SDK gap — ReportExportController#downloadExport
-   * (operationId downloadReportExport) has no SDK operation yet (backend #2216), so the
-   * path is still hand-built, but from the injected AccountingConfiguration's basePath
-   * rather than reading environment.apiBaseUrl directly (SDK-06). Issue #368: the id is
-   * a path segment under /reports/export, not an ?exportId= query parameter.
+   * never attaches the bearer token (ADR-0041; same reasoning as ChatBlobService).
+   *
+   * Backend #2216 added `downloadReportExport` to the accounting OpenAPI spec, so
+   * this now calls the generated `FinancialReportingService.downloadReportExport()`
+   * (`responseType: 'blob'`) instead of hand-building the
+   * `/v1/accounting/reports/export/{exportId}/download` path.
+   *
+   * `httpHeaderAccept` is set to `application/octet-stream` to match the
+   * controller's declared 200 response type; per #2216's closing comment the
+   * server ignores `Accept` on success and always serves the artifact's real
+   * content type (text/csv, application/pdf, ...) because the controller
+   * presets it, so this is a documentation nicety rather than a fix.
+   *
+   * A 404/409 failure also arrives as a `Blob` (`responseType: 'blob'` applies
+   * to the error body too), so `mapDownloadExportError` reads and JSON-parses
+   * it (guarded — a malformed/non-JSON body degrades to the generic case) to
+   * pull out the backend `ApiError.code`. The parsed `message` is never
+   * forwarded: only the fixed `code` reaches the thrown `Error`, so no
+   * server-authored text can reach the UI (ADR-0064). The page's existing
+   * `PEOPLE.TIME_EXPORT.ERROR.DOWNLOAD` copy covers every download failure
+   * regardless of which code was parsed.
    */
   downloadExport(exportId: string): Observable<void> {
-    const path = `/v1/accounting/reports/export/${encodeURIComponent(exportId)}/download`;
-    return this.api.getBlob(path, { baseUrlOverride: this.configuration.basePath }).pipe(
-      map(blob => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `time-export-${exportId}.csv`;
-        document.body.append(a);
-        a.click();
-        a.remove();
-        // Deferred revoke: revoking synchronously can invalidate the anchor's
-        // in-flight read of the blob URL it just triggered (ADR-0065 §3 / SEC-08).
-        setTimeout(() => URL.revokeObjectURL(url));
-      }),
-    );
+    return this.financialReportingService
+      .downloadReportExport(exportId, 'body', undefined, {
+        httpHeaderAccept: 'application/octet-stream',
+      })
+      .pipe(
+        map(blob => {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `time-export-${exportId}.csv`;
+          document.body.append(a);
+          a.click();
+          a.remove();
+          // Deferred revoke: revoking synchronously can invalidate the anchor's
+          // in-flight read of the blob URL it just triggered (ADR-0065 §3 / SEC-08).
+          setTimeout(() => URL.revokeObjectURL(url));
+        }),
+        catchError(error => this.mapDownloadExportError(error)),
+      );
+  }
+
+  private mapDownloadExportError(error: unknown): Observable<never> {
+    if (error instanceof HttpErrorResponse && error.error instanceof Blob) {
+      return from((error.error as Blob).text()).pipe(
+        catchError(() => of('')),
+        switchMap(text => throwError(() => new Error(this.formatExportDownloadError(text)))),
+      );
+    }
+    return throwError(() => error);
+  }
+
+  private formatExportDownloadError(rawBody: string): string {
+    try {
+      const body = JSON.parse(rawBody) as Partial<ApiError>;
+      return typeof body.code === 'string' ? `EXPORT_DOWNLOAD_FAILED:${body.code}` : 'EXPORT_DOWNLOAD_FAILED';
+    } catch {
+      return 'EXPORT_DOWNLOAD_FAILED';
+    }
   }
 
   // --- Private adapter methods: SDK DTOs → local models ---
