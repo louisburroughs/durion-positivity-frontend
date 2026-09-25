@@ -1,25 +1,22 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { ApiBaseService } from '../../../core/services/api-base.service';
 import {
   AvailabilityView,
   InventoryAvailabilityService,
+  InventoryLocationsService,
   LocationAvailabilityDto,
+  LocationInventoryInquiryResponse,
 } from '@durion-sdk/inventory';
 import {
-  FeedSourceType,
   InventoryAvailability,
-  LeadTime,
   LocationInventory,
-  SkuAvailability,
 } from '../models/availability.models';
 
 @Injectable({ providedIn: 'root' })
 export class ProductInventoryService {
-  private readonly api = inject(ApiBaseService);
   private readonly availSdk = inject(InventoryAvailabilityService);
+  private readonly locationsSdk = inject(InventoryLocationsService);
 
   queryInventoryAvailability(sku: string, locationId?: string): Observable<InventoryAvailability> {
     return this.availSdk.listAvailabilityBySku(sku).pipe(
@@ -29,37 +26,42 @@ export class ProductInventoryService {
     );
   }
 
-  // SDK gap: InventoryAvailabilityService.getInventoryLeadTime uses a locationId-scoped
-  // sourceType vocabulary (WAREHOUSE/SUPPLIER/TRANSIT) with no by-sku vendor-feed
-  // listing; it does not correspond to this vendor-feed FeedSourceType (MFR/DISTRIBUTOR)
-  // read, which has no other SDK match either. Left on ApiBaseService.
-  queryAvailabilityBySku(sku: string, sourceType: FeedSourceType): Observable<SkuAvailability[]> {
-    const params = new HttpParams().set('sku', sku).set('sourceType', sourceType);
-    return this.api.get<SkuAvailability[]>('/inventory/v1/availability/by-sku', params);
-  }
+  // Issue #370/#373: queryAvailabilityBySku()/queryLeadTime() were removed. Even at the
+  // corrected /v1/inventory/availability/{by-sku,lead-time} paths, those endpoints expect a
+  // `productSku` + WAREHOUSE/SUPPLIER/TRANSIT `sourceType` contract with no vendor-feed
+  // (MFR/DISTRIBUTOR) equivalent — backend #2213. Their only caller, FeedsComponent, now
+  // shows a "vendor-feed availability isn't available yet" notice instead of calling an
+  // endpoint that cannot serve this request shape.
 
-  // SDK gap: getInventoryLeadTime keys by productId and a WAREHOUSE/SUPPLIER/TRANSIT
-  // sourceType, not this sku + MFR/DISTRIBUTOR vendor-feed shape. Left on ApiBaseService.
-  queryLeadTime(sku: string, sourceType: FeedSourceType): Observable<LeadTime[]> {
-    const params = new HttpParams().set('sku', sku).set('sourceType', sourceType);
-    return this.api.get<LeadTime[]>('/inventory/v1/lead-time', params);
-  }
-
-  // SDK gap: InventoryLocationsService.getLocationInventory(locationId, sku?, asOf?)
-  // matches this path/params but its LocationInventoryInquiryResponse carries only
-  // onHandQuantity/availableToPromiseQuantity -- no locationName or reserved, both
-  // required by the local LocationInventory model. Left on ApiBaseService.
+  // Issue #370: moved to InventoryLocationsService.getLocationInventory (SDK), which matches
+  // LocationInventoryInquiryController#getLocationInventory, GET
+  // /v1/inventory/locations/{locationId}/inventory-inquiry. Its LocationInventoryInquiryResponse
+  // carries only onHandQuantity/availableToPromiseQuantity -- no locationName or reserved -- so
+  // those are omitted (undefined) rather than faked, pending backend #2206.
   getLocationInventory(locationId: string, sku: string): Observable<LocationInventory> {
-    const params = new HttpParams().set('sku', sku);
-    return this.api.get<LocationInventory>(
-      `/inventory/v1/locations/${encodeURIComponent(locationId)}/inventory`,
-      params,
-    );
+    return this.locationsSdk
+      .getLocationInventory(locationId, sku)
+      .pipe(map((dto: LocationInventoryInquiryResponse) => this.toLocationInventoryFromInquiry(locationId, dto)));
   }
 
   // =========================================================================
   // Private adapters
   // =========================================================================
+
+  private toLocationInventoryFromInquiry(
+    locationId: string,
+    dto: LocationInventoryInquiryResponse,
+  ): LocationInventory {
+    return {
+      locationId: dto.locationId ?? locationId,
+      // KNOWN GAP (backend #2206): LocationInventoryInquiryResponse has no locationName or
+      // reserved field. Omitted rather than faked with '' / 0.
+      locationName: undefined,
+      onHand: dto.onHandQuantity ?? 0,
+      reserved: undefined,
+      atp: dto.availableToPromiseQuantity ?? 0,
+    };
+  }
 
   private toLocationInventory(dto: LocationAvailabilityDto | AvailabilityView): LocationInventory {
     return {
@@ -89,7 +91,7 @@ export class ProductInventoryService {
     return {
       sku,
       totalOnHand: breakdown.reduce((sum, l) => sum + l.onHand, 0),
-      totalReserved: breakdown.reduce((sum, l) => sum + l.reserved, 0),
+      totalReserved: breakdown.reduce((sum, l) => sum + (l.reserved ?? 0), 0),
       totalAtp: breakdown.reduce((sum, l) => sum + l.atp, 0),
       locationBreakdown: breakdown,
     };
@@ -112,7 +114,7 @@ export class ProductInventoryService {
     return {
       sku,
       totalOnHand: breakdown.reduce((sum, l) => sum + l.onHand, 0),
-      totalReserved: breakdown.reduce((sum, l) => sum + l.reserved, 0),
+      totalReserved: breakdown.reduce((sum, l) => sum + (l.reserved ?? 0), 0),
       totalAtp: breakdown.reduce((sum, l) => sum + l.atp, 0),
       locationBreakdown: breakdown,
     };

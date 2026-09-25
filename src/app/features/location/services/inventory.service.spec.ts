@@ -10,33 +10,22 @@
  *   getSyncLog              → LocationSyncService.getSyncLog
  *   triggerLocationSync     → LocationSyncService.triggerLocationSync
  *
- * Storage-location writes (and the single storage-location read) have no SDK
- * operation and remain hand-written paths through ApiBaseService:
- *   getStorageLocation      → GET  /inventory/v1/inventory/storage-locations/{id}
- *   createStorageLocation   → POST /inventory/v1/inventory/storage-locations (Idempotency-Key)
- *   updateStorageLocation   → PUT  /inventory/v1/inventory/storage-locations/{id} (Idempotency-Key)
- *   deactivateStorageLocation → POST /inventory/v1/inventory/storage-locations/{id}/deactivate
+ * Issue #371: this service used to also carry getStorageLocation/createStorageLocation/
+ * updateStorageLocation/deactivateStorageLocation, hand-built against the wrong module
+ * (`/inventory/v1/inventory/storage-locations/...`, a pos-inventory read-only placeholder)
+ * and unreachable (404). None had a caller, so they were deleted along with their tests;
+ * see location.service.spec.ts for the real, site-scoped storage-location operations.
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { InventoryReferenceDataService, LocationSyncService } from '@durion-sdk/inventory';
-import { ApiBaseService } from '../../../core/services/api-base.service';
 import { InventoryService } from './inventory.service';
 import { LocationDto, StorageLocationDto, SyncLogResponse } from '../models/location-sync.models';
 
 // ---------------------------------------------------------------------------
 // Shared mocks
 // ---------------------------------------------------------------------------
-
-const apiMock = {
-  get: vi.fn(),
-  post: vi.fn(),
-  put: vi.fn(),
-  patch: vi.fn(),
-  delete: vi.fn(),
-  deleteWithBody: vi.fn(),
-};
 
 const refDataMock = {
   listInventoryLocations: vi.fn(),
@@ -59,9 +48,6 @@ describe('InventoryService', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    apiMock.get.mockReturnValue(of({}));
-    apiMock.post.mockReturnValue(of({}));
-    apiMock.put.mockReturnValue(of({}));
     refDataMock.listInventoryLocations.mockReturnValue(of({ content: [] }));
     refDataMock.listInventoryStorageLocations.mockReturnValue(of({ content: [] }));
     refDataMock.listStorageTypes.mockReturnValue(of([]));
@@ -72,7 +58,6 @@ describe('InventoryService', () => {
     TestBed.configureTestingModule({
       providers: [
         InventoryService,
-        { provide: ApiBaseService, useValue: apiMock },
         { provide: InventoryReferenceDataService, useValue: refDataMock },
         { provide: LocationSyncService, useValue: syncMock },
       ],
@@ -131,87 +116,6 @@ describe('InventoryService', () => {
       service.listStorageLocations('loc-abc').subscribe(r => (result = r));
 
       expect(result).toEqual(rows);
-    });
-  });
-
-  // ── getStorageLocation() ───────────────────────────────────────────────────
-
-  describe('getStorageLocation()', () => {
-    it('calls GET /inventory/v1/inventory/storage-locations/{id}', () => {
-      service.getStorageLocation('sl-999').subscribe();
-
-      const [path] = apiMock.get.mock.calls[0];
-      expect(path).toBe('/inventory/v1/inventory/storage-locations/sl-999');
-    });
-  });
-
-  // ── createStorageLocation() ────────────────────────────────────────────────
-
-  describe('createStorageLocation()', () => {
-    const payload = { name: 'Bin 42', locationId: 'loc-1' };
-
-    it('calls POST /inventory/v1/inventory/storage-locations with the body', () => {
-      service.createStorageLocation(payload, 'idem-key-1').subscribe();
-
-      const [path, body] = apiMock.post.mock.calls[0];
-      expect(path).toBe('/inventory/v1/inventory/storage-locations');
-      expect(body).toEqual(payload);
-    });
-
-    it('forwards the Idempotency-Key header', () => {
-      service.createStorageLocation(payload, 'idem-key-create').subscribe();
-
-      const [, , options] = apiMock.post.mock.calls[0];
-      expect(options?.headers?.['Idempotency-Key']).toBe('idem-key-create');
-    });
-
-    it('omits Idempotency-Key header when key is not provided', () => {
-      service.createStorageLocation(payload).subscribe();
-
-      const [, , options] = apiMock.post.mock.calls[0];
-      expect(options).toBeUndefined();
-    });
-  });
-
-  // ── updateStorageLocation() ────────────────────────────────────────────────
-
-  describe('updateStorageLocation()', () => {
-    const updateBody = { name: 'Bin 43' };
-
-    it('calls PUT /inventory/v1/inventory/storage-locations/{id} with the body', () => {
-      service.updateStorageLocation('sl-1', updateBody, 'idem-key-update').subscribe();
-
-      const [path, body] = apiMock.put.mock.calls[0];
-      expect(path).toBe('/inventory/v1/inventory/storage-locations/sl-1');
-      expect(body).toEqual(updateBody);
-    });
-
-    it('forwards the Idempotency-Key header', () => {
-      service.updateStorageLocation('sl-1', updateBody, 'idem-key-update').subscribe();
-
-      const [, , options] = apiMock.put.mock.calls[0];
-      expect(options?.headers?.['Idempotency-Key']).toBe('idem-key-update');
-    });
-  });
-
-  // ── deactivateStorageLocation() ───────────────────────────────────────────
-
-  describe('deactivateStorageLocation()', () => {
-    const deactivateBody = { reason: 'OBSOLETE' };
-
-    it('calls POST /inventory/v1/inventory/storage-locations/{id}/deactivate with the body', () => {
-      service.deactivateStorageLocation('sl-2', deactivateBody, 'idem-key-deact').subscribe();
-
-      const [path, body] = apiMock.post.mock.calls[0];
-      expect(path).toBe('/inventory/v1/inventory/storage-locations/sl-2/deactivate');
-      expect(body).toEqual(deactivateBody);
-    });
-
-    it('forwards the Idempotency-Key header', () => {
-      service.deactivateStorageLocation('sl-2', deactivateBody, 'idem-key-deact').subscribe();
-
-      const [, , options] = apiMock.post.mock.calls[0];
-      expect(options?.headers?.['Idempotency-Key']).toBe('idem-key-deact');
     });
   });
 

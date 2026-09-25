@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { firstValueFrom, of, throwError } from 'rxjs';
 import { ApiBaseService } from '../../../core/services/api-base.service';
 import { AuthService } from '../../../core/services/auth.service';
 import {
@@ -37,6 +37,7 @@ describe('AccountingService', () => {
     put: vi.fn(),
     patch: vi.fn(),
     delete: vi.fn(),
+    getBlob: vi.fn(),
   };
 
   const accountingEventsStub = {
@@ -430,21 +431,76 @@ describe('AccountingService', () => {
     });
   });
 
-  describe('downloadExport() [issue #350]', () => {
-    it('builds the download URL from the injected AccountingConfiguration basePath, not environment.apiBaseUrl', () => {
+  describe('downloadExport() [issue #350, #373]', () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('fetches the export as an authenticated blob (ADR-0041) and triggers the download from an object URL', async () => {
+      const blob = new Blob(['csv bytes']);
+      apiBaseServiceStub.getBlob.mockReturnValueOnce(of(blob));
       const clickSpy = vi.fn();
       const anchor = { href: '', download: '', click: clickSpy, remove: vi.fn() } as unknown as HTMLAnchorElement;
       const createElementSpy = vi.spyOn(document, 'createElement').mockReturnValue(anchor);
       const appendSpy = vi.spyOn(document.body, 'append').mockImplementation(() => {});
+      const objectUrl = 'blob:mock-url';
+      const createObjectURLSpy = vi.spyOn(URL, 'createObjectURL').mockReturnValue(objectUrl);
+      const revokeObjectURLSpy = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+      vi.useFakeTimers();
 
-      service.downloadExport('exp-1');
+      let completed = false;
+      service.downloadExport('exp-1').subscribe(() => (completed = true));
 
-      expect(anchor.href).toBe('/api/accounting/v1/accounting/export/download?exportId=exp-1');
+      // A plain `<a href>` navigation bypasses HttpClient's auth interceptor and
+      // 401s; the download must go through the authenticated ApiBaseService.getBlob
+      // request instead (ADR-0041).
+      expect(apiBaseServiceStub.getBlob).toHaveBeenCalledWith(
+        '/v1/accounting/reports/export/exp-1/download',
+        { baseUrlOverride: '/api/accounting' },
+      );
+      expect(createObjectURLSpy).toHaveBeenCalledWith(blob);
+      expect(anchor.href).toBe(objectUrl);
       expect(anchor.download).toBe('time-export-exp-1.csv');
       expect(clickSpy).toHaveBeenCalledTimes(1);
+      expect(completed).toBe(true);
+
+      // The revoke is deferred past the click, not synchronous with it (ADR-0065 §3 / SEC-08).
+      expect(revokeObjectURLSpy).not.toHaveBeenCalled();
+      vi.runAllTimers();
+      expect(revokeObjectURLSpy).toHaveBeenCalledWith(objectUrl);
 
       createElementSpy.mockRestore();
       appendSpy.mockRestore();
+    });
+
+    it('URL-encodes the exportId path segment [issue #368]', () => {
+      apiBaseServiceStub.getBlob.mockReturnValueOnce(of(new Blob(['bytes'])));
+      const anchor = { href: '', download: '', click: vi.fn(), remove: vi.fn() } as unknown as HTMLAnchorElement;
+      const createElementSpy = vi.spyOn(document, 'createElement').mockReturnValue(anchor);
+      const appendSpy = vi.spyOn(document.body, 'append').mockImplementation(() => {});
+      vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:mock-url');
+      vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+
+      service.downloadExport('exp/1 special').subscribe();
+
+      expect(apiBaseServiceStub.getBlob).toHaveBeenCalledWith(
+        '/v1/accounting/reports/export/exp%2F1%20special/download',
+        { baseUrlOverride: '/api/accounting' },
+      );
+
+      createElementSpy.mockRestore();
+      appendSpy.mockRestore();
+    });
+
+    it('propagates a fetch failure through the observable instead of triggering a download', async () => {
+      const failure = new Error('401');
+      apiBaseServiceStub.getBlob.mockReturnValueOnce(throwError(() => failure));
+      const createElementSpy = vi.spyOn(document, 'createElement');
+
+      await expect(firstValueFrom(service.downloadExport('exp-1'))).rejects.toBe(failure);
+      expect(createElementSpy).not.toHaveBeenCalled();
+
+      createElementSpy.mockRestore();
     });
   });
 

@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { firstValueFrom, of } from 'rxjs';
+import { firstValueFrom, of, throwError } from 'rxjs';
 import { provideAccountingTimeExportSource } from './time-export-source.provider';
 import { AccountingService } from './accounting.service';
 import { TIME_EXPORT_SOURCE } from '../../../shared/time-export/time-export-source.tokens';
@@ -62,6 +62,7 @@ describe('provideAccountingTimeExportSource', () => {
   });
 
   it('forwards downloadExport once AccountingService resolves', async () => {
+    stubAccounting.downloadExport.mockReturnValue(of(undefined));
     const source = TestBed.inject(TIME_EXPORT_SOURCE);
 
     await firstValueFrom(source.downloadExport('exp-1'));
@@ -72,9 +73,7 @@ describe('provideAccountingTimeExportSource', () => {
   it('surfaces a downloadExport failure through the observable error channel, not an unhandled rejection', async () => {
     const source = TestBed.inject(TIME_EXPORT_SOURCE);
     const failure = new Error('download failed');
-    stubAccounting.downloadExport.mockImplementation(() => {
-      throw failure;
-    });
+    stubAccounting.downloadExport.mockReturnValue(throwError(() => failure));
 
     await expect(firstValueFrom(source.downloadExport('exp-1'))).rejects.toBe(failure);
   });

@@ -4108,7 +4108,8 @@
           "OUT_OF_STOCK": "Sin stock"
         },
         "STATE": {
-          "EMPTY": "No se encontraron datos de feed de inventario."
+          "EMPTY": "No se encontraron datos de feed de inventario.",
+          "UNAVAILABLE": "La disponibilidad del feed del proveedor aún no está disponible."
         },
         "ERROR": {
           "LOAD": "Error al cargar los feeds de inventario."

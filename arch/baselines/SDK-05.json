@@ -5,9 +5,9 @@
     "tracking": "#350"
   },
   {
-    "key": "src/app/features/accounting/services/accounting.service.ts :: '/v1/accounting/export/download?exportId='",
-    "reason": "downloadExport() has no SDK download/streaming operation; the URL is still hand-built, but now from the injected AccountingConfiguration.basePath instead of environment.apiBaseUrl (SDK-06 fixed).",
-    "tracking": "#350"
+    "key": "src/app/features/accounting/services/accounting.service.ts :: '/v1/accounting/reports/export/'",
+    "reason": "downloadExport() has no SDK download/streaming operation (backend #2216 will add downloadReportExport to the OpenAPI spec); the URL is still hand-built, but now from the injected AccountingConfiguration.basePath instead of environment.apiBaseUrl (SDK-06 fixed) and pointed at ReportExportController's real path with the id as a path segment (issue #368).",
+    "tracking": "#368"
   },
   {
     "key": "src/app/features/billing/services/billing-transport.service.ts :: '/v1/invoices/'",
@@ -90,27 +90,7 @@
     "tracking": "#350"
   },
   {
-    "key": "src/app/features/location/services/inventory.service.ts :: '/inventory/v1/inventory'",
-    "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "#350"
-  },
-  {
     "key": "src/app/features/people/services/people.service.ts :: '/people/v1/people/workSessions/'",
-    "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "#350"
-  },
-  {
-    "key": "src/app/features/product/services/product-inventory.service.ts :: '/inventory/v1/availability/by-sku'",
-    "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "#350"
-  },
-  {
-    "key": "src/app/features/product/services/product-inventory.service.ts :: '/inventory/v1/lead-time'",
-    "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "#350"
-  },
-  {
-    "key": "src/app/features/product/services/product-inventory.service.ts :: '/inventory/v1/locations/'",
     "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
     "tracking": "#350"
   },
