@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import enUS from '../../../../../../assets/i18n/en-US.json';
 import { FeedsComponent } from './feeds.component';
 
 describe('FeedsComponent', () => {
@@ -10,6 +11,10 @@ describe('FeedsComponent', () => {
     await TestBed.configureTestingModule({
       imports: [FeedsComponent, TranslateModule.forRoot()],
     }).compileComponents();
+
+    const translate = TestBed.inject(TranslateService);
+    translate.setTranslation('en-US', enUS);
+    translate.use('en-US');
 
     fixture = TestBed.createComponent(FeedsComponent);
     component = fixture.componentInstance;
@@ -61,5 +66,7 @@ describe('FeedsComponent', () => {
 
     const notice = (fixture.nativeElement as HTMLElement).querySelector('[role="status"]');
     expect(notice).toBeTruthy();
+    // The shipped en-US copy, not the raw key (ADR-0035 §8).
+    expect(notice?.textContent?.trim()).toBe(enUS.PRODUCT.INVENTORY.FEEDS.STATE.UNAVAILABLE);
   });
 });
