@@ -68,8 +68,8 @@ export class InventoryReceivingService {
 
   // Backend #2211: `GET /v1/inventory/receiving/workorders` (searchCrossDockWorkorders) is
   // the correct backend path. The previous ApiBaseService call routed to
-  // `/v1/receiving/workorders` (missing the `/inventory` segment between `/v1` and
-  // `/receiving`), which 404'd against the real ReceivingController mapping.
+  // `/inventory/v1/receiving/workorders` (the `/inventory` segment came before `/v1` instead
+  // of after it), which 404'd against the real ReceivingController mapping.
   searchWorkordersForCrossDock(query: string): Observable<WorkorderCrossDockRef[]> {
     return this.receivingSdk
       .searchCrossDockWorkorders(query)
