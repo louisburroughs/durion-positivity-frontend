@@ -6617,8 +6617,12 @@
         "REASON_LABEL": "Motivo",
         "AUTHORITY_LABEL": "Código de autorización",
         "AMOUNT_LABEL": "Importe del reembolso (obligatorio)",
-        "PRIOR_REFUNDS_LOADING": "Cargando reembolsos anteriores...",
-        "PRIOR_REFUNDS_LABEL": "Ya reembolsado"
+        "CONTEXT_LOADING": "Cargando saldo de reembolso...",
+        "CAPTURED_LABEL": "Capturado",
+        "REFUNDED_LABEL": "Ya reembolsado",
+        "REFUNDABLE_LABEL": "Saldo reembolsable",
+        "REFUNDABLE_UNAVAILABLE": "El saldo reembolsable no está disponible hasta que se capture este pago.",
+        "ACTION_FULL_BALANCE": "Reembolsar saldo completo"
       },
       "ERROR": {
         "CAPTURE": "No se pudo procesar el pago. Inténtelo de nuevo.",
@@ -6627,8 +6631,10 @@
         "MISSING_IDS": "Referencia de pago o factura no válida.",
         "REFUND_AMOUNT_REQUIRED": "Ingrese un importe de reembolso mayor que cero.",
         "REFUND_AMOUNT_EXCEEDS_BALANCE": "El importe del reembolso no puede superar el saldo reembolsable.",
-        "REFUND_CONTEXT_LOAD": "No se pudieron cargar los reembolsos anteriores.",
-        "REFUND_PERMISSION_DENIED": "No tiene permiso para reembolsar este pago."
+        "REFUND_CONTEXT_LOAD": "No se pudo cargar el saldo reembolsable.",
+        "REFUND_PERMISSION_DENIED": "No tiene permiso para reembolsar este pago.",
+        "VOID_PERMISSION_DENIED": "No tiene permiso para anular este pago.",
+        "LOCATION_SCOPE_DENIED": "Esta factura está fuera de su ubicación asignada. Pida a un gerente con acceso a esta ubicación que complete esta acción."
       }
     },
     "RECEIPT": {
@@ -6637,7 +6643,16 @@
         "RECEIPT_NUMBER": "Número de recibo",
         "INVOICE_REF": "Referencia de factura",
         "GENERATED_AT": "Generado",
-        "EMAILED_TO": "Enviado por correo a"
+        "EMAILED_TO": "Enviado por correo a",
+        "STATUS": "Estado",
+        "PAID_AMOUNT": "Importe pagado",
+        "PAYMENT_METHOD": "Método de pago",
+        "CASHIER": "Cajero",
+        "TERMINAL": "Terminal",
+        "DELIVERY_METHOD": "Método de entrega",
+        "DELIVERY_EMAIL": "Entregado a",
+        "REPRINT_COUNT": "Cantidad de reimpresiones",
+        "LAST_REPRINT_BY": "Última reimpresión por"
       },
       "ACTION": {
         "GENERATE": "Generar recibo",
@@ -6652,15 +6667,22 @@
       },
       "EMAIL_LABEL": "Dirección de correo electrónico",
       "IDLE": "Aún no se ha generado ningún recibo.",
+      "STATUS": {
+        "GENERATED": "Generado"
+      },
       "ERROR": {
         "LOAD": "No se pudo cargar el recibo.",
+        "LOAD_PERMISSION_DENIED": "No tiene permiso para ver este recibo.",
         "GENERATE": "No se pudo generar el recibo. Inténtelo de nuevo.",
         "GENERATE_PERMISSION_DENIED": "No tiene permiso para generar este recibo.",
         "REPRINT": "No se pudo reimprimir el recibo. Inténtelo de nuevo.",
         "REPRINT_PERMISSION_DENIED": "No tiene permiso para reimprimir este recibo.",
         "MISSING_INVOICE": "No se proporciónó ID de factura.",
-        "NOT_AVAILABLE": "Este recibo no está disponible para ver. Use reimprimir para obtener una copia."
-      }
+        "NOT_FOUND": "Recibo no encontrado.",
+        "REPRINT_OVERRIDE_REQUIRED": "Este recibo superó el límite estándar de reimpresiones. Se requiere permiso de anulación de un supervisor para reimprimirlo nuevamente.",
+        "LOCATION_SCOPE_DENIED": "Esta factura está fuera de su ubicación asignada. Pida a un gerente con acceso a esta ubicación que complete esta acción."
+      },
+      "REPRINT_CAP_WARNING": "Este recibo alcanzó el límite estándar de reimpresiones. Las reimpresiones adicionales requieren autorización de un supervisor."
     },
     "INVOICE_STATUS": {
       "DRAFT": "Borrador",

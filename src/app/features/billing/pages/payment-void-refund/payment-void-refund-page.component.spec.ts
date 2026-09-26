@@ -4,6 +4,8 @@ import { ActivatedRoute, provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { Subject, of, throwError } from 'rxjs';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { AuthService } from '../../../../core/services/auth.service';
+import { BILLING_SECTION } from '../../../../core/security/route-permissions';
 import { RefundContext } from '../../models/billing.models';
 import { BillingTransportService } from '../../services/billing-transport.service';
 import { PaymentVoidRefundPageComponent } from './payment-void-refund-page.component';
@@ -25,7 +27,18 @@ const routeStub = {
 };
 
 const contextFixture: RefundContext = {
-  priorRefundsTotal: 20,
+  capturedAmount: 100,
+  refundedAmount: 20,
+  refundableAmount: 80,
+  status: 'CAPTURED',
+};
+
+/** `null` = token with no permission claim (permissions unknown), as in AuthService. */
+const session: { permissions: string[] | null } = { permissions: null };
+const authStub = {
+  permissionsKnown: () => session.permissions !== null,
+  hasAnyPermission: (permissions: readonly string[]) =>
+    permissions.some(p => session.permissions?.includes(p) ?? false),
 };
 
 describe('PaymentVoidRefundPageComponent', () => {
@@ -45,6 +58,7 @@ describe('PaymentVoidRefundPageComponent', () => {
   }
 
   beforeEach(async () => {
+    session.permissions = null;
     billingTransportStub.executeVoid.mockReset();
     billingTransportStub.executeRefund.mockReset();
     billingTransportStub.loadRefundContext.mockReset();
@@ -56,6 +70,7 @@ describe('PaymentVoidRefundPageComponent', () => {
         provideRouter([]),
         { provide: BillingTransportService, useValue: billingTransportStub },
         { provide: ActivatedRoute, useValue: routeStub },
+        { provide: AuthService, useValue: authStub },
       ],
     }).compileComponents();
 
@@ -92,7 +107,29 @@ describe('PaymentVoidRefundPageComponent', () => {
     expect(stateOrder).toBeLessThan(errorKeyOrder);
   });
 
+  it('maps a 403 from executeVoid to a permission-denied key', () => {
+    billingTransportStub.executeVoid.mockReturnValue(
+      throwError(() => new HttpErrorResponse({ status: 403 })),
+    );
+
+    component.executeVoid('CUSTOMER_REQUEST', 'AUTH-VOID');
+
+    expect(component.state()).toBe('error');
+    expect(component.errorKey()).toBe('BILLING.PAYMENT.ERROR.VOID_PERMISSION_DENIED');
+  });
+
+  it('maps a 403 with a LOCATION_SCOPE_DENIED body code from executeVoid to the location-scope key', () => {
+    billingTransportStub.executeVoid.mockReturnValue(
+      throwError(() => new HttpErrorResponse({ status: 403, error: { code: 'LOCATION_SCOPE_DENIED' } })),
+    );
+
+    component.executeVoid('CUSTOMER_REQUEST', 'AUTH-VOID');
+
+    expect(component.errorKey()).toBe('BILLING.PAYMENT.ERROR.LOCATION_SCOPE_DENIED');
+  });
+
   it('sets error state before errorKey when executeRefund() fails', () => {
+    component.setMode('refund'); // settles the balance read the refund requires (ADR-0064)
     billingTransportStub.executeRefund.mockReturnValue(throwError(() => new Error('refund fail')));
     const stateSetSpy = vi.spyOn(component.state, 'set');
     const errorKeySetSpy = vi.spyOn(component.errorKey, 'set');
@@ -108,6 +145,7 @@ describe('PaymentVoidRefundPageComponent', () => {
   });
 
   it('maps a 422 from executeRefund to the balance-exceeded key', () => {
+    component.setMode('refund'); // settles the balance read the refund requires (ADR-0064)
     billingTransportStub.executeRefund.mockReturnValue(
       throwError(() => new HttpErrorResponse({ status: 422 })),
     );
@@ -118,7 +156,8 @@ describe('PaymentVoidRefundPageComponent', () => {
     expect(component.errorKey()).toBe('BILLING.PAYMENT.ERROR.REFUND_AMOUNT_EXCEEDS_BALANCE');
   });
 
-  it('maps a 403 from executeRefund to a localized permission error instead of a frontend gate (Copilot #4106105951/#4106105999/#4106194893/#4106194936, durion-positivity-backend#2226)', () => {
+  it('maps a plain 403 from executeRefund to the permission-denied key', () => {
+    component.setMode('refund'); // settles the balance read the refund requires (ADR-0064)
     billingTransportStub.executeRefund.mockReturnValue(
       throwError(() => new HttpErrorResponse({ status: 403 })),
     );
@@ -136,7 +175,19 @@ describe('PaymentVoidRefundPageComponent', () => {
     );
   });
 
-  it('sets ready state on successful refund, sending the entered amount explicitly (issue #381), and re-reads the prior-refunds context (ADR-0063 §5)', () => {
+  it('maps a 403 with a LOCATION_SCOPE_DENIED body code from executeRefund to the location-scope key', () => {
+    component.setMode('refund'); // settles the balance read the refund requires (ADR-0064)
+    billingTransportStub.executeRefund.mockReturnValue(
+      throwError(() => new HttpErrorResponse({ status: 403, error: { code: 'LOCATION_SCOPE_DENIED' } })),
+    );
+
+    component.executeRefund('test reason', 'AUTH1', 42.5);
+
+    expect(component.errorKey()).toBe('BILLING.PAYMENT.ERROR.LOCATION_SCOPE_DENIED');
+  });
+
+  it('sets ready state on successful refund, sending the entered amount explicitly (issue #381), and re-reads the refund context (ADR-0063 §5)', () => {
+    component.setMode('refund'); // settles the balance read the refund requires (ADR-0064)
     billingTransportStub.executeRefund.mockReturnValue(of(undefined));
     billingTransportStub.loadRefundContext.mockClear();
 
@@ -153,7 +204,44 @@ describe('PaymentVoidRefundPageComponent', () => {
     expect(billingTransportStub.loadRefundContext).toHaveBeenCalledWith('inv-001', 'pay-001');
   });
 
+  it('blocks a second refund (control and method) while the post-refund balance re-read is pending (ADR-0064)', () => {
+    component.setMode('refund');
+    billingTransportStub.executeRefund.mockReturnValue(of(undefined));
+    const reread$ = new Subject<RefundContext>();
+    billingTransportStub.loadRefundContext.mockReturnValue(reread$.asObservable());
+    component.refundReason.set('reason');
+    component.refundAuthorityCode.set('AUTH1');
+    component.refundAmount.set(10);
+
+    component.executeRefund('reason', 'AUTH1', 10);
+    expect(component.refundContextStatus()).toBe('PENDING');
+    billingTransportStub.executeRefund.mockClear();
+
+    expect(component.canSubmitRefund()).toBe(false);
+    component.executeRefund('reason', 'AUTH1', 10);
+    expect(billingTransportStub.executeRefund).not.toHaveBeenCalled();
+
+    reread$.next({ ...contextFixture, refundableAmount: 70 });
+    reread$.complete();
+    expect(component.refundContextStatus()).toBe('OK');
+    expect(component.canSubmitRefund()).toBe(true);
+  });
+
+  it('keeps refunds blocked after the post-refund balance re-read fails', () => {
+    component.setMode('refund');
+    billingTransportStub.executeRefund.mockReturnValue(of(undefined));
+    billingTransportStub.loadRefundContext.mockReturnValue(throwError(() => new Error('reread failed')));
+
+    component.executeRefund('reason', 'AUTH1', 10);
+    expect(component.refundContextStatus()).toBe('FAILED');
+    billingTransportStub.executeRefund.mockClear();
+
+    component.executeRefund('reason', 'AUTH1', 10);
+    expect(billingTransportStub.executeRefund).not.toHaveBeenCalled();
+  });
+
   it('sets error state before errorKey and never calls the service when refund amount is missing (issue #381: no more implicit full refund)', () => {
+    component.setMode('refund'); // settles the balance read the refund requires (ADR-0064)
     const stateSetSpy = vi.spyOn(component.state, 'set');
     const errorKeySetSpy = vi.spyOn(component.errorKey, 'set');
 
@@ -169,6 +257,7 @@ describe('PaymentVoidRefundPageComponent', () => {
   });
 
   it('sets error state and never calls the service when refund amount is zero or negative', () => {
+    component.setMode('refund'); // settles the balance read the refund requires (ADR-0064)
     component.executeRefund('reason', 'AUTH1', 0);
     expect(component.state()).toBe('error');
     expect(component.errorKey()).toBe('BILLING.PAYMENT.ERROR.REFUND_AMOUNT_REQUIRED');
@@ -180,25 +269,14 @@ describe('PaymentVoidRefundPageComponent', () => {
     expect(billingTransportStub.executeRefund).not.toHaveBeenCalled();
   });
 
-  it('sends the entered amount through even when it exceeds the prior-refunds context — no client-side balance check (Copilot #4106106128: no safe local figure to validate against; the server 422 is authoritative)', () => {
-    billingTransportStub.executeRefund.mockReturnValue(of(undefined));
-    component.setMode('refund'); // loads the prior-refunds context, informational only
+  it('re-validates the amount against the known refundable balance inside executeRefund, even for an untouched field, and never calls the service', () => {
+    component.setMode('refund'); // loads contextFixture: refundableAmount 80
 
-    component.executeRefund('reason', 'AUTH1', 999);
+    component.executeRefund('reason', 'AUTH1', 500);
 
-    expect(billingTransportStub.executeRefund).toHaveBeenCalledWith('inv-001', 'pay-001', 'reason', 'AUTH1', 999);
-  });
-
-  it('canSubmitRefund() is false with no amount entered and true once a positive amount is entered', () => {
-    component.refundReason.set('reason');
-    component.refundAuthorityCode.set('AUTH1');
-    expect(component.canSubmitRefund()).toBe(false);
-
-    component.setRefundAmount('0');
-    expect(component.canSubmitRefund()).toBe(false);
-
-    component.setRefundAmount('25');
-    expect(component.canSubmitRefund()).toBe(true);
+    expect(component.state()).toBe('error');
+    expect(component.errorKey()).toBe('BILLING.PAYMENT.ERROR.REFUND_AMOUNT_EXCEEDS_BALANCE');
+    expect(billingTransportStub.executeRefund).not.toHaveBeenCalled();
   });
 
   it('setRefundAmount with empty string sets refundAmount to null', () => {
@@ -245,8 +323,8 @@ describe('PaymentVoidRefundPageComponent', () => {
     expect(stateOrder).toBeLessThan(errorKeyOrder);
   });
 
-  describe('refund context (durion-positivity-backend#2215, Copilot #4106106128)', () => {
-    it('loads the prior-refunds context once refund mode is entered', () => {
+  describe('refund context (durion-positivity-backend#2226: getInvoicePayment)', () => {
+    it('loads the refund context once refund mode is entered', () => {
       expect(billingTransportStub.loadRefundContext).not.toHaveBeenCalled();
 
       component.setMode('refund');
@@ -282,64 +360,140 @@ describe('PaymentVoidRefundPageComponent', () => {
       billingTransportStub.loadRefundContext.mockReturnValueOnce(first$);
       component.setMode('refund'); // issues the first (still-pending) read
 
-      const second: RefundContext = { priorRefundsTotal: 5 };
+      const second: RefundContext = { capturedAmount: 100, refundedAmount: 0, refundableAmount: 5, status: 'CAPTURED' };
       billingTransportStub.loadRefundContext.mockReturnValueOnce(of(second));
       component.retryLoadRefundContext(); // supersedes it — the retry lands first
 
-      expect(component.refundContext()?.priorRefundsTotal).toBe(5);
+      expect(component.refundContext()?.refundableAmount).toBe(5);
 
       // The stale first read landing after the retry must not overwrite the current value.
       first$.next(contextFixture);
-      expect(component.refundContext()?.priorRefundsTotal).toBe(5);
+      expect(component.refundContext()?.refundableAmount).toBe(5);
     });
   });
 
-  describe('inline amount validation (ADR-0029 §8.3)', () => {
-    it('shows no error before the field is touched', () => {
+  describe('full-balance prefill (durion-positivity-backend#2215 ruling)', () => {
+    it('prefillFullBalance() sets the amount from refundableAmount and marks the field touched', () => {
+      component.setMode('refund');
+
+      component.prefillFullBalance();
+
+      expect(component.refundAmount()).toBe(80);
       expect(component.refundAmountErrorKey()).toBeNull();
     });
 
-    it('shows the required key once touched with no amount', () => {
-      component.markRefundAmountTouched();
-      expect(component.refundAmountErrorKey()).toBe('BILLING.PAYMENT.ERROR.REFUND_AMOUNT_REQUIRED');
+    it('prefillFullBalance() is a no-op when refundableAmount is null (not yet captured)', () => {
+      billingTransportStub.loadRefundContext.mockReturnValue(
+        of({ capturedAmount: 0, refundedAmount: 0, refundableAmount: null, status: 'AUTHORIZED' } as RefundContext),
+      );
+      component.setMode('refund');
+
+      component.prefillFullBalance();
+
+      expect(component.refundAmount()).toBeNull();
     });
 
-    it('clears once a valid amount is entered', () => {
+    it('prefillFullBalance() is a no-op when refundableAmount is zero (already fully refunded)', () => {
+      billingTransportStub.loadRefundContext.mockReturnValue(
+        of({ capturedAmount: 100, refundedAmount: 100, refundableAmount: 0, status: 'REFUNDED' } as RefundContext),
+      );
+      component.setMode('refund');
+
+      component.prefillFullBalance();
+
+      expect(component.refundAmount()).toBeNull();
+    });
+
+    it('disables the full-balance button when refundableAmount is null or non-positive', () => {
+      billingTransportStub.loadRefundContext.mockReturnValue(
+        of({ capturedAmount: 100, refundedAmount: 100, refundableAmount: 0, status: 'REFUNDED' } as RefundContext),
+      );
+      component.setMode('refund');
+      fixture.detectChanges();
+
+      const btn = fixture.nativeElement.querySelector('[data-testid="refund-prefill-full-balance"]');
+      expect(btn.disabled).toBe(true);
+    });
+
+    it('rejects a typed amount above the refundable balance client-side, distinct from the server 422', () => {
       component.setMode('refund');
       component.markRefundAmountTouched();
-      component.setRefundAmount('25');
+      component.setRefundAmount('81');
 
-      expect(component.refundAmountErrorKey()).toBeNull();
+      expect(component.refundAmountErrorKey()).toBe('BILLING.PAYMENT.ERROR.REFUND_AMOUNT_EXCEEDS_BALANCE');
+      expect(component.canSubmitRefund()).toBe(false);
     });
 
-    it('the rendered field wires aria-invalid and aria-describedby to the error', () => {
+    it('allows a partial refund amount at or under the refundable balance', () => {
       component.setMode('refund');
-      fixture.detectChanges();
-      const input: HTMLInputElement = fixture.nativeElement.querySelector('#refund-amount-input');
-
-      input.dispatchEvent(new Event('blur'));
-      fixture.detectChanges();
-
-      expect(input.getAttribute('aria-invalid')).toBe('true');
-      expect(input.getAttribute('aria-describedby')).toBe('refund-amount-error');
-      expect(fixture.nativeElement.querySelector('#refund-amount-error')).toBeTruthy();
-    });
-  });
-
-  describe('no frontend permission gate (Copilot #4106105951/#4106105999/#4106194893/#4106194936, durion-positivity-backend#2226)', () => {
-    it('enables the refund control on form validity alone — REFUND_PAYMENT has no catalog entry to gate on', () => {
-      component.setMode('refund');
-      fixture.detectChanges();
-
-      expect(fixture.nativeElement.querySelector('[data-testid="refund-permission-denied"]')).toBeNull();
-      expect(fixture.nativeElement.querySelector('.pvm__refund-btn').disabled).toBe(true); // form incomplete
-
       component.refundReason.set('reason');
       component.refundAuthorityCode.set('AUTH1');
-      component.setRefundAmount('25');
+      component.markRefundAmountTouched();
+      component.setRefundAmount('80');
+
+      expect(component.refundAmountErrorKey()).toBeNull();
+      expect(component.canSubmitRefund()).toBe(true);
+    });
+  });
+
+  describe('per-control permission gates (durion-positivity-backend#2226, catalog v92)', () => {
+    /**
+     * A fresh component per scenario, with `session.permissions` set *before* creation: `canVoid`/
+     * `canRefund` are Angular `computed()`s wrapping a plain (non-signal) stub method, so they
+     * memoize on first read and never re-evaluate on a later mutation of `session.permissions` —
+     * unlike the real `AuthService`, whose `permissionsKnown`/`hasAnyPermission` read actual
+     * signals, so a real gate does react to a token refresh.
+     */
+    async function freshComponentWith(permissions: string[] | null): Promise<PaymentVoidRefundPageComponent> {
+      session.permissions = permissions;
+      TestBed.resetTestingModule();
+      await TestBed.configureTestingModule({
+        imports: [PaymentVoidRefundPageComponent, TranslateModule.forRoot()],
+        providers: [
+          provideRouter([]),
+          { provide: BillingTransportService, useValue: billingTransportStub },
+          { provide: ActivatedRoute, useValue: routeStub },
+          { provide: AuthService, useValue: authStub },
+        ],
+      }).compileComponents();
+      setup();
+      return component;
+    }
+
+    it('grants both controls when the permission claim is unknown (legacy token), matching canAccess()', async () => {
+      const c = await freshComponentWith(null);
+      expect(c.canVoid()).toBe(true);
+      expect(c.canRefund()).toBe(true);
+    });
+
+    it('grants both controls when the session holds the exact catalog codes', async () => {
+      const c = await freshComponentWith([...BILLING_SECTION.voidExecute, ...BILLING_SECTION.refundExecute]);
+      expect(c.canVoid()).toBe(true);
+      expect(c.canRefund()).toBe(true);
+    });
+
+    it('denies a control when permissions are known but the code is absent, and shows the hint', async () => {
+      const c = await freshComponentWith([]);
+
+      expect(c.canVoid()).toBe(false);
+      expect(c.canRefund()).toBe(false);
+
+      c.voidReason.set('reason');
+      c.voidAuthorityCode.set('AUTH1');
       fixture.detectChanges();
 
-      expect(fixture.nativeElement.querySelector('.pvm__refund-btn').disabled).toBe(false);
+      expect(c.canSubmitVoid()).toBe(false);
+      expect(fixture.nativeElement.querySelector('[data-testid="void-permission-hint"]')).toBeTruthy();
+    });
+
+    it('refuses executeVoid/executeRefund in the method too, not only on the button (ADR-0040 §6a.2)', async () => {
+      const c = await freshComponentWith([]);
+
+      c.executeVoid('reason', 'AUTH1');
+      c.executeRefund('reason', 'AUTH1', 10);
+
+      expect(billingTransportStub.executeVoid).not.toHaveBeenCalled();
+      expect(billingTransportStub.executeRefund).not.toHaveBeenCalled();
     });
   });
 });

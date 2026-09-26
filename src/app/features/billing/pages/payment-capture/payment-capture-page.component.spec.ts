@@ -67,6 +67,19 @@ describe('PaymentCapturePageComponent', () => {
     expect(component.transaction()).toEqual(capturedTxFixture);
   });
 
+  it('links to the receipt page carrying the captured paymentId, so the receipt is generated for this tender', () => {
+    billingTransportStub.initiateAndCapturePayment.mockReturnValueOnce(of(capturedTxFixture));
+
+    component.initiateAndCapture('CARD', 150);
+    fixture.detectChanges();
+
+    const link: HTMLAnchorElement | null = fixture.nativeElement.querySelector('.payment-capture__receipt-link');
+    expect(link).not.toBeNull();
+    const url = new URL(link!.href);
+    expect(url.pathname).toBe('/app/billing/invoices/inv-001/receipts');
+    expect(url.searchParams.get('paymentId')).toBe(capturedTxFixture.paymentId);
+  });
+
   it('sets error state before errorKey when capture flow fails', () => {
     billingTransportStub.initiateAndCapturePayment.mockReturnValue(
       throwError(() => new Error('capture failed')),

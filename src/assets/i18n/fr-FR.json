@@ -6617,8 +6617,12 @@
         "REASON_LABEL": "Raison",
         "AUTHORITY_LABEL": "Code d'autorisation",
         "AMOUNT_LABEL": "Montant du remboursement (obligatoire)",
-        "PRIOR_REFUNDS_LOADING": "Chargement des remboursements antérieurs...",
-        "PRIOR_REFUNDS_LABEL": "Déjà remboursé"
+        "CONTEXT_LOADING": "Chargement du solde remboursable...",
+        "CAPTURED_LABEL": "Capturé",
+        "REFUNDED_LABEL": "Déjà remboursé",
+        "REFUNDABLE_LABEL": "Solde remboursable",
+        "REFUNDABLE_UNAVAILABLE": "Le solde remboursable n'est pas disponible tant que ce paiement n'a pas été capturé.",
+        "ACTION_FULL_BALANCE": "Rembourser le solde complet"
       },
       "ERROR": {
         "CAPTURE": "Impossible de traiter le paiement. Veuillez réessayer.",
@@ -6627,8 +6631,10 @@
         "MISSING_IDS": "Référence de paiement ou de facture invalide.",
         "REFUND_AMOUNT_REQUIRED": "Saisissez un montant de remboursement supérieur à zéro.",
         "REFUND_AMOUNT_EXCEEDS_BALANCE": "Le montant du remboursement ne peut pas dépasser le solde remboursable.",
-        "REFUND_CONTEXT_LOAD": "Impossible de charger les remboursements antérieurs.",
-        "REFUND_PERMISSION_DENIED": "Vous n'avez pas la permission de rembourser ce paiement."
+        "REFUND_CONTEXT_LOAD": "Impossible de charger le solde remboursable.",
+        "REFUND_PERMISSION_DENIED": "Vous n'avez pas la permission de rembourser ce paiement.",
+        "VOID_PERMISSION_DENIED": "Vous n'avez pas la permission d'annuler ce paiement.",
+        "LOCATION_SCOPE_DENIED": "Cette facture est en dehors de votre emplacement assigné. Demandez à un gestionnaire ayant accès à cet emplacement d'effectuer cette action."
       }
     },
     "RECEIPT": {
@@ -6637,7 +6643,16 @@
         "RECEIPT_NUMBER": "Numero de recu",
         "INVOICE_REF": "Reference de facture",
         "GENERATED_AT": "Genere",
-        "EMAILED_TO": "Envoye a"
+        "EMAILED_TO": "Envoye a",
+        "STATUS": "Statut",
+        "PAID_AMOUNT": "Montant payé",
+        "PAYMENT_METHOD": "Méthode de paiement",
+        "CASHIER": "Caissier",
+        "TERMINAL": "Terminal",
+        "DELIVERY_METHOD": "Mode de livraison",
+        "DELIVERY_EMAIL": "Livré à",
+        "REPRINT_COUNT": "Nombre de réimpressions",
+        "LAST_REPRINT_BY": "Dernière réimpression par"
       },
       "ACTION": {
         "GENERATE": "Generer le recu",
@@ -6652,15 +6667,22 @@
       },
       "EMAIL_LABEL": "Adresse e-mail",
       "IDLE": "Aucun recu genere pour le moment.",
+      "STATUS": {
+        "GENERATED": "Généré"
+      },
       "ERROR": {
         "LOAD": "Impossible de charger le recu.",
+        "LOAD_PERMISSION_DENIED": "Vous n'avez pas la permission de consulter ce reçu.",
         "GENERATE": "Impossible de generer le recu. Veuillez réessayer.",
         "GENERATE_PERMISSION_DENIED": "Vous n'avez pas la permission de générer ce reçu.",
         "REPRINT": "Impossible de reimprimer le recu. Veuillez réessayer.",
         "REPRINT_PERMISSION_DENIED": "Vous n'avez pas la permission de réimprimer ce reçu.",
         "MISSING_INVOICE": "Aucun ID de facture fourni.",
-        "NOT_AVAILABLE": "Ce reçu n’est pas disponible à l’affichage. Utilisez la réimpression pour en obtenir une copie."
-      }
+        "NOT_FOUND": "Reçu introuvable.",
+        "REPRINT_OVERRIDE_REQUIRED": "Ce reçu a dépassé la limite standard de réimpressions. Une permission d'autorisation de superviseur est requise pour le réimprimer à nouveau.",
+        "LOCATION_SCOPE_DENIED": "Cette facture est en dehors de votre emplacement assigné. Demandez à un gestionnaire ayant accès à cet emplacement d'effectuer cette action."
+      },
+      "REPRINT_CAP_WARNING": "Ce reçu a atteint la limite standard de réimpressions. Les réimpressions supplémentaires nécessitent une autorisation de superviseur."
     },
     "INVOICE_STATUS": {
       "DRAFT": "Brouillon",

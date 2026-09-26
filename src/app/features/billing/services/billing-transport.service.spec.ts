@@ -13,17 +13,20 @@ import {
   InvoiceArtifactControllerService,
   InvoiceDetailsResponse,
   InvoiceDetailsResponseStatusEnum,
-  InvoiceRefundResponse,
-  InvoiceRefundResponseStatusEnum,
   InvoiceSearchResultStatusEnum,
   InvoiceSearchService,
   InvoiceService,
   PageInvoiceSearchResult,
+  PaymentIntentResponse,
+  PaymentIntentResponsePaymentFlowEnum,
+  PaymentIntentResponseStatusEnum,
   PaymentReversalService,
   PaymentService,
   ReceiptResponse,
   ReceiptResponseStatusEnum,
   ReceiptService,
+  ReceiptViewResponse,
+  ReceiptViewResponseStatusEnum,
   RefundPaymentRequestReasonEnum,
   VoidPaymentRequestReasonEnum,
 } from '@durion-sdk/invoice';
@@ -58,17 +61,19 @@ describe('BillingTransportService', () => {
   const paymentServiceStub = {
     initiatePayment: vi.fn(),
     capturePayment: vi.fn(),
+    getInvoicePayment: vi.fn(),
+    listInvoicePayments: vi.fn(),
   };
 
   const paymentReversalServiceStub = {
     voidPayment: vi.fn(),
     refundPayment: vi.fn(),
-    listInvoiceRefunds: vi.fn(),
   };
 
   const receiptServiceStub = {
     generateReceipt: vi.fn(),
     reprintReceipt: vi.fn(),
+    getReceipt: vi.fn(),
   };
 
   const invoiceArtifactServiceStub = {
@@ -314,83 +319,176 @@ describe('BillingTransportService', () => {
     expect(result).toBeUndefined();
   });
 
-  describe('loadRefundContext (durion-positivity-backend#2215, Copilot #4106106128)', () => {
-    const refund = (overrides: Partial<InvoiceRefundResponse>): InvoiceRefundResponse => ({
-      id: 'refund-1',
-      paymentIntentId: 'pay-001',
-      amount: 10,
-      status: InvoiceRefundResponseStatusEnum.Completed,
+  describe('loadRefundContext (durion-positivity-backend#2226: getInvoicePayment)', () => {
+    const paymentIntent = (overrides: Partial<PaymentIntentResponse>): PaymentIntentResponse => ({
+      paymentId: 'pay-001',
+      invoiceId: 'inv-001',
+      paymentFlow: PaymentIntentResponsePaymentFlowEnum.SaleCapture,
+      status: PaymentIntentResponseStatusEnum.Captured,
+      createdAt: '2026-03-01T00:00:00Z',
+      updatedAt: '2026-03-01T00:00:00Z',
+      capturedAmount: 100,
+      refundedAmount: 20,
+      refundableAmount: 80,
       ...overrides,
     });
 
-    it('sums non-failed prior refunds for this payment, without reading invoice.total', () => {
-      paymentReversalServiceStub.listInvoiceRefunds.mockReturnValueOnce(of([
-        refund({ id: 'r1', amount: 10, status: InvoiceRefundResponseStatusEnum.Completed }),
-        refund({ id: 'r2', amount: 5, status: InvoiceRefundResponseStatusEnum.Pending }),
-      ]));
+    it('reads captured/refunded/refundable amounts from getInvoicePayment, not listInvoiceRefunds', () => {
+      paymentServiceStub.getInvoicePayment.mockReturnValueOnce(of(paymentIntent({})));
 
       let result: unknown;
       service.loadRefundContext('inv-001', 'pay-001').subscribe(value => {
         result = value;
       });
 
-      expect(paymentReversalServiceStub.listInvoiceRefunds).toHaveBeenCalledWith('inv-001');
+      expect(paymentServiceStub.getInvoicePayment).toHaveBeenCalledWith('inv-001', 'pay-001');
       expect(invoiceServiceStub.getInvoice).not.toHaveBeenCalled();
-      expect(result).toEqual({ priorRefundsTotal: 15 });
+      expect(result).toEqual({
+        capturedAmount: 100,
+        refundedAmount: 20,
+        refundableAmount: 80,
+        status: 'CAPTURED',
+      });
     });
 
-    it('excludes FAILED refunds from the prior-refunds total', () => {
-      paymentReversalServiceStub.listInvoiceRefunds.mockReturnValueOnce(of([
-        refund({ id: 'r1', amount: 10, status: InvoiceRefundResponseStatusEnum.Completed }),
-        refund({ id: 'r2', amount: 40, status: InvoiceRefundResponseStatusEnum.Failed }),
-      ]));
+    it('passes refundableAmount through as null when the intent is not CAPTURED', () => {
+      paymentServiceStub.getInvoicePayment.mockReturnValueOnce(of(paymentIntent({
+        status: PaymentIntentResponseStatusEnum.Authorized,
+        capturedAmount: undefined,
+        refundedAmount: undefined,
+        refundableAmount: undefined,
+      })));
 
-      let result: { priorRefundsTotal: number } | undefined;
+      let result: { refundableAmount: number | null; status: string } | undefined;
       service.loadRefundContext('inv-001', 'pay-001').subscribe(value => {
         result = value;
       });
 
-      expect(result?.priorRefundsTotal).toBe(10);
-    });
-
-    it('excludes refunds belonging to a different payment intent on the same invoice', () => {
-      paymentReversalServiceStub.listInvoiceRefunds.mockReturnValueOnce(of([
-        refund({ id: 'r1', paymentIntentId: 'pay-001', amount: 10 }),
-        refund({ id: 'r2', paymentIntentId: 'pay-999', amount: 50 }),
-      ]));
-
-      let result: { priorRefundsTotal: number } | undefined;
-      service.loadRefundContext('inv-001', 'pay-001').subscribe(value => {
-        result = value;
-      });
-
-      expect(result?.priorRefundsTotal).toBe(10);
+      expect(result?.refundableAmount).toBeNull();
+      expect(result?.status).toBe('AUTHORIZED');
     });
   });
 
-  it('generates receipts through the receipt SDK client and maps the full response to a ReceiptRef, issue #381 (no follow-up loadReceipt call)', () => {
-    const receiptResponse: ReceiptResponse = {
-      receiptId: 'rcpt-001',
-      reference: 'R-1001',
-      status: ReceiptResponseStatusEnum.Generated,
-    };
-    receiptServiceStub.generateReceipt.mockReturnValueOnce(of(receiptResponse));
-
-    let result: unknown;
-    service.generateReceipt('inv-001', { deliveryMethod: 'PRINT' }).subscribe(value => {
-      result = value;
+  describe('generateReceipt (issue #381 bug fix: real payment-intent id, not the delivery selection)', () => {
+    const capturedPayment = (overrides: Partial<PaymentIntentResponse>): PaymentIntentResponse => ({
+      paymentId: 'pay-001',
+      invoiceId: 'inv-001',
+      paymentFlow: PaymentIntentResponsePaymentFlowEnum.SaleCapture,
+      status: PaymentIntentResponseStatusEnum.Captured,
+      createdAt: '2026-03-01T00:00:00Z',
+      updatedAt: '2026-03-01T00:00:00Z',
+      ...overrides,
     });
 
-    const expectedRequest: GenerateReceiptRequest = {
-      paymentIntentId: 'PRINT',
-      terminalId: 'WEB-UI',
-      templateId: 'DEFAULT',
-      templateVersion: '1',
-    };
-    expect(receiptServiceStub.generateReceipt).toHaveBeenCalledWith('inv-001', expectedRequest);
-    expect(apiStub.post).not.toHaveBeenCalled();
-    expect(apiStub.get).not.toHaveBeenCalled();
-    expect(result).toEqual({ receiptId: 'rcpt-001', invoiceId: 'inv-001', receiptNumber: 'R-1001' });
+    it('uses the payment id the caller supplies (from the capture page) without listing payments', () => {
+      receiptServiceStub.generateReceipt.mockReturnValueOnce(
+        of({ receiptId: 'rcpt-002', reference: 'R-1002', status: ReceiptResponseStatusEnum.Generated }),
+      );
+      paymentServiceStub.listInvoicePayments.mockClear();
+
+      service.generateReceipt('inv-001', { deliveryMethod: 'PRINT' }, 'pay-supplied').subscribe();
+
+      expect(paymentServiceStub.listInvoicePayments).not.toHaveBeenCalled();
+      expect(receiptServiceStub.generateReceipt).toHaveBeenCalledWith(
+        'inv-001',
+        expect.objectContaining({ paymentIntentId: 'pay-supplied' }),
+      );
+    });
+
+    it('resolves the real payment-intent id from listInvoicePayments and never sends the delivery selection as paymentIntentId', () => {
+      const receiptResponse: ReceiptResponse = {
+        receiptId: 'rcpt-001',
+        reference: 'R-1001',
+        status: ReceiptResponseStatusEnum.Generated,
+      };
+      paymentServiceStub.listInvoicePayments.mockReturnValueOnce(of([capturedPayment({ paymentId: 'pay-001' })]));
+      receiptServiceStub.generateReceipt.mockReturnValueOnce(of(receiptResponse));
+
+      let result: unknown;
+      service.generateReceipt('inv-001', { deliveryMethod: 'PRINT' }).subscribe(value => {
+        result = value;
+      });
+
+      expect(paymentServiceStub.listInvoicePayments).toHaveBeenCalledWith('inv-001');
+      const expectedRequest: GenerateReceiptRequest = {
+        paymentIntentId: 'pay-001',
+        terminalId: 'WEB-UI',
+        templateId: 'DEFAULT',
+        templateVersion: '1',
+      };
+      expect(receiptServiceStub.generateReceipt).toHaveBeenCalledWith('inv-001', expectedRequest);
+      expect(apiStub.post).not.toHaveBeenCalled();
+      expect(apiStub.get).not.toHaveBeenCalled();
+      expect(result).toEqual({ receiptId: 'rcpt-001', invoiceId: 'inv-001', receiptNumber: 'R-1001' });
+    });
+
+    it('prefers the most recently updated CAPTURED intent when an invoice has more than one', () => {
+      receiptServiceStub.generateReceipt.mockReturnValueOnce(of({ receiptId: 'rcpt-001', status: ReceiptResponseStatusEnum.Generated }));
+      paymentServiceStub.listInvoicePayments.mockReturnValueOnce(of([
+        capturedPayment({ paymentId: 'pay-old', updatedAt: '2026-01-01T00:00:00Z' }),
+        capturedPayment({ paymentId: 'pay-new', updatedAt: '2026-03-01T00:00:00Z' }),
+        capturedPayment({ paymentId: 'pay-voided', status: PaymentIntentResponseStatusEnum.Voided, updatedAt: '2026-04-01T00:00:00Z' }),
+      ]));
+
+      service.generateReceipt('inv-001', {}).subscribe();
+
+      expect(receiptServiceStub.generateReceipt).toHaveBeenCalledWith(
+        'inv-001',
+        expect.objectContaining({ paymentIntentId: 'pay-new' }),
+      );
+    });
+
+    it('errors without calling generateReceipt when no CAPTURED payment intent exists for the invoice', () => {
+      paymentServiceStub.listInvoicePayments.mockReturnValueOnce(of([
+        capturedPayment({ paymentId: 'pay-auth', status: PaymentIntentResponseStatusEnum.Authorized }),
+      ]));
+
+      let error: unknown;
+      service.generateReceipt('inv-001', {}).subscribe({ error: err => { error = err; } });
+
+      expect(error).toBeInstanceOf(Error);
+      expect(receiptServiceStub.generateReceipt).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('loadReceipt (durion-positivity-backend#2214: getReceipt)', () => {
+    it('loads a receipt read-only through ReceiptService.getReceipt and maps card-brand-free detail', () => {
+      const viewResponse: ReceiptViewResponse = {
+        receiptId: 'rcpt-001',
+        invoiceId: 'inv-001',
+        paymentIntentId: 'pay-001',
+        reference: 'R-1001',
+        status: ReceiptViewResponseStatusEnum.Generated,
+        paidAmount: 42.5,
+        paymentMethod: 'stripe',
+        cashierId: 'cashier-1',
+        terminalId: 'WEB-UI',
+        reprintCount: 2,
+        templateId: 'DEFAULT',
+        templateVersion: '1',
+        createdAt: '2026-03-01T00:00:00Z',
+      };
+      receiptServiceStub.getReceipt.mockReturnValueOnce(of(viewResponse));
+
+      let result: unknown;
+      service.loadReceipt('inv-001', 'rcpt-001').subscribe(value => {
+        result = value;
+      });
+
+      expect(receiptServiceStub.getReceipt).toHaveBeenCalledWith('inv-001', 'rcpt-001');
+      expect(result).toEqual(expect.objectContaining({
+        receiptId: 'rcpt-001',
+        invoiceId: 'inv-001',
+        paymentId: 'pay-001',
+        receiptNumber: 'R-1001',
+        status: 'GENERATED',
+        paidAmount: 42.5,
+        paymentMethod: 'stripe',
+        cashierId: 'cashier-1',
+        terminalId: 'WEB-UI',
+        reprintCount: 2,
+      }));
+    });
   });
 
   it('creates artifact download tokens through the invoice artifact SDK and maps the token response', () => {
