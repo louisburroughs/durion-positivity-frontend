@@ -16,8 +16,8 @@ import {
   SupplierAvailability,
   SupplierAvailabilityLine,
   SupplierAvailabilityVendor,
-} from '../../models/supplier-availability.models';
-import { InventorySupplierAvailabilityService } from '../../services/inventory-supplier-availability.service';
+} from '../../../../shared/supplier-availability/models/supplier-availability.models';
+import { SupplierAvailabilityService } from '../../../../shared/supplier-availability/services/supplier-availability.service';
 
 type PanelState = 'idle' | 'loading' | 'ready' | 'error';
 
@@ -28,7 +28,7 @@ type PanelState = 'idle' | 'loading' | 'ready' | 'error';
  * (`getSupplierStockAvailability`), keyed by the line's SKU, and never
  * mutates anything. A delivery location and, optionally, a quantity are
  * supplied by the operator — the PO form carries neither today. See
- * `InventorySupplierAvailabilityService` for why the fan-out read was chosen
+ * `SupplierAvailabilityService` for why the fan-out read was chosen
  * over `getPurchaseOrderSupplierAvailability`.
  *
  * Per-vendor answers are partial by design (bounded fan-out deadline): a
@@ -44,7 +44,7 @@ type PanelState = 'idle' | 'loading' | 'ready' | 'error';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PoSupplierAvailabilityPanelComponent {
-  private readonly service = inject(InventorySupplierAvailabilityService);
+  private readonly service = inject(SupplierAvailabilityService);
   private readonly destroyRef = inject(DestroyRef);
 
   /** SKU of the purchase-order line this panel checks. */

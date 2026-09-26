@@ -48,7 +48,11 @@ function toLineStatus(value: string | undefined): SupplierAvailabilityLineStatus
 }
 
 /**
- * Live per-vendor stock-availability check for a catalog product (#212).
+ * Live per-vendor stock-availability check (#212), shared by the catalog
+ * product detail (`product`, keyed by productId and/or sku) and the
+ * purchase-order line check (`inventory`, keyed by sku only: a PO being
+ * drafted has no poId or vendorProfileId, so it uses this cross-vendor
+ * fan-out read rather than getPurchaseOrderSupplierAvailability).
  *
  * ── Transport ────────────────────────────────────────────────────────────
  * Backed entirely by the generated `@durion-sdk/supplier` fan-out read
@@ -68,7 +72,7 @@ function toLineStatus(value: string | undefined): SupplierAvailabilityLineStatus
  * freshness from the client clock.
  */
 @Injectable({ providedIn: 'root' })
-export class ProductSupplierAvailabilityService {
+export class SupplierAvailabilityService {
   private readonly stockSdk = inject(SupplierStockAvailabilityService);
 
   checkAvailability(query: SupplierAvailabilityQuery): Observable<SupplierAvailability> {

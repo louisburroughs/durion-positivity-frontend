@@ -2,21 +2,21 @@ import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SupplierStockAvailabilityService } from '@durion-sdk/supplier';
-import { InventorySupplierAvailabilityService } from './inventory-supplier-availability.service';
+import { SupplierAvailabilityService } from './supplier-availability.service';
 
-describe('InventorySupplierAvailabilityService', () => {
-  let service: InventorySupplierAvailabilityService;
+describe('SupplierAvailabilityService', () => {
+  let service: SupplierAvailabilityService;
 
   const stockSdkStub = { getSupplierStockAvailability: vi.fn() };
 
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [
-        InventorySupplierAvailabilityService,
+        SupplierAvailabilityService,
         { provide: SupplierStockAvailabilityService, useValue: stockSdkStub },
       ],
     });
-    service = TestBed.inject(InventorySupplierAvailabilityService);
+    service = TestBed.inject(SupplierAvailabilityService);
   });
 
   afterEach(() => {
@@ -24,43 +24,56 @@ describe('InventorySupplierAvailabilityService', () => {
   });
 
   describe('checkAvailability()', () => {
-    it('calls the SDK with deliveryLocationId, sku and quantity for a PO line', () => {
+    it('calls the SDK with deliveryLocationId, productId, sku and quantity in order', () => {
       stockSdkStub.getSupplierStockAvailability.mockReturnValueOnce(of({ vendors: [] }));
 
       service
-        .checkAvailability({ sku: 'SKU-9', deliveryLocationId: 'loc-9', quantity: 10 })
+        .checkAvailability({ productId: 'prod-1', deliveryLocationId: 'loc-1', quantity: 3 })
         .subscribe();
 
       expect(stockSdkStub.getSupplierStockAvailability).toHaveBeenCalledWith(
-        'loc-9',
+        'loc-1',
+        'prod-1',
         undefined,
-        'SKU-9',
-        10,
+        3,
+      );
+    });
+
+    it('passes sku through when productId is omitted', () => {
+      stockSdkStub.getSupplierStockAvailability.mockReturnValueOnce(of({ vendors: [] }));
+
+      service.checkAvailability({ sku: 'SKU-1', deliveryLocationId: 'loc-1' }).subscribe();
+
+      expect(stockSdkStub.getSupplierStockAvailability).toHaveBeenCalledWith(
+        'loc-1',
+        undefined,
+        'SKU-1',
+        undefined,
       );
     });
 
     it('maps a full SDK response into the domain shape', () => {
       stockSdkStub.getSupplierStockAvailability.mockReturnValueOnce(
         of({
-          productId: 'prod-9',
-          deliveryLocationId: 'loc-9',
-          requestedQuantity: 10,
-          stalenessThreshold: 'PT2H',
+          productId: 'prod-1',
+          deliveryLocationId: 'loc-1',
+          requestedQuantity: 5,
+          stalenessThreshold: 'PT4H',
           vendors: [
             {
-              vendorProfileId: 'vp-9',
-              vendorDisplayName: 'North Vendor',
+              vendorProfileId: 'vp-1',
+              vendorDisplayName: 'Acme Tires',
               status: 'OK',
-              fetchedAt: '2026-09-01T00:00:00Z',
-              asOf: '2026-08-31T23:00:00Z',
-              stale: true,
+              fetchedAt: '2026-09-01T10:00:00Z',
+              asOf: '2026-09-01T09:00:00Z',
+              stale: false,
               lines: [
                 {
                   status: 'AVAILABLE',
-                  availableQuantity: 40,
+                  availableQuantity: 12,
                   currency: 'USD',
-                  earliestDeliveryDate: '2026-09-10',
-                  quotedUnitPrice: 12.75,
+                  earliestDeliveryDate: '2026-09-05',
+                  quotedUnitPrice: 45.5,
                 },
               ],
             },
@@ -70,29 +83,29 @@ describe('InventorySupplierAvailabilityService', () => {
 
       let result: unknown;
       service
-        .checkAvailability({ sku: 'SKU-9', deliveryLocationId: 'loc-9', quantity: 10 })
+        .checkAvailability({ productId: 'prod-1', deliveryLocationId: 'loc-1', quantity: 5 })
         .subscribe(value => (result = value));
 
       expect(result).toEqual({
-        productId: 'prod-9',
-        deliveryLocationId: 'loc-9',
-        requestedQuantity: 10,
-        stalenessThreshold: 'PT2H',
+        productId: 'prod-1',
+        deliveryLocationId: 'loc-1',
+        requestedQuantity: 5,
+        stalenessThreshold: 'PT4H',
         vendors: [
           {
-            vendorProfileId: 'vp-9',
-            vendorDisplayName: 'North Vendor',
+            vendorProfileId: 'vp-1',
+            vendorDisplayName: 'Acme Tires',
             status: 'OK',
-            fetchedAt: '2026-09-01T00:00:00Z',
-            asOf: '2026-08-31T23:00:00Z',
-            stale: true,
+            fetchedAt: '2026-09-01T10:00:00Z',
+            asOf: '2026-09-01T09:00:00Z',
+            stale: false,
             lines: [
               {
                 status: 'AVAILABLE',
-                availableQuantity: 40,
+                availableQuantity: 12,
                 currency: 'USD',
-                earliestDeliveryDate: '2026-09-10',
-                quotedUnitPrice: 12.75,
+                earliestDeliveryDate: '2026-09-05',
+                quotedUnitPrice: 45.5,
               },
             ],
           },
@@ -100,17 +113,42 @@ describe('InventorySupplierAvailabilityService', () => {
       });
     });
 
-    it('does not error on an empty vendors list — no configured vendor is a valid answer', () => {
+    it('defaults an empty vendors list to [] rather than erroring — no configured vendor is a valid answer', () => {
       stockSdkStub.getSupplierStockAvailability.mockReturnValueOnce(
-        of({ productId: 'prod-9', deliveryLocationId: 'loc-9' }),
+        of({ productId: 'prod-1', deliveryLocationId: 'loc-1' }),
       );
 
       let result: { vendors: readonly unknown[] } | undefined;
       service
-        .checkAvailability({ sku: 'SKU-9', deliveryLocationId: 'loc-9' })
+        .checkAvailability({ productId: 'prod-1', deliveryLocationId: 'loc-1' })
         .subscribe(value => (result = value));
 
       expect(result?.vendors).toEqual([]);
+    });
+
+    it('maps a partial vendor (SUPPLIER_UNAVAILABLE, no answer) without throwing', () => {
+      stockSdkStub.getSupplierStockAvailability.mockReturnValueOnce(
+        of({
+          productId: 'prod-1',
+          deliveryLocationId: 'loc-1',
+          vendors: [
+            {
+              vendorProfileId: 'vp-2',
+              vendorDisplayName: 'Slow Vendor',
+              status: 'SUPPLIER_UNAVAILABLE',
+            },
+          ],
+        }),
+      );
+
+      let result: { vendors: ReadonlyArray<{ fetchedAt: unknown; stale: unknown; lines: unknown }> } | undefined;
+      service
+        .checkAvailability({ productId: 'prod-1', deliveryLocationId: 'loc-1' })
+        .subscribe(value => (result = value));
+
+      expect(result?.vendors[0].fetchedAt).toBeNull();
+      expect(result?.vendors[0].stale).toBeNull();
+      expect(result?.vendors[0].lines).toEqual([]);
     });
   });
 
@@ -133,20 +171,20 @@ describe('InventorySupplierAvailabilityService', () => {
 
     function responseWithVendorStatus(status: string) {
       return of({
-        productId: 'prod-9',
-        deliveryLocationId: 'loc-9',
-        vendors: [{ vendorProfileId: 'vp-9', vendorDisplayName: 'North Vendor', status, lines: [] }],
+        productId: 'prod-1',
+        deliveryLocationId: 'loc-1',
+        vendors: [{ vendorProfileId: 'vp-1', vendorDisplayName: 'Acme Tires', status, lines: [] }],
       });
     }
 
     function responseWithLineStatus(status: string) {
       return of({
-        productId: 'prod-9',
-        deliveryLocationId: 'loc-9',
+        productId: 'prod-1',
+        deliveryLocationId: 'loc-1',
         vendors: [
           {
-            vendorProfileId: 'vp-9',
-            vendorDisplayName: 'North Vendor',
+            vendorProfileId: 'vp-1',
+            vendorDisplayName: 'Acme Tires',
             status: 'OK',
             lines: [{ status }],
           },
@@ -159,7 +197,7 @@ describe('InventorySupplierAvailabilityService', () => {
 
       let result: { vendors: ReadonlyArray<{ status: unknown }> } | undefined;
       service
-        .checkAvailability({ sku: 'SKU-9', deliveryLocationId: 'loc-9' })
+        .checkAvailability({ productId: 'prod-1', deliveryLocationId: 'loc-1' })
         .subscribe(value => (result = value));
 
       expect(result?.vendors[0].status).toBe(status);
@@ -172,7 +210,7 @@ describe('InventorySupplierAvailabilityService', () => {
 
       let result: { vendors: ReadonlyArray<{ status: unknown }> } | undefined;
       service
-        .checkAvailability({ sku: 'SKU-9', deliveryLocationId: 'loc-9' })
+        .checkAvailability({ productId: 'prod-1', deliveryLocationId: 'loc-1' })
         .subscribe(value => (result = value));
 
       expect(result?.vendors[0].status).toBeNull();
@@ -183,7 +221,7 @@ describe('InventorySupplierAvailabilityService', () => {
 
       let result: { vendors: ReadonlyArray<{ lines: ReadonlyArray<{ status: unknown }> }> } | undefined;
       service
-        .checkAvailability({ sku: 'SKU-9', deliveryLocationId: 'loc-9' })
+        .checkAvailability({ productId: 'prod-1', deliveryLocationId: 'loc-1' })
         .subscribe(value => (result = value));
 
       expect(result?.vendors[0].lines[0].status).toBe(status);
@@ -196,7 +234,7 @@ describe('InventorySupplierAvailabilityService', () => {
 
       let result: { vendors: ReadonlyArray<{ lines: ReadonlyArray<{ status: unknown }> }> } | undefined;
       service
-        .checkAvailability({ sku: 'SKU-9', deliveryLocationId: 'loc-9' })
+        .checkAvailability({ productId: 'prod-1', deliveryLocationId: 'loc-1' })
         .subscribe(value => (result = value));
 
       expect(result?.vendors[0].lines[0].status).toBeNull();
