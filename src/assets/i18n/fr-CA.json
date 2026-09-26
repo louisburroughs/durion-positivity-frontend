@@ -2258,7 +2258,8 @@
         "FLAT_MINUTES": "{{value}} minutes fixes",
         "PERCENTAGE_OF_TRAVEL": "{{value}} % du temps de déplacement",
         "DISTANCE_MULTIPLIER": "{{value}} × distance",
-        "NEEDS_FIXING": "type à corriger"
+        "NEEDS_FIXING": "type à corriger",
+        "NO_VALUE": "aucune marge"
       },
       "FIELD": {
         "NAME": "Nom",
@@ -2385,6 +2386,11 @@
         "CHOSEN": "À ajouter",
         "ADD_ONE": "Ajouter 1 capacité",
         "ADD_MANY": "Ajouter {{count}} capacités"
+      },
+      "LINKS": {
+        "LABEL": "Configuration des unités mobiles",
+        "SERVICE_AREAS": "Zones de service",
+        "POLICIES": "Politiques de marge de déplacement"
       }
     },
     "LANDING": {
@@ -2452,6 +2458,14 @@
         "IMPORT_LOCATION": {
           "TITLE": "Importer des emplacements",
           "DESCRIPTION": "Importer en masse les enregistrements d'emplacement a partir d'un fichier CSV ou XLSX."
+        },
+        "SERVICE_AREAS": {
+          "TITLE": "Zones de service",
+          "DESCRIPTION": "Regroupez les codes postaux dans les zones couvertes par les unités mobiles."
+        },
+        "TRAVEL_BUFFER_POLICIES": {
+          "TITLE": "Politiques de marge de déplacement",
+          "DESCRIPTION": "Définissez le temps de route prévu autour des visites des unités mobiles."
         }
       },
       "FIELD": {
@@ -2621,6 +2635,135 @@
         "REPAIR": "Réparation",
         "DIAGNOSTIC": "Diagnostic",
         "OTHER": "Autres"
+      }
+    },
+    "SERVICE_AREAS": {
+      "OVERLINE": "Configuration de l'emplacement",
+      "TITLE": "Zones de service",
+      "STANDFIRST": "Groupes nommés de codes postaux vers lesquels pointent les règles de couverture des unités mobiles. Un client correspond à une unité par code postal au moyen de l'un d'eux.",
+      "TO_MOBILE_UNITS": "Retour aux unités mobiles",
+      "NEW": "Nouvelle zone de service",
+      "VIEW_ONLY": "Lecture seule : vous ne pouvez pas modifier les zones de service.",
+      "LOADING": "Chargement des zones de service…",
+      "RETRY": "Réessayer",
+      "EMPTY": "Pas encore de zone de service. Ajoutez-en une pour chaque groupe de codes postaux desservi par une unité mobile.",
+      "STATUS": {
+        "ACTIVE": "Active",
+        "OFF": "Désactivée"
+      },
+      "STILL_MATCHED": "Les unités qui la couvrent correspondent toujours.",
+      "COVERS_NOBODY": "Aucun code postal : ne couvre personne.",
+      "CODES_ONE": "1 code postal",
+      "CODES_MANY": "{{count}} codes postaux",
+      "SAMPLES": "{{samples}}",
+      "SAMPLES_MORE": "{{samples}} et {{more}} de plus",
+      "EDIT": "Modifier",
+      "EDIT_NAMED": "Modifier {{area}}",
+      "CANCEL": "Annuler",
+      "SAVING": "Enregistrement",
+      "FIELD": {
+        "NAME": "Nom",
+        "DESCRIPTION": "Description",
+        "ACTIVE": "Active",
+        "CODES": "Codes postaux",
+        "COUNTRY": "Pays",
+        "PASTE": "Ajouter des codes postaux"
+      },
+      "HINT": {
+        "NAME": "Un nom court que les répartiteurs reconnaissent, p. ex. « Riverside nord ». Aucune autre zone de service ne peut porter le même nom.",
+        "NAME_FIXED": "Une zone de service ne peut pas encore être renommée.",
+        "DESCRIPTION": "Facultatif. Ce que couvre la zone, en mots.",
+        "ACTIVE": "Indique que la zone est utilisée. Aujourd'hui, les unités qui couvrent une zone désactivée correspondent toujours.",
+        "PASTE": "Collez les codes un par ligne ou séparés par des virgules. Ils sont ajoutés pour le pays à gauche.",
+        "CODES": "L'enregistrement remplace toute la liste. Une zone a besoin d'au moins un code postal."
+      },
+      "PASTE": {
+        "ADD": "Ajouter les codes",
+        "ADDED": "{{added}} ajoutés, {{duplicates}} doublons ignorés.",
+        "ADDED_SKIPPED": "{{added}} ajoutés, {{duplicates}} doublons ignorés. Trop longs pour être enregistrés, donc omis : {{skipped}}.",
+        "REMOVE_ALL": "Tout retirer",
+        "REMOVE_NAMED": "Retirer {{code}}"
+      },
+      "DIALOG": {
+        "CREATE_TITLE": "Nouvelle zone de service",
+        "EDIT_TITLE": "Modifier {{area}}",
+        "CREATE": "Créer la zone de service",
+        "SAVE": "Enregistrer"
+      },
+      "SAVED": {
+        "CREATED": "{{area}} créée.",
+        "UPDATED": "{{area}} enregistrée."
+      },
+      "ERROR": {
+        "LOAD": "Impossible de charger les zones de service.",
+        "NAME_REQUIRED": "Saisissez un nom pour la zone de service.",
+        "NAME_TAKEN": "Une autre zone de service s'appelle déjà {{area}}.",
+        "COUNTRY": "Saisissez un code de pays à deux lettres, p. ex. CA ou FR.",
+        "CODES_REQUIRED": "Ajoutez au moins un code postal.",
+        "INVALID": "La zone de service n'a pas pu être enregistrée : vérifiez chaque champ et réessayez.",
+        "NOT_ALLOWED": "Vous ne pouvez pas modifier les zones de service.",
+        "GONE": "Cette zone de service n'existe plus. Fermez la boîte de dialogue pour voir la liste actuelle.",
+        "SAVE_FAILED": "Impossible d'enregistrer la zone de service. Réessayez."
+      }
+    },
+    "TRAVEL_BUFFERS": {
+      "OVERLINE": "Configuration de l'emplacement",
+      "TITLE": "Politiques de marge de déplacement",
+      "STANDFIRST": "Le temps ajouté autour de chaque visite d'une unité mobile pour la route.",
+      "NOT_APPLIED": "Les marges de déplacement sont enregistrées sur les unités mobiles. La planification ne les utilise pas encore.",
+      "TO_MOBILE_UNITS": "Retour aux unités mobiles",
+      "NEW": "Nouvelle politique",
+      "VIEW_ONLY": "Lecture seule : vous ne pouvez pas modifier les politiques de marge de déplacement.",
+      "LOADING": "Chargement des politiques de marge de déplacement…",
+      "RETRY": "Réessayer",
+      "EMPTY": "Pas encore de politique de marge de déplacement. Une unité mobile en a besoin avant d'être activée.",
+      "NEEDS_FIXING": "Type à corriger",
+      "EDIT": "Modifier",
+      "EDIT_NAMED": "Modifier {{policy}}",
+      "CANCEL": "Annuler",
+      "SAVING": "Enregistrement",
+      "CHOOSE_TYPE": "Choisissez un type de marge",
+      "TYPE": {
+        "FLAT_MINUTES": "Minutes fixes",
+        "PERCENTAGE_OF_TRAVEL": "Pourcentage du temps de déplacement",
+        "DISTANCE_MULTIPLIER": "Multiplicateur de distance"
+      },
+      "SUFFIX": {
+        "FLAT_MINUTES": "minutes",
+        "PERCENTAGE_OF_TRAVEL": "%",
+        "DISTANCE_MULTIPLIER": "× distance"
+      },
+      "FIELD": {
+        "NAME": "Nom",
+        "TYPE": "Type de marge",
+        "VALUE": "Valeur de la marge",
+        "NOTES": "Notes"
+      },
+      "HINT": {
+        "NAME": "Ne peut plus être changé après la création de la politique.",
+        "TYPE": "Comment le temps ajouté est calculé.",
+        "VALUE": "Des minutes pour fixe, un pourcentage pour le temps de déplacement, un multiplicateur pour la distance. Laissez vide pour aucune."
+      },
+      "DIALOG": {
+        "CREATE_TITLE": "Nouvelle politique de marge de déplacement",
+        "EDIT_TITLE": "Modifier {{policy}}",
+        "CREATE": "Créer la politique",
+        "SAVE": "Enregistrer"
+      },
+      "SAVED": {
+        "CREATED": "{{policy}} créée.",
+        "UPDATED": "{{policy}} enregistrée."
+      },
+      "ERROR": {
+        "LOAD": "Impossible de charger les politiques de marge de déplacement.",
+        "NAME_REQUIRED": "Saisissez un nom pour la politique.",
+        "NAME_TAKEN": "Une autre politique s'appelle déjà {{policy}}.",
+        "TYPE_REQUIRED": "Choisissez un type de marge.",
+        "VALUE": "Saisissez un nombre de 0 ou plus, avec au plus deux décimales.",
+        "INVALID": "La politique n'a pas pu être enregistrée : vérifiez chaque champ et réessayez.",
+        "NOT_ALLOWED": "Vous ne pouvez pas modifier les politiques de marge de déplacement.",
+        "GONE": "Cette politique n'existe plus. Fermez la boîte de dialogue pour voir la liste actuelle.",
+        "SAVE_FAILED": "Impossible d'enregistrer la politique. Réessayez."
       }
     }
   },
@@ -7732,6 +7875,7 @@
       "ROLES": "Rôles",
       "ROSTER": "Effectif",
       "SCHEDULE": "Horaire",
+      "SERVICE_AREAS": "Zones de service",
       "SHOP_DASHBOARD": "Tableau de bord de l'atelier",
       "SHORTAGE_RESOLUTION": "Résolution des pénuries",
       "SITE": "Site",
@@ -7743,6 +7887,7 @@
       "TASKS": "Tâches",
       "TENANTS": "Locataires",
       "TIMER": "Minuteur",
+      "TRAVEL_BUFFER_POLICIES": "Politiques de marge de déplacement",
       "TRAVEL_TIME": "Temps de déplacement",
       "UNMATCHED": "Sans correspondance",
       "VEHICLE_FITMENT": "Compatibilité du véhicule",
