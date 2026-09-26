@@ -6142,7 +6142,8 @@
         },
         "ERROR": {
           "MISSING_ID": "Workorder ID is required to load the pick list.",
-          "LOAD": "Failed to load pick list."
+          "LOAD": "Failed to load pick list.",
+          "LOCATION_SCOPE_DENIED": "Your location scope does not cover this workorder's site."
         }
       },
       "RETURN_TO_STOCK": {
@@ -6245,8 +6246,8 @@
           }
         },
         "FIELD": {
-          "SCAN_SKU": "Scanned SKU ID",
-          "SCAN_LOCATION": "Scanned Location ID",
+          "SCAN_PRODUCT_CODE": "Scanned Product Code",
+          "SCAN_LOCATION_CODE": "Scanned Location Code",
           "SKU": "SKU",
           "REQUESTED": "Requested",
           "ALREADY_PICKED": "Already Picked",
@@ -6270,13 +6271,16 @@
           "CONFIRM": "Failed to confirm picked quantity.",
           "COMPLETE": "Failed to complete the pick task.",
           "REFRESH": "Failed to refresh pick task status.",
-          "STILL_PROCESSING": "Still processing your last update. Refresh in a moment to check the latest status."
+          "STILL_PROCESSING": "Still processing your last update. Refresh in a moment to check the latest status.",
+          "LOCATION_SCOPE_DENIED": "Your location scope does not cover this workorder's site."
         },
         "SCAN_RESULT": {
-          "MATCHED": "Scan matched the expected SKU and location.",
-          "SKU_MISMATCH": "Scanned SKU does not match the expected part.",
+          "MATCHED": "Scan matched the expected product and location.",
+          "SKU_MISMATCH": "Scanned product does not match the expected part.",
           "LOCATION_MISMATCH": "Scanned location does not match the expected bin.",
           "NO_MATCH": "Scan did not match this pick task.",
+          "PRODUCT_CODE_UNAVAILABLE": "Product code cannot be verified for this task yet.",
+          "LOCATION_CODE_UNAVAILABLE": "Location code cannot be verified for this task yet.",
           "UNKNOWN": "Scan result could not be determined."
         }
       },
