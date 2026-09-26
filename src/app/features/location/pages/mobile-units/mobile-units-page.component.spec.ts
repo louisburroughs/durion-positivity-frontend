@@ -12,13 +12,14 @@ import type {
   ServiceAreaResponse,
   TravelBufferPolicyResponse,
 } from '@durion-sdk/location';
+import { CoverageRuleResponseRuleTypeEnum, MobileUnitResponseStatusEnum } from '@durion-sdk/location';
 import enUS from '../../../../../assets/i18n/en-US.json';
 import { AuthService } from '../../../../core/services/auth.service';
 import { LOCATION_PAGE } from '../../../../core/security/route-permissions';
 import { isoDateLocal } from '../../../../core/utils/local-date';
 import { LOCATION_LOOKUP_SOURCE } from '../../../../shared/location-picker/location-lookup-source.tokens';
 import type { MobileUnitPatch } from '../../models/mobile-unit-setup.models';
-import { ClaimableService, CoverageRead, LocationService } from '../../services/location.service';
+import { ClaimableService, LocationService, MobileUnitsRead } from '../../services/location.service';
 import { MobileUnitsPageComponent } from './mobile-units-page.component';
 
 const TODAY = isoDateLocal(new Date());
@@ -33,7 +34,7 @@ const unit = (overrides: Partial<MobileUnitResponse> = {}): MobileUnitResponse =
   id: 'mu-1',
   name: 'Van 1',
   baseLocationId: 'loc-1',
-  status: 'INACTIVE',
+  status: MobileUnitResponseStatusEnum.Inactive,
   travelBufferPolicyId: 'p-std',
   serviceCapabilityCodes: [TPMS],
   ...overrides,
@@ -42,7 +43,7 @@ const rule = (overrides: Partial<CoverageRuleResponse> = {}): CoverageRuleRespon
   id: 'rule-1',
   mobileUnitId: 'mu-1',
   serviceAreaId: 'area-n',
-  ruleType: 'SERVICE_AREA',
+  ruleType: CoverageRuleResponseRuleTypeEnum.ServiceArea,
   priority: 1,
   ...overrides,
 });
@@ -61,8 +62,8 @@ const POLICIES: TravelBufferPolicyResponse[] = [
   { id: 'p-bad', name: 'Seeded', bufferType: 'MINUTES', bufferValue: 10 },
 ];
 
-const VAN_9 = unit({ id: 'mu-9', name: 'Van 9', status: 'ACTIVE' });
-const VAN_3 = unit({ id: 'mu-3', name: 'Van 3', status: 'ACTIVE' });
+const VAN_9 = unit({ id: 'mu-9', name: 'Van 9', status: MobileUnitResponseStatusEnum.Active });
+const VAN_3 = unit({ id: 'mu-3', name: 'Van 3', status: MobileUnitResponseStatusEnum.Active });
 const VAN_7 = unit({ id: 'mu-7', name: 'Van 7' });
 const VAN_11 = unit({ id: 'mu-11', name: 'Van 11' });
 const ITEST = unit({ id: 'mu-t', name: 'Itest unit itest-1790388132', travelBufferPolicyId: undefined, serviceCapabilityCodes: [] });
@@ -83,8 +84,7 @@ const authStub = {
 };
 
 const locationServiceStub = {
-  listMobileUnits: vi.fn<(locationId: string) => Observable<MobileUnitResponse[]>>(),
-  listCoverageRules: vi.fn<(ids: readonly string[]) => Observable<CoverageRead>>(),
+  listMobileUnits: vi.fn<(locationId: string) => Observable<MobileUnitsRead>>(),
   listServiceAreas: vi.fn<() => Observable<{ areas: ServiceAreaResponse[]; ok: boolean }>>(),
   listTravelBufferPolicies: vi.fn<() => Observable<{ policies: TravelBufferPolicyResponse[]; ok: boolean }>>(),
   createMobileUnit: vi.fn<(request: MobileUnitRequest) => Observable<MobileUnitResponse>>(),
@@ -138,8 +138,7 @@ describe('MobileUnitsPageComponent', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     session.permissions = null;
-    locationServiceStub.listMobileUnits.mockReturnValue(of(UNITS));
-    locationServiceStub.listCoverageRules.mockReturnValue(of({ rules: COVERAGE, ok: true }));
+    locationServiceStub.listMobileUnits.mockReturnValue(of({ units: UNITS, coverage: COVERAGE, coverageOk: true }));
     locationServiceStub.listServiceAreas.mockReturnValue(of({ areas: AREAS, ok: true }));
     locationServiceStub.listTravelBufferPolicies.mockReturnValue(of({ policies: POLICIES, ok: true }));
     locationServiceStub.searchClaimableServices.mockReturnValue(of({ services: [], ok: true }));
@@ -152,11 +151,11 @@ describe('MobileUnitsPageComponent', () => {
       expect(text()).toContain('Choose the shop these units are based at.');
     });
 
-    it("reads the location's units, then their coverage", async () => {
+    it("reads the location's units with their coverage", async () => {
       await setUp();
       expect(locationServiceStub.listMobileUnits).toHaveBeenCalledWith('loc-1');
-      expect(locationServiceStub.listCoverageRules).toHaveBeenCalledWith(['mu-9', 'mu-3', 'mu-7', 'mu-11', 'mu-t']);
       expect(component.state()).toBe('ready');
+      expect(component.coverageRead()).toBe('OK');
     });
 
     it('shows a load failure with a retry', async () => {
@@ -170,7 +169,7 @@ describe('MobileUnitsPageComponent', () => {
     });
 
     it('says when coverage could not be read, instead of showing "no coverage"', async () => {
-      locationServiceStub.listCoverageRules.mockReturnValue(of({ rules: new Map(), ok: false }));
+      locationServiceStub.listMobileUnits.mockReturnValue(of({ units: UNITS, coverage: new Map(), coverageOk: false }));
       await setUp();
       expect(text()).toContain("Some units' coverage couldn't be loaded.");
       expect(cardText('mu-9')).toContain("Active. Its coverage couldn't be loaded.");
@@ -232,7 +231,7 @@ describe('MobileUnitsPageComponent', () => {
     });
 
     it('activates a complete unit and moves it to Active', () => {
-      locationServiceStub.patchMobileUnit.mockReturnValueOnce(of({ ...VAN_11, status: 'ACTIVE' }));
+      locationServiceStub.patchMobileUnit.mockReturnValueOnce(of({ ...VAN_11, status: MobileUnitResponseStatusEnum.Active }));
       component.activate(card('mu-11'));
       render();
       expect(locationServiceStub.patchMobileUnit).toHaveBeenCalledWith('mu-11', { status: 'ACTIVE' });
@@ -338,7 +337,7 @@ describe('MobileUnitsPageComponent', () => {
 
     it('checks the rows before saving, then replaces the rule set', () => {
       locationServiceStub.replaceCoverageRules.mockImplementationOnce((_id, rules) =>
-        of(rules.map((r, i) => rule({ ...r, id: `new-${i}`, mobileUnitId: 'mu-7' }))),
+        of(rules.map((r, i) => rule({ ...r, ruleType: CoverageRuleResponseRuleTypeEnum.ServiceArea, id: `new-${i}`, mobileUnitId: 'mu-7' }))),
       );
       component.openCoverage(VAN_7);
       component.addRule();

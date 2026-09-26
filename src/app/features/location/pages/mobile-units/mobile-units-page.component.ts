@@ -15,7 +15,6 @@ import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
-import { switchMap, tap } from 'rxjs';
 import type {
   CoverageRuleResponse,
   EligibleMobileUnitResponse,
@@ -23,6 +22,7 @@ import type {
   ServiceAreaResponse,
   TravelBufferPolicyResponse,
 } from '@durion-sdk/location';
+import { MobileUnitRequestStatusEnum } from '@durion-sdk/location';
 import { AuthService } from '../../../../core/services/auth.service';
 import { LOCATION_PAGE } from '../../../../core/security/route-permissions';
 import { isoDateLocal } from '../../../../core/utils/local-date';
@@ -261,19 +261,12 @@ export class MobileUnitsPageComponent {
       }
       this.state.set('loading');
       this.errorKey.set(null);
-      const sub = this.locationService
-        .listMobileUnits(locationId)
-        .pipe(
-          tap(units => {
-            this.units.set(units);
-            this.state.set('ready');
-          }),
-          switchMap(units => this.locationService.listCoverageRules(units.map(unit => unit.id))),
-        )
-        .subscribe({
+      const sub = this.locationService.listMobileUnits(locationId).subscribe({
           next: read => {
-            this.coverage.set(read.rules);
-            this.coverageRead.set(read.ok ? 'OK' : 'FAILED');
+            this.units.set(read.units);
+            this.coverage.set(read.coverage);
+            this.coverageRead.set(read.coverageOk ? 'OK' : 'FAILED');
+            this.state.set('ready');
           },
           error: () => {
             this.units.set([]);
@@ -489,7 +482,7 @@ export class MobileUnitsPageComponent {
     const save$ =
       mode === 'edit' && editing
         ? this.locationService.patchMobileUnit(editing.id, this.toPatch(fields, draft.status, editing))
-        : this.locationService.createMobileUnit({ ...fields, baseLocationId: locationId, status: 'INACTIVE' });
+        : this.locationService.createMobileUnit({ ...fields, baseLocationId: locationId, status: MobileUnitRequestStatusEnum.Inactive });
 
     this.saving.set(true);
     this.saveErrorKey.set(null);
