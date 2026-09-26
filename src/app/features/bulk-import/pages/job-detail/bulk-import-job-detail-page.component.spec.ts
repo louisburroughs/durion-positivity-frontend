@@ -329,14 +329,26 @@ describe('BulkImportJobDetailPageComponent', () => {
       expect(mockService.downloadErrorReport).toHaveBeenCalledWith('job-001');
     });
 
-    it('sets state to error first, then errorKey, when the download fails (ADR-0031)', () => {
+    it('a failed download surfaces a per-action error and keeps the job (and its controls) on screen', () => {
       mockService.downloadErrorReport.mockReturnValue(throwError(() => new Error('download failed')));
+      const stateBefore = component.state();
 
       component.downloadErrorReport();
       fixture.detectChanges();
 
-      expect(component.state()).toBe('error');
-      expect(component.errorKey()).toBe('BULK_IMPORT.JOB_DETAIL.ERROR.DOWNLOAD');
+      expect(component.state()).toBe(stateBefore);
+      expect(component.errorKey()).toBeNull();
+      expect(component.downloadErrorKey()).toBe('BULK_IMPORT.JOB_DETAIL.ERROR.DOWNLOAD');
+    });
+
+    it('clears the previous download error when a download is retried', () => {
+      mockService.downloadErrorReport.mockReturnValueOnce(throwError(() => new Error('download failed')));
+      component.downloadErrorReport();
+      mockService.downloadErrorReport.mockReturnValueOnce(of(undefined));
+
+      component.downloadErrorReport();
+
+      expect(component.downloadErrorKey()).toBeNull();
     });
   });
 });

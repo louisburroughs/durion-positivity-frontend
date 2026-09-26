@@ -27,6 +27,7 @@ export class BulkImportJobDetailPageComponent {
 
   readonly state = signal<PageState>('idle');
   readonly errorKey = signal<string | null>(null);
+  readonly downloadErrorKey = signal<string | null>(null);
   readonly job = signal<BulkLoadJob | null>(null);
   readonly auditRecords = signal<BulkLoadRecordAudit[]>([]);
   readonly correctionPending = signal<Set<string>>(new Set());
@@ -132,13 +133,13 @@ export class BulkImportJobDetailPageComponent {
    */
   downloadErrorReport(): void {
     if (!this.jobId) { return; }
+    this.downloadErrorKey.set(null);
     this.service.downloadErrorReport(this.jobId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        error: () => {
-          this.state.set('error');
-          this.errorKey.set('BULK_IMPORT.JOB_DETAIL.ERROR.DOWNLOAD');
-        },
+        // Per-action error, like the wizard pages: a failed download must not
+        // hide the job (and its retry controls) behind the page-level error state.
+        error: () => this.downloadErrorKey.set('BULK_IMPORT.JOB_DETAIL.ERROR.DOWNLOAD'),
       });
   }
 

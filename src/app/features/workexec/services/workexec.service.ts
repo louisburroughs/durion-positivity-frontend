@@ -896,7 +896,7 @@ export class WorkexecService {
    * (durion-positivity-backend#2210 ruling, issue #350) Neither this operation nor
    * `requestInvoiceFinalization` below has a published contract: invoice content and
    * finalization belong in pos-invoice (`getInvoice`/`finalizeInvoice`), reached from a
-   * work order via `generateWorkorderInvoice`, but `WorkorderResponse` still has no
+   * workorder via `generateWorkorderInvoice`, but `WorkorderResponse` still has no
    * `invoiceId` to look one up read-only. Blocked on
    * durion-positivity-backend#2232 (add `invoiceId` to `WorkorderResponse`, or
    * `GET /v1/invoices/by-workorder/{workorderId}`); stays on `ApiBaseService` until then.
