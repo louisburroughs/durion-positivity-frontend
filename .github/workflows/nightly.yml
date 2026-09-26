@@ -18,7 +18,9 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  DEPENDENCY_CHECK_IMAGE: "owasp/dependency-check:13.0.0"
+  # Pinned by digest: a retagged or compromised Docker Hub tag must not change
+  # what this security job executes. Tag kept for readability: 13.0.0.
+  DEPENDENCY_CHECK_IMAGE: "owasp/dependency-check@sha256:0e8f69ad5b00d62000937f4e57189812343f6903d9c83ee712012d51542a020a"
 
 jobs:
   security-scan:
@@ -91,12 +93,21 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    # Exposed at job level so steps can test for it: `secrets` is not readable
-    # from a step `if:`, but `env` is.
-    env:
-      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    # SONAR_TOKEN is deliberately NOT a job-level env: npm ci, sdk:install,
+    # Playwright and the test suite all run lifecycle scripts / repository code
+    # that could read it. It is handed only to the presence check and the scan.
 
     steps:
+      - name: Require the SonarCloud token
+        # A missing secret must fail the nightly, not skip the analysis and go green.
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          if [ -z "$SONAR_TOKEN" ]; then
+            echo "::error::SONAR_TOKEN secret is not set; the nightly SonarCloud analysis cannot run."
+            exit 1
+          fi
+
       - name: Checkout code
         uses: actions/checkout@v4
         with:
@@ -134,15 +145,12 @@ jobs:
         continue-on-error: true
         run: npx ng test --no-watch --browsers=ChromiumHeadless --runner-config vitest.config.ts --coverage
 
-      - name: Announce a missing SonarCloud token
-        if: env.SONAR_TOKEN == ''
-        run: echo "::warning::SONAR_TOKEN secret is not set; SonarCloud analysis skipped."
-
       - name: SonarCloud Scan
-        if: env.SONAR_TOKEN != ''
         # Project key, organization, sources and the lcov path come from
-        # sonar-project.properties.
+        # sonar-project.properties. The token is scoped to this step only.
         uses: SonarSource/sonarqube-scan-action@ba9859eae8dd6bd29e412f25ddbbef3d032000f4 # v8.2.2
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       - name: Upload coverage report
         if: always()
