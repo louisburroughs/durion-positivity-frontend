@@ -87,9 +87,7 @@ describe('EventEnvelopeContractPageComponent', () => {
       of({
         version: 'v1',
         fields: [{ name: 'eventId', type: 'string', required: true }],
-        traceabilityIds: [
-          { name: 'correlationId', description: 'Observability id', location: 'X-Correlation-Id header' },
-        ],
+        traceabilityIds: [{ name: 'correlationId', type: 'string' }],
       }),
     );
     fixture.detectChanges();
@@ -99,73 +97,5 @@ describe('EventEnvelopeContractPageComponent', () => {
 
     expect(fixture.nativeElement.querySelector('[data-testid="traceability-not-provided"]')).toBeFalsy();
     expect(fixture.nativeElement.textContent).toContain('correlationId');
-    expect(fixture.nativeElement.textContent).toContain('X-Correlation-Id header');
-  });
-
-  it('renders a localized "not provided" state on the identifiers/statuses/idempotency tabs when the backend omits those sections (durion-positivity-backend#2207)', () => {
-    fixture.detectChanges();
-    const tabs = fixture.nativeElement.querySelectorAll('[role="tab"]');
-
-    tabs[2].click();
-    fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('[data-testid="identifiers-not-provided"]')).toBeTruthy();
-
-    tabs[3].click();
-    fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('[data-testid="statuses-not-provided"]')).toBeTruthy();
-
-    tabs[4].click();
-    fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('[data-testid="idempotency-not-provided"]')).toBeTruthy();
-  });
-
-  it('renders the identifiers, statuses, and idempotency sections when the backend provides them', () => {
-    accountingServiceStub.getEventEnvelopeContract.mockReturnValueOnce(
-      of({
-        version: 'v1',
-        fields: [{ name: 'eventId', type: 'string', required: true }],
-        identifierStrategy: {
-          idFormat: 'UUIDv7',
-          eventIdMintedBy: 'server',
-          domainKeyIdFormat: 'opaque string',
-          notes: ['Never required to be a UUID'],
-        },
-        processingStatuses: {
-          statuses: [{ status: 'RECEIVED', meaning: 'Accepted, not yet processed' }],
-          restSubmissionLifecycle: ['RECEIVED', 'PROCESSED'],
-          kafkaFactLifecycle: ['RECEIVED', 'CONSUMED'],
-        },
-        idempotencyOutcomes: {
-          restSubmission: {
-            mechanism: 'eventId dedup',
-            onDuplicateBehavior: 'nothing is persisted',
-            onDuplicateErrorCode: 'DUPLICATE_EVENT',
-            onDuplicateHttpStatus: 409,
-            window: 'unbounded',
-          },
-          factConsumption: {
-            mechanism: 'sourceEventId dedup',
-            outcomes: [{ outcome: 'DUPLICATE_IGNORED', description: 'Re-delivery matched and ignored' }],
-          },
-        },
-      }),
-    );
-    fixture.detectChanges();
-    const tabs = fixture.nativeElement.querySelectorAll('[role="tab"]');
-
-    tabs[2].click();
-    fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('[data-testid="identifiers-not-provided"]')).toBeFalsy();
-    expect(fixture.nativeElement.textContent).toContain('UUIDv7');
-
-    tabs[3].click();
-    fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('[data-testid="statuses-not-provided"]')).toBeFalsy();
-    expect(fixture.nativeElement.textContent).toContain('RECEIVED');
-
-    tabs[4].click();
-    fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('[data-testid="idempotency-not-provided"]')).toBeFalsy();
-    expect(fixture.nativeElement.textContent).toContain('DUPLICATE_IGNORED');
   });
 });

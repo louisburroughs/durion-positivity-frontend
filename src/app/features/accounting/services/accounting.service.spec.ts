@@ -358,8 +358,8 @@ describe('AccountingService', () => {
     });
   });
 
-  describe('getEventEnvelopeContract() [issue #380, #350 D-follow-up, durion-positivity-backend#2207]', () => {
-    it('should call accountingEventsService.getEventContract() and map fields when the optional sections are absent', () => {
+  describe('getEventEnvelopeContract() [issue #380]', () => {
+    it('should call accountingEventsService.getEventContract() and map fields, dropping unsupported traceability/processing/idempotency/identifier data', () => {
       accountingEventsStub.getEventContract.mockReturnValueOnce(
         of({
           version: 'v1',
@@ -378,78 +378,8 @@ describe('AccountingService', () => {
         version: 'v1',
         fields: [{ name: 'eventId', type: 'string', required: true, description: 'Event id' }],
         examples: [{ eventId: 'evt-1' }],
-        identifierStrategy: undefined,
-        traceabilityIds: undefined,
-        processingStatuses: undefined,
-        idempotencyOutcomes: undefined,
       });
-    });
-
-    it('should map identifierStrategy, traceabilityIds, processingStatuses, and idempotencyOutcomes to the real SDK shapes', () => {
-      accountingEventsStub.getEventContract.mockReturnValueOnce(
-        of({
-          version: 'v1',
-          fields: [],
-          identifierStrategy: {
-            idFormat: 'UUIDv7',
-            eventIdMintedBy: 'server, unless the caller supplies eventId',
-            domainKeyIdFormat: 'opaque string',
-            notes: ['Never required to be a UUID'],
-          },
-          traceabilityIds: [
-            { name: 'X-Correlation-Id', description: 'Observability/error-tracing id', location: 'request/response header' },
-          ],
-          processingStatuses: {
-            statuses: [{ status: 'RECEIVED', meaning: 'Accepted, not yet processed' }],
-            restSubmissionLifecycle: ['RECEIVED', 'PROCESSED'],
-            kafkaFactLifecycle: ['RECEIVED', 'CONSUMED'],
-          },
-          idempotencyOutcomes: {
-            restSubmission: {
-              mechanism: 'eventId dedup',
-              onDuplicateBehavior: 'nothing is persisted',
-              onDuplicateErrorCode: 'DUPLICATE_EVENT',
-              onDuplicateHttpStatus: 409,
-              window: 'unbounded',
-            },
-            factConsumption: {
-              mechanism: 'sourceEventId dedup',
-              outcomes: [{ outcome: 'DUPLICATE_IGNORED', description: 'Re-delivery matched and ignored' }],
-            },
-          },
-        }),
-      );
-
-      let result: EventEnvelopeContract | undefined;
-      service.getEventEnvelopeContract().subscribe((r: EventEnvelopeContract) => (result = r));
-
-      expect(result?.identifierStrategy).toEqual({
-        idFormat: 'UUIDv7',
-        eventIdMintedBy: 'server, unless the caller supplies eventId',
-        domainKeyIdFormat: 'opaque string',
-        notes: ['Never required to be a UUID'],
-      });
-      expect(result?.traceabilityIds).toEqual([
-        { name: 'X-Correlation-Id', description: 'Observability/error-tracing id', location: 'request/response header' },
-      ]);
-      expect(result?.processingStatuses).toEqual({
-        statuses: [{ status: 'RECEIVED', meaning: 'Accepted, not yet processed' }],
-        restSubmissionLifecycle: ['RECEIVED', 'PROCESSED'],
-        kafkaFactLifecycle: ['RECEIVED', 'CONSUMED'],
-      });
-      expect(result?.idempotencyOutcomes).toEqual({
-        restSubmission: {
-          mechanism: 'eventId dedup',
-          onDuplicateBehavior: 'nothing is persisted',
-          onDuplicateErrorCode: 'DUPLICATE_EVENT',
-          onDuplicateHttpStatus: 409,
-          window: 'unbounded',
-        },
-        factConsumption: {
-          mechanism: 'sourceEventId dedup',
-          outcomes: [{ outcome: 'DUPLICATE_IGNORED', description: 'Re-delivery matched and ignored' }],
-        },
-      });
+      expect((result as { traceabilityIds?: unknown })?.traceabilityIds).toBeUndefined();
     });
 
     it('should never call ApiBaseService for the event envelope contract (fully migrated to the SDK)', () => {

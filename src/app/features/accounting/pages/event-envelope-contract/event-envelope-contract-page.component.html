@@ -24,15 +24,6 @@
     <button type="button" role="tab" [class.active]="activeTab() === 'traceability'"
       (click)="activeTab.set('traceability')">{{ 'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.TAB_TRACEABILITY' | translate
       }}</button>
-    <button type="button" role="tab" [class.active]="activeTab() === 'identifiers'"
-      (click)="activeTab.set('identifiers')">{{ 'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.TAB_IDENTIFIERS' | translate
-      }}</button>
-    <button type="button" role="tab" [class.active]="activeTab() === 'statuses'"
-      (click)="activeTab.set('statuses')">{{ 'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.TAB_STATUSES' | translate
-      }}</button>
-    <button type="button" role="tab" [class.active]="activeTab() === 'idempotency'"
-      (click)="activeTab.set('idempotency')">{{ 'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.TAB_IDEMPOTENCY' | translate
-      }}</button>
     <button type="button" role="tab" [class.active]="activeTab() === 'examples'" (click)="activeTab.set('examples')">{{
       'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.TAB_EXAMPLES' | translate }}</button>
   </div>
@@ -78,126 +69,14 @@
       <thead>
         <tr>
           <th>{{ 'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.COL_NAME' | translate }}</th>
-          <th>{{ 'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.COL_LOCATION' | translate }}</th>
-          <th>{{ 'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.COL_DESCRIPTION' | translate }}</th>
+          <th>{{ 'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.COL_TYPE' | translate }}</th>
         </tr>
       </thead>
       <tbody>
         @for (item of value.traceabilityIds; track item.name) {
         <tr>
           <td>{{ item.name }}</td>
-          <td>{{ item.location }}</td>
-          <td>{{ item.description }}</td>
-        </tr>
-        }
-      </tbody>
-    </table>
-    }
-  </section>
-  }
-
-  @if (activeTab() === 'identifiers') {
-  <section class="table-scroll-container" role="tabpanel" data-testid="identifiers-tab">
-    @if (!value.identifierStrategy) {
-    <div class="state-panel" data-testid="identifiers-not-provided">{{
-      'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.IDENTIFIER_NOT_PROVIDED' | translate }}</div>
-    } @else {
-    <dl class="definition-list">
-      <dt>{{ 'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.ID_FORMAT' | translate }}</dt>
-      <dd>{{ value.identifierStrategy.idFormat }}</dd>
-      <dt>{{ 'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.EVENT_ID_MINTED_BY' | translate }}</dt>
-      <dd>{{ value.identifierStrategy.eventIdMintedBy }}</dd>
-      <dt>{{ 'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.DOMAIN_KEY_ID_FORMAT' | translate }}</dt>
-      <dd>{{ value.identifierStrategy.domainKeyIdFormat }}</dd>
-    </dl>
-    @if (value.identifierStrategy.notes && value.identifierStrategy.notes.length > 0) {
-    <h3>{{ 'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.NOTES' | translate }}</h3>
-    <ul>
-      @for (note of value.identifierStrategy.notes; track note) {
-      <li>{{ note }}</li>
-      }
-    </ul>
-    }
-    }
-  </section>
-  }
-
-  @if (activeTab() === 'statuses') {
-  <section class="table-scroll-container" role="tabpanel" data-testid="statuses-tab">
-    @if (!value.processingStatuses) {
-    <div class="state-panel" data-testid="statuses-not-provided">{{
-      'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.STATUSES_NOT_PROVIDED' | translate }}</div>
-    } @else {
-    <table class="ledger-table" [attr.aria-label]="'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.STATUS_TABLE_ARIA' | translate">
-      <caption>{{ 'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.STATUS_TABLE_CAPTION' | translate }}</caption>
-      <thead>
-        <tr>
-          <th>{{ 'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.COL_STATUS' | translate }}</th>
-          <th>{{ 'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.COL_MEANING' | translate }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (item of value.processingStatuses.statuses; track item.status) {
-        <tr>
-          <td>{{ item.status }}</td>
-          <td>{{ item.meaning }}</td>
-        </tr>
-        }
-      </tbody>
-    </table>
-    <h3>{{ 'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.REST_SUBMISSION_LIFECYCLE' | translate }}</h3>
-    <ul>
-      @for (status of value.processingStatuses.restSubmissionLifecycle; track status) {
-      <li>{{ status }}</li>
-      }
-    </ul>
-    <h3>{{ 'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.KAFKA_FACT_LIFECYCLE' | translate }}</h3>
-    <ul>
-      @for (status of value.processingStatuses.kafkaFactLifecycle; track status) {
-      <li>{{ status }}</li>
-      }
-    </ul>
-    }
-  </section>
-  }
-
-  @if (activeTab() === 'idempotency') {
-  <section class="table-scroll-container" role="tabpanel" data-testid="idempotency-tab">
-    @if (!value.idempotencyOutcomes) {
-    <div class="state-panel" data-testid="idempotency-not-provided">{{
-      'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.IDEMPOTENCY_NOT_PROVIDED' | translate }}</div>
-    } @else {
-    <h3>{{ 'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.REST_SUBMISSION_IDEMPOTENCY' | translate }}</h3>
-    <dl class="definition-list">
-      <dt>{{ 'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.MECHANISM' | translate }}</dt>
-      <dd>{{ value.idempotencyOutcomes.restSubmission.mechanism }}</dd>
-      <dt>{{ 'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.ON_DUPLICATE_BEHAVIOR' | translate }}</dt>
-      <dd>{{ value.idempotencyOutcomes.restSubmission.onDuplicateBehavior }}</dd>
-      <dt>{{ 'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.ON_DUPLICATE_ERROR_CODE' | translate }}</dt>
-      <dd>{{ value.idempotencyOutcomes.restSubmission.onDuplicateErrorCode }}</dd>
-      <dt>{{ 'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.ON_DUPLICATE_HTTP_STATUS' | translate }}</dt>
-      <dd>{{ value.idempotencyOutcomes.restSubmission.onDuplicateHttpStatus }}</dd>
-      <dt>{{ 'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.WINDOW' | translate }}</dt>
-      <dd>{{ value.idempotencyOutcomes.restSubmission.window }}</dd>
-    </dl>
-    <h3>{{ 'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.FACT_CONSUMPTION_IDEMPOTENCY' | translate }}</h3>
-    <dl class="definition-list">
-      <dt>{{ 'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.MECHANISM' | translate }}</dt>
-      <dd>{{ value.idempotencyOutcomes.factConsumption.mechanism }}</dd>
-    </dl>
-    <table class="ledger-table" [attr.aria-label]="'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.OUTCOME_TABLE_ARIA' | translate">
-      <caption>{{ 'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.OUTCOME_TABLE_CAPTION' | translate }}</caption>
-      <thead>
-        <tr>
-          <th>{{ 'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.COL_OUTCOME' | translate }}</th>
-          <th>{{ 'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.COL_DESCRIPTION' | translate }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (item of value.idempotencyOutcomes.factConsumption.outcomes; track item.outcome) {
-        <tr>
-          <td>{{ item.outcome }}</td>
-          <td>{{ item.description }}</td>
+          <td>{{ item.type }}</td>
         </tr>
         }
       </tbody>

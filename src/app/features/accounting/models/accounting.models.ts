@@ -133,79 +133,29 @@ export interface EnvelopeFieldDefinition {
   example?: string;
 }
 
-/** An identifier usable to trace an accounting event across the ingestion pipeline. */
 export interface TraceabilityIdDefinition {
   name: string;
-  description: string;
-  /** Where the identifier is carried: a request/response header name, or a field on the ingestion response. */
-  location: string;
-}
-
-/** Primary-key and event-id minting rules the ingestion pipeline follows (AD-006 / ADR-0013). */
-export interface EventIdentifierStrategy {
-  idFormat: string;
-  eventIdMintedBy: string;
-  domainKeyIdFormat: string;
-  notes?: string[];
-}
-
-/** One `AccountingEventStatus` constant and its meaning. */
-export interface EventProcessingStatusDescriptor {
-  status: string;
-  meaning: string;
-}
-
-/** Status sequences and constants for the two accounting event ingestion paths. */
-export interface EventProcessingStatusesContract {
-  statuses: EventProcessingStatusDescriptor[];
-  restSubmissionLifecycle: string[];
-  kafkaFactLifecycle: string[];
-}
-
-/** One outcome an idempotency path can record. */
-export interface EventIdempotencyOutcomeDescriptor {
-  outcome: string;
-  description: string;
-}
-
-/** Idempotency mechanism for events submitted via `POST /v1/accounting/events`. */
-export interface RestSubmissionIdempotency {
-  mechanism: string;
-  onDuplicateBehavior: string;
-  onDuplicateErrorCode: string;
-  onDuplicateHttpStatus: number;
-  window: string;
-}
-
-/** Idempotency mechanism for Kafka-consumed inventory posting facts. */
-export interface FactConsumptionIdempotency {
-  mechanism: string;
-  outcomes: EventIdempotencyOutcomeDescriptor[];
-}
-
-/** The two idempotency mechanisms used by the accounting event ingestion pipeline. */
-export interface EventIdempotencyOutcomesContract {
-  restSubmission: RestSubmissionIdempotency;
-  factConsumption: FactConsumptionIdempotency;
+  type: string;
+  description?: string;
+  source?: string;
 }
 
 /**
  * Backend `GET /v1/accounting/events/contract` (`AccountingEventsService.getEventContract`)
- * returns `version`, `fields`, `examples`, `identifierStrategy`, `traceabilityIds`,
- * `processingStatuses`, and `idempotencyOutcomes` (durion-positivity-backend#2207). The last four
- * stay optional so a consumer never assumes an older backend build still lacks them; the page
- * renders a localized "not provided" state per section when absent. `examples` is untyped JSON on
- * the backend (`Array<any>`), so it stays `unknown[]` here rather than claiming a shape the API
- * does not guarantee.
+ * only returns `version`, `fields`, and `examples` today — `identifierStrategy`,
+ * `traceabilityIds`, `processingStatuses`, and `idempotencyOutcomes` are not part of the
+ * response (durion-positivity-backend#2207) and must stay optional so a consumer never assumes
+ * they are present (issue #380). `examples` is untyped JSON on the backend (`Array<any>`), so it
+ * stays `unknown[]` here rather than claiming a shape the API does not guarantee.
  */
 export interface EventEnvelopeContract {
   version: string;
   fields: EnvelopeFieldDefinition[];
   examples?: unknown[];
-  identifierStrategy?: EventIdentifierStrategy;
+  identifierStrategy?: string;
   traceabilityIds?: TraceabilityIdDefinition[];
-  processingStatuses?: EventProcessingStatusesContract;
-  idempotencyOutcomes?: EventIdempotencyOutcomesContract;
+  processingStatuses?: string[];
+  idempotencyOutcomes?: string[];
 }
 
 export interface AccountingEventSubmitRequest {
