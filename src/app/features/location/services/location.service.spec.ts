@@ -1,5 +1,7 @@
 import { TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
+import { ProductsAPIService } from '@durion-sdk/catalog';
+import type { ServiceDto } from '@durion-sdk/catalog';
 import {
   BayAPIService,
   LocationAPIService,
@@ -7,7 +9,26 @@ import {
   SiteDefaultsAPIService,
   StorageLocationAPIService,
 } from '@durion-sdk/location';
+import type { BayRequest, BayResponse } from '@durion-sdk/location';
 import { LocationService } from './location.service';
+
+const bayResponse = (overrides: Partial<BayResponse> = {}): BayResponse => ({
+  id: 'bay-1',
+  locationId: 'loc-01',
+  name: 'Bay 01',
+  bayType: 'GENERAL_SERVICE',
+  status: 'ACTIVE',
+  maxConcurrentVehicles: 1,
+  serviceCapabilityCodes: [],
+  ...overrides,
+});
+
+const catalogService = (overrides: Partial<ServiceDto> = {}): ServiceDto => ({
+  id: 'svc-1',
+  name: 'Wheel alignment, 4-wheel',
+  operationCode: 'WHEEL-ALIGNMENT-4-WHEEL',
+  ...overrides,
+});
 
 describe('LocationService', () => {
   let service: LocationService;
@@ -34,6 +55,9 @@ describe('LocationService', () => {
     getSiteDefaults: vi.fn(),
     configureSiteDefaults: vi.fn(),
   };
+  const catalogProductsApiStub = {
+    searchCatalogServices: vi.fn(),
+  };
   const storageLocationApiStub = {
     listStorageLocations: vi.fn(),
     createStorageLocation: vi.fn(),
@@ -50,6 +74,7 @@ describe('LocationService', () => {
         { provide: MobileUnitAPIService, useValue: mobileUnitApiStub },
         { provide: SiteDefaultsAPIService, useValue: siteDefaultsApiStub },
         { provide: StorageLocationAPIService, useValue: storageLocationApiStub },
+        { provide: ProductsAPIService, useValue: catalogProductsApiStub },
       ],
     });
     service = TestBed.inject(LocationService);
@@ -83,14 +108,23 @@ describe('LocationService', () => {
     });
   });
 
-  it('unwraps the Spring page content array from listBays', () => {
-    const bay = { id: 'bay-1', name: 'Bay 01' };
+  it('reads one 500-row page of bays, every status, and unwraps its content (EXEMPLARS §4)', () => {
+    const bay = bayResponse();
     bayApiStub.listBays.mockReturnValueOnce(of({ content: [bay], totalElements: 1 }));
 
-    let result: unknown[] | undefined;
+    let result: BayResponse[] | undefined;
     service.listBays('loc-01').subscribe(r => (result = r));
 
+    // No status filter: an out-of-service bay must still show on the setup page.
+    expect(bayApiStub.listBays).toHaveBeenCalledWith('loc-01', undefined, undefined, 0, 500);
     expect(result).toEqual([bay]);
+  });
+
+  it('reads a page with no content as no bays', () => {
+    bayApiStub.listBays.mockReturnValueOnce(of({}));
+    let result: BayResponse[] | undefined;
+    service.listBays('loc-01').subscribe(r => (result = r));
+    expect(result).toEqual([]);
   });
 
   it('unwraps the Spring page content array from listMobileUnits', () => {
@@ -103,39 +137,76 @@ describe('LocationService', () => {
     expect(result).toEqual([unit]);
   });
 
-  it('returns a bare array unchanged and empty for a missing page body', () => {
-    bayApiStub.listBays.mockReturnValueOnce(of([{ id: 'bay-1' }]));
-    let asArray: unknown[] | undefined;
-    service.listBays('loc-01').subscribe(r => (asArray = r));
-    expect(asArray).toEqual([{ id: 'bay-1' }]);
-
+  it('returns an empty mobile-unit list for a missing page body', () => {
     mobileUnitApiStub.listMobileUnits.mockReturnValueOnce(of({}));
     let asEmpty: unknown[] | undefined;
     service.listMobileUnits().subscribe(r => (asEmpty = r));
     expect(asEmpty).toEqual([]);
   });
 
-  it('maps a bay body onto the typed BayRequest: specialty codes and duty class travel as sent (CAP-325)', () => {
-    bayApiStub.createBay.mockReturnValueOnce(of({ id: 'bay-1' }));
-
-    service.createBay('loc-01', {
+  it('sends a bay create request exactly as given (CAP-325)', () => {
+    const request: BayRequest = {
       name: 'Rack 1',
       bayType: 'ALIGNMENT',
       capacity: { maxConcurrentVehicles: 1 },
-      serviceCapabilityCodes: ['WHEEL-ALIGNMENT-4-WHEEL', 'WHEEL-ALIGNMENT-2-WHEEL'],
+      serviceCapabilityCodes: ['WHEEL-ALIGNMENT-4-WHEEL'],
       maxDutyClass: 3,
       status: 'ACTIVE',
-    }).subscribe();
+    };
+    bayApiStub.createBay.mockReturnValueOnce(of(bayResponse({ name: 'Rack 1' })));
 
-    expect(bayApiStub.createBay).toHaveBeenCalledWith('loc-01', {
-      name: 'Rack 1',
-      bayType: 'ALIGNMENT',
-      capacity: { maxConcurrentVehicles: 1 },
-      // The optional top-level twin follows the nested value: the backend refuses 0 (@Min(1)).
-      maxConcurrentVehicles: 1,
-      serviceCapabilityCodes: ['WHEEL-ALIGNMENT-4-WHEEL', 'WHEEL-ALIGNMENT-2-WHEEL'],
-      maxDutyClass: 3,
-      status: 'ACTIVE',
+    service.createBay('loc-01', request).subscribe();
+
+    expect(bayApiStub.createBay).toHaveBeenCalledWith('loc-01', request);
+  });
+
+  it('sends a bay patch to the bay it names', () => {
+    bayApiStub.patchBay.mockReturnValueOnce(of(bayResponse({ status: 'OUT_OF_SERVICE' })));
+
+    service.patchBay('loc-01', 'bay-1', { status: 'OUT_OF_SERVICE' }).subscribe();
+
+    expect(bayApiStub.patchBay).toHaveBeenCalledWith('loc-01', 'bay-1', { status: 'OUT_OF_SERVICE' });
+  });
+
+  describe('searchClaimableServices', () => {
+    it('does not call the catalog for a blank query', () => {
+      let result: { services: unknown[]; ok: boolean } | undefined;
+      service.searchClaimableServices('   ').subscribe(r => (result = r));
+
+      expect(catalogProductsApiStub.searchCatalogServices).not.toHaveBeenCalled();
+      expect(result).toEqual({ services: [], ok: true });
+    });
+
+    it('searches by the trimmed name and keeps only services with an operation code', () => {
+      catalogProductsApiStub.searchCatalogServices.mockReturnValueOnce(
+        of([
+          catalogService({ operationCategory: undefined }),
+          catalogService({ id: 'svc-2', name: 'Loose note', operationCode: '  ' }),
+          catalogService({ id: 'svc-3', name: undefined, operationCode: 'TIRE-ROTATION' }),
+        ]),
+      );
+
+      let result: { services: unknown[]; ok: boolean } | undefined;
+      service.searchClaimableServices('  align ').subscribe(r => (result = r));
+
+      expect(catalogProductsApiStub.searchCatalogServices).toHaveBeenCalledWith('align', 20);
+      expect(result).toEqual({
+        ok: true,
+        services: [
+          { operationCode: 'WHEEL-ALIGNMENT-4-WHEEL', name: 'Wheel alignment, 4-wheel', operationCategory: null },
+          // A nameless service falls back to its business code, never its id.
+          { operationCode: 'TIRE-ROTATION', name: 'TIRE-ROTATION', operationCategory: null },
+        ],
+      });
+    });
+
+    it('reports a failed search as not ok rather than as no matches', () => {
+      catalogProductsApiStub.searchCatalogServices.mockReturnValueOnce(throwError(() => new Error('down')));
+
+      let result: { services: unknown[]; ok: boolean } | undefined;
+      service.searchClaimableServices('align').subscribe(r => (result = r));
+
+      expect(result).toEqual({ services: [], ok: false });
     });
   });
 

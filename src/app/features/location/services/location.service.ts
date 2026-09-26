@@ -1,5 +1,7 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, map } from 'rxjs';
+import { Observable, catchError, map, of } from 'rxjs';
+import { ProductsAPIService } from '@durion-sdk/catalog';
+import type { ServiceDto } from '@durion-sdk/catalog';
 import {
   BayAPIService,
   LocationAPIService,
@@ -13,6 +15,7 @@ import type {
   LocationPatchRequest,
   BayRequest,
   BayPatchRequest,
+  BayResponse,
   MobileUnitRequest,
   SiteDefaultsRequest,
   StorageLocationRequest,
@@ -32,6 +35,20 @@ export const STORAGE_LOCATION_TYPES: ReadonlyArray<{ value: string; label: strin
   { value: 'TRUCK', label: 'Truck' },
 ];
 
+/**
+ * Rows asked for from the paged bay list. Matches the other bay readers
+ * (`capacity-calendar.service.ts`, `shop-dashboard.service.ts`): a truncation mitigation, not a
+ * completeness guarantee, since the Spring page silently drops rows past it.
+ */
+const BAY_PAGE_SIZE = 500;
+
+/** A catalog service a bay or mobile unit can claim: only services with an operation code qualify. */
+export interface ClaimableService {
+  readonly operationCode: string;
+  readonly name: string;
+  readonly operationCategory: string | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class LocationService {
   private readonly locationApi = inject(LocationAPIService);
@@ -39,6 +56,8 @@ export class LocationService {
   private readonly mobileUnitApi = inject(MobileUnitAPIService);
   private readonly siteDefaultsApi = inject(SiteDefaultsAPIService);
   private readonly storageLocationApi = inject(StorageLocationAPIService);
+  /** `searchCatalogServices` lives on the catalog's products API. */
+  private readonly catalogProductsApi = inject(ProductsAPIService);
 
   // ── Locations ────────────────────────────────────────────────────────────
 
@@ -123,21 +142,44 @@ export class LocationService {
 
   // ── Bays ─────────────────────────────────────────────────────────────────
 
-  listBays(locationId: string): Observable<unknown[]> {
-    return (this.bayApi.listBays(locationId) as Observable<unknown>).pipe(map(toContentArray));
+  /**
+   * Every bay at the location, in and out of service. No status filter: an out-of-service bay must
+   * still be listed (same call shape as the other bay readers).
+   */
+  listBays(locationId: string): Observable<BayResponse[]> {
+    return this.bayApi
+      .listBays(locationId, undefined, undefined, 0, BAY_PAGE_SIZE)
+      .pipe(map(page => page?.content ?? []));
   }
 
-  createBay(locationId: string, body: Record<string, unknown>, _idempotencyKey?: string): Observable<unknown> {
-    const request = this.toBayRequest(body);
-    return this.bayApi.createBay(locationId, request) as Observable<unknown>;
+  createBay(locationId: string, request: BayRequest): Observable<BayResponse> {
+    return this.bayApi.createBay(locationId, request);
   }
 
-  getBay(locationId: string, bayId: string): Observable<unknown> {
-    return this.bayApi.getBay(locationId, bayId) as Observable<unknown>;
+  getBay(locationId: string, bayId: string): Observable<BayResponse> {
+    return this.bayApi.getBay(locationId, bayId);
   }
 
-  patchBay(locationId: string, bayId: string, patch: Record<string, unknown>): Observable<unknown> {
-    return this.bayApi.patchBay(locationId, bayId, patch as BayPatchRequest) as Observable<unknown>;
+  /** Null fields are left unchanged by pos-location. */
+  patchBay(locationId: string, bayId: string, patch: BayPatchRequest): Observable<BayResponse> {
+    return this.bayApi.patchBay(locationId, bayId, patch);
+  }
+
+  /**
+   * Catalog services whose name contains `query`, for claiming as specialty services or mobile-unit
+   * capabilities. Services without an operation code can't be claimed and are left out. The catalog
+   * has no list-all read yet (durion-positivity-backend#2246), so a blank query returns nothing.
+   */
+  searchClaimableServices(query: string): Observable<{ services: ClaimableService[]; ok: boolean }> {
+    const trimmed = query.trim();
+    if (!trimmed) {
+      return of({ services: [], ok: true });
+    }
+    return this.catalogProductsApi.searchCatalogServices(trimmed, 20).pipe(
+      map(services => ({ services: toClaimableServices(services), ok: true })),
+      // ADR-0064 §1: a catalog outage must not read as "no matches".
+      catchError(() => of({ services: [] as ClaimableService[], ok: false })),
+    );
   }
 
   // ── Mobile Units ─────────────────────────────────────────────────────────
@@ -179,30 +221,6 @@ export class LocationService {
       cleanupBufferMinutes: this.asOptionalNumber(body['cleanupBufferMinutes']),
       type: this.asLocationType(body['type']),
       parents: this.asRecord(body['parents']),
-    };
-  }
-
-  private toBayRequest(body: Record<string, unknown>): BayRequest {
-    const capacity = this.asRecord(body['capacity']);
-    // One value, two places to state it: `capacity.maxConcurrentVehicles` is the contract's
-    // required field, the top-level one its optional legacy twin (@Min(1) — a 0 is refused, so it
-    // is never invented). Either supplied stands in for the other.
-    const nested = this.asOptionalNumber(capacity['maxConcurrentVehicles']);
-    const topLevel = this.asOptionalNumber(body['maxConcurrentVehicles']);
-    const maxConcurrentVehicles = topLevel ?? nested;
-
-    return {
-      name: this.asString(body['name']),
-      bayType: this.asString(body['bayType']),
-      capacity: {
-        maxConcurrentVehicles: nested ?? topLevel ?? 0,
-      },
-      maxConcurrentVehicles,
-      // CAP-325: operation codes this bay type alone performs (D14) and the heaviest GVWR class it
-      // accepts (D13). Skill requirements belong to the catalog service, not the bay (CAP-329).
-      serviceCapabilityCodes: this.asStringArray(body['serviceCapabilityCodes']),
-      maxDutyClass: this.asOptionalNumber(body['maxDutyClass']),
-      status: this.asOptionalString(body['status']),
     };
   }
 
@@ -303,4 +321,14 @@ function toContentArray(response: unknown): unknown[] {
   }
   const page = response as { content?: unknown[]; items?: unknown[] } | null;
   return page?.content ?? page?.items ?? [];
+}
+
+function toClaimableServices(services: readonly ServiceDto[]): ClaimableService[] {
+  return services
+    .filter(service => (service.operationCode ?? '').trim().length > 0)
+    .map(service => ({
+      operationCode: (service.operationCode ?? '').trim(),
+      name: service.name?.trim() || (service.operationCode ?? '').trim(),
+      operationCategory: service.operationCategory ?? null,
+    }));
 }

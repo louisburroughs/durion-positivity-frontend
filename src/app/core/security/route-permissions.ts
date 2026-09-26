@@ -539,6 +539,10 @@ export const LOCATION_PAGE = {
   locationView: ['location:read'],
   locationCreate: ['location:write'],
   bays: ['location:bay:read'],
+  /** Bays page write controls: create and edit. pos-location can also scope this to one location (403). */
+  bayManage: ['location:bay:manage'],
+  /** Bays page specialty-service search (pos-catalog service search). */
+  catalogServiceView: ['catalog:service_type:view'],
   mobileUnits: ['location:mobile-unit:read'],
   /** The sync console reads pos-inventory's replicated location tree. */
   sync: ['inventory:location:view'],
