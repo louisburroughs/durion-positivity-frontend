@@ -144,6 +144,27 @@
   font-weight: 600;
 }
 
+.pvm__permission-hint {
+  margin: 0;
+  color: var(--status-warning-fg);
+  font-size: 0.85rem;
+}
+
+.pvm__prefill-btn {
+  align-self: flex-start;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--link-color);
+  font-weight: 600;
+  padding: var(--space-2) var(--space-3);
+}
+
+.pvm__prefill-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .pvm__ready {
   color: var(--link-color);
   font-weight: 600;

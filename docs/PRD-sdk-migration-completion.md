@@ -205,11 +205,30 @@ fields it does not return as optional. Rendering its `identifierStrategy`/`trace
 blocked on durion-positivity-backend#2234: SDK 0.65.0-alpha was generated from a stale
 `pos-accounting/openapi.yaml` and dropped those fields.
 
-`billing-transport.service.ts` is no longer an approved exception for D7/D8: D7
-(`executeRefund` no-amount branch) and D8 (`loadReceipt`) are resolved (issue #381) — the
-page now requires an explicit refund amount and the receipt page shows a localized
-not-available state instead of calling either nonexistent route. It keeps one narrow,
-permanent exception for the public download URL above.
+`billing-transport.service.ts` is no longer an approved exception: D7 (`executeRefund`
+no-amount branch) and D8 (`loadReceipt`) are resolved (issue #381) — the page still requires
+an explicit refund amount on every request, and the receipt page now calls a real backend
+route for both gaps.
+
+durion-positivity-backend#2226/#2215/#2214 (#350 follow-up, this PR) close the remaining
+gaps that #381 left as informational-only:
+
+- The frontend permission catalog (`core/security/permission-catalog.ts`) is regenerated
+  from backend `origin/main` at catalog version 92 (bits 536–541 added), restoring the
+  `BILLING_SECTION` gates on refund, void and receipt-generate in `route-permissions.ts`
+  that PR #383 had to drop when those codes didn't exist yet. Each gate is independent of
+  its method call (the request-vs-button pattern in `INVENTORY_PAGE.pickExecute`), so an
+  unknown-permission (legacy) token still stays open.
+- `loadRefundContext` now reads `PaymentService.getInvoicePayment`'s `refundableAmount`
+  instead of summing `listInvoiceRefunds`, so the page can prefill a full-balance refund for
+  the operator to confirm, not just show a prior-refunds total.
+- D8 above is now resolved as an actual read: `ReceiptService.getReceipt` (#2214) loads a
+  deep-linked receipt directly, replacing the not-available state.
+- `generateReceipt` had a latent bug (not part of #381's resolution): it sent the delivery
+  method/email selection as `paymentIntentId` instead of a real payment-intent id. Fixed by
+  resolving the invoice's captured payment intent via `listInvoicePayments` first.
+
+`billing-transport.service.ts` keeps one narrow, permanent exception: the public download URL above.
 
 `people/services/people.service.ts` is no longer an approved exception: D2
 (`submitWorkSession`) is resolved by the durion-positivity-backend#2208 ruling —
@@ -369,7 +388,7 @@ tracked follow-up decisions.
 | ~~—~~ | ~~`workexec.service.ts` — `finalizeWorkorder`~~ | Resolved (durion-positivity-backend#2210 ruling, issue #350 revisit): the standalone finalize endpoint/page is superseded by `completeWorkorder`, which already captures the billable-scope snapshot atomically; removed along with its route, page, and models | — |
 | ~~—~~ | ~~`workexec.service.ts` — `listEstimatesForVehicle`~~ | Resolved (issue #379): the vehicle filter exists on `searchEstimates`, which the frontend already used for text search | — |
 | ~~D7~~ | ~~`billing-transport.service.ts` — `executeRefund` (no-amount branch)~~ | Resolved (issue #381): the page now requires an explicit refund amount and always sends it through the SDK `refundPayment` | — |
-| ~~D8~~ | ~~`billing-transport.service.ts` — `loadReceipt`~~   | Resolved (issue #381): removed; the page uses `generateReceipt`'s full response directly and shows a localized not-available state for a receipt reached without generating/reprinting it | — |
+| ~~D8~~ | ~~`billing-transport.service.ts` — `loadReceipt`~~   | Resolved twice: issue #381 removed it (no backend GET existed yet) and showed a not-available state; durion-positivity-backend#2214 (this PR, #350 follow-up) added `ReceiptService.getReceipt`, so `loadReceipt` is back as a real read-only call | — |
 | —   | `billing-transport.service.ts` — `resolveArtifactDownloadUrl()` | Permanent exception: public, token-only invoice download link for an unauthenticated recipient; no SDK operation returns a URL | Never migrate |
 | —   | `bulk-import.service.ts` — tus creation endpoint     | Permanent exception: `createTusUpload` exists, but `tus-js-client` owns the resumable-upload protocol and needs a bare endpoint URL | Never migrate |
 | —   | `chat-api.service.ts` — all                          | Permanent exception: gateway/MCP traffic                          | Never migrate                     |

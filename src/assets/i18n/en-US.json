@@ -6621,8 +6621,12 @@
         "REASON_LABEL": "Reason",
         "AUTHORITY_LABEL": "Authority Code",
         "AMOUNT_LABEL": "Refund Amount (required)",
-        "PRIOR_REFUNDS_LOADING": "Loading prior refunds...",
-        "PRIOR_REFUNDS_LABEL": "Already Refunded"
+        "CONTEXT_LOADING": "Loading refund balance...",
+        "CAPTURED_LABEL": "Captured",
+        "REFUNDED_LABEL": "Already Refunded",
+        "REFUNDABLE_LABEL": "Refundable Balance",
+        "REFUNDABLE_UNAVAILABLE": "Refundable balance is unavailable until this payment is captured.",
+        "ACTION_FULL_BALANCE": "Refund Full Balance"
       },
       "ERROR": {
         "CAPTURE": "Unable to process payment. Please try again.",
@@ -6631,8 +6635,10 @@
         "MISSING_IDS": "Invalid payment or invoice reference.",
         "REFUND_AMOUNT_REQUIRED": "Enter a refund amount greater than zero.",
         "REFUND_AMOUNT_EXCEEDS_BALANCE": "Refund amount cannot exceed the refundable balance.",
-        "REFUND_CONTEXT_LOAD": "Unable to load prior refunds.",
-        "REFUND_PERMISSION_DENIED": "You do not have permission to refund this payment."
+        "REFUND_CONTEXT_LOAD": "Unable to load refundable balance.",
+        "REFUND_PERMISSION_DENIED": "You do not have permission to refund this payment.",
+        "VOID_PERMISSION_DENIED": "You do not have permission to void this payment.",
+        "LOCATION_SCOPE_DENIED": "This invoice is outside your assigned location. Ask a manager with access to this location to complete this action."
       }
     },
     "RECEIPT": {
@@ -6641,7 +6647,16 @@
         "RECEIPT_NUMBER": "Receipt Number",
         "INVOICE_REF": "Invoice Reference",
         "GENERATED_AT": "Generated",
-        "EMAILED_TO": "Emailed To"
+        "EMAILED_TO": "Emailed To",
+        "STATUS": "Status",
+        "PAID_AMOUNT": "Paid Amount",
+        "PAYMENT_METHOD": "Payment Method",
+        "CASHIER": "Cashier",
+        "TERMINAL": "Terminal",
+        "DELIVERY_METHOD": "Delivery Method",
+        "DELIVERY_EMAIL": "Delivered To",
+        "REPRINT_COUNT": "Reprint Count",
+        "LAST_REPRINT_BY": "Last Reprinted By"
       },
       "ACTION": {
         "GENERATE": "Generate Receipt",
@@ -6656,15 +6671,22 @@
       },
       "EMAIL_LABEL": "Email Address",
       "IDLE": "No receipt generated yet.",
+      "STATUS": {
+        "GENERATED": "Generated"
+      },
       "ERROR": {
         "LOAD": "Unable to load receipt.",
+        "LOAD_PERMISSION_DENIED": "You do not have permission to view this receipt.",
         "GENERATE": "Unable to generate receipt. Please try again.",
         "GENERATE_PERMISSION_DENIED": "You do not have permission to generate this receipt.",
         "REPRINT": "Unable to reprint receipt. Please try again.",
         "REPRINT_PERMISSION_DENIED": "You do not have permission to reprint this receipt.",
         "MISSING_INVOICE": "No invoice ID provided.",
-        "NOT_AVAILABLE": "This receipt is not available to view. Use reprint to get a copy."
-      }
+        "NOT_FOUND": "Receipt not found.",
+        "REPRINT_OVERRIDE_REQUIRED": "This receipt has passed the standard reprint limit. Supervisor override permission is required to reprint it again.",
+        "LOCATION_SCOPE_DENIED": "This invoice is outside your assigned location. Ask a manager with access to this location to complete this action."
+      },
+      "REPRINT_CAP_WARNING": "This receipt has reached the standard reprint limit. Further reprints require supervisor override."
     },
     "INVOICE_STATUS": {
       "DRAFT": "Draft",
