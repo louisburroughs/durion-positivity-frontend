@@ -13,6 +13,8 @@ import {
   StorageLocation,
 } from '../../../models/inventory.models';
 import { InventoryDomainService } from '../../../services/inventory.service';
+import { INVENTORY_PAGE } from '../../../../../core/security/route-permissions';
+import { AuthService } from '../../../../../core/services/auth.service';
 
 type PageState = 'idle' | 'loading' | 'ready' | 'submitting' | 'success' | 'error';
 
@@ -26,6 +28,7 @@ type PageState = 'idle' | 'loading' | 'ready' | 'submitting' | 'success' | 'erro
 export class ReturnToStockPageComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly inventoryService = inject(InventoryDomainService);
+  private readonly auth = inject(AuthService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly state = signal<PageState>('idle');
@@ -40,11 +43,20 @@ export class ReturnToStockPageComponent {
   readonly returnQtys = signal<Partial<Record<string, number>>>({});
   readonly submitResult = signal<ReturnToStockResult | null>(null);
 
+  /**
+   * `submitReturnToStock` is a write — `ReturnController.submitToStock` is
+   * `@PreAuthorize('inventory:return:write')` — so the submit control and the
+   * method body both gate on this code independently, not the `returnToStock`
+   * view admission the route itself carries (ADR-0040 §6a.1). Unknown
+   * permissions (legacy token, no `perm_bits` claim) stay open, matching
+   * `canAccess()`'s own fallback.
+   */
   readonly canSubmit = computed(() => {
     const hasLocation = !!this.selectedLocationId();
     const hasReason = !!this.selectedReasonCode();
     const hasLine = Object.values(this.returnQtys()).some(qty => (qty ?? 0) > 0);
-    return hasLocation && hasReason && hasLine;
+    const hasPermission = !this.auth.permissionsKnown() || this.auth.hasAnyPermission(INVENTORY_PAGE.returnToStockWrite);
+    return hasLocation && hasReason && hasLine && hasPermission;
   });
 
   constructor() {
