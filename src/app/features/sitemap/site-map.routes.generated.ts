@@ -173,7 +173,6 @@ export const SITE_MAP_ROUTES: readonly SiteMapRouteEntry[] = [
   { route: '/app/workexec/workorders/:workorderId', label: "Workorders", labelKey: "SITEMAP.LABEL.WORKORDERS", dynamic: true },
   { route: '/app/workexec/workorders/:workorderId/assign', label: "Assign", labelKey: "SITEMAP.LABEL.ASSIGN", dynamic: true, permissions: ['workorder:workorder:assign-technician'] },
   { route: '/app/workexec/workorders/:workorderId/change-requests', label: "Change Requests", labelKey: "SITEMAP.LABEL.CHANGE_REQUESTS", dynamic: true, permissions: ['workorder:change_request:view'] },
-  { route: '/app/workexec/workorders/:workorderId/finalize', label: "Finalize", labelKey: "SITEMAP.LABEL.FINALIZE", dynamic: true, permissions: ['workorder:workorder:view'] },
   { route: '/app/workexec/workorders/:workorderId/invoice-finalization', label: "Invoice Finalization", labelKey: "SITEMAP.LABEL.INVOICE_FINALIZATION", dynamic: true },
   { route: '/app/workexec/workorders/:workorderId/labor', label: "Labor", labelKey: "SITEMAP.LABEL.LABOR", dynamic: true, permissions: ['workorder:labor:view'] },
   { route: '/app/workexec/workorders/:workorderId/parts', label: "Parts", labelKey: "SITEMAP.LABEL.PARTS", dynamic: true, permissions: ['workorder:parts:view'] },

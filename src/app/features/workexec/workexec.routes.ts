@@ -262,17 +262,6 @@ export const WORKEXEC_ROUTES: Routes = [
             m => m.WorkorderChangeRequestsPageComponent,
           ),
       },
-
-      /** Story 216 (CAP-006): Finalize Billable Scope Snapshot */
-      {
-        path: 'workorders/:workorderId/finalize',
-        data: { permissions: WORKEXEC_PAGE.workorderView },
-        loadComponent: () =>
-          import('./pages/workorder-finalize/workorder-finalize-page.component').then(
-            m => m.WorkorderFinalizePageComponent,
-          ),
-      },
-
     ],
   },
 ];

@@ -228,15 +228,6 @@ export const WORKEXEC_LANDING_CONFIG: LandingPageConfig = {
         },
         {
           kind: 'guided',
-          icon: 'lock',
-          titleKey: 'WORKEXEC.LANDING.CARD.WORKORDER_FINALIZE.TITLE',
-          descriptionKey: 'WORKEXEC.LANDING.CARD.WORKORDER_FINALIZE.DESCRIPTION',
-          ctaKey: 'WORKEXEC.LANDING.ACTION.OPEN_WORKORDER_FINALIZE',
-          buildCommands: W('finalize'),
-          permissions: WORKEXEC_PAGE.workorderView,
-        },
-        {
-          kind: 'guided',
           icon: 'receipt_long',
           titleKey: 'WORKEXEC.LANDING.CARD.INVOICE_FINALIZATION.TITLE',
           descriptionKey: 'WORKEXEC.LANDING.CARD.INVOICE_FINALIZATION.DESCRIPTION',

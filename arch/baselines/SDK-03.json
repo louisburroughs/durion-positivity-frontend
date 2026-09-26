@@ -21,7 +21,7 @@
   },
   {
     "key": "src/app/features/workexec/services/workexec.service.ts -> src/app/core/services/api-base.service.ts",
-    "reason": "legacy ApiBaseService transport; migrates with PRD-sdk-migration-completion.md.",
+    "reason": "getWorkorderInvoiceView/requestInvoiceFinalization only (finalizeWorkorder removed, durion-positivity-backend#2210 ruling, issue #350); blocked on durion-positivity-backend#2232 (see SDK-05).",
     "tracking": "#350"
   }
 ]

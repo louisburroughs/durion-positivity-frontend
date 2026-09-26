@@ -46,8 +46,6 @@ import {
   EstimateStatus,
   FinalizeInvoiceRequest,
   FinalizeInvoiceResponse,
-  FinalizeWorkorderRequest,
-  FinalizeWorkorderResponse,
   IssuePartsRequest,
   OperationalContextResponse,
   PartUsageResponse,
@@ -894,6 +892,14 @@ export class WorkexecService {
   /**
    * operationId: getWorkorderInvoiceView
    * GET /v1/workorders/{workorderId}/invoice-view
+   *
+   * (durion-positivity-backend#2210 ruling, issue #350) Neither this operation nor
+   * `requestInvoiceFinalization` below has a published contract: invoice content and
+   * finalization belong in pos-invoice (`getInvoice`/`finalizeInvoice`), reached from a
+   * work order via `generateWorkorderInvoice`, but `WorkorderResponse` still has no
+   * `invoiceId` to look one up read-only. Blocked on
+   * durion-positivity-backend#2232 (add `invoiceId` to `WorkorderResponse`, or
+   * `GET /v1/invoices/by-workorder/{workorderId}`); stays on `ApiBaseService` until then.
    */
   getWorkorderInvoiceView(workorderId: string): Observable<WorkorderInvoiceView> {
     return this.api.get<WorkorderInvoiceView>(`/v1/workorders/${workorderId}/invoice-view`);
@@ -902,6 +908,9 @@ export class WorkexecService {
   /**
    * operationId: requestInvoiceFinalization
    * POST /v1/workorders/{workorderId}/invoice/finalize
+   *
+   * (durion-positivity-backend#2210 ruling, issue #350) Blocked on
+   * durion-positivity-backend#2232 — see `getWorkorderInvoiceView` above.
    */
   requestInvoiceFinalization(
     workorderId: string,
@@ -1199,7 +1208,7 @@ export class WorkexecService {
     return this.changeRequest.declineChangeRequest(changeId, sdkRequest) as Observable<ChangeRequestResponse>;
   }
 
-  // ── CAP-006: Complete / Reopen / Finalize (Stories 215, 214, 216) ──────────
+  // ── CAP-006: Complete / Reopen / Snapshot history (Stories 215, 214, 216) ──
 
   /**
    * operationId: completeWorkorder
@@ -1226,26 +1235,6 @@ export class WorkexecService {
   ): Observable<ReopenWorkorderResponse> {
     return this.workOrderApi.reopenWorkorder(workorderId, this.toSdkReopenWorkorderRequest(body)).pipe(
       map(dto => this.toReopenWorkorderResponse(dto)),
-    );
-  }
-
-  /**
-   * POST /v1/workorders/{workorderId}/finalize
-   * Creates billable scope snapshot (Story 216).
-   *
-   * SDK gap: no `finalize`/billable-scope-snapshot operation exists in
-   * `@durion-sdk/workorder` (distinct from `requestInvoiceFinalization`'s
-   * `/invoice/finalize`, also absent from the SDK below). Left on ApiBaseService.
-   */
-  finalizeWorkorder(
-    workorderId: string,
-    body: FinalizeWorkorderRequest,
-    idempotencyKey?: string,
-  ): Observable<FinalizeWorkorderResponse> {
-    return this.api.post<FinalizeWorkorderResponse>(
-      `/v1/workorders/${workorderId}/finalize`,
-      body,
-      this.idempotencyOptions(idempotencyKey),
     );
   }
 

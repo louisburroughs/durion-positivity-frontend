@@ -66,7 +66,7 @@
   },
   {
     "key": "src/app/features/workexec/services/workexec.service.ts :: '/v1/workorders/'",
-    "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
+    "reason": "getWorkorderInvoiceView/requestInvoiceFinalization only (finalizeWorkorder removed, durion-positivity-backend#2210 ruling, issue #350): neither operation has a published contract in @durion-sdk/workorder or @durion-sdk/invoice. Blocked on durion-positivity-backend#2232 (WorkorderResponse needs an invoiceId, or a by-workorder invoice lookup) before these can move onto pos-invoice's getInvoice/finalizeInvoice.",
     "tracking": "#350"
   }
 ]
