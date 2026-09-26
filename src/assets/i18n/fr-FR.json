@@ -2075,7 +2075,9 @@
         "CREATE": "Créer la baie",
         "SAVE": "Enregistrer",
         "SAVE_APPLY_ONE": "Enregistrer et appliquer 1 changement",
-        "SAVE_APPLY_MANY": "Enregistrer et appliquer {{count}} changements"
+        "SAVE_APPLY_MANY": "Enregistrer et appliquer {{count}} changements",
+        "CREATE_APPLY_ONE": "Créer la baie et appliquer 1 changement",
+        "CREATE_APPLY_MANY": "Créer la baie et appliquer {{count}} changements"
       },
       "SAVED": {
         "CREATED": "{{bay}} ajoutée à {{lane}}.",

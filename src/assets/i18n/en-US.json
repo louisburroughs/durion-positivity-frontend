@@ -2075,7 +2075,9 @@
         "CREATE": "Create bay",
         "SAVE": "Save",
         "SAVE_APPLY_ONE": "Save and apply 1 change",
-        "SAVE_APPLY_MANY": "Save and apply {{count}} changes"
+        "SAVE_APPLY_MANY": "Save and apply {{count}} changes",
+        "CREATE_APPLY_ONE": "Create bay and apply 1 change",
+        "CREATE_APPLY_MANY": "Create bay and apply {{count}} changes"
       },
       "SAVED": {
         "CREATED": "{{bay}} added to {{lane}}.",

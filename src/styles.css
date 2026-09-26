@@ -588,6 +588,10 @@ app-bays-page .dialog-panel h2 {
 }
 
 app-bays-page .dialog-body {
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
   display: grid;
   grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
   gap: var(--space-6);

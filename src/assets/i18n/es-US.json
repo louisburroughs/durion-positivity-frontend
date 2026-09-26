@@ -2075,7 +2075,9 @@
         "CREATE": "Crear bahía",
         "SAVE": "Guardar",
         "SAVE_APPLY_ONE": "Guardar y aplicar 1 cambio",
-        "SAVE_APPLY_MANY": "Guardar y aplicar {{count}} cambios"
+        "SAVE_APPLY_MANY": "Guardar y aplicar {{count}} cambios",
+        "CREATE_APPLY_ONE": "Crear bahía y aplicar 1 cambio",
+        "CREATE_APPLY_MANY": "Crear bahía y aplicar {{count}} cambios"
       },
       "SAVED": {
         "CREATED": "{{bay}} agregada a {{lane}}.",

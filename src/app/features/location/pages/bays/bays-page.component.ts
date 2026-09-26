@@ -14,7 +14,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
-import { Subject, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
+import { Subject, Subscription, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
 import type { BayPatchRequest, BayRequest, BayResponse } from '@durion-sdk/location';
 import { AuthService } from '../../../../core/services/auth.service';
 import { LOCATION_PAGE } from '../../../../core/security/route-permissions';
@@ -172,6 +172,10 @@ export class BaysPageComponent {
   /** Set when a type pick filled in the specialty list, for the "Filled in from …" caption. */
   readonly filledFrom = signal<BayType | null>(null);
   readonly saving = signal(false);
+  /** The vehicles field's text as typed, so a non-whole entry stays on screen while it is refused. */
+  readonly vehiclesText = signal('');
+  /** The save in flight; dropped with the dialog when the location changes (ADR-0063). */
+  private saveSub: Subscription | null = null;
   readonly nameErrorKey = signal<string | null>(null);
   readonly saveErrorKey = signal<string | null>(null);
 
@@ -201,7 +205,9 @@ export class BaysPageComponent {
 
   constructor() {
     this.route.queryParams.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
-      this.locationId.set(String(params['locationId'] ?? ''));
+      const locationId = String(params['locationId'] ?? '');
+      if (locationId !== this.locationId()) this.abandonDialog();
+      this.locationId.set(locationId);
       this.showTests.set(params['tests'] === '1');
     });
 
@@ -257,6 +263,7 @@ export class BaysPageComponent {
   }
 
   private changeLocation(locationId: string): void {
+    if (locationId !== this.locationId()) this.abandonDialog();
     this.scopeDenied.set(false);
     this.announcement.set(null);
     this.expandedCards.set(new Set());
@@ -296,6 +303,7 @@ export class BaysPageComponent {
     this.resetDialog();
     this.editingBay.set(null);
     this.draft.set(newBayDraft());
+    this.vehiclesText.set(String(this.draft().maxConcurrentVehicles));
     this.dialogMode.set('create');
   }
 
@@ -304,11 +312,21 @@ export class BaysPageComponent {
     this.resetDialog();
     this.editingBay.set(bay);
     this.draft.set(draftFromBay(bay));
+    this.vehiclesText.set(String(this.draft().maxConcurrentVehicles));
     this.dialogMode.set('edit');
   }
 
   closeDialog(): void {
     if (this.saving()) return;
+    this.dialogMode.set(null);
+    this.editingBay.set(null);
+  }
+
+  /** A dialog and its save belong to one location: a location change closes the one and drops the other. */
+  private abandonDialog(): void {
+    this.saveSub?.unsubscribe();
+    this.saveSub = null;
+    this.saving.set(false);
     this.dialogMode.set(null);
     this.editingBay.set(null);
   }
@@ -354,9 +372,11 @@ export class BaysPageComponent {
     if (status) this.patchDraft({ status });
   }
 
+  /** Anything but a whole number (blank, `1.5`) is kept as NaN so the save refuses it rather than rounding. */
   setVehicles(value: string): void {
-    const vehicles = Number.parseInt(value, 10);
-    this.patchDraft({ maxConcurrentVehicles: Number.isFinite(vehicles) ? vehicles : 0 });
+    this.vehiclesText.set(value);
+    const vehicles = value.trim() === '' ? Number.NaN : Number(value);
+    this.patchDraft({ maxConcurrentVehicles: Number.isInteger(vehicles) ? vehicles : Number.NaN });
   }
 
   setDutyClass(value: string): void {
@@ -436,10 +456,10 @@ export class BaysPageComponent {
     this.saving.set(true);
     this.saveErrorKey.set(null);
     this.nameErrorKey.set(null);
-    save$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+    this.saveSub = save$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: saved => {
         this.saving.set(false);
-        if (this.locationId() !== locationId) return;
+        this.saveSub = null;
         this.bays.update(bays =>
           mode === 'edit' ? bays.map(bay => (bay.id === saved.id ? saved : bay)) : [...bays, saved],
         );
@@ -456,6 +476,7 @@ export class BaysPageComponent {
       },
       error: (err: unknown) => {
         this.saving.set(false);
+        this.saveSub = null;
         const status = err instanceof HttpErrorResponse ? err.status : 0;
         if (status === 409) {
           this.nameErrorKey.set('LOCATION.BAYS.ERROR.NAME_TAKEN');
