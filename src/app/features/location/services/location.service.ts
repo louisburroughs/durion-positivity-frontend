@@ -4,25 +4,32 @@ import { ProductsAPIService } from '@durion-sdk/catalog';
 import type { ServiceDto } from '@durion-sdk/catalog';
 import {
   BayAPIService,
-  CoverageRuleRequestRuleTypeEnum,
   LocationAPIService,
   MobileUnitAPIService,
-  MobileUnitRequestStatusEnum,
+  MobileUnitEligibilityControllerService,
+  ServiceAreaAPIService,
   SiteDefaultsAPIService,
   StorageLocationAPIService,
+  TravelBufferPolicyAPIService,
 } from '@durion-sdk/location';
 import type {
   CoverageRuleRequest,
+  CoverageRuleResponse,
+  EligibleMobileUnitResponse,
   LocationRequestDTO,
   LocationPatchRequest,
   BayRequest,
   BayPatchRequest,
   BayResponse,
   MobileUnitRequest,
+  MobileUnitResponse,
+  ServiceAreaResponse,
   SiteDefaultsRequest,
   StorageLocationRequest,
   StorageLocationPatchRequest,
+  TravelBufferPolicyResponse,
 } from '@durion-sdk/location';
+import type { MobileUnitPatch } from '../models/mobile-unit-setup.models';
 
 /**
  * Storage location types exposed by the location service
@@ -44,6 +51,20 @@ export const STORAGE_LOCATION_TYPES: ReadonlyArray<{ value: string; label: strin
  */
 const BAY_PAGE_SIZE = 500;
 
+/** Rows asked for from one shop's mobile-unit page; the same cap `shop-dashboard.service.ts` uses. */
+const MOBILE_UNIT_PAGE_SIZE = 500;
+
+/** Coverage rules per mobile unit id. `ok` is false when any unit's read failed (ADR-0064). */
+/**
+ * One shop's mobile units with their coverage rules. `coverageOk` is false when a unit came back
+ * without its rules, so "no coverage" is never shown for rules that weren't read (ADR-0064).
+ */
+export interface MobileUnitsRead {
+  readonly units: MobileUnitResponse[];
+  readonly coverage: ReadonlyMap<string, readonly CoverageRuleResponse[]>;
+  readonly coverageOk: boolean;
+}
+
 /** A catalog service a bay or mobile unit can claim: only services with an operation code qualify. */
 export interface ClaimableService {
   readonly operationCode: string;
@@ -56,6 +77,9 @@ export class LocationService {
   private readonly locationApi = inject(LocationAPIService);
   private readonly bayApi = inject(BayAPIService);
   private readonly mobileUnitApi = inject(MobileUnitAPIService);
+  private readonly mobileUnitEligibilityApi = inject(MobileUnitEligibilityControllerService);
+  private readonly serviceAreaApi = inject(ServiceAreaAPIService);
+  private readonly travelBufferPolicyApi = inject(TravelBufferPolicyAPIService);
   private readonly siteDefaultsApi = inject(SiteDefaultsAPIService);
   private readonly storageLocationApi = inject(StorageLocationAPIService);
   /** `searchCatalogServices` lives on the catalog's products API. */
@@ -186,20 +210,52 @@ export class LocationService {
 
   // ── Mobile Units ─────────────────────────────────────────────────────────
 
-  listMobileUnits(params?: Record<string, string>): Observable<unknown[]> {
-    const page = params?.['page'] ? Number(params['page']) : undefined;
-    const size = params?.['size'] ? Number(params['size']) : undefined;
-    return (this.mobileUnitApi.listMobileUnits(page, size) as Observable<unknown>).pipe(map(toContentArray));
+  /** The units based at one location, each with its coverage rules, in one read. */
+  listMobileUnits(baseLocationId: string): Observable<MobileUnitsRead> {
+    return this.mobileUnitApi
+      .listMobileUnits(0, MOBILE_UNIT_PAGE_SIZE, baseLocationId, undefined, ['coverageRules'])
+      .pipe(
+        map(page => {
+          const units = page?.content ?? [];
+          const coverage = new Map<string, readonly CoverageRuleResponse[]>();
+          for (const unit of units) {
+            if (unit.coverageRules) coverage.set(unit.id, unit.coverageRules);
+          }
+          return { units, coverage, coverageOk: coverage.size === units.length };
+        }),
+      );
   }
 
-  createMobileUnit(body: Record<string, unknown>, _idempotencyKey?: string): Observable<unknown> {
-    const request = this.toMobileUnitRequest(body);
-    return this.mobileUnitApi.createMobileUnit(request) as Observable<unknown>;
+  createMobileUnit(request: MobileUnitRequest): Observable<MobileUnitResponse> {
+    return this.mobileUnitApi.createMobileUnit(request);
   }
 
-  replaceCoverageRules(mobileUnitId: string, body: Record<string, unknown>[]): Observable<unknown> {
-    const requestBody = this.toCoverageRulesReplaceRequest(body);
-    return this.mobileUnitApi.replaceCoverageRules(mobileUnitId, requestBody) as Observable<unknown>;
+  patchMobileUnit(id: string, patch: MobileUnitPatch): Observable<MobileUnitResponse> {
+    return this.mobileUnitApi.patchMobileUnit(id, patch);
+  }
+
+  /** Replaces the unit's whole rule set and returns the saved rules. */
+  replaceCoverageRules(mobileUnitId: string, rules: CoverageRuleRequest[]): Observable<CoverageRuleResponse[]> {
+    return this.mobileUnitApi.replaceCoverageRules(mobileUnitId, { rules });
+  }
+
+  /** Active units covering a postal code on a day, lowest priority first. */
+  findEligibleMobileUnits(postalCode: string, countryCode: string, at: string): Observable<EligibleMobileUnitResponse[]> {
+    return this.mobileUnitEligibilityApi.findEligibleMobileUnits(postalCode, countryCode, at);
+  }
+
+  listServiceAreas(): Observable<{ areas: ServiceAreaResponse[]; ok: boolean }> {
+    return this.serviceAreaApi.listServiceAreas().pipe(
+      map(areas => ({ areas: areas ?? [], ok: true })),
+      catchError(() => of({ areas: [] as ServiceAreaResponse[], ok: false })),
+    );
+  }
+
+  listTravelBufferPolicies(): Observable<{ policies: TravelBufferPolicyResponse[]; ok: boolean }> {
+    return this.travelBufferPolicyApi.listTravelBufferPolicies().pipe(
+      map(policies => ({ policies: policies ?? [], ok: true })),
+      catchError(() => of({ policies: [] as TravelBufferPolicyResponse[], ok: false })),
+    );
   }
 
   private toLocationRequest(body: Record<string, unknown>): LocationRequestDTO {
@@ -226,70 +282,6 @@ export class LocationService {
     };
   }
 
-  private toMobileUnitRequest(body: Record<string, unknown>): MobileUnitRequest {
-    return {
-      name: this.asOptionalString(body['name']) as string,
-      baseLocationId: this.asString(body['baseLocationId']),
-      status: this.asMobileUnitStatus(body['status']),
-      travelBufferPolicyId: this.asOptionalString(body['travelBufferPolicyId']),
-      notes: this.asOptionalString(body['notes']),
-      serviceCapabilityCodes: this.asStringArray(body['serviceCapabilityCodes']),
-      coverageRules: this.toCoverageRuleArray(body['coverageRules']),
-    };
-  }
-
-  private toCoverageRulesReplaceRequest(body: Record<string, unknown>[]): { [key: string]: unknown } {
-    return {
-      rules: body.map(rule => this.toCoverageRuleRequest(rule)),
-    };
-  }
-
-  private toCoverageRuleArray(value: unknown): CoverageRuleRequest[] | undefined {
-    if (!Array.isArray(value)) {
-      return undefined;
-    }
-    return value
-      .filter((entry): entry is Record<string, unknown> => this.isRecord(entry))
-      .map(entry => this.toCoverageRuleRequest(entry));
-  }
-
-  private toCoverageRuleRequest(rule: Record<string, unknown>): CoverageRuleRequest {
-    return {
-      serviceAreaId: this.asOptionalString(rule['serviceAreaId']) as string,
-      ruleType: this.asCoverageRuleType(rule['ruleType']),
-      priority: this.asOptionalNumber(rule['priority']),
-      validFrom: this.asOptionalString(rule['validFrom']),
-      validTo: this.asOptionalString(rule['validTo']),
-      maxDistance: this.asOptionalNumber(rule['maxDistance']),
-    };
-  }
-
-  /**
-   * ACTIVE or INACTIVE, matched case-insensitively as the contract does; anything else is left out,
-   * and pos-location defaults a new unit to INACTIVE.
-   */
-  private asMobileUnitStatus(value: unknown): MobileUnitRequestStatusEnum | undefined {
-    const normalized = this.asEnumKey(value);
-    return Object.values(MobileUnitRequestStatusEnum).find(status => status === normalized);
-  }
-
-  /**
-   * SERVICE_AREA or DISTANCE_TIER, matched case-insensitively as the contract does. Eligibility
-   * matches on the service area alone, so a type pos-location doesn't accept is sent as a plain
-   * service-area rule.
-   */
-  private asCoverageRuleType(value: unknown): CoverageRuleRequestRuleTypeEnum {
-    const normalized = this.asEnumKey(value);
-    return (
-      Object.values(CoverageRuleRequestRuleTypeEnum).find(type => type === normalized) ??
-      CoverageRuleRequestRuleTypeEnum.ServiceArea
-    );
-  }
-
-  private asEnumKey(value: unknown): string {
-    return typeof value === 'string' ? value.trim().toUpperCase() : '';
-  }
-
   private asLocationType(value: unknown): { id?: string; name?: string; description?: string } {
     const record = this.asRecord(value);
     return {
@@ -308,13 +300,6 @@ export class LocationService {
       return undefined;
     }
     return value as T[];
-  }
-
-  private asStringArray(value: unknown): string[] | undefined {
-    if (!Array.isArray(value)) {
-      return undefined;
-    }
-    return value.filter((item): item is string => typeof item === 'string');
   }
 
   private asString(value: unknown): string {
@@ -336,19 +321,6 @@ export class LocationService {
   private isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === 'object' && value !== null && !Array.isArray(value);
   }
-}
-
-/**
- * Unwraps a list response into a plain array. Backend list endpoints return a
- * Spring Data page (`{ content: [...] }`); some return `{ items: [...] }` or a
- * bare array. Normalizes all three so callers always receive an array.
- */
-function toContentArray(response: unknown): unknown[] {
-  if (Array.isArray(response)) {
-    return response;
-  }
-  const page = response as { content?: unknown[]; items?: unknown[] } | null;
-  return page?.content ?? page?.items ?? [];
 }
 
 function toClaimableServices(services: readonly ServiceDto[]): ClaimableService[] {

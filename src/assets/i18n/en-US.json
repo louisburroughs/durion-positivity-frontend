@@ -2096,26 +2096,210 @@
       }
     },
     "MOBILE_UNITS": {
-      "TITLE": "Mobile Units",
-      "CREATE_MOBILE_UNIT": "Create Mobile Unit",
-      "COVERAGE_RULES": "Coverage Rules",
-      "NAME": "Name",
-      "REGION": "Region",
-      "LOADING": "Loading...",
-      "EMPTY": "No mobile units found.",
-      "CANCEL": "Cancel",
-      "CREATE": "Create",
-      "SAVE": "Save",
-      "ERROR": {
-        "LOAD": "Failed to load mobile units.",
-        "NAME_REQUIRED": "Name is required.",
-        "SELECT_UNIT": "A mobile unit must be selected.",
-        "CREATE": "Failed to create mobile unit.",
-        "UPDATE_COVERAGE": "Failed to update coverage rules."
-      },
+      "OVERLINE": "Location setup",
+      "TITLE": "Mobile units",
+      "STANDFIRST": "Decide where each unit based here can be sent. This page doesn't show where units are right now.",
       "LABEL": "Base location",
-      "PROMPT": "Select a base location to view and edit its mobile units.",
-      "UNNAMED": "Mobile Unit"
+      "PROMPT": "Choose the shop these units are based at.",
+      "SHOW_TESTS": "Show test records",
+      "TESTS_HIDDEN": "({{count}} hidden)",
+      "NEW_UNIT": "New unit",
+      "VIEW_ONLY": "View only: you can't change mobile units at this location.",
+      "COVERAGE_READ_FAILED": "Some units' coverage couldn't be loaded. Their coverage and checklist aren't shown.",
+      "LOADING": "Loading mobile units…",
+      "RETRY": "Try again",
+      "EMPTY": "No mobile units are based at this location yet.",
+      "TEST_RECORD": "Test record",
+      "NAME_UNAVAILABLE": "Name unavailable",
+      "RECORDED_CAPABILITIES": "Recorded, not used for assignment yet.",
+      "RECORDED_POLICY": "Recorded, not applied yet.",
+      "EDIT": "Edit",
+      "EDIT_NAMED": "Edit {{unit}}",
+      "EDIT_COVERAGE": "Edit coverage",
+      "EDIT_COVERAGE_NAMED": "Edit coverage for {{unit}}",
+      "CANCEL": "Cancel",
+      "SAVING": "Saving",
+      "REMOVE_CAPABILITY": "Remove {{service}}",
+      "FIND_CAPABILITY": "Find a capability to add",
+      "NO_CATALOG": "You can't view the service catalog, so you can't add capabilities here.",
+      "CHECK": {
+        "TITLE": "Check coverage",
+        "POSTAL": "Postal code",
+        "COUNTRY": "Country",
+        "DATE": "Date",
+        "RUN": "Check",
+        "LOADING": "Checking…",
+        "FAILED": "Couldn't check coverage. Try again.",
+        "NONE": "No active unit based here covers {{postalCode}} on {{date}}.",
+        "RESULT": "{{unit}}, priority {{priority}}",
+        "SCOPE": "Only active units based at this location are listed, lowest priority number first.",
+        "POSTAL_REQUIRED": "Enter a postal code to check."
+      },
+      "GROUP": {
+        "ACTIVE": "Active",
+        "INACTIVE": "Set up, not active"
+      },
+      "STATUS": {
+        "ACTIVE": "Active",
+        "INACTIVE": "Inactive"
+      },
+      "CARD": {
+        "OVERLINE": "Mobile unit",
+        "COVERAGE": "Coverage",
+        "COVERAGE_UNKNOWN": "Coverage couldn't be loaded.",
+        "NO_COVERAGE": "No coverage yet.",
+        "TODAY": "Today",
+        "CODES_ONE": "· 1 postal code",
+        "CODES_MANY": "· {{count}} postal codes",
+        "FROM": "From {{date}}",
+        "PAST_ONE": "1 past rule",
+        "PAST_MANY": "{{count}} past rules",
+        "CAPABILITIES": "Capabilities",
+        "NO_CAPABILITIES": "None recorded."
+      },
+      "SENT": {
+        "INACTIVE": "Not sent out until it's active.",
+        "UNKNOWN": "Active. Its coverage couldn't be loaded.",
+        "NONE_TODAY": "Active, but no coverage rule is in effect today, so no customer matches it.",
+        "AREAS_ONE": "Can be sent to customers in 1 service area today.",
+        "AREAS_MANY": "Can be sent to customers in {{count}} service areas today.",
+        "AREAS_CHECKING": "Active. Checking which service areas it reaches.",
+        "AREAS_UNKNOWN": "Active. The service areas couldn't be loaded, so where it can be sent is unknown.",
+        "NONE_MATCHABLE": "Active, but none of today's service areas has a postal code, so no customer matches it."
+      },
+      "CHECKLIST": {
+        "TITLE": "Ready to activate",
+        "POLICY_DONE": "Travel buffer policy: done",
+        "POLICY_MISSING": "Travel buffer policy: missing",
+        "CAPABILITY_DONE": "At least one capability: done",
+        "CAPABILITY_MISSING": "At least one capability: missing",
+        "COVERAGE_DONE": "At least one coverage rule: done",
+        "COVERAGE_MISSING": "At least one coverage rule: missing",
+        "FIX_POLICY": "Choose a policy",
+        "FIX_CAPABILITY": "Add a capability",
+        "FIX_COVERAGE": "Add coverage"
+      },
+      "ACTIVATE": {
+        "LABEL": "Activate",
+        "NAMED": "Activate {{unit}}",
+        "NEEDS_POLICY": "{{unit}} needs a travel buffer policy before it can be activated.",
+        "NEEDS_CAPABILITY": "{{unit}} needs a capability before it can be activated.",
+        "NEEDS_COVERAGE": "{{unit}} needs a coverage rule before it can be activated.",
+        "DONE_ONE": "{{unit}} is active and can be sent to customers in 1 service area.",
+        "DONE_MANY": "{{unit}} is active and can be sent to customers in {{count}} service areas.",
+        "REFUSED": "{{unit}} couldn't be activated: it needs a travel buffer policy, a capability and a coverage rule."
+      },
+      "WARNING": {
+        "AREA_MISSING": "A coverage rule points at a service area that no longer exists, so it matches nobody.",
+        "AREA_EMPTY": "{{area}} has no postal codes, so it covers nobody.",
+        "AREA_OFF": "{{area}} is switched off, but units covering it are still matched."
+      },
+      "POLICY": {
+        "NONE": "No travel buffer policy.",
+        "UNAVAILABLE": "Policy name unavailable.",
+        "NAMED": "{{policy}} ({{buffer}})",
+        "CHOOSE": "No policy",
+        "READ_FAILED": "The policy list couldn't be loaded."
+      },
+      "BUFFER": {
+        "FLAT_MINUTES": "{{value}} minutes flat",
+        "PERCENTAGE_OF_TRAVEL": "{{value}}% of travel time",
+        "DISTANCE_MULTIPLIER": "{{value}} × distance",
+        "NEEDS_FIXING": "type needs fixing"
+      },
+      "FIELD": {
+        "NAME": "Name",
+        "POLICY": "Travel buffer policy",
+        "CAPABILITIES": "Capabilities",
+        "NOTES": "Notes",
+        "STATUS": "Status"
+      },
+      "HINT": {
+        "NAME": "What dispatchers call this unit, e.g. \"Van 7\". No other unit based at this shop can have the same name.",
+        "BASE_LOCATION": "The unit is based at the location chosen above. It takes only that shop's workorders.",
+        "POLICY": "Extra time allowed around each visit for driving. Recorded now; scheduling doesn't use it yet.",
+        "CAPABILITIES": "The services this unit is equipped for. Recorded now; assignment doesn't check them yet.",
+        "LAST_CAPABILITY": "An active unit needs at least one capability. Set it inactive to remove its last one.",
+        "NOTES": "Anything dispatchers should know about this unit, e.g. where it parks overnight.",
+        "STATUS": "Only active units can be assigned workorders.",
+        "STATUS_INCOMPLETE": "To activate, a unit needs a travel buffer policy, at least one capability and at least one coverage rule.",
+        "PRIORITY": "Priority: lower numbers are offered first, compared across every unit here that covers the same postal code.",
+        "DATES": "Valid from and to: the dates the rule applies. Leave Valid to blank for no end date.",
+        "RULE_TYPE": "Rule type is recorded for later. Matching uses the service area only.",
+        "MAX_DISTANCE": "Max distance is recorded for later and not used for matching. Leave the last distance tier blank as the catch-all.",
+        "POLICY_LOCKED": "A policy can't be removed from a unit yet, only changed to another one."
+      },
+      "DIALOG": {
+        "CREATE_TITLE": "New mobile unit",
+        "EDIT_TITLE": "Edit {{unit}}",
+        "CREATE": "Create unit",
+        "SAVE": "Save",
+        "STARTS_INACTIVE": "New units start inactive. Add coverage next, then activate from the card.",
+        "CREATED_TITLE": "{{unit}} created",
+        "CREATED_BODY": "Add coverage for {{unit}} now? A unit needs a coverage rule before it can be activated.",
+        "LATER": "Later",
+        "ADD_COVERAGE": "Add coverage"
+      },
+      "SAVED": {
+        "CREATED": "{{unit}} added to Set up, not active.",
+        "UPDATED": "{{unit}} saved.",
+        "COVERAGE_ONE": "Coverage for {{unit}} saved: 1 rule.",
+        "COVERAGE_MANY": "Coverage for {{unit}} saved: {{count}} rules."
+      },
+      "COVERAGE": {
+        "TITLE": "Coverage for {{unit}}",
+        "INTRO": "Where this unit goes. A customer is matched by postal code: the rule's service area must include it, on the dates the rule is valid.",
+        "AREAS_FAILED": "The service areas couldn't be loaded, so areas can't be chosen right now.",
+        "EMPTY": "No coverage rules yet.",
+        "RULE": "Rule {{number}}",
+        "AREA": "Service area",
+        "CHOOSE_AREA": "Choose a service area",
+        "PRIORITY": "Priority",
+        "VALID_FROM": "Valid from",
+        "VALID_TO": "Valid to",
+        "RECORDED_ONLY": "Recorded only: not used for matching yet.",
+        "RULE_TYPE_LABEL": "Rule type",
+        "MAX_DISTANCE": "Max distance",
+        "REMOVE": "Remove",
+        "REMOVE_NAMED": "Remove rule {{number}}",
+        "ADD_RULE": "Add rule",
+        "REPLACES": "Saving replaces all of this unit's coverage rules.",
+        "SAVE": "Save coverage",
+        "AREA_OPTION_ONE": "{{area}} (1 postal code)",
+        "AREA_OPTION_MANY": "{{area}} ({{count}} postal codes)",
+        "AREA_MISSING": "This area no longer exists, so the rule matches nobody.",
+        "AREA_EMPTY": "No postal codes: this area covers nobody.",
+        "AREA_OFF_ONE": "1 postal code. Switched off, but still counts.",
+        "AREA_OFF_MANY": "{{count}} postal codes. Switched off, but still counts.",
+        "AREA_CODES_ONE": "1 postal code.",
+        "AREA_CODES_MANY": "{{count}} postal codes.",
+        "RULE_TYPE": {
+          "SERVICE_AREA": "Service area",
+          "DISTANCE_TIER": "Distance tier"
+        },
+        "ERROR": {
+          "AREA_REQUIRED": "Choose a service area.",
+          "PRIORITY": "Enter a whole number of 0 or more.",
+          "DATES": "Valid to can't be before valid from.",
+          "CATCH_ALL_LAST": "Only the last distance tier can leave max distance blank.",
+          "DISTANCE": "Enter a distance of 0 or more.",
+          "TIERS_ASCENDING": "Each distance tier must go further than the one before it.",
+          "CATCH_ALL_MISSING": "Leave the last distance tier's max distance blank, as the catch-all.",
+          "ACTIVE_NEEDS_RULE": "An active unit needs at least one coverage rule. Set {{unit}} inactive first, or add a rule."
+        }
+      },
+      "ERROR": {
+        "LOAD": "Couldn't load the mobile units for this location.",
+        "NAME_REQUIRED": "Enter a name for the unit.",
+        "NAME_TAKEN": "Another unit based here is already called {{unit}}.",
+        "ACTIVE_INCOMPLETE": "An active unit needs a travel buffer policy, a capability and a coverage rule.",
+        "INVALID": "The unit couldn't be saved: check each field and try again.",
+        "NOT_ALLOWED": "You can't change mobile units at this location.",
+        "GONE": "This unit no longer exists. Close the dialog to see the current units.",
+        "CONFLICT": "Someone else changed this unit at the same time. Close the dialog and try again.",
+        "UNPROCESSABLE": "The unit couldn't be saved: a capability isn't an active catalog service, or the unit isn't ready to be active.",
+        "SAVE_FAILED": "Couldn't save. Try again."
+      }
     },
     "LANDING": {
       "TITLE": "Location Workspace",
@@ -2329,6 +2513,15 @@
         "SAVE": "Failed to save location.",
         "DUPLICATE": "A location with this code or name already exists."
       }
+    },
+    "SERVICE_SEARCH": {
+      "HINT": "Type at least 2 letters of the service name.",
+      "LOADING": "Searching…",
+      "FAILED": "Couldn't search the service catalog. Try again.",
+      "NONE": "No services match.",
+      "ALREADY_ADDED": "Already added",
+      "ADD": "Add",
+      "ADD_NAMED": "Add {{service}}"
     }
   },
   "SHOPMGMT": {

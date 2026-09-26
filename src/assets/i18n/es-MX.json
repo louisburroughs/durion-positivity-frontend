@@ -2096,26 +2096,210 @@
       }
     },
     "MOBILE_UNITS": {
+      "OVERLINE": "Configuración de ubicación",
       "TITLE": "Unidades móviles",
-      "CREATE_MOBILE_UNIT": "Crear unidad móvil",
-      "COVERAGE_RULES": "Reglas de cobertura",
-      "NAME": "Nombre",
-      "REGION": "Región",
-      "LOADING": "Cargando...",
-      "EMPTY": "No se encontraron unidades móviles.",
-      "CANCEL": "Cancelar",
-      "CREATE": "Crear",
-      "SAVE": "Guardar",
-      "ERROR": {
-        "LOAD": "No se pudieron cargar las unidades móviles.",
-        "NAME_REQUIRED": "El nombre es obligatorio.",
-        "SELECT_UNIT": "Se debe seleccionar una unidad móvil.",
-        "CREATE": "No se pudo crear la unidad móvil.",
-        "UPDATE_COVERAGE": "No se pudieron actualizar las reglas de cobertura."
-      },
+      "STANDFIRST": "Decida a dónde se puede enviar cada unidad con base aquí. Esta página no muestra dónde están las unidades ahora.",
       "LABEL": "Ubicación base",
-      "PROMPT": "Seleccione una ubicación base para ver y editar sus unidades móviles.",
-      "UNNAMED": "Unidad móvil"
+      "PROMPT": "Elija el taller donde tienen su base estas unidades.",
+      "SHOW_TESTS": "Mostrar registros de prueba",
+      "TESTS_HIDDEN": "({{count}} ocultos)",
+      "NEW_UNIT": "Nueva unidad",
+      "VIEW_ONLY": "Solo lectura: no puede cambiar las unidades móviles de esta ubicación.",
+      "COVERAGE_READ_FAILED": "No se pudo cargar la cobertura de algunas unidades. Su cobertura y su lista de verificación no se muestran.",
+      "LOADING": "Cargando unidades móviles…",
+      "RETRY": "Intentar de nuevo",
+      "EMPTY": "Aún no hay unidades móviles con base en esta ubicación.",
+      "TEST_RECORD": "Registro de prueba",
+      "NAME_UNAVAILABLE": "Nombre no disponible",
+      "RECORDED_CAPABILITIES": "Registradas, todavía no se usan para asignar.",
+      "RECORDED_POLICY": "Registrada, todavía no se aplica.",
+      "EDIT": "Editar",
+      "EDIT_NAMED": "Editar {{unit}}",
+      "EDIT_COVERAGE": "Editar cobertura",
+      "EDIT_COVERAGE_NAMED": "Editar cobertura de {{unit}}",
+      "CANCEL": "Cancelar",
+      "SAVING": "Guardando",
+      "REMOVE_CAPABILITY": "Quitar {{service}}",
+      "FIND_CAPABILITY": "Buscar una capacidad para agregar",
+      "NO_CATALOG": "No puede ver el catálogo de servicios, así que no puede agregar capacidades aquí.",
+      "CHECK": {
+        "TITLE": "Revisar cobertura",
+        "POSTAL": "Código postal",
+        "COUNTRY": "País",
+        "DATE": "Fecha",
+        "RUN": "Revisar",
+        "LOADING": "Revisando…",
+        "FAILED": "No se pudo revisar la cobertura. Intente de nuevo.",
+        "NONE": "Ninguna unidad activa con base aquí cubre {{postalCode}} el {{date}}.",
+        "RESULT": "{{unit}}, prioridad {{priority}}",
+        "SCOPE": "Solo se listan las unidades activas con base en esta ubicación, primero el número de prioridad más bajo.",
+        "POSTAL_REQUIRED": "Escriba un código postal para revisar."
+      },
+      "GROUP": {
+        "ACTIVE": "Activas",
+        "INACTIVE": "Configuradas, no activas"
+      },
+      "STATUS": {
+        "ACTIVE": "Activa",
+        "INACTIVE": "Inactiva"
+      },
+      "CARD": {
+        "OVERLINE": "Unidad móvil",
+        "COVERAGE": "Cobertura",
+        "COVERAGE_UNKNOWN": "No se pudo cargar la cobertura.",
+        "NO_COVERAGE": "Aún sin cobertura.",
+        "TODAY": "Hoy",
+        "CODES_ONE": "· 1 código postal",
+        "CODES_MANY": "· {{count}} códigos postales",
+        "FROM": "Desde el {{date}}",
+        "PAST_ONE": "1 regla pasada",
+        "PAST_MANY": "{{count}} reglas pasadas",
+        "CAPABILITIES": "Capacidades",
+        "NO_CAPABILITIES": "Ninguna registrada."
+      },
+      "SENT": {
+        "INACTIVE": "No sale hasta que esté activa.",
+        "UNKNOWN": "Activa. No se pudo cargar su cobertura.",
+        "NONE_TODAY": "Activa, pero ninguna regla de cobertura está vigente hoy, así que ningún cliente coincide.",
+        "AREAS_ONE": "Se puede enviar hoy a clientes de 1 área de servicio.",
+        "AREAS_MANY": "Se puede enviar hoy a clientes de {{count}} áreas de servicio.",
+        "AREAS_CHECKING": "Activa. Comprobando a qué áreas de servicio llega.",
+        "AREAS_UNKNOWN": "Activa. No se pudieron cargar las áreas de servicio, así que no se sabe adónde se puede enviar.",
+        "NONE_MATCHABLE": "Activa, pero ninguna de las áreas de servicio de hoy tiene códigos postales, así que ningún cliente coincide."
+      },
+      "CHECKLIST": {
+        "TITLE": "Lista para activar",
+        "POLICY_DONE": "Política de margen de traslado: lista",
+        "POLICY_MISSING": "Política de margen de traslado: falta",
+        "CAPABILITY_DONE": "Al menos una capacidad: lista",
+        "CAPABILITY_MISSING": "Al menos una capacidad: falta",
+        "COVERAGE_DONE": "Al menos una regla de cobertura: lista",
+        "COVERAGE_MISSING": "Al menos una regla de cobertura: falta",
+        "FIX_POLICY": "Elegir una política",
+        "FIX_CAPABILITY": "Agregar una capacidad",
+        "FIX_COVERAGE": "Agregar cobertura"
+      },
+      "ACTIVATE": {
+        "LABEL": "Activar",
+        "NAMED": "Activar {{unit}}",
+        "NEEDS_POLICY": "{{unit}} necesita una política de margen de traslado antes de activarse.",
+        "NEEDS_CAPABILITY": "{{unit}} necesita una capacidad antes de activarse.",
+        "NEEDS_COVERAGE": "{{unit}} necesita una regla de cobertura antes de activarse.",
+        "DONE_ONE": "{{unit}} está activa y se puede enviar a clientes de 1 área de servicio.",
+        "DONE_MANY": "{{unit}} está activa y se puede enviar a clientes de {{count}} áreas de servicio.",
+        "REFUSED": "No se pudo activar {{unit}}: necesita una política de margen de traslado, una capacidad y una regla de cobertura."
+      },
+      "WARNING": {
+        "AREA_MISSING": "Una regla de cobertura apunta a un área de servicio que ya no existe, así que no coincide con nadie.",
+        "AREA_EMPTY": "{{area}} no tiene códigos postales, así que no cubre a nadie.",
+        "AREA_OFF": "{{area}} está desactivada, pero las unidades que la cubren siguen coincidiendo."
+      },
+      "POLICY": {
+        "NONE": "Sin política de margen de traslado.",
+        "UNAVAILABLE": "Nombre de la política no disponible.",
+        "NAMED": "{{policy}} ({{buffer}})",
+        "CHOOSE": "Sin política",
+        "READ_FAILED": "No se pudo cargar la lista de políticas."
+      },
+      "BUFFER": {
+        "FLAT_MINUTES": "{{value}} minutos fijos",
+        "PERCENTAGE_OF_TRAVEL": "{{value}}% del tiempo de traslado",
+        "DISTANCE_MULTIPLIER": "{{value}} × distancia",
+        "NEEDS_FIXING": "hay que corregir el tipo"
+      },
+      "FIELD": {
+        "NAME": "Nombre",
+        "POLICY": "Política de margen de traslado",
+        "CAPABILITIES": "Capacidades",
+        "NOTES": "Notas",
+        "STATUS": "Estado"
+      },
+      "HINT": {
+        "NAME": "Cómo llaman los despachadores a esta unidad, p. ej. \"Camioneta 7\". Ninguna otra unidad con base en este taller puede tener el mismo nombre.",
+        "BASE_LOCATION": "La unidad tiene su base en la ubicación elegida arriba. Solo acepta órdenes de trabajo de ese taller.",
+        "POLICY": "Tiempo adicional para manejar en cada visita. Se registra ahora; la programación todavía no lo usa.",
+        "CAPABILITIES": "Los servicios para los que está equipada esta unidad. Se registran ahora; la asignación todavía no los revisa.",
+        "LAST_CAPABILITY": "Una unidad activa necesita al menos una capacidad. Desactívela para quitar la última.",
+        "NOTES": "Lo que los despachadores deben saber de esta unidad, p. ej. dónde se estaciona por la noche.",
+        "STATUS": "Solo a las unidades activas se les pueden asignar órdenes de trabajo.",
+        "STATUS_INCOMPLETE": "Para activarse, una unidad necesita una política de margen de traslado, al menos una capacidad y al menos una regla de cobertura.",
+        "PRIORITY": "Prioridad: los números más bajos se ofrecen primero, comparados entre todas las unidades de aquí que cubren el mismo código postal.",
+        "DATES": "Válida desde y hasta: las fechas en que aplica la regla. Deje Válida hasta en blanco para no tener fecha de fin.",
+        "RULE_TYPE": "El tipo de regla se registra para más adelante. La coincidencia usa solo el área de servicio.",
+        "MAX_DISTANCE": "La distancia máxima se registra para más adelante y no se usa para la coincidencia. Deje en blanco el último nivel de distancia como nivel general.",
+        "POLICY_LOCKED": "Todavía no se puede quitar la política de una unidad, solo cambiarla por otra."
+      },
+      "DIALOG": {
+        "CREATE_TITLE": "Nueva unidad móvil",
+        "EDIT_TITLE": "Editar {{unit}}",
+        "CREATE": "Crear unidad",
+        "SAVE": "Guardar",
+        "STARTS_INACTIVE": "Las unidades nuevas empiezan inactivas. Agregue la cobertura y luego actívela desde la tarjeta.",
+        "CREATED_TITLE": "{{unit}} creada",
+        "CREATED_BODY": "¿Agregar ahora la cobertura de {{unit}}? Una unidad necesita una regla de cobertura antes de activarse.",
+        "LATER": "Más tarde",
+        "ADD_COVERAGE": "Agregar cobertura"
+      },
+      "SAVED": {
+        "CREATED": "{{unit}} agregada a Configuradas, no activas.",
+        "UPDATED": "{{unit}} guardada.",
+        "COVERAGE_ONE": "Cobertura de {{unit}} guardada: 1 regla.",
+        "COVERAGE_MANY": "Cobertura de {{unit}} guardada: {{count}} reglas."
+      },
+      "COVERAGE": {
+        "TITLE": "Cobertura de {{unit}}",
+        "INTRO": "A dónde va esta unidad. Un cliente coincide por código postal: el área de servicio de la regla debe incluirlo, en las fechas en que la regla es válida.",
+        "AREAS_FAILED": "No se pudieron cargar las áreas de servicio, así que ahora no se pueden elegir áreas.",
+        "EMPTY": "Aún no hay reglas de cobertura.",
+        "RULE": "Regla {{number}}",
+        "AREA": "Área de servicio",
+        "CHOOSE_AREA": "Elija un área de servicio",
+        "PRIORITY": "Prioridad",
+        "VALID_FROM": "Válida desde",
+        "VALID_TO": "Válida hasta",
+        "RECORDED_ONLY": "Solo se registra: todavía no se usa para la coincidencia.",
+        "RULE_TYPE_LABEL": "Tipo de regla",
+        "MAX_DISTANCE": "Distancia máxima",
+        "REMOVE": "Quitar",
+        "REMOVE_NAMED": "Quitar regla {{number}}",
+        "ADD_RULE": "Agregar regla",
+        "REPLACES": "Al guardar se reemplazan todas las reglas de cobertura de esta unidad.",
+        "SAVE": "Guardar cobertura",
+        "AREA_OPTION_ONE": "{{area}} (1 código postal)",
+        "AREA_OPTION_MANY": "{{area}} ({{count}} códigos postales)",
+        "AREA_MISSING": "Esta área ya no existe, así que la regla no coincide con nadie.",
+        "AREA_EMPTY": "Sin códigos postales: esta área no cubre a nadie.",
+        "AREA_OFF_ONE": "1 código postal. Desactivada, pero sigue contando.",
+        "AREA_OFF_MANY": "{{count}} códigos postales. Desactivada, pero sigue contando.",
+        "AREA_CODES_ONE": "1 código postal.",
+        "AREA_CODES_MANY": "{{count}} códigos postales.",
+        "RULE_TYPE": {
+          "SERVICE_AREA": "Área de servicio",
+          "DISTANCE_TIER": "Nivel de distancia"
+        },
+        "ERROR": {
+          "AREA_REQUIRED": "Elija un área de servicio.",
+          "PRIORITY": "Escriba un número entero de 0 o más.",
+          "DATES": "Válida hasta no puede ser anterior a Válida desde.",
+          "CATCH_ALL_LAST": "Solo el último nivel de distancia puede dejar la distancia máxima en blanco.",
+          "DISTANCE": "Escriba una distancia de 0 o más.",
+          "TIERS_ASCENDING": "Cada nivel de distancia debe llegar más lejos que el anterior.",
+          "CATCH_ALL_MISSING": "Deje en blanco la distancia máxima del último nivel, como nivel general.",
+          "ACTIVE_NEEDS_RULE": "Una unidad activa necesita al menos una regla de cobertura. Desactive {{unit}} primero, o agregue una regla."
+        }
+      },
+      "ERROR": {
+        "LOAD": "No se pudieron cargar las unidades móviles de esta ubicación.",
+        "NAME_REQUIRED": "Escriba un nombre para la unidad.",
+        "NAME_TAKEN": "Otra unidad con base aquí ya se llama {{unit}}.",
+        "ACTIVE_INCOMPLETE": "Una unidad activa necesita una política de margen de traslado, una capacidad y una regla de cobertura.",
+        "INVALID": "No se pudo guardar la unidad: revise cada campo e intente de nuevo.",
+        "NOT_ALLOWED": "No puede cambiar las unidades móviles de esta ubicación.",
+        "GONE": "Esta unidad ya no existe. Cierre el diálogo para ver las unidades actuales.",
+        "CONFLICT": "Alguien más cambió esta unidad al mismo tiempo. Cierre el diálogo e intente de nuevo.",
+        "UNPROCESSABLE": "No se pudo guardar la unidad: una capacidad no es un servicio activo del catálogo, o la unidad no está lista para estar activa.",
+        "SAVE_FAILED": "No se pudo guardar. Intente de nuevo."
+      }
     },
     "LANDING": {
       "TITLE": "Espacio de trabajo de ubicaciones",
@@ -2329,6 +2513,15 @@
         "SAVE": "No se pudo guardar la ubicación.",
         "DUPLICATE": "Ya existe una ubicación con este código o nombre."
       }
+    },
+    "SERVICE_SEARCH": {
+      "HINT": "Escriba al menos 2 letras del nombre del servicio.",
+      "LOADING": "Buscando…",
+      "FAILED": "No se pudo buscar en el catálogo de servicios. Intente de nuevo.",
+      "NONE": "Ningún servicio coincide.",
+      "ALREADY_ADDED": "Ya agregado",
+      "ADD": "Agregar",
+      "ADD_NAMED": "Agregar {{service}}"
     }
   },
   "SHOPMGMT": {
