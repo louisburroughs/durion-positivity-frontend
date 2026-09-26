@@ -157,6 +157,21 @@ describe('ProductDetailComponent', () => {
   it('loadProduct() calls getAuditHistory with productId', () => {
     expect(mockCatalog.getAuditHistory).toHaveBeenCalledWith('prod-123');
   });
+
+  // ── New UOM conversion row accessible labels ──────────────────────────────────
+
+  it('labels the from/to/factor inputs in the new UOM conversion row', () => {
+    component.activeTab.set('uom');
+    fixture.detectChanges();
+
+    const root = fixture.nativeElement as HTMLElement;
+    for (const id of ['uom-new-from', 'uom-new-to', 'uom-new-factor']) {
+      const input = root.querySelector<HTMLInputElement>(`#${id}`);
+      const label = root.querySelector<HTMLLabelElement>(`label[for="${id}"]`);
+      expect(input).not.toBeNull();
+      expect(label?.textContent?.trim()).toBeTruthy();
+    }
+  });
 });
 
 // ── Manufacturer enrichment panel (#195; restored #218) ─────────────────────

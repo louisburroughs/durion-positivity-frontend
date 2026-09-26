@@ -78,11 +78,11 @@
           </tr>
           }
           <tr>
-            <td><input #newSku class="input-underline" type="text" [value]="productSku()" /></td>
-            <td><input #newAmount class="input-underline" type="number" step="0.01" min="0" /></td>
-            <td><input #newCurrency class="input-underline" type="text" value="USD" /></td>
-            <td><input #newEffectiveAt class="input-underline" type="date" /></td>
-            <td><input #newEndAt class="input-underline" type="date" /></td>
+            <td><label class="sr-only" for="msrp-new-sku">{{ 'PRODUCT.PRICING.MSRP.TABLE.SKU' | translate }}</label><input id="msrp-new-sku" #newSku class="input-underline" type="text" [value]="productSku()" /></td>
+            <td><label class="sr-only" for="msrp-new-amount">{{ 'PRODUCT.PRICING.MSRP.TABLE.AMOUNT' | translate }}</label><input id="msrp-new-amount" #newAmount class="input-underline" type="number" step="0.01" min="0" /></td>
+            <td><label class="sr-only" for="msrp-new-currency">{{ 'PRODUCT.PRICING.MSRP.TABLE.CURRENCY' | translate }}</label><input id="msrp-new-currency" #newCurrency class="input-underline" type="text" value="USD" /></td>
+            <td><label class="sr-only" for="msrp-new-effective">{{ 'PRODUCT.PRICING.MSRP.TABLE.EFFECTIVE' | translate }}</label><input id="msrp-new-effective" #newEffectiveAt class="input-underline" type="date" /></td>
+            <td><label class="sr-only" for="msrp-new-expiry">{{ 'PRODUCT.PRICING.MSRP.TABLE.EXPIRY' | translate }}</label><input id="msrp-new-expiry" #newEndAt class="input-underline" type="date" /></td>
             <td>
               <button class="btn-primary" type="button"
                 (click)="createMsrp({ productSku: newSku.value, amount: +newAmount.value, currency: newCurrency.value, effectiveAt: newEffectiveAt.value, endAt: newEndAt.value || null })">

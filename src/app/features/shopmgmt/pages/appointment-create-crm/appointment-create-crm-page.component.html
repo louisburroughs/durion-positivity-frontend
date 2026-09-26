@@ -52,7 +52,8 @@
     <div formArrayName="serviceRequests">
       @for (ctrl of serviceRequestsArray.controls; track ctrl; let i = $index) {
         <div class="service-request-row">
-          <input [formControlName]="i" type="text" class="service-request-input"
+          <label class="sr-only" for="service-request-{{ i }}">{{ 'SHOPMGMT.APPOINTMENT_CREATE_CRM.SERVICE_REQUEST_PLACEHOLDER' | translate }}</label>
+          <input id="service-request-{{ i }}" [formControlName]="i" type="text" class="service-request-input"
             [attr.placeholder]="'SHOPMGMT.APPOINTMENT_CREATE_CRM.SERVICE_REQUEST_PLACEHOLDER' | translate"
             [name]="'serviceRequest-' + i" />
           <button type="button" class="btn-remove" (click)="removeServiceRequest(i)"

@@ -74,4 +74,61 @@ describe('PeopleDirectoryPageComponent', () => {
     expect(rows()[0].querySelector('.directory-empty-cell')?.textContent?.trim()).toBe('—');
     expect(rows()[0].querySelector('a.directory-email-link')).toBeNull();
   });
+
+  // ── Sortable header buttons (keyboard-operable; th only carries aria-sort) ──
+
+  it('renders three sortable header buttons as <button type="button">', async () => {
+    await setup([person('1', 'dana@example.com')]);
+    const buttons = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLButtonElement>(
+        'th.directory-th--sortable .sort-btn',
+      ),
+    );
+
+    expect(buttons).toHaveLength(3);
+    for (const btn of buttons) {
+      expect(btn.tagName).toBe('BUTTON');
+      expect(btn.type).toBe('button');
+    }
+  });
+
+  it('sorts by username when its sort button is clicked, updating aria-sort on that th', async () => {
+    await setup([person('1', 'dana@example.com'), person('2', 'aaron@example.com')]);
+    const root = fixture.nativeElement as HTMLElement;
+    const ths = Array.from(root.querySelectorAll<HTMLTableCellElement>('th.directory-th--sortable'));
+    const usernameTh = ths[1];
+    const usernameBtn = usernameTh.querySelector<HTMLButtonElement>('.sort-btn');
+
+    expect(usernameTh.getAttribute('aria-sort')).toBe('none');
+
+    usernameBtn?.click();
+    fixture.detectChanges();
+
+    expect(usernameTh.getAttribute('aria-sort')).toBe('ascending');
+  });
+
+  it('toggles aria-sort on the already-active name column when its button is clicked again', async () => {
+    await setup([person('1', 'dana@example.com'), person('2', 'aaron@example.com')]);
+    const root = fixture.nativeElement as HTMLElement;
+    const nameTh = root.querySelector<HTMLTableCellElement>('th.directory-th--sortable');
+    const nameBtn = nameTh?.querySelector<HTMLButtonElement>('.sort-btn');
+
+    expect(nameTh?.getAttribute('aria-sort')).toBe('ascending');
+
+    nameBtn?.click();
+    fixture.detectChanges();
+
+    expect(nameTh?.getAttribute('aria-sort')).toBe('descending');
+  });
+
+  it('does not toggle sort when the th is clicked outside its button', async () => {
+    await setup([person('1', 'dana@example.com')]);
+    const root = fixture.nativeElement as HTMLElement;
+    const usernameTh = Array.from(root.querySelectorAll<HTMLTableCellElement>('th.directory-th--sortable'))[1];
+
+    usernameTh.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    fixture.detectChanges();
+
+    expect(usernameTh.getAttribute('aria-sort')).toBe('none');
+  });
 });

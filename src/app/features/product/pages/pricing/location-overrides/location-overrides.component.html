@@ -83,7 +83,8 @@
                 <button class="btn-primary" type="button" (click)="approveOverride(entry.id)">
                   {{ 'COMMON.APPROVE' | translate }}
                 </button>
-                <input #rejectReason class="input-underline" type="text"
+                <label class="sr-only" for="reject-reason-{{ entry.id }}">{{ 'COMMON.REASON' | translate }}</label>
+                <input #rejectReason id="reject-reason-{{ entry.id }}" class="input-underline" type="text"
                   [attr.placeholder]="'COMMON.REASON' | translate" />
                 <button class="btn-secondary" type="button" (click)="rejectOverride(entry.id, rejectReason.value)">
                   {{ 'COMMON.REJECT' | translate }}

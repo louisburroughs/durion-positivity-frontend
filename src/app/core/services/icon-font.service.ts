@@ -35,7 +35,7 @@ export class IconFontService {
 
       mark(); // already cached from a previous load?
       fonts.load(ICON_FONT).then(mark).catch(() => {/* CSP/offline → stay false */});
-      if (fonts.ready && typeof fonts.ready.then === 'function') {
+      if (typeof fonts.ready?.then === 'function') {
         fonts.ready.then(mark).catch(() => {/* ignore */});
       }
     });

@@ -122,4 +122,24 @@ describe('MsrpComponent', () => {
 
     expect(component.state()).toBe('empty');
   }));
+
+  // ── New MSRP row accessible labels ────────────────────────────────────────────
+
+  it('labels the sku/amount/currency/effective/expiry inputs in the new MSRP row', fakeAsync(() => {
+    mockCatalog.listMsrp.mockReturnValueOnce(of([sampleMsrp]));
+    mockCatalog.getActiveMsrp.mockReturnValueOnce(of(sampleMsrp));
+
+    component.onSkuChange('SKU-001');
+    tick(300);
+    fixture.detectChanges();
+
+    const root = fixture.nativeElement as HTMLElement;
+    const ids = ['msrp-new-sku', 'msrp-new-amount', 'msrp-new-currency', 'msrp-new-effective', 'msrp-new-expiry'];
+    for (const id of ids) {
+      const input = root.querySelector<HTMLInputElement>(`#${id}`);
+      const label = root.querySelector<HTMLLabelElement>(`label[for="${id}"]`);
+      expect(input).not.toBeNull();
+      expect(label?.textContent?.trim()).toBeTruthy();
+    }
+  }));
 });

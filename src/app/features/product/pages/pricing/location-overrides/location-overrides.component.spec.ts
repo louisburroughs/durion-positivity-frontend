@@ -68,4 +68,29 @@ describe('LocationOverridesComponent', () => {
       expect(mockCatalog.rejectLocationPriceOverride).toHaveBeenCalledWith('ovr-1', 'Pricing mismatch');
     });
   });
+
+  // ── Reject-reason input accessible label ────────────────────────────────────
+
+  it('labels the reject-reason input for a pending override', () => {
+    vi.mocked(TestBed.inject(AuthService).hasAnyRole).mockReturnValue(true);
+    component.overrides.set([
+      {
+        id: 'ovr-1',
+        locationId: 'loc-1',
+        productSku: 'SKU-001',
+        overridePrice: 9.99,
+        currency: 'USD',
+        status: 'PENDING_APPROVAL',
+        reason: 'Needs review',
+        requestedAt: '2026-01-01T00:00:00Z',
+      },
+    ]);
+    fixture.detectChanges();
+
+    const root = fixture.nativeElement as HTMLElement;
+    const input = root.querySelector<HTMLInputElement>('#reject-reason-ovr-1');
+    const label = root.querySelector<HTMLLabelElement>('label[for="reject-reason-ovr-1"]');
+    expect(input).not.toBeNull();
+    expect(label?.textContent?.trim()).toBeTruthy();
+  });
 });

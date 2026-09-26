@@ -211,6 +211,23 @@ describe('ChatStateService', () => {
     expect(reopened.state()).toBe('ready');
   });
 
+  it('falls back to a getRandomValues-based id when crypto.randomUUID is unavailable, without touching Math.random', () => {
+    // `newId()` is module-private; its fallback path is exercised through the
+    // id it stamps on a message via appendUserMessage(). Browser-mode specs
+    // share one page, so the override on the real `crypto` object is always
+    // restored, success or failure.
+    Object.defineProperty(globalThis.crypto, 'randomUUID', { value: undefined, configurable: true });
+    const randomSpy = vi.spyOn(Math, 'random');
+
+    try {
+      const message = service.appendUserMessage('a question needing a fallback id');
+      expect(message.id).toMatch(/^id-[0-9a-z]+-[0-9a-f]{16}$/);
+      expect(randomSpy).not.toHaveBeenCalled();
+    } finally {
+      Reflect.deleteProperty(globalThis.crypto, 'randomUUID');
+    }
+  });
+
   it('refuses to open an assistant turn with no conversation to put it in', () => {
     expect(service.beginAssistantTurn()).toBeNull();
   });
