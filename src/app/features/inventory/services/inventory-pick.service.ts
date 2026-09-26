@@ -69,6 +69,14 @@ export class InventoryPickService {
       pickedQty: task.pickedQty,
       uom: 'EA',
       storageLocationId: task.locationId,
+      // #2221: the human-readable location name (served as storageLocationCode),
+      // its barcode, and the SKU's scannable code — the API sends null on a task
+      // last updated before scan codes were replicated; normalized to undefined
+      // here so the model has one "absent" value. Never fall back to the raw
+      // UUID (ADR-0064 §5).
+      storageLocationCode: task.storageLocationCode ?? undefined,
+      storageLocationBarcode: task.storageLocationBarcode ?? undefined,
+      productCode: task.productCode ?? undefined,
       status: task.status,
       sortOrder: task.sortOrder,
     };
@@ -121,21 +129,34 @@ export class InventoryPickService {
     return this.workorderPickedItems.consumeWorkorderPickedItems(workorderId, this.toSdkConsumePickedItemsRequest(request)) as unknown as Observable<ConsumptionResult>;
   }
 
-  /** Evaluative only — no pick state changes; validates a scan against
-   * `pickTaskId`'s expected SKU/location before `confirmPickLine`. */
+  /**
+   * Evaluative only — no pick state changes; validates a scan against
+   * `pickTaskId`'s expected product/location before `confirmPickLine`.
+   *
+   * #2217: forwards only the fields the caller actually supplied — a scanner
+   * flow sends `scannedProductCode`/`scannedLocationCode`; the UUID pair
+   * (`scannedSkuId`/`scannedLocationId`) is still accepted as an alternative
+   * so a caller with ids on hand need not fabricate codes. Sending both of a
+   * pair, or neither, is a 400 VALIDATION_FAILED the backend itself enforces.
+   */
   resolvePickScan(workorderId: string, pickTaskId: string, req: ScanResolveRequest): Observable<ScanResolveResult> {
     return this.workorderPickFacade
       .resolvePickScan(workorderId, pickTaskId, {
-        scannedSkuId: req.scannedSkuId,
-        scannedLocationId: req.scannedLocationId,
+        ...(req.scannedProductCode !== undefined && { scannedProductCode: req.scannedProductCode }),
+        ...(req.scannedLocationCode !== undefined && { scannedLocationCode: req.scannedLocationCode }),
+        ...(req.scannedSkuId !== undefined && { scannedSkuId: req.scannedSkuId }),
+        ...(req.scannedLocationId !== undefined && { scannedLocationId: req.scannedLocationId }),
       })
       .pipe(
         map(res => ({
           pickTaskId: res.pickTaskId,
           matched: res.matched,
           matchStatus: res.matchStatus,
-          resolvedSkuId: res.resolvedSkuId,
-          resolvedLocationId: res.resolvedLocationId,
+          resolvedSkuId: res.resolvedSkuId ?? undefined,
+          resolvedLocationId: res.resolvedLocationId ?? undefined,
+          expectedProductCode: res.expectedProductCode ?? undefined,
+          expectedLocationCode: res.expectedLocationCode ?? undefined,
+          expectedLocationBarcode: res.expectedLocationBarcode ?? undefined,
         })),
       );
   }

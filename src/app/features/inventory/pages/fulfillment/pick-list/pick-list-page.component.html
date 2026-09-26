@@ -75,7 +75,7 @@
           <tr [class.needs-review-row]="task.status === 'NEEDS_REVIEW'">
             <td>{{ task.productSku }}</td>
             <td>{{ task.productDisplayName || ('COMMON.EMPTY_VALUE' | translate) }}</td>
-            <td>{{ task.storageLocationCode || task.storageLocationId || ('COMMON.EMPTY_VALUE' | translate) }}</td>
+            <td>{{ task.storageLocationCode || ('COMMON.NOT_AVAILABLE' | translate) }}</td>
             <td>{{ task.requestedQty }}</td>
             <td>{{ task.pickedQty }}</td>
             <td>{{ task.uom }}</td>

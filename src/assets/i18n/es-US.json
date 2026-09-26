@@ -6101,7 +6101,8 @@
         },
         "ERROR": {
           "MISSING_ID": "Se requiere ID de orden de trabajo para cargar la lista de surtido.",
-          "LOAD": "No se pudo cargar la lista de surtido."
+          "LOAD": "No se pudo cargar la lista de surtido.",
+          "LOCATION_SCOPE_DENIED": "Su alcance de ubicación no cubre el sitio de esta orden de trabajo."
         }
       },
       "RETURN_TO_STOCK": {
@@ -6201,8 +6202,8 @@
           }
         },
         "FIELD": {
-          "SCAN_SKU": "ID de SKU escaneado",
-          "SCAN_LOCATION": "ID de ubicación escaneada",
+          "SCAN_PRODUCT_CODE": "Código de producto escaneado",
+          "SCAN_LOCATION_CODE": "Código de ubicación escaneado",
           "SKU": "SKU",
           "REQUESTED": "Solicitado",
           "ALREADY_PICKED": "Ya surtido",
@@ -6226,13 +6227,16 @@
           "CONFIRM": "No se pudo confirmar la cantidad surtida.",
           "COMPLETE": "No se pudo completar la tarea de surtido.",
           "REFRESH": "No se pudo actualizar el estado de la tarea de surtido.",
-          "STILL_PROCESSING": "Su última actualización aún se está procesando. Actualice en un momento para ver el estado más reciente."
+          "STILL_PROCESSING": "Su última actualización aún se está procesando. Actualice en un momento para ver el estado más reciente.",
+          "LOCATION_SCOPE_DENIED": "Su alcance de ubicación no cubre el sitio de esta orden de trabajo."
         },
         "SCAN_RESULT": {
-          "MATCHED": "El escaneo coincide con el SKU y la ubicación esperados.",
-          "SKU_MISMATCH": "El SKU escaneado no coincide con la pieza esperada.",
+          "MATCHED": "El escaneo coincide con el producto y la ubicación esperados.",
+          "SKU_MISMATCH": "El producto escaneado no coincide con la pieza esperada.",
           "LOCATION_MISMATCH": "La ubicación escaneada no coincide con el contenedor esperado.",
           "NO_MATCH": "El escaneo no coincide con esta tarea de surtido.",
+          "PRODUCT_CODE_UNAVAILABLE": "El código de producto aún no se puede verificar para esta tarea.",
+          "LOCATION_CODE_UNAVAILABLE": "El código de ubicación aún no se puede verificar para esta tarea.",
           "UNKNOWN": "No se pudo determinar el resultado del escaneo."
         }
       },

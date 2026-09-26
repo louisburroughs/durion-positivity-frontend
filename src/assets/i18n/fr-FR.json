@@ -6101,7 +6101,8 @@
         },
         "ERROR": {
           "MISSING_ID": "L'ID d'ordre de travail est requis pour charger la liste de prélèvement.",
-          "LOAD": "Impossible de charger la liste de prélèvement."
+          "LOAD": "Impossible de charger la liste de prélèvement.",
+          "LOCATION_SCOPE_DENIED": "Votre périmètre de localisation ne couvre pas le site de cet ordre de travail."
         }
       },
       "RETURN_TO_STOCK": {
@@ -6201,8 +6202,8 @@
           }
         },
         "FIELD": {
-          "SCAN_SKU": "ID de SKU scanné",
-          "SCAN_LOCATION": "ID d'emplacement scanné",
+          "SCAN_PRODUCT_CODE": "Code produit scanné",
+          "SCAN_LOCATION_CODE": "Code d'emplacement scanné",
           "SKU": "SKU",
           "REQUESTED": "Demandée",
           "ALREADY_PICKED": "Déjà prélevée",
@@ -6226,13 +6227,16 @@
           "CONFIRM": "Impossible de confirmer la quantité prélevée.",
           "COMPLETE": "Impossible de terminer la tâche de prélèvement.",
           "REFRESH": "Impossible d'actualiser l'état de la tâche de prélèvement.",
-          "STILL_PROCESSING": "Votre dernière mise à jour est toujours en cours de traitement. Actualisez dans un instant pour voir le dernier état."
+          "STILL_PROCESSING": "Votre dernière mise à jour est toujours en cours de traitement. Actualisez dans un instant pour voir le dernier état.",
+          "LOCATION_SCOPE_DENIED": "Votre périmètre de localisation ne couvre pas le site de cet ordre de travail."
         },
         "SCAN_RESULT": {
-          "MATCHED": "Le scan correspond au SKU et à l'emplacement attendus.",
-          "SKU_MISMATCH": "Le SKU scanné ne correspond pas à la pièce attendue.",
+          "MATCHED": "Le scan correspond au produit et à l'emplacement attendus.",
+          "SKU_MISMATCH": "Le produit scanné ne correspond pas à la pièce attendue.",
           "LOCATION_MISMATCH": "L'emplacement scanné ne correspond pas au bac attendu.",
           "NO_MATCH": "Le scan ne correspond pas à cette tâche de prélèvement.",
+          "PRODUCT_CODE_UNAVAILABLE": "Le code produit ne peut pas encore être vérifié pour cette tâche.",
+          "LOCATION_CODE_UNAVAILABLE": "Le code d'emplacement ne peut pas encore être vérifié pour cette tâche.",
           "UNKNOWN": "Le résultat du scan n'a pas pu être déterminé."
         }
       },
