@@ -2,12 +2,23 @@ import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import {
   InventoryAvailabilityService,
+  InventoryLedgerEntryDto,
+  InventoryLedgerEntryDtoEventTypeEnum,
   InventoryLedgerService,
   InventoryReferenceDataService,
   PutawayExecutionService,
   PutawayService,
+  PutawayTaskResponse,
+  ReasonCodeDto,
   ReplenishmentService,
+  ReplenishmentTaskResponse,
+  ReturnSubmissionResultDto,
+  ReturnableItemDto,
   ReturnsService,
+  ShortageOptionDto,
+  ShortageOptionDtoOptionTypeEnum,
+  ShortageResolutionResultDto,
+  ShortageResolutionResultDtoOptionTypeEnum,
   ShortageResolutionService,
 } from '@durion-sdk/inventory';
 import { InventoryDomainService } from './inventory.service';
@@ -193,10 +204,10 @@ describe('InventoryDomainService', () => {
   // ── queryLedger() ──────────────────────────────────────────────────────
 
   describe('queryLedger()', () => {
-    const sdkEntry = {
+    const sdkEntry: InventoryLedgerEntryDto = {
       ledgerEntryId: 'entry-001',
       timestamp: '2026-01-15T10:00:00Z',
-      eventType: 'GOODS_RECEIPT',
+      eventType: InventoryLedgerEntryDtoEventTypeEnum.GoodsReceipt,
       stockItemId: 'SKU-001',
       changeInQuantity: 50,
       quantityAfter: 50,
@@ -209,7 +220,11 @@ describe('InventoryDomainService', () => {
       workorderId: 'wo-1',
       workorderLineId: 'wol-1',
     };
-    const mockPage = { entries: [sdkEntry], nextPageToken: null };
+    // Not typed as `LedgerPage` — its `nextPageToken` is generated as `string | undefined`,
+    // but the real backend answers `null` when there is no next page (the same generator gap
+    // already noted above `LedgerPage.entries: Array<any>` in inventory.service.ts).
+    const mockPage: { entries: InventoryLedgerEntryDto[]; nextPageToken: string | null } =
+      { entries: [sdkEntry], nextPageToken: null };
 
     it('calls InventoryLedgerService.listInventoryLedger with every filter field, in order', () => {
       ledgerStub.listInventoryLedger.mockReturnValueOnce(of(mockPage));
@@ -294,10 +309,10 @@ describe('InventoryDomainService', () => {
   // ── getLedgerEntry() ──────────────────────────────────────────────────
 
   describe('getLedgerEntry()', () => {
-    const sdkEntry = {
+    const sdkEntry: InventoryLedgerEntryDto = {
       ledgerEntryId: 'entry-001',
       timestamp: '2026-01-15T10:00:00Z',
-      eventType: 'WORKORDER_CONSUMPTION',
+      eventType: InventoryLedgerEntryDtoEventTypeEnum.WorkorderConsumption,
       stockItemId: 'SKU-001',
       changeInQuantity: -2,
       quantityAfter: 8,
@@ -341,7 +356,7 @@ describe('InventoryDomainService', () => {
   // ── getPutawayTasks() ──────────────────────────────────────────────────
 
   describe('getPutawayTasks()', () => {
-    const sdkTasks = [
+    const sdkTasks: PutawayTaskResponse[] = [
       {
         taskId: 'task-001',
         sourceReceiptId: 'receipt-01',
@@ -445,7 +460,7 @@ describe('InventoryDomainService', () => {
   // ── getReplenishmentTasks() ────────────────────────────────────────────
 
   describe('getReplenishmentTasks()', () => {
-    const sdkTasks = [
+    const sdkTasks: ReplenishmentTaskResponse[] = [
       {
         taskId: 'rt-001',
         itemSKU: 'SKU-001',
@@ -538,7 +553,7 @@ describe('InventoryDomainService', () => {
   // ── getReturnableItems() ──────────────────────────────────────────────
 
   describe('getReturnableItems()', () => {
-    const sdkItems = [
+    const sdkItems: ReturnableItemDto[] = [
       {
         itemId: 'line-001',
         workorderLineId: 'line-001',
@@ -582,7 +597,7 @@ describe('InventoryDomainService', () => {
   // ── getReasonCodes() ──────────────────────────────────────────────────
 
   describe('getReasonCodes()', () => {
-    const sdkCodes = [
+    const sdkCodes: ReasonCodeDto[] = [
       { code: 'DAMAGED', description: 'Damaged part', category: 'PHYSICAL' },
       { code: 'UNUSED', description: 'Unused part', category: 'EXCESS' },
     ];
@@ -619,7 +634,7 @@ describe('InventoryDomainService', () => {
       lines: [{ workorderLineId: 'line-001', quantityToReturn: 2 }],
     };
 
-    const sdkResult = {
+    const sdkResult: ReturnSubmissionResultDto = {
       returnId: 'ret-001',
       workorderId: 'wo-001',
       status: 'SUBMITTED',
@@ -666,7 +681,7 @@ describe('InventoryDomainService', () => {
       });
     });
 
-    it('maps ReturnSubmissionResultDto (processedLines -> totalItemsReturned, processedAt -> createdAt)', () => {
+    it('maps ReturnSubmissionResultDto (processedLines -> processedLineCount, processedAt -> createdAt)', () => {
       returnsStub.submitReturnToStock.mockReturnValueOnce(of(sdkResult));
 
       let result: ReturnToStockResult | undefined;
@@ -675,7 +690,7 @@ describe('InventoryDomainService', () => {
       expect(result).toEqual({
         returnId: 'ret-001',
         workorderId: 'wo-001',
-        totalItemsReturned: 1,
+        processedLineCount: 1,
         status: 'SUBMITTED',
         createdAt: '2026-09-25T00:00:00Z',
       });
@@ -685,9 +700,19 @@ describe('InventoryDomainService', () => {
   // ── getShortageOptions() ──────────────────────────────────────────────
 
   describe('getShortageOptions()', () => {
-    const sdkOptions = [
-      { allocationId: 'alloc-001', optionType: 'SUBSTITUTE', description: 'Use substitute part', substituteSku: 'sku-sub' },
-      { allocationId: 'alloc-001', optionType: 'BACKORDER', description: 'Backorder part', expectedResolutionDate: '2026-10-01' },
+    const sdkOptions: ShortageOptionDto[] = [
+      {
+        allocationId: 'alloc-001',
+        optionType: ShortageOptionDtoOptionTypeEnum.Substitute,
+        description: 'Use substitute part',
+        substituteSku: 'sku-sub',
+      },
+      {
+        allocationId: 'alloc-001',
+        optionType: ShortageOptionDtoOptionTypeEnum.Backorder,
+        description: 'Backorder part',
+        expectedResolutionDate: '2026-10-01',
+      },
     ];
 
     it('calls ShortageResolutionService.listShortageOptions with allocationId and the optional filters', () => {
@@ -737,12 +762,12 @@ describe('InventoryDomainService', () => {
       locationId: 'loc-01',
     };
 
-    const sdkResult = {
+    const sdkResult: ShortageResolutionResultDto = {
       allocationId: 'alloc-001',
       artifactId: 'art-001',
       artifactType: 'RESERVATION',
       idempotencyKey: 'alloc-001:SUBSTITUTE',
-      optionType: 'SUBSTITUTE',
+      optionType: ShortageResolutionResultDtoOptionTypeEnum.Substitute,
       resolvedAt: '2026-09-25T00:00:00Z',
       status: 'RESOLVED',
     };
