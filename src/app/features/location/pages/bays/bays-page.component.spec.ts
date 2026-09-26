@@ -180,9 +180,11 @@ describe('BaysPageComponent', () => {
     it('opens the out-of-service lane on request', () => {
       const toggle = query<HTMLButtonElement>('.lane-toggle')!;
       expect(toggle.getAttribute('aria-expanded')).toBe('false');
+      expect(toggle.hasAttribute('aria-controls')).toBe(false);
       toggle.click();
       render();
       expect(toggle.getAttribute('aria-expanded')).toBe('true');
+      expect(query(`#${toggle.getAttribute('aria-controls')}`)).not.toBeNull();
       expect(cardText('down')).toContain('Its specialty services are open to other bays');
       expect(cardText('down')).toContain('Out of service');
     });
@@ -308,6 +310,29 @@ describe('BaysPageComponent', () => {
       expect(component.saveErrorKey()).toBe('LOCATION.BAYS.ERROR.VEHICLES');
     });
 
+    it('refuses a fractional vehicle count rather than rounding it, and keeps it on screen', () => {
+      component.openCreate();
+      component.setName('Bay 8');
+      component.setVehicles('1.5');
+      render();
+      component.submit();
+      expect(locationServiceStub.createBay).not.toHaveBeenCalled();
+      expect(component.saveErrorKey()).toBe('LOCATION.BAYS.ERROR.VEHICLES');
+      expect(query<HTMLInputElement>('#bay-vehicles')?.value).toBe('1.5');
+    });
+
+    it('names the consequences of a new bay on its create button', () => {
+      component.openCreate();
+      component.setName('Bay 12');
+      component.setType('WASH_DETAIL');
+      render();
+      const count = component.changeMessages().length;
+      expect(count).toBeGreaterThan(0);
+      expect(query('.submit-btn')?.textContent?.trim()).toBe(
+        count === 1 ? 'Create bay and apply 1 change' : `Create bay and apply ${count} changes`,
+      );
+    });
+
     it('puts a duplicate name error under Name and keeps the dialog open', () => {
       locationServiceStub.createBay.mockReturnValueOnce(throwError(() => new HttpErrorResponse({ status: 409 })));
       component.openCreate();
@@ -342,6 +367,34 @@ describe('BaysPageComponent', () => {
       component.submit();
       expect(component.saveErrorKey()).toBe('LOCATION.BAYS.ERROR.NOT_ALLOWED');
       expect(component.canEdit()).toBe(false);
+      render();
+      expect(query<HTMLFieldSetElement>('fieldset.dialog-body')?.disabled).toBe(true);
+      expect(query<HTMLButtonElement>('.submit-btn')?.disabled).toBe(true);
+      expect(query('.dialog-error[role="alert"]')?.textContent).toBeTruthy();
+      expect(query<HTMLButtonElement>('.cancel-btn')?.disabled).toBe(false);
+    });
+
+    it('closes the dialog and drops its save when the URL moves to another location', () => {
+      const pending = new Subject<BayResponse>();
+      locationServiceStub.patchBay.mockReturnValueOnce(pending);
+      component.openEdit(RIVERSIDE[0]);
+      component.setName('Bay 10 renamed');
+      component.submit();
+      expect(component.saving()).toBe(true);
+
+      queryParams.next({ locationId: 'loc-2' });
+      render();
+      expect(component.dialogMode()).toBeNull();
+      expect(component.saving()).toBe(false);
+      expect(pending.observed).toBe(false);
+    });
+
+    it('closes an open dialog when another location is picked', () => {
+      component.openEdit(RIVERSIDE[0]);
+      component.onLocationSelected('loc-2');
+      render();
+      expect(component.dialogMode()).toBeNull();
+      expect(component.editingBay()).toBeNull();
     });
 
     it('holds the dialog open, with Cancel and Save disabled, while the save is in flight', () => {
@@ -495,6 +548,44 @@ describe('BaysPageComponent', () => {
       expect(query('.undo-btn')).toBeNull();
     });
 
+    it('refuses Undo once the bay has changed since the save, instead of overwriting the newer list', () => {
+      const general = RIVERSIDE[0];
+      locationServiceStub.patchBay.mockReturnValueOnce(of({ ...general, serviceCapabilityCodes: ['BRAKE-INSPECTION'] }));
+      component.onServiceDragStart(brakes);
+      component.onCardDrop(cardOf('b10'), new DragEvent('drop'));
+      render();
+      // Another edit lands on the same bay before Undo is pressed.
+      component.bays.update(bays =>
+        bays.map(b => (b.id === 'b10' ? { ...b, serviceCapabilityCodes: ['BRAKE-INSPECTION', 'TIRE-ROTATION'] } : b)),
+      );
+
+      query<HTMLButtonElement>('.undo-btn')!.click();
+      render();
+      expect(locationServiceStub.patchBay).toHaveBeenCalledTimes(1);
+      expect(query('.undo-btn')).toBeNull();
+      expect(cardText('b10')).toContain('Bay 10 has changed since, so Undo no longer applies.');
+    });
+
+    it('forgets the Undo and pending rail state when another location is picked', () => {
+      locationServiceStub.patchBay.mockReturnValueOnce(of({ ...RIVERSIDE[0], serviceCapabilityCodes: ['BRAKE-INSPECTION'] }));
+      component.onServiceDragStart(brakes);
+      component.onCardDrop(cardOf('b10'), new DragEvent('drop'));
+      component.openAddDialog(RIVERSIDE[1]);
+      component.onLocationSelected('loc-2');
+      render();
+      expect(component.outcome()).toBeNull();
+      expect(component.addDialogBay()).toBeNull();
+      expect(component.dragging()).toBeNull();
+    });
+
+    it('points the Who does what toggle at its body only while it is shown', () => {
+      const toggle = query<HTMLButtonElement>('.band-toggle')!;
+      expect(toggle.hasAttribute('aria-controls')).toBe(false);
+      toggle.click();
+      render();
+      expect(query(`#${toggle.getAttribute('aria-controls')}`)).not.toBeNull();
+    });
+
     it('refuses a drop on a card that already has the service', () => {
       component.onServiceDragStart({ operationCode: ALIGN, name: 'Wheel alignment', operationCategory: null });
       render();
@@ -610,6 +701,21 @@ describe('BaysPageComponent', () => {
       expect(component.describeService('DOT-ANNUAL-INSPECTION').key).toBe('LOCATION.BAYS.RAIL.ON_HOLD');
       expect(component.describeService('BRAKE-INSPECTION').key).toBe('LOCATION.BAYS.RAIL.GENERAL_WORK');
     });
+  });
+
+  it('moves focus to the card after removing its last service when Add service is not offered', async () => {
+    session.permissions = [...LOCATION_PAGE.bays, ...LOCATION_PAGE.bayManage];
+    await setUp();
+    const down = RIVERSIDE[5];
+    locationServiceStub.patchBay.mockReturnValueOnce(of({ ...down, serviceCapabilityCodes: [] }));
+    component.toggleOutOfService();
+    render();
+    expect(query('#add-service-down')).toBeNull();
+
+    component.removeServiceFromBay(down, 'DOT-ANNUAL-INSPECTION');
+    component.confirmRemoval();
+    render();
+    expect(document.activeElement?.id).toBe('bay-down');
   });
 
   it('offers no card changes without location:bay:manage', async () => {

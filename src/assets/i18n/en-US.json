@@ -2068,7 +2068,9 @@
         "CREATE": "Create bay",
         "SAVE": "Save",
         "SAVE_APPLY_ONE": "Save and apply 1 change",
-        "SAVE_APPLY_MANY": "Save and apply {{count}} changes"
+        "SAVE_APPLY_MANY": "Save and apply {{count}} changes",
+        "CREATE_APPLY_ONE": "Create bay and apply 1 change",
+        "CREATE_APPLY_MANY": "Create bay and apply {{count}} changes"
       },
       "SAVED": {
         "CREATED": "{{bay}} added to {{lane}}.",
@@ -2100,6 +2102,7 @@
         "NOW_GENERAL": "{{service}} is now general work: any bay here except wash & detail can be assigned it.",
         "REMOVED": "{{service}} removed from {{bay}}.",
         "UNDONE": "Change to {{bay}} undone.",
+        "UNDO_STALE": "{{bay}} has changed since, so Undo no longer applies.",
         "BUSY": "{{bay}} is still saving. Try again in a moment.",
         "MOVED_GENERAL": "{{bay}} moved to General.",
         "MOVED_SPECIALTY": "{{bay}} moved to Specialty.",
@@ -2212,7 +2215,10 @@
         "UNKNOWN": "Active. Its coverage couldn't be loaded.",
         "NONE_TODAY": "Active, but no coverage rule is in effect today, so no customer matches it.",
         "AREAS_ONE": "Can be sent to customers in 1 service area today.",
-        "AREAS_MANY": "Can be sent to customers in {{count}} service areas today."
+        "AREAS_MANY": "Can be sent to customers in {{count}} service areas today.",
+        "AREAS_CHECKING": "Active. Checking which service areas it reaches.",
+        "AREAS_UNKNOWN": "Active. The service areas couldn't be loaded, so where it can be sent is unknown.",
+        "NONE_MATCHABLE": "Active, but none of today's service areas has a postal code, so no customer matches it."
       },
       "CHECKLIST": {
         "TITLE": "Ready to activate",
@@ -2273,7 +2279,8 @@
         "PRIORITY": "Priority: lower numbers are offered first, compared across every unit here that covers the same postal code.",
         "DATES": "Valid from and to: the dates the rule applies. Leave Valid to blank for no end date.",
         "RULE_TYPE": "Rule type is recorded for later. Matching uses the service area only.",
-        "MAX_DISTANCE": "Max distance is recorded for later and not used for matching. Leave the last distance tier blank as the catch-all."
+        "MAX_DISTANCE": "Max distance is recorded for later and not used for matching. Leave the last distance tier blank as the catch-all.",
+        "POLICY_LOCKED": "A policy can't be removed from a unit yet, only changed to another one."
       },
       "DIALOG": {
         "CREATE_TITLE": "New mobile unit",
@@ -2359,6 +2366,7 @@
         "ADDED_MANY": "{{count}} capabilities recorded for {{unit}}.",
         "REMOVED": "{{service}} removed from {{unit}}.",
         "UNDONE": "Change to {{unit}} undone.",
+        "UNDO_STALE": "{{unit}} has changed since, so Undo no longer applies.",
         "BUSY": "{{unit}} is still saving. Try again in a moment.",
         "LAST_CAPABILITY": "An active unit needs at least one capability. Set {{unit}} inactive to remove its last one.",
         "INVALID": "Couldn't change {{unit}}'s capabilities: one of them isn't an active catalog service.",

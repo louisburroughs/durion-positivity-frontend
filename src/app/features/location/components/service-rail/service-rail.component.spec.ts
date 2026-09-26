@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { Observable, of } from 'rxjs';
+import { Observable, Subject, of } from 'rxjs';
 import enUS from '../../../../../assets/i18n/en-US.json';
 import { ClaimableService, LocationService } from '../../services/location.service';
 import { ServiceRailComponent } from './service-rail.component';
@@ -110,8 +110,25 @@ describe('ServiceRailComponent', () => {
     await settle();
     expect(component.state()).toBe('failed');
     el().querySelector<HTMLButtonElement>('.rail-error .link-btn')!.click();
-    fixture.detectChanges();
+    await settle();
     expect(locationServiceStub.searchClaimableServices).toHaveBeenCalledTimes(2);
     expect(component.state()).toBe('ready');
+  });
+
+  it('never lets a retried search answer over a newer query', async () => {
+    const retried = new Subject<{ services: ClaimableService[]; ok: boolean }>();
+    locationServiceStub.searchClaimableServices
+      .mockReturnValueOnce(of({ services: [], ok: false }))
+      .mockReturnValueOnce(retried);
+    component.onQuery('oil');
+    await settle();
+    component.retry();
+    await settle();
+    expect(retried.observed).toBe(true);
+
+    component.onQuery('tire');
+    retried.next({ services: [{ operationCode: 'OIL-CHANGE', name: 'Oil change' } as ClaimableService], ok: true });
+    expect(component.results()).toEqual([]);
+    expect(component.state()).toBe('loading');
   });
 });

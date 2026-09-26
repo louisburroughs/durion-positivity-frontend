@@ -66,7 +66,7 @@
   @if (state() === 'ready' && claimRows().length > 0) {
     <section class="who-band" aria-labelledby="who-heading">
       <h2 id="who-heading" class="who-heading">
-        <button type="button" class="band-toggle" [attr.aria-expanded]="whoOpen()" aria-controls="who-body"
+        <button type="button" class="band-toggle" [attr.aria-expanded]="whoOpen()" [attr.aria-controls]="whoOpen() ? 'who-body' : null"
           (click)="toggleWho()">
           <span aria-hidden="true">{{ whoOpen() ? '▾' : '▸' }}</span>
           {{ 'LOCATION.BAYS.WHO.TITLE' | translate }}
@@ -139,7 +139,7 @@
               @if (lane.lane === 'OUT_OF_SERVICE') {
                 <h2 class="lane-heading" [id]="'lane-' + lane.lane">
                   <button type="button" class="lane-toggle" [attr.aria-expanded]="outOfServiceOpen()"
-                    aria-controls="lane-cards-OUT_OF_SERVICE" (click)="toggleOutOfService()">
+                    [attr.aria-controls]="outOfServiceOpen() ? 'lane-cards-OUT_OF_SERVICE' : null" (click)="toggleOutOfService()">
                     <span aria-hidden="true" class="caret">{{ outOfServiceOpen() ? '▾' : '▸' }}</span>
                     {{ lane.headingKey | translate }}
                     <span class="lane-count">{{ lane.cards.length }}</span>
@@ -274,7 +274,8 @@
         {{ (mode === 'create' ? 'LOCATION.BAYS.DIALOG.CREATE_TITLE' : 'LOCATION.BAYS.DIALOG.EDIT_TITLE') | translate: { bay: editingBay()?.name ?? '' } }}
       </h2>
 
-      <div class="dialog-body">
+      <!-- A 403 makes the page read-only; the open dialog follows it (ADR-0040 §6a). -->
+      <fieldset class="dialog-body" [disabled]="!canEdit()">
         <div class="form-col">
           <div class="field">
             <label for="bay-name">{{ 'LOCATION.BAYS.FIELD.NAME' | translate }} <span aria-hidden="true">*</span></label>
@@ -323,7 +324,7 @@
             <div class="field">
               <label for="bay-vehicles">{{ 'LOCATION.BAYS.FIELD.VEHICLES' | translate }} <span aria-hidden="true">*</span></label>
               <input id="bay-vehicles" type="number" min="1" step="1" required inputmode="numeric"
-                aria-describedby="bay-vehicles-hint" [value]="draft().maxConcurrentVehicles"
+                aria-describedby="bay-vehicles-hint" [value]="vehiclesText()"
                 (input)="setVehicles($any($event.target).value)" />
               <p id="bay-vehicles-hint" class="hint">{{ 'LOCATION.BAYS.HINT.VEHICLES' | translate }}</p>
             </div>
@@ -414,7 +415,7 @@
             <p class="muted">{{ 'LOCATION.BAYS.CHANGES.EXISTING_STAY' | translate }}</p>
           }
         </aside>
-      </div>
+      </fieldset>
 
       @if (saveErrorKey(); as saveError) {
         <p class="dialog-error" role="alert">{{ saveError | translate }}</p>
@@ -424,11 +425,11 @@
         <button type="button" class="btn-secondary cancel-btn" [disabled]="saving()" (click)="closeDialog()">
           {{ 'LOCATION.BAYS.CANCEL' | translate }}
         </button>
-        <button type="submit" class="btn-primary submit-btn" [disabled]="saving()">
-          @if (mode === 'create') {
-            {{ 'LOCATION.BAYS.DIALOG.CREATE' | translate }}
-          } @else if (changeMessages().length === 0) {
-            {{ 'LOCATION.BAYS.DIALOG.SAVE' | translate }}
+        <button type="submit" class="btn-primary submit-btn" [disabled]="saving() || !canEdit()">
+          @if (changeMessages().length === 0) {
+            {{ (mode === 'create' ? 'LOCATION.BAYS.DIALOG.CREATE' : 'LOCATION.BAYS.DIALOG.SAVE') | translate }}
+          } @else if (mode === 'create') {
+            {{ (changeMessages().length === 1 ? 'LOCATION.BAYS.DIALOG.CREATE_APPLY_ONE' : 'LOCATION.BAYS.DIALOG.CREATE_APPLY_MANY') | translate: { count: changeMessages().length } }}
           } @else {
             {{ (changeMessages().length === 1 ? 'LOCATION.BAYS.DIALOG.SAVE_APPLY_ONE' : 'LOCATION.BAYS.DIALOG.SAVE_APPLY_MANY') | translate: { count: changeMessages().length } }}
           }

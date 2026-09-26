@@ -45,7 +45,7 @@
 
   <section class="check-band" aria-labelledby="check-heading">
     <h2 id="check-heading" class="check-heading">
-      <button type="button" class="band-toggle" [attr.aria-expanded]="checkOpen()" aria-controls="check-body"
+      <button type="button" class="band-toggle" [attr.aria-expanded]="checkOpen()" [attr.aria-controls]="checkOpen() ? 'check-body' : null"
         (click)="toggleCheck()">
         <span aria-hidden="true">{{ checkOpen() ? '▾' : '▸' }}</span>
         {{ 'LOCATION.MOBILE_UNITS.CHECK.TITLE' | translate }}
@@ -72,7 +72,7 @@
           <div class="field">
             <label for="check-date">{{ 'LOCATION.MOBILE_UNITS.CHECK.DATE' | translate }}</label>
             <input id="check-date" type="date" [value]="checkDate()"
-              (change)="checkDate.set($any($event.target).value || today)" />
+              (change)="checkDate.set($any($event.target).value || today())" />
           </div>
           <button type="submit" class="btn-primary check-btn" [disabled]="checkState() === 'loading'">
             {{ 'LOCATION.MOBILE_UNITS.CHECK.RUN' | translate }}
@@ -89,7 +89,7 @@
             @case ('ready') {
               @if (checkedFor(); as asked) {
                 @if (checkResults().length === 0) {
-                  <p>{{ 'LOCATION.MOBILE_UNITS.CHECK.NONE' | translate: { postalCode: asked.postalCode, date: (asked.date | date: 'mediumDate') } }}</p>
+                  <p>{{ 'LOCATION.MOBILE_UNITS.CHECK.NONE' | translate: { postalCode: asked.postalCode, date: (asked.day | date: 'mediumDate') } }}</p>
                 } @else {
                   <ol class="check-list">
                     @for (result of checkResults(); track result.id) {
@@ -251,7 +251,7 @@
                               }
                             </ul>
                           }
-                          @for (next of card.upcoming; track next.from) {
+                          @for (next of card.upcoming; track next.from.getTime()) {
                             <p class="coverage-when">{{ 'LOCATION.MOBILE_UNITS.CARD.FROM' | translate: { date: (next.from | date: 'mediumDate') } }}</p>
                             <ul class="chips">
                               @for (chip of next.chips; track chip.ruleId) {
@@ -393,8 +393,10 @@
 
         <div class="field">
           <label for="unit-policy">{{ 'LOCATION.MOBILE_UNITS.FIELD.POLICY' | translate }}</label>
-          <select id="unit-policy" aria-describedby="unit-policy-hint" (change)="setPolicy($any($event.target).value)">
-            <option value="" [selected]="!draft().travelBufferPolicyId">{{ 'LOCATION.MOBILE_UNITS.POLICY.CHOOSE' | translate }}</option>
+          <select id="unit-policy"
+            [attr.aria-describedby]="noPolicyLocked() ? 'unit-policy-hint unit-policy-locked' : 'unit-policy-hint'"
+            (change)="setPolicy($any($event.target).value)">
+            <option value="" [disabled]="noPolicyLocked()" [selected]="!draft().travelBufferPolicyId">{{ 'LOCATION.MOBILE_UNITS.POLICY.CHOOSE' | translate }}</option>
             @for (policy of policies(); track policy.id) {
               <option [value]="policy.id" [selected]="draft().travelBufferPolicyId === policy.id">
                 {{ 'LOCATION.MOBILE_UNITS.POLICY.NAMED' | translate: { policy: policy.name ?? '', buffer: (bufferText(policy).key | translate: bufferText(policy).params) } }}
@@ -407,6 +409,9 @@
               {{ 'LOCATION.MOBILE_UNITS.POLICY.READ_FAILED' | translate }}
             }
           </p>
+          @if (noPolicyLocked()) {
+            <p id="unit-policy-locked" class="hint">{{ 'LOCATION.MOBILE_UNITS.HINT.POLICY_LOCKED' | translate }}</p>
+          }
         </div>
 
         <fieldset class="field" aria-describedby="unit-capability-hint">

@@ -2068,7 +2068,9 @@
         "CREATE": "Créer la baie",
         "SAVE": "Enregistrer",
         "SAVE_APPLY_ONE": "Enregistrer et appliquer 1 changement",
-        "SAVE_APPLY_MANY": "Enregistrer et appliquer {{count}} changements"
+        "SAVE_APPLY_MANY": "Enregistrer et appliquer {{count}} changements",
+        "CREATE_APPLY_ONE": "Créer la baie et appliquer 1 changement",
+        "CREATE_APPLY_MANY": "Créer la baie et appliquer {{count}} changements"
       },
       "SAVED": {
         "CREATED": "{{bay}} ajoutée à {{lane}}.",
@@ -2100,6 +2102,7 @@
         "NOW_GENERAL": "{{service}} devient du travail général : toute baie d'ici sauf lavage et esthétique peut le recevoir.",
         "REMOVED": "{{service}} retiré de {{bay}}.",
         "UNDONE": "Modification de {{bay}} annulée.",
+        "UNDO_STALE": "{{bay}} a changé depuis, donc Annuler ne s'applique plus.",
         "BUSY": "{{bay}} est encore en cours d'enregistrement. Réessayez dans un instant.",
         "MOVED_GENERAL": "{{bay}} est passée dans Générales.",
         "MOVED_SPECIALTY": "{{bay}} est passée dans Spécialisées.",
@@ -2212,7 +2215,10 @@
         "UNKNOWN": "Active. Sa couverture n'a pas pu être chargée.",
         "NONE_TODAY": "Active, mais aucune règle de couverture n'est en vigueur aujourd'hui, donc aucun client ne correspond.",
         "AREAS_ONE": "Peut être envoyée aujourd'hui aux clients de 1 zone de service.",
-        "AREAS_MANY": "Peut être envoyée aujourd'hui aux clients de {{count}} zones de service."
+        "AREAS_MANY": "Peut être envoyée aujourd'hui aux clients de {{count}} zones de service.",
+        "AREAS_CHECKING": "Active. Vérification des zones de service qu'elle dessert.",
+        "AREAS_UNKNOWN": "Active. Les zones de service n'ont pas pu être chargées, donc on ne sait pas où elle peut être envoyée.",
+        "NONE_MATCHABLE": "Active, mais aucune des zones de service d'aujourd'hui n'a de code postal, donc aucun client ne correspond."
       },
       "CHECKLIST": {
         "TITLE": "Prête à activer",
@@ -2273,7 +2279,8 @@
         "PRIORITY": "Priorité : les plus petits numéros sont proposés en premier, comparés entre toutes les unités d'ici qui couvrent le même code postal.",
         "DATES": "Valide du / au : les dates où la règle s'applique. Laissez Valide au vide pour ne pas fixer de fin.",
         "RULE_TYPE": "Le type de règle est enregistré pour plus tard. La correspondance n'utilise que la zone de service.",
-        "MAX_DISTANCE": "La distance maximale est enregistrée pour plus tard et n'est pas utilisée pour la correspondance. Laissez vide le dernier palier de distance, comme palier général."
+        "MAX_DISTANCE": "La distance maximale est enregistrée pour plus tard et n'est pas utilisée pour la correspondance. Laissez vide le dernier palier de distance, comme palier général.",
+        "POLICY_LOCKED": "On ne peut pas encore retirer la politique d'une unité, seulement la remplacer par une autre."
       },
       "DIALOG": {
         "CREATE_TITLE": "Nouvelle unité mobile",
@@ -2359,6 +2366,7 @@
         "ADDED_MANY": "{{count}} capacités enregistrées pour {{unit}}.",
         "REMOVED": "{{service}} retiré de {{unit}}.",
         "UNDONE": "Modification de {{unit}} annulée.",
+        "UNDO_STALE": "{{unit}} a changé depuis, donc Annuler ne s'applique plus.",
         "BUSY": "{{unit}} est encore en cours d'enregistrement. Réessayez dans un instant.",
         "LAST_CAPABILITY": "Une unité active a besoin d'au moins une capacité. Désactivez {{unit}} pour retirer la dernière.",
         "INVALID": "Impossible de modifier les capacités de {{unit}} : l'une d'elles n'est pas un service actif du catalogue.",
