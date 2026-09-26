@@ -13,7 +13,6 @@ import type {
   AuditRecordResponse,
   BulkLoadJobCreateRequest,
   BulkLoadJobResponse,
-  CorrectionResultDto,
 } from '@durion-sdk/bulk-loader';
 import { AuthService } from '../../../core/services/auth.service';
 import {
@@ -162,12 +161,11 @@ export class BulkImportService {
   }
 
   /**
-   * (issue #376, durion-positivity-backend#2205) `ReviewQueueAPIService.submitSingleCorrection()`'s
-   * `CorrectionResultDto` response now also carries `entityType`, `rowNumber`, `reviewStatus`,
-   * `reasonCodes`, `originalValues`, `correctedValues`, and `createdAt` — but every one of them
-   * is nullable (a reload miss on the server still returns `null`). When they are all present the
-   * caller gets back a complete `BulkLoadRecordAudit` to splice in place; when any is `null` this
-   * returns `null` and callers keep the existing re-read fallback.
+   * (issue #376) `ReviewQueueAPIService.submitSingleCorrection()`'s `CorrectionResultDto`
+   * response (`auditRecordId`, `status: ACCEPTED|REJECTED`, `rejectionReason?`) carries
+   * none of `entityType`, `rowNumber`, `reasonCodes` or the corrected `originalValues`
+   * (backend #2205 tracks widening it), so callers must re-read the audit record list
+   * after this resolves rather than splice a record from this response.
    *
    * A `REJECTED` result is a normal HTTP 200 — it is not thrown by the SDK — so it is
    * routed through this Observable's error channel here as a `CorrectionRejectedError`.
@@ -179,7 +177,7 @@ export class BulkImportService {
     jobId: string,
     recordId: string,
     request: SubmitCorrectionRequest,
-  ): Observable<BulkLoadRecordAudit | null> {
+  ): Observable<void> {
     const correctedData: Record<string, string> = {};
     for (const [field, value] of Object.entries(request.correctedValues)) {
       correctedData[field] = String(value);
@@ -190,33 +188,8 @@ export class BulkImportService {
       .pipe(
         switchMap(result => result.status === 'REJECTED'
           ? throwError(() => new CorrectionRejectedError(result.rejectionReason ?? undefined))
-          : of(this.toCorrectionResultRow(jobId, result))),
+          : of(undefined as void)),
       );
-  }
-
-  private toCorrectionResultRow(jobId: string, result: CorrectionResultDto): BulkLoadRecordAudit | null {
-    if (
-      result.entityType == null ||
-      result.rowNumber == null ||
-      result.reviewStatus == null ||
-      result.reasonCodes == null ||
-      result.originalValues == null
-    ) {
-      return null;
-    }
-
-    return {
-      recordId: result.auditRecordId,
-      jobId,
-      entityType: result.entityType,
-      entityId: result.entityId ?? undefined,
-      rowNumber: result.rowNumber,
-      reviewStatus: this.toReviewStatus(result.reviewStatus),
-      reasonCodes: this.parseReasonCodes(result.reasonCodes),
-      originalValues: this.parseOriginalValues(result.originalValues),
-      correctedValues: result.correctedValues != null ? this.parseOriginalValues(result.correctedValues) : undefined,
-      createdAt: result.createdAt ?? undefined,
-    };
   }
 
   /**

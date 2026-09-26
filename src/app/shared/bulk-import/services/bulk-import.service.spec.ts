@@ -356,57 +356,23 @@ describe('BulkImportService', () => {
   });
 
   describe('submitCorrection()', () => {
-    it('calls ReviewQueueAPIService.submitSingleCorrection with auditRecordId and correctedData, resolving null when the row fields are null (durion-positivity-backend#2205)', () => {
+    it('calls ReviewQueueAPIService.submitSingleCorrection with auditRecordId and correctedData', () => {
       const req: SubmitCorrectionRequest = { correctedValues: { sku: 'FIXED-SKU' } };
       reviewQueueStub.submitSingleCorrection.mockReturnValue(of({
         auditRecordId: 'rec-001',
         status: 'ACCEPTED',
       }));
 
-      let result: unknown;
-      service.submitCorrection('job-001', 'rec-001', req).subscribe(r => {
-        result = r;
+      let completed = false;
+      service.submitCorrection('job-001', 'rec-001', req).subscribe(() => {
+        completed = true;
       });
 
       expect(reviewQueueStub.submitSingleCorrection).toHaveBeenCalledWith('job-001', {
         auditRecordId: 'rec-001',
         correctedData: { sku: 'FIXED-SKU' },
       });
-      expect(result).toBeNull();
-    });
-
-    it('splices the returned row when the backend provides entityType/rowNumber/reviewStatus/reasonCodes/originalValues (durion-positivity-backend#2205)', () => {
-      const req: SubmitCorrectionRequest = { correctedValues: { sku: 'FIXED-SKU' } };
-      reviewQueueStub.submitSingleCorrection.mockReturnValue(of({
-        auditRecordId: 'rec-001',
-        status: 'ACCEPTED',
-        entityType: 'CATALOG_PRODUCT',
-        entityId: 'prod-001',
-        rowNumber: 7,
-        reviewStatus: 'APPROVED',
-        reasonCodes: 'INVALID_SKU,MISSING_FIELD',
-        originalValues: '{"sku":"BAD-SKU"}',
-        correctedValues: '{"sku":"FIXED-SKU"}',
-        createdAt: '2026-01-01T00:00:00Z',
-      }));
-
-      let result: unknown;
-      service.submitCorrection('job-001', 'rec-001', req).subscribe(r => {
-        result = r;
-      });
-
-      expect(result).toEqual({
-        recordId: 'rec-001',
-        jobId: 'job-001',
-        entityType: 'CATALOG_PRODUCT',
-        entityId: 'prod-001',
-        rowNumber: 7,
-        reviewStatus: 'APPROVED',
-        reasonCodes: ['INVALID_SKU', 'MISSING_FIELD'],
-        originalValues: { sku: 'BAD-SKU' },
-        correctedValues: { sku: 'FIXED-SKU' },
-        createdAt: '2026-01-01T00:00:00Z',
-      });
+      expect(completed).toBe(true);
     });
 
     it('stringifies non-string corrected values before sending correctedData', () => {

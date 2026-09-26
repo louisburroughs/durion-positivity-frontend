@@ -4,7 +4,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
 import { BulkImportService } from '../../../../shared/bulk-import/services/bulk-import.service';
-import { BulkImportCorrectionReloader, spliceAuditRecord } from '../../../../shared/bulk-import/services/bulk-import-correction-reloader';
+import { BulkImportCorrectionReloader } from '../../../../shared/bulk-import/services/bulk-import-correction-reloader';
 import { BulkImportErrorRecordsTableComponent, CorrectionSubmitEvent } from '../../../../shared/bulk-import/components/bulk-import-error-records-table/bulk-import-error-records-table.component';
 import {
   BulkLoadJob,
@@ -94,12 +94,6 @@ export class BulkImportJobDetailPageComponent {
         onSubmitError: () => {
           this.state.set('error');
           this.errorKey.set('BULK_IMPORT.JOB_DETAIL.ERROR.CORRECTION');
-        },
-        onSubmitResult: result => {
-          if (!result) { return true; }
-          this.auditRecords.update(records => spliceAuditRecord(records, result));
-          this.state.set('ready');
-          return false;
         },
       },
     ).pipe(takeUntilDestroyed(this.destroyRef)).subscribe();
