@@ -38,7 +38,7 @@ describe('BulkImportJobDetailPageComponent', () => {
     cancelJob: vi.fn(),
     retryJob: vi.fn(),
     submitCorrection: vi.fn(),
-    getErrorReportUrl: vi.fn(),
+    downloadErrorReport: vi.fn(),
     createUploadSession: vi.fn(),
     listJobs: vi.fn(),
     getActiveJobForDomain: vi.fn(),
@@ -318,5 +318,47 @@ describe('BulkImportJobDetailPageComponent', () => {
   it('getFieldKeys returns the keys from originalValues', () => {
     const keys = component.getFieldKeys(mockAuditRecord);
     expect(keys).toEqual(['sku']);
+  });
+
+  describe('downloadErrorReport() [durion-positivity-backend#2216 precedent, issue #350]', () => {
+    it('calls service.downloadErrorReport with the jobId', () => {
+      mockService.downloadErrorReport.mockReturnValue(of(undefined));
+
+      component.downloadErrorReport();
+
+      expect(mockService.downloadErrorReport).toHaveBeenCalledWith('job-001');
+    });
+
+    it('a failed download surfaces a per-action error and keeps the job (and its controls) on screen', () => {
+      mockService.downloadErrorReport.mockReturnValue(throwError(() => new Error('download failed')));
+      const stateBefore = component.state();
+
+      component.downloadErrorReport();
+      fixture.detectChanges();
+
+      expect(component.state()).toBe(stateBefore);
+      expect(component.errorKey()).toBeNull();
+      expect(component.downloadErrorKey()).toBe('BULK_IMPORT.JOB_DETAIL.ERROR.DOWNLOAD');
+    });
+
+    it('clears a download error when the job detail (re)loads', () => {
+      mockService.downloadErrorReport.mockReturnValue(throwError(() => new Error('download failed')));
+      component.downloadErrorReport();
+      expect(component.downloadErrorKey()).toBe('BULK_IMPORT.JOB_DETAIL.ERROR.DOWNLOAD');
+
+      component.loadDetail();
+
+      expect(component.downloadErrorKey()).toBeNull();
+    });
+
+    it('clears the previous download error when a download is retried', () => {
+      mockService.downloadErrorReport.mockReturnValueOnce(throwError(() => new Error('download failed')));
+      component.downloadErrorReport();
+      mockService.downloadErrorReport.mockReturnValueOnce(of(undefined));
+
+      component.downloadErrorReport();
+
+      expect(component.downloadErrorKey()).toBeNull();
+    });
   });
 });

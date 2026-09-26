@@ -125,3 +125,9 @@
 	color: var(--status-info-fg);
 	background: var(--status-info-bg);
 }
+
+.job-download-error {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--status-error-fg);
+}

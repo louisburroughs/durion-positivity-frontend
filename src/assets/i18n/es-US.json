@@ -756,7 +756,7 @@
       "RETRY": "Reintentar",
       "SUBMITTING": "Enviando…",
       "SUCCESS": "El tiempo de trabajo se envió correctamente.",
-      "CORRELATION_ID": "ID de correlación:",
+      "SESSION_REFERENCE": "Referencia de sesión:",
       "FAILED": "Error en el envío.",
       "CODE": "Código:",
       "REFERENCE": "Referencia:",
@@ -4079,43 +4079,6 @@
       }
     },
     "INVENTORY": {
-      "FEEDS": {
-        "TITLE": "Feeds de inventario",
-        "SKU": "SKU",
-        "SKU_PLACEHOLDER": "Ingresa un SKU…",
-        "TABS": {
-          "ARIA": "Pestañas de feed de inventario",
-          "MANUFACTURER": "Fabricante",
-          "DISTRIBUTOR": "Distribuidor"
-        },
-        "AVAILABILITY": {
-          "TITLE": "Disponibilidad",
-          "SOURCE": "Fuente",
-          "ON_HAND": "En stock",
-          "RESERVED": "Reservado",
-          "ATP": "DPV",
-          "AS_OF": "Al",
-          "STATUS": "Estado"
-        },
-        "LEAD_TIME": {
-          "TITLE": "Tiempo de entrega",
-          "SOURCE": "Fuente",
-          "MIN_DAYS": "Días mín.",
-          "MAX_DAYS": "Días máx."
-        },
-        "STATUS": {
-          "IN_STOCK": "En stock",
-          "LOW_STOCK": "Stock bajo",
-          "OUT_OF_STOCK": "Sin stock"
-        },
-        "STATE": {
-          "EMPTY": "No se encontraron datos de feed de inventario.",
-          "UNAVAILABLE": "La disponibilidad del feed del proveedor aún no está disponible."
-        },
-        "ERROR": {
-          "LOAD": "Error al cargar los feeds de inventario."
-        }
-      },
       "AVAILABILITY": {
         "TITLE": "Disponibilidad de inventario",
         "SKU": "SKU",
@@ -4323,10 +4286,6 @@
         "AVAILABILITY": {
           "TITLE": "Disponibilidad",
           "DESCRIPTION": "Supervise y administre la disponibilidad de productos."
-        },
-        "FEEDS": {
-          "TITLE": "Fuentes de inventario",
-          "DESCRIPTION": "Administre fuentes automatizadas de datos de inventario."
         },
         "IMPORT_CATALOG": {
           "TITLE": "Importar catálogo",
@@ -4577,10 +4536,6 @@
           "TITLE": "Solicitudes de Cambio",
           "DESCRIPTION": "Revise y actúe sobre las solicitudes de cambio durante la ejecución."
         },
-        "WORKORDER_FINALIZE": {
-          "TITLE": "Finalizar Orden de Trabajo",
-          "DESCRIPTION": "Bloquee el alcance facturable y prepare la orden para la generación de factura."
-        },
         "INVOICE_FINALIZATION": {
           "TITLE": "Finalización de Factura",
           "DESCRIPTION": "Revise y finalice la factura asociada a una orden de trabajo completada."
@@ -4625,7 +4580,6 @@
         "OPEN_WORKORDER_LABOR": "Abrir Mano de Obra",
         "OPEN_WORKORDER_PARTS": "Abrir Piezas",
         "OPEN_WORKORDER_CHANGE_REQUESTS": "Abrir Solicitudes de Cambio",
-        "OPEN_WORKORDER_FINALIZE": "Finalizar Orden",
         "OPEN_INVOICE_FINALIZATION": "Abrir Factura",
         "OPEN_OPERATIONAL_CONTEXT": "Abrir Contexto"
       },
@@ -4979,7 +4933,6 @@
       "RECORD_LABOR": "Registrar mano de obra",
       "MANAGE_PARTS": "Gestionar piezas",
       "CHANGE_REQUESTS": "Solicitudes de cambio",
-      "FINALIZE": "Finalizar para facturación",
       "COMPLETE_WO": "Completar orden de trabajo",
       "REOPEN": "Reabrir",
       "CREATING_INVOICE": "Creando factura…",
@@ -5098,23 +5051,6 @@
       "APPROVE": "Aprobar",
       "DECLINE": "Rechazar",
       "REQUEST_LABEL": "Solicitud n.º {{n}}"
-    },
-    "WORKORDER_FINALIZE": {
-      "CHIP": "Finalizar para facturación",
-      "LOADING": "Cargando historial de instantáneas…",
-      "ACTION_TITLE": "Finalizar alcance facturable",
-      "ACTION_DESC": "Cree una instantánea inmutable del alcance facturable de la orden de trabajo. Esta instantánea captura todas las piezas, la mano de obra y los totales autorizados para generar la factura.",
-      "PO_NUMBER": "Número de OC",
-      "PO_HINT": "(si lo requiere la ubicación)",
-      "PO_PH": "p. ej. PO-2026-001",
-      "SUCCESS": "Instantánea del alcance facturable creada — Versión {{version}}. Total general: {{total}}.",
-      "FINALIZING": "Finalizando…",
-      "FINALIZE_BTN": "Finalizar para facturación",
-      "ACTIVE_EXISTS": "Ya existe una instantánea facturable activa para esta orden de trabajo. La generación de factura está disponible en el detalle de la orden de trabajo.",
-      "HISTORY_ARIA": "Historial de instantáneas del alcance facturable",
-      "HISTORY_TITLE": "Historial de instantáneas",
-      "HISTORY_EMPTY": "Aún no hay instantáneas del alcance facturable registradas.",
-      "COL_CAPTURED": "Capturado"
     },
     "WORKORDER_LABOR": {
       "LOADING": "Cargando mano de obra…",
@@ -5310,10 +5246,6 @@
       "CONFIRM_INVOICE": "No se pudo confirmar la creación de la factura. Actualice esta página en breve.",
       "ITEM_NOT_COMPLETABLE": "El elemento no se puede completar en su estado actual.",
       "COMPLETE_ITEM": "No se pudo completar el elemento. Inténtelo de nuevo.",
-      "LOAD_SNAPSHOT_HISTORY": "No se pudo cargar el historial de instantáneas. Inténtelo de nuevo.",
-      "SNAPSHOT_EXISTS": "Ya existe una instantánea facturable activa para esta orden de trabajo.",
-      "FINALIZE_REQUIREMENTS": "No se cumplen los requisitos de finalización. Verifique si hay elementos no autorizados o totales faltantes.",
-      "FINALIZE": "No se pudo finalizar. Inténtelo de nuevo.",
       "LABOR_LINE_REQUIRED": "Seleccione una línea de servicio de mano de obra para iniciar una sesión.",
       "NO_TECHNICIAN_ASSIGNED": "Esta orden de trabajo no tiene técnico asignado. Asigne un técnico antes de iniciar la mano de obra.",
       "START_LABOR_SESSION": "No se pudo iniciar la sesión de mano de obra.",
@@ -7038,7 +6970,8 @@
         "LOAD_AUDIT": "No se pueden cargar los registros de errores.",
         "CANCEL": "No se puede cancelar el trabajo.",
         "RETRY": "No se puede reintentar el trabajo.",
-        "CORRECTION": "No se pudo enviar la corrección. Intente nuevamente."
+        "CORRECTION": "No se pudo enviar la corrección. Intente nuevamente.",
+        "DOWNLOAD": "No se pudo descargar el informe de errores. Inténtelo de nuevo."
       },
       "META": {
         "ARIA_LABEL": "Metadatos del trabajo",
@@ -7098,7 +7031,8 @@
         "RETRY": "No se puede reintentar el trabajo.",
         "POLL": "No se pudo obtener el estado de importación. Actualice la página.",
         "LOAD_RESULTS": "No se pueden cargar los registros de errores. Intente nuevamente.",
-        "CORRECTION": "No se pudo enviar la corrección. Intente nuevamente."
+        "CORRECTION": "No se pudo enviar la corrección. Intente nuevamente.",
+        "DOWNLOAD": "No se pudo descargar el informe de errores. Inténtelo de nuevo."
       },
       "CONFLICT": {
         "TITLE": "Importación activa en progreso",
@@ -7309,7 +7243,6 @@
       "EXCHANGES": "Intercambios",
       "EXECUTE": "Ejecutar",
       "EXPORT": "Exportar",
-      "FEEDS": "Fuentes de datos",
       "FINALIZE": "Finalizar",
       "FROM_APPOINTMENT": "Desde la cita",
       "IDENTITY_COMPLIANCE": "Cumplimiento de identidad",

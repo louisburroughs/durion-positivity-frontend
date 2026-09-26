@@ -756,7 +756,7 @@
       "RETRY": "Réessayer",
       "SUBMITTING": "Soumission…",
       "SUCCESS": "Le temps de travail a été soumis avec succès.",
-      "CORRELATION_ID": "Identifiant de corrélation :",
+      "SESSION_REFERENCE": "Référence de session :",
       "FAILED": "Échec de la soumission.",
       "CODE": "Code :",
       "REFERENCE": "Référence :",
@@ -4079,43 +4079,6 @@
       }
     },
     "INVENTORY": {
-      "FEEDS": {
-        "TITLE": "Flux d'inventaire",
-        "SKU": "SKU",
-        "SKU_PLACEHOLDER": "Saisir un SKU…",
-        "TABS": {
-          "ARIA": "Onglets du flux d'inventaire",
-          "MANUFACTURER": "Fabricant",
-          "DISTRIBUTOR": "Distributeur"
-        },
-        "AVAILABILITY": {
-          "TITLE": "Disponibilité",
-          "SOURCE": "Source",
-          "ON_HAND": "En stock",
-          "RESERVED": "Réservé",
-          "ATP": "DAP",
-          "AS_OF": "Au",
-          "STATUS": "Statut"
-        },
-        "LEAD_TIME": {
-          "TITLE": "Délai de livraison",
-          "SOURCE": "Source",
-          "MIN_DAYS": "Jours min.",
-          "MAX_DAYS": "Jours max."
-        },
-        "STATUS": {
-          "IN_STOCK": "En stock",
-          "LOW_STOCK": "Stock faible",
-          "OUT_OF_STOCK": "Rupture de stock"
-        },
-        "STATE": {
-          "EMPTY": "Aucune donnée de flux d'inventaire trouvée.",
-          "UNAVAILABLE": "La disponibilité du flux fournisseur n'est pas encore disponible."
-        },
-        "ERROR": {
-          "LOAD": "Échec du chargement des flux d'inventaire."
-        }
-      },
       "AVAILABILITY": {
         "TITLE": "Disponibilité de l'inventaire",
         "SKU": "SKU",
@@ -4323,10 +4286,6 @@
         "AVAILABILITY": {
           "TITLE": "Disponibilite",
           "DESCRIPTION": "Suivre et gerer la disponibilite des produits."
-        },
-        "FEEDS": {
-          "TITLE": "Flux d'inventaire",
-          "DESCRIPTION": "Gerer les flux automatisees de donnees d'inventaire."
         },
         "IMPORT_CATALOG": {
           "TITLE": "Importer le catalogue",
@@ -4577,10 +4536,6 @@
           "TITLE": "Demandes de modification",
           "DESCRIPTION": "Révisez et traitez les demandes de modification pendant l'exécution."
         },
-        "WORKORDER_FINALIZE": {
-          "TITLE": "Finaliser l'ordre de travail",
-          "DESCRIPTION": "Verrouillez la portée facturable et préparez l'ordre pour la génération de facture."
-        },
         "INVOICE_FINALIZATION": {
           "TITLE": "Finalisation de la facture",
           "DESCRIPTION": "Révisez et finalisez la facture associée à un ordre de travail terminé."
@@ -4625,7 +4580,6 @@
         "OPEN_WORKORDER_LABOR": "Ouvrir la main-d'œuvre",
         "OPEN_WORKORDER_PARTS": "Ouvrir les pièces",
         "OPEN_WORKORDER_CHANGE_REQUESTS": "Ouvrir les demandes de modification",
-        "OPEN_WORKORDER_FINALIZE": "Finaliser l'ordre",
         "OPEN_INVOICE_FINALIZATION": "Ouvrir la facture",
         "OPEN_OPERATIONAL_CONTEXT": "Ouvrir le contexte"
       },
@@ -4979,7 +4933,6 @@
       "RECORD_LABOR": "Enregistrer la main-d’œuvre",
       "MANAGE_PARTS": "Gérer les pièces",
       "CHANGE_REQUESTS": "Demandes de modification",
-      "FINALIZE": "Finaliser pour facturation",
       "COMPLETE_WO": "Terminer le bon de travail",
       "REOPEN": "Rouvrir",
       "CREATING_INVOICE": "Création de la facture…",
@@ -5098,23 +5051,6 @@
       "APPROVE": "Approuver",
       "DECLINE": "Refuser",
       "REQUEST_LABEL": "Demande nº {{n}}"
-    },
-    "WORKORDER_FINALIZE": {
-      "CHIP": "Finaliser pour facturation",
-      "LOADING": "Chargement de l’historique des instantanés…",
-      "ACTION_TITLE": "Finaliser la portée facturable",
-      "ACTION_DESC": "Créez un instantané immuable de la portée facturable du bon de travail. Cet instantané capture toutes les pièces, la main-d’œuvre et les totaux autorisés pour la génération de la facture.",
-      "PO_NUMBER": "Numéro de BC",
-      "PO_HINT": "(si requis par l’emplacement)",
-      "PO_PH": "p. ex. PO-2026-001",
-      "SUCCESS": "Instantané de la portée facturable créé — Version {{version}}. Total général : {{total}}.",
-      "FINALIZING": "Finalisation…",
-      "FINALIZE_BTN": "Finaliser pour facturation",
-      "ACTIVE_EXISTS": "Un instantané facturable actif existe déjà pour ce bon de travail. La génération de facture est disponible depuis le détail du bon de travail.",
-      "HISTORY_ARIA": "Historique des instantanés de la portée facturable",
-      "HISTORY_TITLE": "Historique des instantanés",
-      "HISTORY_EMPTY": "Aucun instantané de portée facturable enregistré pour l’instant.",
-      "COL_CAPTURED": "Capturé"
     },
     "WORKORDER_LABOR": {
       "LOADING": "Chargement de la main-d’œuvre…",
@@ -5310,10 +5246,6 @@
       "CONFIRM_INVOICE": "Impossible de confirmer la création de la facture. Actualisez cette page sous peu.",
       "ITEM_NOT_COMPLETABLE": "L'élément ne peut pas être terminé dans son état actuel.",
       "COMPLETE_ITEM": "Impossible de terminer l'élément. Veuillez réessayer.",
-      "LOAD_SNAPSHOT_HISTORY": "Impossible de charger l'historique des instantanés. Veuillez réessayer.",
-      "SNAPSHOT_EXISTS": "Un instantané facturable actif existe déjà pour ce bon de travail.",
-      "FINALIZE_REQUIREMENTS": "Les exigences de finalisation ne sont pas satisfaites. Vérifiez s'il y a des éléments non autorisés ou des totaux manquants.",
-      "FINALIZE": "Impossible de finaliser. Veuillez réessayer.",
       "LABOR_LINE_REQUIRED": "Sélectionnez une ligne de service de main-d'œuvre pour démarrer une session.",
       "NO_TECHNICIAN_ASSIGNED": "Ce bon de travail n'a aucun technicien affecté. Affectez un technicien avant de démarrer la main-d'œuvre.",
       "START_LABOR_SESSION": "Impossible de démarrer la session de main-d'œuvre.",
@@ -7038,7 +6970,8 @@
         "LOAD_AUDIT": "Impossible de charger les enregistrements d'erreurs.",
         "CANCEL": "Impossible d'annuler le travail.",
         "RETRY": "Impossible de réessayer le travail.",
-        "CORRECTION": "Impossible de soumettre la correction. Veuillez réessayer."
+        "CORRECTION": "Impossible de soumettre la correction. Veuillez réessayer.",
+        "DOWNLOAD": "Impossible de télécharger le rapport d'erreurs. Veuillez réessayer."
       },
       "META": {
         "ARIA_LABEL": "Metadonnees du travail",
@@ -7098,7 +7031,8 @@
         "RETRY": "Impossible de réessayer le travail.",
         "POLL": "Impossible d'obtenir le statut d'importation. Veuillez actualiser.",
         "LOAD_RESULTS": "Impossible de charger les enregistrements d'erreur. Veuillez réessayer.",
-        "CORRECTION": "Échec de l'envoi de la correction. Veuillez réessayer."
+        "CORRECTION": "Échec de l'envoi de la correction. Veuillez réessayer.",
+        "DOWNLOAD": "Impossible de télécharger le rapport d'erreurs. Veuillez réessayer."
       },
       "CONFLICT": {
         "TITLE": "Importation active en cours",
@@ -7309,7 +7243,6 @@
       "EXCHANGES": "Échanges",
       "EXECUTE": "Exécuter",
       "EXPORT": "Exporter",
-      "FEEDS": "Flux de données",
       "FINALIZE": "Finaliser",
       "FROM_APPOINTMENT": "À partir du rendez-vous",
       "IDENTITY_COMPLIANCE": "Conformité d'identité",

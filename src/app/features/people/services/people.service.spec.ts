@@ -44,7 +44,6 @@ import {
   RoleDto,
   UserRoleDto,
 } from '@durion-sdk/people-contact';
-import { ApiBaseService } from '../../../core/services/api-base.service';
 import { PeopleService, WorkSessionSubmitRequest } from './people.service';
 
 describe('PeopleService', () => {
@@ -95,15 +94,12 @@ describe('PeopleService', () => {
     stopWorkSession: vi.fn(),
     startWorkSessionBreak: vi.fn(),
     stopWorkSessionBreak: vi.fn(),
+    submitWorkSession: vi.fn(),
   };
   const postalAddressApiStub = {
     getPersonPostalAddress: vi.fn(),
     putPersonPostalAddress: vi.fn(),
     deletePersonPostalAddress: vi.fn(),
-  };
-  const apiBaseStub = {
-    get: vi.fn(),
-    post: vi.fn(),
   };
 
   beforeEach(() => {
@@ -121,7 +117,6 @@ describe('PeopleService', () => {
         { provide: WorkSessionsAPIService, useValue: workSessionsApiStub },
         { provide: TimekeepingApprovalAPIService, useValue: timekeepingApiStub },
         { provide: TimePeriodManagementAPIService, useValue: timePeriodApiStub },
-        { provide: ApiBaseService, useValue: apiBaseStub },
       ],
     });
 
@@ -598,19 +593,24 @@ describe('PeopleService', () => {
     expect(workSessionsApiStub.stopWorkSessionBreak).toHaveBeenCalledWith('s-1');
   });
 
-  it('submitWorkSession() calls the submit endpoint with an encoded session id', () => {
+  it('submitWorkSession() delegates to WorkSessionsAPIService.submitWorkSession with the full argument list', () => {
     const request: WorkSessionSubmitRequest = {
       billableMinutes: 120,
       breakMinutes: 15,
       submittedAt: '2026-05-05T12:00',
     };
-    apiBaseStub.post.mockReturnValue(of({ correlationId: 'corr-1' }));
+    const response: WorkSessionDto = {
+      sessionId: 'session-1',
+      personId: 'person-1',
+      status: 'SUBMITTED',
+      billableMinutes: 120,
+      breakMinutes: 15,
+      submittedAt: '2026-05-05T12:00',
+    };
+    workSessionsApiStub.submitWorkSession.mockReturnValue(of(response));
 
-    service.submitWorkSession('session/1', request).subscribe();
+    service.submitWorkSession('session-1', request).subscribe(result => expect(result).toEqual(response));
 
-    expect(apiBaseStub.post).toHaveBeenCalledWith(
-      '/people/v1/people/workSessions/session%2F1/submit',
-      request,
-    );
+    expect(workSessionsApiStub.submitWorkSession).toHaveBeenCalledWith('session-1', request);
   });
 });

@@ -625,43 +625,7 @@ export interface ReopenWorkorderResponse {
   reopenReason?: string;
 }
 
-// ── CAP-006: Finalize Billable Scope Snapshot (Story 216) ────────────────────
-
-/**
- * POST /v1/workorders/{workorderId}/finalize
- */
-export interface FinalizeWorkorderRequest {
-  snapshotType?: string;
-  poNumber?: string;
-}
-
-export interface BillableScopeSnapshotItem {
-  id: string;
-  description?: string;
-  quantity?: number;
-  unitPrice?: number;
-  lineTotal?: number;
-  itemType?: 'PART' | 'LABOR';
-}
-
-export interface BillableScopeSnapshot {
-  snapshotId: string;
-  workorderId: string;
-  snapshotVersion: number;
-  snapshotStatus: string;
-  partsTotal?: number;
-  laborTotal?: number;
-  taxTotal?: number;
-  grandTotal?: number;
-  poNumber?: string;
-  finalizedAt?: string;
-  finalizedBy?: string;
-  items?: BillableScopeSnapshotItem[];
-}
-
-export interface FinalizeWorkorderResponse extends BillableScopeSnapshot {
-  message?: string;
-}
+// ── CAP-006: Snapshot history (Story 216) ─────────────────────────────────────
 
 /**
  * operationId: getSnapshotHistory
