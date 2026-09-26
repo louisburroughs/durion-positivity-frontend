@@ -32,8 +32,9 @@ export interface PickTaskLine {
   uom: string;
   storageLocationId?: string;
   /** The task's human-readable location name/code, replicated from
-   * `pos-location` (#2221). Null on a task last updated before scan codes
-   * were replicated — never fall back to `storageLocationId` (ADR-0064 §5). */
+   * `pos-location` (#2221). Absent on a task last updated before scan codes
+   * were replicated (the API's `null` is normalized to `undefined` by
+   * `InventoryPickService`) — never fall back to `storageLocationId` (ADR-0064 §5). */
   storageLocationCode?: string;
   /** The location's scannable barcode, when replicated (#2221). */
   storageLocationBarcode?: string;
@@ -77,15 +78,17 @@ export interface ConsumptionResult {
 // part and the bin, not their internal UUIDs, so `resolvePickScan` now takes
 // a scanned product code and a scanned location code as the primary inputs.
 // Exactly one of scannedSkuId/scannedProductCode and exactly one of
-// scannedLocationId/scannedLocationCode may be supplied; the UUID pair is
-// kept as an alternative the SDK still accepts, though the pick-execute page
-// only ever sends the code pair.
-export interface ScanResolveRequest {
-  scannedSkuId?: string;
-  scannedLocationId?: string;
-  scannedProductCode?: string;
-  scannedLocationCode?: string;
-}
+// scannedLocationId/scannedLocationCode must be supplied — enforced by the
+// union below, so a request the backend would 400 does not compile. The UUID
+// forms are kept as an alternative the SDK still accepts, though the
+// pick-execute page only ever sends the code pair.
+export type ScanProductTarget =
+  | { scannedProductCode: string; scannedSkuId?: never }
+  | { scannedSkuId: string; scannedProductCode?: never };
+export type ScanLocationTarget =
+  | { scannedLocationCode: string; scannedLocationId?: never }
+  | { scannedLocationId: string; scannedLocationCode?: never };
+export type ScanResolveRequest = ScanProductTarget & ScanLocationTarget;
 
 /** Evaluative only (ADR-0064 §1) — resolving a scan records no state; `matched`
  * plus `matchStatus` drive the confirm step's gating. `matchStatus` mirrors

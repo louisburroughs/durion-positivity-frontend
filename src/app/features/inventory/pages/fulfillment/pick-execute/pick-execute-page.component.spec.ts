@@ -975,6 +975,29 @@ describe('PickExecutePageComponent', () => {
       expect(document.activeElement).toBe(productInput);
     });
 
+    it('refocuses the product-code field only once an async scan settles and the input is re-enabled', async () => {
+      const pending = new Subject<ScanResolveResult>();
+      mockPickService.resolvePickScan.mockReturnValue(pending.asObservable());
+      const fixture = await setupPickExecuteFixture('wo-001', [EXECUTE]);
+      fixture.detectChanges();
+      const component = fixture.componentInstance;
+      const productInput: HTMLInputElement = fixture.nativeElement.querySelector('#scan-product-code');
+
+      component.setScannedProductCode('SKU-A');
+      component.setScannedLocationCode('bin-A');
+      component.resolveScan();
+      fixture.detectChanges();
+      expect(productInput.hasAttribute('disabled')).toBe(true);
+
+      pending.next(scanMatchedA);
+      pending.complete();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(productInput.hasAttribute('disabled')).toBe(false);
+      expect(document.activeElement).toBe(productInput);
+    });
+
     it('clears both scan fields immediately once the scan is issued', async () => {
       mockPickService.resolvePickScan.mockReturnValue(of(scanMatchedA));
       const component = await setupPickExecute();

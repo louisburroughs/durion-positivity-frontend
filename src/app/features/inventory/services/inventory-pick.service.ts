@@ -70,12 +70,13 @@ export class InventoryPickService {
       uom: 'EA',
       storageLocationId: task.locationId,
       // #2221: the human-readable location name (served as storageLocationCode),
-      // its barcode, and the SKU's scannable code — null on a task last updated
-      // before scan codes were replicated; never fall back to the raw UUID
-      // (ADR-0064 §5).
-      storageLocationCode: task.storageLocationCode,
-      storageLocationBarcode: task.storageLocationBarcode,
-      productCode: task.productCode,
+      // its barcode, and the SKU's scannable code — the API sends null on a task
+      // last updated before scan codes were replicated; normalized to undefined
+      // here so the model has one "absent" value. Never fall back to the raw
+      // UUID (ADR-0064 §5).
+      storageLocationCode: task.storageLocationCode ?? undefined,
+      storageLocationBarcode: task.storageLocationBarcode ?? undefined,
+      productCode: task.productCode ?? undefined,
       status: task.status,
       sortOrder: task.sortOrder,
     };

@@ -2,11 +2,12 @@ import { WritableSignal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService, TranslationObject } from '@ngx-translate/core';
 import { of, Subject, throwError } from 'rxjs';
 import { PickListPageComponent } from './pick-list-page.component';
 import { InventoryPickService } from '../../../services/inventory-pick.service';
 import { PickListView, PickTaskLine } from '../../../models/inventory-pick.models';
+import enUS from '../../../../../../assets/i18n/en-US.json';
 
 const mockPickService = {
   getWorkorderPickList: vi.fn(),
@@ -169,11 +170,17 @@ describe('PickListPageComponent', () => {
       const withoutCode: PickTaskLine = { ...pickTaskLine, storageLocationId: 'loc-uuid-001' };
       mockPickService.getWorkorderPickList.mockReturnValue(of({ ...pickListFixture, tasks: [withoutCode] }));
       const fixture = await setupPickListFixture();
+      // Real en-US bundle (ADR-0035 §8): asserting the translated text, not the
+      // key, proves the fallback is actually wired to a user-visible string.
+      const translate = TestBed.inject(TranslateService);
+      translate.setTranslation('en-US', enUS as TranslationObject);
+      translate.use('en-US');
       fixture.detectChanges();
 
       const text = fixture.nativeElement.textContent as string;
       expect(text).not.toContain('loc-uuid-001');
-      expect(text).toContain('COMMON.NOT_AVAILABLE');
+      expect(text).not.toContain('COMMON.NOT_AVAILABLE');
+      expect(text).toContain(enUS.COMMON.NOT_AVAILABLE);
     });
   });
 

@@ -1,5 +1,5 @@
 
-import { Component, DestroyRef, ElementRef, ViewChild, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, ElementRef, Injector, ViewChild, afterNextRender, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute } from '@angular/router';
@@ -71,6 +71,7 @@ export class PickExecutePageComponent {
   private readonly pickService = inject(InventoryPickService);
   private readonly auth = inject(AuthService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly injector = inject(Injector);
 
   /** A scanner types the code then sends Enter — these refs drive the
    * product→location autofocus flow without relying on the static HTML
@@ -270,6 +271,11 @@ export class PickExecutePageComponent {
     queueMicrotask(() => this.productCodeInputRef?.nativeElement.focus());
   }
 
+  /** Focus once the next render has re-enabled the inputs after a settled scan. */
+  private focusProductCodeInputAfterRender(): void {
+    afterNextRender(() => this.productCodeInputRef?.nativeElement.focus(), { injector: this.injector });
+  }
+
   private focusLocationCodeInput(): void {
     queueMicrotask(() => this.locationCodeInputRef?.nativeElement.focus());
   }
@@ -298,10 +304,10 @@ export class PickExecutePageComponent {
     this.errorKey.set(null);
     // Clear immediately (#2217) — a scan-gun flow never needs to re-see the
     // codes it just submitted, and the next attempt (this task or another)
-    // starts from an empty pair, refocused on the product-code field.
+    // starts from an empty pair. Refocus waits for the scan to settle: the
+    // inputs are disabled while it is pending, which drops focus (ADR-0029 §8.7).
     this.scannedProductCode.set('');
     this.scannedLocationCode.set('');
-    this.focusProductCodeInput();
 
     this.pickService
       .resolvePickScan(workorderId, taskId, { scannedProductCode, scannedLocationCode })
@@ -403,6 +409,7 @@ export class PickExecutePageComponent {
       }
     }
     this.state.set('ready');
+    this.focusProductCodeInputAfterRender();
   }
 
   private applyScanError(seq: number, err: unknown): void {
@@ -415,6 +422,7 @@ export class PickExecutePageComponent {
         ? 'INVENTORY.FULFILLMENT.PICK_EXECUTE.ERROR.LOCATION_SCOPE_DENIED'
         : 'INVENTORY.FULFILLMENT.PICK_EXECUTE.ERROR.RESOLVE_SCAN',
     );
+    this.focusProductCodeInputAfterRender();
   }
 
   /**

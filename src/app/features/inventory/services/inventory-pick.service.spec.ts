@@ -450,5 +450,18 @@ describe('InventoryPickService', () => {
 
       expect(result?.[0].storageLocationCode).toBeUndefined();
     });
+
+    it('getPickTasks normalizes an API null storageLocationCode/storageLocationBarcode/productCode to undefined', () => {
+      facade.getPickTasks.mockReturnValue(
+        of([{ ...taskFixture, storageLocationCode: null, storageLocationBarcode: null, productCode: null } as unknown as typeof taskFixture]),
+      );
+
+      let result: PickTaskLine[] | undefined;
+      service.getPickTasks('wo-001').subscribe(value => (result = value));
+
+      expect(result?.[0].storageLocationCode).toBeUndefined();
+      expect(result?.[0].storageLocationBarcode).toBeUndefined();
+      expect(result?.[0].productCode).toBeUndefined();
+    });
   });
 });
