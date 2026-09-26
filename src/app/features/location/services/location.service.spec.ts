@@ -86,7 +86,7 @@ describe('LocationService', () => {
     service.replaceCoverageRules('mu-001', [
       {
         serviceAreaId: 'svc-1',
-        ruleType: 'PRIMARY',
+        ruleType: 'DISTANCE_TIER',
         priority: 1,
         validFrom: '2026-04-01',
         validTo: '2026-04-30',
@@ -98,11 +98,48 @@ describe('LocationService', () => {
       rules: [
         {
           serviceAreaId: 'svc-1',
-          ruleType: 'PRIMARY',
+          ruleType: 'DISTANCE_TIER',
           priority: 1,
           validFrom: '2026-04-01',
           validTo: '2026-04-30',
           maxDistance: 25,
+        },
+      ],
+    });
+  });
+
+  it('matches mobile-unit status and coverage rule type case-insensitively, as the contract does', () => {
+    mobileUnitApiStub.createMobileUnit.mockReturnValueOnce(of({ id: 'mu-001' }));
+
+    service.createMobileUnit({
+      name: 'Truck 1',
+      baseLocationId: 'loc-01',
+      status: ' active ',
+      coverageRules: [{ serviceAreaId: 'svc-1', ruleType: 'distance_tier', priority: 1 }],
+    }).subscribe();
+
+    expect(mobileUnitApiStub.createMobileUnit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: 'ACTIVE',
+        coverageRules: [expect.objectContaining({ ruleType: 'DISTANCE_TIER' })],
+      }),
+    );
+  });
+
+  it('sends a coverage rule type pos-location does not accept as a service-area rule', () => {
+    mobileUnitApiStub.replaceCoverageRules.mockReturnValueOnce(of([]));
+
+    service.replaceCoverageRules('mu-001', [{ serviceAreaId: 'svc-1', ruleType: 'PRIMARY', priority: 1 }]).subscribe();
+
+    expect(mobileUnitApiStub.replaceCoverageRules).toHaveBeenCalledWith('mu-001', {
+      rules: [
+        {
+          serviceAreaId: 'svc-1',
+          ruleType: 'SERVICE_AREA',
+          priority: 1,
+          validFrom: undefined,
+          validTo: undefined,
+          maxDistance: undefined,
         },
       ],
     });
@@ -234,16 +271,18 @@ describe('LocationService', () => {
     service.createMobileUnit({
       name: 'Truck 1',
       baseLocationId: 'loc-01',
+      status: 'paused',
       coverageRules: [
         {
           serviceAreaId: 'svc-1',
-          ruleType: 'PRIMARY',
+          ruleType: 'SERVICE_AREA',
           priority: 1,
           maxDistance: 30,
         },
       ],
     }).subscribe();
 
+    // A status pos-location doesn't accept is left out, so it defaults the unit to INACTIVE.
     expect(mobileUnitApiStub.createMobileUnit).toHaveBeenCalledWith({
       name: 'Truck 1',
       baseLocationId: 'loc-01',
@@ -254,7 +293,7 @@ describe('LocationService', () => {
       coverageRules: [
         {
           serviceAreaId: 'svc-1',
-          ruleType: 'PRIMARY',
+          ruleType: 'SERVICE_AREA',
           priority: 1,
           validFrom: undefined,
           validTo: undefined,
