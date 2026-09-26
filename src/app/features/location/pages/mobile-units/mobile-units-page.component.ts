@@ -29,6 +29,7 @@ import { LOCATION_PAGE } from '../../../../core/security/route-permissions';
 import { isoDateLocal, parseIsoDateLocal } from '../../../../core/utils/local-date';
 import { LocationPickerComponent } from '../../../../shared/location-picker/location-picker.component';
 import { ModalDialogDirective } from '../../../../shared/modal-dialog.directive';
+import { RailCaption, ServiceRailComponent } from '../../components/service-rail/service-rail.component';
 import { ServiceSearchComponent } from '../../components/service-search/service-search.component';
 import { ClaimableService, LocationService } from '../../services/location.service';
 import { isTestRecord, naturalCompare, operationCodeLabel } from '../../models/bay-setup.models';
@@ -107,7 +108,9 @@ interface UnitCardView {
   readonly current: readonly AreaChip[];
   readonly upcoming: readonly UpcomingCoverage[];
   readonly pastCount: number;
-  readonly capabilities: readonly { code: string; label: string }[];
+  readonly capabilities: readonly { code: string; label: string; pending: boolean }[];
+  readonly codes: readonly string[];
+  readonly saving: boolean;
   readonly policy: PolicyView;
   readonly warnings: readonly Message[];
   readonly notes: string;
@@ -117,6 +120,19 @@ interface GroupView {
   readonly group: UnitGroup;
   readonly headingKey: string;
   readonly cards: readonly UnitCardView[];
+}
+
+/** What is being dragged: a catalog service from the list, or a capability chip off a card. */
+type Dragging =
+  | { readonly kind: 'SERVICE'; readonly service: ClaimableService }
+  | { readonly kind: 'CHIP'; readonly unitId: string; readonly code: string }
+  | null;
+
+/** The last capability change: what it did, and how to take it back. */
+interface Outcome {
+  readonly messages: readonly Message[];
+  /** `codes` restores the list; `applied` is what the save left, checked again when Undo is pressed. */
+  readonly undo: { readonly unitId: string; readonly codes: readonly string[]; readonly applied: readonly string[] } | null;
 }
 
 interface Announcement {
@@ -131,7 +147,7 @@ const DAY_CHECK_MS = 60_000;
 @Component({
   selector: 'app-mobile-units-page',
   standalone: true,
-  imports: [DatePipe, TranslatePipe, LocationPickerComponent, ModalDialogDirective, ServiceSearchComponent],
+  imports: [DatePipe, TranslatePipe, LocationPickerComponent, ModalDialogDirective, ServiceRailComponent, ServiceSearchComponent],
   templateUrl: './mobile-units-page.component.html',
   styleUrl: './mobile-units-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -175,6 +191,15 @@ export class MobileUnitsPageComponent {
   /** Set by a 403 on a write: `location:mobile-unit:manage` doesn't reach this location. */
   readonly scopeDenied = signal(false);
   private readonly reloadTick = signal(0);
+
+  // --- capability changes straight from the cards ---
+  readonly dragging = signal<Dragging>(null);
+  /** Lists being saved, shown on the card until the save confirms or fails. */
+  readonly pendingCodes = signal<ReadonlyMap<string, readonly string[]>>(new Map());
+  readonly outcome = signal<Outcome | null>(null);
+  /** The Add capability dialog: the pointer-free route for a drop (ADR-0029 rule 13). */
+  readonly addDialogUnit = signal<MobileUnitResponse | null>(null);
+  readonly picked = signal<ClaimableService[]>([]);
 
   /** Service names learned from catalog searches, until a catalog list endpoint exists (backend#2246). */
   private readonly serviceNames = signal<ReadonlyMap<string, string>>(new Map());
@@ -352,6 +377,11 @@ export class MobileUnitsPageComponent {
     this.editingUnit.set(null);
     this.createdUnit.set(null);
     this.coverageUnit.set(null);
+    this.addDialogUnit.set(null);
+    this.picked.set([]);
+    this.dragging.set(null);
+    this.outcome.set(null);
+    this.pendingCodes.set(new Map());
     this.checkResults.set([]);
     this.checkedFor.set(null);
     this.checkState.set('idle');
@@ -782,6 +812,230 @@ export class MobileUnitsPageComponent {
       });
   }
 
+  // --- capability changes from the cards: drag and drop, chip ×, Add capability ---
+
+  readonly draggedServiceName = computed(() => {
+    const dragging = this.dragging();
+    return dragging?.kind === 'SERVICE' ? dragging.service.name : '';
+  });
+
+  /** While a chip is dragged, the services list takes the drop that removes it. */
+  readonly railRemoveTarget = computed<RailCaption | null>(() => {
+    const dragging = this.dragging();
+    if (dragging?.kind !== 'CHIP') return null;
+    const unit = this.units().find(u => u.id === dragging.unitId);
+    return {
+      key: `${I18N}.DROP.REMOVE_ZONE`,
+      params: { service: this.serviceLabel(dragging.code), unit: unit?.name ?? '' },
+    };
+  });
+
+  /** Which units here record each service, under its row in the services list. */
+  readonly describeService = (code: string): RailCaption => {
+    const holders = this.units().filter(unit => (unit.serviceCapabilityCodes ?? []).includes(code));
+    if (holders.length === 0) return { key: `${I18N}.RAIL.NONE` };
+    if (holders.length === 1) return { key: `${I18N}.RAIL.ONE`, params: { unit: holders[0].name ?? '' } };
+    return { key: `${I18N}.RAIL.MANY`, params: { count: holders.length } };
+  };
+
+  onServiceDragStart(service: ClaimableService): void {
+    this.dragging.set({ kind: 'SERVICE', service });
+  }
+
+  onChipDragStart(unit: MobileUnitResponse, code: string, event: DragEvent): void {
+    event.dataTransfer?.setData('text/plain', code);
+    if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
+    this.dragging.set({ kind: 'CHIP', unitId: unit.id, code });
+  }
+
+  onDragEnd(): void {
+    this.dragging.set(null);
+  }
+
+  dropState(card: UnitCardView): 'READY' | 'ALREADY' | 'BUSY' | null {
+    const dragging = this.dragging();
+    if (dragging?.kind !== 'SERVICE' || !this.canEdit()) return null;
+    if (card.codes.includes(dragging.service.operationCode)) return 'ALREADY';
+    return card.saving ? 'BUSY' : 'READY';
+  }
+
+  onCardDragOver(card: UnitCardView, event: DragEvent): void {
+    if (this.dropState(card) !== 'READY') return;
+    event.preventDefault();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
+  }
+
+  onCardDrop(card: UnitCardView, event: DragEvent): void {
+    const dragging = this.dragging();
+    const state = this.dropState(card);
+    this.dragging.set(null);
+    if (dragging?.kind !== 'SERVICE' || state !== 'READY') return;
+    event.preventDefault();
+    this.addCapabilities(card.unit, [dragging.service]);
+  }
+
+  onRailRemoveDrop(): void {
+    const dragging = this.dragging();
+    this.dragging.set(null);
+    if (dragging?.kind !== 'CHIP') return;
+    const unit = this.units().find(u => u.id === dragging.unitId);
+    if (unit) this.removeCapabilityFromUnit(unit, dragging.code);
+  }
+
+  addCapabilities(unit: MobileUnitResponse, services: readonly ClaimableService[]): void {
+    const current = this.currentCodesOf(unit);
+    const fresh = services.filter(service => !current.includes(service.operationCode));
+    if (fresh.length === 0) return;
+    fresh.forEach(service => this.rememberName(service));
+    const message: Message =
+      fresh.length === 1
+        ? { key: `${I18N}.DROP.ADDED`, params: { unit: unit.name ?? '', service: fresh[0].name } }
+        : { key: `${I18N}.DROP.ADDED_MANY`, params: { unit: unit.name ?? '', count: fresh.length } };
+    this.changeCodes(unit, [...current, ...fresh.map(service => service.operationCode)], message, true);
+  }
+
+  /**
+   * Removes one capability. An active unit's last one is refused before any request: pos-location
+   * would refuse it (422), and the fix is to set the unit inactive first.
+   */
+  removeCapabilityFromUnit(unit: MobileUnitResponse, code: string): void {
+    if (!this.canEdit()) return;
+    const current = this.currentCodesOf(unit);
+    const index = current.indexOf(code);
+    if (index < 0) return;
+    if (current.length === 1 && isActiveUnit(unit)) {
+      this.setCardError(unit.id, `${I18N}.DROP.LAST_CAPABILITY`);
+      return;
+    }
+    const next = current.filter(c => c !== code);
+    this.changeCodes(
+      unit,
+      next,
+      { key: `${I18N}.DROP.REMOVED`, params: { unit: unit.name ?? '', service: this.serviceLabel(code) } },
+      true,
+    );
+    // Focus moves to the next chip, else to Add capability, else to the card (ADR-0029 rule 7).
+    const following = next[index] ?? next[index - 1];
+    if (following) this.focus(`#cap-remove-${CSS.escape(unit.id)}-${CSS.escape(following)}`);
+    else if (this.canSearchServices()) this.focus(`#add-capability-${CSS.escape(unit.id)}`);
+    else this.focus(`#unit-${CSS.escape(unit.id)}`);
+  }
+
+  undo(): void {
+    const undo = this.outcome()?.undo;
+    const unit = undo && this.units().find(u => u.id === undo.unitId);
+    if (!undo || !unit) return;
+    // Undo restores the whole list, so it applies only while the unit still holds what the save left.
+    const current = unit.serviceCapabilityCodes ?? [];
+    if (current.length !== undo.applied.length || current.some(code => !undo.applied.includes(code))) {
+      this.outcome.set(null);
+      this.setCardError(unit.id, `${I18N}.DROP.UNDO_STALE`);
+      this.focus(`#unit-${CSS.escape(unit.id)}`);
+      return;
+    }
+    this.changeCodes(unit, [...undo.codes], { key: `${I18N}.DROP.UNDONE`, params: { unit: unit.name ?? '' } }, false);
+  }
+
+  dismissOutcome(): void {
+    this.outcome.set(null);
+  }
+
+  private currentCodesOf(unit: MobileUnitResponse): readonly string[] {
+    return this.pendingCodes().get(unit.id) ?? unit.serviceCapabilityCodes ?? [];
+  }
+
+  /**
+   * Saves a unit's whole capability list (PATCH replaces it). The card shows the new list at once,
+   * marked pending; on success the page offers Undo; on refusal the card goes back and says why.
+   */
+  private changeCodes(unit: MobileUnitResponse, next: string[], message: Message, offerUndo: boolean): void {
+    const locationId = this.locationId();
+    if (!this.canEdit() || !locationId) return;
+    if (this.pendingCodes().has(unit.id)) {
+      this.setCardError(unit.id, `${I18N}.DROP.BUSY`);
+      return;
+    }
+    if (next.length === 0 && isActiveUnit(unit)) {
+      this.setCardError(unit.id, `${I18N}.DROP.LAST_CAPABILITY`);
+      return;
+    }
+    const previous = [...(unit.serviceCapabilityCodes ?? [])];
+    this.setCardError(unit.id, null);
+    this.setPending(unit.id, next);
+    this.locationService
+      .patchMobileUnit(unit.id, { serviceCapabilityCodes: next })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: saved => {
+          this.setPending(unit.id, null);
+          if (this.locationId() !== locationId) return;
+          this.replaceUnit(saved);
+          this.outcome.set({
+            messages: [message],
+            undo: offerUndo
+              ? { unitId: saved.id, codes: previous, applied: [...(saved.serviceCapabilityCodes ?? [])] }
+              : null,
+          });
+        },
+        error: (err: unknown) => {
+          this.setPending(unit.id, null);
+          const status = httpStatus(err);
+          if (status === 403) this.scopeDenied.set(true);
+          this.setCardError(unit.id, status === 422 ? `${I18N}.DROP.INVALID` : saveErrorKey(status));
+        },
+      });
+  }
+
+  private setPending(unitId: string, codes: readonly string[] | null): void {
+    this.pendingCodes.update(pending => {
+      const next = new Map(pending);
+      if (codes) next.set(unitId, codes);
+      else next.delete(unitId);
+      return next;
+    });
+  }
+
+  openAddDialog(unit: MobileUnitResponse): void {
+    if (!this.canEdit() || !this.canSearchServices()) return;
+    this.picked.set([]);
+    this.addDialogUnit.set(unit);
+  }
+
+  closeAddDialog(): void {
+    const unit = this.addDialogUnit();
+    this.addDialogUnit.set(null);
+    if (unit) this.focus(`#add-capability-${CSS.escape(unit.id)}`);
+  }
+
+  pick(service: ClaimableService): void {
+    this.picked.update(picked =>
+      picked.some(p => p.operationCode === service.operationCode) ? picked : [...picked, service],
+    );
+  }
+
+  unpick(code: string): void {
+    this.picked.update(picked => picked.filter(p => p.operationCode !== code));
+  }
+
+  readonly addDialogSelected = computed(() => {
+    const unit = this.addDialogUnit();
+    return [...(unit ? this.currentCodesOf(unit) : []), ...this.picked().map(p => p.operationCode)];
+  });
+
+  confirmAdd(): void {
+    const unit = this.addDialogUnit();
+    const picked = this.picked();
+    if (!unit || picked.length === 0) return;
+    this.addDialogUnit.set(null);
+    this.addCapabilities(unit, picked);
+    this.focus(`#add-capability-${CSS.escape(unit.id)}`);
+  }
+
+  /** Names the services list learned, for the chips. */
+  rememberNames(services: readonly ClaimableService[]): void {
+    services.forEach(service => this.rememberName(service));
+  }
+
   // --- labels ---
 
   serviceLabel(code: string): string {
@@ -817,6 +1071,8 @@ export class MobileUnitsPageComponent {
 
   private toCard(unit: MobileUnitResponse): UnitCardView {
     const name = unit.name ?? '';
+    const pending = this.pendingCodes().get(unit.id);
+    const codes = pending ?? unit.serviceCapabilityCodes ?? [];
     const active = isActiveUnit(unit);
     const rules = this.coverage().get(unit.id);
     const coverageKnown = rules != null;
@@ -843,7 +1099,13 @@ export class MobileUnitsPageComponent {
       current: timeline.current.map(rule => this.areaChip(rule)),
       upcoming: [...upcomingByDate].map(([from, chips]) => ({ from: parseIsoDateLocal(from), chips })),
       pastCount: timeline.past.length,
-      capabilities: (unit.serviceCapabilityCodes ?? []).map(code => ({ code, label: this.serviceLabel(code) })),
+      capabilities: codes.map(code => ({
+        code,
+        label: this.serviceLabel(code),
+        pending: pending != null && !(unit.serviceCapabilityCodes ?? []).includes(code),
+      })),
+      codes,
+      saving: pending != null,
       policy: this.policyView(unit.travelBufferPolicyId),
       warnings: this.coverageWarnings(rules ?? []),
       notes: unit.notes?.trim() ?? '',

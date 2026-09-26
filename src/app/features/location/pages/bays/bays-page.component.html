@@ -43,10 +43,77 @@
     }
   </div>
 
+  <div class="outcome-region" role="status" aria-live="polite">
+    @if (outcome(); as done) {
+      <div class="outcome">
+        @for (message of done.messages; track $index) {
+          <p>{{ message.key | translate: message.params }}</p>
+        }
+        <div class="outcome-actions">
+          @if (done.undo && canEdit()) {
+            <button type="button" class="btn-secondary undo-btn" (click)="undo()">{{ 'LOCATION.BAYS.DROP.UNDO' | translate }}</button>
+          }
+          <button type="button" class="link-btn" (click)="dismissOutcome()">{{ 'LOCATION.BAYS.DROP.DISMISS' | translate }}</button>
+        </div>
+      </div>
+    }
+  </div>
+
   @if (state() === 'ready' && !canEdit()) {
     <p class="notice view-only-notice" role="status">{{ 'LOCATION.BAYS.VIEW_ONLY' | translate }}</p>
   }
 
+  @if (state() === 'ready' && claimRows().length > 0) {
+    <section class="who-band" aria-labelledby="who-heading">
+      <h2 id="who-heading" class="who-heading">
+        <button type="button" class="band-toggle" [attr.aria-expanded]="whoOpen()" [attr.aria-controls]="whoOpen() ? 'who-body' : null"
+          (click)="toggleWho()">
+          <span aria-hidden="true">{{ whoOpen() ? '▾' : '▸' }}</span>
+          {{ 'LOCATION.BAYS.WHO.TITLE' | translate }}
+        </button>
+      </h2>
+      <p class="who-summary">
+        {{ (claimSummary().claimed === 1 ? 'LOCATION.BAYS.WHO.CLAIMED_ONE' : 'LOCATION.BAYS.WHO.CLAIMED_MANY') | translate: { count: claimSummary().claimed } }}
+        @if (claimSummary().onlyOne > 0) {
+          · {{ 'LOCATION.BAYS.WHO.ONLY_ONE_COUNT' | translate: { count: claimSummary().onlyOne } }}
+        }
+        @if (claimSummary().noneInService > 0) {
+          · {{ 'LOCATION.BAYS.WHO.NONE_IN_SERVICE_COUNT' | translate: { count: claimSummary().noneInService } }}
+        }
+      </p>
+      @if (whoOpen()) {
+        <div id="who-body">
+          <ul class="who-list">
+            @for (row of claimRows(); track row.code) {
+              <li class="who-row">
+                <div class="who-service">
+                  <span class="who-name">{{ row.label }}</span>
+                  <code class="chip-code">{{ row.code }}</code>
+                </div>
+                <div class="who-bays">
+                  @for (bay of row.active; track bay.id) {
+                    <button type="button" class="link-btn" (click)="showBay(bay)">{{ bay.name }}</button>
+                  }
+                  @for (bay of row.down; track bay.id) {
+                    <button type="button" class="link-btn muted-link" (click)="showBay(bay)">
+                      {{ 'LOCATION.BAYS.WHO.BAY_DOWN' | translate: { bay: bay.name } }}
+                    </button>
+                  }
+                </div>
+                @if (row.flag) {
+                  <span class="tag tag-warning">{{ ('LOCATION.BAYS.WHO.FLAG_' + row.flag) | translate }}</span>
+                }
+              </li>
+            }
+          </ul>
+          <p class="muted">{{ 'LOCATION.BAYS.WHO.GENERAL_NOTE' | translate }}</p>
+        </div>
+      }
+    </section>
+  }
+
+  <div class="setup-layout">
+  <div class="setup-main">
   @switch (state()) {
     @case ('loading') {
       <p class="muted" role="status">{{ 'LOCATION.BAYS.LOADING' | translate }}</p>
@@ -90,7 +157,9 @@
                   @for (card of lane.cards; track card.bay.id) {
                     <li>
                       <article class="bay-card" [id]="'bay-' + card.bay.id" tabindex="-1"
-                        [attr.aria-labelledby]="'bay-name-' + card.bay.id">
+                        [attr.aria-labelledby]="'bay-name-' + card.bay.id"
+                        [class.drop-ready]="dropState(card) === 'READY'"
+                        (dragover)="onCardDragOver(card, $event)" (drop)="onCardDrop(card, $event)">
                         <div class="card-top">
                           <p class="overline">{{ card.typeKey | translate }}</p>
                           <div class="card-tags">
@@ -106,13 +175,33 @@
                         <p class="eligibility">{{ card.eligibility.key | translate: card.eligibility.params }}</p>
                         <p class="duty">{{ card.duty.key | translate: card.duty.params }}</p>
 
+                        @if (dropState(card); as drop) {
+                          <p class="drop-hint" aria-hidden="true">
+                            {{ ('LOCATION.BAYS.DROP.HINT_' + drop) | translate: { bay: card.bay.name, service: draggedServiceName() } }}
+                          </p>
+                        }
+                        @if (cardError(card.bay.id); as refusal) {
+                          <p class="card-error" role="alert">{{ refusal.key | translate: refusal.params }}</p>
+                        }
+                        @if (card.saving) {
+                          <span class="sr-only" role="status">{{ 'LOCATION.BAYS.SAVING' | translate }}</span>
+                        }
+
                         @if (card.chips.length > 0) {
                           <ul class="chips" [attr.aria-label]="'LOCATION.BAYS.SPECIALTY_LIST' | translate: { bay: card.bay.name }">
                             @for (chip of card.chips; track chip.code) {
-                              <li class="chip">
+                              <li class="chip" [class.chip-pending]="chip.pending"
+                                [attr.draggable]="canEdit() && !card.saving ? 'true' : null"
+                                (dragstart)="onChipDragStart(card.bay, chip.code, $event)" (dragend)="onDragEnd()">
                                 <span>{{ chip.label }}</span>
                                 @if (chip.onlyBay) {
                                   <span class="chip-marker">{{ 'LOCATION.BAYS.ONLY_BAY' | translate }}</span>
+                                }
+                                @if (canEdit() && !chip.pending) {
+                                  <button type="button" class="chip-remove" [id]="'chip-remove-' + card.bay.id + '-' + chip.code"
+                                    [attr.aria-label]="'LOCATION.BAYS.REMOVE_FROM' | translate: { service: chip.label, bay: card.bay.name }"
+                                    [disabled]="card.saving"
+                                    (click)="removeServiceFromBay(card.bay, chip.code)">×</button>
                                 }
                               </li>
                             }
@@ -142,6 +231,12 @@
 
                         @if (canEdit()) {
                           <div class="card-actions">
+                            @if (canSearchServices()) {
+                              <button type="button" class="btn-secondary add-service-btn" [id]="'add-service-' + card.bay.id"
+                                [attr.aria-label]="'LOCATION.BAYS.ADD_SERVICE_NAMED' | translate: { bay: card.bay.name }"
+                                [disabled]="card.saving"
+                                (click)="openAddDialog(card.bay)">{{ 'LOCATION.BAYS.ADD_SERVICE' | translate }}</button>
+                            }
                             <button type="button" class="btn-secondary edit-bay-btn"
                               [attr.aria-label]="'LOCATION.BAYS.EDIT_NAMED' | translate: { bay: card.bay.name }"
                               (click)="openEdit(card.bay)">{{ 'LOCATION.BAYS.EDIT' | translate }}</button>
@@ -158,6 +253,18 @@
       }
     }
   }
+  </div>
+  @if (state() === 'ready') {
+    @if (canSearchServices()) {
+      <app-service-rail class="setup-rail" keyboardRouteKey="LOCATION.BAYS.RAIL.KEYBOARD_ROUTE"
+        [draggable]="canEdit()" [describe]="describeService" [removeTarget]="railRemoveTarget()"
+        (serviceDragStarted)="onServiceDragStart($event)" (serviceDragEnded)="onDragEnd()"
+        (removeDropped)="onRailRemoveDrop()" (servicesFound)="rememberNames($event)" />
+    } @else {
+      <p class="setup-rail notice">{{ 'LOCATION.BAYS.SEARCH.NO_ACCESS' | translate }}</p>
+    }
+  }
+  </div>
 }
 
 @if (dialogMode(); as mode) {
@@ -283,43 +390,8 @@
             <p id="bay-specialty-hint" class="hint">{{ 'LOCATION.BAYS.HINT.SPECIALTY' | translate }}</p>
 
             @if (canSearchServices()) {
-              <div class="service-search">
-                <label for="bay-service-search">{{ 'LOCATION.BAYS.SEARCH.LABEL' | translate }}</label>
-                <input id="bay-service-search" type="search" autocomplete="off" aria-describedby="bay-service-search-hint"
-                  [value]="serviceQuery()" (input)="onServiceQuery($any($event.target).value)" />
-                <p id="bay-service-search-hint" class="hint">{{ 'LOCATION.BAYS.SEARCH.HINT' | translate }}</p>
-                <div aria-live="polite">
-                  @switch (searchState()) {
-                    @case ('loading') {
-                      <p class="muted">{{ 'LOCATION.BAYS.SEARCH.LOADING' | translate }}</p>
-                    }
-                    @case ('failed') {
-                      <p class="field-error">{{ 'LOCATION.BAYS.SEARCH.FAILED' | translate }}</p>
-                    }
-                    @case ('ready') {
-                      @if (serviceResults().length === 0) {
-                        <p class="muted">{{ 'LOCATION.BAYS.SEARCH.NONE' | translate }}</p>
-                      } @else {
-                        <ul class="search-results">
-                          @for (service of serviceResults(); track service.operationCode) {
-                            <li>
-                              <span class="result-name">{{ service.name }}</span>
-                              <code class="chip-code">{{ service.operationCode }}</code>
-                              @if (hasService(service.operationCode)) {
-                                <span class="muted">{{ 'LOCATION.BAYS.SEARCH.ALREADY_ADDED' | translate }}</span>
-                              } @else {
-                                <button type="button" class="btn-secondary add-service-btn"
-                                  [attr.aria-label]="'LOCATION.BAYS.SEARCH.ADD_NAMED' | translate: { service: service.name }"
-                                  (click)="addService(service)">{{ 'LOCATION.BAYS.SEARCH.ADD' | translate }}</button>
-                              }
-                            </li>
-                          }
-                        </ul>
-                      }
-                    }
-                  }
-                </div>
-              </div>
+              <app-service-search inputId="bay-service-search" labelKey="LOCATION.BAYS.SEARCH.LABEL"
+                [selectedCodes]="draft().serviceCapabilityCodes" (serviceAdded)="addService($event)" />
             } @else {
               <p class="muted">{{ 'LOCATION.BAYS.SEARCH.NO_ACCESS' | translate }}</p>
             }
@@ -367,5 +439,57 @@
         }
       </div>
     </form>
+  </dialog>
+}
+
+@if (confirmRemove(); as removal) {
+  <dialog appModalDialog class="bay-dialog confirm-dialog" aria-labelledby="confirm-remove-title"
+    aria-describedby="confirm-remove-body" (modalCancel)="cancelRemoval()">
+    <div class="dialog-panel">
+      <h2 id="confirm-remove-title">{{ 'LOCATION.BAYS.CONFIRM_REMOVE.TITLE' | translate: { service: serviceLabel(removal.code) } }}</h2>
+      <p id="confirm-remove-body">
+        {{ (removal.bay.bayType === 'WASH_DETAIL' ? 'LOCATION.BAYS.CONFIRM_REMOVE.BODY_WASH' : 'LOCATION.BAYS.CONFIRM_REMOVE.BODY') | translate: { bay: removal.bay.name } }}
+      </p>
+      <div class="dialog-actions">
+        <button type="button" class="btn-secondary" (click)="cancelRemoval()">{{ 'LOCATION.BAYS.CANCEL' | translate }}</button>
+        <button type="button" class="btn-primary confirm-remove-btn" (click)="confirmRemoval()">
+          {{ 'LOCATION.BAYS.CONFIRM_REMOVE.CONFIRM' | translate: { service: serviceLabel(removal.code) } }}
+        </button>
+      </div>
+    </div>
+  </dialog>
+}
+
+@if (addDialogBay(); as target) {
+  <dialog appModalDialog class="bay-dialog add-dialog" aria-labelledby="add-service-title" (modalCancel)="closeAddDialog()">
+    <div class="dialog-panel">
+      <h2 id="add-service-title">{{ 'LOCATION.BAYS.ADD_DIALOG.TITLE' | translate: { bay: target.name } }}</h2>
+      <app-service-search inputId="add-service-search" labelKey="LOCATION.BAYS.SEARCH.LABEL"
+        [selectedCodes]="addDialogSelected()" (serviceAdded)="pick($event)" />
+      @if (picked().length > 0) {
+        <h3 class="overline">{{ 'LOCATION.BAYS.ADD_DIALOG.CHOSEN' | translate }}</h3>
+        <ul class="chips">
+          @for (service of picked(); track service.operationCode) {
+            <li class="chip">
+              <span>{{ service.name }}</span>
+              <button type="button" class="chip-remove"
+                [attr.aria-label]="'LOCATION.BAYS.REMOVE_SERVICE' | translate: { service: service.name }"
+                (click)="unpick(service.operationCode)">×</button>
+            </li>
+          }
+        </ul>
+      }
+      <p class="hint" aria-live="polite">
+        @if (pickedSoleClaims() > 0) {
+          {{ (pickedSoleClaims() === 1 ? 'LOCATION.BAYS.ADD_DIALOG.SOLE_ONE' : 'LOCATION.BAYS.ADD_DIALOG.SOLE_MANY') | translate: { bay: target.name, count: pickedSoleClaims() } }}
+        }
+      </p>
+      <div class="dialog-actions">
+        <button type="button" class="btn-secondary" (click)="closeAddDialog()">{{ 'LOCATION.BAYS.CANCEL' | translate }}</button>
+        <button type="button" class="btn-primary confirm-add-btn" [disabled]="picked().length === 0" (click)="confirmAdd()">
+          {{ (picked().length === 1 ? 'LOCATION.BAYS.ADD_DIALOG.ADD_ONE' : 'LOCATION.BAYS.ADD_DIALOG.ADD_MANY') | translate: { count: picked().length } }}
+        </button>
+      </div>
+    </div>
   </dialog>
 }

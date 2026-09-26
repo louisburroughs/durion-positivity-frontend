@@ -418,7 +418,7 @@ describe('MobileUnitsPageComponent', () => {
       component.openEdit(VAN_9);
       render();
       expect(component.lastCapabilityLocked()).toBe(true);
-      expect(query('.chip-remove')?.getAttribute('aria-disabled')).toBe('true');
+      expect(query('dialog .chip-remove')?.getAttribute('aria-disabled')).toBe('true');
     });
   });
 
@@ -550,5 +550,99 @@ describe('MobileUnitsPageComponent', () => {
         'Van 9, priority 1',
       ]);
     });
+  });
+
+  describe('capabilities from the cards', () => {
+    const brakes: ClaimableService = { operationCode: 'BRAKE-INSPECTION', name: 'Brake inspection', operationCategory: 'DIAGNOSTIC' };
+    const outcomeText = (): string => query('.outcome')?.textContent?.replace(/\s+/g, ' ').trim() ?? '';
+
+    beforeEach(async () => setUp());
+
+    it('records a service dropped on a card, and can undo it', () => {
+      locationServiceStub.patchMobileUnit
+        .mockReturnValueOnce(of({ ...VAN_7, serviceCapabilityCodes: [TPMS, 'BRAKE-INSPECTION'] }))
+        .mockReturnValueOnce(of(VAN_7));
+      component.onServiceDragStart(brakes);
+      render();
+      expect(cardText('mu-7')).toContain('Drop to record Brake inspection for Van 7');
+      component.onCardDrop(card('mu-7'), new DragEvent('drop'));
+      render();
+      expect(locationServiceStub.patchMobileUnit).toHaveBeenCalledWith('mu-7', {
+        serviceCapabilityCodes: [TPMS, 'BRAKE-INSPECTION'],
+      });
+      expect(outcomeText()).toContain('Brake inspection recorded for Van 7.');
+
+      query<HTMLButtonElement>('.undo-btn')!.click();
+      expect(locationServiceStub.patchMobileUnit).toHaveBeenLastCalledWith('mu-7', { serviceCapabilityCodes: [TPMS] });
+    });
+
+    it('refuses Undo once the unit has changed since the save, instead of overwriting the newer list', () => {
+      locationServiceStub.patchMobileUnit.mockReturnValueOnce(of({ ...VAN_7, serviceCapabilityCodes: [TPMS, 'BRAKE-INSPECTION'] }));
+      component.onServiceDragStart(brakes);
+      component.onCardDrop(card('mu-7'), new DragEvent('drop'));
+      render();
+      component.units.update(units => units.map(u => (u.id === 'mu-7' ? { ...u, serviceCapabilityCodes: ['BRAKE-INSPECTION'] } : u)));
+
+      query<HTMLButtonElement>('.undo-btn')!.click();
+      render();
+      expect(locationServiceStub.patchMobileUnit).toHaveBeenCalledTimes(1);
+      expect(query('.undo-btn')).toBeNull();
+      expect(cardText('mu-7')).toContain('Van 7 has changed since, so Undo no longer applies.');
+    });
+
+    it("refuses to remove an active unit's last capability before sending anything", () => {
+      query<HTMLButtonElement>(`#cap-remove-mu-9-${TPMS}`)!.click();
+      render();
+      expect(locationServiceStub.patchMobileUnit).not.toHaveBeenCalled();
+      expect(query('#unit-mu-9 .card-error')?.textContent).toContain(
+        'An active unit needs at least one capability. Set Van 9 inactive to remove its last one.',
+      );
+    });
+
+    it("removes an inactive unit's capability, including by dropping the chip on the services list", () => {
+      locationServiceStub.patchMobileUnit.mockReturnValueOnce(of({ ...VAN_7, serviceCapabilityCodes: [] }));
+      component.onChipDragStart(VAN_7, TPMS, new DragEvent('dragstart'));
+      expect(component.railRemoveTarget()?.params).toEqual({ service: 'Tpms sensor service', unit: 'Van 7' });
+      component.onRailRemoveDrop();
+      render();
+      expect(locationServiceStub.patchMobileUnit).toHaveBeenCalledWith('mu-7', { serviceCapabilityCodes: [] });
+      expect(outcomeText()).toContain('Tpms sensor service removed from Van 7.');
+    });
+
+    it('adds capabilities through the Add capability dialog', () => {
+      locationServiceStub.patchMobileUnit.mockReturnValueOnce(of({ ...VAN_7, serviceCapabilityCodes: [TPMS, 'BRAKE-INSPECTION'] }));
+      query<HTMLButtonElement>('#add-capability-mu-7')!.click();
+      render();
+      component.pick(brakes);
+      render();
+      query<HTMLButtonElement>('.confirm-add-btn')!.click();
+      expect(locationServiceStub.patchMobileUnit).toHaveBeenCalledWith('mu-7', {
+        serviceCapabilityCodes: [TPMS, 'BRAKE-INSPECTION'],
+      });
+      expect(component.addDialogUnit()).toBeNull();
+    });
+
+    it('rolls a refused change back and says why in the card', () => {
+      locationServiceStub.patchMobileUnit.mockReturnValueOnce(throwError(() => new HttpErrorResponse({ status: 422 })));
+      component.addCapabilities(VAN_7, [brakes]);
+      render();
+      expect(card('mu-7').codes).toEqual([TPMS]);
+      expect(query('#unit-mu-7 .card-error')?.textContent).toContain("Couldn't change Van 7's capabilities");
+    });
+
+    it('describes each listed service by the units recording it', () => {
+      expect(component.describeService(TPMS)).toEqual({ key: 'LOCATION.MOBILE_UNITS.RAIL.MANY', params: { count: 4 } });
+      expect(component.describeService('BRAKE-INSPECTION').key).toBe('LOCATION.MOBILE_UNITS.RAIL.NONE');
+    });
+  });
+
+  it('moves focus to the card after removing its last capability when Add capability is not offered', async () => {
+    session.permissions = [...LOCATION_PAGE.mobileUnits, ...LOCATION_PAGE.mobileUnitManage];
+    await setUp();
+    locationServiceStub.patchMobileUnit.mockReturnValueOnce(of({ ...VAN_7, serviceCapabilityCodes: [] }));
+    expect(query('#add-capability-mu-7')).toBeNull();
+    component.removeCapabilityFromUnit(VAN_7, TPMS);
+    render();
+    expect(document.activeElement?.id).toBe('unit-mu-7');
   });
 });

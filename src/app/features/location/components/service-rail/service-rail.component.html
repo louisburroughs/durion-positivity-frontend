@@ -1,0 +1,62 @@
+<aside class="rail" aria-labelledby="service-rail-heading"
+  [class.remove-target]="removeTarget()" [class.drop-hover]="dropHover()"
+  (dragover)="onRemoveDragOver($event)" (dragleave)="dropHover.set(false)" (drop)="onRemoveDrop($event)">
+  <p class="overline">{{ 'LOCATION.SERVICE_RAIL.OVERLINE' | translate }}</p>
+  <h2 id="service-rail-heading">{{ 'LOCATION.SERVICE_RAIL.TITLE' | translate }}</h2>
+  @if (captionKey(); as caption) {
+    <p class="caption">{{ caption | translate }}</p>
+  }
+
+  @if (removeTarget(); as target) {
+    <p class="remove-zone" aria-hidden="true">{{ target.key | translate: target.params }}</p>
+  }
+
+  <label for="service-rail-search">{{ 'LOCATION.SERVICE_RAIL.FILTER' | translate }}</label>
+  <input id="service-rail-search" type="search" autocomplete="off" aria-describedby="service-rail-hint"
+    [value]="query()" (input)="onQuery($any($event.target).value)" />
+  <p id="service-rail-hint" class="caption">{{ 'LOCATION.SERVICE_SEARCH.HINT' | translate }}</p>
+  <p id="service-rail-keyboard" class="sr-only">{{ keyboardRouteKey() | translate }}</p>
+
+  <div aria-live="polite">
+    @switch (state()) {
+      @case ('loading') {
+        <p class="caption">{{ 'LOCATION.SERVICE_SEARCH.LOADING' | translate }}</p>
+      }
+      @case ('failed') {
+        <p class="rail-error">
+          {{ 'LOCATION.SERVICE_SEARCH.FAILED' | translate }}
+          <button type="button" class="link-btn" (click)="retry()">{{ 'LOCATION.SERVICE_RAIL.RETRY' | translate }}</button>
+        </p>
+      }
+      @case ('ready') {
+        @if (groups().length === 0) {
+          <p class="caption">{{ 'LOCATION.SERVICE_SEARCH.NONE' | translate }}</p>
+        }
+        @for (group of groups(); track group.category) {
+          <section class="rail-group" [attr.aria-labelledby]="'rail-group-' + group.category">
+            <h3 [id]="'rail-group-' + group.category">{{ group.headingKey | translate }}</h3>
+            <ul>
+              @for (service of group.services; track service.operationCode) {
+                <li class="rail-row">
+                  @if (draggable()) {
+                    <span class="handle" draggable="true" role="img"
+                      [attr.aria-label]="'LOCATION.SERVICE_RAIL.HANDLE' | translate: { service: service.name }"
+                      aria-describedby="service-rail-keyboard"
+                      (dragstart)="onDragStart(service, $event)" (dragend)="onDragEnd()">⠿</span>
+                  }
+                  <div class="row-text">
+                    <span class="row-name">{{ service.name }}</span>
+                    <code class="row-code">{{ service.operationCode }}</code>
+                    @if (describe()(service.operationCode); as caption) {
+                      <span class="caption">{{ caption.key | translate: caption.params }}</span>
+                    }
+                  </div>
+                </li>
+              }
+            </ul>
+          </section>
+        }
+      }
+    }
+  </div>
+</aside>

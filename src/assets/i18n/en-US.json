@@ -2048,13 +2048,6 @@
       },
       "SEARCH": {
         "LABEL": "Find a service to add",
-        "HINT": "Type at least 2 letters of the service name.",
-        "LOADING": "Searching…",
-        "FAILED": "Couldn't search the service catalog. Try again.",
-        "NONE": "No services match.",
-        "ALREADY_ADDED": "Already on this bay",
-        "ADD": "Add",
-        "ADD_NAMED": "Add {{service}}",
         "NO_ACCESS": "You can't view the service catalog, so you can't add services here."
       },
       "CHANGES": {
@@ -2093,6 +2086,66 @@
         "GONE": "This bay no longer exists. Close the dialog to see the current bays.",
         "INVALID_SERVICES": "One of the specialty services isn't an active catalog service. Remove it and try again.",
         "SAVE_FAILED": "Couldn't save the bay. Try again."
+      },
+      "REMOVE_FROM": "Remove {{service}} from {{bay}}",
+      "ADD_SERVICE": "Add service",
+      "ADD_SERVICE_NAMED": "Add service to {{bay}}",
+      "DROP": {
+        "REMOVE_ZONE": "Drop here to remove {{service}} from {{bay}}",
+        "HINT_READY": "Drop to add {{service}} to {{bay}}",
+        "HINT_ALREADY": "Already on {{bay}}",
+        "HINT_BUSY": "{{bay}} is still saving",
+        "ADDED": "{{service}} added to {{bay}}.",
+        "ADDED_MANY": "{{count}} services added to {{bay}}.",
+        "ONLY": "Only {{bay}} can now be assigned {{service}} here. Other bays stop taking it.",
+        "ON_HOLD": "{{service}} added to {{bay}}. It won't count until {{bay}} is back in service.",
+        "NOW_GENERAL": "{{service}} is now general work: any bay here except wash & detail can be assigned it.",
+        "REMOVED": "{{service}} removed from {{bay}}.",
+        "UNDONE": "Change to {{bay}} undone.",
+        "UNDO_STALE": "{{bay}} has changed since, so Undo no longer applies.",
+        "BUSY": "{{bay}} is still saving. Try again in a moment.",
+        "MOVED_GENERAL": "{{bay}} moved to General.",
+        "MOVED_SPECIALTY": "{{bay}} moved to Specialty.",
+        "MOVED_WASH": "{{bay}} moved to Wash & detail.",
+        "MOVED_OUT_OF_SERVICE": "{{bay}} moved to Out of service.",
+        "NOT_ALLOWED": "You can't change {{bay}}'s services at this location.",
+        "GONE": "{{bay}} no longer exists. Reload the page to see the current bays.",
+        "INVALID": "Couldn't change {{bay}}'s services: one of them isn't an active catalog service.",
+        "FAILED": "Couldn't change {{bay}}'s services. Try again.",
+        "UNDO": "Undo",
+        "DISMISS": "Dismiss"
+      },
+      "RAIL": {
+        "GENERAL_WORK": "General work here",
+        "ONLY": "Only {{bay}}",
+        "MANY": "{{count}} bays",
+        "ON_HOLD": "Only out-of-service bays: general work for now",
+        "KEYBOARD_ROUTE": "Or use Add service on a bay card."
+      },
+      "WHO": {
+        "TITLE": "Who does what",
+        "CLAIMED_ONE": "1 specialty service claimed",
+        "CLAIMED_MANY": "{{count}} specialty services claimed",
+        "ONLY_ONE_COUNT": "{{count}} with only one bay",
+        "NONE_IN_SERVICE_COUNT": "{{count}} with no bay in service",
+        "BAY_DOWN": "{{bay}} (out of service)",
+        "FLAG_ONLY_ONE": "Only one bay",
+        "FLAG_NONE_IN_SERVICE": "Its only bays are out of service: general work for now",
+        "GENERAL_NOTE": "Every other service is general work: any bay except wash & detail can be assigned it, general bays first."
+      },
+      "CONFIRM_REMOVE": {
+        "TITLE": "Remove {{service}}?",
+        "BODY": "{{bay}} becomes a general bay and can be assigned any general service.",
+        "BODY_WASH": "{{bay}} will have no services and can't be assigned anything.",
+        "CONFIRM": "Remove {{service}}"
+      },
+      "ADD_DIALOG": {
+        "TITLE": "Add services to {{bay}}",
+        "CHOSEN": "To add",
+        "SOLE_ONE": "{{bay}} will be the only bay here for 1 of these.",
+        "SOLE_MANY": "{{bay}} will be the only bay here for {{count}} of these.",
+        "ADD_ONE": "Add 1 service",
+        "ADD_MANY": "Add {{count}} services"
       }
     },
     "MOBILE_UNITS": {
@@ -2299,6 +2352,39 @@
         "CONFLICT": "Someone else changed this unit at the same time. Close the dialog and try again.",
         "UNPROCESSABLE": "The unit couldn't be saved: a capability isn't an active catalog service, or the unit isn't ready to be active.",
         "SAVE_FAILED": "Couldn't save. Try again."
+      },
+      "CAPABILITY_LIST": "Capabilities of {{unit}}",
+      "REMOVE_FROM": "Remove {{service}} from {{unit}}",
+      "ADD_CAPABILITY": "Add capability",
+      "ADD_CAPABILITY_NAMED": "Add capability to {{unit}}",
+      "DROP": {
+        "REMOVE_ZONE": "Drop here to remove {{service}} from {{unit}}",
+        "HINT_READY": "Drop to record {{service}} for {{unit}}",
+        "HINT_ALREADY": "Already recorded for {{unit}}",
+        "HINT_BUSY": "{{unit}} is still saving",
+        "ADDED": "{{service}} recorded for {{unit}}.",
+        "ADDED_MANY": "{{count}} capabilities recorded for {{unit}}.",
+        "REMOVED": "{{service}} removed from {{unit}}.",
+        "UNDONE": "Change to {{unit}} undone.",
+        "UNDO_STALE": "{{unit}} has changed since, so Undo no longer applies.",
+        "BUSY": "{{unit}} is still saving. Try again in a moment.",
+        "LAST_CAPABILITY": "An active unit needs at least one capability. Set {{unit}} inactive to remove its last one.",
+        "INVALID": "Couldn't change {{unit}}'s capabilities: one of them isn't an active catalog service.",
+        "UNDO": "Undo",
+        "DISMISS": "Dismiss"
+      },
+      "RAIL": {
+        "CAPTION": "Capabilities are recorded for each unit; assignment doesn't check them yet.",
+        "KEYBOARD_ROUTE": "Or use Add capability on a unit card.",
+        "NONE": "Not recorded by any unit here",
+        "ONE": "Recorded for {{unit}}",
+        "MANY": "Recorded for {{count}} units"
+      },
+      "ADD_DIALOG": {
+        "TITLE": "Add capabilities to {{unit}}",
+        "CHOSEN": "To add",
+        "ADD_ONE": "Add 1 capability",
+        "ADD_MANY": "Add {{count}} capabilities"
       }
     },
     "LANDING": {
@@ -2522,6 +2608,20 @@
       "ALREADY_ADDED": "Already added",
       "ADD": "Add",
       "ADD_NAMED": "Add {{service}}"
+    },
+    "SERVICE_RAIL": {
+      "OVERLINE": "Catalog",
+      "TITLE": "Services",
+      "FILTER": "Find services",
+      "RETRY": "Try again",
+      "HANDLE": "Drag {{service}}",
+      "CATEGORY": {
+        "TIRE_SERVICE": "Tires",
+        "MAINTENANCE": "Maintenance",
+        "REPAIR": "Repair",
+        "DIAGNOSTIC": "Diagnostic",
+        "OTHER": "Other"
+      }
     }
   },
   "SHOPMGMT": {
