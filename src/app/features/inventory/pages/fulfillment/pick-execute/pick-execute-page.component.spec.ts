@@ -920,6 +920,28 @@ describe('PickExecutePageComponent', () => {
       expect(component.pendingTaskId()).toBeNull();
       expect(component.activeTaskStatus()).toBeNull(); // not task-scoped — it's the shared read
     });
+
+    it('a readback failure moves focus to the error card retry action (the confirm/complete controls unmount)', async () => {
+      const readyToClose: PickTaskLine = { ...taskA, pickedQty: 5, status: 'PENDING' };
+      mockPickService.getWorkorderPickList.mockReturnValue(
+        of({ ...pickListFixture, tasks: [readyToClose, taskB] }),
+      );
+      mockPickService.completePickTask.mockReturnValue(of(readyToClose));
+      mockPickService.getPickTasks.mockReturnValue(
+        throwError(() => new HttpErrorResponse({ status: 403, error: { code: 'LOCATION_SCOPE_DENIED' } })),
+      );
+      const fixture = await setupPickExecuteFixture('wo-001', [EXECUTE]);
+      fixture.detectChanges();
+
+      fixture.componentInstance.completeTask();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const retry: HTMLButtonElement | null = fixture.nativeElement.querySelector('.btn-secondary');
+      expect(fixture.componentInstance.errorKey()).toBe('INVENTORY.FULFILLMENT.PICK_EXECUTE.ERROR.LOCATION_SCOPE_DENIED');
+      expect(retry).not.toBeNull();
+      expect(document.activeElement).toBe(retry);
+    });
   });
 
   // #2217: a mechanic's scanner sends Enter after every code — the first

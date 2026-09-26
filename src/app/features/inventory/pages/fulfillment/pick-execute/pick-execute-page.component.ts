@@ -277,7 +277,11 @@ export class PickExecutePageComponent {
     afterNextRender(() => this.productCodeInputRef?.nativeElement.focus(), { injector: this.injector });
   }
 
-  /** The page-wide error card replaces the scan controls; move focus to its retry action. */
+  /**
+   * The page-wide error card replaces the scan/confirm controls (and a Retry
+   * click unmounts itself during `loading`), so every async error transition
+   * moves focus to the card's retry action (ADR-0029 §8.7).
+   */
   private focusRetryButtonAfterRender(): void {
     afterNextRender(() => this.retryButtonRef?.nativeElement.focus(), { injector: this.injector });
   }
@@ -570,6 +574,7 @@ export class PickExecutePageComponent {
         ? 'INVENTORY.FULFILLMENT.PICK_EXECUTE.ERROR.LOCATION_SCOPE_DENIED'
         : 'INVENTORY.FULFILLMENT.PICK_EXECUTE.ERROR.REFRESH',
     );
+    this.focusRetryButtonAfterRender();
   }
 
   private clearTaskStatus(taskId: string): void {
@@ -632,6 +637,7 @@ export class PickExecutePageComponent {
     if (!pickList) {
       this.state.set('error');
       this.errorKey.set('INVENTORY.FULFILLMENT.PICK_EXECUTE.ERROR.LOAD');
+      this.focusRetryButtonAfterRender();
       return;
     }
     this.pickList.set(pickList);
@@ -650,5 +656,6 @@ export class PickExecutePageComponent {
         ? 'INVENTORY.FULFILLMENT.PICK_EXECUTE.ERROR.LOCATION_SCOPE_DENIED'
         : 'INVENTORY.FULFILLMENT.PICK_EXECUTE.ERROR.LOAD',
     );
+    this.focusRetryButtonAfterRender();
   }
 }
