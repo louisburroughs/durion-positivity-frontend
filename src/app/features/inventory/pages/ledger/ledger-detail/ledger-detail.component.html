@@ -99,12 +99,14 @@
 
       <!-- fromStorageLocationId/toStorageLocationId were ruled out (backend #2206): fromLocationId/
            toLocationId already carry the bin or site the posting used, so there's no separate
-           storage-location field to render. -->
+           storage-location field to render. Neither InventoryLedgerEntry nor the SDK DTO carries a
+           human-readable name for these ids, so the cell always renders COMMON.NOT_AVAILABLE rather
+           than the raw location UUID (ADR-0064 §5). -->
       <dt>{{ 'INVENTORY.LEDGER.DETAIL.FIELD.FROM_LOCATION' | translate }}</dt>
-      <dd>{{ entry()!.fromLocationId ?? ('COMMON.NOT_AVAILABLE' | translate) }}</dd>
+      <dd>{{ 'COMMON.NOT_AVAILABLE' | translate }}</dd>
 
       <dt>{{ 'INVENTORY.LEDGER.DETAIL.FIELD.TO_LOCATION' | translate }}</dt>
-      <dd>{{ entry()!.toLocationId ?? ('COMMON.NOT_AVAILABLE' | translate) }}</dd>
+      <dd>{{ 'COMMON.NOT_AVAILABLE' | translate }}</dd>
 
       <dt>{{ 'INVENTORY.LEDGER.DETAIL.FIELD.ACTOR' | translate }}</dt>
       <dd>{{ entry()!.actorId ?? '—' }}</dd>

@@ -21,6 +21,8 @@ const ledgerEntryFixture: InventoryLedgerEntry = {
   productSku: 'SKU-001',
   quantityChange: 10,
   uom: 'EA',
+  fromLocationId: 'a1b2c3d4-e5f6-4789-a012-b3c4d5e6f7a8',
+  toLocationId: 'b2c3d4e5-f6a7-4890-b123-c4d5e6f7a8b9',
 };
 
 describe('LedgerDetailComponent', () => {
@@ -55,5 +57,17 @@ describe('LedgerDetailComponent', () => {
 
     expect(component.state()).toBe('error');
     expect(component.errorKey()).toBe('INVENTORY.LEDGER.DETAIL.ERROR.LOAD');
+  });
+
+  // ADR-0064 §5: neither InventoryLedgerEntry nor the SDK DTO carries a human-readable name
+  // for fromLocationId/toLocationId, so the raw UUID must never reach the DOM.
+  it('never renders the raw fromLocationId/toLocationId UUID, even when the entry carries one', () => {
+    mockInventoryService.getLedgerEntry.mockReturnValue(of(ledgerEntryFixture));
+    const fixture = TestBed.createComponent(LedgerDetailComponent);
+    fixture.detectChanges();
+
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(text).not.toContain(ledgerEntryFixture.fromLocationId);
+    expect(text).not.toContain(ledgerEntryFixture.toLocationId);
   });
 });

@@ -142,8 +142,11 @@
             <td>{{ entry.productSku }}</td>
             <td>{{ entry.quantityChange }}</td>
             <td>{{ entry.uom }}</td>
-            <td>{{ entry.fromLocationId ?? ('COMMON.NOT_AVAILABLE' | translate) }}</td>
-            <td>{{ entry.toLocationId ?? ('COMMON.NOT_AVAILABLE' | translate) }}</td>
+            <!-- Neither InventoryLedgerEntry nor the SDK DTO carries a human-readable name for
+                 fromLocationId/toLocationId, so the cell always renders COMMON.NOT_AVAILABLE
+                 rather than the raw location UUID (ADR-0064 §5). -->
+            <td>{{ 'COMMON.NOT_AVAILABLE' | translate }}</td>
+            <td>{{ 'COMMON.NOT_AVAILABLE' | translate }}</td>
           </tr>
           }
         </tbody>
