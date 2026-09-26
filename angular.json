@@ -134,7 +134,24 @@
             ],
             "exclude": [
               "src/app/features/positivity/services/supplier-contract-coverage.spec.ts"
-            ]
+            ],
+            "coverageInclude": [
+              "src/app/**/*.ts"
+            ],
+            "coverageExclude": [
+              "**/*.spec.ts",
+              "**/*.routes.ts",
+              "**/*.generated.ts"
+            ],
+            "coverageReporters": [
+              "lcov",
+              "text-summary"
+            ],
+            "coverageThresholds": {
+              "lines": 78,
+              "branches": 71,
+              "functions": 66
+            }
           }
         },
         "lint": {

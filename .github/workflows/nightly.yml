@@ -1,0 +1,160 @@
+# Nightly security scan + SonarCloud analysis, mirroring the backend's
+# `security-scan` and `code-quality-full` jobs (durion-positivity-backend
+# .github/workflows/ci.yml). Kept out of the PR path: the Dependency-Check NVD
+# sync and a full coverage run are too slow for every push.
+name: Nightly Security & Quality
+
+on:
+  schedule:
+    - cron: "0 5 * * *" # same slot as the backend nightly
+  workflow_dispatch:
+
+# Job-level permissions only (Sonar githubactions:S8264); jobs without a
+# permissions block get no token scopes.
+permissions: {}
+
+concurrency:
+  group: nightly-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DEPENDENCY_CHECK_IMAGE: "owasp/dependency-check:13.0.0"
+
+jobs:
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Get current week for cache key
+        id: date
+        run: echo "week=$(date +'%Y-%W')" >> "$GITHUB_OUTPUT"
+
+      - name: Cache OWASP NVD data
+        uses: actions/cache@v4
+        with:
+          path: ~/.dependency-check/data
+          # NVD data is time-sensitive, not lockfile-sensitive: bust weekly.
+          key: ${{ runner.os }}-owasp-nvd-${{ steps.date.outputs.week }}
+          restore-keys: |
+            ${{ runner.os }}-owasp-nvd-
+
+      - name: Run OWASP Dependency Check
+        # Same datafeed mirror as the backend (the NVD API is unusably slow even
+        # with a key). Scans package-lock.json with the Node Package and Node Audit
+        # analyzers, skipping devDependencies: like the backend's compile/runtime
+        # scope, only what ships in the browser bundle or the SSR server gates.
+        # OSS Index needs credentials we don't have; yarn/pnpm aren't used here.
+        # Fails on CVSS >= 7; suppressions live in security/dependency-check-suppressions.xml.
+        run: |
+          mkdir -p "$HOME/.dependency-check/data" reports/dependency-check
+          docker run --rm \
+            -u "$(id -u):$(id -g)" \
+            -v "$GITHUB_WORKSPACE":/src:ro \
+            -v "$HOME/.dependency-check/data":/usr/share/dependency-check/data \
+            -v "$GITHUB_WORKSPACE/reports/dependency-check":/report \
+            "$DEPENDENCY_CHECK_IMAGE" \
+            --scan /src/package-lock.json \
+            --project durion-positivity-frontend \
+            --nvdDatafeed "https://dependency-check.github.io/DependencyCheck_Builder/nvd_cache/nvdcve-{0}.json.gz" \
+            --disableOssIndex --disableYarnAudit --disablePnpmAudit \
+            --nodeAuditSkipDevDependencies --nodePackageSkipDevDependencies \
+            --suppression /src/security/dependency-check-suppressions.xml \
+            --format HTML --format JSON \
+            --out /report \
+            --failOnCVSS 7
+
+      - name: npm audit (production dependencies)
+        # Second opinion straight from the GitHub advisory database; fails on
+        # high/critical advisories in shipped dependencies.
+        if: always()
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Upload dependency check report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-check-report
+          path: reports/dependency-check/**
+          if-no-files-found: ignore
+          retention-days: 30
+
+  sonarcloud:
+    name: Full Coverage SonarCloud Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    # Exposed at job level so steps can test for it: `secrets` is not readable
+    # from a step `if:`, but `env` is.
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Sonar needs history for blame / new-code detection
+          persist-credentials: false
+
+      - name: Checkout Angular SDK repo
+        uses: actions/checkout@v4
+        with:
+          repository: louisburroughs/durion-positivity-sdk-angular
+          path: .sdk-src
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Angular SDK packages
+        run: npm run sdk:install
+
+      - name: Install Playwright Chromium (Vitest browser-mode runner)
+        run: npx playwright install --with-deps chromium
+
+      - name: Unit tests with coverage
+        # Coverage options (include/exclude, lcov reporter, ratchet floors) live in
+        # angular.json test.options and only take effect with --coverage. The step
+        # continues on failure so SonarCloud still receives the report; the final
+        # step fails the job, like the backend's --fail-at-end.
+        id: tests
+        continue-on-error: true
+        run: npx ng test --no-watch --browsers=ChromiumHeadless --runner-config vitest.config.ts --coverage
+
+      - name: Announce a missing SonarCloud token
+        if: env.SONAR_TOKEN == ''
+        run: echo "::warning::SONAR_TOKEN secret is not set; SonarCloud analysis skipped."
+
+      - name: SonarCloud Scan
+        if: env.SONAR_TOKEN != ''
+        # Project key, organization, sources and the lcov path come from
+        # sonar-project.properties.
+        uses: SonarSource/sonarqube-scan-action@ba9859eae8dd6bd29e412f25ddbbef3d032000f4 # v8.2.2
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-lcov
+          path: coverage/**
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Fail if tests or the coverage ratchet failed
+        if: steps.tests.outcome == 'failure'
+        run: |
+          echo "::error::Unit tests failed or coverage fell below the angular.json coverageThresholds floors; see the 'Unit tests with coverage' step."
+          exit 1
