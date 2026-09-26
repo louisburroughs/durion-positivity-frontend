@@ -55,7 +55,6 @@
         <button class="btn btn--ghost" (click)="navigateToLabor()">{{ 'WORKEXEC.WORKORDER_DETAIL.RECORD_LABOR' | translate }}</button>
         <button class="btn btn--ghost" (click)="navigateToParts()">{{ 'WORKEXEC.WORKORDER_DETAIL.MANAGE_PARTS' | translate }}</button>
         <button class="btn btn--ghost" (click)="navigateToChangeRequests()">{{ 'WORKEXEC.WORKORDER_DETAIL.CHANGE_REQUESTS' | translate }}</button>
-        <button class="btn btn--ghost" (click)="navigateToFinalize()">{{ 'WORKEXEC.WORKORDER_DETAIL.FINALIZE' | translate }}</button>
         }
         @if (canComplete()) {
         <button class="btn btn--accent" (click)="openCompleteModal()">{{ 'WORKEXEC.WORKORDER_DETAIL.COMPLETE_WO' | translate }}</button>

@@ -26,12 +26,12 @@ export class ProductInventoryService {
     );
   }
 
-  // Issue #370/#373: queryAvailabilityBySku()/queryLeadTime() were removed. Even at the
-  // corrected /v1/inventory/availability/{by-sku,lead-time} paths, those endpoints expect a
-  // `productSku` + WAREHOUSE/SUPPLIER/TRANSIT `sourceType` contract with no vendor-feed
-  // (MFR/DISTRIBUTOR) equivalent — backend #2213. Their only caller, FeedsComponent, now
-  // shows a "vendor-feed availability isn't available yet" notice instead of calling an
-  // endpoint that cannot serve this request shape.
+  // Issue #370/#373/#2213 ruling (issue #350): queryAvailabilityBySku()/queryLeadTime() were
+  // removed. Even at the corrected /v1/inventory/availability/{by-sku,lead-time} paths, those
+  // endpoints expect a `productSku` + WAREHOUSE/SUPPLIER/TRANSIT `sourceType` contract with no
+  // vendor-feed (MFR/DISTRIBUTOR) equivalent, and the backend ruled out ever adding one
+  // (durion-positivity-backend#2213, closed not_planned). Their only caller, the product
+  // "Inventory Feeds" page (`FeedsComponent`), was removed entirely rather than repurposed.
 
   // Issue #370: moved to InventoryLocationsService.getLocationInventory (SDK), which matches
   // LocationInventoryInquiryController#getLocationInventory, GET

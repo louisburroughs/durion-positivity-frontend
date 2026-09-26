@@ -1,5 +1,3 @@
-export type FeedSourceType = 'MFR' | 'DISTRIBUTOR';
-
 export interface LocationInventory {
   locationId: string;
   // Optional: LocationInventoryInquiryResponse (@durion-sdk/inventory) has no locationName or

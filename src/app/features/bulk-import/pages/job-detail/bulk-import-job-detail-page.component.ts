@@ -27,6 +27,7 @@ export class BulkImportJobDetailPageComponent {
 
   readonly state = signal<PageState>('idle');
   readonly errorKey = signal<string | null>(null);
+  readonly downloadErrorKey = signal<string | null>(null);
   readonly job = signal<BulkLoadJob | null>(null);
   readonly auditRecords = signal<BulkLoadRecordAudit[]>([]);
   readonly correctionPending = signal<Set<string>>(new Set());
@@ -47,6 +48,7 @@ export class BulkImportJobDetailPageComponent {
     if (!this.jobId) { return; }
     this.state.set('loading');
     this.errorKey.set(null);
+    this.downloadErrorKey.set(null);
     this.service.getJob(this.jobId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -125,8 +127,26 @@ export class BulkImportJobDetailPageComponent {
       });
   }
 
+  /**
+   * (durion-positivity-backend#2216 precedent, issue #350) A bare `window.open()` of the
+   * legacy `/api/...` path sent no bearer token and was rejected by the gateway for a real
+   * session; the download now goes through the authenticated SDK blob download instead.
+   */
   downloadErrorReport(): void {
-    window.open(this.service.getErrorReportUrl(this.jobId), '_blank', 'noopener,noreferrer');
+    const jobId = this.jobId;
+    if (!jobId) { return; }
+    this.downloadErrorKey.set(null);
+    this.service.downloadErrorReport(jobId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        // Per-action error, like the wizard pages: a failed download must not
+        // hide the job (and its retry controls) behind the page-level error state.
+        // Dropped if the route has since moved to another job (ADR-0063 §3).
+        error: () => {
+          if (jobId !== this.jobId) return;
+          this.downloadErrorKey.set('BULK_IMPORT.JOB_DETAIL.ERROR.DOWNLOAD');
+        },
+      });
   }
 
   isCorrectionPending(recordId: string): boolean {

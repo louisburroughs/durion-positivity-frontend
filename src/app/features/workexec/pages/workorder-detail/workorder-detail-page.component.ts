@@ -610,10 +610,6 @@ export class WorkorderDetailPageComponent implements OnInit {
     this.router.navigate(['/app/workexec/workorders', this.workorderId(), 'change-requests']);
   }
 
-  navigateToFinalize(): void {
-    this.router.navigate(['/app/workexec/workorders', this.workorderId(), 'finalize']);
-  }
-
   refresh(): void {
     this.loadWorkorder(this.workorderId());
   }

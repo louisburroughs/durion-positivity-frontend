@@ -110,7 +110,8 @@ team needs a precise completion plan based on the actual repository state.
 
 ## Out of Scope
 
-- Rewriting `chat-api.service.ts`, which intentionally uses direct gateway/MCP HTTP.
+- Rewriting `chat-api.service.ts` or `chat-blob.service.ts`, which intentionally use
+  direct gateway/MCP HTTP.
 - Replacing the existence of `ApiBaseService` itself; it remains shared infrastructure.
 - Reworking `src/app/core/services/auth.service.ts` to use SDK auth clients. Auth and
   session lifecycle hardening are separate work unless explicitly scheduled as their own
@@ -156,7 +157,7 @@ Current inventory of non-spec application files still importing or injecting
 | `shopmgmt/pages/dispatch-board/dispatch-board-page.component.ts`               | ✅ Migrated                                       |
 | `shopmgmt/pages/mechanic-roster/mechanic-roster-page.component.ts`             | ✅ Migrated (D1 contract gap)                     |
 | `people/pages/time-approval/time-approval-page.component.ts`                   | 🔴 Blocked — D3: 5 missing SDK operations         |
-| `people/pages/work-session-submit/work-session-submit-page.component.ts`       | 🔴 Blocked — D2: submit endpoint missing from SDK |
+| `people/pages/work-session-submit/work-session-submit-page.component.ts`       | ✅ Migrated (D2 resolved — durion-positivity-backend#2208 ruling) |
 
 ### Local model inventory
 
@@ -177,14 +178,32 @@ The migration is therefore no longer blocked on large-scale type-escape cleanup.
 
 ## Approved Exceptions
 
-The following exceptions are allowed at the start of this PRD:
+The following exceptions are permanent — never migrate, no follow-up tracked beyond
+keeping the reason current:
 
 - `src/app/features/shell/services/chat-api.service.ts`
-  - Reason: gateway/MCP traffic is intentionally outside the domain SDK migration.
+  - Reason: gateway/MCP chat traffic; no `@durion-sdk` package covers `mcp-server`.
+- `src/app/features/shell/services/chat-blob.service.ts`
+  - Reason: fetches arbitrary chat/MCP blob URLs with `baseUrlOverride: ''`; no
+    `@durion-sdk` package covers `mcp-server` (issue #350 revisit, 2026-09-25).
+- `src/app/shared/bulk-import/services/bulk-import.service.ts` — the tus creation
+  endpoint (`buildTusUploadEndpoint`/`isTrustedUploadUrl`)
+  - Reason: the SDK's `createTusUpload` operation exists, but `tus-js-client` owns the
+    resumable-upload protocol end to end (its own creation POST, `Location` header
+    parsing, chunked PATCHes) and needs a bare endpoint URL, not an `Observable`-returning
+    SDK call (issue #350 revisit, 2026-09-25).
+- `src/app/features/billing/services/billing-transport.service.ts` —
+  `resolveArtifactDownloadUrl()`'s public, token-only invoice download link
+  - Reason: no SDK operation returns a URL; the link is for an unauthenticated recipient
+    (e.g. an emailed receipt), so the SDK's bearer-token-gated `downloadInvoiceArtifact`
+    stream cannot serve this case (issue #350 revisit, 2026-09-25).
 
 `accounting.service.ts` is no longer an approved exception: D4 (`getEventEnvelopeContract`)
 is resolved (issue #380) by migrating to the SDK's `getEventContract` and treating the
-fields it does not return as optional.
+fields it does not return as optional. Rendering its `identifierStrategy`/`traceabilityIds`/
+`processingStatuses`/`idempotencyOutcomes` sections (durion-positivity-backend#2207) is
+blocked on durion-positivity-backend#2234: SDK 0.65.0-alpha was generated from a stale
+`pos-accounting/openapi.yaml` and dropped those fields.
 
 `billing-transport.service.ts` is no longer an approved exception: D7 (`executeRefund`
 no-amount branch) and D8 (`loadReceipt`) are resolved (issue #381) — the page still requires
@@ -208,6 +227,14 @@ gaps that #381 left as informational-only:
 - `generateReceipt` had a latent bug (not part of #381's resolution): it sent the delivery
   method/email selection as `paymentIntentId` instead of a real payment-intent id. Fixed by
   resolving the invoice's captured payment intent via `listInvoicePayments` first.
+
+`billing-transport.service.ts` keeps one narrow, permanent exception: the public download URL above.
+
+`people/services/people.service.ts` is no longer an approved exception: D2
+(`submitWorkSession`) is resolved by the durion-positivity-backend#2208 ruling —
+`sessionId` on `WorkSessionDto` is the submission reference users quote, so the page
+displays it instead of a `correlationId` the backend was never going to add, and the
+service migrated onto `WorkSessionsAPIService.submitWorkSession()`.
 
 No page component is an approved exception.
 
@@ -349,18 +376,22 @@ tracked follow-up decisions.
 | ID  | File/Method                                          | Reason                                                            | Follow-up                         |
 | --- | ---------------------------------------------------- | ----------------------------------------------------------------- | --------------------------------- |
 | D1  | `shopmgmt/mechanic-roster` — `createEmployee`        | SDK contract mismatch; `createPerson` used; `role` dropped        | SDK alignment or form redesign    |
-| D2  | `people/work-session-submit` — `submitSession`       | `POST .../workSessions/{id}/submit` missing from SDK              | Backend OpenAPI update            |
+| ~~D2~~ | ~~`people/work-session-submit` — `submitSession`~~ | Resolved (durion-positivity-backend#2208 ruling, issue #350 revisit): `sessionId` on `WorkSessionDto` is the submission reference; migrated to `WorkSessionsAPIService.submitWorkSession()` | — |
 | D3  | `people/time-approval` — 5 operations                | Timekeeping approve/period/entries SDK operations absent          | Backend OpenAPI update            |
-| ~~D4~~ | ~~`accounting.service.ts` — `getEventEnvelopeContract`~~ | Resolved (issue #380): migrated to SDK `getEventContract()`; fields it does not return are optional | — |
+| ~~D4~~ | ~~`accounting.service.ts` — `getEventEnvelopeContract`~~ | Resolved (issue #380): migrated to SDK `getEventContract()`. Rendering the #2207 sections is blocked on durion-positivity-backend#2234 (SDK 0.65 dropped them from a stale spec) | — |
 | D5  | `inventory.service.ts` — all                         | Pervasive field name mismatches between SDK DTOs and local models | Requires SDK model alignment      |
-| D6  | `bulk-import.service.ts` — `submitAuditCorrection`   | SDK endpoint pattern differs                                      | SDK team to align endpoint        |
+| D6 | `bulk-import.service.ts` — `submitCorrection` | Backend #2205 is merged, but SDK 0.65.0-alpha dropped the widened `CorrectionResultDto` row fields (stale `pos-bulk-loader/openapi.yaml`, durion-positivity-backend#2234); callers keep re-reading the audit list until the SDK carries them | durion-positivity-backend#2234 |
 | —   | `workexec.service.ts` — `getWorkorderWipStatus`      | SDK path incompatible with legacy path                            | Consumer migration to new WIP API |
-| —   | `workexec.service.ts` — `getWorkorderInvoiceView`    | No SDK equivalent                                                 | SDK team to add endpoint          |
-| —   | `workexec.service.ts` — `requestInvoiceFinalization` | No SDK equivalent                                                 | SDK team to add endpoint          |
+| —   | `workexec.service.ts` — `getWorkorderInvoiceView`    | Neither has a published contract; invoice content/finalization belong in pos-invoice (durion-positivity-backend#2210 ruling) | Blocked on durion-positivity-backend#2232 (`WorkorderResponse.invoiceId`, or a by-workorder lookup) |
+| —   | `workexec.service.ts` — `requestInvoiceFinalization` | Neither has a published contract; invoice content/finalization belong in pos-invoice (durion-positivity-backend#2210 ruling) | Blocked on durion-positivity-backend#2232 (`WorkorderResponse.invoiceId`, or a by-workorder lookup) |
+| ~~—~~ | ~~`workexec.service.ts` — `finalizeWorkorder`~~ | Resolved (durion-positivity-backend#2210 ruling, issue #350 revisit): the standalone finalize endpoint/page is superseded by `completeWorkorder`, which already captures the billable-scope snapshot atomically; removed along with its route, page, and models | — |
 | ~~—~~ | ~~`workexec.service.ts` — `listEstimatesForVehicle`~~ | Resolved (issue #379): the vehicle filter exists on `searchEstimates`, which the frontend already used for text search | — |
 | ~~D7~~ | ~~`billing-transport.service.ts` — `executeRefund` (no-amount branch)~~ | Resolved (issue #381): the page now requires an explicit refund amount and always sends it through the SDK `refundPayment` | — |
 | ~~D8~~ | ~~`billing-transport.service.ts` — `loadReceipt`~~   | Resolved twice: issue #381 removed it (no backend GET existed yet) and showed a not-available state; durion-positivity-backend#2214 (this PR, #350 follow-up) added `ReceiptService.getReceipt`, so `loadReceipt` is back as a real read-only call | — |
+| —   | `billing-transport.service.ts` — `resolveArtifactDownloadUrl()` | Permanent exception: public, token-only invoice download link for an unauthenticated recipient; no SDK operation returns a URL | Never migrate |
+| —   | `bulk-import.service.ts` — tus creation endpoint     | Permanent exception: `createTusUpload` exists, but `tus-js-client` owns the resumable-upload protocol and needs a bare endpoint URL | Never migrate |
 | —   | `chat-api.service.ts` — all                          | Permanent exception: gateway/MCP traffic                          | Never migrate                     |
+| —   | `chat-blob.service.ts` — all                         | Permanent exception: fetches arbitrary chat/MCP blob URLs, no `@durion-sdk` package covers `mcp-server` | Never migrate |
 
 **Acceptance criteria:**
 

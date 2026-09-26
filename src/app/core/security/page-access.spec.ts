@@ -149,7 +149,6 @@ const UNGATED_BY_DESIGN: Readonly<Record<string, string>> = {
   // `@PreAuthorize` to trace and no code that could be right.
   '/app/workexec/workorders/:workorderId/invoice-finalization':
     'getWorkorderInvoiceView has no published contract',
-  '/app/product/inventory/feeds': 'availability-by-sku and lead-time have no published contract',
 };
 
 /**

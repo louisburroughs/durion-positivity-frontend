@@ -49,7 +49,7 @@ describe('BulkImportJobsPageComponent', () => {
     approveColumnMappings: vi.fn(),
     listAuditRecords: vi.fn(),
     submitCorrection: vi.fn(),
-    getErrorReportUrl: vi.fn(),
+    downloadErrorReport: vi.fn(),
     uploadFile: vi.fn(),
   };
 

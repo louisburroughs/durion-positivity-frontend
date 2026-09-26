@@ -756,7 +756,7 @@
       "RETRY": "Retry",
       "SUBMITTING": "Submitting…",
       "SUCCESS": "Job time submitted successfully.",
-      "CORRELATION_ID": "Correlation ID:",
+      "SESSION_REFERENCE": "Session reference:",
       "FAILED": "Submission failed.",
       "CODE": "Code:",
       "REFERENCE": "Reference:",
@@ -4079,43 +4079,6 @@
       }
     },
     "INVENTORY": {
-      "FEEDS": {
-        "TITLE": "Inventory Feeds",
-        "SKU": "SKU",
-        "SKU_PLACEHOLDER": "Enter a SKU…",
-        "TABS": {
-          "ARIA": "Inventory feed tabs",
-          "MANUFACTURER": "Manufacturer",
-          "DISTRIBUTOR": "Distributor"
-        },
-        "AVAILABILITY": {
-          "TITLE": "Availability",
-          "SOURCE": "Source",
-          "ON_HAND": "On hand",
-          "RESERVED": "Reserved",
-          "ATP": "ATP",
-          "AS_OF": "As of",
-          "STATUS": "Status"
-        },
-        "LEAD_TIME": {
-          "TITLE": "Lead Time",
-          "SOURCE": "Source",
-          "MIN_DAYS": "Min days",
-          "MAX_DAYS": "Max days"
-        },
-        "STATUS": {
-          "IN_STOCK": "In stock",
-          "LOW_STOCK": "Low stock",
-          "OUT_OF_STOCK": "Out of stock"
-        },
-        "STATE": {
-          "EMPTY": "No inventory feed data found.",
-          "UNAVAILABLE": "Vendor-feed availability isn't available yet."
-        },
-        "ERROR": {
-          "LOAD": "Failed to load inventory feeds."
-        }
-      },
       "AVAILABILITY": {
         "TITLE": "Inventory Availability",
         "SKU": "SKU",
@@ -4323,10 +4286,6 @@
         "AVAILABILITY": {
           "TITLE": "Availability",
           "DESCRIPTION": "Track and manage product availability."
-        },
-        "FEEDS": {
-          "TITLE": "Inventory Feeds",
-          "DESCRIPTION": "Manage automated inventory data feeds."
         },
         "IMPORT_CATALOG": {
           "TITLE": "Import Catalog",
@@ -4577,10 +4536,6 @@
           "TITLE": "Change Requests",
           "DESCRIPTION": "Review and act on change requests raised during workorder execution."
         },
-        "WORKORDER_FINALIZE": {
-          "TITLE": "Finalize Workorder",
-          "DESCRIPTION": "Lock the billable scope and prepare a workorder for invoice generation."
-        },
         "INVOICE_FINALIZATION": {
           "TITLE": "Invoice Finalization",
           "DESCRIPTION": "Review and finalize the invoice associated with a completed workorder."
@@ -4625,7 +4580,6 @@
         "OPEN_WORKORDER_LABOR": "Open Labor",
         "OPEN_WORKORDER_PARTS": "Open Parts",
         "OPEN_WORKORDER_CHANGE_REQUESTS": "Open Change Requests",
-        "OPEN_WORKORDER_FINALIZE": "Finalize Workorder",
         "OPEN_INVOICE_FINALIZATION": "Open Invoice",
         "OPEN_OPERATIONAL_CONTEXT": "Open Context"
       },
@@ -4979,7 +4933,6 @@
       "RECORD_LABOR": "Record Labor",
       "MANAGE_PARTS": "Manage Parts",
       "CHANGE_REQUESTS": "Change Requests",
-      "FINALIZE": "Finalize for Billing",
       "COMPLETE_WO": "Complete Work Order",
       "REOPEN": "Reopen",
       "CREATING_INVOICE": "Creating Invoice…",
@@ -5098,23 +5051,6 @@
       "APPROVE": "Approve",
       "DECLINE": "Decline",
       "REQUEST_LABEL": "Request #{{n}}"
-    },
-    "WORKORDER_FINALIZE": {
-      "CHIP": "Finalize for Billing",
-      "LOADING": "Loading snapshot history…",
-      "ACTION_TITLE": "Finalize Billable Scope",
-      "ACTION_DESC": "Create an immutable snapshot of the work order’s billable scope. This snapshot captures all authorized parts, labor, and totals for invoice generation.",
-      "PO_NUMBER": "PO Number",
-      "PO_HINT": "(if required by location)",
-      "PO_PH": "e.g. PO-2026-001",
-      "SUCCESS": "Billable scope snapshot created — Version {{version}}. Grand Total: {{total}}.",
-      "FINALIZING": "Finalizing…",
-      "FINALIZE_BTN": "Finalize for Billing",
-      "ACTIVE_EXISTS": "An active billable snapshot already exists for this work order. Invoice generation is available from the work order detail.",
-      "HISTORY_ARIA": "Billable scope snapshot history",
-      "HISTORY_TITLE": "Snapshot History",
-      "HISTORY_EMPTY": "No billable scope snapshots recorded yet.",
-      "COL_CAPTURED": "Captured"
     },
     "WORKORDER_LABOR": {
       "LOADING": "Loading labor…",
@@ -5310,10 +5246,6 @@
       "CONFIRM_INVOICE": "Failed to confirm invoice creation. Refresh this page shortly.",
       "ITEM_NOT_COMPLETABLE": "Item cannot be completed in its current state.",
       "COMPLETE_ITEM": "Failed to complete item. Please try again.",
-      "LOAD_SNAPSHOT_HISTORY": "Failed to load snapshot history. Please try again.",
-      "SNAPSHOT_EXISTS": "An active billable snapshot already exists for this work order.",
-      "FINALIZE_REQUIREMENTS": "Finalization requirements not met. Check for unauthorized items or missing totals.",
-      "FINALIZE": "Failed to finalize. Please try again.",
       "LABOR_LINE_REQUIRED": "Select a labor service line to start a session.",
       "NO_TECHNICIAN_ASSIGNED": "This work order has no assigned technician. Assign a technician before starting labor.",
       "START_LABOR_SESSION": "Failed to start labor session.",
@@ -7056,7 +6988,8 @@
         "LOAD_AUDIT": "Unable to load error records.",
         "CANCEL": "Unable to cancel job.",
         "RETRY": "Unable to retry job.",
-        "CORRECTION": "Failed to submit correction. Please try again."
+        "CORRECTION": "Failed to submit correction. Please try again.",
+        "DOWNLOAD": "Unable to download the error report. Please try again."
       },
       "META": {
         "ARIA_LABEL": "Job metadata",
@@ -7116,7 +7049,8 @@
         "RETRY": "Unable to retry job.",
         "POLL": "Failed to get import status. Please refresh.",
         "LOAD_RESULTS": "Unable to load error records. Please try again.",
-        "CORRECTION": "Failed to submit correction. Please try again."
+        "CORRECTION": "Failed to submit correction. Please try again.",
+        "DOWNLOAD": "Unable to download the error report. Please try again."
       },
       "CONFLICT": {
         "TITLE": "Active Import in Progress",
@@ -7327,7 +7261,6 @@
       "EXCHANGES": "Exchanges",
       "EXECUTE": "Execute",
       "EXPORT": "Export",
-      "FEEDS": "Feeds",
       "FINALIZE": "Finalize",
       "FROM_APPOINTMENT": "From Appointment",
       "IDENTITY_COMPLIANCE": "Identity Compliance",

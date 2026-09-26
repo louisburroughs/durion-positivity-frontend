@@ -30,6 +30,7 @@ export class WorkSessionSubmitPageComponent {
 
   readonly sessionId = signal('');
   readonly submitState = signal<SubmitState>('NOT_SUBMITTED');
+  readonly submissionReference = signal<string | null>(null);
   readonly correlationId = signal<string | null>(null);
   readonly errorCode = signal<string | null>(null);
   readonly errorMessage = signal<string | null>(null);
@@ -82,6 +83,7 @@ export class WorkSessionSubmitPageComponent {
     this.errorCode.set(null);
     this.errorMessage.set(null);
     this.correlationId.set(null);
+    this.submissionReference.set(null);
 
     const values = this.submitForm.getRawValue();
     const body = {
@@ -95,9 +97,8 @@ export class WorkSessionSubmitPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (response) => {
-          const payload = response as Record<string, unknown> | null;
           this.submitState.set('SUBMITTED');
-          this.correlationId.set(typeof payload?.['correlationId'] === 'string' ? payload['correlationId'] : null);
+          this.submissionReference.set(response.sessionId);
         },
         error: (err: unknown) => {
           const envelope = this.toEnvelope(err);

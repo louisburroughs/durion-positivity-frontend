@@ -19,12 +19,12 @@
 
   @if (pageState() === 'ready' && contract(); as value) {
   <div class="tab-bar" role="tablist" [attr.aria-label]="'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.TABS_ARIA' | translate">
-    <button type="button" role="tab" [class.active]="activeTab() === 'fields'" (click)="activeTab.set('fields')">{{
+    <button type="button" role="tab" [class.active]="activeTab() === 'fields'" [attr.aria-selected]="activeTab() === 'fields'" (click)="activeTab.set('fields')">{{
       'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.TAB_FIELDS' | translate }}</button>
-    <button type="button" role="tab" [class.active]="activeTab() === 'traceability'"
+    <button type="button" role="tab" [class.active]="activeTab() === 'traceability'" [attr.aria-selected]="activeTab() === 'traceability'"
       (click)="activeTab.set('traceability')">{{ 'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.TAB_TRACEABILITY' | translate
       }}</button>
-    <button type="button" role="tab" [class.active]="activeTab() === 'examples'" (click)="activeTab.set('examples')">{{
+    <button type="button" role="tab" [class.active]="activeTab() === 'examples'" [attr.aria-selected]="activeTab() === 'examples'" (click)="activeTab.set('examples')">{{
       'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.TAB_EXAMPLES' | translate }}</button>
   </div>
 

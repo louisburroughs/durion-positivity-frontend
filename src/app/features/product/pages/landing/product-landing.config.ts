@@ -94,14 +94,6 @@ export const PRODUCT_LANDING_CONFIG: LandingPageConfig = {
           route: '/app/product/inventory/availability',
           permissions: PRODUCT_PAGE.availability,
         },
-        {
-          kind: 'direct',
-          icon: 'rss_feed',
-          titleKey: 'PRODUCT.LANDING.CARD.FEEDS.TITLE',
-          descriptionKey: 'PRODUCT.LANDING.CARD.FEEDS.DESCRIPTION',
-          ctaKey: 'PRODUCT.LANDING.ACTION.OPEN_PAGE',
-          route: '/app/product/inventory/feeds',
-        },
       ],
     },
     {

@@ -34,8 +34,6 @@ import {
   RoleDto,
   UserRoleDto,
 } from '@durion-sdk/people-contact';
-import { ApiBaseService } from '../../../core/services/api-base.service';
-
 export interface WorkSessionSubmitRequest {
   billableMinutes: number;
   breakMinutes: number;
@@ -46,7 +44,6 @@ type DisableEmployeeRequest = Parameters<EmployeeAPIService['disableEmployee']>[
 
 @Injectable({ providedIn: 'root' })
 export class PeopleService {
-  private readonly api = inject(ApiBaseService);
   private readonly employeeApi = inject(EmployeeAPIService);
   private readonly reportsApi = inject(PeopleReportsAPIService);
   private readonly staffingApi = inject(PeopleStaffingAssignmentsService);
@@ -216,18 +213,12 @@ export class PeopleService {
   }
 
   /**
-   * D2 (issue #350): `WorkSessionsAPIService.submitWorkSession()` now exists in
-   * `@durion-sdk/people`, but its `WorkSessionDto` response (`sessionId`, `personId`,
-   * `status`, timestamps, minute totals) has no `correlationId` — the field
-   * `WorkSessionSubmitPageComponent` reads back and renders for support follow-up.
-   * Calling the SDK method would silently drop that value rather than migrate the
-   * endpoint, so this stays on `ApiBaseService` until the people OpenAPI contract
-   * returns a correlation id on submit.
+   * D2 (issue #350, #2208 ruling): `sessionId` on `WorkSessionDto` is the
+   * submission reference users quote; there is no `correlationId` on submit and
+   * none will be added (People domain rules DECISION-PEOPLE-005). Migrated onto
+   * `WorkSessionsAPIService.submitWorkSession()`.
    */
-  submitWorkSession(sessionId: string, request: WorkSessionSubmitRequest): Observable<Record<string, unknown> | null> {
-    return this.api.post<Record<string, unknown> | null>(
-      `/people/v1/people/workSessions/${encodeURIComponent(sessionId)}/submit`,
-      request,
-    );
+  submitWorkSession(sessionId: string, request: WorkSessionSubmitRequest): Observable<WorkSessionDto> {
+    return this.workSessionsApi.submitWorkSession(sessionId, request);
   }
 }
