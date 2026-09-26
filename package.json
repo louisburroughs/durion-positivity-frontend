@@ -84,6 +84,7 @@
     "@types/node": "^20.17.19",
     "@types/uuid": "^10.0.0",
     "@vitest/browser-playwright": "^4.1.10",
+    "@vitest/coverage-v8": "^4.1.10",
     "angular-eslint": "^22.1.0",
     "archunit": "2.5.4",
     "axe-core": "^4.11.1",

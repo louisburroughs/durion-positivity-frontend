@@ -40,6 +40,7 @@ npm test                             # what CI runs: contract tests + arch suite
 npm run test:arch                    # architecture rules (ArchUnitTS, plain node) — arch/README.md
 npx ng test --no-watch --browsers=ChromiumHeadless --runner-config vitest.config.ts   # single CI pass (real Chromium, as CI runs it)
 npx ng test --include="src/app/features/<domain>/**/*.spec.ts" --no-watch --browsers=ChromiumHeadless --runner-config vitest.config.ts   # one domain suite
+npx ng test --no-watch --browsers=ChromiumHeadless --runner-config vitest.config.ts --coverage   # coverage → coverage/durion-positivity-frontend/lcov.info; floors in angular.json (nightly Sonar)
 npm run lint                         # ESLint via @angular-eslint
 npm run lint:css                     # stylelint src/**/*.css
 npm run i18n:check                   # missing-keys + pseudo-locale check
