@@ -415,6 +415,153 @@ button {
 }
 
 /* ── Scoped Shared Styles Extracted From Oversized Component Stylesheets ── */
+/* Mobile Units page: unit and coverage dialogs. */
+app-mobile-units-page .mu-dialog {
+  width: min(640px, calc(100vw - 2rem));
+  max-height: calc(100vh - 2rem);
+  box-sizing: border-box;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--cardBackground);
+  color: var(--currentTextColor);
+  box-shadow: 0 12px 40px rgb(0 0 0 / 5%);
+}
+
+app-mobile-units-page .mu-dialog-wide {
+  width: min(1040px, calc(100vw - 2rem));
+}
+
+app-mobile-units-page .mu-dialog::backdrop {
+  background: rgb(28 46 72 / 32%);
+}
+
+app-mobile-units-page .dialog-panel {
+  padding: var(--space-6);
+}
+
+app-mobile-units-page .dialog-panel h2 {
+  margin: 0 0 var(--space-4);
+  font-family: var(--font-primary);
+}
+
+app-mobile-units-page .dialog-panel .field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+  margin: 0 0 var(--space-4);
+  padding: 0;
+  border: none;
+}
+
+app-mobile-units-page .dialog-panel .field > label,
+app-mobile-units-page .dialog-panel legend {
+  font-weight: var(--font-weight-heading);
+}
+
+app-mobile-units-page .dialog-panel input[type='text'],
+app-mobile-units-page .dialog-panel input[type='number'],
+app-mobile-units-page .dialog-panel input[type='date'],
+app-mobile-units-page .dialog-panel select,
+app-mobile-units-page .dialog-panel textarea {
+  min-height: 32px;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-sm);
+  background: var(--input-background);
+  color: var(--currentTextColor);
+}
+
+app-mobile-units-page .dialog-panel .hint {
+  margin: var(--space-1) 0 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+app-mobile-units-page .dialog-panel .radio-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+app-mobile-units-page .dialog-panel .chip-code {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+app-mobile-units-page .dialog-panel .chip-remove {
+  min-width: 24px;
+  min-height: 24px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font-size: 1rem;
+}
+
+app-mobile-units-page .dialog-panel .chip-remove[aria-disabled='true'] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+app-mobile-units-page .rule-list {
+  display: flex;
+  flex-direction: column;
+  margin: 0 0 var(--space-4);
+  padding: 0;
+  list-style: none;
+}
+
+app-mobile-units-page .rule-row {
+  padding: var(--space-4);
+  border-radius: var(--radius-sm);
+}
+
+app-mobile-units-page .rule-row:nth-child(odd) {
+  background: var(--surface-inset);
+}
+
+app-mobile-units-page .rule-row fieldset {
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+app-mobile-units-page .rule-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(11rem, 100%), 1fr));
+  gap: var(--space-4);
+}
+
+app-mobile-units-page .recorded-only .caption,
+app-mobile-units-page .recorded-only label {
+  color: var(--text-muted);
+}
+
+app-mobile-units-page .dialog-error {
+  margin: var(--space-3) 0;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--status-error-fg);
+  border-radius: var(--radius-sm);
+  background: var(--status-error-bg);
+  color: var(--status-error-fg);
+}
+
+app-mobile-units-page .dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+app-mobile-units-page .save-coverage-btn[aria-disabled='true'] {
+  opacity: 0.6;
+}
+
 /* Bays page create/edit dialog. */
 app-bays-page .bay-dialog {
   width: min(960px, calc(100vw - 2rem));

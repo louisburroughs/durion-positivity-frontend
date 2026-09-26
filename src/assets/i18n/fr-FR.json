@@ -2094,26 +2094,206 @@
       }
     },
     "MOBILE_UNITS": {
+      "OVERLINE": "Configuration de l'emplacement",
       "TITLE": "Unités mobiles",
-      "CREATE_MOBILE_UNIT": "Créer une unité mobile",
-      "COVERAGE_RULES": "Règles de couverture",
-      "NAME": "Nom",
-      "REGION": "Région",
-      "LOADING": "Chargement...",
-      "EMPTY": "Aucune unité mobile trouvée.",
-      "CANCEL": "Annuler",
-      "CREATE": "Créer",
-      "SAVE": "Enregistrer",
-      "ERROR": {
-        "LOAD": "Impossible de charger les unités mobiles.",
-        "NAME_REQUIRED": "Le nom est requis.",
-        "SELECT_UNIT": "Une unité mobile doit être sélectionnée.",
-        "CREATE": "Impossible de créer l'unité mobile.",
-        "UPDATE_COVERAGE": "Impossible de mettre à jour les règles de couverture."
-      },
+      "STANDFIRST": "Décidez où chaque unité basée ici peut être envoyée. Cette page ne montre pas où se trouvent les unités en ce moment.",
       "LABEL": "Emplacement de base",
-      "PROMPT": "Sélectionnez un emplacement de base pour afficher et modifier ses unités mobiles.",
-      "UNNAMED": "Unité mobile"
+      "PROMPT": "Choisissez l'atelier où ces unités sont basées.",
+      "SHOW_TESTS": "Afficher les enregistrements de test",
+      "TESTS_HIDDEN": "({{count}} masqués)",
+      "NEW_UNIT": "Nouvelle unité",
+      "VIEW_ONLY": "Lecture seule : vous ne pouvez pas modifier les unités mobiles de cet emplacement.",
+      "COVERAGE_READ_FAILED": "La couverture de certaines unités n'a pas pu être chargée. Leur couverture et leur liste de vérification ne sont pas affichées.",
+      "LOADING": "Chargement des unités mobiles…",
+      "RETRY": "Réessayer",
+      "EMPTY": "Aucune unité mobile n'est encore basée à cet emplacement.",
+      "TEST_RECORD": "Enregistrement de test",
+      "NAME_UNAVAILABLE": "Nom indisponible",
+      "RECORDED_CAPABILITIES": "Enregistrées, pas encore utilisées pour l'assignation.",
+      "RECORDED_POLICY": "Enregistrée, pas encore appliquée.",
+      "EDIT": "Modifier",
+      "EDIT_NAMED": "Modifier {{unit}}",
+      "EDIT_COVERAGE": "Modifier la couverture",
+      "EDIT_COVERAGE_NAMED": "Modifier la couverture de {{unit}}",
+      "CANCEL": "Annuler",
+      "SAVING": "Enregistrement",
+      "REMOVE_CAPABILITY": "Retirer {{service}}",
+      "FIND_CAPABILITY": "Trouver une capacité à ajouter",
+      "NO_CATALOG": "Vous ne pouvez pas consulter le catalogue de services, donc vous ne pouvez pas ajouter de capacités ici.",
+      "CHECK": {
+        "TITLE": "Vérifier la couverture",
+        "POSTAL": "Code postal",
+        "COUNTRY": "Pays",
+        "DATE": "Date",
+        "RUN": "Vérifier",
+        "LOADING": "Vérification…",
+        "FAILED": "Impossible de vérifier la couverture. Réessayez.",
+        "NONE": "Aucune unité active basée ici ne couvre {{postalCode}} le {{date}}.",
+        "RESULT": "{{unit}}, priorité {{priority}}",
+        "SCOPE": "Seules les unités actives basées à cet emplacement sont listées, le plus petit numéro de priorité en premier.",
+        "POSTAL_REQUIRED": "Saisissez un code postal à vérifier."
+      },
+      "GROUP": {
+        "ACTIVE": "Actives",
+        "INACTIVE": "Configurées, non actives"
+      },
+      "STATUS": {
+        "ACTIVE": "Active",
+        "INACTIVE": "Inactive"
+      },
+      "CARD": {
+        "OVERLINE": "Unité mobile",
+        "COVERAGE": "Couverture",
+        "COVERAGE_UNKNOWN": "La couverture n'a pas pu être chargée.",
+        "NO_COVERAGE": "Pas encore de couverture.",
+        "TODAY": "Aujourd'hui",
+        "CODES_ONE": "· 1 code postal",
+        "CODES_MANY": "· {{count}} codes postaux",
+        "FROM": "À partir du {{date}}",
+        "PAST_ONE": "1 règle passée",
+        "PAST_MANY": "{{count}} règles passées",
+        "CAPABILITIES": "Capacités",
+        "NO_CAPABILITIES": "Aucune enregistrée."
+      },
+      "SENT": {
+        "INACTIVE": "Pas envoyée tant qu'elle n'est pas active.",
+        "UNKNOWN": "Active. Sa couverture n'a pas pu être chargée.",
+        "NONE_TODAY": "Active, mais aucune règle de couverture n'est en vigueur aujourd'hui, donc aucun client ne correspond.",
+        "AREAS_ONE": "Peut être envoyée aujourd'hui aux clients de 1 zone de service.",
+        "AREAS_MANY": "Peut être envoyée aujourd'hui aux clients de {{count}} zones de service."
+      },
+      "CHECKLIST": {
+        "TITLE": "Prête à activer",
+        "POLICY_DONE": "Politique de marge de déplacement : fait",
+        "POLICY_MISSING": "Politique de marge de déplacement : manquante",
+        "CAPABILITY_DONE": "Au moins une capacité : fait",
+        "CAPABILITY_MISSING": "Au moins une capacité : manquante",
+        "COVERAGE_DONE": "Au moins une règle de couverture : fait",
+        "COVERAGE_MISSING": "Au moins une règle de couverture : manquante",
+        "FIX_POLICY": "Choisir une politique",
+        "FIX_CAPABILITY": "Ajouter une capacité",
+        "FIX_COVERAGE": "Ajouter une couverture"
+      },
+      "ACTIVATE": {
+        "LABEL": "Activer",
+        "NAMED": "Activer {{unit}}",
+        "NEEDS_POLICY": "{{unit}} a besoin d'une politique de marge de déplacement avant d'être activée.",
+        "NEEDS_CAPABILITY": "{{unit}} a besoin d'une capacité avant d'être activée.",
+        "NEEDS_COVERAGE": "{{unit}} a besoin d'une règle de couverture avant d'être activée.",
+        "DONE_ONE": "{{unit}} est active et peut être envoyée aux clients de 1 zone de service.",
+        "DONE_MANY": "{{unit}} est active et peut être envoyée aux clients de {{count}} zones de service.",
+        "REFUSED": "{{unit}} n'a pas pu être activée : il lui faut une politique de marge de déplacement, une capacité et une règle de couverture."
+      },
+      "WARNING": {
+        "AREA_MISSING": "Une règle de couverture pointe vers une zone de service qui n'existe plus, donc elle ne correspond à personne.",
+        "AREA_EMPTY": "{{area}} n'a aucun code postal, donc elle ne couvre personne.",
+        "AREA_OFF": "{{area}} est désactivée, mais les unités qui la couvrent correspondent toujours."
+      },
+      "POLICY": {
+        "NONE": "Aucune politique de marge de déplacement.",
+        "UNAVAILABLE": "Nom de la politique indisponible.",
+        "NAMED": "{{policy}} ({{buffer}})",
+        "CHOOSE": "Aucune politique",
+        "READ_FAILED": "La liste des politiques n'a pas pu être chargée."
+      },
+      "BUFFER": {
+        "FLAT_MINUTES": "{{value}} minutes fixes",
+        "PERCENTAGE_OF_TRAVEL": "{{value}} % du temps de déplacement",
+        "DISTANCE_MULTIPLIER": "{{value}} × distance",
+        "NEEDS_FIXING": "type à corriger"
+      },
+      "FIELD": {
+        "NAME": "Nom",
+        "POLICY": "Politique de marge de déplacement",
+        "CAPABILITIES": "Capacités",
+        "NOTES": "Notes",
+        "STATUS": "Statut"
+      },
+      "HINT": {
+        "NAME": "Le nom que les répartiteurs donnent à cette unité, par ex. « Fourgon 7 ». Aucune autre unité basée à cet atelier ne peut porter le même nom.",
+        "BASE_LOCATION": "L'unité est basée à l'emplacement choisi plus haut. Elle ne prend que les bons de travail de cet atelier.",
+        "POLICY": "Temps ajouté autour de chaque visite pour la route. Enregistré maintenant ; la planification ne l'utilise pas encore.",
+        "CAPABILITIES": "Les services pour lesquels cette unité est équipée. Enregistrés maintenant ; l'assignation ne les vérifie pas encore.",
+        "LAST_CAPABILITY": "Une unité active a besoin d'au moins une capacité. Désactivez-la pour retirer la dernière.",
+        "NOTES": "Ce que les répartiteurs doivent savoir sur cette unité, par ex. où elle se gare la nuit.",
+        "STATUS": "Seules les unités actives peuvent recevoir des bons de travail.",
+        "STATUS_INCOMPLETE": "Pour être activée, une unité a besoin d'une politique de marge de déplacement, d'au moins une capacité et d'au moins une règle de couverture.",
+        "PRIORITY": "Priorité : les plus petits numéros sont proposés en premier, comparés entre toutes les unités d'ici qui couvrent le même code postal.",
+        "DATES": "Valide du / au : les dates où la règle s'applique. Laissez Valide au vide pour ne pas fixer de fin.",
+        "RULE_TYPE": "Le type de règle est enregistré pour plus tard. La correspondance n'utilise que la zone de service.",
+        "MAX_DISTANCE": "La distance maximale est enregistrée pour plus tard et n'est pas utilisée pour la correspondance. Laissez vide le dernier palier de distance, comme palier général."
+      },
+      "DIALOG": {
+        "CREATE_TITLE": "Nouvelle unité mobile",
+        "EDIT_TITLE": "Modifier {{unit}}",
+        "CREATE": "Créer l'unité",
+        "SAVE": "Enregistrer",
+        "STARTS_INACTIVE": "Les nouvelles unités commencent inactives. Ajoutez ensuite la couverture, puis activez-la depuis la carte.",
+        "CREATED_TITLE": "{{unit}} créée",
+        "CREATED_BODY": "Ajouter maintenant la couverture de {{unit}} ? Une unité a besoin d'une règle de couverture avant d'être activée.",
+        "LATER": "Plus tard",
+        "ADD_COVERAGE": "Ajouter une couverture"
+      },
+      "SAVED": {
+        "CREATED": "{{unit}} ajoutée à Configurées, non actives.",
+        "UPDATED": "{{unit}} enregistrée.",
+        "COVERAGE_ONE": "Couverture de {{unit}} enregistrée : 1 règle.",
+        "COVERAGE_MANY": "Couverture de {{unit}} enregistrée : {{count}} règles."
+      },
+      "COVERAGE": {
+        "TITLE": "Couverture de {{unit}}",
+        "INTRO": "Où va cette unité. Un client correspond par code postal : la zone de service de la règle doit l'inclure, aux dates où la règle est valide.",
+        "AREAS_FAILED": "Les zones de service n'ont pas pu être chargées, donc aucune zone ne peut être choisie pour l'instant.",
+        "EMPTY": "Pas encore de règle de couverture.",
+        "RULE": "Règle {{number}}",
+        "AREA": "Zone de service",
+        "CHOOSE_AREA": "Choisissez une zone de service",
+        "PRIORITY": "Priorité",
+        "VALID_FROM": "Valide du",
+        "VALID_TO": "Valide au",
+        "RECORDED_ONLY": "Enregistré seulement : pas encore utilisé pour la correspondance.",
+        "RULE_TYPE_LABEL": "Type de règle",
+        "MAX_DISTANCE": "Distance maximale",
+        "REMOVE": "Retirer",
+        "REMOVE_NAMED": "Retirer la règle {{number}}",
+        "ADD_RULE": "Ajouter une règle",
+        "REPLACES": "L'enregistrement remplace toutes les règles de couverture de cette unité.",
+        "SAVE": "Enregistrer la couverture",
+        "AREA_OPTION_ONE": "{{area}} (1 code postal)",
+        "AREA_OPTION_MANY": "{{area}} ({{count}} codes postaux)",
+        "AREA_MISSING": "Cette zone n'existe plus, donc la règle ne correspond à personne.",
+        "AREA_EMPTY": "Aucun code postal : cette zone ne couvre personne.",
+        "AREA_OFF_ONE": "1 code postal. Désactivée, mais compte toujours.",
+        "AREA_OFF_MANY": "{{count}} codes postaux. Désactivée, mais compte toujours.",
+        "AREA_CODES_ONE": "1 code postal.",
+        "AREA_CODES_MANY": "{{count}} codes postaux.",
+        "RULE_TYPE": {
+          "SERVICE_AREA": "Zone de service",
+          "DISTANCE_TIER": "Palier de distance"
+        },
+        "ERROR": {
+          "AREA_REQUIRED": "Choisissez une zone de service.",
+          "PRIORITY": "Saisissez un nombre entier de 0 ou plus.",
+          "DATES": "Valide au ne peut pas précéder Valide du.",
+          "CATCH_ALL_LAST": "Seul le dernier palier de distance peut laisser la distance maximale vide.",
+          "DISTANCE": "Saisissez une distance de 0 ou plus.",
+          "TIERS_ASCENDING": "Chaque palier de distance doit aller plus loin que le précédent.",
+          "CATCH_ALL_MISSING": "Laissez vide la distance maximale du dernier palier, comme palier général.",
+          "ACTIVE_NEEDS_RULE": "Une unité active a besoin d'au moins une règle de couverture. Désactivez d'abord {{unit}}, ou ajoutez une règle."
+        }
+      },
+      "ERROR": {
+        "LOAD": "Impossible de charger les unités mobiles de cet emplacement.",
+        "NAME_REQUIRED": "Saisissez un nom pour l'unité.",
+        "NAME_TAKEN": "Une autre unité basée ici s'appelle déjà {{unit}}.",
+        "ACTIVE_INCOMPLETE": "Une unité active a besoin d'une politique de marge de déplacement, d'une capacité et d'une règle de couverture.",
+        "INVALID": "L'unité n'a pas pu être enregistrée : vérifiez chaque champ et réessayez.",
+        "NOT_ALLOWED": "Vous ne pouvez pas modifier les unités mobiles de cet emplacement.",
+        "GONE": "Cette unité n'existe plus. Fermez la boîte de dialogue pour voir les unités actuelles.",
+        "CONFLICT": "Quelqu'un d'autre a modifié cette unité en même temps. Fermez la boîte de dialogue et réessayez.",
+        "UNPROCESSABLE": "L'unité n'a pas pu être enregistrée : une capacité n'est pas un service actif du catalogue, ou l'unité n'est pas prête à être active.",
+        "SAVE_FAILED": "Impossible d'enregistrer. Réessayez."
+      }
     },
     "LANDING": {
       "TITLE": "Espace de travail des emplacements",
@@ -2327,6 +2507,15 @@
         "SAVE": "Impossible d'enregistrer l'emplacement.",
         "DUPLICATE": "Un emplacement avec ce code ou ce nom existe déjà."
       }
+    },
+    "SERVICE_SEARCH": {
+      "HINT": "Tapez au moins 2 lettres du nom du service.",
+      "LOADING": "Recherche…",
+      "FAILED": "Impossible de chercher dans le catalogue de services. Réessayez.",
+      "NONE": "Aucun service ne correspond.",
+      "ALREADY_ADDED": "Déjà ajouté",
+      "ADD": "Ajouter",
+      "ADD_NAMED": "Ajouter {{service}}"
     }
   },
   "SHOPMGMT": {

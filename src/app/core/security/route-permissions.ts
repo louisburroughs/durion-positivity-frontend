@@ -544,6 +544,8 @@ export const LOCATION_PAGE = {
   /** Bays page specialty-service search (pos-catalog service search). */
   catalogServiceView: ['catalog:service_type:view'],
   mobileUnits: ['location:mobile-unit:read'],
+  /** Mobile Units page write controls: create, edit, activate, coverage. */
+  mobileUnitManage: ['location:mobile-unit:manage'],
   /** The sync console reads pos-inventory's replicated location tree. */
   sync: ['inventory:location:view'],
   bulkImport: ['bulkImport:upload:execute'],

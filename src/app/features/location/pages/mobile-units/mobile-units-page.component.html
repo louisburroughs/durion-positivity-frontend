@@ -1,16 +1,32 @@
-<section class="page-header">
+<header class="page-header">
+  <p class="overline">{{ 'LOCATION.MOBILE_UNITS.OVERLINE' | translate }}</p>
   <h1>{{ 'LOCATION.MOBILE_UNITS.TITLE' | translate }}</h1>
-  @if (locationId()) {
-    <button type="button" class="btn-primary open-create-btn" (click)="openCreate()">{{ 'LOCATION.MOBILE_UNITS.CREATE_MOBILE_UNIT' | translate }}</button>
-  }
-</section>
+  <p class="standfirst">{{ 'LOCATION.MOBILE_UNITS.STANDFIRST' | translate }}</p>
+</header>
 
-<app-location-picker
-  [label]="'LOCATION.MOBILE_UNITS.LABEL' | translate"
-  [selectedId]="locationId()"
-  (locationSelected)="onLocationSelected($event)"
-  (invalidSelection)="onInvalidSelection($event)"
-></app-location-picker>
+<div class="toolbar">
+  <app-location-picker
+    [label]="'LOCATION.MOBILE_UNITS.LABEL' | translate"
+    [selectedId]="locationId()"
+    (locationSelected)="onLocationSelected($event)"
+    (invalidSelection)="onInvalidSelection($event)"
+  ></app-location-picker>
+
+  @if (locationId()) {
+    <div class="toolbar-actions">
+      <label class="tests-toggle">
+        <input type="checkbox" [checked]="showTests()" (change)="toggleTests($any($event.target).checked)" />
+        <span>{{ 'LOCATION.MOBILE_UNITS.SHOW_TESTS' | translate }}</span>
+        @if (!showTests() && hiddenTestCount() > 0) {
+          <span class="muted">{{ 'LOCATION.MOBILE_UNITS.TESTS_HIDDEN' | translate: { count: hiddenTestCount() } }}</span>
+        }
+      </label>
+      @if (canEdit()) {
+        <button type="button" class="btn-primary new-unit-btn" (click)="openCreate()">{{ 'LOCATION.MOBILE_UNITS.NEW_UNIT' | translate }}</button>
+      }
+    </div>
+  }
+</div>
 
 @if (invalidId()) {
   <div class="error-banner" role="alert">{{ 'LOCATION.PICKER.NOT_FOUND' | translate }}</div>
@@ -20,69 +36,540 @@
   <section class="empty-state">
     <p>{{ 'LOCATION.MOBILE_UNITS.PROMPT' | translate }}</p>
   </section>
-}
+} @else {
+  <div class="sr-only" aria-live="polite">
+    @if (announcement(); as said) {
+      {{ said.key | translate: said.params }}
+    }
+  </div>
 
-@if (locationId()) {
-  @if (error()) {
-    <div class="error-banner">{{ error()! | translate }}</div>
+  <section class="check-band" aria-labelledby="check-heading">
+    <h2 id="check-heading" class="check-heading">
+      <button type="button" class="band-toggle" [attr.aria-expanded]="checkOpen()" aria-controls="check-body"
+        (click)="toggleCheck()">
+        <span aria-hidden="true">{{ checkOpen() ? '▾' : '▸' }}</span>
+        {{ 'LOCATION.MOBILE_UNITS.CHECK.TITLE' | translate }}
+      </button>
+    </h2>
+    @if (checkOpen()) {
+      <div id="check-body">
+        <form class="check-form" novalidate (submit)="$event.preventDefault(); runCheck()">
+          <div class="field">
+            <label for="check-postal">{{ 'LOCATION.MOBILE_UNITS.CHECK.POSTAL' | translate }}</label>
+            <input id="check-postal" type="text" autocomplete="postal-code" [value]="checkPostalCode()"
+              [attr.aria-invalid]="checkErrorKey() ? true : null"
+              [attr.aria-describedby]="checkErrorKey() ? 'check-postal-error' : null"
+              (input)="checkPostalCode.set($any($event.target).value)" />
+            @if (checkErrorKey(); as checkError) {
+              <p id="check-postal-error" class="field-error">{{ checkError | translate }}</p>
+            }
+          </div>
+          <div class="field field-narrow">
+            <label for="check-country">{{ 'LOCATION.MOBILE_UNITS.CHECK.COUNTRY' | translate }}</label>
+            <input id="check-country" type="text" maxlength="2" autocomplete="country" [value]="checkCountryValue()"
+              (input)="checkCountry.set($any($event.target).value.trim().toUpperCase())" />
+          </div>
+          <div class="field">
+            <label for="check-date">{{ 'LOCATION.MOBILE_UNITS.CHECK.DATE' | translate }}</label>
+            <input id="check-date" type="date" [value]="checkDate()"
+              (change)="checkDate.set($any($event.target).value || today)" />
+          </div>
+          <button type="submit" class="btn-primary check-btn" [disabled]="checkState() === 'loading'">
+            {{ 'LOCATION.MOBILE_UNITS.CHECK.RUN' | translate }}
+          </button>
+        </form>
+        <div class="check-results" aria-live="polite">
+          @switch (checkState()) {
+            @case ('loading') {
+              <p class="muted">{{ 'LOCATION.MOBILE_UNITS.CHECK.LOADING' | translate }}</p>
+            }
+            @case ('failed') {
+              <p class="field-error">{{ 'LOCATION.MOBILE_UNITS.CHECK.FAILED' | translate }}</p>
+            }
+            @case ('ready') {
+              @if (checkedFor(); as asked) {
+                @if (checkResults().length === 0) {
+                  <p>{{ 'LOCATION.MOBILE_UNITS.CHECK.NONE' | translate: { postalCode: asked.postalCode, date: (asked.date | date: 'mediumDate') } }}</p>
+                } @else {
+                  <ol class="check-list">
+                    @for (result of checkResults(); track result.id) {
+                      <li>{{ 'LOCATION.MOBILE_UNITS.CHECK.RESULT' | translate: { unit: result.name ?? '', priority: result.priority ?? 0 } }}</li>
+                    }
+                  </ol>
+                }
+                <p class="muted">{{ 'LOCATION.MOBILE_UNITS.CHECK.SCOPE' | translate }}</p>
+              }
+            }
+          }
+        </div>
+      </div>
+    }
+  </section>
+
+  @if (state() === 'ready' && !canEdit()) {
+    <p class="notice view-only-notice" role="status">{{ 'LOCATION.MOBILE_UNITS.VIEW_ONLY' | translate }}</p>
+  }
+  @if (state() === 'ready' && coverageRead() === 'FAILED') {
+    <p class="notice" role="status">{{ 'LOCATION.MOBILE_UNITS.COVERAGE_READ_FAILED' | translate }}</p>
   }
 
-  @if (loading()) {
-    <section class="units-list">
-      <p>{{ 'LOCATION.MOBILE_UNITS.LOADING' | translate }}</p>
-    </section>
-  } @else {
-    @if (mobileUnits().length > 0) {
-      <section class="units-list">
-        @for (unit of mobileUnits(); track $index) {
-          <article class="unit-card">
-            <h3>{{ getUnitName(unit) }}</h3>
-            <button type="button" class="btn-secondary" (click)="openCoverage(unit)">{{ 'LOCATION.MOBILE_UNITS.COVERAGE_RULES' | translate }}</button>
-          </article>
+  @switch (state()) {
+    @case ('loading') {
+      <p class="muted" role="status">{{ 'LOCATION.MOBILE_UNITS.LOADING' | translate }}</p>
+    }
+    @case ('error') {
+      <div class="state-panel" role="alert">
+        <p>{{ errorKey()! | translate }}</p>
+        <button type="button" class="btn-secondary retry-btn" (click)="retry()">{{ 'LOCATION.MOBILE_UNITS.RETRY' | translate }}</button>
+      </div>
+    }
+    @case ('ready') {
+      @if (!hasVisibleUnits()) {
+        <section class="empty-state">
+          <p>{{ 'LOCATION.MOBILE_UNITS.EMPTY' | translate }}</p>
+          @if (canEdit()) {
+            <button type="button" class="btn-primary" (click)="openCreate()">{{ 'LOCATION.MOBILE_UNITS.NEW_UNIT' | translate }}</button>
+          }
+        </section>
+      } @else {
+        @for (group of groups(); track group.group) {
+          @if (group.cards.length > 0) {
+            <section class="group" [attr.aria-labelledby]="'group-' + group.group">
+              <h2 class="group-heading" [id]="'group-' + group.group">
+                {{ group.headingKey | translate }} <span class="group-count">{{ group.cards.length }}</span>
+              </h2>
+              <ul class="card-grid">
+                @for (card of group.cards; track card.unit.id) {
+                  <li>
+                    <article class="unit-card" [id]="'unit-' + card.unit.id" tabindex="-1"
+                      [attr.aria-labelledby]="'unit-name-' + card.unit.id">
+                      <div class="card-top">
+                        <p class="overline">{{ 'LOCATION.MOBILE_UNITS.CARD.OVERLINE' | translate }}</p>
+                        <div class="card-tags">
+                          @if (card.testRecord) {
+                            <span class="tag tag-neutral">{{ 'LOCATION.MOBILE_UNITS.TEST_RECORD' | translate }}</span>
+                          }
+                          <span class="tag" [class.tag-success]="card.active" [class.tag-neutral]="!card.active">
+                            {{ statusKey(card.active ? 'ACTIVE' : 'INACTIVE') | translate }}
+                          </span>
+                        </div>
+                      </div>
+                      <h3 [id]="'unit-name-' + card.unit.id">{{ card.name }}</h3>
+                      <p class="sent" [class.warning-text]="card.sentWarning">{{ card.sentLine.key | translate: card.sentLine.params }}</p>
+
+                      @if (cardError(card.unit.id); as refusal) {
+                        <p class="card-error" role="alert">{{ refusal | translate: { unit: card.name } }}</p>
+                      }
+
+                      @if (!card.active && card.checklist; as checklist) {
+                        <div class="checklist-block">
+                          <h4 class="overline" [id]="'checklist-' + card.unit.id">{{ 'LOCATION.MOBILE_UNITS.CHECKLIST.TITLE' | translate }}</h4>
+                          <ul class="checklist" [attr.aria-labelledby]="'checklist-' + card.unit.id">
+                            <li [id]="'check-' + card.unit.id + '-policy'" tabindex="-1">
+                              <span aria-hidden="true" class="mark">{{ checklist.policy ? '✓' : '✗' }}</span>
+                              <span>{{ (checklist.policy ? 'LOCATION.MOBILE_UNITS.CHECKLIST.POLICY_DONE' : 'LOCATION.MOBILE_UNITS.CHECKLIST.POLICY_MISSING') | translate }}</span>
+                              @if (!checklist.policy && canEdit()) {
+                                <button type="button" class="link-btn" (click)="openEdit(card.unit, 'unit-policy')">
+                                  {{ 'LOCATION.MOBILE_UNITS.CHECKLIST.FIX_POLICY' | translate }}
+                                </button>
+                              }
+                            </li>
+                            <li [id]="'check-' + card.unit.id + '-capability'" tabindex="-1">
+                              <span aria-hidden="true" class="mark">{{ checklist.capability ? '✓' : '✗' }}</span>
+                              <span>{{ (checklist.capability ? 'LOCATION.MOBILE_UNITS.CHECKLIST.CAPABILITY_DONE' : 'LOCATION.MOBILE_UNITS.CHECKLIST.CAPABILITY_MISSING') | translate }}</span>
+                              @if (!checklist.capability && canEdit()) {
+                                <button type="button" class="link-btn" (click)="openEdit(card.unit, 'unit-capability-search')">
+                                  {{ 'LOCATION.MOBILE_UNITS.CHECKLIST.FIX_CAPABILITY' | translate }}
+                                </button>
+                              }
+                            </li>
+                            <li [id]="'check-' + card.unit.id + '-coverage'" tabindex="-1">
+                              <span aria-hidden="true" class="mark">{{ checklist.coverage ? '✓' : '✗' }}</span>
+                              <span>{{ (checklist.coverage ? 'LOCATION.MOBILE_UNITS.CHECKLIST.COVERAGE_DONE' : 'LOCATION.MOBILE_UNITS.CHECKLIST.COVERAGE_MISSING') | translate }}</span>
+                              @if (!checklist.coverage && canEdit()) {
+                                <button type="button" class="link-btn" (click)="openCoverage(card.unit)">
+                                  {{ 'LOCATION.MOBILE_UNITS.CHECKLIST.FIX_COVERAGE' | translate }}
+                                </button>
+                              }
+                            </li>
+                          </ul>
+                          @if (canEdit()) {
+                            <button type="button" class="btn-primary activate-btn"
+                              [attr.aria-disabled]="!card.ready || activating() === card.unit.id ? true : null"
+                              [attr.aria-describedby]="'checklist-' + card.unit.id"
+                              [attr.aria-label]="'LOCATION.MOBILE_UNITS.ACTIVATE.NAMED' | translate: { unit: card.name }"
+                              (click)="activate(card)">{{ 'LOCATION.MOBILE_UNITS.ACTIVATE.LABEL' | translate }}</button>
+                          }
+                        </div>
+                      }
+
+                      <div class="section">
+                        <h4 class="overline">{{ 'LOCATION.MOBILE_UNITS.CARD.COVERAGE' | translate }}</h4>
+                        @if (!card.coverageKnown) {
+                          <p class="muted">{{ 'LOCATION.MOBILE_UNITS.CARD.COVERAGE_UNKNOWN' | translate }}</p>
+                        } @else if (card.current.length === 0 && card.upcoming.length === 0) {
+                          <p class="muted">{{ 'LOCATION.MOBILE_UNITS.CARD.NO_COVERAGE' | translate }}</p>
+                        } @else {
+                          @if (card.current.length > 0) {
+                            <p class="coverage-when">{{ 'LOCATION.MOBILE_UNITS.CARD.TODAY' | translate }}</p>
+                            <ul class="chips">
+                              @for (chip of card.current; track chip.ruleId) {
+                                <li class="chip">{{ chip.name ?? ('LOCATION.MOBILE_UNITS.NAME_UNAVAILABLE' | translate) }}
+                                  @if (chip.codes !== null) {
+                                    <span class="chip-count">{{ (chip.codes === 1 ? 'LOCATION.MOBILE_UNITS.CARD.CODES_ONE' : 'LOCATION.MOBILE_UNITS.CARD.CODES_MANY') | translate: { count: chip.codes } }}</span>
+                                  }
+                                </li>
+                              }
+                            </ul>
+                          }
+                          @for (next of card.upcoming; track next.from) {
+                            <p class="coverage-when">{{ 'LOCATION.MOBILE_UNITS.CARD.FROM' | translate: { date: (next.from | date: 'mediumDate') } }}</p>
+                            <ul class="chips">
+                              @for (chip of next.chips; track chip.ruleId) {
+                                <li class="chip">{{ chip.name ?? ('LOCATION.MOBILE_UNITS.NAME_UNAVAILABLE' | translate) }}
+                                  @if (chip.codes !== null) {
+                                    <span class="chip-count">{{ (chip.codes === 1 ? 'LOCATION.MOBILE_UNITS.CARD.CODES_ONE' : 'LOCATION.MOBILE_UNITS.CARD.CODES_MANY') | translate: { count: chip.codes } }}</span>
+                                  }
+                                </li>
+                              }
+                            </ul>
+                          }
+                        }
+                        @if (card.pastCount > 0) {
+                          <p class="muted">{{ (card.pastCount === 1 ? 'LOCATION.MOBILE_UNITS.CARD.PAST_ONE' : 'LOCATION.MOBILE_UNITS.CARD.PAST_MANY') | translate: { count: card.pastCount } }}</p>
+                        }
+                        @for (warning of card.warnings; track $index) {
+                          <p class="warning-text">{{ warning.key | translate: warning.params }}</p>
+                        }
+                      </div>
+
+                      <div class="section">
+                        <h4 class="overline">{{ 'LOCATION.MOBILE_UNITS.CARD.CAPABILITIES' | translate }}</h4>
+                        <p class="caption">{{ 'LOCATION.MOBILE_UNITS.RECORDED_CAPABILITIES' | translate }}</p>
+                        @if (card.capabilities.length > 0) {
+                          <ul class="chips">
+                            @for (capability of card.capabilities; track capability.code) {
+                              <li class="chip">{{ capability.label }}</li>
+                            }
+                          </ul>
+                        } @else {
+                          <p class="muted">{{ 'LOCATION.MOBILE_UNITS.CARD.NO_CAPABILITIES' | translate }}</p>
+                        }
+                      </div>
+
+                      <dl class="facts">
+                        <div>
+                          <dt>{{ 'LOCATION.MOBILE_UNITS.FIELD.POLICY' | translate }}</dt>
+                          <dd>
+                            @if (card.policy.policy; as policy) {
+                              {{ 'LOCATION.MOBILE_UNITS.POLICY.NAMED' | translate: { policy: policy.name ?? '', buffer: (bufferText(policy).key | translate: bufferText(policy).params) } }}
+                            } @else {
+                              {{ card.policy.missingKey! | translate }}
+                            }
+                            <span class="muted">{{ 'LOCATION.MOBILE_UNITS.RECORDED_POLICY' | translate }}</span>
+                          </dd>
+                        </div>
+                        @if (card.notes) {
+                          <div>
+                            <dt>{{ 'LOCATION.MOBILE_UNITS.FIELD.NOTES' | translate }}</dt>
+                            <dd class="notes">{{ card.notes }}</dd>
+                          </div>
+                        }
+                      </dl>
+
+                      @if (canEdit()) {
+                        <div class="card-actions">
+                          <button type="button" class="btn-secondary edit-coverage-btn" [id]="'edit-coverage-' + card.unit.id"
+                            [attr.aria-label]="'LOCATION.MOBILE_UNITS.EDIT_COVERAGE_NAMED' | translate: { unit: card.name }"
+                            [disabled]="!card.coverageKnown"
+                            (click)="openCoverage(card.unit)">{{ 'LOCATION.MOBILE_UNITS.EDIT_COVERAGE' | translate }}</button>
+                          <button type="button" class="btn-secondary edit-unit-btn"
+                            [attr.aria-label]="'LOCATION.MOBILE_UNITS.EDIT_NAMED' | translate: { unit: card.name }"
+                            (click)="openEdit(card.unit)">{{ 'LOCATION.MOBILE_UNITS.EDIT' | translate }}</button>
+                        </div>
+                      }
+                    </article>
+                  </li>
+                }
+              </ul>
+            </section>
+          }
         }
-      </section>
-    } @else {
-      <section class="empty-state">
-        <p>{{ 'LOCATION.MOBILE_UNITS.EMPTY' | translate }}</p>
-      </section>
+      }
     }
   }
 }
 
-@if (showCreateModal()) {
-  <div class="create-modal-overlay">
-  <section class="create-modal">
-    <h3>{{ 'LOCATION.MOBILE_UNITS.CREATE_MOBILE_UNIT' | translate }}</h3>
+@if (dialogMode(); as mode) {
+  <dialog appModalDialog class="mu-dialog" aria-labelledby="unit-dialog-title" (modalCancel)="closeDialog()">
+    @if (createdUnit(); as created) {
+      <div class="dialog-panel">
+        <h2 id="unit-dialog-title">{{ 'LOCATION.MOBILE_UNITS.DIALOG.CREATED_TITLE' | translate: { unit: created.name ?? '' } }}</h2>
+        <p>{{ 'LOCATION.MOBILE_UNITS.DIALOG.CREATED_BODY' | translate: { unit: created.name ?? '' } }}</p>
+        <div class="dialog-actions">
+          <button type="button" class="btn-secondary" (click)="closeDialog()">{{ 'LOCATION.MOBILE_UNITS.DIALOG.LATER' | translate }}</button>
+          <button type="button" id="add-coverage-now" class="btn-primary" (click)="addCoverageForCreated()">
+            {{ 'LOCATION.MOBILE_UNITS.DIALOG.ADD_COVERAGE' | translate }}
+          </button>
+        </div>
+      </div>
+    } @else {
+      <form class="dialog-panel" novalidate (submit)="$event.preventDefault(); submit()">
+        <h2 id="unit-dialog-title">
+          {{ (mode === 'create' ? 'LOCATION.MOBILE_UNITS.DIALOG.CREATE_TITLE' : 'LOCATION.MOBILE_UNITS.DIALOG.EDIT_TITLE') | translate: { unit: editingUnit()?.name ?? '' } }}
+        </h2>
 
-    <div class="form-group">
-      <label for="mobile-unit-name">{{ 'LOCATION.MOBILE_UNITS.NAME' | translate }}</label>
-      <input id="mobile-unit-name" type="text" [value]="createName()"
-        (input)="createName.set($any($event.target).value)" />
-    </div>
+        <div class="field">
+          <label for="unit-name">{{ 'LOCATION.MOBILE_UNITS.FIELD.NAME' | translate }} <span aria-hidden="true">*</span></label>
+          <input id="unit-name" type="text" required autocomplete="off" [value]="draft().name"
+            [attr.aria-invalid]="nameErrorKey() ? true : null"
+            [attr.aria-describedby]="nameErrorKey() ? 'unit-name-error unit-name-hint' : 'unit-name-hint'"
+            (input)="setName($any($event.target).value)" />
+          @if (nameErrorKey(); as nameError) {
+            <p id="unit-name-error" class="field-error">{{ nameError | translate: { unit: draft().name.trim() } }}</p>
+          }
+          <p id="unit-name-hint" class="hint">{{ 'LOCATION.MOBILE_UNITS.HINT.NAME' | translate }}</p>
+        </div>
 
-    <div class="modal-actions">
-      <button type="button" class="btn-secondary" (click)="closeCreate()">{{ 'LOCATION.MOBILE_UNITS.CANCEL' | translate }}</button>
-      <button type="button" class="btn-primary submit-create-btn" (click)="submitCreate()">{{ 'LOCATION.MOBILE_UNITS.CREATE' | translate }}</button>
-    </div>
-  </section>
-  </div>
+        <p class="hint">{{ 'LOCATION.MOBILE_UNITS.HINT.BASE_LOCATION' | translate }}</p>
+
+        <div class="field">
+          <label for="unit-policy">{{ 'LOCATION.MOBILE_UNITS.FIELD.POLICY' | translate }}</label>
+          <select id="unit-policy" aria-describedby="unit-policy-hint" (change)="setPolicy($any($event.target).value)">
+            <option value="" [selected]="!draft().travelBufferPolicyId">{{ 'LOCATION.MOBILE_UNITS.POLICY.CHOOSE' | translate }}</option>
+            @for (policy of policies(); track policy.id) {
+              <option [value]="policy.id" [selected]="draft().travelBufferPolicyId === policy.id">
+                {{ 'LOCATION.MOBILE_UNITS.POLICY.NAMED' | translate: { policy: policy.name ?? '', buffer: (bufferText(policy).key | translate: bufferText(policy).params) } }}
+              </option>
+            }
+          </select>
+          <p id="unit-policy-hint" class="hint">
+            {{ 'LOCATION.MOBILE_UNITS.HINT.POLICY' | translate }}
+            @if (policiesRead() === 'FAILED') {
+              {{ 'LOCATION.MOBILE_UNITS.POLICY.READ_FAILED' | translate }}
+            }
+          </p>
+        </div>
+
+        <fieldset class="field" aria-describedby="unit-capability-hint">
+          <legend>{{ 'LOCATION.MOBILE_UNITS.FIELD.CAPABILITIES' | translate }}</legend>
+          @if (draftChips().length > 0) {
+            <ul class="chips">
+              @for (chip of draftChips(); track chip.code) {
+                <li class="chip">
+                  <span>{{ chip.label }}</span>
+                  <code class="chip-code">{{ chip.code }}</code>
+                  <button type="button" class="chip-remove"
+                    [attr.aria-label]="'LOCATION.MOBILE_UNITS.REMOVE_CAPABILITY' | translate: { service: chip.label }"
+                    [attr.aria-disabled]="lastCapabilityLocked() ? true : null"
+                    (click)="lastCapabilityLocked() || removeCapability(chip.code)">×</button>
+                </li>
+              }
+            </ul>
+          } @else {
+            <p class="muted">{{ 'LOCATION.MOBILE_UNITS.CARD.NO_CAPABILITIES' | translate }}</p>
+          }
+          <p id="unit-capability-hint" class="hint">
+            {{ 'LOCATION.MOBILE_UNITS.HINT.CAPABILITIES' | translate }}
+            @if (lastCapabilityLocked()) {
+              {{ 'LOCATION.MOBILE_UNITS.HINT.LAST_CAPABILITY' | translate }}
+            }
+          </p>
+          @if (canSearchServices()) {
+            <app-service-search inputId="unit-capability-search" labelKey="LOCATION.MOBILE_UNITS.FIND_CAPABILITY"
+              [selectedCodes]="draft().serviceCapabilityCodes" (serviceAdded)="addCapability($event)" />
+          } @else {
+            <p class="muted">{{ 'LOCATION.MOBILE_UNITS.NO_CATALOG' | translate }}</p>
+          }
+        </fieldset>
+
+        <div class="field">
+          <label for="unit-notes">{{ 'LOCATION.MOBILE_UNITS.FIELD.NOTES' | translate }}</label>
+          <textarea id="unit-notes" rows="3" aria-describedby="unit-notes-hint" [value]="draft().notes"
+            (input)="setNotes($any($event.target).value)"></textarea>
+          <p id="unit-notes-hint" class="hint">{{ 'LOCATION.MOBILE_UNITS.HINT.NOTES' | translate }}</p>
+        </div>
+
+        @if (mode === 'create') {
+          <p class="notice">{{ 'LOCATION.MOBILE_UNITS.DIALOG.STARTS_INACTIVE' | translate }}</p>
+        } @else {
+          <fieldset class="field" aria-describedby="unit-status-hint">
+            <legend>{{ 'LOCATION.MOBILE_UNITS.FIELD.STATUS' | translate }}</legend>
+            <div class="radio-row">
+              @for (status of statuses; track status) {
+                <label>
+                  <input type="radio" name="unit-status" [value]="status" [checked]="draft().status === status"
+                    [attr.aria-disabled]="status === 'ACTIVE' && !draftCanBeActive() ? true : null"
+                    (change)="setStatus(status)" (click)="status === 'ACTIVE' && !draftCanBeActive() && $event.preventDefault()" />
+                  {{ statusKey(status) | translate }}
+                </label>
+              }
+            </div>
+            <p id="unit-status-hint" class="hint">
+              {{ 'LOCATION.MOBILE_UNITS.HINT.STATUS' | translate }}
+              @if (!draftCanBeActive()) {
+                {{ 'LOCATION.MOBILE_UNITS.HINT.STATUS_INCOMPLETE' | translate }}
+              }
+            </p>
+          </fieldset>
+        }
+
+        @if (saveErrorKey(); as saveError) {
+          <p class="dialog-error" role="alert">{{ saveError | translate }}</p>
+        }
+
+        <div class="dialog-actions">
+          <button type="button" class="btn-secondary cancel-btn" [disabled]="saving()" (click)="closeDialog()">
+            {{ 'LOCATION.MOBILE_UNITS.CANCEL' | translate }}
+          </button>
+          <button type="submit" class="btn-primary submit-btn" [disabled]="saving()">
+            {{ (mode === 'create' ? 'LOCATION.MOBILE_UNITS.DIALOG.CREATE' : 'LOCATION.MOBILE_UNITS.DIALOG.SAVE') | translate }}
+          </button>
+          @if (saving()) {
+            <span class="sr-only" role="status">{{ 'LOCATION.MOBILE_UNITS.SAVING' | translate }}</span>
+          }
+        </div>
+      </form>
+    }
+  </dialog>
 }
 
-@if (showCoverageModal()) {
-  <div class="coverage-modal-overlay">
-  <section class="coverage-modal">
-    <h3>{{ 'LOCATION.MOBILE_UNITS.COVERAGE_RULES' | translate }}</h3>
+@if (coverageUnit(); as unit) {
+  <dialog appModalDialog class="mu-dialog mu-dialog-wide" aria-labelledby="coverage-title" (modalCancel)="closeCoverage()">
+    <form class="dialog-panel" novalidate (submit)="$event.preventDefault(); saveCoverage()">
+      <h2 id="coverage-title">{{ 'LOCATION.MOBILE_UNITS.COVERAGE.TITLE' | translate: { unit: unit.name ?? '' } }}</h2>
+      <p class="hint">{{ 'LOCATION.MOBILE_UNITS.COVERAGE.INTRO' | translate }}</p>
+      @if (areasRead() === 'FAILED') {
+        <p class="notice" role="status">{{ 'LOCATION.MOBILE_UNITS.COVERAGE.AREAS_FAILED' | translate }}</p>
+      }
 
-    <div class="form-group">
-      <label for="coverage-region">{{ 'LOCATION.MOBILE_UNITS.REGION' | translate }}</label>
-      <input id="coverage-region" type="text" [value]="coverageRegion()"
-        (input)="coverageRegion.set($any($event.target).value)" />
-    </div>
+      @if (ruleRows().length === 0) {
+        <p class="muted">{{ 'LOCATION.MOBILE_UNITS.COVERAGE.EMPTY' | translate }}</p>
+      }
+      <ol class="rule-list">
+        @for (row of ruleRows(); track row.key; let i = $index) {
+          <li class="rule-row">
+            <fieldset>
+              <legend>{{ 'LOCATION.MOBILE_UNITS.COVERAGE.RULE' | translate: { number: i + 1 } }}</legend>
+              <div class="rule-grid">
+                <div class="field">
+                  <label [for]="'rule-' + row.key + '-area'">{{ 'LOCATION.MOBILE_UNITS.COVERAGE.AREA' | translate }} <span aria-hidden="true">*</span></label>
+                  <select [id]="'rule-' + row.key + '-area'"
+                    [attr.aria-invalid]="ruleError(row.key, 'serviceAreaId') ? true : null"
+                    [attr.aria-describedby]="ruleDescribedBy(row.key, 'serviceAreaId', 'rule-' + row.key + '-area-note')"
+                    (change)="setRuleField(row.key, 'serviceAreaId', $any($event.target).value)">
+                    <option value="" [selected]="!row.serviceAreaId">{{ 'LOCATION.MOBILE_UNITS.COVERAGE.CHOOSE_AREA' | translate }}</option>
+                    @if (isUnlistedArea(row.serviceAreaId)) {
+                      <option [value]="row.serviceAreaId" selected>{{ 'LOCATION.MOBILE_UNITS.NAME_UNAVAILABLE' | translate }}</option>
+                    }
+                    @for (area of areas(); track area.id) {
+                      <option [value]="area.id" [selected]="row.serviceAreaId === area.id">
+                        {{ areaOptionKey(area).key | translate: areaOptionKey(area).params }}
+                      </option>
+                    }
+                  </select>
+                  @if (ruleError(row.key, 'serviceAreaId'); as error) {
+                    <p [id]="'rule-' + row.key + '-serviceAreaId-error'" class="field-error">{{ error | translate }}</p>
+                  }
+                  <p [id]="'rule-' + row.key + '-area-note'" class="hint">
+                    @if (areaNote(row.serviceAreaId); as note) {
+                      {{ note.key | translate: note.params }}
+                    }
+                  </p>
+                </div>
+                <div class="field">
+                  <label [for]="'rule-' + row.key + '-priority'">{{ 'LOCATION.MOBILE_UNITS.COVERAGE.PRIORITY' | translate }} <span aria-hidden="true">*</span></label>
+                  <input type="number" min="0" step="1" inputmode="numeric" [id]="'rule-' + row.key + '-priority'" [value]="row.priority"
+                    [attr.aria-invalid]="ruleError(row.key, 'priority') ? true : null"
+                    [attr.aria-describedby]="ruleDescribedBy(row.key, 'priority', 'coverage-priority-hint')"
+                    (input)="setRuleField(row.key, 'priority', $any($event.target).value)" />
+                  @if (ruleError(row.key, 'priority'); as error) {
+                    <p [id]="'rule-' + row.key + '-priority-error'" class="field-error">{{ error | translate }}</p>
+                  }
+                </div>
+                <div class="field">
+                  <label [for]="'rule-' + row.key + '-validFrom'">{{ 'LOCATION.MOBILE_UNITS.COVERAGE.VALID_FROM' | translate }}</label>
+                  <input type="date" [id]="'rule-' + row.key + '-validFrom'" [value]="row.validFrom"
+                    aria-describedby="coverage-dates-hint"
+                    (change)="setRuleField(row.key, 'validFrom', $any($event.target).value)" />
+                </div>
+                <div class="field">
+                  <label [for]="'rule-' + row.key + '-validTo'">{{ 'LOCATION.MOBILE_UNITS.COVERAGE.VALID_TO' | translate }}</label>
+                  <input type="date" [id]="'rule-' + row.key + '-validTo'" [value]="row.validTo"
+                    [attr.aria-invalid]="ruleError(row.key, 'validTo') ? true : null"
+                    [attr.aria-describedby]="ruleDescribedBy(row.key, 'validTo', 'coverage-dates-hint')"
+                    (change)="setRuleField(row.key, 'validTo', $any($event.target).value)" />
+                  @if (ruleError(row.key, 'validTo'); as error) {
+                    <p [id]="'rule-' + row.key + '-validTo-error'" class="field-error">{{ error | translate }}</p>
+                  }
+                </div>
+              </div>
+              <div class="recorded-only">
+                <p class="caption">{{ 'LOCATION.MOBILE_UNITS.COVERAGE.RECORDED_ONLY' | translate }}</p>
+                <div class="rule-grid">
+                  <div class="field">
+                    <label [for]="'rule-' + row.key + '-type'">{{ 'LOCATION.MOBILE_UNITS.COVERAGE.RULE_TYPE_LABEL' | translate }}</label>
+                    <select [id]="'rule-' + row.key + '-type'" aria-describedby="coverage-type-hint"
+                      (change)="setRuleType(row.key, $any($event.target).value)">
+                      @for (type of ruleTypes; track type) {
+                        <option [value]="type" [selected]="row.ruleType === type">{{ ruleTypeKey(type) | translate }}</option>
+                      }
+                    </select>
+                  </div>
+                  @if (row.ruleType === 'DISTANCE_TIER') {
+                    <div class="field">
+                      <label [for]="'rule-' + row.key + '-maxDistance'">{{ 'LOCATION.MOBILE_UNITS.COVERAGE.MAX_DISTANCE' | translate }}</label>
+                      <input type="number" min="0" step="any" [id]="'rule-' + row.key + '-maxDistance'" [value]="row.maxDistance"
+                        [attr.aria-invalid]="ruleError(row.key, 'maxDistance') ? true : null"
+                        [attr.aria-describedby]="ruleDescribedBy(row.key, 'maxDistance', 'coverage-distance-hint')"
+                        (input)="setRuleField(row.key, 'maxDistance', $any($event.target).value)" />
+                      @if (ruleError(row.key, 'maxDistance'); as error) {
+                        <p [id]="'rule-' + row.key + '-maxDistance-error'" class="field-error">{{ error | translate }}</p>
+                      }
+                    </div>
+                  }
+                </div>
+              </div>
+              <button type="button" class="btn-secondary remove-rule-btn" [id]="'rule-' + row.key + '-remove'"
+                [attr.aria-label]="'LOCATION.MOBILE_UNITS.COVERAGE.REMOVE_NAMED' | translate: { number: i + 1 }"
+                (click)="removeRule(row.key)">{{ 'LOCATION.MOBILE_UNITS.COVERAGE.REMOVE' | translate }}</button>
+            </fieldset>
+          </li>
+        }
+      </ol>
 
-    <div class="modal-actions">
-      <button type="button" class="btn-secondary" (click)="closeCoverage()">{{ 'LOCATION.MOBILE_UNITS.CANCEL' | translate }}</button>
-      <button type="button" class="btn-primary" (click)="submitCoverageRules()">{{ 'LOCATION.MOBILE_UNITS.SAVE' | translate }}</button>
-    </div>
-  </section>
-  </div>
+      <button type="button" id="add-rule" class="btn-secondary add-rule-btn" (click)="addRule()">
+        {{ 'LOCATION.MOBILE_UNITS.COVERAGE.ADD_RULE' | translate }}
+      </button>
+
+      <div class="coverage-hints">
+        <p id="coverage-priority-hint" class="hint">{{ 'LOCATION.MOBILE_UNITS.HINT.PRIORITY' | translate }}</p>
+        <p id="coverage-dates-hint" class="hint">{{ 'LOCATION.MOBILE_UNITS.HINT.DATES' | translate }}</p>
+        <p id="coverage-type-hint" class="hint">{{ 'LOCATION.MOBILE_UNITS.HINT.RULE_TYPE' | translate }}</p>
+        <p id="coverage-distance-hint" class="hint">{{ 'LOCATION.MOBILE_UNITS.HINT.MAX_DISTANCE' | translate }}</p>
+        <p id="coverage-replace-hint" class="hint">{{ 'LOCATION.MOBILE_UNITS.COVERAGE.REPLACES' | translate }}</p>
+      </div>
+
+      @if (coverageValidation().form; as formError) {
+        <p id="coverage-form-error" class="dialog-error" role="alert">{{ formError | translate: { unit: unit.name ?? '' } }}</p>
+      }
+      @if (coverageSaveErrorKey(); as saveError) {
+        <p class="dialog-error" role="alert">{{ saveError | translate }}</p>
+      }
+
+      <div class="dialog-actions">
+        <button type="button" class="btn-secondary cancel-btn" [disabled]="coverageSaving()" (click)="closeCoverage()">
+          {{ 'LOCATION.MOBILE_UNITS.CANCEL' | translate }}
+        </button>
+        <button type="submit" class="btn-primary save-coverage-btn" [disabled]="coverageSaving()"
+          [attr.aria-disabled]="coverageValidation().form ? true : null"
+          [attr.aria-describedby]="coverageValidation().form ? 'coverage-form-error coverage-replace-hint' : 'coverage-replace-hint'">
+          {{ 'LOCATION.MOBILE_UNITS.COVERAGE.SAVE' | translate }}
+        </button>
+        @if (coverageSaving()) {
+          <span class="sr-only" role="status">{{ 'LOCATION.MOBILE_UNITS.SAVING' | translate }}</span>
+        }
+      </div>
+    </form>
+  </dialog>
 }

@@ -6,10 +6,21 @@ import {
   BayAPIService,
   LocationAPIService,
   MobileUnitAPIService,
+  MobileUnitEligibilityControllerService,
+  ServiceAreaAPIService,
   SiteDefaultsAPIService,
   StorageLocationAPIService,
+  TravelBufferPolicyAPIService,
 } from '@durion-sdk/location';
-import type { BayRequest, BayResponse } from '@durion-sdk/location';
+import type {
+  BayRequest,
+  BayResponse,
+  CoverageRuleRequest,
+  CoverageRuleResponse,
+  MobileUnitResponse,
+  ServiceAreaResponse,
+  TravelBufferPolicyResponse,
+} from '@durion-sdk/location';
 import { LocationService } from './location.service';
 
 const bayResponse = (overrides: Partial<BayResponse> = {}): BayResponse => ({
@@ -20,6 +31,24 @@ const bayResponse = (overrides: Partial<BayResponse> = {}): BayResponse => ({
   status: 'ACTIVE',
   maxConcurrentVehicles: 1,
   serviceCapabilityCodes: [],
+  ...overrides,
+});
+
+const mobileUnit = (overrides: Partial<MobileUnitResponse> = {}): MobileUnitResponse => ({
+  id: 'mu-1',
+  name: 'Van 7',
+  baseLocationId: 'loc-01',
+  status: 'INACTIVE',
+  serviceCapabilityCodes: [],
+  ...overrides,
+});
+
+const coverageRule = (overrides: Partial<CoverageRuleResponse> = {}): CoverageRuleResponse => ({
+  id: 'rule-1',
+  mobileUnitId: 'mu-1',
+  serviceAreaId: 'area-1',
+  ruleType: 'SERVICE_AREA',
+  priority: 1,
   ...overrides,
 });
 
@@ -49,8 +78,13 @@ describe('LocationService', () => {
   const mobileUnitApiStub = {
     listMobileUnits: vi.fn(),
     createMobileUnit: vi.fn(),
+    patchMobileUnit: vi.fn(),
+    listCoverageRules: vi.fn(),
     replaceCoverageRules: vi.fn(),
   };
+  const eligibilityApiStub = { findEligibleMobileUnits: vi.fn() };
+  const serviceAreaApiStub = { listServiceAreas: vi.fn() };
+  const travelBufferPolicyApiStub = { listTravelBufferPolicies: vi.fn() };
   const siteDefaultsApiStub = {
     getSiteDefaults: vi.fn(),
     configureSiteDefaults: vi.fn(),
@@ -72,40 +106,15 @@ describe('LocationService', () => {
         { provide: LocationAPIService, useValue: locationApiStub },
         { provide: BayAPIService, useValue: bayApiStub },
         { provide: MobileUnitAPIService, useValue: mobileUnitApiStub },
+        { provide: MobileUnitEligibilityControllerService, useValue: eligibilityApiStub },
+        { provide: ServiceAreaAPIService, useValue: serviceAreaApiStub },
+        { provide: TravelBufferPolicyAPIService, useValue: travelBufferPolicyApiStub },
         { provide: SiteDefaultsAPIService, useValue: siteDefaultsApiStub },
         { provide: StorageLocationAPIService, useValue: storageLocationApiStub },
         { provide: ProductsAPIService, useValue: catalogProductsApiStub },
       ],
     });
     service = TestBed.inject(LocationService);
-  });
-
-  it('maps replaceCoverageRules into a typed rules envelope instead of forwarding raw arrays', () => {
-    mobileUnitApiStub.replaceCoverageRules.mockReturnValueOnce(of({ success: true }));
-
-    service.replaceCoverageRules('mu-001', [
-      {
-        serviceAreaId: 'svc-1',
-        ruleType: 'PRIMARY',
-        priority: 1,
-        validFrom: '2026-04-01',
-        validTo: '2026-04-30',
-        maxDistance: 25,
-      },
-    ]).subscribe();
-
-    expect(mobileUnitApiStub.replaceCoverageRules).toHaveBeenCalledWith('mu-001', {
-      rules: [
-        {
-          serviceAreaId: 'svc-1',
-          ruleType: 'PRIMARY',
-          priority: 1,
-          validFrom: '2026-04-01',
-          validTo: '2026-04-30',
-          maxDistance: 25,
-        },
-      ],
-    });
   });
 
   it('reads one 500-row page of bays, every status, and unwraps its content (EXEMPLARS §4)', () => {
@@ -125,23 +134,6 @@ describe('LocationService', () => {
     let result: BayResponse[] | undefined;
     service.listBays('loc-01').subscribe(r => (result = r));
     expect(result).toEqual([]);
-  });
-
-  it('unwraps the Spring page content array from listMobileUnits', () => {
-    const unit = { id: 'mu-1', name: 'Truck 1' };
-    mobileUnitApiStub.listMobileUnits.mockReturnValueOnce(of({ content: [unit], totalElements: 1 }));
-
-    let result: unknown[] | undefined;
-    service.listMobileUnits().subscribe(r => (result = r));
-
-    expect(result).toEqual([unit]);
-  });
-
-  it('returns an empty mobile-unit list for a missing page body', () => {
-    mobileUnitApiStub.listMobileUnits.mockReturnValueOnce(of({}));
-    let asEmpty: unknown[] | undefined;
-    service.listMobileUnits().subscribe(r => (asEmpty = r));
-    expect(asEmpty).toEqual([]);
   });
 
   it('sends a bay create request exactly as given (CAP-325)', () => {
@@ -210,60 +202,98 @@ describe('LocationService', () => {
     });
   });
 
-  it('sends a mobile unit\'s serviceCapabilityCodes as given (CAP-325 D14.2)', () => {
-    mobileUnitApiStub.createMobileUnit.mockReturnValueOnce(of({ mobileUnitId: 'mu-002' }));
+  describe('mobile units', () => {
+    it('reads one 500-row page and keeps the units based at the location (backend#2253)', () => {
+      const here = mobileUnit();
+      mobileUnitApiStub.listMobileUnits.mockReturnValueOnce(
+        of({ content: [here, mobileUnit({ id: 'mu-2', baseLocationId: 'loc-02' })] }),
+      );
 
-    service.createMobileUnit({
-      name: 'Van 7',
-      baseLocationId: 'loc-01',
-      status: 'INACTIVE',
-      serviceCapabilityCodes: ['OIL-CHANGE-FULL-SYNTHETIC', 'BATTERY-REPLACEMENT'],
-    }).subscribe();
+      let result: MobileUnitResponse[] | undefined;
+      service.listMobileUnits('loc-01').subscribe(r => (result = r));
 
-    expect(mobileUnitApiStub.createMobileUnit).toHaveBeenCalledWith(
-      expect.objectContaining({
+      expect(mobileUnitApiStub.listMobileUnits).toHaveBeenCalledWith(0, 500);
+      expect(result).toEqual([here]);
+    });
+
+    it('reads a page with no content as no units', () => {
+      mobileUnitApiStub.listMobileUnits.mockReturnValueOnce(of({}));
+      let result: MobileUnitResponse[] | undefined;
+      service.listMobileUnits('loc-01').subscribe(r => (result = r));
+      expect(result).toEqual([]);
+    });
+
+    it('creates and patches a unit with the request as given', () => {
+      mobileUnitApiStub.createMobileUnit.mockReturnValueOnce(of(mobileUnit()));
+      mobileUnitApiStub.patchMobileUnit.mockReturnValueOnce(of(mobileUnit({ status: 'ACTIVE' })));
+
+      service
+        .createMobileUnit({ name: 'Van 7', baseLocationId: 'loc-01', status: 'INACTIVE', serviceCapabilityCodes: ['TPMS-SENSOR-SERVICE'] })
+        .subscribe();
+      service.patchMobileUnit('mu-1', { status: 'ACTIVE' }).subscribe();
+
+      expect(mobileUnitApiStub.createMobileUnit).toHaveBeenCalledWith({
         name: 'Van 7',
-        serviceCapabilityCodes: ['OIL-CHANGE-FULL-SYNTHETIC', 'BATTERY-REPLACEMENT'],
-      }),
-    );
-  });
+        baseLocationId: 'loc-01',
+        status: 'INACTIVE',
+        serviceCapabilityCodes: ['TPMS-SENSOR-SERVICE'],
+      });
+      expect(mobileUnitApiStub.patchMobileUnit).toHaveBeenCalledWith('mu-1', { status: 'ACTIVE' });
+    });
 
-  it('maps mobile-unit coverageRules through the typed request mapper', () => {
-    mobileUnitApiStub.createMobileUnit.mockReturnValueOnce(of({ mobileUnitId: 'mu-001' }));
+    it('wraps replacement coverage rules in the { rules } envelope', () => {
+      const rules: CoverageRuleRequest[] = [{ serviceAreaId: 'area-1', ruleType: 'SERVICE_AREA', priority: 1 }];
+      mobileUnitApiStub.replaceCoverageRules.mockReturnValueOnce(of([coverageRule()]));
 
-    service.createMobileUnit({
-      name: 'Truck 1',
-      baseLocationId: 'loc-01',
-      coverageRules: [
-        {
-          serviceAreaId: 'svc-1',
-          ruleType: 'PRIMARY',
-          priority: 1,
-          maxDistance: 30,
-        },
-      ],
-    }).subscribe();
+      let saved: CoverageRuleResponse[] | undefined;
+      service.replaceCoverageRules('mu-1', rules).subscribe(r => (saved = r));
 
-    expect(mobileUnitApiStub.createMobileUnit).toHaveBeenCalledWith({
-      name: 'Truck 1',
-      baseLocationId: 'loc-01',
-      status: undefined,
-      travelBufferPolicyId: undefined,
-      notes: undefined,
-      serviceCapabilityCodes: undefined,
-      coverageRules: [
-        {
-          serviceAreaId: 'svc-1',
-          ruleType: 'PRIMARY',
-          priority: 1,
-          validFrom: undefined,
-          validTo: undefined,
-          maxDistance: 30,
-        },
-      ],
+      expect(mobileUnitApiStub.replaceCoverageRules).toHaveBeenCalledWith('mu-1', { rules });
+      expect(saved).toEqual([coverageRule()]);
+    });
+
+    it('reads coverage per unit and marks the result not ok when one read fails', () => {
+      mobileUnitApiStub.listCoverageRules.mockImplementation((id: string) =>
+        id === 'mu-1' ? of([coverageRule()]) : throwError(() => new Error('down')),
+      );
+
+      let read: { rules: ReadonlyMap<string, readonly CoverageRuleResponse[]>; ok: boolean } | undefined;
+      service.listCoverageRules(['mu-1', 'mu-2']).subscribe(r => (read = r));
+
+      expect(mobileUnitApiStub.listCoverageRules.mock.calls).toEqual([['mu-1'], ['mu-2']]);
+      expect(read?.ok).toBe(false);
+      expect([...read!.rules]).toEqual([['mu-1', [coverageRule()]]]);
+    });
+
+    it('reads no coverage for no units without calling the API', () => {
+      let read: { ok: boolean } | undefined;
+      service.listCoverageRules([]).subscribe(r => (read = r));
+      expect(mobileUnitApiStub.listCoverageRules).not.toHaveBeenCalled();
+      expect(read?.ok).toBe(true);
+    });
+
+    it('checks eligibility with the postal code, country and instant as positional args', () => {
+      eligibilityApiStub.findEligibleMobileUnits.mockReturnValueOnce(of([]));
+      service.findEligibleMobileUnits('78701', 'US', '2026-10-01T12:00:00Z').subscribe();
+      expect(eligibilityApiStub.findEligibleMobileUnits).toHaveBeenCalledWith('78701', 'US', '2026-10-01T12:00:00Z');
+    });
+
+    it('degrades the service-area and policy reads to empty, not ok', () => {
+      serviceAreaApiStub.listServiceAreas.mockReturnValueOnce(throwError(() => new Error('403')));
+      travelBufferPolicyApiStub.listTravelBufferPolicies.mockReturnValueOnce(
+        of([{ id: 'p-1', name: 'Standard', bufferType: 'FLAT_MINUTES', bufferValue: 15 } satisfies TravelBufferPolicyResponse]),
+      );
+
+      let areas: { areas: ServiceAreaResponse[]; ok: boolean } | undefined;
+      let policies: { policies: TravelBufferPolicyResponse[]; ok: boolean } | undefined;
+      service.listServiceAreas().subscribe(r => (areas = r));
+      service.listTravelBufferPolicies().subscribe(r => (policies = r));
+
+      expect(areas).toEqual({ areas: [], ok: false });
+      expect(policies?.ok).toBe(true);
+      expect(policies?.policies.map(p => p.name)).toEqual(['Standard']);
     });
   });
-  // ── SDK delegation (ADR-0035 minimum coverage for migrated methods) ────────
 
   describe('getAllLocations()', () => {
     it('delegates to LocationAPIService.listLocations and emits the response', () => {

@@ -1,26 +1,35 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, catchError, map, of } from 'rxjs';
+import { Observable, catchError, forkJoin, map, of } from 'rxjs';
 import { ProductsAPIService } from '@durion-sdk/catalog';
 import type { ServiceDto } from '@durion-sdk/catalog';
 import {
   BayAPIService,
   LocationAPIService,
   MobileUnitAPIService,
+  MobileUnitEligibilityControllerService,
+  ServiceAreaAPIService,
   SiteDefaultsAPIService,
   StorageLocationAPIService,
+  TravelBufferPolicyAPIService,
 } from '@durion-sdk/location';
 import type {
   CoverageRuleRequest,
+  CoverageRuleResponse,
+  EligibleMobileUnitResponse,
   LocationRequestDTO,
   LocationPatchRequest,
   BayRequest,
   BayPatchRequest,
   BayResponse,
   MobileUnitRequest,
+  MobileUnitResponse,
+  ServiceAreaResponse,
   SiteDefaultsRequest,
   StorageLocationRequest,
   StorageLocationPatchRequest,
+  TravelBufferPolicyResponse,
 } from '@durion-sdk/location';
+import type { MobileUnitPatch } from '../models/mobile-unit-setup.models';
 
 /**
  * Storage location types exposed by the location service
@@ -42,6 +51,15 @@ export const STORAGE_LOCATION_TYPES: ReadonlyArray<{ value: string; label: strin
  */
 const BAY_PAGE_SIZE = 500;
 
+/** Rows asked for from the paged mobile-unit list; the same cap `shop-dashboard.service.ts` uses. */
+const MOBILE_UNIT_PAGE_SIZE = 500;
+
+/** Coverage rules per mobile unit id. `ok` is false when any unit's read failed (ADR-0064). */
+export interface CoverageRead {
+  readonly rules: ReadonlyMap<string, readonly CoverageRuleResponse[]>;
+  readonly ok: boolean;
+}
+
 /** A catalog service a bay or mobile unit can claim: only services with an operation code qualify. */
 export interface ClaimableService {
   readonly operationCode: string;
@@ -54,6 +72,9 @@ export class LocationService {
   private readonly locationApi = inject(LocationAPIService);
   private readonly bayApi = inject(BayAPIService);
   private readonly mobileUnitApi = inject(MobileUnitAPIService);
+  private readonly mobileUnitEligibilityApi = inject(MobileUnitEligibilityControllerService);
+  private readonly serviceAreaApi = inject(ServiceAreaAPIService);
+  private readonly travelBufferPolicyApi = inject(TravelBufferPolicyAPIService);
   private readonly siteDefaultsApi = inject(SiteDefaultsAPIService);
   private readonly storageLocationApi = inject(StorageLocationAPIService);
   /** `searchCatalogServices` lives on the catalog's products API. */
@@ -184,20 +205,68 @@ export class LocationService {
 
   // ── Mobile Units ─────────────────────────────────────────────────────────
 
-  listMobileUnits(params?: Record<string, string>): Observable<unknown[]> {
-    const page = params?.['page'] ? Number(params['page']) : undefined;
-    const size = params?.['size'] ? Number(params['size']) : undefined;
-    return (this.mobileUnitApi.listMobileUnits(page, size) as Observable<unknown>).pipe(map(toContentArray));
+  /**
+   * The units based at one location. The list endpoint can't filter by base location
+   * (durion-positivity-backend#2253), so this reads one 500-row page and filters it here.
+   */
+  listMobileUnits(baseLocationId: string): Observable<MobileUnitResponse[]> {
+    return this.mobileUnitApi
+      .listMobileUnits(0, MOBILE_UNIT_PAGE_SIZE)
+      .pipe(map(page => (page?.content ?? []).filter(unit => unit.baseLocationId === baseLocationId)));
   }
 
-  createMobileUnit(body: Record<string, unknown>, _idempotencyKey?: string): Observable<unknown> {
-    const request = this.toMobileUnitRequest(body);
-    return this.mobileUnitApi.createMobileUnit(request) as Observable<unknown>;
+  createMobileUnit(request: MobileUnitRequest): Observable<MobileUnitResponse> {
+    return this.mobileUnitApi.createMobileUnit(request);
   }
 
-  replaceCoverageRules(mobileUnitId: string, body: Record<string, unknown>[]): Observable<unknown> {
-    const requestBody = this.toCoverageRulesReplaceRequest(body);
-    return this.mobileUnitApi.replaceCoverageRules(mobileUnitId, requestBody) as Observable<unknown>;
+  patchMobileUnit(id: string, patch: MobileUnitPatch): Observable<MobileUnitResponse> {
+    return this.mobileUnitApi.patchMobileUnit(id, patch);
+  }
+
+  /**
+   * Coverage rules for each unit, one read per unit until the list can carry them
+   * (durion-positivity-backend#2253). A failed read leaves that unit out and marks the result not ok,
+   * so "no coverage" is never shown for a read that didn't happen.
+   */
+  listCoverageRules(unitIds: readonly string[]): Observable<CoverageRead> {
+    if (unitIds.length === 0) return of({ rules: new Map(), ok: true });
+    return forkJoin(
+      unitIds.map(id =>
+        this.mobileUnitApi.listCoverageRules(id).pipe(
+          map(rules => ({ id, rules: rules ?? [], ok: true })),
+          catchError(() => of({ id, rules: [] as CoverageRuleResponse[], ok: false })),
+        ),
+      ),
+    ).pipe(
+      map(results => ({
+        rules: new Map(results.filter(result => result.ok).map(result => [result.id, result.rules] as const)),
+        ok: results.every(result => result.ok),
+      })),
+    );
+  }
+
+  /** Replaces the unit's whole rule set and returns the saved rules. */
+  replaceCoverageRules(mobileUnitId: string, rules: CoverageRuleRequest[]): Observable<CoverageRuleResponse[]> {
+    return this.mobileUnitApi.replaceCoverageRules(mobileUnitId, { rules });
+  }
+
+  /** Active units covering a postal code on a day, lowest priority first. */
+  findEligibleMobileUnits(postalCode: string, countryCode: string, at: string): Observable<EligibleMobileUnitResponse[]> {
+    return this.mobileUnitEligibilityApi.findEligibleMobileUnits(postalCode, countryCode, at);
+  }
+
+  listServiceAreas(): Observable<{ areas: ServiceAreaResponse[]; ok: boolean }> {
+    return this.serviceAreaApi.listServiceAreas().pipe(
+      map(areas => ({ areas: areas ?? [], ok: true })),
+      catchError(() => of({ areas: [] as ServiceAreaResponse[], ok: false })),
+    );
+  }
+
+  listTravelBufferPolicies(): Observable<{ policies: TravelBufferPolicyResponse[]; ok: boolean }> {
+    return this.travelBufferPolicyApi.listTravelBufferPolicies().pipe(
+      map(policies => ({ policies: policies ?? [], ok: true })),
+      catchError(() => of({ policies: [] as TravelBufferPolicyResponse[], ok: false })),
+    );
   }
 
   private toLocationRequest(body: Record<string, unknown>): LocationRequestDTO {
@@ -224,44 +293,6 @@ export class LocationService {
     };
   }
 
-  private toMobileUnitRequest(body: Record<string, unknown>): MobileUnitRequest {
-    return {
-      name: this.asOptionalString(body['name']) as string,
-      baseLocationId: this.asOptionalString(body['baseLocationId']),
-      status: this.asOptionalString(body['status']),
-      travelBufferPolicyId: this.asOptionalString(body['travelBufferPolicyId']),
-      notes: this.asOptionalString(body['notes']),
-      serviceCapabilityCodes: this.asStringArray(body['serviceCapabilityCodes']),
-      coverageRules: this.toCoverageRuleArray(body['coverageRules']),
-    };
-  }
-
-  private toCoverageRulesReplaceRequest(body: Record<string, unknown>[]): { [key: string]: unknown } {
-    return {
-      rules: body.map(rule => this.toCoverageRuleRequest(rule)),
-    };
-  }
-
-  private toCoverageRuleArray(value: unknown): CoverageRuleRequest[] | undefined {
-    if (!Array.isArray(value)) {
-      return undefined;
-    }
-    return value
-      .filter((entry): entry is Record<string, unknown> => this.isRecord(entry))
-      .map(entry => this.toCoverageRuleRequest(entry));
-  }
-
-  private toCoverageRuleRequest(rule: Record<string, unknown>): CoverageRuleRequest {
-    return {
-      serviceAreaId: this.asOptionalString(rule['serviceAreaId']) as string,
-      ruleType: this.asOptionalString(rule['ruleType']) as string,
-      priority: this.asOptionalNumber(rule['priority']),
-      validFrom: this.asOptionalString(rule['validFrom']),
-      validTo: this.asOptionalString(rule['validTo']),
-      maxDistance: this.asOptionalNumber(rule['maxDistance']),
-    };
-  }
-
   private asLocationType(value: unknown): { id?: string; name?: string; description?: string } {
     const record = this.asRecord(value);
     return {
@@ -280,13 +311,6 @@ export class LocationService {
       return undefined;
     }
     return value as T[];
-  }
-
-  private asStringArray(value: unknown): string[] | undefined {
-    if (!Array.isArray(value)) {
-      return undefined;
-    }
-    return value.filter((item): item is string => typeof item === 'string');
   }
 
   private asString(value: unknown): string {
@@ -308,19 +332,6 @@ export class LocationService {
   private isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === 'object' && value !== null && !Array.isArray(value);
   }
-}
-
-/**
- * Unwraps a list response into a plain array. Backend list endpoints return a
- * Spring Data page (`{ content: [...] }`); some return `{ items: [...] }` or a
- * bare array. Normalizes all three so callers always receive an array.
- */
-function toContentArray(response: unknown): unknown[] {
-  if (Array.isArray(response)) {
-    return response;
-  }
-  const page = response as { content?: unknown[]; items?: unknown[] } | null;
-  return page?.content ?? page?.items ?? [];
 }
 
 function toClaimableServices(services: readonly ServiceDto[]): ClaimableService[] {

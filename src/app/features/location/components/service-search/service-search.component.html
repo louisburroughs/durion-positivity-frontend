@@ -1,0 +1,37 @@
+<div class="service-search">
+  <label [for]="inputId()">{{ labelKey() | translate }}</label>
+  <input type="search" autocomplete="off" [id]="inputId()" [attr.aria-describedby]="inputId() + '-hint'"
+    [value]="query()" (input)="onQuery($any($event.target).value)" />
+  <p class="hint" [id]="inputId() + '-hint'">{{ 'LOCATION.SERVICE_SEARCH.HINT' | translate }}</p>
+  <div aria-live="polite">
+    @switch (state()) {
+      @case ('loading') {
+        <p class="muted">{{ 'LOCATION.SERVICE_SEARCH.LOADING' | translate }}</p>
+      }
+      @case ('failed') {
+        <p class="search-error">{{ 'LOCATION.SERVICE_SEARCH.FAILED' | translate }}</p>
+      }
+      @case ('ready') {
+        @if (results().length === 0) {
+          <p class="muted">{{ 'LOCATION.SERVICE_SEARCH.NONE' | translate }}</p>
+        } @else {
+          <ul class="results">
+            @for (service of results(); track service.operationCode) {
+              <li>
+                <span class="result-name">{{ service.name }}</span>
+                <code class="result-code">{{ service.operationCode }}</code>
+                @if (isSelected(service.operationCode)) {
+                  <span class="muted">{{ 'LOCATION.SERVICE_SEARCH.ALREADY_ADDED' | translate }}</span>
+                } @else {
+                  <button type="button" class="add-service-btn"
+                    [attr.aria-label]="'LOCATION.SERVICE_SEARCH.ADD_NAMED' | translate: { service: service.name }"
+                    (click)="add(service)">{{ 'LOCATION.SERVICE_SEARCH.ADD' | translate }}</button>
+                }
+              </li>
+            }
+          </ul>
+        }
+      }
+    }
+  </div>
+</div>
