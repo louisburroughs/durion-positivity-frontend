@@ -128,7 +128,6 @@ export const SITE_MAP_ROUTES: readonly SiteMapRouteEntry[] = [
   { route: '/app/product/catalog/enrichment/review/:treadDesignId', label: "Review", labelKey: "SITEMAP.LABEL.REVIEW", dynamic: true, permissions: ['catalog:tread_design:view'] },
   { route: '/app/product/catalog/enrichment/unmatched', label: "Unmatched", labelKey: "SITEMAP.LABEL.UNMATCHED", dynamic: false, permissions: ['catalog:tread_design:view'] },
   { route: '/app/product/inventory/availability', label: "Availability", labelKey: "SITEMAP.LABEL.AVAILABILITY", dynamic: false, permissions: ['inventory:availability:read'] },
-  { route: '/app/product/inventory/feeds', label: "Feeds", labelKey: "SITEMAP.LABEL.FEEDS", dynamic: false },
   { route: '/app/product/location/locations-roster', label: "Locations Roster", labelKey: "SITEMAP.LABEL.LOCATIONS_ROSTER", dynamic: false, permissions: ['location:read'] },
   { route: '/app/product/pricing/location-overrides', label: "Location Overrides", labelKey: "SITEMAP.LABEL.LOCATION_OVERRIDES", dynamic: false, permissions: ['catalog:location_price_override:read'] },
   { route: '/app/product/pricing/msrp', label: "Msrp", labelKey: "SITEMAP.LABEL.MSRP", dynamic: false, permissions: ['catalog:msrp:read'] },

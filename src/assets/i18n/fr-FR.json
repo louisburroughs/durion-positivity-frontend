@@ -4107,43 +4107,6 @@
       }
     },
     "INVENTORY": {
-      "FEEDS": {
-        "TITLE": "Flux d'inventaire",
-        "SKU": "SKU",
-        "SKU_PLACEHOLDER": "Saisir un SKU…",
-        "TABS": {
-          "ARIA": "Onglets du flux d'inventaire",
-          "MANUFACTURER": "Fabricant",
-          "DISTRIBUTOR": "Distributeur"
-        },
-        "AVAILABILITY": {
-          "TITLE": "Disponibilité",
-          "SOURCE": "Source",
-          "ON_HAND": "En stock",
-          "RESERVED": "Réservé",
-          "ATP": "DAP",
-          "AS_OF": "Au",
-          "STATUS": "Statut"
-        },
-        "LEAD_TIME": {
-          "TITLE": "Délai de livraison",
-          "SOURCE": "Source",
-          "MIN_DAYS": "Jours min.",
-          "MAX_DAYS": "Jours max."
-        },
-        "STATUS": {
-          "IN_STOCK": "En stock",
-          "LOW_STOCK": "Stock faible",
-          "OUT_OF_STOCK": "Rupture de stock"
-        },
-        "STATE": {
-          "EMPTY": "Aucune donnée de flux d'inventaire trouvée.",
-          "UNAVAILABLE": "La disponibilité du flux fournisseur n'est pas encore disponible."
-        },
-        "ERROR": {
-          "LOAD": "Échec du chargement des flux d'inventaire."
-        }
-      },
       "AVAILABILITY": {
         "TITLE": "Disponibilité de l'inventaire",
         "SKU": "SKU",
@@ -4351,10 +4314,6 @@
         "AVAILABILITY": {
           "TITLE": "Disponibilite",
           "DESCRIPTION": "Suivre et gerer la disponibilite des produits."
-        },
-        "FEEDS": {
-          "TITLE": "Flux d'inventaire",
-          "DESCRIPTION": "Gerer les flux automatisees de donnees d'inventaire."
         },
         "IMPORT_CATALOG": {
           "TITLE": "Importer le catalogue",

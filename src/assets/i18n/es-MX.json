@@ -4107,43 +4107,6 @@
       }
     },
     "INVENTORY": {
-      "FEEDS": {
-        "TITLE": "Feeds de inventario",
-        "SKU": "SKU",
-        "SKU_PLACEHOLDER": "Ingresa un SKU…",
-        "TABS": {
-          "ARIA": "Pestañas de feed de inventario",
-          "MANUFACTURER": "Fabricante",
-          "DISTRIBUTOR": "Distribuidor"
-        },
-        "AVAILABILITY": {
-          "TITLE": "Disponibilidad",
-          "SOURCE": "Fuente",
-          "ON_HAND": "En stock",
-          "RESERVED": "Reservado",
-          "ATP": "DPP",
-          "AS_OF": "Al",
-          "STATUS": "Estado"
-        },
-        "LEAD_TIME": {
-          "TITLE": "Tiempo de entrega",
-          "SOURCE": "Fuente",
-          "MIN_DAYS": "Días mín.",
-          "MAX_DAYS": "Días máx."
-        },
-        "STATUS": {
-          "IN_STOCK": "En stock",
-          "LOW_STOCK": "Stock bajo",
-          "OUT_OF_STOCK": "Sin stock"
-        },
-        "STATE": {
-          "EMPTY": "No se encontraron datos de feed de inventario.",
-          "UNAVAILABLE": "La disponibilidad del feed del proveedor aún no está disponible."
-        },
-        "ERROR": {
-          "LOAD": "Error al cargar los feeds de inventario."
-        }
-      },
       "AVAILABILITY": {
         "TITLE": "Disponibilidad de inventario",
         "SKU": "SKU",
@@ -4351,10 +4314,6 @@
         "AVAILABILITY": {
           "TITLE": "Disponibilidad",
           "DESCRIPTION": "Supervise y administre la disponibilidad de productos."
-        },
-        "FEEDS": {
-          "TITLE": "Fuentes de inventario",
-          "DESCRIPTION": "Administre fuentes automatizadas de datos de inventario."
         },
         "IMPORT_CATALOG": {
           "TITLE": "Importar catálogo",

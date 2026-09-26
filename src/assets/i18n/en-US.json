@@ -4107,43 +4107,6 @@
       }
     },
     "INVENTORY": {
-      "FEEDS": {
-        "TITLE": "Inventory Feeds",
-        "SKU": "SKU",
-        "SKU_PLACEHOLDER": "Enter a SKU…",
-        "TABS": {
-          "ARIA": "Inventory feed tabs",
-          "MANUFACTURER": "Manufacturer",
-          "DISTRIBUTOR": "Distributor"
-        },
-        "AVAILABILITY": {
-          "TITLE": "Availability",
-          "SOURCE": "Source",
-          "ON_HAND": "On hand",
-          "RESERVED": "Reserved",
-          "ATP": "ATP",
-          "AS_OF": "As of",
-          "STATUS": "Status"
-        },
-        "LEAD_TIME": {
-          "TITLE": "Lead Time",
-          "SOURCE": "Source",
-          "MIN_DAYS": "Min days",
-          "MAX_DAYS": "Max days"
-        },
-        "STATUS": {
-          "IN_STOCK": "In stock",
-          "LOW_STOCK": "Low stock",
-          "OUT_OF_STOCK": "Out of stock"
-        },
-        "STATE": {
-          "EMPTY": "No inventory feed data found.",
-          "UNAVAILABLE": "Vendor-feed availability isn't available yet."
-        },
-        "ERROR": {
-          "LOAD": "Failed to load inventory feeds."
-        }
-      },
       "AVAILABILITY": {
         "TITLE": "Inventory Availability",
         "SKU": "SKU",
@@ -4351,10 +4314,6 @@
         "AVAILABILITY": {
           "TITLE": "Availability",
           "DESCRIPTION": "Track and manage product availability."
-        },
-        "FEEDS": {
-          "TITLE": "Inventory Feeds",
-          "DESCRIPTION": "Manage automated inventory data feeds."
         },
         "IMPORT_CATALOG": {
           "TITLE": "Import Catalog",
