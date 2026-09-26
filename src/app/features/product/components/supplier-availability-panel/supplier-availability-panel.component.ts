@@ -16,8 +16,8 @@ import {
   SupplierAvailability,
   SupplierAvailabilityLine,
   SupplierAvailabilityVendor,
-} from '../../models/supplier-availability.models';
-import { ProductSupplierAvailabilityService } from '../../services/product-supplier-availability.service';
+} from '../../../../shared/supplier-availability/models/supplier-availability.models';
+import { SupplierAvailabilityService } from '../../../../shared/supplier-availability/services/supplier-availability.service';
 
 type PanelState = 'idle' | 'loading' | 'ready' | 'error';
 
@@ -45,7 +45,7 @@ type PanelState = 'idle' | 'loading' | 'ready' | 'error';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SupplierAvailabilityPanelComponent {
-  private readonly service = inject(ProductSupplierAvailabilityService);
+  private readonly service = inject(SupplierAvailabilityService);
   private readonly destroyRef = inject(DestroyRef);
 
   /** Catalog product this panel checks. */

@@ -21,7 +21,7 @@ type PageState = 'idle' | 'loading' | 'empty' | 'ready' | 'error';
  * `removeLine`, `updateLine`). The per-line supplier availability check that
  * used to sit here (#190) was restored in #212 against the generated fan-out
  * read (`getSupplierStockAvailability`); see `PoSupplierAvailabilityPanelComponent`
- * and `InventorySupplierAvailabilityService` for why that read was chosen
+ * and `SupplierAvailabilityService` for why that read was chosen
  * over `getPurchaseOrderSupplierAvailability`.
  */
 @Component({

@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TranslateModule } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 import { SupplierAvailabilityPanelComponent } from './supplier-availability-panel.component';
-import { ProductSupplierAvailabilityService } from '../../services/product-supplier-availability.service';
+import { SupplierAvailabilityService } from '../../../../shared/supplier-availability/services/supplier-availability.service';
 
 describe('SupplierAvailabilityPanelComponent', () => {
   let fixture: ComponentFixture<SupplierAvailabilityPanelComponent>;
@@ -15,7 +15,7 @@ describe('SupplierAvailabilityPanelComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [SupplierAvailabilityPanelComponent, TranslateModule.forRoot()],
-      providers: [{ provide: ProductSupplierAvailabilityService, useValue: mockService }],
+      providers: [{ provide: SupplierAvailabilityService, useValue: mockService }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(SupplierAvailabilityPanelComponent);
