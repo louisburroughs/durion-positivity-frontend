@@ -116,7 +116,7 @@ export class MobileUnitsPageComponent implements OnInit {
       return;
     }
 
-    this.locationService.createMobileUnit({ name }).subscribe({
+    this.locationService.createMobileUnit({ name, baseLocationId: this.locationId() }).subscribe({
       next: () => {
         this.closeCreate();
         this.loadMobileUnits(this.locationId());
