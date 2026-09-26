@@ -341,6 +341,16 @@ describe('BulkImportJobDetailPageComponent', () => {
       expect(component.downloadErrorKey()).toBe('BULK_IMPORT.JOB_DETAIL.ERROR.DOWNLOAD');
     });
 
+    it('clears a download error when the job detail (re)loads', () => {
+      mockService.downloadErrorReport.mockReturnValue(throwError(() => new Error('download failed')));
+      component.downloadErrorReport();
+      expect(component.downloadErrorKey()).toBe('BULK_IMPORT.JOB_DETAIL.ERROR.DOWNLOAD');
+
+      component.loadDetail();
+
+      expect(component.downloadErrorKey()).toBeNull();
+    });
+
     it('clears the previous download error when a download is retried', () => {
       mockService.downloadErrorReport.mockReturnValueOnce(throwError(() => new Error('download failed')));
       component.downloadErrorReport();

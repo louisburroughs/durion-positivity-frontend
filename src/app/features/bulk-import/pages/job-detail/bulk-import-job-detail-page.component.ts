@@ -48,6 +48,7 @@ export class BulkImportJobDetailPageComponent {
     if (!this.jobId) { return; }
     this.state.set('loading');
     this.errorKey.set(null);
+    this.downloadErrorKey.set(null);
     this.service.getJob(this.jobId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -132,14 +133,19 @@ export class BulkImportJobDetailPageComponent {
    * session; the download now goes through the authenticated SDK blob download instead.
    */
   downloadErrorReport(): void {
-    if (!this.jobId) { return; }
+    const jobId = this.jobId;
+    if (!jobId) { return; }
     this.downloadErrorKey.set(null);
-    this.service.downloadErrorReport(this.jobId)
+    this.service.downloadErrorReport(jobId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         // Per-action error, like the wizard pages: a failed download must not
         // hide the job (and its retry controls) behind the page-level error state.
-        error: () => this.downloadErrorKey.set('BULK_IMPORT.JOB_DETAIL.ERROR.DOWNLOAD'),
+        // Dropped if the route has since moved to another job (ADR-0063 §3).
+        error: () => {
+          if (jobId !== this.jobId) return;
+          this.downloadErrorKey.set('BULK_IMPORT.JOB_DETAIL.ERROR.DOWNLOAD');
+        },
       });
   }
 
