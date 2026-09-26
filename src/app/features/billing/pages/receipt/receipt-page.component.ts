@@ -3,7 +3,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { switchMap, tap } from 'rxjs/operators';
+import { throwError } from 'rxjs';
+import { catchError, switchMap, tap } from 'rxjs/operators';
 import { TranslatePipe } from '@ngx-translate/core';
 import { BILLING_SECTION } from '../../../../core/security/route-permissions';
 import { AuthService } from '../../../../core/services/auth.service';
@@ -13,6 +14,13 @@ import {
   ReceiptRef,
 } from '../../models/billing.models';
 import { BillingTransportService } from '../../services/billing-transport.service';
+
+/** Wraps an error from the re-read that follows a successful reprint. */
+class PostReprintReadError extends Error {
+  constructor(override readonly cause: unknown) {
+    super('post-reprint receipt read failed');
+  }
+}
 
 @Component({
   selector: 'app-receipt-page',
@@ -129,15 +137,7 @@ export class ReceiptPageComponent implements OnInit {
         error: (err: unknown) => {
           if (seq !== this.receiptReadSeq) return;
           this.state.set('error');
-          this.errorKey.set(
-            err instanceof HttpErrorResponse && err.status === 404
-              ? 'BILLING.RECEIPT.ERROR.NOT_FOUND'
-              : this.mapPermissionErrorKey(
-                  err,
-                  'BILLING.RECEIPT.ERROR.LOAD_PERMISSION_DENIED',
-                  'BILLING.RECEIPT.ERROR.LOAD',
-                ),
-          );
+          this.errorKey.set(this.mapLoadErrorKey(err));
         },
       });
   }
@@ -183,6 +183,13 @@ export class ReceiptPageComponent implements OnInit {
    * `generateReceipt` — `deniedKey` distinguishes a read denial (`LOAD_PERMISSION_DENIED`) from a
    * write denial (`GENERATE_PERMISSION_DENIED`), since the two are different backend authorities.
    */
+  /** Read-path errors (deep-link load, or the post-reprint re-read). */
+  private mapLoadErrorKey(err: unknown): string {
+    return err instanceof HttpErrorResponse && err.status === 404
+      ? 'BILLING.RECEIPT.ERROR.NOT_FOUND'
+      : this.mapPermissionErrorKey(err, 'BILLING.RECEIPT.ERROR.LOAD_PERMISSION_DENIED', 'BILLING.RECEIPT.ERROR.LOAD');
+  }
+
   private mapPermissionErrorKey(err: unknown, deniedKey: string, genericKey: string): string {
     if (err instanceof HttpErrorResponse && err.status === 403) {
       return this.isLocationScopeDenied(err) ? 'BILLING.RECEIPT.ERROR.LOCATION_SCOPE_DENIED' : deniedKey;
@@ -268,7 +275,13 @@ export class ReceiptPageComponent implements OnInit {
         // `getReceipt` path the deep-link load uses instead of guessing `count + 1` (request-keyed
         // by `receiptReadSeq`, ADR-0063 §1).
         tap(() => this.receiptStale.set(true)),
-        switchMap(() => this.billingService.loadReceipt(invoiceId, receiptId)),
+        // The reprint POST has succeeded by now: a failure of the follow-up read is a read error,
+        // never a reprint failure — tag it so it maps to the load keys, not the reprint ones.
+        switchMap(() =>
+          this.billingService
+            .loadReceipt(invoiceId, receiptId)
+            .pipe(catchError((err: unknown) => throwError(() => new PostReprintReadError(err)))),
+        ),
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe({
@@ -281,7 +294,9 @@ export class ReceiptPageComponent implements OnInit {
         error: (err: unknown) => {
           if (seq !== this.receiptReadSeq) return;
           this.state.set('error');
-          this.errorKey.set(this.mapReprintErrorKey(err));
+          this.errorKey.set(
+            err instanceof PostReprintReadError ? this.mapLoadErrorKey(err.cause) : this.mapReprintErrorKey(err),
+          );
         },
       });
   }

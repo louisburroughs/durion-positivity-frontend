@@ -466,6 +466,23 @@ describe('ReceiptPageComponent', () => {
       expect(billingTransportStub.reprintReceipt).toHaveBeenCalledTimes(1);
     });
 
+    it('maps a 403 from the post-reprint re-read to the load key, not a reprint failure (the POST succeeded)', async () => {
+      billingTransportStub.loadReceipt.mockReturnValueOnce(of({ ...receiptDetailFixture, reprintCount: 1 }));
+      await configure('inv-001', 'rcpt-001');
+      create();
+
+      billingTransportStub.reprintReceipt.mockReturnValue(
+        of({ receiptId: 'rcpt-001', invoiceId: 'inv-001', receiptNumber: 'R-1001' }),
+      );
+      billingTransportStub.loadReceipt.mockReturnValueOnce(throwError(() => new HttpErrorResponse({ status: 403 })));
+
+      component.reprint();
+
+      expect(component.state()).toBe('error');
+      expect(component.errorKey()).toBe('BILLING.RECEIPT.ERROR.LOAD_PERMISSION_DENIED');
+      expect(component.canReprint()).toBe(false);
+    });
+
     it('still allows a retry when the reprint itself fails (the displayed detail was never superseded)', async () => {
       billingTransportStub.loadReceipt.mockReturnValueOnce(of({ ...receiptDetailFixture, reprintCount: 1 }));
       await configure('inv-001', 'rcpt-001');

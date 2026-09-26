@@ -129,6 +129,7 @@ describe('PaymentVoidRefundPageComponent', () => {
   });
 
   it('sets error state before errorKey when executeRefund() fails', () => {
+    component.setMode('refund'); // settles the balance read the refund requires (ADR-0064)
     billingTransportStub.executeRefund.mockReturnValue(throwError(() => new Error('refund fail')));
     const stateSetSpy = vi.spyOn(component.state, 'set');
     const errorKeySetSpy = vi.spyOn(component.errorKey, 'set');
@@ -144,6 +145,7 @@ describe('PaymentVoidRefundPageComponent', () => {
   });
 
   it('maps a 422 from executeRefund to the balance-exceeded key', () => {
+    component.setMode('refund'); // settles the balance read the refund requires (ADR-0064)
     billingTransportStub.executeRefund.mockReturnValue(
       throwError(() => new HttpErrorResponse({ status: 422 })),
     );
@@ -155,6 +157,7 @@ describe('PaymentVoidRefundPageComponent', () => {
   });
 
   it('maps a plain 403 from executeRefund to the permission-denied key', () => {
+    component.setMode('refund'); // settles the balance read the refund requires (ADR-0064)
     billingTransportStub.executeRefund.mockReturnValue(
       throwError(() => new HttpErrorResponse({ status: 403 })),
     );
@@ -173,6 +176,7 @@ describe('PaymentVoidRefundPageComponent', () => {
   });
 
   it('maps a 403 with a LOCATION_SCOPE_DENIED body code from executeRefund to the location-scope key', () => {
+    component.setMode('refund'); // settles the balance read the refund requires (ADR-0064)
     billingTransportStub.executeRefund.mockReturnValue(
       throwError(() => new HttpErrorResponse({ status: 403, error: { code: 'LOCATION_SCOPE_DENIED' } })),
     );
@@ -183,6 +187,7 @@ describe('PaymentVoidRefundPageComponent', () => {
   });
 
   it('sets ready state on successful refund, sending the entered amount explicitly (issue #381), and re-reads the refund context (ADR-0063 §5)', () => {
+    component.setMode('refund'); // settles the balance read the refund requires (ADR-0064)
     billingTransportStub.executeRefund.mockReturnValue(of(undefined));
     billingTransportStub.loadRefundContext.mockClear();
 
@@ -199,7 +204,44 @@ describe('PaymentVoidRefundPageComponent', () => {
     expect(billingTransportStub.loadRefundContext).toHaveBeenCalledWith('inv-001', 'pay-001');
   });
 
+  it('blocks a second refund (control and method) while the post-refund balance re-read is pending (ADR-0064)', () => {
+    component.setMode('refund');
+    billingTransportStub.executeRefund.mockReturnValue(of(undefined));
+    const reread$ = new Subject<RefundContext>();
+    billingTransportStub.loadRefundContext.mockReturnValue(reread$.asObservable());
+    component.refundReason.set('reason');
+    component.refundAuthorityCode.set('AUTH1');
+    component.refundAmount.set(10);
+
+    component.executeRefund('reason', 'AUTH1', 10);
+    expect(component.refundContextStatus()).toBe('PENDING');
+    billingTransportStub.executeRefund.mockClear();
+
+    expect(component.canSubmitRefund()).toBe(false);
+    component.executeRefund('reason', 'AUTH1', 10);
+    expect(billingTransportStub.executeRefund).not.toHaveBeenCalled();
+
+    reread$.next({ ...contextFixture, refundableAmount: 70 });
+    reread$.complete();
+    expect(component.refundContextStatus()).toBe('OK');
+    expect(component.canSubmitRefund()).toBe(true);
+  });
+
+  it('keeps refunds blocked after the post-refund balance re-read fails', () => {
+    component.setMode('refund');
+    billingTransportStub.executeRefund.mockReturnValue(of(undefined));
+    billingTransportStub.loadRefundContext.mockReturnValue(throwError(() => new Error('reread failed')));
+
+    component.executeRefund('reason', 'AUTH1', 10);
+    expect(component.refundContextStatus()).toBe('FAILED');
+    billingTransportStub.executeRefund.mockClear();
+
+    component.executeRefund('reason', 'AUTH1', 10);
+    expect(billingTransportStub.executeRefund).not.toHaveBeenCalled();
+  });
+
   it('sets error state before errorKey and never calls the service when refund amount is missing (issue #381: no more implicit full refund)', () => {
+    component.setMode('refund'); // settles the balance read the refund requires (ADR-0064)
     const stateSetSpy = vi.spyOn(component.state, 'set');
     const errorKeySetSpy = vi.spyOn(component.errorKey, 'set');
 
@@ -215,6 +257,7 @@ describe('PaymentVoidRefundPageComponent', () => {
   });
 
   it('sets error state and never calls the service when refund amount is zero or negative', () => {
+    component.setMode('refund'); // settles the balance read the refund requires (ADR-0064)
     component.executeRefund('reason', 'AUTH1', 0);
     expect(component.state()).toBe('error');
     expect(component.errorKey()).toBe('BILLING.PAYMENT.ERROR.REFUND_AMOUNT_REQUIRED');

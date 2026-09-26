@@ -126,6 +126,9 @@ export class PaymentVoidRefundPageComponent implements OnInit {
     const amount = this.refundAmount();
     return this.state() !== 'submitting'
       && this.canRefund()
+      // Only against a settled balance read (ADR-0064): while the post-refund re-read is PENDING,
+      // or after it FAILED, the retained `refundContext` may be stale.
+      && this.refundContextStatus() === 'OK'
       && this.refundReason().trim().length > 0
       && this.refundAuthorityCode().trim().length > 0
       && amount !== null && amount > 0
@@ -200,6 +203,11 @@ export class PaymentVoidRefundPageComponent implements OnInit {
     if (!this.invoiceId() || !this.paymentId()) {
       this.state.set('error');
       this.errorKey.set('BILLING.PAYMENT.ERROR.MISSING_IDS');
+      return;
+    }
+    // Only against a settled balance read, like the button (ADR-0064): while the post-refund
+    // re-read is PENDING, or after it FAILED, the retained `refundContext` may be stale.
+    if (this.refundContextStatus() !== 'OK') {
       return;
     }
     if (amount === null || amount <= 0) {
