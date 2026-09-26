@@ -1,3 +1,4 @@
+import { CoverageRuleRequestRuleTypeEnum } from '@durion-sdk/location';
 import type {
   CoverageRuleRequest,
   CoverageRuleResponse,
@@ -242,7 +243,10 @@ export function toRuleRequest(row: CoverageRuleDraft): CoverageRuleRequest {
   const maxDistance = row.ruleType === 'DISTANCE_TIER' && row.maxDistance.trim() ? Number(row.maxDistance) : undefined;
   return {
     serviceAreaId: row.serviceAreaId,
-    ruleType: row.ruleType,
+    ruleType:
+      row.ruleType === 'DISTANCE_TIER'
+        ? CoverageRuleRequestRuleTypeEnum.DistanceTier
+        : CoverageRuleRequestRuleTypeEnum.ServiceArea,
     priority: Number(row.priority.trim()),
     ...(row.validFrom ? { validFrom: row.validFrom } : {}),
     ...(row.validTo ? { validTo: row.validTo } : {}),

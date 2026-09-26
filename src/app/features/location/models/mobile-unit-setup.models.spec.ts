@@ -1,3 +1,4 @@
+import { CoverageRuleResponseRuleTypeEnum, MobileUnitResponseStatusEnum } from '@durion-sdk/location';
 import type { CoverageRuleResponse, ServiceAreaResponse } from '@durion-sdk/location';
 import {
   CoverageRuleDraft,
@@ -18,7 +19,7 @@ const rule = (overrides: Partial<CoverageRuleResponse> = {}): CoverageRuleRespon
   id: 'rule-1',
   mobileUnitId: 'mu-1',
   serviceAreaId: 'area-1',
-  ruleType: 'SERVICE_AREA',
+  ruleType: CoverageRuleResponseRuleTypeEnum.ServiceArea,
   priority: 1,
   ...overrides,
 });
@@ -44,8 +45,8 @@ const PREFIX = 'LOCATION.MOBILE_UNITS.COVERAGE.ERROR';
 
 describe('mobile unit setup rules', () => {
   it('groups units by status, reading it case-insensitively', () => {
-    expect(unitGroupOf({ id: 'a', status: 'active' })).toBe('ACTIVE');
-    expect(unitGroupOf({ id: 'b', status: 'INACTIVE' })).toBe('INACTIVE');
+    expect(unitGroupOf({ id: 'a', status: 'active' as MobileUnitResponseStatusEnum })).toBe('ACTIVE');
+    expect(unitGroupOf({ id: 'b', status: MobileUnitResponseStatusEnum.Inactive })).toBe('INACTIVE');
     expect(unitGroupOf({ id: 'c' })).toBe('INACTIVE');
   });
 
@@ -92,7 +93,7 @@ describe('mobile unit setup rules', () => {
   });
 
   it('turns a saved rule into an editor row and a valid row back into a request', () => {
-    const draft = draftFromRule(rule({ ruleType: 'INCLUDE', priority: 3, validFrom: '2026-10-01', maxDistance: 25 }), 'k');
+    const draft = draftFromRule(rule({ ruleType: 'INCLUDE' as CoverageRuleResponseRuleTypeEnum, priority: 3, validFrom: '2026-10-01', maxDistance: 25 }), 'k');
     expect(draft).toEqual({
       key: 'k',
       serviceAreaId: 'area-1',
