@@ -138,6 +138,7 @@
 .sort-btn {
   display: inline-flex;
   align-items: center;
+  min-height: 24px; /* WCAG 2.5.8 / ADR-0029 §8.5 target size */
   background: transparent;
   border: none;
   padding: 0;

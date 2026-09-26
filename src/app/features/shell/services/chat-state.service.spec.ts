@@ -211,19 +211,28 @@ describe('ChatStateService', () => {
     expect(reopened.state()).toBe('ready');
   });
 
-  it('falls back to a getRandomValues-based id when crypto.randomUUID is unavailable, without touching Math.random', () => {
+  it('falls back to a crypto.getRandomValues id when crypto.randomUUID is unavailable, without touching Math.random', () => {
     // `newId()` is module-private; its fallback path is exercised through the
     // id it stamps on a message via appendUserMessage(). Browser-mode specs
     // share one page, so the override on the real `crypto` object is always
     // restored, success or failure.
     Object.defineProperty(globalThis.crypto, 'randomUUID', { value: undefined, configurable: true });
     const randomSpy = vi.spyOn(Math, 'random');
+    // Deterministic CSPRNG bytes prove the suffix actually comes from getRandomValues,
+    // not from some other deterministic source that merely has the same shape.
+    const cryptoSpy = vi.spyOn(globalThis.crypto, 'getRandomValues').mockImplementation(<T extends ArrayBufferView | null>(array: T): T => {
+      if (array instanceof Uint8Array) array.fill(0xab);
+      return array;
+    });
 
     try {
       const message = service.appendUserMessage('a question needing a fallback id');
-      expect(message.id).toMatch(/^id-[0-9a-z]+-[0-9a-f]{16}$/);
+      expect(cryptoSpy).toHaveBeenCalled();
+      expect(message.id).toMatch(/^id-[0-9a-z]+-abababababababab$/);
       expect(randomSpy).not.toHaveBeenCalled();
     } finally {
+      cryptoSpy.mockRestore();
+      randomSpy.mockRestore();
       Reflect.deleteProperty(globalThis.crypto, 'randomUUID');
     }
   });
