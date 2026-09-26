@@ -2068,7 +2068,9 @@
         "CREATE": "Crear bahía",
         "SAVE": "Guardar",
         "SAVE_APPLY_ONE": "Guardar y aplicar 1 cambio",
-        "SAVE_APPLY_MANY": "Guardar y aplicar {{count}} cambios"
+        "SAVE_APPLY_MANY": "Guardar y aplicar {{count}} cambios",
+        "CREATE_APPLY_ONE": "Crear bahía y aplicar 1 cambio",
+        "CREATE_APPLY_MANY": "Crear bahía y aplicar {{count}} cambios"
       },
       "SAVED": {
         "CREATED": "{{bay}} agregada a {{lane}}.",
@@ -2100,6 +2102,7 @@
         "NOW_GENERAL": "{{service}} ahora es trabajo general: se puede asignar a cualquier bahía de aquí excepto las de lavado y detallado.",
         "REMOVED": "{{service}} quitado de {{bay}}.",
         "UNDONE": "Cambio en {{bay}} deshecho.",
+        "UNDO_STALE": "{{bay}} cambió desde entonces, así que Deshacer ya no aplica.",
         "BUSY": "{{bay}} todavía se está guardando. Intente de nuevo en un momento.",
         "MOVED_GENERAL": "{{bay}} pasó a General.",
         "MOVED_SPECIALTY": "{{bay}} pasó a Especializada.",
@@ -2212,7 +2215,10 @@
         "UNKNOWN": "Activa. No se pudo cargar su cobertura.",
         "NONE_TODAY": "Activa, pero ninguna regla de cobertura está vigente hoy, así que ningún cliente coincide.",
         "AREAS_ONE": "Se puede enviar hoy a clientes de 1 área de servicio.",
-        "AREAS_MANY": "Se puede enviar hoy a clientes de {{count}} áreas de servicio."
+        "AREAS_MANY": "Se puede enviar hoy a clientes de {{count}} áreas de servicio.",
+        "AREAS_CHECKING": "Activa. Comprobando a qué áreas de servicio llega.",
+        "AREAS_UNKNOWN": "Activa. No se pudieron cargar las áreas de servicio, así que no se sabe adónde se puede enviar.",
+        "NONE_MATCHABLE": "Activa, pero ninguna de las áreas de servicio de hoy tiene códigos postales, así que ningún cliente coincide."
       },
       "CHECKLIST": {
         "TITLE": "Lista para activar",
@@ -2273,7 +2279,8 @@
         "PRIORITY": "Prioridad: los números más bajos se ofrecen primero, comparados entre todas las unidades de aquí que cubren el mismo código postal.",
         "DATES": "Válida desde y hasta: las fechas en que aplica la regla. Deje Válida hasta en blanco para no tener fecha de fin.",
         "RULE_TYPE": "El tipo de regla se registra para más adelante. La coincidencia usa solo el área de servicio.",
-        "MAX_DISTANCE": "La distancia máxima se registra para más adelante y no se usa para la coincidencia. Deje en blanco el último nivel de distancia como nivel general."
+        "MAX_DISTANCE": "La distancia máxima se registra para más adelante y no se usa para la coincidencia. Deje en blanco el último nivel de distancia como nivel general.",
+        "POLICY_LOCKED": "Todavía no se puede quitar la política de una unidad, solo cambiarla por otra."
       },
       "DIALOG": {
         "CREATE_TITLE": "Nueva unidad móvil",
@@ -2359,6 +2366,7 @@
         "ADDED_MANY": "{{count}} capacidades registradas en {{unit}}.",
         "REMOVED": "{{service}} quitado de {{unit}}.",
         "UNDONE": "Cambio en {{unit}} deshecho.",
+        "UNDO_STALE": "{{unit}} cambió desde entonces, así que Deshacer ya no aplica.",
         "BUSY": "{{unit}} todavía se está guardando. Intente de nuevo en un momento.",
         "LAST_CAPABILITY": "Una unidad activa necesita al menos una capacidad. Desactive {{unit}} para quitar la última.",
         "INVALID": "No se pudieron cambiar las capacidades de {{unit}}: una de ellas no es un servicio activo del catálogo.",

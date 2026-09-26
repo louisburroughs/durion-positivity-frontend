@@ -14,6 +14,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
+import { Subscription } from 'rxjs';
 import type { BayPatchRequest, BayRequest, BayResponse } from '@durion-sdk/location';
 import { AuthService } from '../../../../core/services/auth.service';
 import { LOCATION_PAGE } from '../../../../core/security/route-permissions';
@@ -82,7 +83,8 @@ interface ChipView {
 /** The last specialty change: what it did, and how to take it back. */
 interface Outcome {
   readonly messages: readonly Message[];
-  readonly undo: { readonly bayId: string; readonly codes: readonly string[] } | null;
+  /** `codes` restores the list; `applied` is what the save left, checked again when Undo is pressed. */
+  readonly undo: { readonly bayId: string; readonly codes: readonly string[]; readonly applied: readonly string[] } | null;
 }
 
 /** One claimed specialty service, with the bays claiming it in and out of service. */
@@ -195,6 +197,10 @@ export class BaysPageComponent {
   /** Set when a type pick filled in the specialty list, for the "Filled in from …" caption. */
   readonly filledFrom = signal<BayType | null>(null);
   readonly saving = signal(false);
+  /** The vehicles field's text as typed, so a non-whole entry stays on screen while it is refused. */
+  readonly vehiclesText = signal('');
+  /** The save in flight; dropped with the dialog when the location changes (ADR-0063). */
+  private saveSub: Subscription | null = null;
   readonly nameErrorKey = signal<string | null>(null);
   readonly saveErrorKey = signal<string | null>(null);
 
@@ -286,7 +292,9 @@ export class BaysPageComponent {
 
   constructor() {
     this.route.queryParams.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
-      this.locationId.set(String(params['locationId'] ?? ''));
+      const locationId = String(params['locationId'] ?? '');
+      if (locationId !== this.locationId()) this.abandonDialog();
+      this.locationId.set(locationId);
       this.showTests.set(params['tests'] === '1');
     });
 
@@ -328,6 +336,7 @@ export class BaysPageComponent {
   }
 
   private changeLocation(locationId: string): void {
+    if (locationId !== this.locationId()) this.abandonDialog();
     this.scopeDenied.set(false);
     this.announcement.set(null);
     this.outcome.set(null);
@@ -370,6 +379,7 @@ export class BaysPageComponent {
     this.resetDialog();
     this.editingBay.set(null);
     this.draft.set(newBayDraft());
+    this.vehiclesText.set(String(this.draft().maxConcurrentVehicles));
     this.dialogMode.set('create');
   }
 
@@ -378,6 +388,7 @@ export class BaysPageComponent {
     this.resetDialog();
     this.editingBay.set(bay);
     this.draft.set(draftFromBay(bay));
+    this.vehiclesText.set(String(this.draft().maxConcurrentVehicles));
     this.dialogMode.set('edit');
   }
 
@@ -385,6 +396,24 @@ export class BaysPageComponent {
     if (this.saving()) return;
     this.dialogMode.set(null);
     this.editingBay.set(null);
+  }
+
+  /**
+   * Dialogs, saves and rail changes belong to one location: a location change closes the dialogs,
+   * drops the in-flight save and forgets the pending rail state and its Undo.
+   */
+  private abandonDialog(): void {
+    this.saveSub?.unsubscribe();
+    this.saveSub = null;
+    this.saving.set(false);
+    this.dialogMode.set(null);
+    this.editingBay.set(null);
+    this.addDialogBay.set(null);
+    this.picked.set([]);
+    this.confirmRemove.set(null);
+    this.dragging.set(null);
+    this.outcome.set(null);
+    this.pendingCodes.set(new Map());
   }
 
   private resetDialog(): void {
@@ -425,9 +454,11 @@ export class BaysPageComponent {
     if (status) this.patchDraft({ status });
   }
 
+  /** Anything but a whole number (blank, `1.5`) is kept as NaN so the save refuses it rather than rounding. */
   setVehicles(value: string): void {
-    const vehicles = Number.parseInt(value, 10);
-    this.patchDraft({ maxConcurrentVehicles: Number.isFinite(vehicles) ? vehicles : 0 });
+    this.vehiclesText.set(value);
+    const vehicles = value.trim() === '' ? Number.NaN : Number(value);
+    this.patchDraft({ maxConcurrentVehicles: Number.isInteger(vehicles) ? vehicles : Number.NaN });
   }
 
   setDutyClass(value: string): void {
@@ -490,10 +521,10 @@ export class BaysPageComponent {
     this.saving.set(true);
     this.saveErrorKey.set(null);
     this.nameErrorKey.set(null);
-    save$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+    this.saveSub = save$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: saved => {
         this.saving.set(false);
-        if (this.locationId() !== locationId) return;
+        this.saveSub = null;
         this.bays.update(bays =>
           mode === 'edit' ? bays.map(bay => (bay.id === saved.id ? saved : bay)) : [...bays, saved],
         );
@@ -510,6 +541,7 @@ export class BaysPageComponent {
       },
       error: (err: unknown) => {
         this.saving.set(false);
+        this.saveSub = null;
         const status = err instanceof HttpErrorResponse ? err.status : 0;
         if (status === 409) {
           this.nameErrorKey.set('LOCATION.BAYS.ERROR.NAME_TAKEN');
@@ -648,19 +680,25 @@ export class BaysPageComponent {
       ? { key: `${I18N}.DROP.NOW_GENERAL`, params: { service } }
       : { key: `${I18N}.DROP.REMOVED`, params: { service, bay: bay.name } };
     this.changeCodes(bay, next, [message], true);
-    // Focus moves to the next chip, else to Add service (ADR-0029 rule 7).
+    // Focus moves to the next chip, else to Add service, else to the card (ADR-0029 rule 7).
     const following = next[index] ?? next[index - 1];
-    this.focusSelector(
-      following
-        ? `#chip-remove-${CSS.escape(bay.id)}-${CSS.escape(following)}`
-        : `#add-service-${CSS.escape(bay.id)}`,
-    );
+    if (following) this.focusSelector(`#chip-remove-${CSS.escape(bay.id)}-${CSS.escape(following)}`);
+    else if (this.canSearchServices()) this.focusSelector(`#add-service-${CSS.escape(bay.id)}`);
+    else this.focusCard(bay.id);
   }
 
   undo(): void {
     const undo = this.outcome()?.undo;
     const bay = undo && this.bays().find(b => b.id === undo.bayId);
     if (!undo || !bay) return;
+    // Undo restores the whole list, so it applies only while the bay still holds what the save left.
+    const { added, removed } = codeChanges(undo.applied, specialtyCodes(bay));
+    if (added.length > 0 || removed.length > 0) {
+      this.outcome.set(null);
+      this.setCardError(bay.id, { key: `${I18N}.DROP.UNDO_STALE`, params: { bay: bay.name } });
+      this.focusCard(bay.id);
+      return;
+    }
     this.changeCodes(bay, [...undo.codes], [{ key: `${I18N}.DROP.UNDONE`, params: { bay: bay.name } }], false);
   }
 
@@ -715,7 +753,7 @@ export class BaysPageComponent {
           const moved = lane !== laneBefore;
           this.outcome.set({
             messages: moved ? [...messages, { key: `${I18N}.DROP.MOVED_${lane}`, params: { bay: saved.name } }] : messages,
-            undo: offerUndo ? { bayId: saved.id, codes: previous } : null,
+            undo: offerUndo ? { bayId: saved.id, codes: previous, applied: [...specialtyCodes(saved)] } : null,
           });
           if (moved) {
             if (lane === 'OUT_OF_SERVICE') this.outOfServiceOpen.set(true);

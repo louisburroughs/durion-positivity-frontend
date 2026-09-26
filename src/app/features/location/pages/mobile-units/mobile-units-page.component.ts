@@ -15,6 +15,7 @@ import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
+import { Subscription, interval } from 'rxjs';
 import type {
   CoverageRuleResponse,
   EligibleMobileUnitResponse,
@@ -25,7 +26,7 @@ import type {
 import { MobileUnitRequestStatusEnum } from '@durion-sdk/location';
 import { AuthService } from '../../../../core/services/auth.service';
 import { LOCATION_PAGE } from '../../../../core/security/route-permissions';
-import { isoDateLocal } from '../../../../core/utils/local-date';
+import { isoDateLocal, parseIsoDateLocal } from '../../../../core/utils/local-date';
 import { LocationPickerComponent } from '../../../../shared/location-picker/location-picker.component';
 import { ModalDialogDirective } from '../../../../shared/modal-dialog.directive';
 import { RailCaption, ServiceRailComponent } from '../../components/service-rail/service-rail.component';
@@ -81,7 +82,8 @@ interface AreaChip {
 }
 
 interface UpcomingCoverage {
-  readonly from: string;
+  /** Local midnight of the rule's first day, for the date pipe (ADR-0038). */
+  readonly from: Date;
   readonly chips: readonly AreaChip[];
 }
 
@@ -129,7 +131,8 @@ type Dragging =
 /** The last capability change: what it did, and how to take it back. */
 interface Outcome {
   readonly messages: readonly Message[];
-  readonly undo: { readonly unitId: string; readonly codes: readonly string[] } | null;
+  /** `codes` restores the list; `applied` is what the save left, checked again when Undo is pressed. */
+  readonly undo: { readonly unitId: string; readonly codes: readonly string[]; readonly applied: readonly string[] } | null;
 }
 
 interface Announcement {
@@ -138,6 +141,8 @@ interface Announcement {
 }
 
 const I18N = 'LOCATION.MOBILE_UNITS';
+/** How often the page re-reads the local day, so a page left open past midnight moves with it. */
+const DAY_CHECK_MS = 60_000;
 
 @Component({
   selector: 'app-mobile-units-page',
@@ -158,7 +163,13 @@ export class MobileUnitsPageComponent {
 
   readonly statuses = MOBILE_UNIT_STATUSES;
   readonly ruleTypes = COVERAGE_RULE_TYPES;
-  readonly today = isoDateLocal(new Date());
+  /** The one clock read behind "today"; a method so a spec can pin it (ADR-0038 §7). */
+  now(): Date {
+    return new Date();
+  }
+
+  /** The local day, re-read every minute: fixed at construction it goes stale across midnight. */
+  readonly today = signal(isoDateLocal(this.now()));
 
   // --- page state (ADR-0031): `state` always moves before `errorKey` ---
   readonly state = signal<PageState>('idle');
@@ -269,13 +280,20 @@ export class MobileUnitsPageComponent {
   readonly checkState = signal<CheckState>('idle');
   readonly checkErrorKey = signal<string | null>(null);
   readonly checkResults = signal<EligibleMobileUnitResponse[]>([]);
-  /** The postal code and date the shown results answer. */
-  readonly checkedFor = signal<{ postalCode: string; date: string } | null>(null);
+  /** The postal code and day the shown results answer; `day` is local midnight for the date pipe. */
+  readonly checkedFor = signal<{ postalCode: string; date: string; day: Date } | null>(null);
+  /** The check in flight: a newer check or a location change drops it (ADR-0063). */
+  private checkSub: Subscription | null = null;
+  /** The unit and coverage saves in flight, dropped with their dialogs on a location change. */
+  private saveSub: Subscription | null = null;
+  private coverageSub: Subscription | null = null;
   readonly checkCountryValue = computed(() => this.checkCountry() || usualCountry(this.areas()));
 
   constructor() {
     this.route.queryParams.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
-      this.locationId.set(String(params['locationId'] ?? ''));
+      const locationId = String(params['locationId'] ?? '');
+      if (locationId !== this.locationId()) this.abandonLocationWork();
+      this.locationId.set(locationId);
       this.showTests.set(params['tests'] === '1');
     });
 
@@ -305,6 +323,13 @@ export class MobileUnitsPageComponent {
           },
         });
       onCleanup(() => sub.unsubscribe());
+    });
+
+    // Browser only: a server render has no midnight to cross.
+    afterNextRender(() => {
+      interval(DAY_CHECK_MS)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe(() => this.today.set(isoDateLocal(this.now())));
     });
 
     // Service areas and travel buffer policies are tenant-wide: read once, degrade to "unavailable".
@@ -337,16 +362,35 @@ export class MobileUnitsPageComponent {
   }
 
   private changeLocation(locationId: string): void {
+    if (locationId !== this.locationId()) this.abandonLocationWork();
     this.scopeDenied.set(false);
     this.announcement.set(null);
     this.cardErrors.set(new Map());
+    this.locationId.set(locationId);
+    this.router.navigate([], { queryParams: { locationId: locationId || null }, queryParamsHandling: 'merge' });
+  }
+
+  /**
+   * Dialogs, saves and checks belong to one location. A location change, from the picker or the
+   * URL, closes the dialogs and drops whatever is in flight so nothing lands on the new one.
+   */
+  private abandonLocationWork(): void {
+    for (const sub of [this.saveSub, this.coverageSub, this.checkSub]) sub?.unsubscribe();
+    this.saveSub = this.coverageSub = this.checkSub = null;
+    this.saving.set(false);
+    this.coverageSaving.set(false);
+    this.dialogMode.set(null);
+    this.editingUnit.set(null);
+    this.createdUnit.set(null);
+    this.coverageUnit.set(null);
+    this.addDialogUnit.set(null);
+    this.picked.set([]);
+    this.dragging.set(null);
     this.outcome.set(null);
     this.pendingCodes.set(new Map());
     this.checkResults.set([]);
     this.checkedFor.set(null);
     this.checkState.set('idle');
-    this.locationId.set(locationId);
-    this.router.navigate([], { queryParams: { locationId: locationId || null }, queryParamsHandling: 'merge' });
   }
 
   retry(): void {
@@ -411,8 +455,22 @@ export class MobileUnitsPageComponent {
   }
 
   private currentAreaCount(unitId: string): number {
-    const rules = this.coverage().get(unitId) ?? [];
-    return new Set(coverageTimeline(rules, this.today).current.map(rule => rule.serviceAreaId)).size;
+    return this.matchableAreaCount(coverageTimeline(this.coverage().get(unitId) ?? [], this.today()).current);
+  }
+
+  /**
+   * The areas today's rules can send the unit to: known areas with at least one postal code. A
+   * switched-off area still counts, because matching still uses it. Only meaningful once the areas
+   * read is OK.
+   */
+  private matchableAreaCount(current: readonly CoverageRuleResponse[]): number {
+    const areas = this.areaById();
+    return new Set(
+      current.map(rule => rule.serviceAreaId).filter(id => {
+        const area = areas.get(id);
+        return area != null && postalCodeCount(area) > 0;
+      }),
+    ).size;
   }
 
   // --- unit create/edit dialog ---
@@ -455,6 +513,7 @@ export class MobileUnitsPageComponent {
   }
 
   setPolicy(travelBufferPolicyId: string): void {
+    if (!travelBufferPolicyId && this.noPolicyLocked()) return;
     this.draft.update(draft => ({ ...draft, travelBufferPolicyId }));
   }
 
@@ -483,6 +542,12 @@ export class MobileUnitsPageComponent {
       serviceCapabilityCodes: draft.serviceCapabilityCodes.filter(c => c !== code),
     }));
   }
+
+  /**
+   * PATCH treats a missing `travelBufferPolicyId` as "unchanged" and has no clear value yet
+   * (backend#2252), so "No policy" is disabled while editing a unit that has one.
+   */
+  readonly noPolicyLocked = computed(() => this.dialogMode() === 'edit' && !!this.editingUnit()?.travelBufferPolicyId);
 
   /** An active unit must keep a capability; the save would be refused (422). */
   readonly lastCapabilityLocked = computed(
@@ -518,10 +583,10 @@ export class MobileUnitsPageComponent {
 
     this.saving.set(true);
     this.saveErrorKey.set(null);
-    save$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+    this.saveSub = save$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: saved => {
         this.saving.set(false);
-        if (this.locationId() !== locationId) return;
+        this.saveSub = null;
         if (mode === 'create') {
           this.units.update(units => [...units, saved]);
           this.coverage.update(coverage => new Map(coverage).set(saved.id, []));
@@ -539,6 +604,7 @@ export class MobileUnitsPageComponent {
       },
       error: (err: unknown) => {
         this.saving.set(false);
+        this.saveSub = null;
         const status = httpStatus(err);
         if (status === 409) {
           this.nameErrorKey.set('LOCATION.MOBILE_UNITS.ERROR.NAME_TAKEN');
@@ -661,16 +727,15 @@ export class MobileUnitsPageComponent {
       }
       return;
     }
-    const locationId = this.locationId();
     this.coverageSaving.set(true);
     this.coverageSaveErrorKey.set(null);
-    this.locationService
+    this.coverageSub = this.locationService
       .replaceCoverageRules(unit.id, this.ruleRows().map(toRuleRequest))
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: rules => {
           this.coverageSaving.set(false);
-          if (this.locationId() !== locationId) return;
+          this.coverageSub = null;
           this.coverage.update(coverage => new Map(coverage).set(unit.id, rules));
           this.announcement.set({
             key: `${I18N}.SAVED.COVERAGE_${plural(rules.length)}`,
@@ -680,6 +745,7 @@ export class MobileUnitsPageComponent {
         },
         error: (err: unknown) => {
           this.coverageSaving.set(false);
+          this.coverageSub = null;
           const status = httpStatus(err);
           if (status === 403) this.scopeDenied.set(true);
           this.coverageSaveErrorKey.set(saveErrorKey(status));
@@ -732,18 +798,21 @@ export class MobileUnitsPageComponent {
     const locationId = this.locationId();
     this.checkErrorKey.set(null);
     this.checkState.set('loading');
-    this.locationService
+    // Only the latest check may answer: a slower earlier one is dropped, not raced.
+    this.checkSub?.unsubscribe();
+    this.checkSub = this.locationService
       .findEligibleMobileUnits(postalCode, this.checkCountryValue(), eligibilityInstant(date))
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: results => {
-          if (this.locationId() !== locationId) return;
+          this.checkSub = null;
           // Eligibility isn't filtered by base location; this page answers for its own shop.
           this.checkResults.set(results.filter(result => result.baseLocationId === locationId));
-          this.checkedFor.set({ postalCode, date });
+          this.checkedFor.set({ postalCode, date, day: parseIsoDateLocal(date) });
           this.checkState.set('ready');
         },
         error: () => {
+          this.checkSub = null;
           this.checkState.set('failed');
         },
       });
@@ -851,18 +920,25 @@ export class MobileUnitsPageComponent {
       { key: `${I18N}.DROP.REMOVED`, params: { unit: unit.name ?? '', service: this.serviceLabel(code) } },
       true,
     );
+    // Focus moves to the next chip, else to Add capability, else to the card (ADR-0029 rule 7).
     const following = next[index] ?? next[index - 1];
-    this.focus(
-      following
-        ? `#cap-remove-${CSS.escape(unit.id)}-${CSS.escape(following)}`
-        : `#add-capability-${CSS.escape(unit.id)}`,
-    );
+    if (following) this.focus(`#cap-remove-${CSS.escape(unit.id)}-${CSS.escape(following)}`);
+    else if (this.canSearchServices()) this.focus(`#add-capability-${CSS.escape(unit.id)}`);
+    else this.focus(`#unit-${CSS.escape(unit.id)}`);
   }
 
   undo(): void {
     const undo = this.outcome()?.undo;
     const unit = undo && this.units().find(u => u.id === undo.unitId);
     if (!undo || !unit) return;
+    // Undo restores the whole list, so it applies only while the unit still holds what the save left.
+    const current = unit.serviceCapabilityCodes ?? [];
+    if (current.length !== undo.applied.length || current.some(code => !undo.applied.includes(code))) {
+      this.outcome.set(null);
+      this.setCardError(unit.id, `${I18N}.DROP.UNDO_STALE`);
+      this.focus(`#unit-${CSS.escape(unit.id)}`);
+      return;
+    }
     this.changeCodes(unit, [...undo.codes], { key: `${I18N}.DROP.UNDONE`, params: { unit: unit.name ?? '' } }, false);
   }
 
@@ -900,7 +976,12 @@ export class MobileUnitsPageComponent {
           this.setPending(unit.id, null);
           if (this.locationId() !== locationId) return;
           this.replaceUnit(saved);
-          this.outcome.set({ messages: [message], undo: offerUndo ? { unitId: saved.id, codes: previous } : null });
+          this.outcome.set({
+            messages: [message],
+            undo: offerUndo
+              ? { unitId: saved.id, codes: previous, applied: [...(saved.serviceCapabilityCodes ?? [])] }
+              : null,
+          });
         },
         error: (err: unknown) => {
           this.setPending(unit.id, null);
@@ -1001,18 +1082,9 @@ export class MobileUnitsPageComponent {
     const active = isActiveUnit(unit);
     const rules = this.coverage().get(unit.id);
     const coverageKnown = rules != null;
-    const timeline = coverageTimeline(rules ?? [], this.today);
+    const timeline = coverageTimeline(rules ?? [], this.today());
     const checklist = coverageKnown ? activationChecklist(unit, rules.length) : null;
-    const areaCount = new Set(timeline.current.map(rule => rule.serviceAreaId)).size;
-
-    let sentLine: Message;
-    let sentWarning = false;
-    if (!active) sentLine = { key: `${I18N}.SENT.INACTIVE` };
-    else if (!coverageKnown) sentLine = { key: `${I18N}.SENT.UNKNOWN` };
-    else if (areaCount === 0) {
-      sentLine = { key: `${I18N}.SENT.NONE_TODAY` };
-      sentWarning = true;
-    } else sentLine = { key: `${I18N}.SENT.${areaCount === 1 ? 'AREAS_ONE' : 'AREAS_MANY'}`, params: { count: areaCount } };
+    const { sentLine, sentWarning } = this.sentLine(active, coverageKnown, timeline.current);
 
     const upcomingByDate = new Map<string, AreaChip[]>();
     for (const rule of timeline.upcoming) {
@@ -1031,7 +1103,7 @@ export class MobileUnitsPageComponent {
       ready: checklist != null && isReadyToActivate(checklist),
       coverageKnown,
       current: timeline.current.map(rule => this.areaChip(rule)),
-      upcoming: [...upcomingByDate].map(([from, chips]) => ({ from, chips })),
+      upcoming: [...upcomingByDate].map(([from, chips]) => ({ from: parseIsoDateLocal(from), chips })),
       pastCount: timeline.past.length,
       capabilities: codes.map(code => ({
         code,
@@ -1044,6 +1116,28 @@ export class MobileUnitsPageComponent {
       warnings: this.coverageWarnings(rules ?? []),
       notes: unit.notes?.trim() ?? '',
     };
+  }
+
+  /**
+   * Where an active unit can be sent today. The count is of areas that can match (see
+   * `matchableAreaCount`), so it never claims an area its own warning says covers nobody; while
+   * the areas are unknown it says so rather than counting rules.
+   */
+  private sentLine(
+    active: boolean,
+    coverageKnown: boolean,
+    current: readonly CoverageRuleResponse[],
+  ): { sentLine: Message; sentWarning: boolean } {
+    if (!active) return { sentLine: { key: `${I18N}.SENT.INACTIVE` }, sentWarning: false };
+    if (!coverageKnown) return { sentLine: { key: `${I18N}.SENT.UNKNOWN` }, sentWarning: false };
+    if (current.length === 0) return { sentLine: { key: `${I18N}.SENT.NONE_TODAY` }, sentWarning: true };
+    const areasRead = this.areasRead();
+    if (areasRead !== 'OK') {
+      return { sentLine: { key: `${I18N}.SENT.${areasRead === 'FAILED' ? 'AREAS_UNKNOWN' : 'AREAS_CHECKING'}` }, sentWarning: false };
+    }
+    const count = this.matchableAreaCount(current);
+    if (count === 0) return { sentLine: { key: `${I18N}.SENT.NONE_MATCHABLE` }, sentWarning: true };
+    return { sentLine: { key: `${I18N}.SENT.AREAS_${plural(count)}`, params: { count } }, sentWarning: false };
   }
 
   private areaChip(rule: CoverageRuleResponse): AreaChip {

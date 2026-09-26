@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, input, output, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
-import { Subject, debounceTime, distinctUntilChanged, filter, switchMap } from 'rxjs';
+import { Subject, debounceTime, distinctUntilChanged, filter, map, switchMap } from 'rxjs';
 import { ClaimableService, LocationService } from '../../services/location.service';
 
 type SearchState = 'idle' | 'loading' | 'ready' | 'failed';
@@ -63,7 +63,9 @@ export class ServiceRailComponent {
   readonly results = signal<ClaimableService[]>([]);
   readonly state = signal<SearchState>('idle');
   readonly dropHover = signal(false);
-  private readonly terms = new Subject<string>();
+  /** Search requests; `attempt` lets Retry resend the same term through the same cancellable stream. */
+  private readonly terms = new Subject<{ readonly term: string; readonly attempt: number }>();
+  private attempt = 0;
 
   readonly groups = computed<RailGroup[]>(() => {
     const byCategory = new Map<string, ClaimableService[]>();
@@ -86,16 +88,17 @@ export class ServiceRailComponent {
     this.terms
       .pipe(
         debounceTime(250),
-        distinctUntilChanged(),
-        filter(term => term.length >= MIN_SEARCH_LENGTH),
-        switchMap(term => this.locationService.searchClaimableServices(term)),
+        distinctUntilChanged((a, b) => a.term === b.term && a.attempt === b.attempt),
+        filter(({ term }) => term.length >= MIN_SEARCH_LENGTH),
+        switchMap(({ term }) => this.locationService.searchClaimableServices(term).pipe(map(result => ({ ...result, term })))),
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe(result => this.apply(result));
   }
 
-  private apply({ services, ok }: { services: ClaimableService[]; ok: boolean }): void {
-    if (this.query().trim().length < MIN_SEARCH_LENGTH) return;
+  /** Only the answer for the query now in the box is shown (ADR-0063). */
+  private apply({ services, ok, term }: { services: ClaimableService[]; ok: boolean; term: string }): void {
+    if (term !== this.query().trim()) return;
     this.results.set(services);
     this.state.set(ok ? 'ready' : 'failed');
     if (services.length > 0) this.servicesFound.emit(services);
@@ -107,22 +110,23 @@ export class ServiceRailComponent {
     if (term.length < MIN_SEARCH_LENGTH) {
       this.results.set([]);
       this.state.set('idle');
-      this.terms.next('');
+      this.terms.next({ term: '', attempt: this.attempt });
       return;
     }
     this.state.set('loading');
-    this.terms.next(term);
+    this.terms.next({ term, attempt: this.attempt });
   }
 
-  /** Searches the same term again; the debounced stream would drop a repeat of it. */
+  /**
+   * Searches the same term again. A new attempt number gets it past `distinctUntilChanged`, and it
+   * goes through the same `switchMap`, so a newer query still cancels it.
+   */
   retry(): void {
     const term = this.query().trim();
     if (term.length < MIN_SEARCH_LENGTH) return;
     this.state.set('loading');
-    this.locationService
-      .searchClaimableServices(term)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(result => this.apply(result));
+    this.attempt += 1;
+    this.terms.next({ term, attempt: this.attempt });
   }
 
   onDragStart(service: ClaimableService, event: DragEvent): void {
