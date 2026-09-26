@@ -14,12 +14,14 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
-import { Subject, Subscription, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
+import { Subscription } from 'rxjs';
 import type { BayPatchRequest, BayRequest, BayResponse } from '@durion-sdk/location';
 import { AuthService } from '../../../../core/services/auth.service';
 import { LOCATION_PAGE } from '../../../../core/security/route-permissions';
 import { LocationPickerComponent } from '../../../../shared/location-picker/location-picker.component';
 import { ModalDialogDirective } from '../../../../shared/modal-dialog.directive';
+import { RailCaption, ServiceRailComponent } from '../../components/service-rail/service-rail.component';
+import { ServiceSearchComponent } from '../../components/service-search/service-search.component';
 import { ClaimableService, LocationService } from '../../services/location.service';
 import {
   BAY_LANES,
@@ -52,7 +54,11 @@ type PageState = 'idle' | 'loading' | 'ready' | 'error';
 type DialogMode = 'create' | 'edit';
 /** On a retype: take the new type's usual services, or keep the bay's current ones. */
 type TypeChoice = 'DEFAULTS' | 'KEEP';
-type SearchState = 'idle' | 'loading' | 'ready' | 'failed';
+/** What is being dragged: a catalog service from the list, or a chip off a card. */
+type Dragging =
+  | { readonly kind: 'SERVICE'; readonly service: ClaimableService }
+  | { readonly kind: 'CHIP'; readonly bayId: string; readonly code: string }
+  | null;
 
 /** A translation key and its parameters, resolved in the template. */
 interface Message {
@@ -70,6 +76,24 @@ interface ChipView {
   readonly code: string;
   readonly label: string;
   readonly onlyBay: boolean;
+  /** Shown before the save confirms it. */
+  readonly pending: boolean;
+}
+
+/** The last specialty change: what it did, and how to take it back. */
+interface Outcome {
+  readonly messages: readonly Message[];
+  /** `codes` restores the list; `applied` is what the save left, checked again when Undo is pressed. */
+  readonly undo: { readonly bayId: string; readonly codes: readonly string[]; readonly applied: readonly string[] } | null;
+}
+
+/** One claimed specialty service, with the bays claiming it in and out of service. */
+interface ClaimRow {
+  readonly code: string;
+  readonly label: string;
+  readonly active: readonly BayResponse[];
+  readonly down: readonly BayResponse[];
+  readonly flag: 'ONLY_ONE' | 'NONE_IN_SERVICE' | null;
 }
 
 interface BayCardView {
@@ -84,6 +108,8 @@ interface BayCardView {
   readonly chips: readonly ChipView[];
   readonly hiddenChips: number;
   readonly isWash: boolean;
+  readonly codes: readonly string[];
+  readonly saving: boolean;
 }
 
 interface LaneView {
@@ -94,13 +120,12 @@ interface LaneView {
 
 /** Chips a card shows before "+N more". */
 const VISIBLE_CHIPS = 4;
-const MIN_SEARCH_LENGTH = 2;
 const I18N = 'LOCATION.BAYS';
 
 @Component({
   selector: 'app-bays-page',
   standalone: true,
-  imports: [TranslatePipe, LocationPickerComponent, ModalDialogDirective],
+  imports: [TranslatePipe, LocationPickerComponent, ModalDialogDirective, ServiceRailComponent, ServiceSearchComponent],
   templateUrl: './bays-page.component.html',
   styleUrl: './bays-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -179,10 +204,72 @@ export class BaysPageComponent {
   readonly nameErrorKey = signal<string | null>(null);
   readonly saveErrorKey = signal<string | null>(null);
 
-  readonly serviceQuery = signal('');
-  readonly serviceResults = signal<ClaimableService[]>([]);
-  readonly searchState = signal<SearchState>('idle');
-  private readonly searchTerms = new Subject<string>();
+  // --- specialty changes straight from the cards ---
+  readonly dragging = signal<Dragging>(null);
+  /** Lists being saved, shown on the card until the save confirms or fails. */
+  readonly pendingCodes = signal<ReadonlyMap<string, readonly string[]>>(new Map());
+  readonly cardErrors = signal<ReadonlyMap<string, Message>>(new Map());
+  readonly outcome = signal<Outcome | null>(null);
+  /** Removing a bay's last specialty service changes what it is; this asks first. */
+  readonly confirmRemove = signal<{ readonly bay: BayResponse; readonly code: string } | null>(null);
+  /** The Add service dialog: the pointer-free route for a drop (ADR-0029 rule 13). */
+  readonly addDialogBay = signal<BayResponse | null>(null);
+  readonly picked = signal<ClaimableService[]>([]);
+  readonly whoOpen = signal(false);
+
+  /** Every claimed specialty service here, and who claims it. */
+  readonly claimRows = computed<ClaimRow[]>(() => {
+    const rows = new Map<string, { active: BayResponse[]; down: BayResponse[] }>();
+    const bays = [...this.bays()].sort((a, b) => naturalCompare(a.name, b.name));
+    for (const bay of bays) {
+      for (const code of specialtyCodes(bay)) {
+        const row = rows.get(code) ?? { active: [], down: [] };
+        (isOutOfService(bay) ? row.down : row.active).push(bay);
+        rows.set(code, row);
+      }
+    }
+    return [...rows]
+      .map(([code, row]) => ({
+        code,
+        label: this.serviceLabel(code),
+        active: row.active,
+        down: row.down,
+        flag: row.active.length === 1 ? ('ONLY_ONE' as const) : row.active.length === 0 ? ('NONE_IN_SERVICE' as const) : null,
+      }))
+      .sort((a, b) => naturalCompare(a.label, b.label));
+  });
+  readonly claimSummary = computed(() => {
+    const rows = this.claimRows();
+    return {
+      claimed: rows.length,
+      onlyOne: rows.filter(row => row.flag === 'ONLY_ONE').length,
+      noneInService: rows.filter(row => row.flag === 'NONE_IN_SERVICE').length,
+    };
+  });
+
+  readonly draggedServiceName = computed(() => {
+    const dragging = this.dragging();
+    return dragging?.kind === 'SERVICE' ? dragging.service.name : '';
+  });
+
+  /** While a chip is dragged, the services list takes the drop that removes it. */
+  readonly railRemoveTarget = computed<RailCaption | null>(() => {
+    const dragging = this.dragging();
+    if (dragging?.kind !== 'CHIP') return null;
+    const bay = this.bays().find(b => b.id === dragging.bayId);
+    return {
+      key: `${I18N}.DROP.REMOVE_ZONE`,
+      params: { service: this.serviceLabel(dragging.code), bay: bay?.name ?? '' },
+    };
+  });
+  /** Who holds each service here, under its row in the services list. */
+  readonly describeService = (code: string): RailCaption => {
+    const claim = this.claimRows().find(row => row.code === code);
+    if (!claim) return { key: `${I18N}.RAIL.GENERAL_WORK` };
+    if (claim.active.length === 1) return { key: `${I18N}.RAIL.ONLY`, params: { bay: claim.active[0].name } };
+    if (claim.active.length > 1) return { key: `${I18N}.RAIL.MANY`, params: { count: claim.active.length } };
+    return { key: `${I18N}.RAIL.ON_HOLD` };
+  };
 
   readonly typeChanged = computed(() => {
     const bay = this.editingBay();
@@ -198,7 +285,7 @@ export class BaysPageComponent {
    */
   readonly noLimitLocked = computed(() => this.dialogMode() === 'edit' && this.editingBay()?.maxDutyClass != null);
   readonly draftChips = computed<ChipView[]>(() =>
-    this.draft().serviceCapabilityCodes.map(code => ({ code, label: this.serviceLabel(code), onlyBay: false })),
+    this.draft().serviceCapabilityCodes.map(code => ({ code, label: this.serviceLabel(code), onlyBay: false, pending: false })),
   );
   readonly changes = computed(() => bayChanges(this.editingBay(), this.draft(), this.bays()));
   readonly changeMessages = computed(() => this.changes().map(change => this.changeMessage(change)));
@@ -234,20 +321,6 @@ export class BaysPageComponent {
       });
       onCleanup(() => sub.unsubscribe());
     });
-
-    this.searchTerms
-      .pipe(
-        debounceTime(250),
-        distinctUntilChanged(),
-        switchMap(term => this.locationService.searchClaimableServices(term)),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe(({ services, ok }) => {
-        if (this.serviceQuery().trim().length < MIN_SEARCH_LENGTH) return;
-        this.serviceResults.set(services);
-        this.searchState.set(ok ? 'ready' : 'failed');
-        this.rememberNames(services);
-      });
   }
 
   // --- location and filters ---
@@ -266,6 +339,9 @@ export class BaysPageComponent {
     if (locationId !== this.locationId()) this.abandonDialog();
     this.scopeDenied.set(false);
     this.announcement.set(null);
+    this.outcome.set(null);
+    this.cardErrors.set(new Map());
+    this.pendingCodes.set(new Map());
     this.expandedCards.set(new Set());
     this.locationId.set(locationId);
     this.router.navigate([], { queryParams: { locationId: locationId || null }, queryParamsHandling: 'merge' });
@@ -322,13 +398,22 @@ export class BaysPageComponent {
     this.editingBay.set(null);
   }
 
-  /** A dialog and its save belong to one location: a location change closes the one and drops the other. */
+  /**
+   * Dialogs, saves and rail changes belong to one location: a location change closes the dialogs,
+   * drops the in-flight save and forgets the pending rail state and its Undo.
+   */
   private abandonDialog(): void {
     this.saveSub?.unsubscribe();
     this.saveSub = null;
     this.saving.set(false);
     this.dialogMode.set(null);
     this.editingBay.set(null);
+    this.addDialogBay.set(null);
+    this.picked.set([]);
+    this.confirmRemove.set(null);
+    this.dragging.set(null);
+    this.outcome.set(null);
+    this.pendingCodes.set(new Map());
   }
 
   private resetDialog(): void {
@@ -336,9 +421,6 @@ export class BaysPageComponent {
     this.filledFrom.set(null);
     this.nameErrorKey.set(null);
     this.saveErrorKey.set(null);
-    this.serviceQuery.set('');
-    this.serviceResults.set([]);
-    this.searchState.set('idle');
   }
 
   setName(name: string): void {
@@ -390,19 +472,6 @@ export class BaysPageComponent {
     this.filledFrom.set(general || codes.length === 0 ? null : this.draft().bayType);
   }
 
-  onServiceQuery(query: string): void {
-    this.serviceQuery.set(query);
-    const term = query.trim();
-    if (term.length < MIN_SEARCH_LENGTH) {
-      this.serviceResults.set([]);
-      this.searchState.set('idle');
-      this.searchTerms.next('');
-      return;
-    }
-    this.searchState.set('loading');
-    this.searchTerms.next(term);
-  }
-
   addService(service: ClaimableService): void {
     const codes = this.draft().serviceCapabilityCodes;
     if (codes.includes(service.operationCode)) return;
@@ -414,10 +483,6 @@ export class BaysPageComponent {
   removeService(code: string): void {
     this.patchDraft({ serviceCapabilityCodes: this.draft().serviceCapabilityCodes.filter(c => c !== code) });
     this.filledFrom.set(null);
-  }
-
-  hasService(code: string): boolean {
-    return this.draft().serviceCapabilityCodes.includes(code);
   }
 
   private patchDraft(patch: Partial<BayDraft>): void {
@@ -509,9 +574,275 @@ export class BaysPageComponent {
 
   /** Focus follows the saved card into its lane (ADR-0029 rule 7). */
   private focusCard(bayId: string): void {
-    afterNextRender(() => this.host.nativeElement.querySelector<HTMLElement>(`#bay-${CSS.escape(bayId)}`)?.focus(), {
+    this.focusSelector(`#bay-${CSS.escape(bayId)}`);
+  }
+
+  private focusSelector(selector: string): void {
+    afterNextRender(() => this.host.nativeElement.querySelector<HTMLElement>(selector)?.focus(), {
       injector: this.injector,
     });
+  }
+
+  // --- specialty changes from the cards: drag and drop, chip ×, Add service ---
+
+  onServiceDragStart(service: ClaimableService): void {
+    this.dragging.set({ kind: 'SERVICE', service });
+  }
+
+  onChipDragStart(bay: BayResponse, code: string, event: DragEvent): void {
+    event.dataTransfer?.setData('text/plain', code);
+    if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
+    this.dragging.set({ kind: 'CHIP', bayId: bay.id, code });
+  }
+
+  onDragEnd(): void {
+    this.dragging.set(null);
+  }
+
+  /** What a card says while a service is dragged: it takes the drop, or already has it. */
+  dropState(card: BayCardView): 'READY' | 'ALREADY' | 'BUSY' | null {
+    const dragging = this.dragging();
+    if (dragging?.kind !== 'SERVICE' || !this.canEdit()) return null;
+    if (card.codes.includes(dragging.service.operationCode)) return 'ALREADY';
+    return card.saving ? 'BUSY' : 'READY';
+  }
+
+  onCardDragOver(card: BayCardView, event: DragEvent): void {
+    if (this.dropState(card) !== 'READY') return;
+    event.preventDefault();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
+  }
+
+  onCardDrop(card: BayCardView, event: DragEvent): void {
+    const dragging = this.dragging();
+    const state = this.dropState(card);
+    this.dragging.set(null);
+    if (dragging?.kind !== 'SERVICE' || state !== 'READY') return;
+    event.preventDefault();
+    this.addServices(card.bay, [dragging.service]);
+  }
+
+  /** A chip dropped on the services list is removed from its bay. */
+  onRailRemoveDrop(): void {
+    const dragging = this.dragging();
+    this.dragging.set(null);
+    if (dragging?.kind !== 'CHIP') return;
+    const bay = this.bays().find(b => b.id === dragging.bayId);
+    if (bay) this.removeServiceFromBay(bay, dragging.code);
+  }
+
+  addServices(bay: BayResponse, services: readonly ClaimableService[]): void {
+    const current = this.currentCodesOf(bay);
+    const fresh = services.filter(service => !current.includes(service.operationCode));
+    if (fresh.length === 0) return;
+    this.rememberNames(fresh);
+    const next = [...current, ...fresh.map(service => service.operationCode)];
+    const messages =
+      fresh.length === 1
+        ? [this.addMessage(bay, next, fresh[0].operationCode)]
+        : [{ key: `${I18N}.DROP.ADDED_MANY`, params: { bay: bay.name, count: fresh.length } }];
+    this.changeCodes(bay, next, messages, true);
+  }
+
+  /** Removes one service; the last one asks first, since the bay then changes what it takes. */
+  removeServiceFromBay(bay: BayResponse, code: string): void {
+    if (!this.canEdit()) return;
+    const current = this.currentCodesOf(bay);
+    if (!current.includes(code)) return;
+    if (current.length === 1) {
+      this.confirmRemove.set({ bay, code });
+      return;
+    }
+    this.removeCode(bay, code, current);
+  }
+
+  confirmRemoval(): void {
+    const pending = this.confirmRemove();
+    this.confirmRemove.set(null);
+    if (pending) this.removeCode(pending.bay, pending.code, this.currentCodesOf(pending.bay));
+  }
+
+  cancelRemoval(): void {
+    const pending = this.confirmRemove();
+    this.confirmRemove.set(null);
+    if (pending) this.focusSelector(`#chip-remove-${CSS.escape(pending.bay.id)}-${CSS.escape(pending.code)}`);
+  }
+
+  private removeCode(bay: BayResponse, code: string, current: readonly string[]): void {
+    const index = current.indexOf(code);
+    const next = current.filter(c => c !== code);
+    const draft = { ...draftFromBay(bay), serviceCapabilityCodes: next };
+    const becomesGeneral = bayChanges(bay, draft, this.bays()).some(
+      change => change.kind === 'NOW_GENERAL_WORK' && change.code === code,
+    );
+    const service = this.serviceLabel(code);
+    const message: Message = becomesGeneral
+      ? { key: `${I18N}.DROP.NOW_GENERAL`, params: { service } }
+      : { key: `${I18N}.DROP.REMOVED`, params: { service, bay: bay.name } };
+    this.changeCodes(bay, next, [message], true);
+    // Focus moves to the next chip, else to Add service, else to the card (ADR-0029 rule 7).
+    const following = next[index] ?? next[index - 1];
+    if (following) this.focusSelector(`#chip-remove-${CSS.escape(bay.id)}-${CSS.escape(following)}`);
+    else if (this.canSearchServices()) this.focusSelector(`#add-service-${CSS.escape(bay.id)}`);
+    else this.focusCard(bay.id);
+  }
+
+  undo(): void {
+    const undo = this.outcome()?.undo;
+    const bay = undo && this.bays().find(b => b.id === undo.bayId);
+    if (!undo || !bay) return;
+    // Undo restores the whole list, so it applies only while the bay still holds what the save left.
+    const { added, removed } = codeChanges(undo.applied, specialtyCodes(bay));
+    if (added.length > 0 || removed.length > 0) {
+      this.outcome.set(null);
+      this.setCardError(bay.id, { key: `${I18N}.DROP.UNDO_STALE`, params: { bay: bay.name } });
+      this.focusCard(bay.id);
+      return;
+    }
+    this.changeCodes(bay, [...undo.codes], [{ key: `${I18N}.DROP.UNDONE`, params: { bay: bay.name } }], false);
+  }
+
+  dismissOutcome(): void {
+    this.outcome.set(null);
+  }
+
+  cardError(bayId: string): Message | null {
+    return this.cardErrors().get(bayId) ?? null;
+  }
+
+  private currentCodesOf(bay: BayResponse): readonly string[] {
+    return this.pendingCodes().get(bay.id) ?? specialtyCodes(bay);
+  }
+
+  private addMessage(bay: BayResponse, next: readonly string[], code: string): Message {
+    const draft = { ...draftFromBay(bay), serviceCapabilityCodes: [...next] };
+    const change = bayChanges(bay, draft, this.bays()).find(
+      c => (c.kind === 'ONLY_CLAIMANT' || c.kind === 'CLAIM_ON_HOLD') && c.code === code,
+    );
+    const service = this.serviceLabel(code);
+    if (change?.kind === 'ONLY_CLAIMANT') return { key: `${I18N}.DROP.ONLY`, params: { bay: bay.name, service } };
+    if (change?.kind === 'CLAIM_ON_HOLD') return { key: `${I18N}.DROP.ON_HOLD`, params: { bay: bay.name, service } };
+    return { key: `${I18N}.DROP.ADDED`, params: { bay: bay.name, service } };
+  }
+
+  /**
+   * Saves a bay's whole specialty list (PATCH replaces it). The card shows the new list at once,
+   * marked pending; on success the page says what changed and offers Undo; on refusal the card
+   * goes back to its saved list and says why. One save per card at a time.
+   */
+  private changeCodes(bay: BayResponse, next: string[], messages: Message[], offerUndo: boolean): void {
+    const locationId = this.locationId();
+    if (!this.canEdit() || !locationId) return;
+    if (this.pendingCodes().has(bay.id)) {
+      this.setCardError(bay.id, { key: `${I18N}.DROP.BUSY`, params: { bay: bay.name } });
+      return;
+    }
+    const previous = [...specialtyCodes(bay)];
+    const laneBefore = laneOf(bay);
+    this.setCardError(bay.id, null);
+    this.setPending(bay.id, next);
+    this.locationService
+      .patchBay(locationId, bay.id, { serviceCapabilityCodes: next })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: saved => {
+          this.setPending(bay.id, null);
+          if (this.locationId() !== locationId) return;
+          this.bays.update(bays => bays.map(b => (b.id === saved.id ? saved : b)));
+          const lane = laneOf(saved);
+          const moved = lane !== laneBefore;
+          this.outcome.set({
+            messages: moved ? [...messages, { key: `${I18N}.DROP.MOVED_${lane}`, params: { bay: saved.name } }] : messages,
+            undo: offerUndo ? { bayId: saved.id, codes: previous, applied: [...specialtyCodes(saved)] } : null,
+          });
+          if (moved) {
+            if (lane === 'OUT_OF_SERVICE') this.outOfServiceOpen.set(true);
+            this.focusCard(saved.id);
+          }
+        },
+        error: (err: unknown) => {
+          this.setPending(bay.id, null);
+          const status = err instanceof HttpErrorResponse ? err.status : 0;
+          if (status === 403) this.scopeDenied.set(true);
+          this.setCardError(bay.id, { key: dropErrorKey(status), params: { bay: bay.name } });
+        },
+      });
+  }
+
+  private setPending(bayId: string, codes: readonly string[] | null): void {
+    this.pendingCodes.update(pending => {
+      const next = new Map(pending);
+      if (codes) next.set(bayId, codes);
+      else next.delete(bayId);
+      return next;
+    });
+  }
+
+  private setCardError(bayId: string, message: Message | null): void {
+    this.cardErrors.update(errors => {
+      const next = new Map(errors);
+      if (message) next.set(bayId, message);
+      else next.delete(bayId);
+      return next;
+    });
+  }
+
+  openAddDialog(bay: BayResponse): void {
+    if (!this.canEdit() || !this.canSearchServices()) return;
+    this.picked.set([]);
+    this.addDialogBay.set(bay);
+  }
+
+  closeAddDialog(): void {
+    const bay = this.addDialogBay();
+    this.addDialogBay.set(null);
+    if (bay) this.focusSelector(`#add-service-${CSS.escape(bay.id)}`);
+  }
+
+  pick(service: ClaimableService): void {
+    this.picked.update(picked =>
+      picked.some(p => p.operationCode === service.operationCode) ? picked : [...picked, service],
+    );
+  }
+
+  unpick(code: string): void {
+    this.picked.update(picked => picked.filter(p => p.operationCode !== code));
+  }
+
+  /** Codes the Add service dialog treats as already chosen: the bay's own and those just picked. */
+  readonly addDialogSelected = computed(() => {
+    const bay = this.addDialogBay();
+    return [...(bay ? this.currentCodesOf(bay) : []), ...this.picked().map(p => p.operationCode)];
+  });
+
+  /** How many picked services no in-service bay here claims yet: this bay would be their only one. */
+  readonly pickedSoleClaims = computed(() => {
+    const bay = this.addDialogBay();
+    if (!bay || isOutOfService(bay)) return 0;
+    const claims = activeClaimants(this.bays().filter(b => b.id !== bay.id));
+    return this.picked().filter(p => !claims.has(p.operationCode)).length;
+  });
+
+  confirmAdd(): void {
+    const bay = this.addDialogBay();
+    const picked = this.picked();
+    if (!bay || picked.length === 0) return;
+    this.addDialogBay.set(null);
+    this.addServices(bay, picked);
+    this.focusSelector(`#add-service-${CSS.escape(bay.id)}`);
+  }
+
+  // --- who does what ---
+
+  toggleWho(): void {
+    this.whoOpen.update(open => !open);
+  }
+
+  /** Brings a bay's card into view, opening its lane or the test records if they hide it. */
+  showBay(bay: BayResponse): void {
+    if (isOutOfService(bay)) this.outOfServiceOpen.set(true);
+    if (isTestRecord(bay.name) && !this.showTests()) this.toggleTests(true);
+    this.focusCard(bay.id);
   }
 
   // --- labels ---
@@ -532,7 +863,7 @@ export class BaysPageComponent {
     return `${I18N}.DUTY.OPTION_${dutyBand(dutyClass)}`;
   }
 
-  private rememberNames(services: readonly ClaimableService[]): void {
+  rememberNames(services: readonly ClaimableService[]): void {
     if (services.length === 0) return;
     this.serviceNames.update(names => {
       const next = new Map(names);
@@ -542,13 +873,16 @@ export class BaysPageComponent {
   }
 
   private toCard(bay: BayResponse): BayCardView {
-    const codes = specialtyCodes(bay);
+    const saved = specialtyCodes(bay);
+    const pending = this.pendingCodes().get(bay.id);
+    const codes = pending ?? saved;
     const outOfService = isOutOfService(bay);
     const claimants = this.claimants();
     const chips = codes.map(code => ({
       code,
       label: this.serviceLabel(code),
-      onlyBay: !outOfService && claimants.get(code)?.length === 1,
+      onlyBay: !outOfService && !pending && claimants.get(code)?.length === 1,
+      pending: pending != null && !saved.includes(code),
     }));
     const expanded = this.expandedCards().has(bay.id);
     const visibleChips = expanded ? chips : chips.slice(0, VISIBLE_CHIPS);
@@ -564,6 +898,8 @@ export class BaysPageComponent {
       chips: visibleChips,
       hiddenChips: chips.length - visibleChips.length,
       isWash: laneOf(bay) === 'WASH',
+      codes,
+      saving: pending != null,
     };
   }
 
@@ -621,5 +957,19 @@ function saveErrorKey(status: number): string {
       return 'LOCATION.BAYS.ERROR.INVALID_SERVICES';
     default:
       return 'LOCATION.BAYS.ERROR.SAVE_FAILED';
+  }
+}
+
+/** The card message for a refused specialty change. */
+function dropErrorKey(status: number): string {
+  switch (status) {
+    case 403:
+      return 'LOCATION.BAYS.DROP.NOT_ALLOWED';
+    case 404:
+      return 'LOCATION.BAYS.DROP.GONE';
+    case 422:
+      return 'LOCATION.BAYS.DROP.INVALID';
+    default:
+      return 'LOCATION.BAYS.DROP.FAILED';
   }
 }
