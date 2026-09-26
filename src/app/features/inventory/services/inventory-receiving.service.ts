@@ -1,8 +1,6 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { ApiBaseService } from '../../../core/services/api-base.service';
 import {
   ASNService,
   ReceivingService,
@@ -14,6 +12,7 @@ import {
   CreateReceivingSessionRequest,
   CrossDockRequest,
   CrossDockResponse,
+  CrossDockWorkorderSearchResultDto,
 } from '@durion-sdk/inventory';
 import {
   AsnCreateRequest,
@@ -29,7 +28,6 @@ import {
 
 @Injectable({ providedIn: 'root' })
 export class InventoryReceivingService {
-  private readonly api = inject(ApiBaseService);
   private readonly asnSdk = inject(ASNService);
   private readonly receivingSdk = inject(ReceivingService);
 
@@ -68,11 +66,14 @@ export class InventoryReceivingService {
     );
   }
 
-  // SDK gap: no workorder-search operation exists in @durion-sdk/inventory for
-  // cross-dock candidate lookup. Left on ApiBaseService.
+  // Backend #2211: `GET /v1/inventory/receiving/workorders` (searchCrossDockWorkorders) is
+  // the correct backend path. The previous ApiBaseService call routed to
+  // `/inventory/v1/receiving/workorders` (the `/inventory` segment came before `/v1` instead
+  // of after it), which 404'd against the real ReceivingController mapping.
   searchWorkordersForCrossDock(query: string): Observable<WorkorderCrossDockRef[]> {
-    const params = new HttpParams().set('query', query);
-    return this.api.get<WorkorderCrossDockRef[]>('/inventory/v1/receiving/workorders', params);
+    return this.receivingSdk
+      .searchCrossDockWorkorders(query)
+      .pipe(map(dtos => dtos.map(dto => this.toWorkorderCrossDockRef(dto))));
   }
 
   submitCrossDockReceipt(request: CrossDockReceiveRequest): Observable<CrossDockReceiveResult> {
@@ -166,6 +167,16 @@ export class InventoryReceivingService {
     return {
       issueReferenceId: dto.lineId ?? '',
       issueMode: '',
+    };
+  }
+
+  private toWorkorderCrossDockRef(dto: CrossDockWorkorderSearchResultDto): WorkorderCrossDockRef {
+    return {
+      workorderId: dto.workorderId,
+      workorderNumber: dto.workorderNumber ?? '',
+      status: dto.status ?? '',
+      partLineCount: dto.partLineCount,
+      updatedAt: dto.updatedAt,
     };
   }
 }

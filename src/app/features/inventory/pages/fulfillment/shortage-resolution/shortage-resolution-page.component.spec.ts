@@ -8,9 +8,10 @@ type Bundle = Record<string, unknown>;
 const lookup = (bundle: Bundle, key: string): unknown =>
   key.split('.').reduce<unknown>((node, part) => (node as Record<string, unknown> | undefined)?.[part], bundle);
 
-// (issue #378) `ShortageController` requires allocationId, sku, shortQuantity,
-// workorderLineId and siteId, none of which this page's route or any cheap existing
-// read can supply, so it never calls the backend and always shows the notice below.
+// (issue #378, revisited #350) Backend #2206 made `listShortageOptions`/`resolveShortage`
+// callable with just allocationId, but no read supplies this page's route with an
+// allocationId in the first place (blocked on backend #2233), so it never calls the
+// backend and always shows the notice below.
 describe('ShortageResolutionPageComponent', () => {
   async function setup() {
     await TestBed.configureTestingModule({

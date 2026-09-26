@@ -288,6 +288,13 @@ export const INVENTORY_PAGE = {
    */
   consumeItemsAccess: ['inventory:pick_list:view', 'workorder:parts:consume'],
   returnToStock: ['inventory:return:view'],
+  /**
+   * `submitReturnToStock` is a write — `ReturnController.submitToStock` is
+   * `@PreAuthorize('inventory:return:write')` — so the submit control and the
+   * method body both gate on this code independently, not the `returnToStock`
+   * view admission above (ADR-0040 §6a.1).
+   */
+  returnToStockWrite: ['inventory:return:write'],
   shortageResolution: ['inventory:shortage:view'],
   /** Purchase orders live under /app/inventory but are served by pos-order. */
   purchaseOrderView: ['order:purchase_order:view'],

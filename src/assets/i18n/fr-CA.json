@@ -5702,6 +5702,7 @@
             "STAGING_LOCATION": "Préparation",
             "TARGET_LOCATION": "Destination",
             "QUANTITY": "Quantité",
+            "UOM": "UDM",
             "STATUS": "Statut"
           }
         },
@@ -6107,7 +6108,10 @@
           "MISSING_ID": "L'ID d'ordre de travail est requis.",
           "LOAD": "Impossible de charger les données de retour au stock.",
           "STORAGE_LOCATIONS": "Impossible de charger les zones de stockage.",
-          "SUBMIT": "Impossible de soumettre le retour au stock."
+          "SUBMIT": "Impossible de soumettre le retour au stock.",
+          "QUANTITY_EXCEEDED": "La quantité de retour dépasse ce qui peut encore être retourné pour cette ligne.",
+          "LINE_NOT_FOUND": "Une ou plusieurs lignes de l'ordre de travail sont introuvables.",
+          "VALIDATION": "Vérifiez les détails du retour et réessayez."
         }
       },
       "CONSUME_PICKED_ITEMS": {

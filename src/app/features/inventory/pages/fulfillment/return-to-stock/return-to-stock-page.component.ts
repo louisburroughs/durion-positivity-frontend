@@ -1,6 +1,7 @@
 
 import { Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { forkJoin } from 'rxjs';
@@ -12,6 +13,8 @@ import {
   StorageLocation,
 } from '../../../models/inventory.models';
 import { InventoryDomainService } from '../../../services/inventory.service';
+import { INVENTORY_PAGE } from '../../../../../core/security/route-permissions';
+import { AuthService } from '../../../../../core/services/auth.service';
 
 type PageState = 'idle' | 'loading' | 'ready' | 'submitting' | 'success' | 'error';
 
@@ -25,6 +28,7 @@ type PageState = 'idle' | 'loading' | 'ready' | 'submitting' | 'success' | 'erro
 export class ReturnToStockPageComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly inventoryService = inject(InventoryDomainService);
+  private readonly auth = inject(AuthService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly state = signal<PageState>('idle');
@@ -39,11 +43,20 @@ export class ReturnToStockPageComponent {
   readonly returnQtys = signal<Partial<Record<string, number>>>({});
   readonly submitResult = signal<ReturnToStockResult | null>(null);
 
+  /**
+   * `submitReturnToStock` is a write — `ReturnController.submitToStock` is
+   * `@PreAuthorize('inventory:return:write')` — so the submit control and the
+   * method body both gate on this code independently, not the `returnToStock`
+   * view admission the route itself carries (ADR-0040 §6a.1). Unknown
+   * permissions (legacy token, no `perm_bits` claim) stay open, matching
+   * `canAccess()`'s own fallback.
+   */
   readonly canSubmit = computed(() => {
     const hasLocation = !!this.selectedLocationId();
     const hasReason = !!this.selectedReasonCode();
     const hasLine = Object.values(this.returnQtys()).some(qty => (qty ?? 0) > 0);
-    return hasLocation && hasReason && hasLine;
+    const hasPermission = !this.auth.permissionsKnown() || this.auth.hasAnyPermission(INVENTORY_PAGE.returnToStockWrite);
+    return hasLocation && hasReason && hasLine && hasPermission;
   });
 
   constructor() {
@@ -118,11 +131,30 @@ export class ReturnToStockPageComponent {
           this.submitResult.set(result);
           this.state.set('success');
         },
-        error: () => {
+        error: (err: unknown) => {
           this.state.set('error');
-          this.errorKey.set('INVENTORY.FULFILLMENT.RETURN_TO_STOCK.ERROR.SUBMIT');
+          this.errorKey.set(this.mapSubmitErrorKey(err));
         },
       });
+  }
+
+  // Backend #2206/#2227 (`ReturnServiceImpl.submitToStock`): 422 RETURN_QUANTITY_EXCEEDED when a
+  // line's quantity exceeds what remains returnable, 404 when a line's itemId doesn't name a real
+  // workorder line, 400 for a missing/invalid field (empty lines, non-positive quantity, an
+  // unrecognized reasonCode).
+  private mapSubmitErrorKey(err: unknown): string {
+    if (err instanceof HttpErrorResponse) {
+      if (err.status === 422) {
+        return 'INVENTORY.FULFILLMENT.RETURN_TO_STOCK.ERROR.QUANTITY_EXCEEDED';
+      }
+      if (err.status === 404) {
+        return 'INVENTORY.FULFILLMENT.RETURN_TO_STOCK.ERROR.LINE_NOT_FOUND';
+      }
+      if (err.status === 400) {
+        return 'INVENTORY.FULFILLMENT.RETURN_TO_STOCK.ERROR.VALIDATION';
+      }
+    }
+    return 'INVENTORY.FULFILLMENT.RETURN_TO_STOCK.ERROR.SUBMIT';
   }
 
   private loadInitial(): void {

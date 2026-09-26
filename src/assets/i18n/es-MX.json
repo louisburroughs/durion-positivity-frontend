@@ -5702,6 +5702,7 @@
             "STAGING_LOCATION": "Preparación",
             "TARGET_LOCATION": "Destino",
             "QUANTITY": "Cantidad",
+            "UOM": "UM",
             "STATUS": "Estado"
           }
         },
@@ -6107,7 +6108,10 @@
           "MISSING_ID": "Se requiere ID de orden de trabajo.",
           "LOAD": "No se pudieron cargar los datos de devolución a stock.",
           "STORAGE_LOCATIONS": "No se pudieron cargar las ubicaciones de almacenamiento.",
-          "SUBMIT": "No se pudo enviar la devolución a stock."
+          "SUBMIT": "No se pudo enviar la devolución a stock.",
+          "QUANTITY_EXCEEDED": "La cantidad de devolución supera lo que aún se puede devolver para esta línea.",
+          "LINE_NOT_FOUND": "No se encontraron una o más líneas de la orden de trabajo.",
+          "VALIDATION": "Revise los datos de la devolución e intente de nuevo."
         }
       },
       "CONSUME_PICKED_ITEMS": {

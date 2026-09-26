@@ -1,16 +1,29 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import {
   InventoryAvailabilityService,
+  InventoryLedgerEntryDto,
+  InventoryLedgerService,
   InventoryReferenceDataService,
+  LedgerPage,
   PutawayExecutionResponse as SdkPutawayExecutionResponse,
   PutawayExecutionService,
+  PutawayService,
+  PutawayTaskResponse,
   ReasonCodeDto,
+  ReplenishmentService,
+  ReplenishmentTaskResponse,
+  ReturnLineDto,
+  ReturnSubmissionResultDto,
+  ReturnSubmitRequest,
+  ReturnableItemDto,
+  ShortageOptionDto,
+  ShortageResolutionResultDto,
+  ShortageResolutionService,
+  ShortageResolveRequest,
   ReturnsService,
 } from '@durion-sdk/inventory';
-import { ApiBaseService } from '../../../core/services/api-base.service';
 import { pageContent } from '../../../core/utils/spring-page';
 import {
   AvailabilityView,
@@ -57,13 +70,38 @@ interface InventoryLocationZoneDto {
   locationId?: string;
 }
 
+/**
+ * `LedgerPage.entries` is typed `Array<any>` in the generated SDK (the backend response is a
+ * real `InventoryLedgerEntryDto[]`, but the OpenAPI generator lost the element type on this
+ * one operation). This narrow local shape lets `listInventoryLedger`'s entries and
+ * `getInventoryLedgerEntry`'s single DTO share one defensive mapper instead of trusting `any`.
+ */
+interface LedgerEntryLike {
+  ledgerEntryId?: string;
+  timestamp?: string;
+  eventType?: string;
+  stockItemId?: string;
+  changeInQuantity?: number;
+  unitOfMeasure?: string;
+  fromLocationId?: string;
+  toLocationId?: string;
+  transactionUserId?: string;
+  reasonCode?: string;
+  sourceTransactionId?: string;
+  workorderId?: string;
+  workorderLineId?: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class InventoryDomainService {
-  private readonly api = inject(ApiBaseService);
   private readonly refDataSdk = inject(InventoryReferenceDataService);
   private readonly availabilitySdk = inject(InventoryAvailabilityService);
   private readonly returnsSdk = inject(ReturnsService);
   private readonly putawayExecutionSdk = inject(PutawayExecutionService);
+  private readonly ledgerSdk = inject(InventoryLedgerService);
+  private readonly putawaySdk = inject(PutawayService);
+  private readonly replenishmentSdk = inject(ReplenishmentService);
+  private readonly shortageSdk = inject(ShortageResolutionService);
 
   queryAvailability(
     sku: string,
@@ -107,45 +145,38 @@ export class InventoryDomainService {
     );
   }
 
-  // D5 follow-up (docs/PRD-sdk-migration-completion.md): InventoryLedgerEntryDto has no
-  // fromStorageLocationId/toStorageLocationId/workorderId/workorderLineId — the ledger detail
-  // page renders all four, and the SDK shape cannot produce them. Left on ApiBaseService
-  // pending an SDK model alignment rather than silently dropping them.
+  // Backend #2206/#2227: storageLocationId, workorderId and workorderLineId are accepted by
+  // listInventoryLedger but not yet applied server-side (the ledger has no storage-location
+  // column, and the docblock says workorder filters aren't wired up yet); they're still passed
+  // through so filtering starts working the moment the backend catches up.
   queryLedger(filter: LedgerFilter): Observable<LedgerPageResponse> {
-    let params = new HttpParams();
-    if (filter.productSku != null) { params = params.set('productSku', filter.productSku); }
-    if (filter.locationId != null) { params = params.set('locationId', filter.locationId); }
-    if (filter.storageLocationId != null) { params = params.set('storageLocationId', filter.storageLocationId); }
-    if (filter.dateFrom != null) { params = params.set('dateFrom', filter.dateFrom); }
-    if (filter.dateTo != null) { params = params.set('dateTo', filter.dateTo); }
-    if (filter.sourceTransactionId != null) { params = params.set('sourceTransactionId', filter.sourceTransactionId); }
-    if (filter.workorderId != null) { params = params.set('workorderId', filter.workorderId); }
-    if (filter.workorderLineId != null) { params = params.set('workorderLineId', filter.workorderLineId); }
-    if (filter.pageSize != null) { params = params.set('pageSize', String(filter.pageSize)); }
-    if (filter.pageToken != null) { params = params.set('pageToken', filter.pageToken); }
-    if (filter.movementTypes != null && filter.movementTypes.length > 0) {
-      filter.movementTypes.forEach(t => { params = params.append('movementTypes', t); });
-    }
-    return this.api.get<LedgerPageResponse>('/inventory/v1/inventory/ledger', params);
+    return this.ledgerSdk
+      .listInventoryLedger(
+        filter.productSku,
+        filter.locationId,
+        filter.storageLocationId,
+        filter.dateFrom,
+        filter.dateTo,
+        filter.sourceTransactionId,
+        filter.workorderId,
+        filter.workorderLineId,
+        filter.movementTypes,
+        filter.pageToken,
+        filter.pageSize,
+      )
+      .pipe(map(page => this.toLedgerPageResponse(page)));
   }
 
   getLedgerEntry(ledgerEntryId: string): Observable<InventoryLedgerEntry> {
-    return this.api.get<InventoryLedgerEntry>(
-      `/inventory/v1/inventory/ledger/${encodeURIComponent(ledgerEntryId)}`,
-    );
+    return this.ledgerSdk
+      .getInventoryLedgerEntry(ledgerEntryId)
+      .pipe(map(dto => this.toInventoryLedgerEntry(dto)));
   }
 
-  // D5 follow-up (docs/PRD-sdk-migration-completion.md): the generated putaway/
-  // replenishment/returnable-items/shortage operations describe a source/destination
-  // shape with no top-level site `locationId` and no `uom`, which this local model
-  // needs; migrating would silently drop or fabricate data rather than rename fields.
-  // Left on ApiBaseService pending SDK model alignment.
   getPutawayTasks(locationId?: string): Observable<PutawayTask[]> {
-    let params = new HttpParams();
-    if (locationId) {
-      params = params.set('locationId', locationId);
-    }
-    return this.api.get<PutawayTask[]>('/inventory/v1/inventory/putaway/tasks', params);
+    return this.putawaySdk
+      .listPutawayTasks(locationId)
+      .pipe(map(tasks => tasks.map(dto => this.toPutawayTask(dto))));
   }
 
   /**
@@ -165,23 +196,20 @@ export class InventoryDomainService {
       .pipe(map(response => this.toPutawayExecutionResult(response)));
   }
 
+  // `listReplenishmentTasks` (backend #2206) has no locationId filter — every open task is
+  // returned and this filters client-side, matching the page's prior locationId-scoped view.
   getReplenishmentTasks(locationId?: string): Observable<ReplenishmentTask[]> {
-    let params = new HttpParams();
-    if (locationId) {
-      params = params.set('locationId', locationId);
-    }
-    return this.api.get<ReplenishmentTask[]>('/inventory/v1/inventory/replenishment/tasks', params);
+    return this.replenishmentSdk.listReplenishmentTasks().pipe(
+      map(tasks => tasks
+        .filter(dto => !locationId || dto.locationId === locationId)
+        .map(dto => this.toReplenishmentTask(dto))),
+    );
   }
 
-  // D5 follow-up: SDK's ReturnableItemDto has no `uom` and keys the returnable row by
-  // `itemId`, not `workorderLineId` (this endpoint is also a documented backend stub).
-  // Left on ApiBaseService pending SDK model alignment.
   getReturnableItems(workorderId: string): Observable<ReturnableItem[]> {
-    const params = new HttpParams().set('workorderId', workorderId);
-    return this.api.get<ReturnableItem[]>(
-      '/inventory/v1/inventory/returns/returnable-items',
-      params,
-    );
+    return this.returnsSdk
+      .listReturnableItems(workorderId)
+      .pipe(map(dtos => dtos.map(dto => this.toReturnableItem(dto))));
   }
 
   // `type` is unused by the SDK's fixed reason-code catalog (no filter support) but
@@ -192,37 +220,57 @@ export class InventoryDomainService {
     );
   }
 
-  // D5 follow-up: the SDK's ReturnSubmitRequest carries only workorderId + lines; it
-  // drops locationId/storageLocationId/reasonCode, which this request needs per line.
-  // Left on ApiBaseService pending SDK model alignment.
+  // `ReturnSubmitRequest.lines[].itemId` names the workorder line (backend #2206/#2227:
+  // `ReturnServiceImpl.submitToStock` keys every line by `workorderLineId`), and each SDK line
+  // carries the destination `locationId`/`storageLocationId`/`reasonCode` individually, so the
+  // request's header fields are copied onto every line.
   submitReturnToStock(request: ReturnToStockRequest): Observable<ReturnToStockResult> {
-    return this.api.post<ReturnToStockResult>(
-      '/inventory/v1/inventory/returns/submit-to-stock',
-      request,
-    );
+    const sdkRequest: ReturnSubmitRequest = {
+      workorderId: request.workorderId,
+      lines: request.lines.map((line): ReturnLineDto => ({
+        itemId: line.workorderLineId,
+        quantity: line.quantityToReturn,
+        reasonCode: request.reasonCode,
+        locationId: request.locationId,
+        storageLocationId: request.storageLocationId,
+      })),
+    };
+    return this.returnsSdk
+      .submitReturnToStock(sdkRequest)
+      .pipe(map(dto => this.toReturnToStockResult(dto)));
   }
 
-  // D5 follow-up (issue #378, backend #2206): `ShortageController` requires sku,
-  // shortQuantity, workorderLineId and siteId in addition to allocationId, and
-  // resolveShortage's request needs the same fields plus an idempotencyKey. Neither is
-  // available at this call site's current shape, and there is no cheap existing read to
-  // supply them, so `ShortageResolutionPageComponent` no longer calls either method —
-  // it shows a "not available yet" notice instead of sending a request that will 400.
-  // Left on ApiBaseService pending an SDK model alignment or a wider page-level request
-  // shape once backend #2206 lands.
-  getShortageOptions(allocationLineId: string): Observable<ShortageOption[]> {
-    const params = new HttpParams().set('allocationId', allocationLineId);
-    return this.api.get<ShortageOption[]>(
-      '/inventory/v1/inventory/shortage/options',
-      params,
-    );
+  getShortageOptions(
+    allocationId: string,
+    sku?: string,
+    shortQuantity?: number,
+    workorderLineId?: string,
+    locationId?: string,
+  ): Observable<ShortageOption[]> {
+    return this.shortageSdk
+      .listShortageOptions(allocationId, sku, shortQuantity, workorderLineId, locationId)
+      .pipe(map(dtos => dtos.map(dto => this.toShortageOption(dto))));
   }
 
   resolveShortage(request: ShortageResolutionRequest): Observable<ShortageResolutionResult> {
-    return this.api.post<ShortageResolutionResult>(
-      '/inventory/v1/inventory/shortage/resolve',
-      request,
-    );
+    const sdkRequest: ShortageResolveRequest = {
+      allocationId: request.allocationId,
+      // The SDK's enum is a closed string union of the same option names the local model
+      // already carries as `string`; the cast is safe because the caller only ever forwards
+      // one of ShortageOptionDtoOptionTypeEnum's values.
+      optionType: request.optionType as ShortageResolveRequest['optionType'],
+      sku: request.sku,
+      shortQuantity: request.shortQuantity,
+      workorderLineId: request.workorderLineId,
+      locationId: request.locationId,
+      sourceLocationId: request.sourceLocationId,
+      substituteSku: request.substituteSku,
+      notes: request.notes,
+      idempotencyKey: request.idempotencyKey,
+    };
+    return this.shortageSdk
+      .resolveShortage(sdkRequest)
+      .pipe(map(dto => this.toShortageResolutionResult(dto)));
   }
 
   private toReturnReasonCode(dto: ReasonCodeDto): ReturnReasonCode {
@@ -241,6 +289,108 @@ export class InventoryDomainService {
       status: response.status,
       executedAt: response.executedAt,
       actorId: response.actorId,
+    };
+  }
+
+  private toLedgerPageResponse(page: LedgerPage): LedgerPageResponse {
+    const entries = Array.isArray(page.entries) ? page.entries : [];
+    return {
+      items: entries.map(entry => this.toInventoryLedgerEntry(entry as LedgerEntryLike)),
+      nextPageToken: page.nextPageToken ?? null,
+    };
+  }
+
+  private toInventoryLedgerEntry(dto: LedgerEntryLike | InventoryLedgerEntryDto): InventoryLedgerEntry {
+    return {
+      ledgerEntryId: dto.ledgerEntryId ?? '',
+      timestamp: dto.timestamp ?? '',
+      movementType: dto.eventType ?? '',
+      productSku: dto.stockItemId ?? '',
+      quantityChange: dto.changeInQuantity ?? 0,
+      uom: dto.unitOfMeasure ?? '',
+      fromLocationId: dto.fromLocationId ?? undefined,
+      toLocationId: dto.toLocationId ?? undefined,
+      actorId: dto.transactionUserId ?? undefined,
+      reasonCode: dto.reasonCode ?? undefined,
+      sourceTransactionId: dto.sourceTransactionId ?? undefined,
+      workorderId: dto.workorderId ?? undefined,
+      workorderLineId: dto.workorderLineId ?? undefined,
+    };
+  }
+
+  private toPutawayTask(dto: PutawayTaskResponse): PutawayTask {
+    return {
+      taskId: dto.taskId,
+      sourceReceiptId: dto.sourceReceiptId,
+      productId: dto.productId,
+      quantity: dto.quantity,
+      sourceLocationId: dto.sourceLocationId ?? '',
+      suggestedDestinationLocationId: dto.suggestedDestinationLocationId,
+      actualDestinationLocationId: dto.actualDestinationLocationId,
+      status: dto.status,
+      assigneeId: dto.assigneeId,
+      locationId: dto.locationId,
+      uom: dto.uom,
+      createdAt: dto.createdAt,
+      updatedAt: dto.updatedAt,
+    };
+  }
+
+  private toReplenishmentTask(dto: ReplenishmentTaskResponse): ReplenishmentTask {
+    return {
+      replenishmentTaskId: dto.taskId,
+      locationId: dto.locationId ?? '',
+      fromStorageLocationId: dto.sourceLocationId ?? '',
+      toStorageLocationId: dto.destinationLocationId,
+      productSku: dto.itemSKU,
+      requestedQty: dto.quantity,
+      uom: dto.uom ?? '',
+      status: dto.status,
+    };
+  }
+
+  private toReturnableItem(dto: ReturnableItemDto): ReturnableItem {
+    return {
+      workorderLineId: dto.workorderLineId,
+      productSku: dto.sku,
+      description: dto.description,
+      maxReturnableQty: dto.quantityReturnable,
+      uom: dto.uom ?? '',
+    };
+  }
+
+  private toReturnToStockResult(dto: ReturnSubmissionResultDto): ReturnToStockResult {
+    return {
+      returnId: dto.returnId,
+      workorderId: dto.workorderId,
+      processedLineCount: dto.processedLines,
+      status: dto.status,
+      createdAt: dto.processedAt,
+    };
+  }
+
+  private toShortageOption(dto: ShortageOptionDto): ShortageOption {
+    return {
+      allocationId: dto.allocationId,
+      optionType: dto.optionType,
+      description: dto.description,
+      availableQuantity: dto.availableQuantity,
+      costDelta: dto.costDelta,
+      expectedResolutionDate: dto.expectedResolutionDate,
+      sourceLocationId: dto.sourceLocationId,
+      substituteSku: dto.substituteSku,
+    };
+  }
+
+  private toShortageResolutionResult(dto: ShortageResolutionResultDto): ShortageResolutionResult {
+    return {
+      allocationId: dto.allocationId,
+      optionType: dto.optionType,
+      artifactId: dto.artifactId,
+      artifactType: dto.artifactType,
+      idempotencyKey: dto.idempotencyKey,
+      status: dto.status,
+      resolvedAt: dto.resolvedAt,
     };
   }
 }

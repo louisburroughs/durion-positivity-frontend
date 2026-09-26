@@ -10,51 +10,6 @@
     "tracking": "#350"
   },
   {
-    "key": "src/app/features/inventory/services/inventory-receiving.service.ts :: '/inventory/v1/receiving/workorders'",
-    "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "#350"
-  },
-  {
-    "key": "src/app/features/inventory/services/inventory.service.ts :: '/inventory/v1/inventory/ledger'",
-    "reason": "InventoryLedgerEntryDto (@durion-sdk/inventory) has no fromStorageLocationId/toStorageLocationId/workorderId/workorderLineId, which the ledger detail page renders; D5 follow-up, kept on ApiBaseService pending SDK model alignment.",
-    "tracking": "#350"
-  },
-  {
-    "key": "src/app/features/inventory/services/inventory.service.ts :: '/inventory/v1/inventory/ledger/'",
-    "reason": "InventoryLedgerEntryDto (@durion-sdk/inventory) has no fromStorageLocationId/toStorageLocationId/workorderId/workorderLineId, which the ledger detail page renders; D5 follow-up, kept on ApiBaseService pending SDK model alignment.",
-    "tracking": "#350"
-  },
-  {
-    "key": "src/app/features/inventory/services/inventory.service.ts :: '/inventory/v1/inventory/putaway/tasks'",
-    "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "#350"
-  },
-  {
-    "key": "src/app/features/inventory/services/inventory.service.ts :: '/inventory/v1/inventory/replenishment/tasks'",
-    "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "#350"
-  },
-  {
-    "key": "src/app/features/inventory/services/inventory.service.ts :: '/inventory/v1/inventory/returns/returnable-items'",
-    "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "#350"
-  },
-  {
-    "key": "src/app/features/inventory/services/inventory.service.ts :: '/inventory/v1/inventory/returns/submit-to-stock'",
-    "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "#350"
-  },
-  {
-    "key": "src/app/features/inventory/services/inventory.service.ts :: '/inventory/v1/inventory/shortage/options'",
-    "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "#350"
-  },
-  {
-    "key": "src/app/features/inventory/services/inventory.service.ts :: '/inventory/v1/inventory/shortage/resolve'",
-    "reason": "hardcoded backend path literal on a service still using legacy ApiBaseService transport (see SDK-03); migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "#350"
-  },
-  {
     "key": "src/app/features/shell/services/chat-api.service.ts :: '/mcp-server/v1/mcp/chat'",
     "reason": "permanent exception (gateway/MCP chat traffic, no @durion-sdk package covers mcp-server; see SDK-03). PRD-sdk-migration-completion.md §Approved Exceptions.",
     "tracking": "#350"

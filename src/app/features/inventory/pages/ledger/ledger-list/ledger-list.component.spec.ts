@@ -13,10 +13,12 @@ const mockInventoryService = {
 const ledgerEntryItem: InventoryLedgerEntry = {
   ledgerEntryId: 'e1',
   timestamp: '2026-01-01T00:00:00Z',
-  movementType: 'RECEIPT',
+  movementType: 'GOODS_RECEIPT',
   productSku: 'SKU-001',
   quantityChange: 10,
   uom: 'EA',
+  fromLocationId: 'a1b2c3d4-e5f6-4789-a012-b3c4d5e6f7a8',
+  toLocationId: 'b2c3d4e5-f6a7-4890-b123-c4d5e6f7a8b9',
 };
 
 const ledgerPageWithItems: LedgerPageResponse = { items: [ledgerEntryItem], nextPageToken: null };
@@ -82,5 +84,20 @@ describe('LedgerListComponent', () => {
     const keyIdx = calls.findIndex(c => c.startsWith('errorKey:'));
     expect(errIdx).toBeGreaterThanOrEqual(0);
     expect(keyIdx).toBeGreaterThan(errIdx);
+  });
+
+  // ADR-0064 §5: neither InventoryLedgerEntry nor the SDK DTO carries a human-readable name
+  // for fromLocationId/toLocationId, so the raw UUID must never reach the DOM.
+  it('never renders the raw fromLocationId/toLocationId UUID, even when a row carries one', () => {
+    mockInventoryService.queryLedger.mockReturnValue(of(ledgerPageWithItems));
+    const fixture = TestBed.createComponent(LedgerListComponent);
+    const component = fixture.componentInstance;
+
+    component.applyFilter({});
+    fixture.detectChanges();
+
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(text).not.toContain(ledgerEntryItem.fromLocationId);
+    expect(text).not.toContain(ledgerEntryItem.toLocationId);
   });
 });

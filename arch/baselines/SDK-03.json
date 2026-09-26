@@ -1,15 +1,5 @@
 [
   {
-    "key": "src/app/features/inventory/services/inventory-receiving.service.ts -> src/app/core/services/api-base.service.ts",
-    "reason": "legacy ApiBaseService transport; migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "#350"
-  },
-  {
-    "key": "src/app/features/inventory/services/inventory.service.ts -> src/app/core/services/api-base.service.ts",
-    "reason": "legacy ApiBaseService transport; migrates with PRD-sdk-migration-completion.md.",
-    "tracking": "#350"
-  },
-  {
     "key": "src/app/features/shell/services/chat-api.service.ts -> src/app/core/services/api-base.service.ts",
     "reason": "permanent exception (gateway/MCP chat traffic, no @durion-sdk package covers mcp-server; PRD-sdk-migration-completion.md §Approved Exceptions).",
     "tracking": "#350"
