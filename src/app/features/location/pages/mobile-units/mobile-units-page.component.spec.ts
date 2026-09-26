@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router, provideRouter } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, of, throwError } from 'rxjs';
 import type {
   CoverageRuleRequest,
   CoverageRuleResponse,
@@ -102,6 +102,7 @@ const locationLookupSourceStub = {
 describe('MobileUnitsPageComponent', () => {
   let fixture: ComponentFixture<MobileUnitsPageComponent>;
   let component: MobileUnitsPageComponent;
+  let queryParams: BehaviorSubject<Record<string, string>>;
 
   const el = (): HTMLElement => fixture.nativeElement as HTMLElement;
   const text = (): string => el().textContent ?? '';
@@ -115,11 +116,12 @@ describe('MobileUnitsPageComponent', () => {
       .find(view => view.unit.id === unitId)!;
 
   async function setUp(params: Record<string, string> = { locationId: 'loc-1' }): Promise<void> {
+    queryParams = new BehaviorSubject(params);
     await TestBed.configureTestingModule({
       imports: [MobileUnitsPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
-        { provide: ActivatedRoute, useValue: { queryParams: new BehaviorSubject(params) } },
+        { provide: ActivatedRoute, useValue: { queryParams } },
         { provide: AuthService, useValue: authStub },
         { provide: LocationService, useValue: locationServiceStub },
         { provide: LOCATION_LOOKUP_SOURCE, useValue: locationLookupSourceStub },
@@ -205,6 +207,12 @@ describe('MobileUnitsPageComponent', () => {
       expect(cardText('mu-3')).toContain('From');
     });
 
+    it('names an upcoming rule by its local day, not the UTC instant', () => {
+      const from = card('mu-3').upcoming[0].from;
+      expect(isoDateLocal(from)).toBe(inDays(10));
+      expect([from.getHours(), from.getMinutes()]).toEqual([0, 0]);
+    });
+
     it('warns that a switched-off area still counts', () => {
       expect(cardText('mu-11')).toContain('Eastside is switched off, but units covering it are still matched.');
     });
@@ -215,6 +223,57 @@ describe('MobileUnitsPageComponent', () => {
       expect(van7).toContain('At least one coverage rule: missing');
       expect(query('#unit-mu-7 .activate-btn')?.getAttribute('aria-disabled')).toBe('true');
       expect(query('#unit-mu-7 .activate-btn')?.getAttribute('aria-label')).toBe('Activate Van 7');
+    });
+  });
+
+  describe('where a unit can be sent', () => {
+    it("doesn't count an area with no postal codes, and says no customer matches", async () => {
+      locationServiceStub.listServiceAreas.mockReturnValue(
+        of({ areas: [{ ...AREAS[0], postalCodes: [] }, AREAS[1]], ok: true }),
+      );
+      await setUp();
+      expect(card('mu-9').sentWarning).toBe(true);
+      expect(cardText('mu-9')).toContain("none of today's service areas has a postal code");
+      expect(cardText('mu-9')).not.toContain('Can be sent to customers');
+      expect(cardText('mu-9')).toContain('Riverside north has no postal codes, so it covers nobody.');
+    });
+
+    it("doesn't count a service area that no longer exists", async () => {
+      locationServiceStub.listServiceAreas.mockReturnValue(of({ areas: [AREAS[1]], ok: true }));
+      await setUp();
+      expect(card('mu-9').sentLine.key).toBe('LOCATION.MOBILE_UNITS.SENT.NONE_MATCHABLE');
+    });
+
+    it('still counts a switched-off area, which matching still uses', async () => {
+      locationServiceStub.listMobileUnits.mockReturnValue(
+        of({ units: [{ ...VAN_11, status: MobileUnitResponseStatusEnum.Active }], coverage: COVERAGE, coverageOk: true }),
+      );
+      await setUp();
+      expect(cardText('mu-11')).toContain('Can be sent to customers in 1 service area today.');
+    });
+
+    it('says the reach is unknown when the areas could not be read, rather than counting rules', async () => {
+      locationServiceStub.listServiceAreas.mockReturnValue(of({ areas: [], ok: false }));
+      await setUp();
+      expect(card('mu-9').sentWarning).toBe(false);
+      expect(cardText('mu-9')).toContain("The service areas couldn't be loaded, so where it can be sent is unknown.");
+    });
+
+    it('moves "today" on when the page is left open past midnight', async () => {
+      vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] });
+      try {
+        await setUp();
+        expect(card('mu-3').sentLine.key).toBe('LOCATION.MOBILE_UNITS.SENT.NONE_TODAY');
+        const later = new Date();
+        later.setDate(later.getDate() + 10);
+        vi.spyOn(component, 'now').mockReturnValue(later);
+        vi.advanceTimersByTime(60_000);
+        render();
+        expect(component.today()).toBe(inDays(10));
+        expect(cardText('mu-3')).toContain('Can be sent to customers in 1 service area today.');
+      } finally {
+        vi.useRealTimers();
+      }
     });
   });
 
@@ -319,6 +378,37 @@ describe('MobileUnitsPageComponent', () => {
       expect(locationServiceStub.patchMobileUnit).toHaveBeenCalledWith('mu-9', { name: 'Van 9A' });
     });
 
+    it('locks "No policy" on a unit that has one, since PATCH cannot clear it yet', () => {
+      component.openEdit(VAN_9);
+      render();
+      expect(component.noPolicyLocked()).toBe(true);
+      expect(query<HTMLOptionElement>('#unit-policy option[value=""]')?.disabled).toBe(true);
+      expect(query('#unit-policy')?.getAttribute('aria-describedby')).toBe('unit-policy-hint unit-policy-locked');
+      component.setPolicy('');
+      expect(component.draft().travelBufferPolicyId).toBe('p-std');
+      component.closeDialog();
+
+      component.openCreate();
+      render();
+      expect(component.noPolicyLocked()).toBe(false);
+      expect(query<HTMLOptionElement>('#unit-policy option[value=""]')?.disabled).toBe(false);
+    });
+
+    it('closes the dialog and drops its save when the URL moves to another location', () => {
+      const pending = new Subject<MobileUnitResponse>();
+      locationServiceStub.patchMobileUnit.mockReturnValueOnce(pending);
+      component.openEdit(VAN_9);
+      component.setName('Van 9A');
+      component.submit();
+      expect(component.saving()).toBe(true);
+
+      queryParams.next({ locationId: 'loc-2' });
+      render();
+      expect(component.dialogMode()).toBeNull();
+      expect(component.saving()).toBe(false);
+      expect(pending.observed).toBe(false);
+    });
+
     it("won't set an incomplete unit active, and keeps an active unit's last capability", () => {
       component.openEdit(VAN_7);
       component.setStatus('ACTIVE');
@@ -369,6 +459,20 @@ describe('MobileUnitsPageComponent', () => {
       expect(locationServiceStub.replaceCoverageRules).not.toHaveBeenCalled();
     });
 
+    it('closes the editor and drops its save when another location is picked', () => {
+      const pending = new Subject<CoverageRuleResponse[]>();
+      locationServiceStub.replaceCoverageRules.mockReturnValueOnce(pending);
+      component.openCoverage(VAN_9);
+      component.saveCoverage();
+      expect(component.coverageSaving()).toBe(true);
+
+      component.onLocationSelected('loc-2');
+      render();
+      expect(component.coverageUnit()).toBeNull();
+      expect(component.coverageSaving()).toBe(false);
+      expect(pending.observed).toBe(false);
+    });
+
     it('describes the chosen area under its select', () => {
       component.openCoverage(VAN_11);
       render();
@@ -378,6 +482,50 @@ describe('MobileUnitsPageComponent', () => {
 
   describe('check coverage', () => {
     beforeEach(async () => setUp());
+
+    it('points the toggle at the check form only while it is shown', () => {
+      const toggle = query<HTMLButtonElement>('.band-toggle')!;
+      expect(toggle.hasAttribute('aria-controls')).toBe(false);
+      toggle.click();
+      render();
+      expect(query(`#${toggle.getAttribute('aria-controls')}`)).not.toBeNull();
+    });
+
+    it('answers with the latest check only, whatever order the replies arrive in', () => {
+      const first = new Subject<EligibleMobileUnitResponse[]>();
+      const second = new Subject<EligibleMobileUnitResponse[]>();
+      locationServiceStub.findEligibleMobileUnits.mockReturnValueOnce(first).mockReturnValueOnce(second);
+      component.checkPostalCode.set('78701');
+      component.runCheck();
+      component.checkPostalCode.set('78721');
+      component.runCheck();
+
+      second.next([{ id: 'mu-11', name: 'Van 11', baseLocationId: 'loc-1', priority: 1 }]);
+      first.next([{ id: 'mu-9', name: 'Van 9', baseLocationId: 'loc-1', priority: 1 }]);
+
+      expect(first.observed).toBe(false);
+      expect(component.checkedFor()?.postalCode).toBe('78721');
+      expect(component.checkResults().map(result => result.id)).toEqual(['mu-11']);
+    });
+
+    it('names the checked day as the local calendar day chosen', () => {
+      locationServiceStub.findEligibleMobileUnits.mockReturnValueOnce(of([]));
+      component.checkPostalCode.set('78701');
+      component.checkDate.set('2026-10-01');
+      component.runCheck();
+      expect(isoDateLocal(component.checkedFor()!.day)).toBe('2026-10-01');
+    });
+
+    it('drops a check in flight and its results when the location changes', () => {
+      const pending = new Subject<EligibleMobileUnitResponse[]>();
+      locationServiceStub.findEligibleMobileUnits.mockReturnValueOnce(pending);
+      component.checkPostalCode.set('78701');
+      component.runCheck();
+      queryParams.next({ locationId: 'loc-2' });
+      render();
+      expect(pending.observed).toBe(false);
+      expect(component.checkState()).toBe('idle');
+    });
 
     it('needs a postal code before checking', () => {
       component.runCheck();

@@ -2162,7 +2162,10 @@
         "UNKNOWN": "Activa. No se pudo cargar su cobertura.",
         "NONE_TODAY": "Activa, pero ninguna regla de cobertura está vigente hoy, así que ningún cliente coincide.",
         "AREAS_ONE": "Se puede enviar hoy a clientes de 1 área de servicio.",
-        "AREAS_MANY": "Se puede enviar hoy a clientes de {{count}} áreas de servicio."
+        "AREAS_MANY": "Se puede enviar hoy a clientes de {{count}} áreas de servicio.",
+        "AREAS_CHECKING": "Activa. Comprobando a qué áreas de servicio llega.",
+        "AREAS_UNKNOWN": "Activa. No se pudieron cargar las áreas de servicio, así que no se sabe adónde se puede enviar.",
+        "NONE_MATCHABLE": "Activa, pero ninguna de las áreas de servicio de hoy tiene códigos postales, así que ningún cliente coincide."
       },
       "CHECKLIST": {
         "TITLE": "Lista para activar",
@@ -2223,7 +2226,8 @@
         "PRIORITY": "Prioridad: los números más bajos se ofrecen primero, comparados entre todas las unidades de aquí que cubren el mismo código postal.",
         "DATES": "Válida desde y hasta: las fechas en que aplica la regla. Deje Válida hasta en blanco para no tener fecha de fin.",
         "RULE_TYPE": "El tipo de regla se registra para más adelante. La coincidencia usa solo el área de servicio.",
-        "MAX_DISTANCE": "La distancia máxima se registra para más adelante y no se usa para la coincidencia. Deje en blanco el último nivel de distancia como nivel general."
+        "MAX_DISTANCE": "La distancia máxima se registra para más adelante y no se usa para la coincidencia. Deje en blanco el último nivel de distancia como nivel general.",
+        "POLICY_LOCKED": "Todavía no se puede quitar la política de una unidad, solo cambiarla por otra."
       },
       "DIALOG": {
         "CREATE_TITLE": "Nueva unidad móvil",

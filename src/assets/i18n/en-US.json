@@ -2162,7 +2162,10 @@
         "UNKNOWN": "Active. Its coverage couldn't be loaded.",
         "NONE_TODAY": "Active, but no coverage rule is in effect today, so no customer matches it.",
         "AREAS_ONE": "Can be sent to customers in 1 service area today.",
-        "AREAS_MANY": "Can be sent to customers in {{count}} service areas today."
+        "AREAS_MANY": "Can be sent to customers in {{count}} service areas today.",
+        "AREAS_CHECKING": "Active. Checking which service areas it reaches.",
+        "AREAS_UNKNOWN": "Active. The service areas couldn't be loaded, so where it can be sent is unknown.",
+        "NONE_MATCHABLE": "Active, but none of today's service areas has a postal code, so no customer matches it."
       },
       "CHECKLIST": {
         "TITLE": "Ready to activate",
@@ -2223,7 +2226,8 @@
         "PRIORITY": "Priority: lower numbers are offered first, compared across every unit here that covers the same postal code.",
         "DATES": "Valid from and to: the dates the rule applies. Leave Valid to blank for no end date.",
         "RULE_TYPE": "Rule type is recorded for later. Matching uses the service area only.",
-        "MAX_DISTANCE": "Max distance is recorded for later and not used for matching. Leave the last distance tier blank as the catch-all."
+        "MAX_DISTANCE": "Max distance is recorded for later and not used for matching. Leave the last distance tier blank as the catch-all.",
+        "POLICY_LOCKED": "A policy can't be removed from a unit yet, only changed to another one."
       },
       "DIALOG": {
         "CREATE_TITLE": "New mobile unit",
