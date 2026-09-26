@@ -492,6 +492,8 @@ app-travel-buffer-policies-page .state-panel {
 app-service-areas-page .state-panel,
 app-travel-buffer-policies-page .state-panel {
   border: 1px solid var(--status-error-fg);
+  background: var(--status-error-bg);
+  color: var(--status-error-fg);
 }
 
 app-service-areas-page .ledger,

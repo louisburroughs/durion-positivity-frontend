@@ -100,6 +100,25 @@ describe('ServiceAreasPageComponent', () => {
     expect(component.dialogMode()).toBeNull();
   });
 
+  it('refuses the save in the handler too, whatever dialog is open, without location:service-area:manage', async () => {
+    session.permissions = [...LOCATION_PAGE.serviceAreas];
+    await setUp();
+    // Force a populated dialog past the hidden controls: only the handler guard stands in the way.
+    component.dialogMode.set('create');
+    component.patchDraft({ name: 'South', countryCode: 'US', postalCodes: codes('78745') });
+    component.submit();
+
+    component.dialogMode.set('edit');
+    component.editing.set(AREAS[0]);
+    component.patchDraft({ name: AREAS[0].name ?? '', description: 'Changed', postalCodes: codes('78745') });
+    component.submit();
+
+    expect(locationServiceStub.createServiceArea).not.toHaveBeenCalled();
+    expect(locationServiceStub.patchServiceArea).not.toHaveBeenCalled();
+    expect(locationServiceStub.replaceServiceAreaPostalCodes).not.toHaveBeenCalled();
+    expect(component.saving()).toBe(false);
+  });
+
   describe('create', () => {
     beforeEach(async () => setUp());
 
@@ -139,8 +158,29 @@ describe('ServiceAreasPageComponent', () => {
       component.patchDraft({ countryCode: 'USA' });
       component.pasteText.set('78745');
       component.addPasted();
-      expect(component.codesErrorKey()).toBe('LOCATION.SERVICE_AREAS.ERROR.COUNTRY');
+      render();
+      expect(component.countryErrorKey()).toBe('LOCATION.SERVICE_AREAS.ERROR.COUNTRY');
+      expect(component.codesErrorKey()).toBeNull();
       expect(component.draft().postalCodes).toEqual([]);
+      const country = el().querySelector('#area-country')!;
+      expect(country.getAttribute('aria-invalid')).toBe('true');
+      expect(el().querySelector(`#${country.getAttribute('aria-describedby')}`)?.textContent).toBeTruthy();
+
+      component.setCountry('us');
+      render();
+      expect(component.draft().countryCode).toBe('US');
+      expect(country.hasAttribute('aria-invalid')).toBe(false);
+    });
+
+    it('ties the missing-codes error to the paste box', () => {
+      component.openCreate();
+      component.patchDraft({ name: 'South' });
+      component.submit();
+      render();
+      const paste = el().querySelector('#area-paste')!;
+      expect(paste.getAttribute('aria-invalid')).toBe('true');
+      expect(paste.getAttribute('aria-describedby')).toBe('area-codes-error area-paste-hint');
+      expect(el().querySelector('#area-codes-error')?.textContent).toContain('Add at least one postal code.');
     });
 
     it('puts a duplicate name error under Name', () => {

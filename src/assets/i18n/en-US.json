@@ -2258,7 +2258,8 @@
         "FLAT_MINUTES": "{{value}} minutes flat",
         "PERCENTAGE_OF_TRAVEL": "{{value}}% of travel time",
         "DISTANCE_MULTIPLIER": "{{value}} × distance",
-        "NEEDS_FIXING": "type needs fixing"
+        "NEEDS_FIXING": "type needs fixing",
+        "NO_VALUE": "no buffer"
       },
       "FIELD": {
         "NAME": "Name",

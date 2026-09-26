@@ -106,6 +106,8 @@ export class ServiceAreasPageComponent {
   readonly pasteNote = signal<{ key: string; params: Record<string, string | number> } | null>(null);
   readonly nameErrorKey = signal<string | null>(null);
   readonly codesErrorKey = signal<string | null>(null);
+  /** Refusal of the country, shown at the country field that takes the focus. */
+  readonly countryErrorKey = signal<string | null>(null);
   readonly saveErrorKey = signal<string | null>(null);
   readonly saving = signal(false);
 
@@ -167,6 +169,7 @@ export class ServiceAreasPageComponent {
     this.pasteNote.set(null);
     this.nameErrorKey.set(null);
     this.codesErrorKey.set(null);
+    this.countryErrorKey.set(null);
     this.saveErrorKey.set(null);
   }
 
@@ -183,11 +186,12 @@ export class ServiceAreasPageComponent {
   addPasted(): void {
     const country = this.draft().countryCode;
     if (!isCountryCode(country)) {
-      this.codesErrorKey.set('LOCATION.SERVICE_AREAS.ERROR.COUNTRY');
+      this.countryErrorKey.set('LOCATION.SERVICE_AREAS.ERROR.COUNTRY');
       this.focus('dialog #area-country');
       return;
     }
     const parsed = parsePostalCodes(this.pasteText(), country, this.draft().postalCodes);
+    this.countryErrorKey.set(null);
     this.codesErrorKey.set(null);
     this.draft.update(draft => ({ ...draft, postalCodes: [...draft.postalCodes, ...parsed.added] }));
     this.pasteText.set('');
@@ -195,6 +199,11 @@ export class ServiceAreasPageComponent {
       key: parsed.tooLong.length > 0 ? 'LOCATION.SERVICE_AREAS.PASTE.ADDED_SKIPPED' : 'LOCATION.SERVICE_AREAS.PASTE.ADDED',
       params: { added: parsed.added.length, duplicates: parsed.duplicates, skipped: parsed.tooLong.join(', ') },
     });
+  }
+
+  setCountry(value: string): void {
+    this.countryErrorKey.set(null);
+    this.patchDraft({ countryCode: value.trim().toUpperCase() });
   }
 
   removeCode(entry: PostalCodeEntry): void {

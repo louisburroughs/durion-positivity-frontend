@@ -2258,7 +2258,8 @@
         "FLAT_MINUTES": "{{value}}[!!  ḿïïñüüŧëëš ƒľààŧ !!]",
         "PERCENTAGE_OF_TRAVEL": "{{value}}[!! % øøƒ ŧŕààṽëëľ ŧïïḿëë !!]",
         "DISTANCE_MULTIPLIER": "{{value}}[!!  × đïïšŧààñçëë !!]",
-        "NEEDS_FIXING": "[!! ŧÿṕëë ñëëëëđš ƒïïẍïïñğ !!]"
+        "NEEDS_FIXING": "[!! ŧÿṕëë ñëëëëđš ƒïïẍïïñğ !!]",
+        "NO_VALUE": "[!! ñøø ƀüüƒƒëëŕ !!]"
       },
       "FIELD": {
         "NAME": "[!! Ňààḿëë !!]",

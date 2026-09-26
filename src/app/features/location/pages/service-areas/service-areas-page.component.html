@@ -116,11 +116,18 @@
           <div class="field field-narrow">
             <label for="area-country">{{ 'LOCATION.SERVICE_AREAS.FIELD.COUNTRY' | translate }}</label>
             <input id="area-country" type="text" maxlength="2" autocomplete="off" [value]="draft().countryCode"
-              (input)="patchDraft({ countryCode: $any($event.target).value.trim().toUpperCase() })" />
+              [attr.aria-invalid]="countryErrorKey() ? true : null"
+              [attr.aria-describedby]="countryErrorKey() ? 'area-country-error' : null"
+              (input)="setCountry($any($event.target).value)" />
+            @if (countryErrorKey(); as countryError) {
+              <p id="area-country-error" class="field-error">{{ countryError | translate }}</p>
+            }
           </div>
           <div class="field field-grow">
             <label for="area-paste">{{ 'LOCATION.SERVICE_AREAS.FIELD.PASTE' | translate }}</label>
-            <textarea id="area-paste" rows="3" aria-describedby="area-paste-hint" [value]="pasteText()"
+            <textarea id="area-paste" rows="3" [value]="pasteText()"
+              [attr.aria-invalid]="codesErrorKey() ? true : null"
+              [attr.aria-describedby]="codesErrorKey() ? 'area-codes-error area-paste-hint' : 'area-paste-hint'"
               (input)="pasteText.set($any($event.target).value)"></textarea>
             <p id="area-paste-hint" class="hint">{{ 'LOCATION.SERVICE_AREAS.HINT.PASTE' | translate }}</p>
           </div>
@@ -134,7 +141,7 @@
           }
         </p>
         @if (codesErrorKey(); as codesError) {
-          <p class="field-error" role="alert">{{ codesError | translate }}</p>
+          <p id="area-codes-error" class="field-error" role="alert">{{ codesError | translate }}</p>
         }
 
         <p class="code-count">

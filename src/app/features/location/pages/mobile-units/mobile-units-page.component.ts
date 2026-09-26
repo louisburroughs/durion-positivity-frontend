@@ -1058,7 +1058,7 @@ export class MobileUnitsPageComponent {
 
   /** The buffer in words, e.g. "15 minutes flat"; "type needs fixing" for an unknown type. */
   bufferText(policy: TravelBufferPolicyResponse): Message {
-    return { key: bufferKey(policy), params: { value: policy.bufferValue ?? 0 } };
+    return { key: bufferKey(policy), params: { value: policy.bufferValue ?? '' } };
   }
 
   private rememberName(service: ClaimableService): void {

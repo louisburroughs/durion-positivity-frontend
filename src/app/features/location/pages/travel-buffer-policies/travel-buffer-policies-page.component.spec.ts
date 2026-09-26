@@ -67,6 +67,16 @@ describe('TravelBufferPoliciesPageComponent', () => {
     expect(el().querySelector('#policy-p-bad')!.textContent).toContain('Type needs fixing');
   });
 
+  it('shows a policy with no value as no buffer, never as zero', async () => {
+    locationServiceStub.listTravelBufferPolicies.mockReturnValue(
+      of({ policies: [{ id: 'p-none', name: 'None', bufferType: 'FLAT_MINUTES' }], ok: true }),
+    );
+    await setUp();
+    const row = el().querySelector('#policy-p-none')!.textContent ?? '';
+    expect(row).toContain('no buffer');
+    expect(row).not.toContain('0 minutes');
+  });
+
   it('shows a load failure with a retry', async () => {
     locationServiceStub.listTravelBufferPolicies.mockReturnValueOnce(of({ policies: [], ok: false }));
     await setUp();

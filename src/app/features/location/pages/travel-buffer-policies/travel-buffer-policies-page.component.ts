@@ -35,7 +35,8 @@ interface PolicyRow {
   readonly policy: TravelBufferPolicyResponse;
   readonly name: string;
   readonly bufferKey: string;
-  readonly value: number;
+  /** Null for no buffer: `bufferKey` then names none, so no value is shown. */
+  readonly value: number | null;
   /** The stored type isn't one pos-location accepts (the seeded "MINUTES", backend#2249). */
   readonly needsFixing: boolean;
 }
@@ -82,7 +83,7 @@ export class TravelBufferPoliciesPageComponent {
         policy,
         name: policy.name ?? '',
         bufferKey: bufferKey(policy),
-        value: policy.bufferValue ?? 0,
+        value: policy.bufferValue ?? null,
         needsFixing: !isTravelBufferType(policy.bufferType),
       })),
   );
