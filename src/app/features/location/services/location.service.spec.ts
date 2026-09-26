@@ -83,6 +83,24 @@ describe('LocationService', () => {
     });
   });
 
+  it('matches mobile-unit status and coverage rule type case-insensitively, as the contract does', () => {
+    mobileUnitApiStub.createMobileUnit.mockReturnValueOnce(of({ id: 'mu-001' }));
+
+    service.createMobileUnit({
+      name: 'Truck 1',
+      baseLocationId: 'loc-01',
+      status: ' active ',
+      coverageRules: [{ serviceAreaId: 'svc-1', ruleType: 'distance_tier', priority: 1 }],
+    }).subscribe();
+
+    expect(mobileUnitApiStub.createMobileUnit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: 'ACTIVE',
+        coverageRules: [expect.objectContaining({ ruleType: 'DISTANCE_TIER' })],
+      }),
+    );
+  });
+
   it('sends a coverage rule type pos-location does not accept as a service-area rule', () => {
     mobileUnitApiStub.replaceCoverageRules.mockReturnValueOnce(of([]));
 
@@ -182,7 +200,7 @@ describe('LocationService', () => {
     service.createMobileUnit({
       name: 'Truck 1',
       baseLocationId: 'loc-01',
-      status: 'active',
+      status: 'paused',
       coverageRules: [
         {
           serviceAreaId: 'svc-1',
@@ -193,7 +211,7 @@ describe('LocationService', () => {
       ],
     }).subscribe();
 
-    // An unknown status is left out, so pos-location defaults the unit to INACTIVE.
+    // A status pos-location doesn't accept is left out, so it defaults the unit to INACTIVE.
     expect(mobileUnitApiStub.createMobileUnit).toHaveBeenCalledWith({
       name: 'Truck 1',
       baseLocationId: 'loc-01',

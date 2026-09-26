@@ -246,20 +246,30 @@ export class LocationService {
     };
   }
 
-  /** ACTIVE or INACTIVE; anything else is left out, and pos-location defaults a new unit to INACTIVE. */
+  /**
+   * ACTIVE or INACTIVE, matched case-insensitively as the contract does; anything else is left out,
+   * and pos-location defaults a new unit to INACTIVE.
+   */
   private asMobileUnitStatus(value: unknown): MobileUnitRequestStatusEnum | undefined {
-    return Object.values(MobileUnitRequestStatusEnum).find(status => status === value);
+    const normalized = this.asEnumKey(value);
+    return Object.values(MobileUnitRequestStatusEnum).find(status => status === normalized);
   }
 
   /**
-   * SERVICE_AREA or DISTANCE_TIER, the only types pos-location accepts. Eligibility matches on the
-   * service area alone, so an unrecognised type is sent as a plain service-area rule.
+   * SERVICE_AREA or DISTANCE_TIER, matched case-insensitively as the contract does. Eligibility
+   * matches on the service area alone, so a type pos-location doesn't accept is sent as a plain
+   * service-area rule.
    */
   private asCoverageRuleType(value: unknown): CoverageRuleRequestRuleTypeEnum {
+    const normalized = this.asEnumKey(value);
     return (
-      Object.values(CoverageRuleRequestRuleTypeEnum).find(type => type === value) ??
+      Object.values(CoverageRuleRequestRuleTypeEnum).find(type => type === normalized) ??
       CoverageRuleRequestRuleTypeEnum.ServiceArea
     );
+  }
+
+  private asEnumKey(value: unknown): string {
+    return typeof value === 'string' ? value.trim().toUpperCase() : '';
   }
 
   private asLocationType(value: unknown): { id?: string; name?: string; description?: string } {
