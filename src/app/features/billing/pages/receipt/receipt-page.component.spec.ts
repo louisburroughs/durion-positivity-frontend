@@ -445,6 +445,39 @@ describe('ReceiptPageComponent', () => {
       expect(component.canReprintPastCap()).toBe(false);
       expect(component.canReprint()).toBe(false);
     });
+
+    it('blocks another reprint when the post-reprint re-read fails (the displayed count is stale, ADR-0064)', async () => {
+      billingTransportStub.loadReceipt.mockReturnValueOnce(of({ ...receiptDetailFixture, reprintCount: 1 }));
+      await configure('inv-001', 'rcpt-001');
+      create();
+      expect(component.canReprint()).toBe(true);
+
+      billingTransportStub.reprintReceipt.mockReturnValue(
+        of({ receiptId: 'rcpt-001', invoiceId: 'inv-001', receiptNumber: 'R-1001' }),
+      );
+      billingTransportStub.loadReceipt.mockReturnValueOnce(throwError(() => new Error('read failed')));
+      billingTransportStub.reprintReceipt.mockClear();
+
+      component.reprint();
+
+      expect(component.state()).toBe('error');
+      expect(component.canReprint()).toBe(false);
+      component.reprint();
+      expect(billingTransportStub.reprintReceipt).toHaveBeenCalledTimes(1);
+    });
+
+    it('still allows a retry when the reprint itself fails (the displayed detail was never superseded)', async () => {
+      billingTransportStub.loadReceipt.mockReturnValueOnce(of({ ...receiptDetailFixture, reprintCount: 1 }));
+      await configure('inv-001', 'rcpt-001');
+      create();
+
+      billingTransportStub.reprintReceipt.mockReturnValue(throwError(() => new Error('reprint failed')));
+
+      component.reprint();
+
+      expect(component.state()).toBe('error');
+      expect(component.canReprint()).toBe(true);
+    });
   });
 
   describe('receipt status rendering (ADR-0065 allowlisted translation)', () => {

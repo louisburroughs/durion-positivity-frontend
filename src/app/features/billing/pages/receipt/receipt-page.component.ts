@@ -3,7 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { switchMap } from 'rxjs/operators';
+import { switchMap, tap } from 'rxjs/operators';
 import { TranslatePipe } from '@ngx-translate/core';
 import { BILLING_SECTION } from '../../../../core/security/route-permissions';
 import { AuthService } from '../../../../core/services/auth.service';
@@ -66,6 +66,12 @@ export class ReceiptPageComponent implements OnInit {
    * post-reprint re-read below, checked on landing.
    */
   private receiptReadSeq = 0;
+  /**
+   * True once a reprint has succeeded but its authoritative re-read has not (yet) landed: the
+   * displayed detail's `reprintCount` is then stale, so no further reprint may be based on it
+   * (ADR-0064 — actionability is gated on a successful read outcome).
+   */
+  private readonly receiptStale = signal(false);
 
   /**
    * durion-positivity-backend#2226's receipt status enum has one member (`GENERATED`) today
@@ -117,6 +123,7 @@ export class ReceiptPageComponent implements OnInit {
         next: receipt => {
           if (seq !== this.receiptReadSeq) return; // superseded read (ADR-0063 §1)
           this.receipt.set(receipt);
+          this.receiptStale.set(false);
           this.state.set('ready');
         },
         error: (err: unknown) => {
@@ -155,6 +162,7 @@ export class ReceiptPageComponent implements OnInit {
         next: receipt => {
           this.receiptId.set(receipt.receiptId);
           this.receipt.set(receipt);
+          this.receiptStale.set(false);
           this.state.set('ready');
         },
         error: (err: unknown) => {
@@ -225,7 +233,7 @@ export class ReceiptPageComponent implements OnInit {
    * `reprintCount`). A 403 always maps to a localized permission (or location-scope) error.
    */
   canReprint(): boolean {
-    if (this.state() === 'submitting') {
+    if (this.state() === 'submitting' || this.receiptStale()) {
       return false;
     }
     return !this.reprintOverrideNeeded() || this.canReprintPastCap();
@@ -259,6 +267,7 @@ export class ReceiptPageComponent implements OnInit {
         // disarmed `reprintOverrideNeeded()`. Re-read the authoritative detail via the same
         // `getReceipt` path the deep-link load uses instead of guessing `count + 1` (request-keyed
         // by `receiptReadSeq`, ADR-0063 §1).
+        tap(() => this.receiptStale.set(true)),
         switchMap(() => this.billingService.loadReceipt(invoiceId, receiptId)),
         takeUntilDestroyed(this.destroyRef),
       )
@@ -266,6 +275,7 @@ export class ReceiptPageComponent implements OnInit {
         next: receipt => {
           if (seq !== this.receiptReadSeq) return; // superseded read (ADR-0063 §1)
           this.receipt.set(receipt);
+          this.receiptStale.set(false);
           this.state.set('ready');
         },
         error: (err: unknown) => {
