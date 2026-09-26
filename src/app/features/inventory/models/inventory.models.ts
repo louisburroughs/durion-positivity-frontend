@@ -425,7 +425,7 @@ export interface ReturnToStockLine {
 export interface ReturnToStockResult {
   returnId: string;
   workorderId: string;
-  totalItemsReturned: number;
+  processedLineCount: number;
   status?: string;
   /** @serverGenerated */
   readonly createdAt?: string;

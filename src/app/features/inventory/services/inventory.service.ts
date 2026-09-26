@@ -363,7 +363,7 @@ export class InventoryDomainService {
     return {
       returnId: dto.returnId,
       workorderId: dto.workorderId,
-      totalItemsReturned: dto.processedLines,
+      processedLineCount: dto.processedLines,
       status: dto.status,
       createdAt: dto.processedAt,
     };
