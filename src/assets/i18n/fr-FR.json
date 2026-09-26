@@ -2048,13 +2048,6 @@
       },
       "SEARCH": {
         "LABEL": "Trouver un service à ajouter",
-        "HINT": "Tapez au moins 2 lettres du nom du service.",
-        "LOADING": "Recherche…",
-        "FAILED": "Impossible de chercher dans le catalogue de services. Réessayez.",
-        "NONE": "Aucun service ne correspond.",
-        "ALREADY_ADDED": "Déjà sur cette baie",
-        "ADD": "Ajouter",
-        "ADD_NAMED": "Ajouter {{service}}",
         "NO_ACCESS": "Vous ne pouvez pas consulter le catalogue de services, donc vous ne pouvez pas ajouter de services ici."
       },
       "CHANGES": {
@@ -2091,6 +2084,65 @@
         "GONE": "Cette baie n'existe plus. Fermez la boîte de dialogue pour voir les baies actuelles.",
         "INVALID_SERVICES": "Un des services spécialisés n'est pas un service actif du catalogue. Retirez-le et réessayez.",
         "SAVE_FAILED": "Impossible d'enregistrer la baie. Réessayez."
+      },
+      "REMOVE_FROM": "Retirer {{service}} de {{bay}}",
+      "ADD_SERVICE": "Ajouter un service",
+      "ADD_SERVICE_NAMED": "Ajouter un service à {{bay}}",
+      "DROP": {
+        "REMOVE_ZONE": "Déposez ici pour retirer {{service}} de {{bay}}",
+        "HINT_READY": "Déposez pour ajouter {{service}} à {{bay}}",
+        "HINT_ALREADY": "Déjà sur {{bay}}",
+        "HINT_BUSY": "{{bay}} est encore en cours d'enregistrement",
+        "ADDED": "{{service}} ajouté à {{bay}}.",
+        "ADDED_MANY": "{{count}} services ajoutés à {{bay}}.",
+        "ONLY": "Seule {{bay}} peut maintenant recevoir {{service}} ici. Les autres baies cessent de l'accepter.",
+        "ON_HOLD": "{{service}} ajouté à {{bay}}. Il ne comptera pas avant le retour en service de {{bay}}.",
+        "NOW_GENERAL": "{{service}} devient du travail général : toute baie d'ici sauf lavage et esthétique peut le recevoir.",
+        "REMOVED": "{{service}} retiré de {{bay}}.",
+        "UNDONE": "Modification de {{bay}} annulée.",
+        "BUSY": "{{bay}} est encore en cours d'enregistrement. Réessayez dans un instant.",
+        "MOVED_GENERAL": "{{bay}} est passée dans Générales.",
+        "MOVED_SPECIALTY": "{{bay}} est passée dans Spécialisées.",
+        "MOVED_WASH": "{{bay}} est passée dans Lavage et esthétique.",
+        "MOVED_OUT_OF_SERVICE": "{{bay}} est passée dans Hors service.",
+        "NOT_ALLOWED": "Vous ne pouvez pas modifier les services de {{bay}} à cet emplacement.",
+        "GONE": "{{bay}} n'existe plus. Rechargez la page pour voir les baies actuelles.",
+        "INVALID": "Impossible de modifier les services de {{bay}} : l'un d'eux n'est pas un service actif du catalogue.",
+        "FAILED": "Impossible de modifier les services de {{bay}}. Réessayez.",
+        "UNDO": "Annuler",
+        "DISMISS": "Fermer"
+      },
+      "RAIL": {
+        "GENERAL_WORK": "Travail général ici",
+        "ONLY": "Seulement {{bay}}",
+        "MANY": "{{count}} baies",
+        "ON_HOLD": "Seulement des baies hors service : travail général pour l'instant",
+        "KEYBOARD_ROUTE": "Ou utilisez Ajouter un service sur la carte d'une baie."
+      },
+      "WHO": {
+        "TITLE": "Qui fait quoi",
+        "CLAIMED_ONE": "1 service spécialisé revendiqué",
+        "CLAIMED_MANY": "{{count}} services spécialisés revendiqués",
+        "ONLY_ONE_COUNT": "{{count}} avec une seule baie",
+        "NONE_IN_SERVICE_COUNT": "{{count}} sans baie en service",
+        "BAY_DOWN": "{{bay}} (hors service)",
+        "FLAG_ONLY_ONE": "Une seule baie",
+        "FLAG_NONE_IN_SERVICE": "Ses seules baies sont hors service : travail général pour l'instant",
+        "GENERAL_NOTE": "Tous les autres services sont du travail général : toute baie sauf lavage et esthétique peut les recevoir, les baies générales en premier."
+      },
+      "CONFIRM_REMOVE": {
+        "TITLE": "Retirer {{service}} ?",
+        "BODY": "{{bay}} devient une baie générale et peut recevoir n'importe quel service général.",
+        "BODY_WASH": "{{bay}} n'aura plus aucun service et ne pourra rien recevoir.",
+        "CONFIRM": "Retirer {{service}}"
+      },
+      "ADD_DIALOG": {
+        "TITLE": "Ajouter des services à {{bay}}",
+        "CHOSEN": "À ajouter",
+        "SOLE_ONE": "{{bay}} sera la seule baie d'ici pour 1 d'entre eux.",
+        "SOLE_MANY": "{{bay}} sera la seule baie d'ici pour {{count}} d'entre eux.",
+        "ADD_ONE": "Ajouter 1 service",
+        "ADD_MANY": "Ajouter {{count}} services"
       }
     },
     "MOBILE_UNITS": {
@@ -2293,6 +2345,38 @@
         "CONFLICT": "Quelqu'un d'autre a modifié cette unité en même temps. Fermez la boîte de dialogue et réessayez.",
         "UNPROCESSABLE": "L'unité n'a pas pu être enregistrée : une capacité n'est pas un service actif du catalogue, ou l'unité n'est pas prête à être active.",
         "SAVE_FAILED": "Impossible d'enregistrer. Réessayez."
+      },
+      "CAPABILITY_LIST": "Capacités de {{unit}}",
+      "REMOVE_FROM": "Retirer {{service}} de {{unit}}",
+      "ADD_CAPABILITY": "Ajouter une capacité",
+      "ADD_CAPABILITY_NAMED": "Ajouter une capacité à {{unit}}",
+      "DROP": {
+        "REMOVE_ZONE": "Déposez ici pour retirer {{service}} de {{unit}}",
+        "HINT_READY": "Déposez pour enregistrer {{service}} pour {{unit}}",
+        "HINT_ALREADY": "Déjà enregistré pour {{unit}}",
+        "HINT_BUSY": "{{unit}} est encore en cours d'enregistrement",
+        "ADDED": "{{service}} enregistré pour {{unit}}.",
+        "ADDED_MANY": "{{count}} capacités enregistrées pour {{unit}}.",
+        "REMOVED": "{{service}} retiré de {{unit}}.",
+        "UNDONE": "Modification de {{unit}} annulée.",
+        "BUSY": "{{unit}} est encore en cours d'enregistrement. Réessayez dans un instant.",
+        "LAST_CAPABILITY": "Une unité active a besoin d'au moins une capacité. Désactivez {{unit}} pour retirer la dernière.",
+        "INVALID": "Impossible de modifier les capacités de {{unit}} : l'une d'elles n'est pas un service actif du catalogue.",
+        "UNDO": "Annuler",
+        "DISMISS": "Fermer"
+      },
+      "RAIL": {
+        "CAPTION": "Les capacités sont enregistrées par unité ; l'assignation ne les vérifie pas encore.",
+        "KEYBOARD_ROUTE": "Ou utilisez Ajouter une capacité sur la carte d'une unité.",
+        "NONE": "Aucune unité d'ici ne l'enregistre",
+        "ONE": "Enregistré pour {{unit}}",
+        "MANY": "Enregistré pour {{count}} unités"
+      },
+      "ADD_DIALOG": {
+        "TITLE": "Ajouter des capacités à {{unit}}",
+        "CHOSEN": "À ajouter",
+        "ADD_ONE": "Ajouter 1 capacité",
+        "ADD_MANY": "Ajouter {{count}} capacités"
       }
     },
     "LANDING": {
@@ -2516,6 +2600,20 @@
       "ALREADY_ADDED": "Déjà ajouté",
       "ADD": "Ajouter",
       "ADD_NAMED": "Ajouter {{service}}"
+    },
+    "SERVICE_RAIL": {
+      "OVERLINE": "Catalogue",
+      "TITLE": "Services",
+      "FILTER": "Trouver des services",
+      "RETRY": "Réessayer",
+      "HANDLE": "Faire glisser {{service}}",
+      "CATEGORY": {
+        "TIRE_SERVICE": "Pneus",
+        "MAINTENANCE": "Entretien",
+        "REPAIR": "Réparation",
+        "DIAGNOSTIC": "Diagnostic",
+        "OTHER": "Autres"
+      }
     }
   },
   "SHOPMGMT": {

@@ -437,40 +437,17 @@ describe('BaysPageComponent', () => {
     });
   });
 
-  describe('service search', () => {
+  describe('service search in the dialog', () => {
     const alignment: ClaimableService = { operationCode: ALIGN, name: 'Wheel alignment, 4-wheel', operationCategory: null };
 
-    it('searches the catalog after two letters and adds a service by name', async () => {
+    it('adds a service the shared search finds, and learns its name', async () => {
       await setUp();
-      locationServiceStub.searchClaimableServices.mockReturnValue(of({ services: [alignment], ok: true }));
       component.openCreate();
-      component.onServiceQuery('a');
-      expect(component.searchState()).toBe('idle');
-
-      component.onServiceQuery('align');
-      await new Promise(resolve => setTimeout(resolve, 300));
       render();
-
-      expect(locationServiceStub.searchClaimableServices).toHaveBeenCalledWith('align');
-      const add = query<HTMLButtonElement>('.add-service-btn')!;
-      expect(add.getAttribute('aria-label')).toBe('Add Wheel alignment, 4-wheel');
-      add.click();
-      render();
+      expect(query('app-service-search #bay-service-search')).not.toBeNull();
+      component.addService(alignment);
       expect(component.draft().serviceCapabilityCodes).toEqual([ALIGN]);
-      expect(text()).toContain('Already on this bay');
-      // The name learned from the search replaces the derived label on the chip.
       expect(component.serviceLabel(ALIGN)).toBe('Wheel alignment, 4-wheel');
-    });
-
-    it('reports a failed search rather than "no matches"', async () => {
-      await setUp();
-      locationServiceStub.searchClaimableServices.mockReturnValue(of({ services: [], ok: false }));
-      component.openCreate();
-      component.onServiceQuery('align');
-      await new Promise(resolve => setTimeout(resolve, 300));
-      render();
-      expect(component.searchState()).toBe('failed');
-      expect(text()).toContain("Couldn't search the service catalog.");
     });
 
     it('explains the missing search to a user who cannot view the catalog', async () => {
@@ -481,5 +458,168 @@ describe('BaysPageComponent', () => {
       expect(query('#bay-service-search')).toBeNull();
       expect(text()).toContain("You can't view the service catalog");
     });
+  });
+
+  describe('specialty services from the cards', () => {
+    const brakes: ClaimableService = { operationCode: 'BRAKE-INSPECTION', name: 'Brake inspection', operationCategory: 'DIAGNOSTIC' };
+    const rotation: ClaimableService = { operationCode: 'TIRE-ROTATION', name: 'Tire rotation', operationCategory: 'TIRE_SERVICE' };
+    const cardOf = (bayId: string) =>
+      component
+        .lanes()
+        .flatMap(lane => lane.cards)
+        .find(card => card.bay.id === bayId)!;
+    const outcomeText = (): string => query('.outcome')?.textContent?.replace(/\s+/g, ' ').trim() ?? '';
+
+    beforeEach(async () => setUp());
+
+    it('saves a service dropped on a card, says what changed, moves the card, and can undo', () => {
+      const general = RIVERSIDE[0];
+      locationServiceStub.patchBay
+        .mockReturnValueOnce(of({ ...general, serviceCapabilityCodes: ['BRAKE-INSPECTION'] }))
+        .mockReturnValueOnce(of(general));
+
+      component.onServiceDragStart(brakes);
+      expect(component.dropState(cardOf('b10'))).toBe('READY');
+      component.onCardDrop(cardOf('b10'), new DragEvent('drop'));
+      render();
+
+      expect(locationServiceStub.patchBay).toHaveBeenCalledWith('loc-1', 'b10', { serviceCapabilityCodes: ['BRAKE-INSPECTION'] });
+      expect(outcomeText()).toContain('Only Bay 10 can now be assigned Brake inspection here.');
+      expect(outcomeText()).toContain('Bay 10 moved to Specialty.');
+      expect(component.lanes()[1].cards.map(card => card.bay.name)).toContain('Bay 10');
+
+      query<HTMLButtonElement>('.undo-btn')!.click();
+      render();
+      expect(locationServiceStub.patchBay).toHaveBeenLastCalledWith('loc-1', 'b10', { serviceCapabilityCodes: [] });
+      expect(outcomeText()).toContain('Change to Bay 10 undone.');
+      expect(query('.undo-btn')).toBeNull();
+    });
+
+    it('refuses a drop on a card that already has the service', () => {
+      component.onServiceDragStart({ operationCode: ALIGN, name: 'Wheel alignment', operationCategory: null });
+      render();
+      expect(component.dropState(cardOf('b4'))).toBe('ALREADY');
+      expect(cardText('b4')).toContain('Already on Bay 4');
+      component.onCardDrop(cardOf('b4'), new DragEvent('drop'));
+      expect(locationServiceStub.patchBay).not.toHaveBeenCalled();
+    });
+
+    it('shows the new chip as pending, and runs one save per card at a time', () => {
+      const pending = new Subject<BayResponse>();
+      locationServiceStub.patchBay.mockReturnValueOnce(pending);
+      component.addServices(RIVERSIDE[0], [brakes]);
+      render();
+      expect(cardOf('b10').saving).toBe(true);
+      expect(query('#bay-b10 .chip-pending')?.textContent).toContain('Brake inspection');
+
+      component.addServices(RIVERSIDE[0], [rotation]);
+      render();
+      expect(locationServiceStub.patchBay).toHaveBeenCalledTimes(1);
+      expect(query('#bay-b10 .card-error')?.textContent).toContain('Bay 10 is still saving.');
+
+      pending.next({ ...RIVERSIDE[0], serviceCapabilityCodes: ['BRAKE-INSPECTION'] });
+      expect(cardOf('b10').saving).toBe(false);
+    });
+
+    it('rolls a refused change back and says why in the card', () => {
+      locationServiceStub.patchBay.mockReturnValueOnce(throwError(() => new HttpErrorResponse({ status: 422 })));
+      component.addServices(RIVERSIDE[0], [brakes]);
+      render();
+      expect(cardOf('b10').codes).toEqual([]);
+      expect(query('#bay-b10 .card-error[role="alert"]')?.textContent).toContain(
+        "Couldn't change Bay 10's services: one of them isn't an active catalog service.",
+      );
+      expect(query('.outcome')).toBeNull();
+    });
+
+    it('removes a chip with its × button and says the service became general work', () => {
+      const tireBay = RIVERSIDE[2];
+      const remaining = TIRE_CODES.filter(code => code !== TIRE_CODES[0]);
+      locationServiceStub.patchBay.mockReturnValueOnce(of({ ...tireBay, serviceCapabilityCodes: remaining }));
+      const remove = query<HTMLButtonElement>(`#chip-remove-b3-${TIRE_CODES[0]}`)!;
+      expect(remove.getAttribute('aria-label')).toBe('Remove Tire install set 4 from Bay 3');
+      remove.click();
+      render();
+      expect(locationServiceStub.patchBay).toHaveBeenCalledWith('loc-1', 'b3', { serviceCapabilityCodes: remaining });
+      expect(outcomeText()).toContain('Tire install set 4 is now general work');
+    });
+
+    it("asks before removing a bay's last service", () => {
+      locationServiceStub.patchBay.mockReturnValueOnce(of({ ...RIVERSIDE[3], serviceCapabilityCodes: [] }));
+      component.removeServiceFromBay(RIVERSIDE[3], ALIGN);
+      render();
+      expect(locationServiceStub.patchBay).not.toHaveBeenCalled();
+      expect(query('#confirm-remove-body')?.textContent).toContain(
+        'Bay 4 becomes a general bay and can be assigned any general service.',
+      );
+      query<HTMLButtonElement>('.confirm-remove-btn')!.click();
+      render();
+      expect(locationServiceStub.patchBay).toHaveBeenCalledWith('loc-1', 'b4', { serviceCapabilityCodes: [] });
+      expect(outcomeText()).toContain('Bay 4 moved to General.');
+    });
+
+    it('removes a chip dropped on the services list', () => {
+      locationServiceStub.patchBay.mockReturnValueOnce(of(RIVERSIDE[2]));
+      component.onChipDragStart(RIVERSIDE[2], TIRE_CODES[1], new DragEvent('dragstart'));
+      expect(component.railRemoveTarget()?.key).toBe('LOCATION.BAYS.DROP.REMOVE_ZONE');
+      component.onRailRemoveDrop();
+      expect(locationServiceStub.patchBay).toHaveBeenCalledWith('loc-1', 'b3', {
+        serviceCapabilityCodes: TIRE_CODES.filter(code => code !== TIRE_CODES[1]),
+      });
+      expect(component.dragging()).toBeNull();
+    });
+
+    it('adds several services through the Add service dialog in one save', () => {
+      locationServiceStub.patchBay.mockReturnValueOnce(
+        of({ ...RIVERSIDE[0], serviceCapabilityCodes: ['BRAKE-INSPECTION', 'TIRE-ROTATION'] }),
+      );
+      query<HTMLButtonElement>('#add-service-b10')!.click();
+      render();
+      component.pick(brakes);
+      component.pick(rotation);
+      render();
+      expect(text()).toContain('Bay 10 will be the only bay here for 2 of these.');
+      const add = query<HTMLButtonElement>('.confirm-add-btn')!;
+      expect(add.textContent?.trim()).toBe('Add 2 services');
+      add.click();
+      render();
+      expect(locationServiceStub.patchBay).toHaveBeenCalledWith('loc-1', 'b10', {
+        serviceCapabilityCodes: ['BRAKE-INSPECTION', 'TIRE-ROTATION'],
+      });
+      expect(component.addDialogBay()).toBeNull();
+      expect(outcomeText()).toContain('2 services added to Bay 10.');
+    });
+
+    it('lists who does what, and flags single and out-of-service claims', () => {
+      expect(query('.who-summary')?.textContent?.replace(/\s+/g, ' ')).toContain(
+        '11 specialty services claimed · 10 with only one bay · 1 with no bay in service',
+      );
+      query<HTMLButtonElement>('.who-heading .band-toggle')!.click();
+      render();
+      const dot = component.claimRows().find(row => row.code === 'DOT-ANNUAL-INSPECTION')!;
+      expect(dot.flag).toBe('NONE_IN_SERVICE');
+      expect(text()).toContain('Bay 5 (out of service)');
+
+      component.showBay(dot.down[0]);
+      render();
+      expect(component.outOfServiceOpen()).toBe(true);
+    });
+
+    it('describes each listed service by who claims it here', () => {
+      expect(component.describeService(ALIGN)).toEqual({ key: 'LOCATION.BAYS.RAIL.ONLY', params: { bay: 'Bay 4' } });
+      expect(component.describeService('DOT-ANNUAL-INSPECTION').key).toBe('LOCATION.BAYS.RAIL.ON_HOLD');
+      expect(component.describeService('BRAKE-INSPECTION').key).toBe('LOCATION.BAYS.RAIL.GENERAL_WORK');
+    });
+  });
+
+  it('offers no card changes without location:bay:manage', async () => {
+    session.permissions = [...LOCATION_PAGE.bays, ...LOCATION_PAGE.catalogServiceView];
+    await setUp();
+    expect(query('.chip-remove')).toBeNull();
+    expect(query('.add-service-btn')).toBeNull();
+    component.addServices(RIVERSIDE[0], [{ operationCode: 'X-1', name: 'X', operationCategory: null }]);
+    component.onServiceDragStart({ operationCode: 'X-1', name: 'X', operationCategory: null });
+    expect(component.dropState(component.lanes()[0].cards[0])).toBeNull();
+    expect(locationServiceStub.patchBay).not.toHaveBeenCalled();
   });
 });

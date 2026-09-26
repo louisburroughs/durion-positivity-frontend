@@ -106,6 +106,22 @@
     }
   </section>
 
+  <div class="outcome-region" role="status" aria-live="polite">
+    @if (outcome(); as done) {
+      <div class="outcome">
+        @for (message of done.messages; track $index) {
+          <p>{{ message.key | translate: message.params }}</p>
+        }
+        <div class="outcome-actions">
+          @if (done.undo && canEdit()) {
+            <button type="button" class="btn-secondary undo-btn" (click)="undo()">{{ 'LOCATION.MOBILE_UNITS.DROP.UNDO' | translate }}</button>
+          }
+          <button type="button" class="link-btn" (click)="dismissOutcome()">{{ 'LOCATION.MOBILE_UNITS.DROP.DISMISS' | translate }}</button>
+        </div>
+      </div>
+    }
+  </div>
+
   @if (state() === 'ready' && !canEdit()) {
     <p class="notice view-only-notice" role="status">{{ 'LOCATION.MOBILE_UNITS.VIEW_ONLY' | translate }}</p>
   }
@@ -113,6 +129,8 @@
     <p class="notice" role="status">{{ 'LOCATION.MOBILE_UNITS.COVERAGE_READ_FAILED' | translate }}</p>
   }
 
+  <div class="setup-layout">
+  <div class="setup-main">
   @switch (state()) {
     @case ('loading') {
       <p class="muted" role="status">{{ 'LOCATION.MOBILE_UNITS.LOADING' | translate }}</p>
@@ -142,7 +160,9 @@
                 @for (card of group.cards; track card.unit.id) {
                   <li>
                     <article class="unit-card" [id]="'unit-' + card.unit.id" tabindex="-1"
-                      [attr.aria-labelledby]="'unit-name-' + card.unit.id">
+                      [attr.aria-labelledby]="'unit-name-' + card.unit.id"
+                      [class.drop-ready]="dropState(card) === 'READY'"
+                      (dragover)="onCardDragOver(card, $event)" (drop)="onCardDrop(card, $event)">
                       <div class="card-top">
                         <p class="overline">{{ 'LOCATION.MOBILE_UNITS.CARD.OVERLINE' | translate }}</p>
                         <div class="card-tags">
@@ -156,6 +176,15 @@
                       </div>
                       <h3 [id]="'unit-name-' + card.unit.id">{{ card.name }}</h3>
                       <p class="sent" [class.warning-text]="card.sentWarning">{{ card.sentLine.key | translate: card.sentLine.params }}</p>
+
+                      @if (dropState(card); as drop) {
+                        <p class="drop-hint" aria-hidden="true">
+                          {{ ('LOCATION.MOBILE_UNITS.DROP.HINT_' + drop) | translate: { unit: card.name, service: draggedServiceName() } }}
+                        </p>
+                      }
+                      @if (card.saving) {
+                        <span class="sr-only" role="status">{{ 'LOCATION.MOBILE_UNITS.SAVING' | translate }}</span>
+                      }
 
                       @if (cardError(card.unit.id); as refusal) {
                         <p class="card-error" role="alert">{{ refusal | translate: { unit: card.name } }}</p>
@@ -247,9 +276,19 @@
                         <h4 class="overline">{{ 'LOCATION.MOBILE_UNITS.CARD.CAPABILITIES' | translate }}</h4>
                         <p class="caption">{{ 'LOCATION.MOBILE_UNITS.RECORDED_CAPABILITIES' | translate }}</p>
                         @if (card.capabilities.length > 0) {
-                          <ul class="chips">
+                          <ul class="chips" [attr.aria-label]="'LOCATION.MOBILE_UNITS.CAPABILITY_LIST' | translate: { unit: card.name }">
                             @for (capability of card.capabilities; track capability.code) {
-                              <li class="chip">{{ capability.label }}</li>
+                              <li class="chip" [class.chip-pending]="capability.pending"
+                                [attr.draggable]="canEdit() && !card.saving ? 'true' : null"
+                                (dragstart)="onChipDragStart(card.unit, capability.code, $event)" (dragend)="onDragEnd()">
+                                <span>{{ capability.label }}</span>
+                                @if (canEdit() && !capability.pending) {
+                                  <button type="button" class="chip-remove" [id]="'cap-remove-' + card.unit.id + '-' + capability.code"
+                                    [attr.aria-label]="'LOCATION.MOBILE_UNITS.REMOVE_FROM' | translate: { service: capability.label, unit: card.name }"
+                                    [disabled]="card.saving"
+                                    (click)="removeCapabilityFromUnit(card.unit, capability.code)">×</button>
+                                }
+                              </li>
                             }
                           </ul>
                         } @else {
@@ -279,6 +318,12 @@
 
                       @if (canEdit()) {
                         <div class="card-actions">
+                          @if (canSearchServices()) {
+                            <button type="button" class="btn-secondary add-capability-btn" [id]="'add-capability-' + card.unit.id"
+                              [attr.aria-label]="'LOCATION.MOBILE_UNITS.ADD_CAPABILITY_NAMED' | translate: { unit: card.name }"
+                              [disabled]="card.saving"
+                              (click)="openAddDialog(card.unit)">{{ 'LOCATION.MOBILE_UNITS.ADD_CAPABILITY' | translate }}</button>
+                          }
                           <button type="button" class="btn-secondary edit-coverage-btn" [id]="'edit-coverage-' + card.unit.id"
                             [attr.aria-label]="'LOCATION.MOBILE_UNITS.EDIT_COVERAGE_NAMED' | translate: { unit: card.name }"
                             [disabled]="!card.coverageKnown"
@@ -298,6 +343,19 @@
       }
     }
   }
+  </div>
+  @if (state() === 'ready') {
+    @if (canSearchServices()) {
+      <app-service-rail class="setup-rail" captionKey="LOCATION.MOBILE_UNITS.RAIL.CAPTION"
+        keyboardRouteKey="LOCATION.MOBILE_UNITS.RAIL.KEYBOARD_ROUTE"
+        [draggable]="canEdit()" [describe]="describeService" [removeTarget]="railRemoveTarget()"
+        (serviceDragStarted)="onServiceDragStart($event)" (serviceDragEnded)="onDragEnd()"
+        (removeDropped)="onRailRemoveDrop()" (servicesFound)="rememberNames($event)" />
+    } @else {
+      <p class="setup-rail notice">{{ 'LOCATION.MOBILE_UNITS.NO_CATALOG' | translate }}</p>
+    }
+  }
+  </div>
 }
 
 @if (dialogMode(); as mode) {
@@ -571,5 +629,35 @@
         }
       </div>
     </form>
+  </dialog>
+}
+
+@if (addDialogUnit(); as target) {
+  <dialog appModalDialog class="mu-dialog" aria-labelledby="add-capability-title" (modalCancel)="closeAddDialog()">
+    <div class="dialog-panel">
+      <h2 id="add-capability-title">{{ 'LOCATION.MOBILE_UNITS.ADD_DIALOG.TITLE' | translate: { unit: target.name ?? '' } }}</h2>
+      <p class="hint">{{ 'LOCATION.MOBILE_UNITS.HINT.CAPABILITIES' | translate }}</p>
+      <app-service-search inputId="add-capability-search" labelKey="LOCATION.MOBILE_UNITS.FIND_CAPABILITY"
+        [selectedCodes]="addDialogSelected()" (serviceAdded)="pick($event)" />
+      @if (picked().length > 0) {
+        <h3 class="hint">{{ 'LOCATION.MOBILE_UNITS.ADD_DIALOG.CHOSEN' | translate }}</h3>
+        <ul class="chips">
+          @for (service of picked(); track service.operationCode) {
+            <li class="chip">
+              <span>{{ service.name }}</span>
+              <button type="button" class="chip-remove"
+                [attr.aria-label]="'LOCATION.MOBILE_UNITS.REMOVE_CAPABILITY' | translate: { service: service.name }"
+                (click)="unpick(service.operationCode)">×</button>
+            </li>
+          }
+        </ul>
+      }
+      <div class="dialog-actions">
+        <button type="button" class="btn-secondary" (click)="closeAddDialog()">{{ 'LOCATION.MOBILE_UNITS.CANCEL' | translate }}</button>
+        <button type="button" class="btn-primary confirm-add-btn" [disabled]="picked().length === 0" (click)="confirmAdd()">
+          {{ (picked().length === 1 ? 'LOCATION.MOBILE_UNITS.ADD_DIALOG.ADD_ONE' : 'LOCATION.MOBILE_UNITS.ADD_DIALOG.ADD_MANY') | translate: { count: picked().length } }}
+        </button>
+      </div>
+    </div>
   </dialog>
 }

@@ -415,6 +415,174 @@ button {
 }
 
 /* ── Scoped Shared Styles Extracted From Oversized Component Stylesheets ── */
+/* Bays and Mobile Units setup pages: services list layout, drops, outcome toast, who-does-what band. */
+app-bays-page .setup-layout,
+app-mobile-units-page .setup-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 20rem;
+  gap: var(--space-8);
+  align-items: start;
+}
+
+app-bays-page .setup-main,
+app-mobile-units-page .setup-main {
+  min-width: 0;
+}
+
+app-bays-page .drop-ready,
+app-mobile-units-page .drop-ready {
+  outline: 2px dashed var(--primaryA400);
+  outline-offset: 2px;
+}
+
+app-bays-page .drop-hint,
+app-mobile-units-page .drop-hint {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: var(--font-weight-heading);
+}
+
+app-bays-page .chip-pending,
+app-mobile-units-page .chip-pending {
+  opacity: 0.6;
+  font-style: italic;
+}
+
+app-bays-page .chip[draggable="true"],
+app-mobile-units-page .chip[draggable="true"] {
+  cursor: grab;
+}
+
+app-bays-page .card-error,
+app-mobile-units-page .card-error {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--status-error-fg);
+  border-radius: var(--radius-sm);
+  background: var(--status-error-bg);
+  color: var(--status-error-fg);
+}
+
+app-bays-page .outcome-region,
+app-mobile-units-page .outcome-region {
+  position: sticky;
+  top: var(--space-2);
+  z-index: 2;
+}
+
+app-bays-page .outcome,
+app-mobile-units-page .outcome {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--cardBackground);
+  box-shadow: 0 12px 40px rgb(0 0 0 / 8%);
+}
+
+app-bays-page .outcome p,
+app-mobile-units-page .outcome p {
+  margin: 0;
+}
+
+app-bays-page .outcome-actions,
+app-mobile-units-page .outcome-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+app-bays-page .who-band,
+app-mobile-units-page .who-band {
+  margin-bottom: var(--space-8);
+  padding: var(--space-4);
+  border-left: 2px solid var(--primaryA400);
+  background: var(--surface-inset);
+}
+
+app-bays-page .who-heading,
+app-mobile-units-page .who-heading {
+  margin: 0;
+  font-size: 1rem;
+}
+
+app-bays-page .who-heading .band-toggle,
+app-mobile-units-page .who-heading .band-toggle {
+  display: inline-flex;
+  gap: var(--space-2);
+  min-height: 24px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+app-bays-page .who-summary,
+app-mobile-units-page .who-summary {
+  margin: var(--space-1) 0 0;
+  color: var(--text-muted);
+}
+
+app-bays-page .who-list,
+app-mobile-units-page .who-list {
+  display: flex;
+  flex-direction: column;
+  margin: var(--space-3) 0;
+  padding: 0;
+  list-style: none;
+}
+
+app-bays-page .who-row,
+app-mobile-units-page .who-row {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 2fr) auto;
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-2) 0;
+}
+
+app-bays-page .who-service,
+app-mobile-units-page .who-service {
+  display: flex;
+  flex-direction: column;
+}
+
+app-bays-page .who-bays,
+app-mobile-units-page .who-bays {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+app-bays-page .muted-link,
+app-mobile-units-page .muted-link {
+  color: var(--text-muted);
+}
+
+@media (width <= 960px) {
+  app-bays-page .setup-layout,
+  app-mobile-units-page .setup-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+app-mobile-units-page .chip-remove {
+  min-width: 24px;
+  min-height: 24px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
 /* Mobile Units page: unit and coverage dialogs. */
 app-mobile-units-page .mu-dialog {
   width: min(640px, calc(100vw - 2rem));
@@ -577,6 +745,11 @@ app-bays-page .bay-dialog {
 
 app-bays-page .bay-dialog::backdrop {
   background: rgb(28 46 72 / 32%);
+}
+
+app-bays-page .confirm-dialog,
+app-bays-page .add-dialog {
+  width: min(560px, calc(100vw - 2rem));
 }
 
 app-bays-page .dialog-panel {
