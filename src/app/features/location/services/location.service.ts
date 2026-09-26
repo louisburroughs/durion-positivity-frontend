@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, catchError, forkJoin, map, of } from 'rxjs';
+import { Observable, catchError, map, of } from 'rxjs';
 import { ProductsAPIService } from '@durion-sdk/catalog';
 import type { ServiceDto } from '@durion-sdk/catalog';
 import {
@@ -55,13 +55,18 @@ export const STORAGE_LOCATION_TYPES: ReadonlyArray<{ value: string; label: strin
  */
 const BAY_PAGE_SIZE = 500;
 
-/** Rows asked for from the paged mobile-unit list; the same cap `shop-dashboard.service.ts` uses. */
+/** Rows asked for from one shop's mobile-unit page; the same cap `shop-dashboard.service.ts` uses. */
 const MOBILE_UNIT_PAGE_SIZE = 500;
 
 /** Coverage rules per mobile unit id. `ok` is false when any unit's read failed (ADR-0064). */
-export interface CoverageRead {
-  readonly rules: ReadonlyMap<string, readonly CoverageRuleResponse[]>;
-  readonly ok: boolean;
+/**
+ * One shop's mobile units with their coverage rules. `coverageOk` is false when a unit came back
+ * without its rules, so "no coverage" is never shown for rules that weren't read (ADR-0064).
+ */
+export interface MobileUnitsRead {
+  readonly units: MobileUnitResponse[];
+  readonly coverage: ReadonlyMap<string, readonly CoverageRuleResponse[]>;
+  readonly coverageOk: boolean;
 }
 
 /** A catalog service a bay or mobile unit can claim: only services with an operation code qualify. */
@@ -209,14 +214,20 @@ export class LocationService {
 
   // ── Mobile Units ─────────────────────────────────────────────────────────
 
-  /**
-   * The units based at one location. The list endpoint can't filter by base location
-   * (durion-positivity-backend#2253), so this reads one 500-row page and filters it here.
-   */
-  listMobileUnits(baseLocationId: string): Observable<MobileUnitResponse[]> {
+  /** The units based at one location, each with its coverage rules, in one read. */
+  listMobileUnits(baseLocationId: string): Observable<MobileUnitsRead> {
     return this.mobileUnitApi
-      .listMobileUnits(0, MOBILE_UNIT_PAGE_SIZE)
-      .pipe(map(page => (page?.content ?? []).filter(unit => unit.baseLocationId === baseLocationId)));
+      .listMobileUnits(0, MOBILE_UNIT_PAGE_SIZE, baseLocationId, undefined, ['coverageRules'])
+      .pipe(
+        map(page => {
+          const units = page?.content ?? [];
+          const coverage = new Map<string, readonly CoverageRuleResponse[]>();
+          for (const unit of units) {
+            if (unit.coverageRules) coverage.set(unit.id, unit.coverageRules);
+          }
+          return { units, coverage, coverageOk: coverage.size === units.length };
+        }),
+      );
   }
 
   createMobileUnit(request: MobileUnitRequest): Observable<MobileUnitResponse> {
@@ -225,28 +236,6 @@ export class LocationService {
 
   patchMobileUnit(id: string, patch: MobileUnitPatch): Observable<MobileUnitResponse> {
     return this.mobileUnitApi.patchMobileUnit(id, patch);
-  }
-
-  /**
-   * Coverage rules for each unit, one read per unit until the list can carry them
-   * (durion-positivity-backend#2253). A failed read leaves that unit out and marks the result not ok,
-   * so "no coverage" is never shown for a read that didn't happen.
-   */
-  listCoverageRules(unitIds: readonly string[]): Observable<CoverageRead> {
-    if (unitIds.length === 0) return of({ rules: new Map(), ok: true });
-    return forkJoin(
-      unitIds.map(id =>
-        this.mobileUnitApi.listCoverageRules(id).pipe(
-          map(rules => ({ id, rules: rules ?? [], ok: true })),
-          catchError(() => of({ id, rules: [] as CoverageRuleResponse[], ok: false })),
-        ),
-      ),
-    ).pipe(
-      map(results => ({
-        rules: new Map(results.filter(result => result.ok).map(result => [result.id, result.rules] as const)),
-        ok: results.every(result => result.ok),
-      })),
-    );
   }
 
   /** Replaces the unit's whole rule set and returns the saved rules. */

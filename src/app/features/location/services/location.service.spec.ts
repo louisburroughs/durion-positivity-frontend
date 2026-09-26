@@ -4,6 +4,10 @@ import { ProductsAPIService } from '@durion-sdk/catalog';
 import type { ServiceDto } from '@durion-sdk/catalog';
 import {
   BayAPIService,
+  CoverageRuleRequestRuleTypeEnum,
+  CoverageRuleResponseRuleTypeEnum,
+  MobileUnitRequestStatusEnum,
+  MobileUnitResponseStatusEnum,
   LocationAPIService,
   MobileUnitAPIService,
   MobileUnitEligibilityControllerService,
@@ -21,7 +25,7 @@ import type {
   ServiceAreaResponse,
   TravelBufferPolicyResponse,
 } from '@durion-sdk/location';
-import { LocationService } from './location.service';
+import { LocationService, MobileUnitsRead } from './location.service';
 
 const bayResponse = (overrides: Partial<BayResponse> = {}): BayResponse => ({
   id: 'bay-1',
@@ -38,7 +42,7 @@ const mobileUnit = (overrides: Partial<MobileUnitResponse> = {}): MobileUnitResp
   id: 'mu-1',
   name: 'Van 7',
   baseLocationId: 'loc-01',
-  status: 'INACTIVE',
+  status: MobileUnitResponseStatusEnum.Inactive,
   serviceCapabilityCodes: [],
   ...overrides,
 });
@@ -47,7 +51,7 @@ const coverageRule = (overrides: Partial<CoverageRuleResponse> = {}): CoverageRu
   id: 'rule-1',
   mobileUnitId: 'mu-1',
   serviceAreaId: 'area-1',
-  ruleType: 'SERVICE_AREA',
+  ruleType: CoverageRuleResponseRuleTypeEnum.ServiceArea,
   priority: 1,
   ...overrides,
 });
@@ -79,7 +83,6 @@ describe('LocationService', () => {
     listMobileUnits: vi.fn(),
     createMobileUnit: vi.fn(),
     patchMobileUnit: vi.fn(),
-    listCoverageRules: vi.fn(),
     replaceCoverageRules: vi.fn(),
   };
   const eligibilityApiStub = { findEligibleMobileUnits: vi.fn() };
@@ -212,32 +215,45 @@ describe('LocationService', () => {
   });
 
   describe('mobile units', () => {
-    it('reads one 500-row page and keeps the units based at the location (backend#2253)', () => {
-      const here = mobileUnit();
+    it("reads one shop's units and their coverage rules in one request", () => {
+      const rules = [coverageRule()];
       mobileUnitApiStub.listMobileUnits.mockReturnValueOnce(
-        of({ content: [here, mobileUnit({ id: 'mu-2', baseLocationId: 'loc-02' })] }),
+        of({ content: [mobileUnit({ coverageRules: rules }), mobileUnit({ id: 'mu-2', coverageRules: [] })] }),
       );
 
-      let result: MobileUnitResponse[] | undefined;
-      service.listMobileUnits('loc-01').subscribe(r => (result = r));
+      let read: MobileUnitsRead | undefined;
+      service.listMobileUnits('loc-01').subscribe(r => (read = r));
 
-      expect(mobileUnitApiStub.listMobileUnits).toHaveBeenCalledWith(0, 500);
-      expect(result).toEqual([here]);
+      expect(mobileUnitApiStub.listMobileUnits).toHaveBeenCalledWith(0, 500, 'loc-01', undefined, ['coverageRules']);
+      expect(read?.units.map(unit => unit.id)).toEqual(['mu-1', 'mu-2']);
+      expect([...read!.coverage]).toEqual([
+        ['mu-1', rules],
+        ['mu-2', []],
+      ]);
+      expect(read?.coverageOk).toBe(true);
+    });
+
+    it('marks coverage unread when a unit comes back without its rules', () => {
+      mobileUnitApiStub.listMobileUnits.mockReturnValueOnce(of({ content: [mobileUnit()] }));
+      let read: MobileUnitsRead | undefined;
+      service.listMobileUnits('loc-01').subscribe(r => (read = r));
+      expect(read?.coverage.size).toBe(0);
+      expect(read?.coverageOk).toBe(false);
     });
 
     it('reads a page with no content as no units', () => {
       mobileUnitApiStub.listMobileUnits.mockReturnValueOnce(of({}));
-      let result: MobileUnitResponse[] | undefined;
-      service.listMobileUnits('loc-01').subscribe(r => (result = r));
-      expect(result).toEqual([]);
+      let read: MobileUnitsRead | undefined;
+      service.listMobileUnits('loc-01').subscribe(r => (read = r));
+      expect(read).toEqual({ units: [], coverage: new Map(), coverageOk: true });
     });
 
     it('creates and patches a unit with the request as given', () => {
       mobileUnitApiStub.createMobileUnit.mockReturnValueOnce(of(mobileUnit()));
-      mobileUnitApiStub.patchMobileUnit.mockReturnValueOnce(of(mobileUnit({ status: 'ACTIVE' })));
+      mobileUnitApiStub.patchMobileUnit.mockReturnValueOnce(of(mobileUnit({ status: MobileUnitResponseStatusEnum.Active })));
 
       service
-        .createMobileUnit({ name: 'Van 7', baseLocationId: 'loc-01', status: 'INACTIVE', serviceCapabilityCodes: ['TPMS-SENSOR-SERVICE'] })
+        .createMobileUnit({ name: 'Van 7', baseLocationId: 'loc-01', status: MobileUnitRequestStatusEnum.Inactive, serviceCapabilityCodes: ['TPMS-SENSOR-SERVICE'] })
         .subscribe();
       service.patchMobileUnit('mu-1', { status: 'ACTIVE' }).subscribe();
 
@@ -251,7 +267,7 @@ describe('LocationService', () => {
     });
 
     it('wraps replacement coverage rules in the { rules } envelope', () => {
-      const rules: CoverageRuleRequest[] = [{ serviceAreaId: 'area-1', ruleType: 'SERVICE_AREA', priority: 1 }];
+      const rules: CoverageRuleRequest[] = [{ serviceAreaId: 'area-1', ruleType: CoverageRuleRequestRuleTypeEnum.ServiceArea, priority: 1 }];
       mobileUnitApiStub.replaceCoverageRules.mockReturnValueOnce(of([coverageRule()]));
 
       let saved: CoverageRuleResponse[] | undefined;
@@ -259,26 +275,6 @@ describe('LocationService', () => {
 
       expect(mobileUnitApiStub.replaceCoverageRules).toHaveBeenCalledWith('mu-1', { rules });
       expect(saved).toEqual([coverageRule()]);
-    });
-
-    it('reads coverage per unit and marks the result not ok when one read fails', () => {
-      mobileUnitApiStub.listCoverageRules.mockImplementation((id: string) =>
-        id === 'mu-1' ? of([coverageRule()]) : throwError(() => new Error('down')),
-      );
-
-      let read: { rules: ReadonlyMap<string, readonly CoverageRuleResponse[]>; ok: boolean } | undefined;
-      service.listCoverageRules(['mu-1', 'mu-2']).subscribe(r => (read = r));
-
-      expect(mobileUnitApiStub.listCoverageRules.mock.calls).toEqual([['mu-1'], ['mu-2']]);
-      expect(read?.ok).toBe(false);
-      expect([...read!.rules]).toEqual([['mu-1', [coverageRule()]]]);
-    });
-
-    it('reads no coverage for no units without calling the API', () => {
-      let read: { ok: boolean } | undefined;
-      service.listCoverageRules([]).subscribe(r => (read = r));
-      expect(mobileUnitApiStub.listCoverageRules).not.toHaveBeenCalled();
-      expect(read?.ok).toBe(true);
     });
 
     it('checks eligibility with the postal code, country and instant as positional args', () => {
