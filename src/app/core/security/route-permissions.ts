@@ -546,6 +546,10 @@ export const LOCATION_PAGE = {
   mobileUnits: ['location:mobile-unit:read'],
   /** Mobile Units page write controls: create, edit, activate, coverage. */
   mobileUnitManage: ['location:mobile-unit:manage'],
+  serviceAreas: ['location:service-area:read'],
+  serviceAreaManage: ['location:service-area:manage'],
+  travelBufferPolicies: ['location:travel-buffer-policy:read'],
+  travelBufferPolicyManage: ['location:travel-buffer-policy:manage'],
   /** The sync console reads pos-inventory's replicated location tree. */
   sync: ['inventory:location:view'],
   bulkImport: ['bulkImport:upload:execute'],

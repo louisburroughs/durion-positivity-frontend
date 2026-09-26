@@ -84,8 +84,12 @@ describe('mobile unit setup rules', () => {
   });
 
   it('names each travel buffer type, and flags an unknown one', () => {
-    expect(bufferKey({ id: 'p', bufferType: 'FLAT_MINUTES' })).toBe('LOCATION.MOBILE_UNITS.BUFFER.FLAT_MINUTES');
+    expect(bufferKey({ id: 'p', bufferType: 'FLAT_MINUTES', bufferValue: 15 })).toBe('LOCATION.MOBILE_UNITS.BUFFER.FLAT_MINUTES');
     expect(bufferKey({ id: 'p', bufferType: 'MINUTES' })).toBe('LOCATION.MOBILE_UNITS.BUFFER.NEEDS_FIXING');
+    expect(bufferKey({ id: 'p', bufferType: 'FLAT_MINUTES', bufferValue: 0 })).toBe('LOCATION.MOBILE_UNITS.BUFFER.FLAT_MINUTES');
+    expect(bufferKey({ id: 'p', bufferType: 'PERCENTAGE_OF_TRAVEL', bufferValue: undefined })).toBe(
+      'LOCATION.MOBILE_UNITS.BUFFER.NO_VALUE',
+    );
   });
 
   it('names an eligibility day as noon UTC, so the backend reads the same date', () => {

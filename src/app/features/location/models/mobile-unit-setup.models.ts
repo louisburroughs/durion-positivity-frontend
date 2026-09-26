@@ -158,10 +158,11 @@ export function usualCountry(areas: readonly ServiceAreaResponse[]): string {
 }
 
 /** The i18n key for a policy's buffer in words; unknown types (the seeded "MINUTES") need fixing. */
+/** A blank value means "no buffer" (the dialog's contract), never an invented zero. */
 export function bufferKey(policy: TravelBufferPolicyResponse): string {
-  return isTravelBufferType(policy.bufferType)
-    ? `LOCATION.MOBILE_UNITS.BUFFER.${policy.bufferType}`
-    : 'LOCATION.MOBILE_UNITS.BUFFER.NEEDS_FIXING';
+  if (!isTravelBufferType(policy.bufferType)) return 'LOCATION.MOBILE_UNITS.BUFFER.NEEDS_FIXING';
+  if (policy.bufferValue == null) return 'LOCATION.MOBILE_UNITS.BUFFER.NO_VALUE';
+  return `LOCATION.MOBILE_UNITS.BUFFER.${policy.bufferType}`;
 }
 
 export function newUnitDraft(): MobileUnitDraft {

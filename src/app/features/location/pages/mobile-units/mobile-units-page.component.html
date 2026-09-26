@@ -2,6 +2,16 @@
   <p class="overline">{{ 'LOCATION.MOBILE_UNITS.OVERLINE' | translate }}</p>
   <h1>{{ 'LOCATION.MOBILE_UNITS.TITLE' | translate }}</h1>
   <p class="standfirst">{{ 'LOCATION.MOBILE_UNITS.STANDFIRST' | translate }}</p>
+  @if (canSeeServiceAreas() || canSeePolicies()) {
+    <nav class="setup-links" [attr.aria-label]="'LOCATION.MOBILE_UNITS.LINKS.LABEL' | translate">
+      @if (canSeeServiceAreas()) {
+        <a routerLink="/app/location/service-areas">{{ 'LOCATION.MOBILE_UNITS.LINKS.SERVICE_AREAS' | translate }}</a>
+      }
+      @if (canSeePolicies()) {
+        <a routerLink="/app/location/travel-buffer-policies">{{ 'LOCATION.MOBILE_UNITS.LINKS.POLICIES' | translate }}</a>
+      }
+    </nav>
+  }
 </header>
 
 <div class="toolbar">

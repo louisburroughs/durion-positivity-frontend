@@ -58,6 +58,20 @@ export const LOCATION_ROUTES: Routes = [
         loadComponent: () => import('./pages/mobile-units/mobile-units-page.component').then(m => m.MobileUnitsPageComponent),
       },
       {
+        path: 'service-areas',
+        data: { permissions: LOCATION_PAGE.serviceAreas },
+        loadComponent: () =>
+          import('./pages/service-areas/service-areas-page.component').then(m => m.ServiceAreasPageComponent),
+      },
+      {
+        path: 'travel-buffer-policies',
+        data: { permissions: LOCATION_PAGE.travelBufferPolicies },
+        loadComponent: () =>
+          import('./pages/travel-buffer-policies/travel-buffer-policies-page.component').then(
+            m => m.TravelBufferPoliciesPageComponent,
+          ),
+      },
+      {
         path: 'storage-locations',
         data: { permissions: LOCATION_PAGE.locationView },
         loadComponent: () =>

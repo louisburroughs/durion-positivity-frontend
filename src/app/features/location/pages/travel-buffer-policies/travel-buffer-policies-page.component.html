@@ -1,0 +1,136 @@
+<header class="page-header">
+  <p class="overline">{{ 'LOCATION.TRAVEL_BUFFERS.OVERLINE' | translate }}</p>
+  <h1>{{ 'LOCATION.TRAVEL_BUFFERS.TITLE' | translate }}</h1>
+  <p class="standfirst">{{ 'LOCATION.TRAVEL_BUFFERS.STANDFIRST' | translate }}</p>
+  <div class="header-actions">
+    <a routerLink="/app/location/mobile-units">{{ 'LOCATION.TRAVEL_BUFFERS.TO_MOBILE_UNITS' | translate }}</a>
+    @if (canEdit()) {
+      <button type="button" class="btn-primary new-policy-btn" (click)="openCreate()">{{ 'LOCATION.TRAVEL_BUFFERS.NEW' | translate }}</button>
+    }
+  </div>
+</header>
+
+<p class="notice not-applied">{{ 'LOCATION.TRAVEL_BUFFERS.NOT_APPLIED' | translate }}</p>
+
+<div class="sr-only" aria-live="polite">
+  @if (announcement(); as said) {
+    {{ said.key | translate: { policy: said.policy } }}
+  }
+</div>
+
+@if (state() === 'ready' && !canEdit()) {
+  <p class="notice" role="status">{{ 'LOCATION.TRAVEL_BUFFERS.VIEW_ONLY' | translate }}</p>
+}
+
+@switch (state()) {
+  @case ('loading') {
+    <p class="muted" role="status">{{ 'LOCATION.TRAVEL_BUFFERS.LOADING' | translate }}</p>
+  }
+  @case ('error') {
+    <div class="state-panel" role="alert">
+      <p>{{ errorKey()! | translate }}</p>
+      <button type="button" class="btn-secondary retry-btn" (click)="retry()">{{ 'LOCATION.TRAVEL_BUFFERS.RETRY' | translate }}</button>
+    </div>
+  }
+  @case ('ready') {
+    @if (rows().length === 0) {
+      <p class="empty-state">{{ 'LOCATION.TRAVEL_BUFFERS.EMPTY' | translate }}</p>
+    } @else {
+      <ul class="ledger">
+        @for (row of rows(); track row.policy.id) {
+          <li class="ledger-row" [id]="'policy-' + row.policy.id" tabindex="-1">
+            <h2 class="row-name">{{ row.name }}</h2>
+            <p>
+              @if (row.needsFixing) {
+                <span class="tag tag-warning">{{ 'LOCATION.TRAVEL_BUFFERS.NEEDS_FIXING' | translate }}</span>
+              } @else {
+                {{ row.bufferKey | translate: { value: row.value } }}
+              }
+            </p>
+            <p class="muted">{{ row.policy.notes }}</p>
+            @if (canEdit()) {
+              <button type="button" class="btn-secondary edit-policy-btn"
+                [attr.aria-label]="'LOCATION.TRAVEL_BUFFERS.EDIT_NAMED' | translate: { policy: row.name }"
+                (click)="openEdit(row.policy)">{{ 'LOCATION.TRAVEL_BUFFERS.EDIT' | translate }}</button>
+            }
+          </li>
+        }
+      </ul>
+    }
+  }
+}
+
+@if (dialogMode(); as mode) {
+  <dialog appModalDialog class="list-dialog" aria-labelledby="policy-dialog-title" (modalCancel)="closeDialog()">
+    <form class="dialog-panel" novalidate (submit)="$event.preventDefault(); submit()">
+      <h2 id="policy-dialog-title">
+        {{ (mode === 'create' ? 'LOCATION.TRAVEL_BUFFERS.DIALOG.CREATE_TITLE' : 'LOCATION.TRAVEL_BUFFERS.DIALOG.EDIT_TITLE') | translate: { policy: editing()?.name ?? '' } }}
+      </h2>
+
+      <div class="field">
+        <label for="policy-name">{{ 'LOCATION.TRAVEL_BUFFERS.FIELD.NAME' | translate }} @if (mode === 'create') {<span aria-hidden="true">*</span>}</label>
+        <input id="policy-name" type="text" autocomplete="off" [value]="draft().name" [readOnly]="mode === 'edit'"
+          [attr.aria-invalid]="nameErrorKey() ? true : null"
+          [attr.aria-describedby]="nameErrorKey() ? 'policy-name-error policy-name-hint' : 'policy-name-hint'"
+          (input)="patchDraft({ name: $any($event.target).value })" />
+        @if (nameErrorKey(); as nameError) {
+          <p id="policy-name-error" class="field-error">{{ nameError | translate: { policy: draft().name.trim() } }}</p>
+        }
+        <p id="policy-name-hint" class="hint">{{ 'LOCATION.TRAVEL_BUFFERS.HINT.NAME' | translate }}</p>
+      </div>
+
+      <div class="field">
+        <label for="policy-type">{{ 'LOCATION.TRAVEL_BUFFERS.FIELD.TYPE' | translate }} <span aria-hidden="true">*</span></label>
+        <select id="policy-type" [attr.aria-invalid]="typeErrorKey() ? true : null"
+          [attr.aria-describedby]="typeErrorKey() ? 'policy-type-error policy-type-hint' : 'policy-type-hint'"
+          (change)="setType($any($event.target).value)">
+          @if (!draft().bufferType) {
+            <option value="" selected>{{ 'LOCATION.TRAVEL_BUFFERS.CHOOSE_TYPE' | translate }}</option>
+          }
+          @for (type of bufferTypes; track type) {
+            <option [value]="type" [selected]="draft().bufferType === type">{{ typeKey(type) | translate }}</option>
+          }
+        </select>
+        @if (typeErrorKey(); as typeError) {
+          <p id="policy-type-error" class="field-error">{{ typeError | translate }}</p>
+        }
+        <p id="policy-type-hint" class="hint">{{ 'LOCATION.TRAVEL_BUFFERS.HINT.TYPE' | translate }}</p>
+      </div>
+
+      <div class="field">
+        <label for="policy-value">{{ 'LOCATION.TRAVEL_BUFFERS.FIELD.VALUE' | translate }}</label>
+        <div class="value-row">
+          <input id="policy-value" type="number" min="0" step="0.01" inputmode="decimal" [value]="draft().bufferValue"
+            [attr.aria-invalid]="valueErrorKey() ? true : null"
+            [attr.aria-describedby]="valueErrorKey() ? 'policy-value-error policy-value-hint' : 'policy-value-hint'"
+            (input)="patchDraft({ bufferValue: $any($event.target).value })" />
+          @if (suffixKey(); as suffix) {
+            <span class="suffix">{{ suffix | translate }}</span>
+          }
+        </div>
+        @if (valueErrorKey(); as valueError) {
+          <p id="policy-value-error" class="field-error">{{ valueError | translate }}</p>
+        }
+        <p id="policy-value-hint" class="hint">{{ 'LOCATION.TRAVEL_BUFFERS.HINT.VALUE' | translate }}</p>
+      </div>
+
+      <div class="field">
+        <label for="policy-notes">{{ 'LOCATION.TRAVEL_BUFFERS.FIELD.NOTES' | translate }}</label>
+        <textarea id="policy-notes" rows="2" [value]="draft().notes" (input)="patchDraft({ notes: $any($event.target).value })"></textarea>
+      </div>
+
+      @if (saveErrorKey(); as saveError) {
+        <p class="dialog-error" role="alert">{{ saveError | translate }}</p>
+      }
+      <div class="dialog-actions">
+        <button type="button" class="btn-secondary" [disabled]="saving()" (click)="closeDialog()">{{ 'LOCATION.TRAVEL_BUFFERS.CANCEL' | translate }}</button>
+        <button type="submit" class="btn-primary submit-btn" [disabled]="saving()">
+          {{ (mode === 'create' ? 'LOCATION.TRAVEL_BUFFERS.DIALOG.CREATE' : 'LOCATION.TRAVEL_BUFFERS.DIALOG.SAVE') | translate }}
+        </button>
+        @if (saving()) {
+          <span class="sr-only" role="status">{{ 'LOCATION.TRAVEL_BUFFERS.SAVING' | translate }}</span>
+        }
+      </div>
+    </form>
+  </dialog>
+}

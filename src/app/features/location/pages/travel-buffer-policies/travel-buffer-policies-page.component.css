@@ -1,0 +1,23 @@
+.value-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.value-row input {
+  width: 8em;
+}
+
+.not-applied {
+  border-left: 2px solid var(--primaryA400);
+}
+
+.ledger-row {
+  grid-template-columns: minmax(0, 2fr) minmax(0, 2fr) minmax(0, 3fr) auto;
+}
+
+@media (width <= 720px) {
+  .ledger-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
