@@ -117,14 +117,14 @@ describe('ReceiptPageComponent', () => {
       expect(component.errorKey()).toBe('BILLING.RECEIPT.ERROR.NOT_FOUND');
     });
 
-    it('maps a 403 from loadReceipt to a localized permission error', async () => {
+    it('maps a 403 from loadReceipt to a load-specific permission error, not the generate one', async () => {
       billingTransportStub.loadReceipt.mockReturnValue(
         throwError(() => new HttpErrorResponse({ status: 403 })),
       );
       create();
 
       expect(component.state()).toBe('error');
-      expect(component.errorKey()).toBe('BILLING.RECEIPT.ERROR.GENERATE_PERMISSION_DENIED');
+      expect(component.errorKey()).toBe('BILLING.RECEIPT.ERROR.LOAD_PERMISSION_DENIED');
     });
 
     it('maps a 403 with a LOCATION_SCOPE_DENIED body code from loadReceipt to the location-scope key', async () => {
@@ -380,6 +380,87 @@ describe('ReceiptPageComponent', () => {
       component.generateAndShow({ deliveryMethod: 'PRINT' });
 
       expect(component.errorKey()).toBe('BILLING.RECEIPT.ERROR.GENERATE');
+    });
+  });
+
+  describe('method-level permission re-checks (ADR-0040 §6a.2)', () => {
+    it('refuses generateAndShow in the method too, not only on the button, when the generate code is absent', async () => {
+      session.permissions = [];
+      await configure('inv-001', null);
+      create();
+
+      component.generateAndShow({ deliveryMethod: 'PRINT' });
+
+      expect(billingTransportStub.generateReceipt).not.toHaveBeenCalled();
+      expect(component.state()).toBe('idle');
+    });
+
+    it('refuses reprint in the method too, not only on the button, once the reprint cap requires an override the caller lacks', async () => {
+      session.permissions = [];
+      billingTransportStub.loadReceipt.mockReturnValue(
+        of({ ...receiptDetailFixture, reprintCount: 5 }),
+      );
+      await configure('inv-001', 'rcpt-001');
+      create();
+      expect(component.canReprint()).toBe(false);
+
+      component.reprint();
+
+      expect(billingTransportStub.reprintReceipt).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('reprint preserves the authoritative reprint count (receipt-page.component.ts:54 / billing-transport.service.ts:433)', () => {
+    it('re-reads the receipt via getReceipt after a successful reprint, so reprintCount (and reprintOverrideNeeded) reflect the server, not a bare ReceiptResponse missing the field', async () => {
+      // No invoice:receipt:reprint_override throughout — below the threshold this is irrelevant
+      // (reprint stays allowed), but it must start blocking the moment the reload reports count 5.
+      session.permissions = [];
+      billingTransportStub.loadReceipt.mockReturnValueOnce(
+        of({ ...receiptDetailFixture, reprintCount: 4 }),
+      );
+      await configure('inv-001', 'rcpt-001');
+      create();
+
+      expect(component.reprintOverrideNeeded()).toBe(false);
+      expect(component.canReprint()).toBe(true);
+
+      // `reprintReceipt`'s real response (`ReceiptResponse`) has no `reprintCount` — the fixture
+      // below models that shape so a regression back to replacing `receipt()` with it directly
+      // would drop the count silently.
+      billingTransportStub.reprintReceipt.mockReturnValue(
+        of({ receiptId: 'rcpt-001', invoiceId: 'inv-001', receiptNumber: 'R-1001' }),
+      );
+      billingTransportStub.loadReceipt.mockReturnValueOnce(
+        of({ ...receiptDetailFixture, reprintCount: 5 }),
+      );
+
+      component.reprint();
+
+      expect(billingTransportStub.loadReceipt).toHaveBeenCalledTimes(2);
+      expect(billingTransportStub.loadReceipt).toHaveBeenLastCalledWith('inv-001', 'rcpt-001');
+      expect(component.receipt()?.reprintCount).toBe(5);
+      expect(component.reprintOverrideNeeded()).toBe(true);
+
+      // A caller without invoice:receipt:reprint_override is now blocked by the real count.
+      expect(component.canReprintPastCap()).toBe(false);
+      expect(component.canReprint()).toBe(false);
+    });
+  });
+
+  describe('receipt status rendering (ADR-0065 allowlisted translation)', () => {
+    it('maps GENERATED to its translation key rather than rendering the raw enum', () => {
+      create();
+      expect(component.receiptStatusKey('GENERATED')).toBe('BILLING.RECEIPT.STATUS.GENERATED');
+
+      const statusRow = fixture.nativeElement.querySelector('.receipt__detail .receipt__field-row:nth-child(3) strong');
+      expect(statusRow.textContent.trim()).toBe('BILLING.RECEIPT.STATUS.GENERATED');
+      expect(statusRow.textContent.trim()).not.toBe('GENERATED');
+    });
+
+    it('falls back to COMMON.NOT_AVAILABLE for an unrecognized status value', () => {
+      create();
+      expect(component.receiptStatusKey('SOMETHING_NEW')).toBe('COMMON.NOT_AVAILABLE');
+      expect(component.receiptStatusKey(undefined)).toBe('COMMON.NOT_AVAILABLE');
     });
   });
 });

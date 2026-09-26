@@ -226,6 +226,16 @@ describe('PaymentVoidRefundPageComponent', () => {
     expect(billingTransportStub.executeRefund).not.toHaveBeenCalled();
   });
 
+  it('re-validates the amount against the known refundable balance inside executeRefund, even for an untouched field, and never calls the service', () => {
+    component.setMode('refund'); // loads contextFixture: refundableAmount 80
+
+    component.executeRefund('reason', 'AUTH1', 500);
+
+    expect(component.state()).toBe('error');
+    expect(component.errorKey()).toBe('BILLING.PAYMENT.ERROR.REFUND_AMOUNT_EXCEEDS_BALANCE');
+    expect(billingTransportStub.executeRefund).not.toHaveBeenCalled();
+  });
+
   it('setRefundAmount with empty string sets refundAmount to null', () => {
     component.setRefundAmount('');
     expect(component.refundAmount()).toBeNull();
@@ -338,6 +348,28 @@ describe('PaymentVoidRefundPageComponent', () => {
       component.prefillFullBalance();
 
       expect(component.refundAmount()).toBeNull();
+    });
+
+    it('prefillFullBalance() is a no-op when refundableAmount is zero (already fully refunded)', () => {
+      billingTransportStub.loadRefundContext.mockReturnValue(
+        of({ capturedAmount: 100, refundedAmount: 100, refundableAmount: 0, status: 'REFUNDED' } as RefundContext),
+      );
+      component.setMode('refund');
+
+      component.prefillFullBalance();
+
+      expect(component.refundAmount()).toBeNull();
+    });
+
+    it('disables the full-balance button when refundableAmount is null or non-positive', () => {
+      billingTransportStub.loadRefundContext.mockReturnValue(
+        of({ capturedAmount: 100, refundedAmount: 100, refundableAmount: 0, status: 'REFUNDED' } as RefundContext),
+      );
+      component.setMode('refund');
+      fixture.detectChanges();
+
+      const btn = fixture.nativeElement.querySelector('[data-testid="refund-prefill-full-balance"]');
+      expect(btn.disabled).toBe(true);
     });
 
     it('rejects a typed amount above the refundable balance client-side, distinct from the server 422', () => {

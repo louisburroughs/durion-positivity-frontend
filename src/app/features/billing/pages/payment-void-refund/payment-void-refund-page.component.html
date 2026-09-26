@@ -78,7 +78,7 @@
     }
   </dl>
   <button type="button" class="pvm__prefill-btn" data-testid="refund-prefill-full-balance"
-    [disabled]="context.refundableAmount === null" (click)="prefillFullBalance()">
+    [disabled]="context.refundableAmount === null || context.refundableAmount <= 0" (click)="prefillFullBalance()">
     {{ 'BILLING.PAYMENT.REFUND.ACTION_FULL_BALANCE' | translate }}
   </button>
   }

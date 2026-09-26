@@ -6699,7 +6699,7 @@
         "MISSING_IDS": "Référence de paiement ou de facture invalide.",
         "REFUND_AMOUNT_REQUIRED": "Saisissez un montant de remboursement supérieur à zéro.",
         "REFUND_AMOUNT_EXCEEDS_BALANCE": "Le montant du remboursement ne peut pas dépasser le solde remboursable.",
-        "REFUND_CONTEXT_LOAD": "Impossible de charger les remboursements antérieurs.",
+        "REFUND_CONTEXT_LOAD": "Impossible de charger le solde remboursable.",
         "REFUND_PERMISSION_DENIED": "Vous n'avez pas la permission de rembourser ce paiement.",
         "VOID_PERMISSION_DENIED": "Vous n'avez pas la permission d'annuler ce paiement.",
         "LOCATION_SCOPE_DENIED": "Cette facture est en dehors de votre emplacement assigné. Demandez à un gestionnaire ayant accès à cet emplacement d'effectuer cette action."
@@ -6735,8 +6735,12 @@
       },
       "EMAIL_LABEL": "Adresse courriel",
       "IDLE": "Aucun recu genere pour le moment.",
+      "STATUS": {
+        "GENERATED": "Généré"
+      },
       "ERROR": {
         "LOAD": "Impossible de charger le recu.",
+        "LOAD_PERMISSION_DENIED": "Vous n'avez pas la permission de consulter ce reçu.",
         "GENERATE": "Impossible de generer le recu. Veuillez réessayer.",
         "GENERATE_PERMISSION_DENIED": "Vous n'avez pas la permission de générer ce reçu.",
         "REPRINT": "Impossible de reimprimer le recu. Veuillez réessayer.",

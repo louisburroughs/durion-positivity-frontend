@@ -560,10 +560,15 @@ export const BILLING_PAGE = {
  * Each control is gated independently of its method call (ADR-0040 §6a pattern, mirrored from
  * `INVENTORY_PAGE.pickExecute`'s `canExecute`): a page computes
  * `!auth.permissionsKnown() || auth.hasAnyPermission(BILLING_SECTION.xExecute)` to decide whether to
- * *disable* the button, but always calls the transport method on click regardless of that
- * computed value — the button is decorative, the request is what actually gets a 403. A legacy
- * token without a `perm_bits` claim (`permissionsKnown() === false`) is treated as granted, exactly
- * like `AuthService.canAccess()`, so it never locks out a session the backend would still admit.
+ * *disable* the button, and the mutation method (`executeVoid`/`executeRefund`,
+ * `generateAndShow`/`reprint`) re-checks that same computed at the top of its body before any state
+ * change or transport call — so a denied caller invoking the method directly (bypassing the
+ * disabled control) is refused client-side too, not just left to a 403. The backend enforces these
+ * authorities regardless of what this client-side gate decides (ADR-0040 §6a.2), and a 403 that
+ * does slip through — a race, a stale permission claim — is still mapped to a localized error by
+ * the calling page. A legacy token without a `perm_bits` claim (`permissionsKnown() === false`) is
+ * treated as granted, exactly like `AuthService.canAccess()`, so it never locks out a session the
+ * backend would still admit.
  *
  * `receiptReprintOverride` is wired only where the page can actually know it applies:
  * `ReceiptServiceImpl.reprintReceipt` requires it once `ReceiptViewResponse.reprintCount >= 5`

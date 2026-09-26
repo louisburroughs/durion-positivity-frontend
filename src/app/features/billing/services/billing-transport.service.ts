@@ -234,6 +234,14 @@ export class BillingTransportService {
     );
   }
 
+  /**
+   * `ReceiptService.reprintReceipt`'s `ReceiptResponse` (verified against `@durion-sdk/invoice`
+   * types) carries only `receiptId`/`reference`/`status` — no `reprintCount`, unlike
+   * `ReceiptViewResponse`. Callers must not treat this method's result as the new authoritative
+   * receipt detail (it would silently drop `reprintCount` and disarm
+   * `ReceiptPageComponent.reprintOverrideNeeded`); `ReceiptPageComponent.reprint` re-reads via
+   * {@link loadReceipt} after this succeeds instead.
+   */
   reprintReceipt(invoiceId: string, receiptId: string): Observable<ReceiptRef> {
     const request: ReprintReceiptRequest = {
       reason: 'CUSTOMER_REQUEST',

@@ -139,7 +139,7 @@ export class PaymentVoidRefundPageComponent implements OnInit {
    */
   prefillFullBalance(): void {
     const refundable = this.refundContext()?.refundableAmount;
-    if (refundable === null || refundable === undefined) {
+    if (refundable === null || refundable === undefined || refundable <= 0) {
       return;
     }
     this.refundAmount.set(refundable);
@@ -205,6 +205,15 @@ export class PaymentVoidRefundPageComponent implements OnInit {
     if (amount === null || amount <= 0) {
       this.state.set('error');
       this.errorKey.set('BILLING.PAYMENT.ERROR.REFUND_AMOUNT_REQUIRED');
+      return;
+    }
+    // Re-validated against the last known balance, not only the (possibly stale) inline field
+    // hint — the server's own 422 stays authoritative for anything this can't see, but a known
+    // over-balance amount never reaches the transport call (ADR-0040 §6a.2 pattern).
+    const refundable = this.refundContext()?.refundableAmount;
+    if (refundable !== null && refundable !== undefined && amount > refundable) {
+      this.state.set('error');
+      this.errorKey.set('BILLING.PAYMENT.ERROR.REFUND_AMOUNT_EXCEEDS_BALANCE');
       return;
     }
     this.mode.set('refund');

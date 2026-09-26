@@ -70,7 +70,7 @@
     @if (r.status) {
     <div class="receipt__field-row">
       <span>{{ 'BILLING.RECEIPT.FIELD.STATUS' | translate }}</span>
-      <strong>{{ r.status }}</strong>
+      <strong>{{ receiptStatusKey(r.status) | translate }}</strong>
     </div>
     }
     <div class="receipt__field-row">

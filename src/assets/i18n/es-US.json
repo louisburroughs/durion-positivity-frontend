@@ -6699,7 +6699,7 @@
         "MISSING_IDS": "Referencia de pago o factura no válida.",
         "REFUND_AMOUNT_REQUIRED": "Ingrese un importe de reembolso mayor que cero.",
         "REFUND_AMOUNT_EXCEEDS_BALANCE": "El importe del reembolso no puede superar el saldo reembolsable.",
-        "REFUND_CONTEXT_LOAD": "No se pudieron cargar los reembolsos anteriores.",
+        "REFUND_CONTEXT_LOAD": "No se pudo cargar el saldo reembolsable.",
         "REFUND_PERMISSION_DENIED": "No tiene permiso para reembolsar este pago.",
         "VOID_PERMISSION_DENIED": "No tiene permiso para anular este pago.",
         "LOCATION_SCOPE_DENIED": "Esta factura está fuera de su ubicación asignada. Pida a un gerente con acceso a esta ubicación que complete esta acción."
@@ -6735,8 +6735,12 @@
       },
       "EMAIL_LABEL": "Dirección de correo electrónico",
       "IDLE": "Aún no se ha generado ningún recibo.",
+      "STATUS": {
+        "GENERATED": "Generado"
+      },
       "ERROR": {
         "LOAD": "No se pudo cargar el recibo.",
+        "LOAD_PERMISSION_DENIED": "No tiene permiso para ver este recibo.",
         "GENERATE": "No se pudo generar el recibo. Inténtelo de nuevo.",
         "GENERATE_PERMISSION_DENIED": "No tiene permiso para generar este recibo.",
         "REPRINT": "No se pudo reimprimir el recibo. Inténtelo de nuevo.",

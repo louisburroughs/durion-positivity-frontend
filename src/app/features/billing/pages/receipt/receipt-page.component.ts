@@ -3,6 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
+import { switchMap } from 'rxjs/operators';
 import { TranslatePipe } from '@ngx-translate/core';
 import { BILLING_SECTION } from '../../../../core/security/route-permissions';
 import { AuthService } from '../../../../core/services/auth.service';
@@ -60,6 +61,28 @@ export class ReceiptPageComponent implements OnInit {
   /** The payment to document, when the page is reached from the capture page (query param). */
   private paymentId: string | undefined;
 
+  /**
+   * Guards a superseded receipt read (ADR-0063 §1) — bumped on the deep-link load and on the
+   * post-reprint re-read below, checked on landing.
+   */
+  private receiptReadSeq = 0;
+
+  /**
+   * durion-positivity-backend#2226's receipt status enum has one member (`GENERATED`) today
+   * (`ReceiptViewResponseStatusEnum`, verified against `@durion-sdk/invoice` types); this allowlist
+   * mirrors `payment-capture-page.component.html`'s `'STATUS.' + status` pattern rather than
+   * rendering `r.status` raw, and falls back to `COMMON.NOT_AVAILABLE` for anything the SDK adds
+   * later that this page doesn't recognize yet.
+   */
+  receiptStatusKey(status: string | null | undefined): string {
+    switch (status) {
+      case 'GENERATED':
+        return 'BILLING.RECEIPT.STATUS.GENERATED';
+      default:
+        return 'COMMON.NOT_AVAILABLE';
+    }
+  }
+
   ngOnInit(): void {
     const invoiceId = this.route.snapshot.paramMap.get('invoiceId') ?? '';
     const receiptId = this.route.snapshot.paramMap.get('receiptId');
@@ -85,26 +108,38 @@ export class ReceiptPageComponent implements OnInit {
     this.state.set('loading');
     this.errorKey.set(null);
 
+    const seq = ++this.receiptReadSeq;
+
     this.billingService
       .loadReceipt(invoiceId, receiptId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: receipt => {
+          if (seq !== this.receiptReadSeq) return; // superseded read (ADR-0063 §1)
           this.receipt.set(receipt);
           this.state.set('ready');
         },
         error: (err: unknown) => {
+          if (seq !== this.receiptReadSeq) return;
           this.state.set('error');
           this.errorKey.set(
             err instanceof HttpErrorResponse && err.status === 404
               ? 'BILLING.RECEIPT.ERROR.NOT_FOUND'
-              : this.mapGenerateOrLoadErrorKey(err, 'BILLING.RECEIPT.ERROR.LOAD'),
+              : this.mapPermissionErrorKey(
+                  err,
+                  'BILLING.RECEIPT.ERROR.LOAD_PERMISSION_DENIED',
+                  'BILLING.RECEIPT.ERROR.LOAD',
+                ),
           );
         },
       });
   }
 
   generateAndShow(delivery?: GenerateReceiptRequest): void {
+    // Re-checked here, not only at the control (ADR-0040 §6a.2).
+    if (!this.canGeneratePermission()) {
+      return;
+    }
     if (!this.invoiceId()) {
       this.state.set('error');
       this.errorKey.set('BILLING.RECEIPT.ERROR.MISSING_INVOICE');
@@ -125,17 +160,24 @@ export class ReceiptPageComponent implements OnInit {
         error: (err: unknown) => {
           this.state.set('error');
           this.errorKey.set(
-            this.mapGenerateOrLoadErrorKey(err, 'BILLING.RECEIPT.ERROR.GENERATE'),
+            this.mapPermissionErrorKey(
+              err,
+              'BILLING.RECEIPT.ERROR.GENERATE_PERMISSION_DENIED',
+              'BILLING.RECEIPT.ERROR.GENERATE',
+            ),
           );
         },
       });
   }
 
-  private mapGenerateOrLoadErrorKey(err: unknown, genericKey: string): string {
+  /**
+   * Shared 403/location-scope mapping for both the deep-link `getReceipt` load and
+   * `generateReceipt` — `deniedKey` distinguishes a read denial (`LOAD_PERMISSION_DENIED`) from a
+   * write denial (`GENERATE_PERMISSION_DENIED`), since the two are different backend authorities.
+   */
+  private mapPermissionErrorKey(err: unknown, deniedKey: string, genericKey: string): string {
     if (err instanceof HttpErrorResponse && err.status === 403) {
-      return this.isLocationScopeDenied(err)
-        ? 'BILLING.RECEIPT.ERROR.LOCATION_SCOPE_DENIED'
-        : 'BILLING.RECEIPT.ERROR.GENERATE_PERMISSION_DENIED';
+      return this.isLocationScopeDenied(err) ? 'BILLING.RECEIPT.ERROR.LOCATION_SCOPE_DENIED' : deniedKey;
     }
     return genericKey;
   }
@@ -190,6 +232,11 @@ export class ReceiptPageComponent implements OnInit {
   }
 
   reprint(): void {
+    // Re-checked here, not only at the control (ADR-0040 §6a.2) — includes the over-cap override
+    // authority via `canReprintPastCap`.
+    if (!this.canReprint()) {
+      return;
+    }
     const receiptId = this.receiptId() ?? this.receipt()?.receiptId;
     if (!receiptId) {
       this.state.set('error');
@@ -200,15 +247,29 @@ export class ReceiptPageComponent implements OnInit {
     this.state.set('submitting');
     this.errorKey.set(null);
 
+    const invoiceId = this.invoiceId();
+    const seq = ++this.receiptReadSeq;
+
     this.billingService
-      .reprintReceipt(this.invoiceId(), receiptId)
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .reprintReceipt(invoiceId, receiptId)
+      .pipe(
+        // Copilot PR review: `reprintReceipt`'s `ReceiptResponse` has no `reprintCount` (verified
+        // against `@durion-sdk/invoice` types), unlike `getReceipt`'s `ReceiptViewResponse` —
+        // replacing `receipt()` with the bare reprint response silently dropped `reprintCount` and
+        // disarmed `reprintOverrideNeeded()`. Re-read the authoritative detail via the same
+        // `getReceipt` path the deep-link load uses instead of guessing `count + 1` (request-keyed
+        // by `receiptReadSeq`, ADR-0063 §1).
+        switchMap(() => this.billingService.loadReceipt(invoiceId, receiptId)),
+        takeUntilDestroyed(this.destroyRef),
+      )
       .subscribe({
         next: receipt => {
+          if (seq !== this.receiptReadSeq) return; // superseded read (ADR-0063 §1)
           this.receipt.set(receipt);
           this.state.set('ready');
         },
         error: (err: unknown) => {
+          if (seq !== this.receiptReadSeq) return;
           this.state.set('error');
           this.errorKey.set(this.mapReprintErrorKey(err));
         },
