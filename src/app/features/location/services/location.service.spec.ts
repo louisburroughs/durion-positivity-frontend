@@ -61,7 +61,7 @@ describe('LocationService', () => {
     service.replaceCoverageRules('mu-001', [
       {
         serviceAreaId: 'svc-1',
-        ruleType: 'PRIMARY',
+        ruleType: 'DISTANCE_TIER',
         priority: 1,
         validFrom: '2026-04-01',
         validTo: '2026-04-30',
@@ -73,11 +73,30 @@ describe('LocationService', () => {
       rules: [
         {
           serviceAreaId: 'svc-1',
-          ruleType: 'PRIMARY',
+          ruleType: 'DISTANCE_TIER',
           priority: 1,
           validFrom: '2026-04-01',
           validTo: '2026-04-30',
           maxDistance: 25,
+        },
+      ],
+    });
+  });
+
+  it('sends a coverage rule type pos-location does not accept as a service-area rule', () => {
+    mobileUnitApiStub.replaceCoverageRules.mockReturnValueOnce(of([]));
+
+    service.replaceCoverageRules('mu-001', [{ serviceAreaId: 'svc-1', ruleType: 'PRIMARY', priority: 1 }]).subscribe();
+
+    expect(mobileUnitApiStub.replaceCoverageRules).toHaveBeenCalledWith('mu-001', {
+      rules: [
+        {
+          serviceAreaId: 'svc-1',
+          ruleType: 'SERVICE_AREA',
+          priority: 1,
+          validFrom: undefined,
+          validTo: undefined,
+          maxDistance: undefined,
         },
       ],
     });
@@ -163,16 +182,18 @@ describe('LocationService', () => {
     service.createMobileUnit({
       name: 'Truck 1',
       baseLocationId: 'loc-01',
+      status: 'active',
       coverageRules: [
         {
           serviceAreaId: 'svc-1',
-          ruleType: 'PRIMARY',
+          ruleType: 'SERVICE_AREA',
           priority: 1,
           maxDistance: 30,
         },
       ],
     }).subscribe();
 
+    // An unknown status is left out, so pos-location defaults the unit to INACTIVE.
     expect(mobileUnitApiStub.createMobileUnit).toHaveBeenCalledWith({
       name: 'Truck 1',
       baseLocationId: 'loc-01',
@@ -183,7 +204,7 @@ describe('LocationService', () => {
       coverageRules: [
         {
           serviceAreaId: 'svc-1',
-          ruleType: 'PRIMARY',
+          ruleType: 'SERVICE_AREA',
           priority: 1,
           validFrom: undefined,
           validTo: undefined,

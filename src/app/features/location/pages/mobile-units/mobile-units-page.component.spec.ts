@@ -130,7 +130,8 @@ describe('MobileUnitsPageComponent', () => {
     const submitButton = fixture.debugElement.query(By.css('.submit-create-btn'));
     submitButton.nativeElement.click();
 
-    expect(locationServiceStub.createMobileUnit).toHaveBeenCalledWith({ name: 'Downtown Unit' });
+    // pos-location requires the base location on create; the unit belongs to the selected one.
+    expect(locationServiceStub.createMobileUnit).toHaveBeenCalledWith({ name: 'Downtown Unit', baseLocationId: 'loc-1' });
   });
 });
 

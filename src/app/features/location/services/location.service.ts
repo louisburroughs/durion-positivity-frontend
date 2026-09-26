@@ -2,8 +2,10 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import {
   BayAPIService,
+  CoverageRuleRequestRuleTypeEnum,
   LocationAPIService,
   MobileUnitAPIService,
+  MobileUnitRequestStatusEnum,
   SiteDefaultsAPIService,
   StorageLocationAPIService,
 } from '@durion-sdk/location';
@@ -209,8 +211,8 @@ export class LocationService {
   private toMobileUnitRequest(body: Record<string, unknown>): MobileUnitRequest {
     return {
       name: this.asOptionalString(body['name']) as string,
-      baseLocationId: this.asOptionalString(body['baseLocationId']),
-      status: this.asOptionalString(body['status']),
+      baseLocationId: this.asString(body['baseLocationId']),
+      status: this.asMobileUnitStatus(body['status']),
       travelBufferPolicyId: this.asOptionalString(body['travelBufferPolicyId']),
       notes: this.asOptionalString(body['notes']),
       serviceCapabilityCodes: this.asStringArray(body['serviceCapabilityCodes']),
@@ -236,12 +238,28 @@ export class LocationService {
   private toCoverageRuleRequest(rule: Record<string, unknown>): CoverageRuleRequest {
     return {
       serviceAreaId: this.asOptionalString(rule['serviceAreaId']) as string,
-      ruleType: this.asOptionalString(rule['ruleType']) as string,
+      ruleType: this.asCoverageRuleType(rule['ruleType']),
       priority: this.asOptionalNumber(rule['priority']),
       validFrom: this.asOptionalString(rule['validFrom']),
       validTo: this.asOptionalString(rule['validTo']),
       maxDistance: this.asOptionalNumber(rule['maxDistance']),
     };
+  }
+
+  /** ACTIVE or INACTIVE; anything else is left out, and pos-location defaults a new unit to INACTIVE. */
+  private asMobileUnitStatus(value: unknown): MobileUnitRequestStatusEnum | undefined {
+    return Object.values(MobileUnitRequestStatusEnum).find(status => status === value);
+  }
+
+  /**
+   * SERVICE_AREA or DISTANCE_TIER, the only types pos-location accepts. Eligibility matches on the
+   * service area alone, so an unrecognised type is sent as a plain service-area rule.
+   */
+  private asCoverageRuleType(value: unknown): CoverageRuleRequestRuleTypeEnum {
+    return (
+      Object.values(CoverageRuleRequestRuleTypeEnum).find(type => type === value) ??
+      CoverageRuleRequestRuleTypeEnum.ServiceArea
+    );
   }
 
   private asLocationType(value: unknown): { id?: string; name?: string; description?: string } {
