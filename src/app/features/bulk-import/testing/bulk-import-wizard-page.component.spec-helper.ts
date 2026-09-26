@@ -21,6 +21,7 @@ type WizardComponentHarness = {
   onFileSelected: (file: File) => void;
   onSubmitCorrection: (event: CorrectionSubmitEvent) => void;
   retryAuditLoad: () => void;
+  downloadErrorReport: () => void;
 };
 
 interface WizardPageSpecOptions<TComponent> {
@@ -74,7 +75,7 @@ export function describeBulkImportWizardPage<TComponent>(options: WizardPageSpec
       retryJob: vi.fn(),
       listAuditRecords: vi.fn(),
       submitCorrection: vi.fn(),
-      getErrorReportUrl: vi.fn(),
+      downloadErrorReport: vi.fn(),
       listJobs: vi.fn(),
     };
 
@@ -425,6 +426,35 @@ export function describeBulkImportWizardPage<TComponent>(options: WizardPageSpec
         expect(component.correctionErrorKey()).not.toContain('sku already assigned');
         expect(component.correctionPendingIds().has('rec-001')).toBe(false);
         // A rejection is a per-action error, not a page-level one: the results view stays up.
+        expect(component.state()).toBe('results');
+      });
+    });
+
+    describe('downloadErrorReport() [durion-positivity-backend#2216 precedent, issue #350]', () => {
+      beforeEach(() => {
+        const failedJob = buildActiveJob(options.domainType);
+        failedJob.status = 'FAILED';
+        mockBulkImportService.getActiveJobForDomain.mockReturnValue(of(failedJob));
+        mockBulkImportService.listAuditRecords.mockReturnValue(
+          of({ items: [], nextPageToken: null } as AuditRecordListResponse),
+        );
+        fixture.detectChanges();
+      });
+
+      it('calls service.downloadErrorReport with the jobId', () => {
+        mockBulkImportService.downloadErrorReport.mockReturnValue(of(undefined));
+
+        component.downloadErrorReport();
+
+        expect(mockBulkImportService.downloadErrorReport).toHaveBeenCalledWith('job-001');
+      });
+
+      it('surfaces a localized per-action error, never a page-level one, when the download fails', () => {
+        mockBulkImportService.downloadErrorReport.mockReturnValue(throwError(() => new Error('download failed')));
+
+        component.downloadErrorReport();
+
+        expect(component.correctionErrorKey()).toBe('BULK_IMPORT.WIZARD.ERROR.DOWNLOAD');
         expect(component.state()).toBe('results');
       });
     });

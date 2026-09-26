@@ -7058,7 +7058,8 @@
         "LOAD_AUDIT": "No se pueden cargar los registros de errores.",
         "CANCEL": "No se puede cancelar el trabajo.",
         "RETRY": "No se puede reintentar el trabajo.",
-        "CORRECTION": "No se pudo enviar la corrección. Intente nuevamente."
+        "CORRECTION": "No se pudo enviar la corrección. Intente nuevamente.",
+        "DOWNLOAD": "No se pudo descargar el informe de errores. Inténtelo de nuevo."
       },
       "META": {
         "ARIA_LABEL": "Metadatos del trabajo",
@@ -7118,7 +7119,8 @@
         "RETRY": "No se puede reintentar el trabajo.",
         "POLL": "No se pudo obtener el estado de importación. Actualice la página.",
         "LOAD_RESULTS": "No se pueden cargar los registros de errores. Intente nuevamente.",
-        "CORRECTION": "No se pudo enviar la corrección. Intente nuevamente."
+        "CORRECTION": "No se pudo enviar la corrección. Intente nuevamente.",
+        "DOWNLOAD": "No se pudo descargar el informe de errores. Inténtelo de nuevo."
       },
       "CONFLICT": {
         "TITLE": "Importación activa en progreso",

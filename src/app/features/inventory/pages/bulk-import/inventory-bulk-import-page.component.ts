@@ -318,9 +318,22 @@ export class InventoryBulkImportPageComponent implements OnInit, OnDestroy {
     ).pipe(takeUntilDestroyed(this.destroyRef)).subscribe();
   }
 
+  /**
+   * (durion-positivity-backend#2216 precedent, issue #350) A bare `window.open()` of the
+   * legacy `/api/...` path sent no bearer token and was rejected by the gateway for a real
+   * session; the download now goes through the authenticated SDK blob download instead.
+   */
   downloadErrorReport(): void {
     const jobId = this.job()?.jobId;
-    if (jobId) { window.open(this.service.getErrorReportUrl(jobId), '_blank', 'noopener,noreferrer'); }
+    if (!jobId) { return; }
+    this.correctionErrorKey.set(null);
+    this.service.downloadErrorReport(jobId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        error: () => {
+          this.correctionErrorKey.set('BULK_IMPORT.WIZARD.ERROR.DOWNLOAD');
+        },
+      });
   }
 
   retryJob(): void {

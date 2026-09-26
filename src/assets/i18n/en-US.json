@@ -7058,7 +7058,8 @@
         "LOAD_AUDIT": "Unable to load error records.",
         "CANCEL": "Unable to cancel job.",
         "RETRY": "Unable to retry job.",
-        "CORRECTION": "Failed to submit correction. Please try again."
+        "CORRECTION": "Failed to submit correction. Please try again.",
+        "DOWNLOAD": "Unable to download the error report. Please try again."
       },
       "META": {
         "ARIA_LABEL": "Job metadata",
@@ -7118,7 +7119,8 @@
         "RETRY": "Unable to retry job.",
         "POLL": "Failed to get import status. Please refresh.",
         "LOAD_RESULTS": "Unable to load error records. Please try again.",
-        "CORRECTION": "Failed to submit correction. Please try again."
+        "CORRECTION": "Failed to submit correction. Please try again.",
+        "DOWNLOAD": "Unable to download the error report. Please try again."
       },
       "CONFLICT": {
         "TITLE": "Active Import in Progress",

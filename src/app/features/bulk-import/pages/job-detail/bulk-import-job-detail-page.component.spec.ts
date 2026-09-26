@@ -38,7 +38,7 @@ describe('BulkImportJobDetailPageComponent', () => {
     cancelJob: vi.fn(),
     retryJob: vi.fn(),
     submitCorrection: vi.fn(),
-    getErrorReportUrl: vi.fn(),
+    downloadErrorReport: vi.fn(),
     createUploadSession: vi.fn(),
     listJobs: vi.fn(),
     getActiveJobForDomain: vi.fn(),
@@ -339,5 +339,25 @@ describe('BulkImportJobDetailPageComponent', () => {
   it('getFieldKeys returns the keys from originalValues', () => {
     const keys = component.getFieldKeys(mockAuditRecord);
     expect(keys).toEqual(['sku']);
+  });
+
+  describe('downloadErrorReport() [durion-positivity-backend#2216 precedent, issue #350]', () => {
+    it('calls service.downloadErrorReport with the jobId', () => {
+      mockService.downloadErrorReport.mockReturnValue(of(undefined));
+
+      component.downloadErrorReport();
+
+      expect(mockService.downloadErrorReport).toHaveBeenCalledWith('job-001');
+    });
+
+    it('sets state to error first, then errorKey, when the download fails (ADR-0031)', () => {
+      mockService.downloadErrorReport.mockReturnValue(throwError(() => new Error('download failed')));
+
+      component.downloadErrorReport();
+      fixture.detectChanges();
+
+      expect(component.state()).toBe('error');
+      expect(component.errorKey()).toBe('BULK_IMPORT.JOB_DETAIL.ERROR.DOWNLOAD');
+    });
   });
 });

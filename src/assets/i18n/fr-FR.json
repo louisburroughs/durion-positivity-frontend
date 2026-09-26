@@ -7058,7 +7058,8 @@
         "LOAD_AUDIT": "Impossible de charger les enregistrements d'erreurs.",
         "CANCEL": "Impossible d'annuler le travail.",
         "RETRY": "Impossible de réessayer le travail.",
-        "CORRECTION": "Impossible de soumettre la correction. Veuillez réessayer."
+        "CORRECTION": "Impossible de soumettre la correction. Veuillez réessayer.",
+        "DOWNLOAD": "Impossible de télécharger le rapport d'erreurs. Veuillez réessayer."
       },
       "META": {
         "ARIA_LABEL": "Metadonnees du travail",
@@ -7118,7 +7119,8 @@
         "RETRY": "Impossible de réessayer le travail.",
         "POLL": "Impossible d'obtenir le statut d'importation. Veuillez actualiser.",
         "LOAD_RESULTS": "Impossible de charger les enregistrements d'erreur. Veuillez réessayer.",
-        "CORRECTION": "Échec de l'envoi de la correction. Veuillez réessayer."
+        "CORRECTION": "Échec de l'envoi de la correction. Veuillez réessayer.",
+        "DOWNLOAD": "Impossible de télécharger le rapport d'erreurs. Veuillez réessayer."
       },
       "CONFLICT": {
         "TITLE": "Importation active en cours",

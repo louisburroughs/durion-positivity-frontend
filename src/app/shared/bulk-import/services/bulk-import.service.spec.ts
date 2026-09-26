@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
+import { firstValueFrom, of, throwError } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   ApproveColumnMappingsRequest,
@@ -445,9 +446,79 @@ describe('BulkImportService', () => {
     });
   });
 
-  describe('getErrorReportUrl()', () => {
-    it('returns the correct URL for a given jobId', () => {
-      expect(service.getErrorReportUrl('job-001')).toBe('/api/bulk-loader/v1/bulk-jobs/job-001/error-report');
+  describe('downloadErrorReport() [durion-positivity-backend#2216 precedent, issue #350]', () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('calls ReviewQueueAPIService.downloadErrorReport(jobId) (ADR-0041) and triggers the download from an object URL', () => {
+      const blob = new Blob(['sku,reason\nBAD-SKU,INVALID']);
+      reviewQueueStub.downloadErrorReport.mockReturnValueOnce(of(blob));
+      const clickSpy = vi.fn();
+      const anchor = { href: '', download: '', click: clickSpy, remove: vi.fn() } as unknown as HTMLAnchorElement;
+      const createElementSpy = vi.spyOn(document, 'createElement').mockReturnValue(anchor);
+      const appendSpy = vi.spyOn(document.body, 'append').mockImplementation(() => {});
+      const objectUrl = 'blob:mock-url';
+      const createObjectURLSpy = vi.spyOn(URL, 'createObjectURL').mockReturnValue(objectUrl);
+      const revokeObjectURLSpy = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+      vi.useFakeTimers();
+
+      let completed = false;
+      service.downloadErrorReport('job-001').subscribe(() => (completed = true));
+
+      // A plain `window.open()` of a bare path bypasses HttpClient's auth
+      // interceptor and sends no bearer token; the download must go through
+      // the authenticated, generated SDK operation instead (ADR-0041).
+      expect(reviewQueueStub.downloadErrorReport).toHaveBeenCalledWith('job-001');
+      expect(createObjectURLSpy).toHaveBeenCalledWith(blob);
+      expect(anchor.href).toBe(objectUrl);
+      expect(anchor.download).toBe('bulk-import-error-report-job-001.csv');
+      expect(clickSpy).toHaveBeenCalledTimes(1);
+      expect(completed).toBe(true);
+
+      // The revoke is deferred past the click, not synchronous with it (ADR-0065 §3 / SEC-08).
+      expect(revokeObjectURLSpy).not.toHaveBeenCalled();
+      vi.runAllTimers();
+      expect(revokeObjectURLSpy).toHaveBeenCalledWith(objectUrl);
+
+      createElementSpy.mockRestore();
+      appendSpy.mockRestore();
+    });
+
+    it('propagates a non-blob transport failure through the observable unchanged, instead of triggering a download', async () => {
+      const failure = new Error('network down');
+      reviewQueueStub.downloadErrorReport.mockReturnValueOnce(throwError(() => failure));
+      const createElementSpy = vi.spyOn(document, 'createElement');
+
+      await expect(firstValueFrom(service.downloadErrorReport('job-001'))).rejects.toBe(failure);
+      expect(createElementSpy).not.toHaveBeenCalled();
+
+      createElementSpy.mockRestore();
+    });
+
+    it('reads and parses a Blob ApiError body from a 404 response instead of leaking the server message (ADR-0064)', async () => {
+      const apiErrorBlob = new Blob([JSON.stringify({ code: 'JOB_NOT_FOUND', message: 'Job job-001 was not found for tenant t-9' })], {
+        type: 'application/json',
+      });
+      const httpError = new HttpErrorResponse({ status: 404, error: apiErrorBlob });
+      reviewQueueStub.downloadErrorReport.mockReturnValueOnce(throwError(() => httpError));
+
+      const error = await firstValueFrom(service.downloadErrorReport('job-001')).catch((e: unknown) => e as Error);
+
+      expect(error).toBeInstanceOf(Error);
+      expect((error as Error).message).toBe('ERROR_REPORT_DOWNLOAD_FAILED:JOB_NOT_FOUND');
+      expect((error as Error).message).not.toContain('tenant t-9');
+    });
+
+    it('degrades a malformed/non-JSON Blob error body to the generic download-failed error', async () => {
+      const brokenBlob = new Blob(['<html>not json</html>'], { type: 'text/html' });
+      const httpError = new HttpErrorResponse({ status: 500, error: brokenBlob });
+      reviewQueueStub.downloadErrorReport.mockReturnValueOnce(throwError(() => httpError));
+
+      const error = await firstValueFrom(service.downloadErrorReport('job-001')).catch((e: unknown) => e as Error);
+
+      expect(error).toBeInstanceOf(Error);
+      expect((error as Error).message).toBe('ERROR_REPORT_DOWNLOAD_FAILED');
     });
   });
 

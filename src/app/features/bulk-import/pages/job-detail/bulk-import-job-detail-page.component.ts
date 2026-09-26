@@ -131,8 +131,21 @@ export class BulkImportJobDetailPageComponent {
       });
   }
 
+  /**
+   * (durion-positivity-backend#2216 precedent, issue #350) A bare `window.open()` of the
+   * legacy `/api/...` path sent no bearer token and was rejected by the gateway for a real
+   * session; the download now goes through the authenticated SDK blob download instead.
+   */
   downloadErrorReport(): void {
-    window.open(this.service.getErrorReportUrl(this.jobId), '_blank', 'noopener,noreferrer');
+    if (!this.jobId) { return; }
+    this.service.downloadErrorReport(this.jobId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        error: () => {
+          this.state.set('error');
+          this.errorKey.set('BULK_IMPORT.JOB_DETAIL.ERROR.DOWNLOAD');
+        },
+      });
   }
 
   isCorrectionPending(recordId: string): boolean {
