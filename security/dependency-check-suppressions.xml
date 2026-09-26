@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  OWASP Dependency-Check suppressions for the nightly security scan
+  (.github/workflows/nightly.yml). Mirrors the backend's
+  build-tools/owasp-suppressions.xml convention.
+
+  Every suppression needs a <notes> entry naming the issue that justifies it
+  (false positive, not reachable, accepted risk) and, where possible, an
+  `until` date so it is re-reviewed. Prefer upgrading the dependency.
+-->
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+</suppressions>
