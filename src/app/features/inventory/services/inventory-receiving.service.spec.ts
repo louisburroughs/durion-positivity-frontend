@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { ASNService, ReceivingService } from '@durion-sdk/inventory';
+import type { CrossDockWorkorderSearchResultDto } from '@durion-sdk/inventory';
 import { InventoryReceivingService } from './inventory-receiving.service';
 import {
   AsnCreateRequest,
@@ -264,7 +265,7 @@ describe('InventoryReceivingService', () => {
   // ── searchWorkordersForCrossDock() ────────────────────────────────────
 
   describe('searchWorkordersForCrossDock()', () => {
-    const sdkResults = [
+    const sdkResults: CrossDockWorkorderSearchResultDto[] = [
       { workorderId: 'wo-001', workorderNumber: 'WO-001', status: 'OPEN', partLineCount: 2, updatedAt: '2026-09-20T00:00:00Z' },
     ];
 
@@ -288,7 +289,8 @@ describe('InventoryReceivingService', () => {
     });
 
     it('defaults workorderNumber/status to empty string when the SDK omits them', () => {
-      receivingSdkStub.searchCrossDockWorkorders.mockReturnValueOnce(of([{ workorderId: 'wo-002', partLineCount: 1 }]));
+      const sparse: CrossDockWorkorderSearchResultDto[] = [{ workorderId: 'wo-002', partLineCount: 1 }];
+      receivingSdkStub.searchCrossDockWorkorders.mockReturnValueOnce(of(sparse));
 
       let result: WorkorderCrossDockRef[] | undefined;
       service.searchWorkordersForCrossDock('').subscribe(r => (result = r));
