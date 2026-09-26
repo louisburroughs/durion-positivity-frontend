@@ -118,6 +118,23 @@ describe('AppointmentCreateCrmPageComponent [CAP-137]', () => {
     expect(rows.length).toBe(1);
   });
 
+  // 5b. service-request inputs are labeled (accessibility)
+  it('labels the service-request input for each row', async () => {
+    await setup();
+    component.addServiceRequest();
+    component.addServiceRequest();
+    fixture.detectChanges();
+
+    const inputs = fixture.debugElement.queryAll(By.css('.service-request-input'));
+    expect(inputs.length).toBe(2);
+    for (const inputDe of inputs) {
+      const input = inputDe.nativeElement as HTMLInputElement;
+      const label = fixture.debugElement.query(By.css(`label[for="${input.id}"]`));
+      expect(input.id).toBeTruthy();
+      expect(label?.nativeElement.textContent?.trim()).toBeTruthy();
+    }
+  });
+
   // 6. removeServiceRequest removes the row
   it('removeServiceRequest(0) removes the row at index 0', async () => {
     await setup();

@@ -836,16 +836,27 @@ function lastUserMessageId(messages: readonly ChatMessage[]): string | undefined
   return undefined;
 }
 
+/** Monotonic suffix for the no-Web-Crypto last resort in `newId`. */
+let idCounter = 0;
+
 /**
  * `crypto.randomUUID` exists only in a secure context, so on a plain-HTTP LAN or
- * staging host every send would throw. These ids are local correlation keys, never
- * security tokens, so a random fallback is fine.
+ * staging host every send would throw. The fallback still draws from the CSPRNG:
+ * `crypto.getRandomValues` is available outside secure contexts too. The last
+ * resort (no Web Crypto at all) only covers exotic runtimes; these ids are local
+ * correlation keys, never security tokens.
  */
 function newId(): string {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID();
+  if (typeof crypto !== 'undefined') {
+    if (typeof crypto.randomUUID === 'function') {
+      return crypto.randomUUID();
+    }
+    if (typeof crypto.getRandomValues === 'function') {
+      const bytes = crypto.getRandomValues(new Uint8Array(8));
+      return `id-${Date.now().toString(36)}-${Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('')}`;
+    }
   }
-  return `id-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+  return `id-${Date.now().toString(36)}-${(++idCounter).toString(36)}`;
 }
 
 /** First line of the opening question, clipped on a word boundary. */

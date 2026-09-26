@@ -95,6 +95,8 @@
           </thead>
           <tbody>
             @for (party of parties(); track party.partyId) {
+              <!-- Whole-row click is a pointer shortcut; the name link below is the
+                   focusable keyboard path to the same route (issue #392). -->
               <tr class="party-row" (click)="onRowClick($event, party.partyId, party.customerNumber)">
                 <td>
                   <a class="party-row__name party-row__link"

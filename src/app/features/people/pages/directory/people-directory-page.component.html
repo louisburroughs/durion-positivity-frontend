@@ -50,34 +50,37 @@
               scope="col"
               class="directory-th directory-th--sortable"
               [attr.aria-sort]="ariaSort('lastName')"
-              (click)="sortBy('lastName')"
             >
-              {{ 'PEOPLE.DIRECTORY.COL.NAME' | translate }}
-              <span class="sort-icon" aria-hidden="true">
-                @if (sortColumn() === 'lastName') { {{ sortDir() === 'asc' ? '↑' : '↓' }} } @else { ↕ }
-              </span>
+              <button class="sort-btn" type="button" (click)="sortBy('lastName')">
+                {{ 'PEOPLE.DIRECTORY.COL.NAME' | translate }}
+                <span class="sort-icon" aria-hidden="true">
+                  @if (sortColumn() === 'lastName') { {{ sortDir() === 'asc' ? '↑' : '↓' }} } @else { ↕ }
+                </span>
+              </button>
             </th>
             <th
               scope="col"
               class="directory-th directory-th--sortable"
               [attr.aria-sort]="ariaSort('username')"
-              (click)="sortBy('username')"
             >
-              {{ 'PEOPLE.DIRECTORY.COL.USERNAME' | translate }}
-              <span class="sort-icon" aria-hidden="true">
-                @if (sortColumn() === 'username') { {{ sortDir() === 'asc' ? '↑' : '↓' }} } @else { ↕ }
-              </span>
+              <button class="sort-btn" type="button" (click)="sortBy('username')">
+                {{ 'PEOPLE.DIRECTORY.COL.USERNAME' | translate }}
+                <span class="sort-icon" aria-hidden="true">
+                  @if (sortColumn() === 'username') { {{ sortDir() === 'asc' ? '↑' : '↓' }} } @else { ↕ }
+                </span>
+              </button>
             </th>
             <th
               scope="col"
               class="directory-th directory-th--sortable"
               [attr.aria-sort]="ariaSort('primaryEmail')"
-              (click)="sortBy('primaryEmail')"
             >
-              {{ 'PEOPLE.DIRECTORY.COL.EMAIL' | translate }}
-              <span class="sort-icon" aria-hidden="true">
-                @if (sortColumn() === 'primaryEmail') { {{ sortDir() === 'asc' ? '↑' : '↓' }} } @else { ↕ }
-              </span>
+              <button class="sort-btn" type="button" (click)="sortBy('primaryEmail')">
+                {{ 'PEOPLE.DIRECTORY.COL.EMAIL' | translate }}
+                <span class="sort-icon" aria-hidden="true">
+                  @if (sortColumn() === 'primaryEmail') { {{ sortDir() === 'asc' ? '↑' : '↓' }} } @else { ↕ }
+                </span>
+              </button>
             </th>
             <th scope="col" class="directory-th">
               {{ 'PEOPLE.DIRECTORY.COL.PHONE' | translate }}
