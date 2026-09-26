@@ -1,16 +1,32 @@
-<section class="page-header">
+<header class="page-header">
+  <p class="overline">{{ 'LOCATION.BAYS.OVERLINE' | translate }}</p>
   <h1>{{ 'LOCATION.BAYS.TITLE' | translate }}</h1>
-  @if (locationId()) {
-    <button type="button" class="btn-primary open-create-btn" (click)="openCreate()">{{ 'LOCATION.BAYS.CREATE_BAY' | translate }}</button>
-  }
-</section>
+  <p class="standfirst">{{ 'LOCATION.BAYS.STANDFIRST' | translate }}</p>
+</header>
 
-<app-location-picker
-  [label]="'LOCATION.BAYS.LABEL' | translate"
-  [selectedId]="locationId()"
-  (locationSelected)="onLocationSelected($event)"
-  (invalidSelection)="onInvalidSelection($event)"
-></app-location-picker>
+<div class="toolbar">
+  <app-location-picker
+    [label]="'LOCATION.BAYS.LABEL' | translate"
+    [selectedId]="locationId()"
+    (locationSelected)="onLocationSelected($event)"
+    (invalidSelection)="onInvalidSelection($event)"
+  ></app-location-picker>
+
+  @if (locationId()) {
+    <div class="toolbar-actions">
+      <label class="tests-toggle">
+        <input type="checkbox" [checked]="showTests()" (change)="toggleTests($any($event.target).checked)" />
+        <span>{{ 'LOCATION.BAYS.SHOW_TESTS' | translate }}</span>
+        @if (!showTests() && hiddenTestCount() > 0) {
+          <span class="muted">{{ 'LOCATION.BAYS.TESTS_HIDDEN' | translate: { count: hiddenTestCount() } }}</span>
+        }
+      </label>
+      @if (canEdit()) {
+        <button type="button" class="btn-primary new-bay-btn" (click)="openCreate()">{{ 'LOCATION.BAYS.NEW_BAY' | translate }}</button>
+      }
+    </div>
+  }
+</div>
 
 @if (invalidId()) {
   <div class="error-banner" role="alert">{{ 'LOCATION.PICKER.NOT_FOUND' | translate }}</div>
@@ -20,68 +36,336 @@
   <section class="empty-state">
     <p>{{ 'LOCATION.BAYS.PROMPT' | translate }}</p>
   </section>
-}
+} @else {
+  <div class="sr-only" aria-live="polite">
+    @if (announcement(); as said) {
+      {{ said.key | translate: { bay: said.bay, lane: (said.laneKey | translate) } }}
+    }
+  </div>
 
-@if (error()) {
-  <div class="error-banner">{{ error()! | translate }}</div>
-}
+  @if (state() === 'ready' && !canEdit()) {
+    <p class="notice view-only-notice" role="status">{{ 'LOCATION.BAYS.VIEW_ONLY' | translate }}</p>
+  }
 
-@if (locationId()) {
-  @if (loading()) {
-    <section class="bays-grid">
-      <p>{{ 'LOCATION.BAYS.LOADING' | translate }}</p>
-    </section>
-  } @else {
-    @if (bays().length > 0) {
-      <section class="bays-grid">
-        @for (bay of bays(); track $index) {
-          <button type="button" class="bay-card" (click)="selectBay(bay)">
-            <h3>{{ getBayName(bay) }}</h3>
-          </button>
+  @switch (state()) {
+    @case ('loading') {
+      <p class="muted" role="status">{{ 'LOCATION.BAYS.LOADING' | translate }}</p>
+    }
+    @case ('error') {
+      <div class="state-panel" role="alert">
+        <p>{{ errorKey()! | translate }}</p>
+        <button type="button" class="btn-secondary retry-btn" (click)="retry()">{{ 'LOCATION.BAYS.RETRY' | translate }}</button>
+      </div>
+    }
+    @case ('ready') {
+      @if (!hasVisibleBays()) {
+        <section class="empty-state">
+          <p>{{ 'LOCATION.BAYS.EMPTY' | translate }}</p>
+          @if (canEdit()) {
+            <button type="button" class="btn-primary" (click)="openCreate()">{{ 'LOCATION.BAYS.NEW_BAY' | translate }}</button>
+          }
+        </section>
+      } @else {
+        @for (lane of lanes(); track lane.lane) {
+          @if (lane.cards.length > 0) {
+            <section class="lane" [attr.aria-labelledby]="'lane-' + lane.lane">
+              @if (lane.lane === 'OUT_OF_SERVICE') {
+                <h2 class="lane-heading" [id]="'lane-' + lane.lane">
+                  <button type="button" class="lane-toggle" [attr.aria-expanded]="outOfServiceOpen()"
+                    [attr.aria-controls]="outOfServiceOpen() ? 'lane-cards-OUT_OF_SERVICE' : null" (click)="toggleOutOfService()">
+                    <span aria-hidden="true" class="caret">{{ outOfServiceOpen() ? '▾' : '▸' }}</span>
+                    {{ lane.headingKey | translate }}
+                    <span class="lane-count">{{ lane.cards.length }}</span>
+                  </button>
+                </h2>
+              } @else {
+                <h2 class="lane-heading" [id]="'lane-' + lane.lane">
+                  {{ lane.headingKey | translate }}
+                  <span class="lane-count">{{ lane.cards.length }}</span>
+                </h2>
+              }
+
+              @if (lane.lane !== 'OUT_OF_SERVICE' || outOfServiceOpen()) {
+                <ul class="card-grid" [id]="'lane-cards-' + lane.lane">
+                  @for (card of lane.cards; track card.bay.id) {
+                    <li>
+                      <article class="bay-card" [id]="'bay-' + card.bay.id" tabindex="-1"
+                        [attr.aria-labelledby]="'bay-name-' + card.bay.id">
+                        <div class="card-top">
+                          <p class="overline">{{ card.typeKey | translate }}</p>
+                          <div class="card-tags">
+                            @if (card.testRecord) {
+                              <span class="tag tag-neutral">{{ 'LOCATION.BAYS.TEST_RECORD' | translate }}</span>
+                            }
+                            @if (card.outOfService) {
+                              <span class="tag tag-warning">{{ 'LOCATION.BAYS.STATUS.OUT_OF_SERVICE' | translate }}</span>
+                            }
+                          </div>
+                        </div>
+                        <h3 [id]="'bay-name-' + card.bay.id">{{ card.bay.name }}</h3>
+                        <p class="eligibility">{{ card.eligibility.key | translate: card.eligibility.params }}</p>
+                        <p class="duty">{{ card.duty.key | translate: card.duty.params }}</p>
+
+                        @if (card.chips.length > 0) {
+                          <ul class="chips" [attr.aria-label]="'LOCATION.BAYS.SPECIALTY_LIST' | translate: { bay: card.bay.name }">
+                            @for (chip of card.chips; track chip.code) {
+                              <li class="chip">
+                                <span>{{ chip.label }}</span>
+                                @if (chip.onlyBay) {
+                                  <span class="chip-marker">{{ 'LOCATION.BAYS.ONLY_BAY' | translate }}</span>
+                                }
+                              </li>
+                            }
+                          </ul>
+                          @if (card.hiddenChips > 0 || isExpanded(card.bay.id)) {
+                            <button type="button" class="link-btn more-chips-btn" [attr.aria-expanded]="isExpanded(card.bay.id)"
+                              (click)="toggleChips(card.bay.id)">
+                              {{ isExpanded(card.bay.id)
+                                ? ('LOCATION.BAYS.SHOW_FEWER' | translate)
+                                : ('LOCATION.BAYS.MORE_SERVICES' | translate: { count: card.hiddenChips }) }}
+                            </button>
+                          }
+                        } @else if (!card.isWash && !card.outOfService) {
+                          <p class="muted">{{ 'LOCATION.BAYS.GENERAL_NO_SPECIALTY' | translate }}</p>
+                        }
+
+                        <dl class="facts">
+                          <div>
+                            <dt>{{ 'LOCATION.BAYS.FIELD.VEHICLES' | translate }}</dt>
+                            <dd>{{ card.vehicles }}</dd>
+                          </div>
+                          <div>
+                            <dt>{{ 'LOCATION.BAYS.FIELD.DUTY' | translate }}</dt>
+                            <dd>{{ card.dutyValue.key | translate: card.dutyValue.params }}</dd>
+                          </div>
+                        </dl>
+
+                        @if (canEdit()) {
+                          <div class="card-actions">
+                            <button type="button" class="btn-secondary edit-bay-btn"
+                              [attr.aria-label]="'LOCATION.BAYS.EDIT_NAMED' | translate: { bay: card.bay.name }"
+                              (click)="openEdit(card.bay)">{{ 'LOCATION.BAYS.EDIT' | translate }}</button>
+                          </div>
+                        }
+                      </article>
+                    </li>
+                  }
+                </ul>
+              }
+            </section>
+          }
         }
-      </section>
-    } @else {
-      <section class="empty-state">
-        <p>{{ 'LOCATION.BAYS.EMPTY' | translate }}</p>
-      </section>
+      }
     }
   }
 }
 
-@if (showCreateModal()) {
-  <div class="create-modal-overlay">
-  <section class="create-modal">
-    <h3>{{ 'LOCATION.BAYS.CREATE_BAY' | translate }}</h3>
+@if (dialogMode(); as mode) {
+  <dialog appModalDialog class="bay-dialog" aria-labelledby="bay-dialog-title" (modalCancel)="closeDialog()">
+    <form class="dialog-panel" novalidate (submit)="$event.preventDefault(); submit()">
+      <h2 id="bay-dialog-title">
+        {{ (mode === 'create' ? 'LOCATION.BAYS.DIALOG.CREATE_TITLE' : 'LOCATION.BAYS.DIALOG.EDIT_TITLE') | translate: { bay: editingBay()?.name ?? '' } }}
+      </h2>
 
-    <div class="form-group">
-      <label for="create-bay-name">{{ 'LOCATION.BAYS.BAY_NAME' | translate }}</label>
-      <input id="create-bay-name" type="text" [value]="createBayName()"
-        (input)="createBayName.set($any($event.target).value)" />
-    </div>
+      <!-- A 403 makes the page read-only; the open dialog follows it (ADR-0040 §6a). -->
+      <fieldset class="dialog-body" [disabled]="!canEdit()">
+        <div class="form-col">
+          <div class="field">
+            <label for="bay-name">{{ 'LOCATION.BAYS.FIELD.NAME' | translate }} <span aria-hidden="true">*</span></label>
+            <input id="bay-name" type="text" required autocomplete="off" [value]="draft().name"
+              [attr.aria-invalid]="nameErrorKey() ? true : null"
+              [attr.aria-describedby]="nameErrorKey() ? 'bay-name-error bay-name-hint' : 'bay-name-hint'"
+              (input)="setName($any($event.target).value)" />
+            @if (nameErrorKey(); as nameError) {
+              <p id="bay-name-error" class="field-error">{{ nameError | translate: { bay: draft().name.trim() } }}</p>
+            }
+            <p id="bay-name-hint" class="hint">{{ 'LOCATION.BAYS.HINT.NAME' | translate }}</p>
+          </div>
 
-    <div class="modal-actions">
-      <button type="button" class="btn-secondary" (click)="closeCreate()">{{ 'LOCATION.BAYS.CANCEL' | translate }}</button>
-      <button type="button" class="btn-primary submit-create-btn" (click)="submitCreate()">{{ 'LOCATION.BAYS.CREATE' | translate }}</button>
-    </div>
-  </section>
-  </div>
-}
+          <div class="field">
+            <label for="bay-type">{{ 'LOCATION.BAYS.FIELD.TYPE' | translate }} <span aria-hidden="true">*</span></label>
+            <select id="bay-type" aria-describedby="bay-type-hint" (change)="setType($any($event.target).value)">
+              @for (type of bayTypes; track type) {
+                <option [value]="type" [selected]="draft().bayType === type">{{ typeKey(type) | translate }}</option>
+              }
+            </select>
+            <p id="bay-type-hint" class="hint">
+              {{ (mode === 'create' ? 'LOCATION.BAYS.HINT.TYPE_CREATE' : 'LOCATION.BAYS.HINT.TYPE_EDIT') | translate }}
+              @if (draft().bayType === 'WASH_DETAIL') {
+                {{ 'LOCATION.BAYS.HINT.TYPE_WASH' | translate }}
+              }
+            </p>
+          </div>
 
-@if (showEditModal()) {
-  <div class="edit-modal-overlay">
-  <section class="edit-modal">
-    <h3>{{ 'LOCATION.BAYS.EDIT_BAY' | translate }}</h3>
+          @if (typeChanged()) {
+            <fieldset class="field type-choice">
+              <legend>{{ 'LOCATION.BAYS.TYPE_CHOICE.LEGEND' | translate }}</legend>
+              <label>
+                <input type="radio" name="type-choice" value="DEFAULTS" [checked]="typeChoice() === 'DEFAULTS'"
+                  (change)="setTypeChoice('DEFAULTS')" />
+                {{ 'LOCATION.BAYS.TYPE_CHOICE.DEFAULTS' | translate: { type: (typeKey(draft().bayType) | translate), count: typeDefaults().length } }}
+              </label>
+              <label>
+                <input type="radio" name="type-choice" value="KEEP" [checked]="typeChoice() === 'KEEP'"
+                  (change)="setTypeChoice('KEEP')" />
+                {{ 'LOCATION.BAYS.TYPE_CHOICE.KEEP' | translate: { count: currentCodes().length } }}
+              </label>
+            </fieldset>
+          }
 
-    <div class="form-group">
-      <label for="edit-bay-name">{{ 'LOCATION.BAYS.BAY_NAME' | translate }}</label>
-      <input id="edit-bay-name" type="text" [value]="editBayName()"
-        (input)="editBayName.set($any($event.target).value)" />
-    </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="bay-vehicles">{{ 'LOCATION.BAYS.FIELD.VEHICLES' | translate }} <span aria-hidden="true">*</span></label>
+              <input id="bay-vehicles" type="number" min="1" step="1" required inputmode="numeric"
+                aria-describedby="bay-vehicles-hint" [value]="vehiclesText()"
+                (input)="setVehicles($any($event.target).value)" />
+              <p id="bay-vehicles-hint" class="hint">{{ 'LOCATION.BAYS.HINT.VEHICLES' | translate }}</p>
+            </div>
+            <div class="field">
+              <label for="bay-duty">{{ 'LOCATION.BAYS.FIELD.DUTY' | translate }}</label>
+              <select id="bay-duty"
+                [attr.aria-describedby]="noLimitLocked() ? 'bay-duty-hint bay-duty-locked' : 'bay-duty-hint'"
+                (change)="setDutyClass($any($event.target).value)">
+                <option value="" [disabled]="noLimitLocked()" [selected]="draft().maxDutyClass === null">
+                  {{ 'LOCATION.BAYS.DUTY.NO_LIMIT' | translate }}
+                </option>
+                @for (dutyClass of dutyClasses; track dutyClass) {
+                  <option [value]="dutyClass" [selected]="draft().maxDutyClass === dutyClass">
+                    {{ dutyOptionKey(dutyClass) | translate: { dutyClass } }}
+                  </option>
+                }
+              </select>
+              <p id="bay-duty-hint" class="hint">{{ 'LOCATION.BAYS.HINT.DUTY' | translate }}</p>
+              @if (noLimitLocked()) {
+                <p id="bay-duty-locked" class="hint">{{ 'LOCATION.BAYS.HINT.DUTY_LOCKED' | translate }}</p>
+              }
+            </div>
+          </div>
 
-    <div class="modal-actions">
-      <button type="button" class="btn-secondary" (click)="closeEdit()">{{ 'LOCATION.BAYS.CANCEL' | translate }}</button>
-      <button type="button" class="btn-primary" (click)="submitEdit()">{{ 'LOCATION.BAYS.SAVE' | translate }}</button>
-    </div>
-  </section>
-  </div>
+          <fieldset class="field status-field" aria-describedby="bay-status-hint">
+            <legend>{{ 'LOCATION.BAYS.FIELD.STATUS' | translate }}</legend>
+            <div class="radio-row">
+              @for (status of bayStatuses; track status) {
+                <label>
+                  <input type="radio" name="bay-status" [value]="status" [checked]="draft().status === status"
+                    (change)="setStatus(status)" />
+                  {{ statusKey(status) | translate }}
+                </label>
+              }
+            </div>
+            <p id="bay-status-hint" class="hint">{{ 'LOCATION.BAYS.HINT.STATUS' | translate }}</p>
+          </fieldset>
+
+          <fieldset class="field specialty-field" aria-describedby="bay-specialty-hint">
+            <legend>{{ 'LOCATION.BAYS.FIELD.SPECIALTY' | translate }}</legend>
+            @if (filledFrom(); as from) {
+              <p class="caption">{{ 'LOCATION.BAYS.FILLED_FROM' | translate: { type: (typeKey(from) | translate) } }}</p>
+            }
+            @if (draftChips().length > 0) {
+              <ul class="chips">
+                @for (chip of draftChips(); track chip.code) {
+                  <li class="chip">
+                    <span>{{ chip.label }}</span>
+                    <code class="chip-code">{{ chip.code }}</code>
+                    <button type="button" class="chip-remove"
+                      [attr.aria-label]="'LOCATION.BAYS.REMOVE_SERVICE' | translate: { service: chip.label }"
+                      (click)="removeService(chip.code)">×</button>
+                  </li>
+                }
+              </ul>
+            }
+            <label class="check">
+              <input type="checkbox" class="general-bay-check" [checked]="isGeneralBay()"
+                [disabled]="isGeneralBay() && typeDefaults().length === 0"
+                (change)="setGeneralBay($any($event.target).checked)" />
+              {{ 'LOCATION.BAYS.GENERAL_BAY' | translate }}
+            </label>
+            <p id="bay-specialty-hint" class="hint">{{ 'LOCATION.BAYS.HINT.SPECIALTY' | translate }}</p>
+
+            @if (canSearchServices()) {
+              <div class="service-search">
+                <label for="bay-service-search">{{ 'LOCATION.BAYS.SEARCH.LABEL' | translate }}</label>
+                <input id="bay-service-search" type="search" autocomplete="off" aria-describedby="bay-service-search-hint"
+                  [value]="serviceQuery()" (input)="onServiceQuery($any($event.target).value)" />
+                <p id="bay-service-search-hint" class="hint">{{ 'LOCATION.BAYS.SEARCH.HINT' | translate }}</p>
+                <div aria-live="polite">
+                  @switch (searchState()) {
+                    @case ('loading') {
+                      <p class="muted">{{ 'LOCATION.BAYS.SEARCH.LOADING' | translate }}</p>
+                    }
+                    @case ('failed') {
+                      <p class="field-error">{{ 'LOCATION.BAYS.SEARCH.FAILED' | translate }}</p>
+                    }
+                    @case ('ready') {
+                      @if (serviceResults().length === 0) {
+                        <p class="muted">{{ 'LOCATION.BAYS.SEARCH.NONE' | translate }}</p>
+                      } @else {
+                        <ul class="search-results">
+                          @for (service of serviceResults(); track service.operationCode) {
+                            <li>
+                              <span class="result-name">{{ service.name }}</span>
+                              <code class="chip-code">{{ service.operationCode }}</code>
+                              @if (hasService(service.operationCode)) {
+                                <span class="muted">{{ 'LOCATION.BAYS.SEARCH.ALREADY_ADDED' | translate }}</span>
+                              } @else {
+                                <button type="button" class="btn-secondary add-service-btn"
+                                  [attr.aria-label]="'LOCATION.BAYS.SEARCH.ADD_NAMED' | translate: { service: service.name }"
+                                  (click)="addService(service)">{{ 'LOCATION.BAYS.SEARCH.ADD' | translate }}</button>
+                              }
+                            </li>
+                          }
+                        </ul>
+                      }
+                    }
+                  }
+                </div>
+              </div>
+            } @else {
+              <p class="muted">{{ 'LOCATION.BAYS.SEARCH.NO_ACCESS' | translate }}</p>
+            }
+          </fieldset>
+        </div>
+
+        <aside class="preview" aria-labelledby="bay-preview-title">
+          <h3 id="bay-preview-title" class="overline">{{ 'LOCATION.BAYS.CHANGES.TITLE' | translate }}</h3>
+          <div aria-live="polite">
+            @if (changeMessages().length > 0) {
+              <ul class="change-list">
+                @for (change of changeMessages(); track $index) {
+                  <li>{{ change.key | translate: change.params }}</li>
+                }
+              </ul>
+            } @else {
+              <p>{{ 'LOCATION.BAYS.CHANGES.NONE' | translate }}</p>
+            }
+          </div>
+          @if (mode === 'edit') {
+            <p class="muted">{{ 'LOCATION.BAYS.CHANGES.EXISTING_STAY' | translate }}</p>
+          }
+        </aside>
+      </fieldset>
+
+      @if (saveErrorKey(); as saveError) {
+        <p class="dialog-error" role="alert">{{ saveError | translate }}</p>
+      }
+
+      <div class="dialog-actions">
+        <button type="button" class="btn-secondary cancel-btn" [disabled]="saving()" (click)="closeDialog()">
+          {{ 'LOCATION.BAYS.CANCEL' | translate }}
+        </button>
+        <button type="submit" class="btn-primary submit-btn" [disabled]="saving() || !canEdit()">
+          @if (changeMessages().length === 0) {
+            {{ (mode === 'create' ? 'LOCATION.BAYS.DIALOG.CREATE' : 'LOCATION.BAYS.DIALOG.SAVE') | translate }}
+          } @else if (mode === 'create') {
+            {{ (changeMessages().length === 1 ? 'LOCATION.BAYS.DIALOG.CREATE_APPLY_ONE' : 'LOCATION.BAYS.DIALOG.CREATE_APPLY_MANY') | translate: { count: changeMessages().length } }}
+          } @else {
+            {{ (changeMessages().length === 1 ? 'LOCATION.BAYS.DIALOG.SAVE_APPLY_ONE' : 'LOCATION.BAYS.DIALOG.SAVE_APPLY_MANY') | translate: { count: changeMessages().length } }}
+          }
+        </button>
+        @if (saving()) {
+          <span class="sr-only" role="status">{{ 'LOCATION.BAYS.SAVING' | translate }}</span>
+        }
+      </div>
+    </form>
+  </dialog>
 }

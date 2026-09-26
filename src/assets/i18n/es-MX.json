@@ -1953,24 +1953,147 @@
       "TYPE_DESCRIPTION": "Descripción"
     },
     "BAYS": {
+      "OVERLINE": "Configuración de ubicación",
       "TITLE": "Bahías",
-      "CREATE_BAY": "Crear bahía",
-      "EDIT_BAY": "Editar bahía",
-      "BAY_NAME": "Nombre de la bahía",
-      "LOADING": "Cargando...",
-      "EMPTY": "No se encontraron bahías para esta ubicación.",
-      "CANCEL": "Cancelar",
-      "CREATE": "Crear",
-      "SAVE": "Guardar",
-      "ERROR": {
-        "LOAD": "No se pudieron cargar las bahías.",
-        "NAME_REQUIRED": "El nombre de la bahía es obligatorio.",
-        "BAY_AND_NAME_REQUIRED": "La bahía y el nombre son obligatorios.",
-        "CREATE": "No se pudo crear la bahía.",
-        "UPDATE": "No se pudo actualizar la bahía."
-      },
+      "STANDFIRST": "Decida qué órdenes de trabajo se pueden asignar a cada bahía. Esta página no muestra lo que hay en una bahía ahora.",
       "LABEL": "Ubicación",
-      "PROMPT": "Seleccione una ubicación para ver y editar sus bahías."
+      "PROMPT": "Elija una ubicación para configurar sus bahías.",
+      "SHOW_TESTS": "Mostrar registros de prueba",
+      "TESTS_HIDDEN": "({{count}} ocultos)",
+      "NEW_BAY": "Nueva bahía",
+      "VIEW_ONLY": "Solo lectura: no puede cambiar las bahías de esta ubicación.",
+      "LOADING": "Cargando bahías…",
+      "RETRY": "Intentar de nuevo",
+      "EMPTY": "Esta ubicación aún no tiene bahías. Agregue una por cada espacio en el que reserva trabajo.",
+      "TEST_RECORD": "Registro de prueba",
+      "ONLY_BAY": "Única bahía",
+      "SPECIALTY_LIST": "Servicios especializados de {{bay}}",
+      "SHOW_FEWER": "Mostrar menos",
+      "MORE_SERVICES": "+{{count}} más",
+      "GENERAL_NO_SPECIALTY": "Bahía general: sin servicios especializados.",
+      "EDIT": "Editar",
+      "EDIT_NAMED": "Editar {{bay}}",
+      "CANCEL": "Cancelar",
+      "SAVING": "Guardando",
+      "FILLED_FROM": "Completado a partir de {{type}}.",
+      "REMOVE_SERVICE": "Quitar {{service}}",
+      "GENERAL_BAY": "Sin servicios especializados (bahía general)",
+      "LANE": {
+        "GENERAL": "General",
+        "SPECIALTY": "Especializada",
+        "WASH": "Lavado y detallado",
+        "OUT_OF_SERVICE": "Fuera de servicio"
+      },
+      "TYPE": {
+        "GENERAL_SERVICE": "Servicio general",
+        "ALIGNMENT": "Alineación",
+        "TIRE_SERVICE": "Servicio de llantas",
+        "HEAVY_DUTY": "Servicio pesado",
+        "INSPECTION": "Inspección",
+        "WASH_DETAIL": "Lavado y detallado"
+      },
+      "STATUS": {
+        "ACTIVE": "Activa",
+        "OUT_OF_SERVICE": "Fuera de servicio"
+      },
+      "CAN_BE_ASSIGNED": {
+        "GENERAL": "Se le puede asignar cualquier servicio general, antes que a las bahías especializadas.",
+        "SPECIALTY_ONE": "Se le puede asignar 1 servicio especializado, además de servicios generales.",
+        "SPECIALTY_MANY": "Se le pueden asignar {{count}} servicios especializados, además de servicios generales.",
+        "SPECIALTY_AFTER_GENERAL_ONE": "Se le puede asignar 1 servicio especializado, además de servicios generales después de las bahías generales.",
+        "SPECIALTY_AFTER_GENERAL_MANY": "Se le pueden asignar {{count}} servicios especializados, además de servicios generales después de las bahías generales.",
+        "WASH_ONE": "Solo se le puede asignar su 1 servicio, nunca servicios generales.",
+        "WASH_MANY": "Solo se le pueden asignar sus {{count}} servicios, nunca servicios generales.",
+        "WASH_NONE": "Todavía no se le puede asignar nada. Agregue los servicios que hace esta bahía.",
+        "OUT_OF_SERVICE": "Fuera de servicio: no recibe nuevas órdenes de trabajo hasta que vuelva.",
+        "OUT_OF_SERVICE_CLAIMS": "Fuera de servicio: no recibe nuevas órdenes de trabajo. Sus servicios especializados quedan abiertos a otras bahías hasta que vuelva."
+      },
+      "DUTY": {
+        "TAKES_ANY": "Acepta cualquier vehículo.",
+        "TAKES_LIGHT": "Acepta vehículos hasta la clase {{dutyClass}} (ligero).",
+        "TAKES_MEDIUM": "Acepta vehículos hasta la clase {{dutyClass}} (mediano).",
+        "TAKES_HEAVY": "Acepta vehículos hasta la clase {{dutyClass}} (pesado).",
+        "VALUE_ANY": "Sin límite",
+        "VALUE_LIGHT": "{{dutyClass}} (ligero)",
+        "VALUE_MEDIUM": "{{dutyClass}} (mediano)",
+        "VALUE_HEAVY": "{{dutyClass}} (pesado)",
+        "NO_LIMIT": "Sin límite",
+        "OPTION_LIGHT": "{{dutyClass}} (ligero)",
+        "OPTION_MEDIUM": "{{dutyClass}} (mediano)",
+        "OPTION_HEAVY": "{{dutyClass}} (pesado)"
+      },
+      "FIELD": {
+        "NAME": "Nombre",
+        "TYPE": "Tipo de bahía",
+        "VEHICLES": "Vehículos a la vez",
+        "DUTY": "Clase de servicio máxima",
+        "STATUS": "Estado",
+        "SPECIALTY": "Servicios especializados"
+      },
+      "HINT": {
+        "NAME": "Cómo llama el personal a esta bahía, p. ej. \"Bahía 3\". Ninguna otra bahía de esta ubicación puede tener el mismo nombre.",
+        "TYPE_CREATE": "El tipo de trabajo para el que está preparada esta bahía. Una bahía nueva empieza con los servicios especializados habituales de ese tipo; cámbielos abajo.",
+        "TYPE_EDIT": "El tipo de trabajo para el que está preparada esta bahía. Cambiarlo reemplaza los servicios especializados por los habituales del nuevo tipo, a menos que conserve los actuales.",
+        "TYPE_WASH": "Las bahías de lavado y detallado solo aceptan los servicios que agregue aquí, nunca servicios generales.",
+        "STATUS": "Fuera de servicio impide que lleguen nuevas órdenes de trabajo a esta bahía; las que ya tiene se quedan. Mientras está fuera, sus servicios especializados quedan abiertos a otras bahías.",
+        "VEHICLES": "Cuántos vehículos caben físicamente. La bahía sigue aceptando una orden de trabajo abierta a la vez, así que agregue una bahía por cada puesto que reserve por separado.",
+        "DUTY": "El vehículo más pesado que acepta esta bahía: clases 1–3 ligero, 4–6 mediano, 7–8 pesado. Elija Sin límite si cabe cualquier vehículo. Los vehículos sin clase registrada no se revisan.",
+        "DUTY_LOCKED": "Un límite ya establecido todavía no se puede quitar, solo cambiar a otra clase.",
+        "SPECIALTY": "Servicios que en esta ubicación solo se pueden asignar a las bahías que los reclaman. Déjelo vacío para una bahía general, que acepta cualquier servicio que ninguna bahía de aquí reclama."
+      },
+      "TYPE_CHOICE": {
+        "LEGEND": "Servicios especializados después del cambio de tipo",
+        "DEFAULTS": "Usar los servicios habituales de {{type}} ({{count}})",
+        "KEEP": "Conservar los servicios actuales de esta bahía ({{count}})"
+      },
+      "SEARCH": {
+        "LABEL": "Buscar un servicio para agregar",
+        "HINT": "Escriba al menos 2 letras del nombre del servicio.",
+        "LOADING": "Buscando…",
+        "FAILED": "No se pudo buscar en el catálogo de servicios. Intente de nuevo.",
+        "NONE": "Ningún servicio coincide.",
+        "ALREADY_ADDED": "Ya está en esta bahía",
+        "ADD": "Agregar",
+        "ADD_NAMED": "Agregar {{service}}",
+        "NO_ACCESS": "No puede ver el catálogo de servicios, así que no puede agregar servicios aquí."
+      },
+      "CHANGES": {
+        "TITLE": "Qué cambia",
+        "NONE": "No cambia lo que se puede asignar a las demás bahías.",
+        "EXISTING_STAY": "Las órdenes de trabajo que ya están en esta bahía se quedan.",
+        "ONLY_CLAIMANT": "{{bay}} será la única bahía de aquí a la que se puede asignar {{service}}. Las demás bahías dejan de aceptarlo.",
+        "NOW_GENERAL_WORK": "{{service}} pasa a ser trabajo general: se puede asignar a cualquier bahía de aquí excepto las de lavado y detallado.",
+        "CLAIM_ON_HOLD": "{{service}} no contará para {{bay}} hasta que vuelva al servicio.",
+        "OUT_OF_SERVICE": "{{bay}} deja de recibir nuevas órdenes de trabajo.",
+        "BACK_IN_SERVICE": "{{bay}} puede volver a recibir nuevas órdenes de trabajo.",
+        "NO_BAY_ABOVE": "Los vehículos por encima de la clase {{dutyClass}} no tendrán bahía aquí.",
+        "WASH_NONE": "No se podrá asignar nada a {{bay}} hasta que agregue los servicios que hace."
+      },
+      "DIALOG": {
+        "CREATE_TITLE": "Nueva bahía",
+        "EDIT_TITLE": "Editar {{bay}}",
+        "CREATE": "Crear bahía",
+        "SAVE": "Guardar",
+        "SAVE_APPLY_ONE": "Guardar y aplicar 1 cambio",
+        "SAVE_APPLY_MANY": "Guardar y aplicar {{count}} cambios",
+        "CREATE_APPLY_ONE": "Crear bahía y aplicar 1 cambio",
+        "CREATE_APPLY_MANY": "Crear bahía y aplicar {{count}} cambios"
+      },
+      "SAVED": {
+        "CREATED": "{{bay}} agregada a {{lane}}.",
+        "UPDATED": "{{bay}} guardada. Está en {{lane}}."
+      },
+      "ERROR": {
+        "LOAD": "No se pudieron cargar las bahías de esta ubicación.",
+        "NAME_REQUIRED": "Escriba un nombre para la bahía.",
+        "NAME_TAKEN": "Otra bahía de aquí ya se llama {{bay}}.",
+        "VEHICLES": "Vehículos a la vez debe ser un número entero de 1 o más.",
+        "INVALID": "No se pudo guardar la bahía: revise cada campo e intente de nuevo.",
+        "NOT_ALLOWED": "No puede cambiar las bahías de esta ubicación.",
+        "GONE": "Esta bahía ya no existe. Cierre el diálogo para ver las bahías actuales.",
+        "INVALID_SERVICES": "Uno de los servicios especializados no es un servicio activo del catálogo. Quítelo e intente de nuevo.",
+        "SAVE_FAILED": "No se pudo guardar la bahía. Intente de nuevo."
+      }
     },
     "MOBILE_UNITS": {
       "TITLE": "Unidades móviles",

@@ -1953,24 +1953,147 @@
       "TYPE_DESCRIPTION": "Description"
     },
     "BAYS": {
+      "OVERLINE": "Configuration de l'emplacement",
       "TITLE": "Baies",
-      "CREATE_BAY": "Créer une baie",
-      "EDIT_BAY": "Modifier la baie",
-      "BAY_NAME": "Nom de la baie",
-      "LOADING": "Chargement...",
-      "EMPTY": "Aucune baie trouvée pour cet emplacement.",
-      "CANCEL": "Annuler",
-      "CREATE": "Créer",
-      "SAVE": "Enregistrer",
-      "ERROR": {
-        "LOAD": "Impossible de charger les baies.",
-        "NAME_REQUIRED": "Le nom de la baie est requis.",
-        "BAY_AND_NAME_REQUIRED": "La baie et le nom sont requis.",
-        "CREATE": "Impossible de créer la baie.",
-        "UPDATE": "Impossible de mettre à jour la baie."
-      },
+      "STANDFIRST": "Décidez quels bons de travail peuvent être assignés à chaque baie. Cette page ne montre pas ce qui se trouve dans une baie en ce moment.",
       "LABEL": "Emplacement",
-      "PROMPT": "Sélectionnez un emplacement pour afficher et modifier ses baies."
+      "PROMPT": "Choisissez un emplacement pour configurer ses baies.",
+      "SHOW_TESTS": "Afficher les enregistrements de test",
+      "TESTS_HIDDEN": "({{count}} masqués)",
+      "NEW_BAY": "Nouvelle baie",
+      "VIEW_ONLY": "Lecture seule : vous ne pouvez pas modifier les baies de cet emplacement.",
+      "LOADING": "Chargement des baies…",
+      "RETRY": "Réessayer",
+      "EMPTY": "Cet emplacement n'a pas encore de baie. Ajoutez-en une pour chaque espace où vous réservez du travail.",
+      "TEST_RECORD": "Enregistrement de test",
+      "ONLY_BAY": "Seule baie",
+      "SPECIALTY_LIST": "Services spécialisés de {{bay}}",
+      "SHOW_FEWER": "Afficher moins",
+      "MORE_SERVICES": "+{{count}} de plus",
+      "GENERAL_NO_SPECIALTY": "Baie générale : aucun service spécialisé.",
+      "EDIT": "Modifier",
+      "EDIT_NAMED": "Modifier {{bay}}",
+      "CANCEL": "Annuler",
+      "SAVING": "Enregistrement",
+      "FILLED_FROM": "Rempli à partir de {{type}}.",
+      "REMOVE_SERVICE": "Retirer {{service}}",
+      "GENERAL_BAY": "Aucun service spécialisé (baie générale)",
+      "LANE": {
+        "GENERAL": "Générales",
+        "SPECIALTY": "Spécialisées",
+        "WASH": "Lavage et esthétique",
+        "OUT_OF_SERVICE": "Hors service"
+      },
+      "TYPE": {
+        "GENERAL_SERVICE": "Service général",
+        "ALIGNMENT": "Alignement",
+        "TIRE_SERVICE": "Service de pneus",
+        "HEAVY_DUTY": "Poids lourd",
+        "INSPECTION": "Inspection",
+        "WASH_DETAIL": "Lavage et esthétique"
+      },
+      "STATUS": {
+        "ACTIVE": "Active",
+        "OUT_OF_SERVICE": "Hors service"
+      },
+      "CAN_BE_ASSIGNED": {
+        "GENERAL": "Peut recevoir n'importe quel service général, proposé avant les baies spécialisées.",
+        "SPECIALTY_ONE": "Peut recevoir 1 service spécialisé, plus les services généraux.",
+        "SPECIALTY_MANY": "Peut recevoir {{count}} services spécialisés, plus les services généraux.",
+        "SPECIALTY_AFTER_GENERAL_ONE": "Peut recevoir 1 service spécialisé, plus les services généraux après les baies générales.",
+        "SPECIALTY_AFTER_GENERAL_MANY": "Peut recevoir {{count}} services spécialisés, plus les services généraux après les baies générales.",
+        "WASH_ONE": "Peut recevoir uniquement son service, jamais de services généraux.",
+        "WASH_MANY": "Peut recevoir uniquement ses {{count}} services, jamais de services généraux.",
+        "WASH_NONE": "Ne peut encore rien recevoir. Ajoutez les services que fait cette baie.",
+        "OUT_OF_SERVICE": "Hors service : aucun nouveau bon de travail jusqu'à son retour.",
+        "OUT_OF_SERVICE_CLAIMS": "Hors service : aucun nouveau bon de travail. Ses services spécialisés sont ouverts aux autres baies jusqu'à son retour."
+      },
+      "DUTY": {
+        "TAKES_ANY": "Accepte tout véhicule.",
+        "TAKES_LIGHT": "Accepte les véhicules jusqu'à la classe {{dutyClass}} (léger).",
+        "TAKES_MEDIUM": "Accepte les véhicules jusqu'à la classe {{dutyClass}} (moyen).",
+        "TAKES_HEAVY": "Accepte les véhicules jusqu'à la classe {{dutyClass}} (lourd).",
+        "VALUE_ANY": "Aucune limite",
+        "VALUE_LIGHT": "{{dutyClass}} (léger)",
+        "VALUE_MEDIUM": "{{dutyClass}} (moyen)",
+        "VALUE_HEAVY": "{{dutyClass}} (lourd)",
+        "NO_LIMIT": "Aucune limite",
+        "OPTION_LIGHT": "{{dutyClass}} (léger)",
+        "OPTION_MEDIUM": "{{dutyClass}} (moyen)",
+        "OPTION_HEAVY": "{{dutyClass}} (lourd)"
+      },
+      "FIELD": {
+        "NAME": "Nom",
+        "TYPE": "Type de baie",
+        "VEHICLES": "Véhicules à la fois",
+        "DUTY": "Classe de poids maximale",
+        "STATUS": "Statut",
+        "SPECIALTY": "Services spécialisés"
+      },
+      "HINT": {
+        "NAME": "Le nom que le personnel donne à cette baie, p. ex. « Baie 3 ». Aucune autre baie de cet emplacement ne peut porter le même nom.",
+        "TYPE_CREATE": "Le type de travail pour lequel cette baie est équipée. Une nouvelle baie commence avec les services spécialisés habituels de ce type; modifiez-les ci-dessous.",
+        "TYPE_EDIT": "Le type de travail pour lequel cette baie est équipée. Le changer remplace les services spécialisés par ceux du nouveau type, sauf si vous gardez les services actuels.",
+        "TYPE_WASH": "Les baies de lavage et esthétique n'acceptent que les services ajoutés ici, jamais de services généraux.",
+        "STATUS": "Hors service empêche l'arrivée de nouveaux bons de travail dans cette baie; ceux qui y sont déjà restent. Pendant ce temps, ses services spécialisés sont ouverts aux autres baies.",
+        "VEHICLES": "Le nombre de véhicules qui tiennent physiquement. La baie n'accepte toujours qu'un bon de travail ouvert à la fois : ajoutez une baie pour chaque poste réservé séparément.",
+        "DUTY": "Le véhicule le plus lourd que cette baie accepte : classes 1–3 léger, 4–6 moyen, 7–8 lourd. Choisissez Aucune limite si tout véhicule convient. Les véhicules sans classe enregistrée ne sont pas vérifiés.",
+        "DUTY_LOCKED": "Une limite déjà définie ne peut pas encore être retirée, seulement changée pour une autre classe.",
+        "SPECIALTY": "Services qui, à cet emplacement, ne peuvent être assignés qu'aux baies qui les revendiquent. Laissez vide pour une baie générale, qui accepte tout service qu'aucune baie d'ici ne revendique."
+      },
+      "TYPE_CHOICE": {
+        "LEGEND": "Services spécialisés après le changement de type",
+        "DEFAULTS": "Utiliser les services habituels de {{type}} ({{count}})",
+        "KEEP": "Garder les services actuels de cette baie ({{count}})"
+      },
+      "SEARCH": {
+        "LABEL": "Trouver un service à ajouter",
+        "HINT": "Tapez au moins 2 lettres du nom du service.",
+        "LOADING": "Recherche…",
+        "FAILED": "Impossible de chercher dans le catalogue de services. Réessayez.",
+        "NONE": "Aucun service ne correspond.",
+        "ALREADY_ADDED": "Déjà sur cette baie",
+        "ADD": "Ajouter",
+        "ADD_NAMED": "Ajouter {{service}}",
+        "NO_ACCESS": "Vous ne pouvez pas consulter le catalogue de services, donc vous ne pouvez pas ajouter de services ici."
+      },
+      "CHANGES": {
+        "TITLE": "Ce qui change",
+        "NONE": "Aucun changement à ce que les autres baies peuvent recevoir.",
+        "EXISTING_STAY": "Les bons de travail déjà dans cette baie y restent.",
+        "ONLY_CLAIMANT": "{{bay}} sera la seule baie d'ici à pouvoir recevoir {{service}}. Les autres baies cessent de l'accepter.",
+        "NOW_GENERAL_WORK": "{{service}} devient du travail général : toute baie d'ici sauf lavage et esthétique peut le recevoir.",
+        "CLAIM_ON_HOLD": "{{service}} ne comptera pas pour {{bay}} avant son retour en service.",
+        "OUT_OF_SERVICE": "{{bay}} ne reçoit plus de nouveaux bons de travail.",
+        "BACK_IN_SERVICE": "{{bay}} peut de nouveau recevoir de nouveaux bons de travail.",
+        "NO_BAY_ABOVE": "Les véhicules au-dessus de la classe {{dutyClass}} n'auront aucune baie ici.",
+        "WASH_NONE": "{{bay}} ne pourra rien recevoir tant que vous n'aurez pas ajouté ses services."
+      },
+      "DIALOG": {
+        "CREATE_TITLE": "Nouvelle baie",
+        "EDIT_TITLE": "Modifier {{bay}}",
+        "CREATE": "Créer la baie",
+        "SAVE": "Enregistrer",
+        "SAVE_APPLY_ONE": "Enregistrer et appliquer 1 changement",
+        "SAVE_APPLY_MANY": "Enregistrer et appliquer {{count}} changements",
+        "CREATE_APPLY_ONE": "Créer la baie et appliquer 1 changement",
+        "CREATE_APPLY_MANY": "Créer la baie et appliquer {{count}} changements"
+      },
+      "SAVED": {
+        "CREATED": "{{bay}} ajoutée à {{lane}}.",
+        "UPDATED": "{{bay}} enregistrée. Elle est dans {{lane}}."
+      },
+      "ERROR": {
+        "LOAD": "Impossible de charger les baies de cet emplacement.",
+        "NAME_REQUIRED": "Saisissez un nom pour la baie.",
+        "NAME_TAKEN": "Une autre baie d'ici s'appelle déjà {{bay}}.",
+        "VEHICLES": "Véhicules à la fois doit être un nombre entier de 1 ou plus.",
+        "INVALID": "La baie n'a pas pu être enregistrée : vérifiez chaque champ et réessayez.",
+        "NOT_ALLOWED": "Vous ne pouvez pas modifier les baies de cet emplacement.",
+        "GONE": "Cette baie n'existe plus. Fermez la boîte de dialogue pour voir les baies actuelles.",
+        "INVALID_SERVICES": "Un des services spécialisés n'est pas un service actif du catalogue. Retirez-le et réessayez.",
+        "SAVE_FAILED": "Impossible d'enregistrer la baie. Réessayez."
+      }
     },
     "MOBILE_UNITS": {
       "TITLE": "Unités mobiles",

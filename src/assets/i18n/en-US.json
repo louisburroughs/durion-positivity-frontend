@@ -1953,24 +1953,147 @@
       "TYPE_DESCRIPTION": "Description"
     },
     "BAYS": {
+      "OVERLINE": "Location setup",
       "TITLE": "Bays",
-      "CREATE_BAY": "Create Bay",
-      "EDIT_BAY": "Edit Bay",
-      "BAY_NAME": "Bay Name",
-      "LOADING": "Loading...",
-      "EMPTY": "No bays found for this location.",
-      "CANCEL": "Cancel",
-      "CREATE": "Create",
-      "SAVE": "Save",
-      "ERROR": {
-        "LOAD": "Failed to load bays.",
-        "NAME_REQUIRED": "Bay name is required.",
-        "BAY_AND_NAME_REQUIRED": "Bay and name are required.",
-        "CREATE": "Failed to create bay.",
-        "UPDATE": "Failed to update bay."
-      },
+      "STANDFIRST": "Decide which workorders each bay can be assigned. This page doesn't show what's in a bay right now.",
       "LABEL": "Location",
-      "PROMPT": "Select a location to view and edit its bays."
+      "PROMPT": "Choose a location to set up its bays.",
+      "SHOW_TESTS": "Show test records",
+      "TESTS_HIDDEN": "({{count}} hidden)",
+      "NEW_BAY": "New bay",
+      "VIEW_ONLY": "View only: you can't change bays at this location.",
+      "LOADING": "Loading bays…",
+      "RETRY": "Try again",
+      "EMPTY": "No bays at this location yet. Add one for each space you book work into.",
+      "TEST_RECORD": "Test record",
+      "ONLY_BAY": "Only bay",
+      "SPECIALTY_LIST": "Specialty services of {{bay}}",
+      "SHOW_FEWER": "Show fewer",
+      "MORE_SERVICES": "+{{count}} more",
+      "GENERAL_NO_SPECIALTY": "General bay: no specialty services.",
+      "EDIT": "Edit",
+      "EDIT_NAMED": "Edit {{bay}}",
+      "CANCEL": "Cancel",
+      "SAVING": "Saving",
+      "FILLED_FROM": "Filled in from {{type}}.",
+      "REMOVE_SERVICE": "Remove {{service}}",
+      "GENERAL_BAY": "No specialty services (general bay)",
+      "LANE": {
+        "GENERAL": "General",
+        "SPECIALTY": "Specialty",
+        "WASH": "Wash & detail",
+        "OUT_OF_SERVICE": "Out of service"
+      },
+      "TYPE": {
+        "GENERAL_SERVICE": "General service",
+        "ALIGNMENT": "Alignment",
+        "TIRE_SERVICE": "Tire service",
+        "HEAVY_DUTY": "Heavy duty",
+        "INSPECTION": "Inspection",
+        "WASH_DETAIL": "Wash & detail"
+      },
+      "STATUS": {
+        "ACTIVE": "Active",
+        "OUT_OF_SERVICE": "Out of service"
+      },
+      "CAN_BE_ASSIGNED": {
+        "GENERAL": "Can be assigned any general service, offered before specialty bays.",
+        "SPECIALTY_ONE": "Can be assigned 1 specialty service, plus general services.",
+        "SPECIALTY_MANY": "Can be assigned {{count}} specialty services, plus general services.",
+        "SPECIALTY_AFTER_GENERAL_ONE": "Can be assigned 1 specialty service, plus general services after the general bays.",
+        "SPECIALTY_AFTER_GENERAL_MANY": "Can be assigned {{count}} specialty services, plus general services after the general bays.",
+        "WASH_ONE": "Can be assigned only its 1 service, never general services.",
+        "WASH_MANY": "Can be assigned only its {{count}} services, never general services.",
+        "WASH_NONE": "Can't be assigned anything yet. Add the services this bay does.",
+        "OUT_OF_SERVICE": "Out of service: no new workorders until it's back.",
+        "OUT_OF_SERVICE_CLAIMS": "Out of service: no new workorders. Its specialty services are open to other bays until it's back."
+      },
+      "DUTY": {
+        "TAKES_ANY": "Takes any vehicle.",
+        "TAKES_LIGHT": "Takes vehicles up to class {{dutyClass}} (light).",
+        "TAKES_MEDIUM": "Takes vehicles up to class {{dutyClass}} (medium).",
+        "TAKES_HEAVY": "Takes vehicles up to class {{dutyClass}} (heavy).",
+        "VALUE_ANY": "No limit",
+        "VALUE_LIGHT": "{{dutyClass}} (light)",
+        "VALUE_MEDIUM": "{{dutyClass}} (medium)",
+        "VALUE_HEAVY": "{{dutyClass}} (heavy)",
+        "NO_LIMIT": "No limit",
+        "OPTION_LIGHT": "{{dutyClass}} (light)",
+        "OPTION_MEDIUM": "{{dutyClass}} (medium)",
+        "OPTION_HEAVY": "{{dutyClass}} (heavy)"
+      },
+      "FIELD": {
+        "NAME": "Name",
+        "TYPE": "Bay type",
+        "VEHICLES": "Vehicles at once",
+        "DUTY": "Max duty class",
+        "STATUS": "Status",
+        "SPECIALTY": "Specialty services"
+      },
+      "HINT": {
+        "NAME": "What staff call this bay, e.g. \"Bay 3\". No other bay at this location can have the same name.",
+        "TYPE_CREATE": "The kind of work this bay is set up for. A new bay starts with that type's usual specialty services; change them below.",
+        "TYPE_EDIT": "The kind of work this bay is set up for. Changing it replaces the specialty services with the new type's usual ones, unless you keep the current ones.",
+        "TYPE_WASH": "Wash & detail bays take only the services you add here, never general services.",
+        "STATUS": "Out of service stops new workorders coming to this bay; any already on it stay. While it's out, its specialty services open up to other bays.",
+        "VEHICLES": "How many vehicles physically fit. The bay still takes one open workorder at a time, so add a separate bay for each stall you book separately.",
+        "DUTY": "The heaviest vehicle this bay takes: classes 1–3 light, 4–6 medium, 7–8 heavy. Choose No limit if any vehicle fits. Vehicles with no class on record aren't checked.",
+        "DUTY_LOCKED": "A limit that has been set can't be removed yet, only changed to another class.",
+        "SPECIALTY": "Services that only bays claiming them can be assigned at this location. Leave empty for a general bay, which takes any service no bay here claims."
+      },
+      "TYPE_CHOICE": {
+        "LEGEND": "Specialty services after the type change",
+        "DEFAULTS": "Use {{type}}'s usual services ({{count}})",
+        "KEEP": "Keep this bay's current services ({{count}})"
+      },
+      "SEARCH": {
+        "LABEL": "Find a service to add",
+        "HINT": "Type at least 2 letters of the service name.",
+        "LOADING": "Searching…",
+        "FAILED": "Couldn't search the service catalog. Try again.",
+        "NONE": "No services match.",
+        "ALREADY_ADDED": "Already on this bay",
+        "ADD": "Add",
+        "ADD_NAMED": "Add {{service}}",
+        "NO_ACCESS": "You can't view the service catalog, so you can't add services here."
+      },
+      "CHANGES": {
+        "TITLE": "What changes",
+        "NONE": "No change to what other bays can be assigned.",
+        "EXISTING_STAY": "Workorders already on this bay stay.",
+        "ONLY_CLAIMANT": "{{bay}} will be the only bay here that can be assigned {{service}}. Other bays stop taking it.",
+        "NOW_GENERAL_WORK": "{{service}} becomes general work: any bay here except wash & detail can be assigned it.",
+        "CLAIM_ON_HOLD": "{{service}} won't count for {{bay}} until it's back in service.",
+        "OUT_OF_SERVICE": "{{bay}} stops being assigned new workorders.",
+        "BACK_IN_SERVICE": "{{bay}} can be assigned new workorders again.",
+        "NO_BAY_ABOVE": "Vehicles above class {{dutyClass}} will have no bay here.",
+        "WASH_NONE": "{{bay}} can't be assigned anything until you add the services it does."
+      },
+      "DIALOG": {
+        "CREATE_TITLE": "New bay",
+        "EDIT_TITLE": "Edit {{bay}}",
+        "CREATE": "Create bay",
+        "SAVE": "Save",
+        "SAVE_APPLY_ONE": "Save and apply 1 change",
+        "SAVE_APPLY_MANY": "Save and apply {{count}} changes",
+        "CREATE_APPLY_ONE": "Create bay and apply 1 change",
+        "CREATE_APPLY_MANY": "Create bay and apply {{count}} changes"
+      },
+      "SAVED": {
+        "CREATED": "{{bay}} added to {{lane}}.",
+        "UPDATED": "{{bay}} saved. It's in {{lane}}."
+      },
+      "ERROR": {
+        "LOAD": "Couldn't load the bays for this location.",
+        "NAME_REQUIRED": "Enter a name for the bay.",
+        "NAME_TAKEN": "Another bay here is already called {{bay}}.",
+        "VEHICLES": "Vehicles at once must be a whole number of 1 or more.",
+        "INVALID": "The bay couldn't be saved: check each field and try again.",
+        "NOT_ALLOWED": "You can't change bays at this location.",
+        "GONE": "This bay no longer exists. Close the dialog to see the current bays.",
+        "INVALID_SERVICES": "One of the specialty services isn't an active catalog service. Remove it and try again.",
+        "SAVE_FAILED": "Couldn't save the bay. Try again."
+      }
     },
     "MOBILE_UNITS": {
       "TITLE": "Mobile Units",
