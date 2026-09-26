@@ -86,13 +86,6 @@ export const PRODUCT_ROUTES: Routes = [
           ),
       },
       {
-        path: 'inventory/feeds',
-        loadComponent: () =>
-          import('./pages/inventory/feeds/feeds.component').then(
-            m => m.FeedsComponent,
-          ),
-      },
-      {
         path: 'location/locations-roster',
         data: { permissions: PRODUCT_PAGE.locationsRoster },
         loadComponent: () =>

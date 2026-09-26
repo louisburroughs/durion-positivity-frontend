@@ -21,7 +21,9 @@ describe('WorkSessionSubmitPageComponent', () => {
     TestBed.resetTestingModule();
 
     peopleService = {
-      submitWorkSession: vi.fn().mockReturnValue(of({ correlationId: 'CORR-1' })),
+      submitWorkSession: vi.fn().mockReturnValue(
+        of({ sessionId: 'SESSION-1', personId: 'person-1', status: 'SUBMITTED', billableMinutes: 120, breakMinutes: 15 }),
+      ),
     };
 
     await TestBed.configureTestingModule({
@@ -82,7 +84,7 @@ describe('WorkSessionSubmitPageComponent', () => {
     expect(resultPanel).toBeTruthy();
   });
 
-  it('shows correlation id after successful submit', () => {
+  it('shows sessionId as the submission reference after successful submit', () => {
     component.submitForm.controls.billableMinutes.setValue(120);
     component.submitForm.controls.breakMinutes.setValue(15);
     component.submitForm.controls.submittedAt.setValue(new Date().toISOString());
@@ -90,9 +92,10 @@ describe('WorkSessionSubmitPageComponent', () => {
     component.submitJobTime();
     fixture.detectChanges();
 
-    const el = fixture.nativeElement.querySelector('[data-testid="correlation-id"]');
+    const el = fixture.nativeElement.querySelector('[data-testid="session-reference"]');
     expect(el).toBeTruthy();
-    expect(el.textContent).toContain('CORR-1');
+    expect(el.textContent).toContain('SESSION-1');
+    expect(fixture.nativeElement.querySelector('[data-testid="correlation-id"]')).toBeFalsy();
   });
 
   it('shows error panel when submit fails', () => {

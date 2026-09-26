@@ -106,7 +106,6 @@ export const APP_SEEDS: readonly string[] = [
   '/app/product/pricing/msrp',
   '/app/product/pricing/location-overrides',
   '/app/product/inventory/availability',
-  '/app/product/inventory/feeds',
   '/app/product/location/locations-roster',
   '/app/product/bulk-import/catalog',
   '/app/product/bulk-import/price',

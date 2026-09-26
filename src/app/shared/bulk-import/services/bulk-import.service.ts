@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, map, of, switchMap, throwError } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Observable, catchError, from, map, of, switchMap, throwError } from 'rxjs';
 import { Upload } from 'tus-js-client';
 import {
   BulkLoadJobsAPIService,
@@ -7,7 +8,12 @@ import {
   Configuration as BulkLoaderConfiguration,
   ReviewQueueAPIService,
 } from '@durion-sdk/bulk-loader';
-import type { AuditRecordResponse, BulkLoadJobCreateRequest, BulkLoadJobResponse } from '@durion-sdk/bulk-loader';
+import type {
+  ApiError,
+  AuditRecordResponse,
+  BulkLoadJobCreateRequest,
+  BulkLoadJobResponse,
+} from '@durion-sdk/bulk-loader';
 import { AuthService } from '../../../core/services/auth.service';
 import {
   ACTIVE_JOB_STATUSES,
@@ -186,9 +192,56 @@ export class BulkImportService {
       );
   }
 
-  /** Returns the API URL for downloading the error report CSV. */
-  getErrorReportUrl(jobId: string): string {
-    return `/api/bulk-loader/v1/bulk-jobs/${encodeURIComponent(jobId)}/error-report`;
+  /**
+   * Downloads the job's error report CSV via `ReviewQueueAPIService.downloadErrorReport()`
+   * (`responseType: 'blob'`), replacing the bare `/api/bulk-loader/v1/bulk-jobs/{jobId}/error-report`
+   * URL a caller previously `window.open()`-ed directly — that request carried no bearer
+   * token and was rejected by the gateway for a real session. Follows the same authenticated
+   * object-URL download pattern as `accounting.service.ts#downloadExport` (deferred revoke,
+   * SEC-08 / ADR-0065 §3): a 404 also arrives as a `Blob` (`responseType: 'blob'` applies to
+   * the error body too), so it is read and JSON-parsed to pull out the backend `ApiError.code`
+   * only — the server's free-text `message` is never forwarded to the UI (ADR-0064). Unlike
+   * `downloadReportExport`, this operation's generated `httpHeaderAccept` option is typed
+   * `'application/json'` only — the controller presets `text/csv` regardless (#2216 precedent),
+   * so the option is omitted rather than cast to a value the type doesn't declare.
+   */
+  downloadErrorReport(jobId: string): Observable<void> {
+    return this.reviewQueueService
+      .downloadErrorReport(jobId)
+      .pipe(
+        map(blob => {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `bulk-import-error-report-${jobId}.csv`;
+          document.body.append(a);
+          a.click();
+          a.remove();
+          // Deferred revoke: revoking synchronously can invalidate the anchor's
+          // in-flight read of the blob URL it just triggered (ADR-0065 §3 / SEC-08).
+          setTimeout(() => URL.revokeObjectURL(url));
+        }),
+        catchError(error => this.mapErrorReportDownloadError(error)),
+      );
+  }
+
+  private mapErrorReportDownloadError(error: unknown): Observable<never> {
+    if (error instanceof HttpErrorResponse && error.error instanceof Blob) {
+      return from((error.error as Blob).text()).pipe(
+        catchError(() => of('')),
+        switchMap(text => throwError(() => new Error(this.formatErrorReportDownloadError(text)))),
+      );
+    }
+    return throwError(() => error);
+  }
+
+  private formatErrorReportDownloadError(rawBody: string): string {
+    try {
+      const body = JSON.parse(rawBody) as Partial<ApiError>;
+      return typeof body.code === 'string' ? `ERROR_REPORT_DOWNLOAD_FAILED:${body.code}` : 'ERROR_REPORT_DOWNLOAD_FAILED';
+    } catch {
+      return 'ERROR_REPORT_DOWNLOAD_FAILED';
+    }
   }
 
   /**

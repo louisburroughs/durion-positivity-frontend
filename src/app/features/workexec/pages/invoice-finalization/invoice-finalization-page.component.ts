@@ -7,6 +7,15 @@ import { map, of, switchMap } from 'rxjs';
 import { WorkorderInvoiceView } from '../../models/workexec.models';
 import { WorkexecService } from '../../services/workexec.service';
 
+/**
+ * (durion-positivity-backend#2210 ruling, issue #350) The standalone workorder
+ * `finalize` endpoint/page was removed — superseded by `completeWorkorder`, which
+ * already captures the billable-scope snapshot atomically. This page's own
+ * `getWorkorderInvoiceView`/`requestInvoiceFinalization` calls stay as-is: reworking
+ * them onto pos-invoice (`getInvoice`/`finalizeInvoice` via `generateWorkorderInvoice`)
+ * is blocked on durion-positivity-backend#2232 (`WorkorderResponse` has no `invoiceId`
+ * to look one up read-only).
+ */
 @Component({
   selector: 'app-invoice-finalization-page',
   standalone: true,

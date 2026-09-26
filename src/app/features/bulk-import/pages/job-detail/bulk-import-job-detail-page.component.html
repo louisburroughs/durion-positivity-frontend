@@ -41,6 +41,9 @@
 				{{ 'BULK_IMPORT.JOB_DETAIL.DOWNLOAD_ERRORS' | translate }}
 			</button>
 			}
+			@if (downloadErrorKey()) {
+			<p class="job-download-error" role="alert">{{ downloadErrorKey()! | translate }}</p>
+			}
 		</div>
 	</section>
 
