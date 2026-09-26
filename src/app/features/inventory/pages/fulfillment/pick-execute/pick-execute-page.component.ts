@@ -78,6 +78,7 @@ export class PickExecutePageComponent {
    * `autofocus` attribute, which only fires once per element insertion, not
    * every time a new task is selected or a scan resolves (#2217). */
   @ViewChild('scanProductCodeInput') private readonly productCodeInputRef?: ElementRef<HTMLInputElement>;
+  @ViewChild('retryButton') private readonly retryButtonRef?: ElementRef<HTMLButtonElement>;
   @ViewChild('scanLocationCodeInput') private readonly locationCodeInputRef?: ElementRef<HTMLInputElement>;
 
   /**
@@ -276,6 +277,11 @@ export class PickExecutePageComponent {
     afterNextRender(() => this.productCodeInputRef?.nativeElement.focus(), { injector: this.injector });
   }
 
+  /** The page-wide error card replaces the scan controls; move focus to its retry action. */
+  private focusRetryButtonAfterRender(): void {
+    afterNextRender(() => this.retryButtonRef?.nativeElement.focus(), { injector: this.injector });
+  }
+
   private focusLocationCodeInput(): void {
     queueMicrotask(() => this.locationCodeInputRef?.nativeElement.focus());
   }
@@ -422,7 +428,8 @@ export class PickExecutePageComponent {
         ? 'INVENTORY.FULFILLMENT.PICK_EXECUTE.ERROR.LOCATION_SCOPE_DENIED'
         : 'INVENTORY.FULFILLMENT.PICK_EXECUTE.ERROR.RESOLVE_SCAN',
     );
-    this.focusProductCodeInputAfterRender();
+    // The error card replaces the scan inputs, so focus its retry action.
+    this.focusRetryButtonAfterRender();
   }
 
   /**
@@ -537,6 +544,7 @@ export class PickExecutePageComponent {
       this.clearTaskStatus(taskId);
       this.state.set('error');
       this.errorKey.set('INVENTORY.FULFILLMENT.PICK_EXECUTE.ERROR.LOCATION_SCOPE_DENIED');
+      this.focusRetryButtonAfterRender();
       return;
     }
     this.taskStatus.set({ taskId, kind: 'error', key: fallbackKey });

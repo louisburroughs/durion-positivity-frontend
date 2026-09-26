@@ -998,6 +998,24 @@ describe('PickExecutePageComponent', () => {
       expect(document.activeElement).toBe(productInput);
     });
 
+    it('moves focus to the error card retry action when a scan fails (inputs are no longer rendered)', async () => {
+      mockPickService.resolvePickScan.mockReturnValue(throwError(() => new Error('boom')));
+      const fixture = await setupPickExecuteFixture('wo-001', [EXECUTE]);
+      fixture.detectChanges();
+      const component = fixture.componentInstance;
+
+      component.setScannedProductCode('SKU-A');
+      component.setScannedLocationCode('bin-A');
+      component.resolveScan();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const retry: HTMLButtonElement | null = fixture.nativeElement.querySelector('.btn-secondary');
+      expect(fixture.nativeElement.querySelector('#scan-product-code')).toBeNull();
+      expect(retry).not.toBeNull();
+      expect(document.activeElement).toBe(retry);
+    });
+
     it('clears both scan fields immediately once the scan is issued', async () => {
       mockPickService.resolvePickScan.mockReturnValue(of(scanMatchedA));
       const component = await setupPickExecute();

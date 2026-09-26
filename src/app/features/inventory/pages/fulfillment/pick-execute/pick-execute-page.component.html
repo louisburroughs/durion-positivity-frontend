@@ -15,7 +15,7 @@
   <section class="card state-card" role="alert">
     <span class="material-symbols-outlined" aria-hidden="true">error</span>
     <p>{{ (errorKey() || 'INVENTORY.FULFILLMENT.PICK_EXECUTE.ERROR.LOAD') | translate }}</p>
-    <button class="btn-secondary" type="button" (click)="reload()">{{ 'COMMON.RETRY' | translate }}</button>
+    <button #retryButton class="btn-secondary" type="button" (click)="reload()">{{ 'COMMON.RETRY' | translate }}</button>
   </section>
   }
 
