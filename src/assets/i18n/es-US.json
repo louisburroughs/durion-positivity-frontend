@@ -2377,6 +2377,11 @@
         "CHOSEN": "Por agregar",
         "ADD_ONE": "Agregar 1 capacidad",
         "ADD_MANY": "Agregar {{count}} capacidades"
+      },
+      "LINKS": {
+        "LABEL": "Configuración de unidades móviles",
+        "SERVICE_AREAS": "Áreas de servicio",
+        "POLICIES": "Políticas de margen de traslado"
       }
     },
     "LANDING": {
@@ -2444,6 +2449,14 @@
         "IMPORT_LOCATION": {
           "TITLE": "Importar ubicaciones",
           "DESCRIPTION": "Importe masivamente registros de ubicaciones desde un archivo CSV o XLSX."
+        },
+        "SERVICE_AREAS": {
+          "TITLE": "Áreas de servicio",
+          "DESCRIPTION": "Agrupe códigos postales en las áreas que cubren las unidades móviles."
+        },
+        "TRAVEL_BUFFER_POLICIES": {
+          "TITLE": "Políticas de margen de traslado",
+          "DESCRIPTION": "Defina el tiempo de manejo permitido en las visitas de unidades móviles."
         }
       },
       "FIELD": {
@@ -2613,6 +2626,135 @@
         "REPAIR": "Reparación",
         "DIAGNOSTIC": "Diagnóstico",
         "OTHER": "Otros"
+      }
+    },
+    "SERVICE_AREAS": {
+      "OVERLINE": "Configuración de ubicación",
+      "TITLE": "Áreas de servicio",
+      "STANDFIRST": "Grupos de códigos postales con nombre a los que apuntan las reglas de cobertura de las unidades móviles. Un cliente coincide con una unidad por código postal a través de uno de ellos.",
+      "TO_MOBILE_UNITS": "Volver a unidades móviles",
+      "NEW": "Nueva área de servicio",
+      "VIEW_ONLY": "Solo lectura: no puede cambiar las áreas de servicio.",
+      "LOADING": "Cargando áreas de servicio…",
+      "RETRY": "Intentar de nuevo",
+      "EMPTY": "Aún no hay áreas de servicio. Agregue una por cada grupo de códigos postales que atiende una unidad móvil.",
+      "STATUS": {
+        "ACTIVE": "Activa",
+        "OFF": "Desactivada"
+      },
+      "STILL_MATCHED": "Las unidades que la cubren siguen coincidiendo.",
+      "COVERS_NOBODY": "Sin códigos postales: no cubre a nadie.",
+      "CODES_ONE": "1 código postal",
+      "CODES_MANY": "{{count}} códigos postales",
+      "SAMPLES": "{{samples}}",
+      "SAMPLES_MORE": "{{samples}} y {{more}} más",
+      "EDIT": "Editar",
+      "EDIT_NAMED": "Editar {{area}}",
+      "CANCEL": "Cancelar",
+      "SAVING": "Guardando",
+      "FIELD": {
+        "NAME": "Nombre",
+        "DESCRIPTION": "Descripción",
+        "ACTIVE": "Activa",
+        "CODES": "Códigos postales",
+        "COUNTRY": "País",
+        "PASTE": "Agregar códigos postales"
+      },
+      "HINT": {
+        "NAME": "Un nombre corto que reconozcan los despachadores, p. ej. \"Riverside norte\". Ninguna otra área de servicio puede tener el mismo nombre.",
+        "NAME_FIXED": "Todavía no se puede cambiar el nombre de un área de servicio.",
+        "DESCRIPTION": "Opcional. Qué cubre el área, en palabras.",
+        "ACTIVE": "Marca el área como en uso. Hoy, las unidades que cubren un área desactivada siguen coincidiendo.",
+        "PASTE": "Pegue los códigos uno por línea o separados por comas. Se agregan para el país de la izquierda.",
+        "CODES": "Al guardar se reemplaza toda la lista. Un área necesita al menos un código postal."
+      },
+      "PASTE": {
+        "ADD": "Agregar códigos",
+        "ADDED": "{{added}} agregados, {{duplicates}} duplicados ignorados.",
+        "ADDED_SKIPPED": "{{added}} agregados, {{duplicates}} duplicados ignorados. Demasiado largos para guardarse, se omitieron: {{skipped}}.",
+        "REMOVE_ALL": "Quitar todos",
+        "REMOVE_NAMED": "Quitar {{code}}"
+      },
+      "DIALOG": {
+        "CREATE_TITLE": "Nueva área de servicio",
+        "EDIT_TITLE": "Editar {{area}}",
+        "CREATE": "Crear área de servicio",
+        "SAVE": "Guardar"
+      },
+      "SAVED": {
+        "CREATED": "{{area}} creada.",
+        "UPDATED": "{{area}} guardada."
+      },
+      "ERROR": {
+        "LOAD": "No se pudieron cargar las áreas de servicio.",
+        "NAME_REQUIRED": "Escriba un nombre para el área de servicio.",
+        "NAME_TAKEN": "Otra área de servicio ya se llama {{area}}.",
+        "COUNTRY": "Escriba un código de país de dos letras, p. ej. US o MX.",
+        "CODES_REQUIRED": "Agregue al menos un código postal.",
+        "INVALID": "No se pudo guardar el área de servicio: revise cada campo e intente de nuevo.",
+        "NOT_ALLOWED": "No puede cambiar las áreas de servicio.",
+        "GONE": "Esta área de servicio ya no existe. Cierre el diálogo para ver la lista actual.",
+        "SAVE_FAILED": "No se pudo guardar el área de servicio. Intente de nuevo."
+      }
+    },
+    "TRAVEL_BUFFERS": {
+      "OVERLINE": "Configuración de ubicación",
+      "TITLE": "Políticas de margen de traslado",
+      "STANDFIRST": "El tiempo adicional para manejar en cada visita de una unidad móvil.",
+      "NOT_APPLIED": "Los márgenes de traslado se registran en las unidades móviles. La programación todavía no los usa.",
+      "TO_MOBILE_UNITS": "Volver a unidades móviles",
+      "NEW": "Nueva política",
+      "VIEW_ONLY": "Solo lectura: no puede cambiar las políticas de margen de traslado.",
+      "LOADING": "Cargando políticas de margen de traslado…",
+      "RETRY": "Intentar de nuevo",
+      "EMPTY": "Aún no hay políticas de margen de traslado. Una unidad móvil necesita una antes de activarse.",
+      "NEEDS_FIXING": "Hay que corregir el tipo",
+      "EDIT": "Editar",
+      "EDIT_NAMED": "Editar {{policy}}",
+      "CANCEL": "Cancelar",
+      "SAVING": "Guardando",
+      "CHOOSE_TYPE": "Elija un tipo de margen",
+      "TYPE": {
+        "FLAT_MINUTES": "Minutos fijos",
+        "PERCENTAGE_OF_TRAVEL": "Porcentaje del tiempo de traslado",
+        "DISTANCE_MULTIPLIER": "Multiplicador de distancia"
+      },
+      "SUFFIX": {
+        "FLAT_MINUTES": "minutos",
+        "PERCENTAGE_OF_TRAVEL": "%",
+        "DISTANCE_MULTIPLIER": "× distancia"
+      },
+      "FIELD": {
+        "NAME": "Nombre",
+        "TYPE": "Tipo de margen",
+        "VALUE": "Valor del margen",
+        "NOTES": "Notas"
+      },
+      "HINT": {
+        "NAME": "No se puede cambiar después de crear la política.",
+        "TYPE": "Cómo se calcula el tiempo adicional.",
+        "VALUE": "Minutos para fijo, un porcentaje para tiempo de traslado, un multiplicador para distancia. Déjelo en blanco para ninguno."
+      },
+      "DIALOG": {
+        "CREATE_TITLE": "Nueva política de margen de traslado",
+        "EDIT_TITLE": "Editar {{policy}}",
+        "CREATE": "Crear política",
+        "SAVE": "Guardar"
+      },
+      "SAVED": {
+        "CREATED": "{{policy}} creada.",
+        "UPDATED": "{{policy}} guardada."
+      },
+      "ERROR": {
+        "LOAD": "No se pudieron cargar las políticas de margen de traslado.",
+        "NAME_REQUIRED": "Escriba un nombre para la política.",
+        "NAME_TAKEN": "Otra política ya se llama {{policy}}.",
+        "TYPE_REQUIRED": "Elija un tipo de margen.",
+        "VALUE": "Escriba un número de 0 o más, con dos decimales como máximo.",
+        "INVALID": "No se pudo guardar la política: revise cada campo e intente de nuevo.",
+        "NOT_ALLOWED": "No puede cambiar las políticas de margen de traslado.",
+        "GONE": "Esta política ya no existe. Cierre el diálogo para ver la lista actual.",
+        "SAVE_FAILED": "No se pudo guardar la política. Intente de nuevo."
       }
     }
   },
@@ -7724,6 +7866,7 @@
       "ROLES": "Roles",
       "ROSTER": "Plantilla",
       "SCHEDULE": "Horario",
+      "SERVICE_AREAS": "Áreas de servicio",
       "SHOP_DASHBOARD": "Panel del taller",
       "SHORTAGE_RESOLUTION": "Resolución de faltantes",
       "SITE": "Sitio",
@@ -7735,6 +7878,7 @@
       "TASKS": "Tareas",
       "TENANTS": "Inquilinos",
       "TIMER": "Temporizador",
+      "TRAVEL_BUFFER_POLICIES": "Políticas de margen de traslado",
       "TRAVEL_TIME": "Tiempo de viaje",
       "UNMATCHED": "Sin coincidencia",
       "VEHICLE_FITMENT": "Ajuste de vehículo",

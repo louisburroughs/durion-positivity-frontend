@@ -83,8 +83,17 @@ describe('LocationService', () => {
     replaceCoverageRules: vi.fn(),
   };
   const eligibilityApiStub = { findEligibleMobileUnits: vi.fn() };
-  const serviceAreaApiStub = { listServiceAreas: vi.fn() };
-  const travelBufferPolicyApiStub = { listTravelBufferPolicies: vi.fn() };
+  const serviceAreaApiStub = {
+    listServiceAreas: vi.fn(),
+    createServiceArea: vi.fn(),
+    patchServiceArea: vi.fn(),
+    replaceServiceAreaPostalCodes: vi.fn(),
+  };
+  const travelBufferPolicyApiStub = {
+    listTravelBufferPolicies: vi.fn(),
+    createTravelBufferPolicy: vi.fn(),
+    patchTravelBufferPolicy: vi.fn(),
+  };
   const siteDefaultsApiStub = {
     getSiteDefaults: vi.fn(),
     configureSiteDefaults: vi.fn(),
@@ -292,6 +301,40 @@ describe('LocationService', () => {
       expect(areas).toEqual({ areas: [], ok: false });
       expect(policies?.ok).toBe(true);
       expect(policies?.policies.map(p => p.name)).toEqual(['Standard']);
+    });
+  });
+
+  describe('service areas and travel buffer policies', () => {
+    it('sends service-area writes to the SDK as given, wrapping postal codes in their envelope', () => {
+      const area: ServiceAreaResponse = { id: 'area-1', name: 'North' };
+      serviceAreaApiStub.createServiceArea.mockReturnValueOnce(of(area));
+      serviceAreaApiStub.patchServiceArea.mockReturnValueOnce(of(area));
+      serviceAreaApiStub.replaceServiceAreaPostalCodes.mockReturnValueOnce(of(area));
+      const postalCodes = [{ postalCode: '78701', countryCode: 'US' }];
+
+      service.createServiceArea({ name: 'North', active: true, postalCodes }).subscribe();
+      service.patchServiceArea('area-1', { active: false }).subscribe();
+      service.replaceServiceAreaPostalCodes('area-1', postalCodes).subscribe();
+
+      expect(serviceAreaApiStub.createServiceArea).toHaveBeenCalledWith({ name: 'North', active: true, postalCodes });
+      expect(serviceAreaApiStub.patchServiceArea).toHaveBeenCalledWith('area-1', { active: false });
+      expect(serviceAreaApiStub.replaceServiceAreaPostalCodes).toHaveBeenCalledWith('area-1', { postalCodes });
+    });
+
+    it('sends travel-buffer-policy writes to the SDK as given', () => {
+      const policy: TravelBufferPolicyResponse = { id: 'p-1', name: 'Standard' };
+      travelBufferPolicyApiStub.createTravelBufferPolicy.mockReturnValueOnce(of(policy));
+      travelBufferPolicyApiStub.patchTravelBufferPolicy.mockReturnValueOnce(of(policy));
+
+      service.createTravelBufferPolicy({ name: 'Standard', bufferType: 'FLAT_MINUTES', bufferValue: 15 }).subscribe();
+      service.patchTravelBufferPolicy('p-1', { bufferValue: null }).subscribe();
+
+      expect(travelBufferPolicyApiStub.createTravelBufferPolicy).toHaveBeenCalledWith({
+        name: 'Standard',
+        bufferType: 'FLAT_MINUTES',
+        bufferValue: 15,
+      });
+      expect(travelBufferPolicyApiStub.patchTravelBufferPolicy).toHaveBeenCalledWith('p-1', { bufferValue: null });
     });
   });
 

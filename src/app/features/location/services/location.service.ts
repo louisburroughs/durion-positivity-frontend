@@ -23,13 +23,17 @@ import type {
   BayResponse,
   MobileUnitRequest,
   MobileUnitResponse,
+  PostalCodeEntry,
+  ServiceAreaRequest,
   ServiceAreaResponse,
   SiteDefaultsRequest,
   StorageLocationRequest,
   StorageLocationPatchRequest,
+  TravelBufferPolicyRequest,
   TravelBufferPolicyResponse,
 } from '@durion-sdk/location';
 import type { MobileUnitPatch } from '../models/mobile-unit-setup.models';
+import type { ServiceAreaPatch, TravelBufferPolicyPatch } from '../models/setup-lists.models';
 
 /**
  * Storage location types exposed by the location service
@@ -260,6 +264,27 @@ export class LocationService {
       map(areas => ({ areas: areas ?? [], ok: true })),
       catchError(() => of({ areas: [] as ServiceAreaResponse[], ok: false })),
     );
+  }
+
+  createServiceArea(request: ServiceAreaRequest): Observable<ServiceAreaResponse> {
+    return this.serviceAreaApi.createServiceArea(request);
+  }
+
+  patchServiceArea(id: string, patch: ServiceAreaPatch): Observable<ServiceAreaResponse> {
+    return this.serviceAreaApi.patchServiceArea(id, patch);
+  }
+
+  /** Replaces the area's whole postal-code set; pos-location refuses an empty one (400). */
+  replaceServiceAreaPostalCodes(id: string, postalCodes: PostalCodeEntry[]): Observable<ServiceAreaResponse> {
+    return this.serviceAreaApi.replaceServiceAreaPostalCodes(id, { postalCodes });
+  }
+
+  createTravelBufferPolicy(request: TravelBufferPolicyRequest): Observable<TravelBufferPolicyResponse> {
+    return this.travelBufferPolicyApi.createTravelBufferPolicy(request);
+  }
+
+  patchTravelBufferPolicy(id: string, patch: TravelBufferPolicyPatch): Observable<TravelBufferPolicyResponse> {
+    return this.travelBufferPolicyApi.patchTravelBufferPolicy(id, patch);
   }
 
   listTravelBufferPolicies(): Observable<{ policies: TravelBufferPolicyResponse[]; ok: boolean }> {

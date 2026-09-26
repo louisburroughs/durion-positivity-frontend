@@ -1,0 +1,176 @@
+<header class="page-header">
+  <p class="overline">{{ 'LOCATION.SERVICE_AREAS.OVERLINE' | translate }}</p>
+  <h1>{{ 'LOCATION.SERVICE_AREAS.TITLE' | translate }}</h1>
+  <p class="standfirst">{{ 'LOCATION.SERVICE_AREAS.STANDFIRST' | translate }}</p>
+  <div class="header-actions">
+    <a routerLink="/app/location/mobile-units">{{ 'LOCATION.SERVICE_AREAS.TO_MOBILE_UNITS' | translate }}</a>
+    @if (canEdit()) {
+      <button type="button" class="btn-primary new-area-btn" (click)="openCreate()">{{ 'LOCATION.SERVICE_AREAS.NEW' | translate }}</button>
+    }
+  </div>
+</header>
+
+<div class="sr-only" aria-live="polite">
+  @if (announcement(); as said) {
+    {{ said.key | translate: { area: said.area } }}
+  }
+</div>
+
+@if (state() === 'ready' && !canEdit()) {
+  <p class="notice" role="status">{{ 'LOCATION.SERVICE_AREAS.VIEW_ONLY' | translate }}</p>
+}
+
+@switch (state()) {
+  @case ('loading') {
+    <p class="muted" role="status">{{ 'LOCATION.SERVICE_AREAS.LOADING' | translate }}</p>
+  }
+  @case ('error') {
+    <div class="state-panel" role="alert">
+      <p>{{ errorKey()! | translate }}</p>
+      <button type="button" class="btn-secondary retry-btn" (click)="retry()">{{ 'LOCATION.SERVICE_AREAS.RETRY' | translate }}</button>
+    </div>
+  }
+  @case ('ready') {
+    @if (rows().length === 0) {
+      <p class="empty-state">{{ 'LOCATION.SERVICE_AREAS.EMPTY' | translate }}</p>
+    } @else {
+      <ul class="ledger">
+        @for (row of rows(); track row.area.id) {
+          <li class="ledger-row" [id]="'area-' + row.area.id" tabindex="-1">
+            <div class="ledger-main">
+              <h2 class="row-name">{{ row.name }}</h2>
+              @if (row.area.description) {
+                <p class="muted row-description">{{ row.area.description }}</p>
+              }
+            </div>
+            <div class="ledger-status">
+              <span class="tag" [class.tag-success]="row.active" [class.tag-neutral]="!row.active">
+                {{ (row.active ? 'LOCATION.SERVICE_AREAS.STATUS.ACTIVE' : 'LOCATION.SERVICE_AREAS.STATUS.OFF') | translate }}
+              </span>
+              @if (!row.active) {
+                <p class="muted">{{ 'LOCATION.SERVICE_AREAS.STILL_MATCHED' | translate }}</p>
+              }
+            </div>
+            <div class="ledger-codes">
+              @if (row.count === 0) {
+                <p class="warning-text">{{ 'LOCATION.SERVICE_AREAS.COVERS_NOBODY' | translate }}</p>
+              } @else {
+                <p>{{ (row.count === 1 ? 'LOCATION.SERVICE_AREAS.CODES_ONE' : 'LOCATION.SERVICE_AREAS.CODES_MANY') | translate: { count: row.count } }}</p>
+                <p class="muted">
+                  {{ (row.more > 0 ? 'LOCATION.SERVICE_AREAS.SAMPLES_MORE' : 'LOCATION.SERVICE_AREAS.SAMPLES') | translate: { samples: row.samples, more: row.more } }}
+                </p>
+              }
+            </div>
+            @if (canEdit()) {
+              <button type="button" class="btn-secondary edit-area-btn"
+                [attr.aria-label]="'LOCATION.SERVICE_AREAS.EDIT_NAMED' | translate: { area: row.name }"
+                (click)="openEdit(row.area)">{{ 'LOCATION.SERVICE_AREAS.EDIT' | translate }}</button>
+            }
+          </li>
+        }
+      </ul>
+    }
+  }
+}
+
+@if (dialogMode(); as mode) {
+  <dialog appModalDialog class="list-dialog" aria-labelledby="area-dialog-title" (modalCancel)="closeDialog()">
+    <form class="dialog-panel" novalidate (submit)="$event.preventDefault(); submit()">
+      <h2 id="area-dialog-title">
+        {{ (mode === 'create' ? 'LOCATION.SERVICE_AREAS.DIALOG.CREATE_TITLE' : 'LOCATION.SERVICE_AREAS.DIALOG.EDIT_TITLE') | translate: { area: editing()?.name ?? '' } }}
+      </h2>
+
+      <div class="field">
+        <label for="area-name">{{ 'LOCATION.SERVICE_AREAS.FIELD.NAME' | translate }} @if (mode === 'create') {<span aria-hidden="true">*</span>}</label>
+        <input id="area-name" type="text" autocomplete="off" [value]="draft().name" [readOnly]="mode === 'edit'"
+          [attr.aria-invalid]="nameErrorKey() ? true : null"
+          [attr.aria-describedby]="nameErrorKey() ? 'area-name-error area-name-hint' : 'area-name-hint'"
+          (input)="patchDraft({ name: $any($event.target).value })" />
+        @if (nameErrorKey(); as nameError) {
+          <p id="area-name-error" class="field-error">{{ nameError | translate: { area: draft().name.trim() } }}</p>
+        }
+        <p id="area-name-hint" class="hint">
+          {{ (mode === 'create' ? 'LOCATION.SERVICE_AREAS.HINT.NAME' : 'LOCATION.SERVICE_AREAS.HINT.NAME_FIXED') | translate }}
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="area-description">{{ 'LOCATION.SERVICE_AREAS.FIELD.DESCRIPTION' | translate }}</label>
+        <input id="area-description" type="text" autocomplete="off" aria-describedby="area-description-hint"
+          [value]="draft().description" (input)="patchDraft({ description: $any($event.target).value })" />
+        <p id="area-description-hint" class="hint">{{ 'LOCATION.SERVICE_AREAS.HINT.DESCRIPTION' | translate }}</p>
+      </div>
+
+      <div class="field">
+        <label class="check">
+          <input type="checkbox" id="area-active" aria-describedby="area-active-hint" [checked]="draft().active"
+            (change)="patchDraft({ active: $any($event.target).checked })" />
+          {{ 'LOCATION.SERVICE_AREAS.FIELD.ACTIVE' | translate }}
+        </label>
+        <p id="area-active-hint" class="hint">{{ 'LOCATION.SERVICE_AREAS.HINT.ACTIVE' | translate }}</p>
+      </div>
+
+      <fieldset class="field" aria-describedby="area-codes-hint">
+        <legend>{{ 'LOCATION.SERVICE_AREAS.FIELD.CODES' | translate }}</legend>
+        <div class="paste-row">
+          <div class="field field-narrow">
+            <label for="area-country">{{ 'LOCATION.SERVICE_AREAS.FIELD.COUNTRY' | translate }}</label>
+            <input id="area-country" type="text" maxlength="2" autocomplete="off" [value]="draft().countryCode"
+              (input)="patchDraft({ countryCode: $any($event.target).value.trim().toUpperCase() })" />
+          </div>
+          <div class="field field-grow">
+            <label for="area-paste">{{ 'LOCATION.SERVICE_AREAS.FIELD.PASTE' | translate }}</label>
+            <textarea id="area-paste" rows="3" aria-describedby="area-paste-hint" [value]="pasteText()"
+              (input)="pasteText.set($any($event.target).value)"></textarea>
+            <p id="area-paste-hint" class="hint">{{ 'LOCATION.SERVICE_AREAS.HINT.PASTE' | translate }}</p>
+          </div>
+        </div>
+        <button type="button" class="btn-secondary add-codes-btn" [disabled]="!pasteText().trim()" (click)="addPasted()">
+          {{ 'LOCATION.SERVICE_AREAS.PASTE.ADD' | translate }}
+        </button>
+        <p class="hint" aria-live="polite">
+          @if (pasteNote(); as note) {
+            {{ note.key | translate: note.params }}
+          }
+        </p>
+        @if (codesErrorKey(); as codesError) {
+          <p class="field-error" role="alert">{{ codesError | translate }}</p>
+        }
+
+        <p class="code-count">
+          {{ (draft().postalCodes.length === 1 ? 'LOCATION.SERVICE_AREAS.CODES_ONE' : 'LOCATION.SERVICE_AREAS.CODES_MANY') | translate: { count: draft().postalCodes.length } }}
+          @if (draft().postalCodes.length > 0) {
+            <button type="button" class="link-btn remove-all-btn" (click)="removeAllCodes()">{{ 'LOCATION.SERVICE_AREAS.PASTE.REMOVE_ALL' | translate }}</button>
+          }
+        </p>
+        @if (draft().postalCodes.length > 0) {
+          <ul class="chips">
+            @for (entry of draft().postalCodes; track codeKey(entry)) {
+              <li class="chip">
+                <span>{{ entry.postalCode }}</span>
+                <span class="chip-country">{{ entry.countryCode }}</span>
+                <button type="button" class="chip-remove"
+                  [attr.aria-label]="'LOCATION.SERVICE_AREAS.PASTE.REMOVE_NAMED' | translate: { code: entry.postalCode }"
+                  (click)="removeCode(entry)">×</button>
+              </li>
+            }
+          </ul>
+        }
+        <p id="area-codes-hint" class="hint">{{ 'LOCATION.SERVICE_AREAS.HINT.CODES' | translate }}</p>
+      </fieldset>
+
+      @if (saveErrorKey(); as saveError) {
+        <p class="dialog-error" role="alert">{{ saveError | translate }}</p>
+      }
+      <div class="dialog-actions">
+        <button type="button" class="btn-secondary" [disabled]="saving()" (click)="closeDialog()">{{ 'LOCATION.SERVICE_AREAS.CANCEL' | translate }}</button>
+        <button type="submit" class="btn-primary submit-btn" [disabled]="saving()">
+          {{ (mode === 'create' ? 'LOCATION.SERVICE_AREAS.DIALOG.CREATE' : 'LOCATION.SERVICE_AREAS.DIALOG.SAVE') | translate }}
+        </button>
+        @if (saving()) {
+          <span class="sr-only" role="status">{{ 'LOCATION.SERVICE_AREAS.SAVING' | translate }}</span>
+        }
+      </div>
+    </form>
+  </dialog>
+}

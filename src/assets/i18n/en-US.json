@@ -2377,6 +2377,11 @@
         "CHOSEN": "To add",
         "ADD_ONE": "Add 1 capability",
         "ADD_MANY": "Add {{count}} capabilities"
+      },
+      "LINKS": {
+        "LABEL": "Mobile unit setup",
+        "SERVICE_AREAS": "Service areas",
+        "POLICIES": "Travel buffer policies"
       }
     },
     "LANDING": {
@@ -2444,6 +2449,14 @@
         "IMPORT_LOCATION": {
           "TITLE": "Import Locations",
           "DESCRIPTION": "Bulk import location records from a CSV or XLSX file."
+        },
+        "SERVICE_AREAS": {
+          "TITLE": "Service Areas",
+          "DESCRIPTION": "Group postal codes into the areas mobile units cover."
+        },
+        "TRAVEL_BUFFER_POLICIES": {
+          "TITLE": "Travel Buffer Policies",
+          "DESCRIPTION": "Set the driving time allowed around mobile-unit visits."
         }
       },
       "FIELD": {
@@ -2613,6 +2626,135 @@
         "REPAIR": "Repair",
         "DIAGNOSTIC": "Diagnostic",
         "OTHER": "Other"
+      }
+    },
+    "SERVICE_AREAS": {
+      "OVERLINE": "Location setup",
+      "TITLE": "Service areas",
+      "STANDFIRST": "Named groups of postal codes that mobile-unit coverage rules point at. A customer is matched to a unit by postal code through one of these.",
+      "TO_MOBILE_UNITS": "Back to mobile units",
+      "NEW": "New service area",
+      "VIEW_ONLY": "View only: you can't change service areas.",
+      "LOADING": "Loading service areas…",
+      "RETRY": "Try again",
+      "EMPTY": "No service areas yet. Add one for each group of postal codes a mobile unit serves.",
+      "STATUS": {
+        "ACTIVE": "Active",
+        "OFF": "Switched off"
+      },
+      "STILL_MATCHED": "Units covering it are still matched.",
+      "COVERS_NOBODY": "No postal codes: covers nobody.",
+      "CODES_ONE": "1 postal code",
+      "CODES_MANY": "{{count}} postal codes",
+      "SAMPLES": "{{samples}}",
+      "SAMPLES_MORE": "{{samples}} and {{more}} more",
+      "EDIT": "Edit",
+      "EDIT_NAMED": "Edit {{area}}",
+      "CANCEL": "Cancel",
+      "SAVING": "Saving",
+      "FIELD": {
+        "NAME": "Name",
+        "DESCRIPTION": "Description",
+        "ACTIVE": "Active",
+        "CODES": "Postal codes",
+        "COUNTRY": "Country",
+        "PASTE": "Add postal codes"
+      },
+      "HINT": {
+        "NAME": "A short name dispatchers recognise, e.g. \"Riverside north\". No other service area can have the same name.",
+        "NAME_FIXED": "A service area can't be renamed yet.",
+        "DESCRIPTION": "Optional. What the area covers, in words.",
+        "ACTIVE": "Marks the area as in use. Today, units covering a switched-off area are still matched.",
+        "PASTE": "Paste codes one per line or separated by commas. They're added for the country on the left.",
+        "CODES": "Saving replaces the whole list. An area needs at least one postal code."
+      },
+      "PASTE": {
+        "ADD": "Add codes",
+        "ADDED": "{{added}} added, {{duplicates}} duplicates ignored.",
+        "ADDED_SKIPPED": "{{added}} added, {{duplicates}} duplicates ignored. Too long to store, so left out: {{skipped}}.",
+        "REMOVE_ALL": "Remove all",
+        "REMOVE_NAMED": "Remove {{code}}"
+      },
+      "DIALOG": {
+        "CREATE_TITLE": "New service area",
+        "EDIT_TITLE": "Edit {{area}}",
+        "CREATE": "Create service area",
+        "SAVE": "Save"
+      },
+      "SAVED": {
+        "CREATED": "{{area}} created.",
+        "UPDATED": "{{area}} saved."
+      },
+      "ERROR": {
+        "LOAD": "Couldn't load the service areas.",
+        "NAME_REQUIRED": "Enter a name for the service area.",
+        "NAME_TAKEN": "Another service area is already called {{area}}.",
+        "COUNTRY": "Enter a two-letter country code, e.g. US or CA.",
+        "CODES_REQUIRED": "Add at least one postal code.",
+        "INVALID": "The service area couldn't be saved: check each field and try again.",
+        "NOT_ALLOWED": "You can't change service areas.",
+        "GONE": "This service area no longer exists. Close the dialog to see the current list.",
+        "SAVE_FAILED": "Couldn't save the service area. Try again."
+      }
+    },
+    "TRAVEL_BUFFERS": {
+      "OVERLINE": "Location setup",
+      "TITLE": "Travel buffer policies",
+      "STANDFIRST": "The extra time allowed around each mobile-unit visit for driving.",
+      "NOT_APPLIED": "Travel buffers are recorded on mobile units. Scheduling doesn't use them yet.",
+      "TO_MOBILE_UNITS": "Back to mobile units",
+      "NEW": "New policy",
+      "VIEW_ONLY": "View only: you can't change travel buffer policies.",
+      "LOADING": "Loading travel buffer policies…",
+      "RETRY": "Try again",
+      "EMPTY": "No travel buffer policies yet. A mobile unit needs one before it can be activated.",
+      "NEEDS_FIXING": "Type needs fixing",
+      "EDIT": "Edit",
+      "EDIT_NAMED": "Edit {{policy}}",
+      "CANCEL": "Cancel",
+      "SAVING": "Saving",
+      "CHOOSE_TYPE": "Choose a buffer type",
+      "TYPE": {
+        "FLAT_MINUTES": "Flat minutes",
+        "PERCENTAGE_OF_TRAVEL": "Percentage of travel time",
+        "DISTANCE_MULTIPLIER": "Distance multiplier"
+      },
+      "SUFFIX": {
+        "FLAT_MINUTES": "minutes",
+        "PERCENTAGE_OF_TRAVEL": "%",
+        "DISTANCE_MULTIPLIER": "× distance"
+      },
+      "FIELD": {
+        "NAME": "Name",
+        "TYPE": "Buffer type",
+        "VALUE": "Buffer value",
+        "NOTES": "Notes"
+      },
+      "HINT": {
+        "NAME": "Can't be changed after the policy is created.",
+        "TYPE": "How the extra time is worked out.",
+        "VALUE": "Minutes for flat, a percentage for travel time, a multiplier for distance. Leave blank for none."
+      },
+      "DIALOG": {
+        "CREATE_TITLE": "New travel buffer policy",
+        "EDIT_TITLE": "Edit {{policy}}",
+        "CREATE": "Create policy",
+        "SAVE": "Save"
+      },
+      "SAVED": {
+        "CREATED": "{{policy}} created.",
+        "UPDATED": "{{policy}} saved."
+      },
+      "ERROR": {
+        "LOAD": "Couldn't load the travel buffer policies.",
+        "NAME_REQUIRED": "Enter a name for the policy.",
+        "NAME_TAKEN": "Another policy is already called {{policy}}.",
+        "TYPE_REQUIRED": "Choose a buffer type.",
+        "VALUE": "Enter a number of 0 or more, with at most two decimals.",
+        "INVALID": "The policy couldn't be saved: check each field and try again.",
+        "NOT_ALLOWED": "You can't change travel buffer policies.",
+        "GONE": "This policy no longer exists. Close the dialog to see the current list.",
+        "SAVE_FAILED": "Couldn't save the policy. Try again."
       }
     }
   },
@@ -7724,6 +7866,7 @@
       "ROLES": "Roles",
       "ROSTER": "Roster",
       "SCHEDULE": "Schedule",
+      "SERVICE_AREAS": "Service Areas",
       "SHOP_DASHBOARD": "Shop Dashboard",
       "SHORTAGE_RESOLUTION": "Shortage Resolution",
       "SITE": "Site",
@@ -7735,6 +7878,7 @@
       "TASKS": "Tasks",
       "TENANTS": "Tenants",
       "TIMER": "Timer",
+      "TRAVEL_BUFFER_POLICIES": "Travel Buffer Policies",
       "TRAVEL_TIME": "Travel Time",
       "UNMATCHED": "Unmatched",
       "VEHICLE_FITMENT": "Vehicle Fitment",

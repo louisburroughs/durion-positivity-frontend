@@ -415,6 +415,327 @@ button {
 }
 
 /* ── Scoped Shared Styles Extracted From Oversized Component Stylesheets ── */
+/* Service areas and Travel buffer policies setup lists. */
+app-service-areas-page .overline,
+app-travel-buffer-policies-page .overline {
+  margin: 0 0 var(--space-1);
+  font-size: 0.68rem;
+  font-weight: var(--font-weight-heading);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+app-service-areas-page .page-header,
+app-travel-buffer-policies-page .page-header {
+  margin-bottom: var(--space-6);
+}
+
+app-service-areas-page .page-header h1,
+app-service-areas-page .row-name,
+app-service-areas-page .dialog-panel h2,
+app-travel-buffer-policies-page .page-header h1,
+app-travel-buffer-policies-page .row-name,
+app-travel-buffer-policies-page .dialog-panel h2 {
+  margin: 0;
+  font-family: var(--font-primary);
+}
+
+app-service-areas-page .row-name,
+app-travel-buffer-policies-page .row-name {
+  font-size: 1.05rem;
+}
+
+app-service-areas-page .standfirst,
+app-travel-buffer-policies-page .standfirst {
+  max-width: 60ch;
+  margin: var(--space-2) 0 var(--space-3);
+  color: var(--text-muted);
+}
+
+app-service-areas-page .header-actions,
+app-travel-buffer-policies-page .header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+app-service-areas-page .muted,
+app-service-areas-page .hint,
+app-travel-buffer-policies-page .muted,
+app-travel-buffer-policies-page .hint {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+app-service-areas-page .warning-text,
+app-travel-buffer-policies-page .warning-text {
+  margin: 0;
+  color: var(--status-warning-fg);
+}
+
+app-service-areas-page .notice,
+app-service-areas-page .empty-state,
+app-service-areas-page .state-panel,
+app-travel-buffer-policies-page .notice,
+app-travel-buffer-policies-page .empty-state,
+app-travel-buffer-policies-page .state-panel {
+  margin-bottom: var(--space-6);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--surface-inset);
+}
+
+app-service-areas-page .state-panel,
+app-travel-buffer-policies-page .state-panel {
+  border: 1px solid var(--status-error-fg);
+}
+
+app-service-areas-page .ledger,
+app-travel-buffer-policies-page .ledger {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+app-service-areas-page .ledger-row,
+app-travel-buffer-policies-page .ledger-row {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr) minmax(0, 2fr) auto;
+  gap: var(--space-4);
+  align-items: center;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+}
+
+app-service-areas-page .ledger-row:nth-child(odd),
+app-travel-buffer-policies-page .ledger-row:nth-child(odd) {
+  background: var(--surface-inset);
+}
+
+app-service-areas-page .ledger-row:focus-visible,
+app-travel-buffer-policies-page .ledger-row:focus-visible {
+  outline: 2px solid var(--primaryA400);
+}
+
+app-service-areas-page .ledger-row p,
+app-travel-buffer-policies-page .ledger-row p {
+  margin: 0;
+}
+
+app-service-areas-page .tag,
+app-travel-buffer-policies-page .tag {
+  display: inline-block;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  line-height: 1.6;
+}
+
+app-service-areas-page .tag-success,
+app-travel-buffer-policies-page .tag-success {
+  background: var(--status-success-bg);
+  color: var(--status-success-fg);
+}
+
+app-service-areas-page .tag-neutral,
+app-travel-buffer-policies-page .tag-neutral {
+  background: var(--status-neutral-bg);
+  color: var(--status-neutral-fg);
+}
+
+app-service-areas-page .tag-warning,
+app-travel-buffer-policies-page .tag-warning {
+  background: var(--status-warning-bg);
+  color: var(--status-warning-fg);
+}
+
+app-service-areas-page .list-dialog,
+app-travel-buffer-policies-page .list-dialog {
+  width: min(640px, calc(100vw - 2rem));
+  max-height: calc(100vh - 2rem);
+  box-sizing: border-box;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--cardBackground);
+  color: var(--currentTextColor);
+  box-shadow: 0 12px 40px rgb(0 0 0 / 5%);
+}
+
+app-service-areas-page .list-dialog::backdrop,
+app-travel-buffer-policies-page .list-dialog::backdrop {
+  background: rgb(28 46 72 / 32%);
+}
+
+app-service-areas-page .dialog-panel,
+app-travel-buffer-policies-page .dialog-panel {
+  padding: var(--space-6);
+}
+
+app-service-areas-page .dialog-panel h2,
+app-travel-buffer-policies-page .dialog-panel h2 {
+  margin-bottom: var(--space-4);
+}
+
+app-service-areas-page .field,
+app-travel-buffer-policies-page .field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+  margin: 0 0 var(--space-4);
+  padding: 0;
+  border: none;
+}
+
+app-service-areas-page .field > label,
+app-service-areas-page .field legend,
+app-travel-buffer-policies-page .field > label,
+app-travel-buffer-policies-page .field legend {
+  font-weight: var(--font-weight-heading);
+}
+
+app-service-areas-page .check,
+app-travel-buffer-policies-page .check {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 24px;
+}
+
+app-service-areas-page .field input[type="text"],
+app-service-areas-page .field input[type="number"],
+app-service-areas-page .field select,
+app-service-areas-page .field textarea,
+app-travel-buffer-policies-page .field input[type="text"],
+app-travel-buffer-policies-page .field input[type="number"],
+app-travel-buffer-policies-page .field select,
+app-travel-buffer-policies-page .field textarea {
+  min-height: 32px;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-sm);
+  background: var(--input-background);
+  color: var(--currentTextColor);
+}
+
+app-service-areas-page .field input[readonly],
+app-travel-buffer-policies-page .field input[readonly] {
+  background: var(--surface-inset);
+}
+
+app-service-areas-page .field-error,
+app-travel-buffer-policies-page .field-error {
+  margin: 0;
+  color: var(--status-error-fg);
+}
+
+app-service-areas-page .chips,
+app-travel-buffer-policies-page .chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+app-service-areas-page .chip,
+app-travel-buffer-policies-page .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 24px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--primaryA100);
+  font-size: 0.85rem;
+}
+
+app-service-areas-page .chip-remove,
+app-travel-buffer-policies-page .chip-remove {
+  min-width: 24px;
+  min-height: 24px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+app-service-areas-page .link-btn,
+app-travel-buffer-policies-page .link-btn {
+  min-height: 24px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--accent-strong);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+app-service-areas-page .dialog-error,
+app-travel-buffer-policies-page .dialog-error {
+  margin: var(--space-3) 0;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--status-error-fg);
+  border-radius: var(--radius-sm);
+  background: var(--status-error-bg);
+  color: var(--status-error-fg);
+}
+
+app-service-areas-page .dialog-actions,
+app-travel-buffer-policies-page .dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+app-service-areas-page .btn-primary,
+app-service-areas-page .btn-secondary,
+app-travel-buffer-policies-page .btn-primary,
+app-travel-buffer-policies-page .btn-secondary {
+  min-height: 32px;
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+app-service-areas-page .btn-primary,
+app-travel-buffer-policies-page .btn-primary {
+  background: var(--brand-primary);
+  color: var(--contrastTextColor);
+}
+
+app-service-areas-page .btn-secondary,
+app-travel-buffer-policies-page .btn-secondary {
+  background: var(--brand-secondary);
+  color: var(--contrastTextColor);
+}
+
+app-service-areas-page .btn-primary:disabled,
+app-service-areas-page .btn-secondary:disabled,
+app-travel-buffer-policies-page .btn-primary:disabled,
+app-travel-buffer-policies-page .btn-secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (width <= 720px) {
+  app-service-areas-page .ledger-row,
+  app-travel-buffer-policies-page .ledger-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 /* Bays and Mobile Units setup pages: services list layout, drops, outcome toast, who-does-what band. */
 app-bays-page .setup-layout,
 app-mobile-units-page .setup-layout {
@@ -581,6 +902,13 @@ app-mobile-units-page .chip-remove {
   color: inherit;
   font-size: 1rem;
   cursor: pointer;
+}
+
+app-mobile-units-page .setup-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin-top: var(--space-2);
 }
 
 /* Mobile Units page: unit and coverage dialogs. */

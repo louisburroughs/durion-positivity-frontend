@@ -13,7 +13,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { switchMap, tap } from 'rxjs';
 import type {
@@ -142,7 +142,7 @@ const I18N = 'LOCATION.MOBILE_UNITS';
 @Component({
   selector: 'app-mobile-units-page',
   standalone: true,
-  imports: [DatePipe, TranslatePipe, LocationPickerComponent, ModalDialogDirective, ServiceRailComponent, ServiceSearchComponent],
+  imports: [DatePipe, TranslatePipe, RouterLink, LocationPickerComponent, ModalDialogDirective, ServiceRailComponent, ServiceSearchComponent],
   templateUrl: './mobile-units-page.component.html',
   styleUrl: './mobile-units-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -197,6 +197,12 @@ export class MobileUnitsPageComponent {
     () => !this.auth.permissionsKnown() || this.auth.hasAnyPermission(LOCATION_PAGE.mobileUnitManage),
   );
   readonly canEdit = computed(() => this.canManage() && !this.scopeDenied());
+  readonly canSeeServiceAreas = computed(
+    () => !this.auth.permissionsKnown() || this.auth.hasAnyPermission(LOCATION_PAGE.serviceAreas),
+  );
+  readonly canSeePolicies = computed(
+    () => !this.auth.permissionsKnown() || this.auth.hasAnyPermission(LOCATION_PAGE.travelBufferPolicies),
+  );
   readonly canSearchServices = computed(
     () => !this.auth.permissionsKnown() || this.auth.hasAnyPermission(LOCATION_PAGE.catalogServiceView),
   );
