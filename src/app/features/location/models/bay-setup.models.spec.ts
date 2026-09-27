@@ -9,6 +9,7 @@ import {
   draftFromBay,
   dutyBand,
   eligibilityKind,
+  isRetired,
   isTestRecord,
   laneOf,
   naturalCompare,
@@ -60,6 +61,17 @@ describe('bay setup rules', () => {
       expect(laneOf(bay({ status: 'out_of_service' }))).toBe('OUT_OF_SERVICE');
       expect(laneOf(bay({ bayType: 'wash_detail' }))).toBe('WASH');
     });
+
+    it('puts a retired bay in the out-of-service lane too, and marks it not assignable', () => {
+      const retired = bay({ status: 'RETIRED', bayType: 'ALIGNMENT', serviceCapabilityCodes: [ALIGN] });
+      expect(isRetired(retired)).toBe(true);
+      expect(laneOf(retired)).toBe('OUT_OF_SERVICE');
+      expect(eligibilityKind(retired)).toBe('OUT_OF_SERVICE');
+    });
+
+    it('treats an unrecognised status as non-active too, like the backend default', () => {
+      expect(laneOf(bay({ status: 'SOMETHING_NEW' }))).toBe('OUT_OF_SERVICE');
+    });
   });
 
   it('bands duty classes 1–3 light, 4–6 medium, 7–8 heavy, and none for no limit', () => {
@@ -84,11 +96,12 @@ describe('bay setup rules', () => {
     expect(operationCodeLabel('  ')).toBe('  ');
   });
 
-  it('counts only in-service bays as claimants', () => {
+  it('counts only in-service bays as claimants; a retired bay never counts either', () => {
     const claims = activeClaimants([
       bay({ id: 'a', serviceCapabilityCodes: [ALIGN] }),
       bay({ id: 'b', serviceCapabilityCodes: [ALIGN, 'TPMS-SENSOR-SERVICE'] }),
       bay({ id: 'c', status: 'OUT_OF_SERVICE', serviceCapabilityCodes: ['DOT-ANNUAL-INSPECTION'] }),
+      bay({ id: 'd', status: 'RETIRED', serviceCapabilityCodes: ['DOT-ANNUAL-INSPECTION'] }),
     ]);
     expect(claims.get(ALIGN)).toEqual(['a', 'b']);
     expect(claims.get('TPMS-SENSOR-SERVICE')).toEqual(['b']);
@@ -117,6 +130,10 @@ describe('bay setup rules', () => {
       maxDutyClass: 6,
       serviceCapabilityCodes: [],
     });
+  });
+
+  it('refuses to draft a retired bay: retiring is DELETE-only and reactivating it is a separate story', () => {
+    expect(() => draftFromBay(bay({ status: 'RETIRED' }))).toThrow(/RETIRED/);
   });
 
   it('carries a valid out-of-service reason and note into the draft, and drops an unrecognised reason', () => {
@@ -194,6 +211,15 @@ describe('bay setup rules', () => {
 
     it('warns that an in-service wash bay with no services can be assigned nothing', () => {
       expect(bayChanges(null, draft({ bayType: 'WASH_DETAIL' }), [])).toEqual([{ kind: 'WASH_NONE' }]);
+    });
+
+    it('never calls draftFromBay on a retired other bay (it throws), and ignores it for duty class', () => {
+      const before = bay({ id: 'heavy', maxDutyClass: 8 });
+      const retiredOther = bay({ id: 'ret', status: 'RETIRED', maxDutyClass: 6 });
+      const after = { ...draftFromBay(before), maxDutyClass: 4 };
+      // A retired bay never took vehicles, so it must not stand in as the "other" heavy bay that
+      // would otherwise excuse lowering this one's duty class.
+      expect(bayChanges(before, after, [before, retiredOther])).toEqual([{ kind: 'NO_BAY_ABOVE', dutyClass: 4 }]);
     });
   });
 });

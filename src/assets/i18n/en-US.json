@@ -1994,7 +1994,8 @@
       },
       "STATUS": {
         "ACTIVE": "Active",
-        "OUT_OF_SERVICE": "Out of service"
+        "OUT_OF_SERVICE": "Out of service",
+        "RETIRED": "Retired"
       },
       "OUT_OF_SERVICE_REASON": {
         "CHOOSE": "Choose a reason"

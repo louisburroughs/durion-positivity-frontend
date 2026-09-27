@@ -51,7 +51,9 @@ import {
   draftFromBay,
   dutyBand,
   eligibilityKind,
+  isNonActive,
   isOutOfService,
+  isRetired,
   isTestRecord,
   laneOf,
   naturalCompare,
@@ -110,6 +112,7 @@ interface BayCardView {
   readonly bay: BayResponse;
   readonly typeKey: string;
   readonly outOfService: boolean;
+  readonly retired: boolean;
   readonly testRecord: boolean;
   readonly eligibility: Message;
   readonly duty: Message;
@@ -237,7 +240,7 @@ export class BaysPageComponent {
     for (const bay of bays) {
       for (const code of specialtyCodes(bay)) {
         const row = rows.get(code) ?? { active: [], down: [] };
-        (isOutOfService(bay) ? row.down : row.active).push(bay);
+        (isNonActive(bay) ? row.down : row.active).push(bay);
         rows.set(code, row);
       }
     }
@@ -397,7 +400,9 @@ export class BaysPageComponent {
   }
 
   openEdit(bay: BayResponse): void {
-    if (!this.canEdit()) return;
+    // Retiring is only via DELETE and reactivating is a separate story (#395): a retired bay is
+    // never editable, so the dialog is never opened for one.
+    if (!this.canEdit() || isRetired(bay)) return;
     this.resetDialog();
     this.editingBay.set(bay);
     this.draft.set(draftFromBay(bay));
@@ -667,7 +672,7 @@ export class BaysPageComponent {
   /** What a card says while a service is dragged: it takes the drop, or already has it. */
   dropState(card: BayCardView): 'READY' | 'ALREADY' | 'BUSY' | null {
     const dragging = this.dragging();
-    if (dragging?.kind !== 'SERVICE' || !this.canEdit()) return null;
+    if (dragging?.kind !== 'SERVICE' || !this.canEdit() || card.retired) return null;
     if (card.codes.includes(dragging.service.operationCode)) return 'ALREADY';
     return card.saving ? 'BUSY' : 'READY';
   }
@@ -697,6 +702,7 @@ export class BaysPageComponent {
   }
 
   addServices(bay: BayResponse, services: readonly ClaimableService[]): void {
+    if (isRetired(bay)) return;
     const current = this.currentCodesOf(bay);
     const fresh = services.filter(service => !current.includes(service.operationCode));
     if (fresh.length === 0) return;
@@ -711,7 +717,7 @@ export class BaysPageComponent {
 
   /** Removes one service; the last one asks first, since the bay then changes what it takes. */
   removeServiceFromBay(bay: BayResponse, code: string): void {
-    if (!this.canEdit()) return;
+    if (!this.canEdit() || isRetired(bay)) return;
     const current = this.currentCodesOf(bay);
     if (!current.includes(code)) return;
     if (current.length === 1) {
@@ -797,7 +803,8 @@ export class BaysPageComponent {
    */
   private changeCodes(bay: BayResponse, next: string[], messages: Message[], offerUndo: boolean): void {
     const locationId = this.locationId();
-    if (!this.canEdit() || !locationId) return;
+    // Defense in depth: every caller already guards against a retired bay before reaching here.
+    if (!this.canEdit() || !locationId || isRetired(bay)) return;
     if (this.pendingCodes().has(bay.id)) {
       this.setCardError(bay.id, { key: `${I18N}.DROP.BUSY`, params: { bay: bay.name } });
       return;
@@ -853,7 +860,7 @@ export class BaysPageComponent {
   }
 
   openAddDialog(bay: BayResponse): void {
-    if (!this.canEdit() || !this.canSearchServices()) return;
+    if (!this.canEdit() || !this.canSearchServices() || isRetired(bay)) return;
     this.picked.set([]);
     this.addDialogBay.set(bay);
   }
@@ -883,7 +890,7 @@ export class BaysPageComponent {
   /** How many picked services no in-service bay here claims yet: this bay would be their only one. */
   readonly pickedSoleClaims = computed(() => {
     const bay = this.addDialogBay();
-    if (!bay || isOutOfService(bay)) return 0;
+    if (!bay || isNonActive(bay)) return 0;
     const claims = activeClaimants(this.bays().filter(b => b.id !== bay.id));
     return this.picked().filter(p => !claims.has(p.operationCode)).length;
   });
@@ -905,7 +912,7 @@ export class BaysPageComponent {
 
   /** Brings a bay's card into view, opening its lane or the test records if they hide it. */
   showBay(bay: BayResponse): void {
-    if (isOutOfService(bay)) this.outOfServiceOpen.set(true);
+    if (isNonActive(bay)) this.outOfServiceOpen.set(true);
     if (isTestRecord(bay.name) && !this.showTests()) this.toggleTests(true);
     this.focusCard(bay.id);
   }
@@ -942,11 +949,12 @@ export class BaysPageComponent {
     const pending = this.pendingCodes().get(bay.id);
     const codes = pending ?? saved;
     const outOfService = isOutOfService(bay);
+    const retired = isRetired(bay);
     const claimants = this.claimants();
     const chips = codes.map(code => ({
       code,
       label: this.serviceLabel(code),
-      onlyBay: !outOfService && !pending && claimants.get(code)?.length === 1,
+      onlyBay: !outOfService && !retired && !pending && claimants.get(code)?.length === 1,
       pending: pending != null && !saved.includes(code),
     }));
     const expanded = this.expandedCards().has(bay.id);
@@ -955,6 +963,7 @@ export class BaysPageComponent {
       bay,
       typeKey: this.typeKey(bay.bayType),
       outOfService,
+      retired,
       testRecord: isTestRecord(bay.name),
       eligibility: this.eligibilityMessage(bay, codes.length),
       duty: this.dutyMessage(bay.maxDutyClass, 'TAKES'),

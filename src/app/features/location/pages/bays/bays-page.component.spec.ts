@@ -808,6 +808,63 @@ describe('BaysPageComponent', () => {
     expect(document.activeElement?.id).toBe('bay-down');
   });
 
+  describe('retired bays', () => {
+    const retired = bay({ id: 'ret', name: 'Bay 6', status: 'RETIRED', serviceCapabilityCodes: [ALIGN] });
+
+    beforeEach(async () => {
+      locationServiceStub.listBays.mockReturnValue(of([...RIVERSIDE, retired]));
+      await setUp();
+      query<HTMLButtonElement>('.lane-toggle')!.click();
+      render();
+    });
+
+    it('puts a retired bay in the non-active lane, badged Retired, and not an eligible claimant', () => {
+      const lane = component.lanes().find(l => l.lane === 'OUT_OF_SERVICE')!;
+      expect(lane.cards.map(card => card.bay.id)).toEqual(['down', 'ret']);
+      expect(queryAll('#bay-ret .card-tags .tag').map(tag => tag.textContent?.trim())).toEqual(['Retired']);
+      // Bay 4 still claims the alignment service exclusively: the retired bay's own (stale) claim
+      // never counts, so it must not show as "Only bay" and must not appear as an active claimant.
+      expect(query('#bay-ret .chip-marker')).toBeNull();
+      expect(component.claimRows().find(row => row.code === ALIGN)?.active.map(b => b.id)).toEqual(['b4']);
+    });
+
+    it('has no Edit control, and openEdit opens nothing for it', () => {
+      expect(query('#bay-ret .edit-bay-btn')).toBeNull();
+      expect(query('#bay-ret .add-service-btn')).toBeNull();
+      component.openEdit(retired);
+      expect(component.dialogMode()).toBeNull();
+    });
+
+    it('never mutates it: addServices, removeServiceFromBay and a drop all refuse it', () => {
+      component.addServices(retired, [{ operationCode: 'X-1', name: 'X', operationCategory: null }]);
+      component.removeServiceFromBay(retired, ALIGN);
+      component.onServiceDragStart({ operationCode: 'X-1', name: 'X', operationCategory: null });
+      const card = component.lanes().flatMap(l => l.cards).find(c => c.bay.id === 'ret')!;
+      expect(component.dropState(card)).toBeNull();
+      expect(locationServiceStub.patchBay).not.toHaveBeenCalled();
+    });
+  });
+
+  it('still edits an out-of-service bay normally (regression)', async () => {
+    await setUp();
+    const saved = { ...RIVERSIDE[5], name: 'Bay 5 renamed', outOfServiceReason: 'EQUIPMENT_FAILURE' };
+    locationServiceStub.patchBay.mockReturnValueOnce(of(saved));
+    component.openEdit(RIVERSIDE[5]);
+    expect(component.dialogMode()).toBe('edit');
+    expect(component.draft().status).toBe('OUT_OF_SERVICE');
+    component.setName('Bay 5 renamed');
+    component.setOutOfServiceReason('EQUIPMENT_FAILURE');
+    component.submit();
+    expect(locationServiceStub.patchBay).toHaveBeenCalledWith('loc-1', 'down', {
+      name: 'Bay 5 renamed',
+      bayType: 'GENERAL_SERVICE',
+      status: 'OUT_OF_SERVICE',
+      capacity: { maxConcurrentVehicles: 1 },
+      outOfServiceReason: 'EQUIPMENT_FAILURE',
+    });
+    expect(component.dialogMode()).toBeNull();
+  });
+
   it('offers no card changes without location:bay:manage', async () => {
     session.permissions = [...LOCATION_PAGE.bays, ...LOCATION_PAGE.catalogServiceView];
     await setUp();

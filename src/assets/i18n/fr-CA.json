@@ -1994,7 +1994,8 @@
       },
       "STATUS": {
         "ACTIVE": "Active",
-        "OUT_OF_SERVICE": "Hors service"
+        "OUT_OF_SERVICE": "Hors service",
+        "RETIRED": "Retirée"
       },
       "OUT_OF_SERVICE_REASON": {
         "CHOOSE": "Choisir un motif"

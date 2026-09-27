@@ -166,7 +166,9 @@
                             @if (card.testRecord) {
                               <span class="tag tag-neutral">{{ 'LOCATION.BAYS.TEST_RECORD' | translate }}</span>
                             }
-                            @if (card.outOfService) {
+                            @if (card.retired) {
+                              <span class="tag tag-neutral">{{ 'LOCATION.BAYS.STATUS.RETIRED' | translate }}</span>
+                            } @else if (card.outOfService) {
                               <span class="tag tag-warning">{{ 'LOCATION.BAYS.STATUS.OUT_OF_SERVICE' | translate }}</span>
                             }
                           </div>
@@ -191,13 +193,13 @@
                           <ul class="chips" [attr.aria-label]="'LOCATION.BAYS.SPECIALTY_LIST' | translate: { bay: card.bay.name }">
                             @for (chip of card.chips; track chip.code) {
                               <li class="chip" [class.chip-pending]="chip.pending"
-                                [attr.draggable]="canEdit() && !card.saving ? 'true' : null"
+                                [attr.draggable]="canEdit() && !card.saving && !card.retired ? 'true' : null"
                                 (dragstart)="onChipDragStart(card.bay, chip.code, $event)" (dragend)="onDragEnd()">
                                 <span>{{ chip.label }}</span>
                                 @if (chip.onlyBay) {
                                   <span class="chip-marker">{{ 'LOCATION.BAYS.ONLY_BAY' | translate }}</span>
                                 }
-                                @if (canEdit() && !chip.pending) {
+                                @if (canEdit() && !chip.pending && !card.retired) {
                                   <button type="button" class="chip-remove" [id]="'chip-remove-' + card.bay.id + '-' + chip.code"
                                     [attr.aria-label]="'LOCATION.BAYS.REMOVE_FROM' | translate: { service: chip.label, bay: card.bay.name }"
                                     [disabled]="card.saving"
@@ -214,7 +216,7 @@
                                 : ('LOCATION.BAYS.MORE_SERVICES' | translate: { count: card.hiddenChips }) }}
                             </button>
                           }
-                        } @else if (!card.isWash && !card.outOfService) {
+                        } @else if (!card.isWash && !card.outOfService && !card.retired) {
                           <p class="muted">{{ 'LOCATION.BAYS.GENERAL_NO_SPECIALTY' | translate }}</p>
                         }
 
@@ -229,7 +231,7 @@
                           </div>
                         </dl>
 
-                        @if (canEdit()) {
+                        @if (canEdit() && !card.retired) {
                           <div class="card-actions">
                             @if (canSearchServices()) {
                               <button type="button" class="btn-secondary add-service-btn" [id]="'add-service-' + card.bay.id"

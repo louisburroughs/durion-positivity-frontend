@@ -97,6 +97,21 @@ export function isOutOfService(bay: BayResponse): boolean {
   return (bay.status ?? '').toUpperCase() === 'OUT_OF_SERVICE';
 }
 
+/** Retired only via `DELETE` (DECISION-LOCATION-026); reactivating one is a separate story (#395). */
+export function isRetired(bay: BayResponse): boolean {
+  return (bay.status ?? '').toUpperCase() === 'RETIRED';
+}
+
+/**
+ * Anything but `ACTIVE` — `OUT_OF_SERVICE`, `RETIRED`, or an unrecognised value — reads as non-active,
+ * the same tolerance pos-location itself applies (`LifecycleStatusSupport.normalizeStatus` defaults an
+ * unknown value away from `ACTIVE`). Lane placement, eligibility and claims all key off this, not off
+ * `isOutOfService` alone, so a retired bay is never treated as assignable.
+ */
+export function isNonActive(bay: BayResponse): boolean {
+  return (bay.status ?? '').toUpperCase() !== 'ACTIVE';
+}
+
 export function isWashBay(bay: BayResponse): boolean {
   return (bay.bayType ?? '').toUpperCase() === 'WASH_DETAIL';
 }
@@ -106,11 +121,11 @@ export function specialtyCodes(bay: BayResponse): readonly string[] {
 }
 
 /**
- * The lane a bay sits in. Out of service wins over type, so a bay that is down is never listed as if
- * it could take work.
+ * The lane a bay sits in. Non-active (out of service or retired) wins over type, so a bay that can't
+ * take work is never listed as if it could.
  */
 export function laneOf(bay: BayResponse): BayLane {
-  if (isOutOfService(bay)) return 'OUT_OF_SERVICE';
+  if (isNonActive(bay)) return 'OUT_OF_SERVICE';
   if (isWashBay(bay)) return 'WASH';
   return specialtyCodes(bay).length > 0 ? 'SPECIALTY' : 'GENERAL';
 }
@@ -118,11 +133,11 @@ export function laneOf(bay: BayResponse): BayLane {
 /**
  * Which sentence describes what the bay can be assigned, per the opening-search rules in
  * pos-shop-manager (`OpeningSearchServiceImpl.eligibleBays`): a claimed service goes only to the bays
- * claiming it, unclaimed work goes to any bay except a wash bay, general bays first. An out-of-service
- * bay is left out of that search entirely.
+ * claiming it, unclaimed work goes to any bay except a wash bay, general bays first. A non-active
+ * (out-of-service or retired) bay is left out of that search entirely.
  */
 export function eligibilityKind(bay: BayResponse): BayEligibilityKind {
-  if (isOutOfService(bay)) return 'OUT_OF_SERVICE';
+  if (isNonActive(bay)) return 'OUT_OF_SERVICE';
   const claims = specialtyCodes(bay).length;
   if (isWashBay(bay)) return claims > 0 ? 'WASH' : 'WASH_NONE';
   return claims > 0 ? 'SPECIALTY' : 'GENERAL';
@@ -160,13 +175,13 @@ export function operationCodeLabel(code: string): string {
 }
 
 /**
- * Operation code → ids of the ACTIVE bays claiming it. Out-of-service claims don't count in the
- * opening search, so they don't count here either.
+ * Operation code → ids of the ACTIVE bays claiming it. Non-active (out-of-service or retired) claims
+ * don't count in the opening search, so they don't count here either.
  */
 export function activeClaimants(bays: readonly BayResponse[]): ReadonlyMap<string, readonly string[]> {
   const claims = new Map<string, string[]>();
   for (const bay of bays) {
-    if (isOutOfService(bay)) continue;
+    if (isNonActive(bay)) continue;
     for (const code of specialtyCodes(bay)) {
       const holders = claims.get(code) ?? [];
       holders.push(bay.id);
@@ -190,8 +205,18 @@ export function newBayDraft(bayType: BayType = 'GENERAL_SERVICE'): BayDraft {
   };
 }
 
-/** A draft holding an existing bay's values. */
+/**
+ * A draft holding an existing bay's values, for the create/edit dialog. Throws for a `RETIRED` bay:
+ * retiring is only via `DELETE` and reactivating one is a separate story (#395), so there is no
+ * `BayDraft.status` this could honestly map to — mapping it to the editable `OUT_OF_SERVICE` would let
+ * an ordinary save silently reactivate a terminal record. The page guards every entry point that could
+ * reach this (`openEdit`, `changeCodes`) against a retired bay first, so this is a second, load-bearing
+ * guard against a bug reintroducing one of them, not the primary defense.
+ */
 export function draftFromBay(bay: BayResponse): BayDraft {
+  if (isRetired(bay)) {
+    throw new Error('draftFromBay: bay is RETIRED and cannot be edited (reactivation is tracked separately, #395)');
+  }
   return {
     name: bay.name,
     bayType: isBayType(bay.bayType) ? bay.bayType : 'GENERAL_SERVICE',
@@ -259,7 +284,7 @@ export function bayChanges(
 ): BayChange[] {
   const others = bays.filter(bay => bay.id !== before?.id);
   const otherClaims = activeClaimants(others);
-  const wasActive = before != null && !isOutOfService(before);
+  const wasActive = before != null && !isNonActive(before);
   const isActive = after.status === 'ACTIVE';
   const claimedBefore = wasActive ? specialtyCodes(before) : [];
   const claimedAfter = isActive ? after.serviceCapabilityCodes : [];
@@ -282,8 +307,11 @@ export function bayChanges(
     }
   }
 
-  const otherDrafts = others.map(draftFromBay);
-  const heaviestBefore = heaviestClassTaken(before ? [...otherDrafts, draftFromBay(before)] : otherDrafts);
+  // A retired bay never took vehicles (it is non-active), so it is dropped before `draftFromBay`
+  // rather than mapped through it — `draftFromBay` refuses a retired bay outright (see its doc).
+  const otherDrafts = others.filter(bay => !isRetired(bay)).map(draftFromBay);
+  const beforeDraft = before != null && !isRetired(before) ? draftFromBay(before) : null;
+  const heaviestBefore = heaviestClassTaken(beforeDraft ? [...otherDrafts, beforeDraft] : otherDrafts);
   const heaviestAfter = heaviestClassTaken([...otherDrafts, after]);
   if (heaviestAfter < heaviestBefore && heaviestAfter > 0) {
     changes.push({ kind: 'NO_BAY_ABOVE', dutyClass: heaviestAfter });
