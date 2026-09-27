@@ -14,6 +14,7 @@ import type {
 } from '@durion-sdk/location';
 import {
   CoverageRuleResponseRuleTypeEnum,
+  DistanceDtoUnitEnum,
   MobileUnitResponseStatusEnum,
   TravelBufferPolicyResponseBufferTypeEnum,
 } from '@durion-sdk/location';
@@ -91,6 +92,7 @@ const locationServiceStub = {
   listMobileUnits: vi.fn<(locationId: string) => Observable<MobileUnitsRead>>(),
   listServiceAreas: vi.fn<() => Observable<{ areas: ServiceAreaResponse[]; ok: boolean }>>(),
   listTravelBufferPolicies: vi.fn<() => Observable<{ policies: TravelBufferPolicyResponse[]; ok: boolean }>>(),
+  getLocationDistanceUnit: vi.fn<(locationId: string) => Observable<DistanceDtoUnitEnum>>(),
   createMobileUnit: vi.fn<(request: MobileUnitRequest) => Observable<MobileUnitResponse>>(),
   patchMobileUnit: vi.fn<(id: string, patch: MobileUnitPatch) => Observable<MobileUnitResponse>>(),
   replaceCoverageRules: vi.fn<(id: string, rules: CoverageRuleRequest[]) => Observable<CoverageRuleResponse[]>>(),
@@ -147,6 +149,7 @@ describe('MobileUnitsPageComponent', () => {
     locationServiceStub.listMobileUnits.mockReturnValue(of({ units: UNITS, coverage: COVERAGE, coverageOk: true }));
     locationServiceStub.listServiceAreas.mockReturnValue(of({ areas: AREAS, ok: true }));
     locationServiceStub.listTravelBufferPolicies.mockReturnValue(of({ policies: POLICIES, ok: true }));
+    locationServiceStub.getLocationDistanceUnit.mockReturnValue(of(DistanceDtoUnitEnum.Km));
     locationServiceStub.searchClaimableServices.mockReturnValue(of({ services: [], ok: true }));
   });
 
@@ -187,12 +190,28 @@ describe('MobileUnitsPageComponent', () => {
   describe('groups and cards', () => {
     beforeEach(async () => setUp());
 
-    it('groups units into Active and Set up, not active, in natural order, hiding test records', () => {
+    it('groups units into Active and Out of service, in natural order, hiding test records', () => {
       expect(component.groups().map(group => [group.group, group.cards.map(view => view.name)])).toEqual([
         ['ACTIVE', ['Van 3', 'Van 9']],
-        ['INACTIVE', ['Van 7', 'Van 11']],
+        ['OUT_OF_SERVICE', ['Van 7', 'Van 11']],
       ]);
       expect(text()).toContain('(1 hidden)');
+    });
+
+    it('badges a card by its own status, and a retired unit falls into Out of service', () => {
+      locationServiceStub.listMobileUnits.mockReturnValue(
+        of({
+          units: [...UNITS, unit({ id: 'mu-ret', name: 'Van 20', status: MobileUnitResponseStatusEnum.Retired })],
+          coverage: new Map<string, CoverageRuleResponse[]>([...COVERAGE, ['mu-ret', []]]),
+          coverageOk: true,
+        }),
+      );
+      component.retry();
+      render();
+      expect(cardText('mu-9')).toContain('Active');
+      expect(cardText('mu-7')).toContain('Out of service');
+      expect(cardText('mu-ret')).toContain('Retired');
+      expect(component.groups().find(g => g.group === 'OUT_OF_SERVICE')?.cards.map(c => c.name)).toContain('Van 20');
     });
 
     it('says where an active unit can be sent, with its coverage, capabilities and travel buffer', () => {
@@ -425,6 +444,43 @@ describe('MobileUnitsPageComponent', () => {
       expect(component.lastCapabilityLocked()).toBe(true);
       expect(query('dialog .chip-remove')?.getAttribute('aria-disabled')).toBe('true');
     });
+
+    it("blocks an out-of-service save with no reason, tying the error to the reason field", () => {
+      component.openEdit(VAN_7);
+      component.submit();
+      render();
+      expect(locationServiceStub.patchMobileUnit).not.toHaveBeenCalled();
+      expect(component.reasonErrorKey()).toBe('LOCATION.MOBILE_UNITS.ERROR.REASON_REQUIRED');
+      expect(query('#unit-reason-error')?.textContent).toContain('Choose a reason the unit is out of service.');
+      expect(query('#unit-reason')?.getAttribute('aria-describedby')).toBe('unit-reason-error unit-reason-hint');
+      expect(query('#unit-reason-note-error')).toBeNull();
+    });
+
+    it('blocks an out-of-service save with reason Other and no note, tying the error to the note field', () => {
+      component.openEdit(VAN_7);
+      component.setOutOfServiceReason('OTHER');
+      component.submit();
+      render();
+      expect(locationServiceStub.patchMobileUnit).not.toHaveBeenCalled();
+      expect(component.noteErrorKey()).toBe('LOCATION.MOBILE_UNITS.ERROR.NOTE_REQUIRED');
+      expect(query('#unit-reason-note-error')?.textContent).toContain('Enter a short note for "Other".');
+      expect(query('#unit-reason-note')?.getAttribute('aria-describedby')).toBe('unit-reason-note-error unit-reason-note-hint');
+      // One error per control: the reason field itself is not also flagged.
+      expect(component.reasonErrorKey()).toBeNull();
+      expect(query('#unit-reason-error')).toBeNull();
+    });
+
+    it('sends the reason and note on a valid out-of-service save', () => {
+      locationServiceStub.patchMobileUnit.mockReturnValueOnce(of(VAN_7));
+      component.openEdit(VAN_7);
+      component.setOutOfServiceReason('OTHER');
+      component.setOutOfServiceNote('Awaiting parts');
+      component.submit();
+      expect(locationServiceStub.patchMobileUnit).toHaveBeenCalledWith('mu-7', {
+        outOfServiceReason: 'OTHER',
+        outOfServiceNote: 'Awaiting parts',
+      });
+    });
   });
 
   describe('coverage editor', () => {
@@ -482,6 +538,57 @@ describe('MobileUnitsPageComponent', () => {
       component.openCoverage(VAN_11);
       render();
       expect(text()).toContain('1 postal code. Switched off, but still counts.');
+    });
+
+    it('keeps an existing rule in miles through the editor and back, whatever the location is set to', () => {
+      const tierMi = rule({ id: 'rule-mi', mobileUnitId: 'mu-7', ruleType: CoverageRuleResponseRuleTypeEnum.DistanceTier, priority: 1, maxDistance: { value: 10, unit: DistanceDtoUnitEnum.Mi } });
+      const catchAll = rule({ id: 'rule-catch', mobileUnitId: 'mu-7', ruleType: CoverageRuleResponseRuleTypeEnum.DistanceTier, priority: 2 });
+      locationServiceStub.listMobileUnits.mockReturnValueOnce(
+        of({ units: UNITS, coverage: new Map<string, CoverageRuleResponse[]>([...COVERAGE, ['mu-7', [tierMi, catchAll]]]), coverageOk: true }),
+      );
+      component.retry(); // location itself is KM (the default mock); the rule's own unit still wins
+      render();
+      component.openCoverage(VAN_7);
+      render();
+
+      const [row1, row2] = component.ruleRows();
+      expect(row1.maxDistanceUnit).toBe('MI');
+      expect(query(`#rule-${row1.key}-unit`)?.textContent?.trim()).toBe('mi');
+
+      locationServiceStub.replaceCoverageRules.mockReturnValueOnce(of([tierMi, catchAll]));
+      component.saveCoverage();
+      expect(locationServiceStub.replaceCoverageRules).toHaveBeenCalledWith('mu-7', [
+        { serviceAreaId: 'area-n', ruleType: 'DISTANCE_TIER', priority: 1, maxDistance: { value: 10, unit: 'MI' } },
+        { serviceAreaId: 'area-n', ruleType: 'DISTANCE_TIER', priority: 2 },
+      ]);
+      expect(row2.maxDistance).toBe('');
+    });
+
+    it('sends a new rule in the base location\'s unit when the location is MI', () => {
+      locationServiceStub.getLocationDistanceUnit.mockReturnValue(of(DistanceDtoUnitEnum.Mi));
+      component.retry();
+      render();
+
+      component.openCoverage(VAN_7);
+      component.addRule();
+      const key1 = component.ruleRows()[0].key;
+      component.setRuleField(key1, 'serviceAreaId', 'area-n');
+      component.setRuleType(key1, 'DISTANCE_TIER');
+      component.setRuleField(key1, 'maxDistance', '8');
+      render();
+      expect(query(`#rule-${key1}-unit`)?.textContent?.trim()).toBe('mi');
+
+      component.addRule();
+      const key2 = component.ruleRows()[1].key;
+      component.setRuleField(key2, 'serviceAreaId', 'area-n');
+      component.setRuleType(key2, 'DISTANCE_TIER');
+
+      locationServiceStub.replaceCoverageRules.mockReturnValueOnce(of([]));
+      component.saveCoverage();
+      expect(locationServiceStub.replaceCoverageRules).toHaveBeenCalledWith('mu-7', [
+        { serviceAreaId: 'area-n', ruleType: 'DISTANCE_TIER', priority: 1, maxDistance: { value: 8, unit: 'MI' } },
+        { serviceAreaId: 'area-n', ruleType: 'DISTANCE_TIER', priority: 2 },
+      ]);
     });
   });
 

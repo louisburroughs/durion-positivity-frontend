@@ -16,6 +16,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { Subscription, interval } from 'rxjs';
+import { DistanceDtoUnitEnum } from '@durion-sdk/location';
 import type {
   CoverageRuleResponse,
   EligibleMobileUnitResponse,
@@ -49,6 +50,7 @@ import {
   MobileUnitDraft,
   MobileUnitPatch,
   UNIT_GROUPS,
+  UnitBadgeStatus,
   UnitGroup,
   activationChecklist,
   bufferKey,
@@ -61,6 +63,7 @@ import {
   newUnitDraft,
   postalCodeCount,
   toRuleRequest,
+  unitBadgeStatus,
   unitGroupOf,
   usualCountry,
   validateCoverage,
@@ -101,6 +104,7 @@ interface UnitCardView {
   readonly unit: MobileUnitResponse;
   readonly name: string;
   readonly active: boolean;
+  readonly statusBadge: UnitBadgeStatus;
   readonly testRecord: boolean;
   readonly sentLine: Message;
   /** The sent line describes a unit that can't be matched. */
@@ -189,6 +193,8 @@ export class MobileUnitsPageComponent {
   readonly areasRead = signal<ReadOutcome>('PENDING');
   readonly policies = signal<TravelBufferPolicyResponse[]>([]);
   readonly policiesRead = signal<ReadOutcome>('PENDING');
+  /** The base location's distance unit (DECISION-LOCATION-028); KM until the location read answers. */
+  readonly locationDistanceUnit = signal<DistanceDtoUnitEnum>(DistanceDtoUnitEnum.Km);
   readonly announcement = signal<Announcement | null>(null);
   /** Per-card refusal, keyed by unit id. */
   readonly cardErrors = signal<ReadonlyMap<string, string>>(new Map());
@@ -250,6 +256,7 @@ export class MobileUnitsPageComponent {
   readonly saving = signal(false);
   readonly nameErrorKey = signal<string | null>(null);
   readonly reasonErrorKey = signal<string | null>(null);
+  readonly noteErrorKey = signal<string | null>(null);
   readonly saveErrorKey = signal<string | null>(null);
   readonly draftChips = computed(() =>
     this.draft().serviceCapabilityCodes.map(code => ({ code, label: this.serviceLabel(code) })),
@@ -311,6 +318,7 @@ export class MobileUnitsPageComponent {
       if (!locationId) {
         this.units.set([]);
         this.state.set('idle');
+        this.locationDistanceUnit.set(DistanceDtoUnitEnum.Km);
         return;
       }
       this.state.set('loading');
@@ -328,7 +336,14 @@ export class MobileUnitsPageComponent {
             this.errorKey.set('LOCATION.MOBILE_UNITS.ERROR.LOAD');
           },
         });
-      onCleanup(() => sub.unsubscribe());
+      // Never errors: the service itself falls back to KM (ADR-0064).
+      const unitSub = this.locationService
+        .getLocationDistanceUnit(locationId)
+        .subscribe(unit => this.locationDistanceUnit.set(unit));
+      onCleanup(() => {
+        sub.unsubscribe();
+        unitSub.unsubscribe();
+      });
     });
 
     // Browser only: a server render has no midnight to cross.
@@ -511,6 +526,7 @@ export class MobileUnitsPageComponent {
     this.createdUnit.set(null);
     this.nameErrorKey.set(null);
     this.reasonErrorKey.set(null);
+    this.noteErrorKey.set(null);
     this.saveErrorKey.set(null);
   }
 
@@ -532,6 +548,7 @@ export class MobileUnitsPageComponent {
     const status = MOBILE_UNIT_STATUSES.find(s => s === value);
     if (!status || (status === 'ACTIVE' && !this.draftCanBeActive())) return;
     this.reasonErrorKey.set(null);
+    this.noteErrorKey.set(null);
     this.draft.update(draft => ({ ...draft, status }));
   }
 
@@ -539,11 +556,12 @@ export class MobileUnitsPageComponent {
     const reason = OUT_OF_SERVICE_REASONS.find(r => r === value);
     if (!reason) return;
     this.reasonErrorKey.set(null);
+    this.noteErrorKey.set(null);
     this.draft.update(draft => ({ ...draft, outOfServiceReason: reason }));
   }
 
   setOutOfServiceNote(note: string): void {
-    this.reasonErrorKey.set(null);
+    this.noteErrorKey.set(null);
     this.draft.update(draft => ({ ...draft, outOfServiceNote: note }));
   }
 
@@ -599,7 +617,7 @@ export class MobileUnitsPageComponent {
       return;
     }
     if (mode === 'edit' && draft.status === 'OUT_OF_SERVICE' && draft.outOfServiceReason === 'OTHER' && !draft.outOfServiceNote.trim()) {
-      this.reasonErrorKey.set('LOCATION.MOBILE_UNITS.ERROR.NOTE_REQUIRED');
+      this.noteErrorKey.set('LOCATION.MOBILE_UNITS.ERROR.NOTE_REQUIRED');
       this.focus('dialog #unit-reason-note');
       return;
     }
@@ -613,8 +631,9 @@ export class MobileUnitsPageComponent {
     const save$ =
       mode === 'edit' && editing
         ? this.locationService.patchMobileUnit(editing.id, this.toPatch(fields, draft, editing))
-        // A create never shows the status field: pos-location defaults an omitted status to
-        // OUT_OF_SERVICE with reason OTHER (DECISION-LOCATION-026), matching the prior INACTIVE start.
+        // A create never shows the status field, and sends no reason or note: pos-location
+        // defaults them to OUT_OF_SERVICE, reason OTHER and note "not yet configured"
+        // (DECISION-LOCATION-026).
         : this.locationService.createMobileUnit({ ...fields, baseLocationId: locationId });
 
     this.saving.set(true);
@@ -697,7 +716,8 @@ export class MobileUnitsPageComponent {
   openCoverage(unit: MobileUnitResponse): void {
     if (!this.canEdit()) return;
     const rules = [...(this.coverage().get(unit.id) ?? [])].sort((a, b) => (a.priority ?? 0) - (b.priority ?? 0));
-    this.ruleRows.set(rules.map(rule => draftFromRule(rule, this.nextRowKey())));
+    const defaultUnit = this.locationDistanceUnit();
+    this.ruleRows.set(rules.map(rule => draftFromRule(rule, this.nextRowKey(), defaultUnit)));
     this.coverageSubmitted.set(false);
     this.coverageSaveErrorKey.set(null);
     this.coverageUnit.set(unit);
@@ -721,6 +741,7 @@ export class MobileUnitsPageComponent {
       validFrom: '',
       validTo: '',
       maxDistance: '',
+      maxDistanceUnit: this.locationDistanceUnit(),
     };
     this.ruleRows.set([...rows, row]);
     this.focus(`#rule-${row.key}-area`);
@@ -1100,6 +1121,10 @@ export class MobileUnitsPageComponent {
     return `${I18N}.COVERAGE.RULE_TYPE.${type}`;
   }
 
+  distanceUnitKey(unit: DistanceDtoUnitEnum): string {
+    return `${I18N}.COVERAGE.UNIT.${unit}`;
+  }
+
   /** The buffer in words, e.g. "15 minutes flat"; "type needs fixing" for an unknown type. */
   bufferText(policy: TravelBufferPolicyResponse): Message {
     return { key: bufferKey(policy), params: { value: policy.bufferValue ?? '' } };
@@ -1140,6 +1165,7 @@ export class MobileUnitsPageComponent {
       unit,
       name,
       active,
+      statusBadge: unitBadgeStatus(unit),
       testRecord: isTestRecord(name),
       sentLine,
       sentWarning,
