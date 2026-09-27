@@ -18,6 +18,7 @@ import {
   isReadyToActivate,
   ruleInEffect,
   toRuleRequest,
+  unitBadgeStatus,
   unitGroupOf,
   usualCountry,
   validateCoverage,
@@ -40,6 +41,7 @@ const row = (overrides: Partial<CoverageRuleDraft> = {}): CoverageRuleDraft => (
   validFrom: '',
   validTo: '',
   maxDistance: '',
+  maxDistanceUnit: DistanceDtoUnitEnum.Km,
   ...overrides,
 });
 
@@ -52,10 +54,19 @@ const area = (codes: [string, string][]): ServiceAreaResponse => ({
 const PREFIX = 'LOCATION.MOBILE_UNITS.COVERAGE.ERROR';
 
 describe('mobile unit setup rules', () => {
-  it('groups units by status, reading it case-insensitively', () => {
+  it('groups units by status, reading it case-insensitively; retired falls in with the non-active', () => {
     expect(unitGroupOf({ id: 'a', status: 'active' as MobileUnitResponseStatusEnum })).toBe('ACTIVE');
-    expect(unitGroupOf({ id: 'b', status: MobileUnitResponseStatusEnum.OutOfService })).toBe('INACTIVE');
-    expect(unitGroupOf({ id: 'c' })).toBe('INACTIVE');
+    expect(unitGroupOf({ id: 'b', status: MobileUnitResponseStatusEnum.OutOfService })).toBe('OUT_OF_SERVICE');
+    expect(unitGroupOf({ id: 'c', status: MobileUnitResponseStatusEnum.Retired })).toBe('OUT_OF_SERVICE');
+    expect(unitGroupOf({ id: 'd' })).toBe('OUT_OF_SERVICE');
+  });
+
+  it('badges a unit by its own status, defaulting an unrecognised one to out of service', () => {
+    expect(unitBadgeStatus({ id: 'a', status: 'active' as MobileUnitResponseStatusEnum })).toBe('ACTIVE');
+    expect(unitBadgeStatus({ id: 'b', status: MobileUnitResponseStatusEnum.OutOfService })).toBe('OUT_OF_SERVICE');
+    expect(unitBadgeStatus({ id: 'c', status: MobileUnitResponseStatusEnum.Retired })).toBe('RETIRED');
+    expect(unitBadgeStatus({ id: 'd' })).toBe('OUT_OF_SERVICE');
+    expect(unitBadgeStatus({ id: 'e', status: 'BOGUS' as MobileUnitResponseStatusEnum })).toBe('OUT_OF_SERVICE');
   });
 
   it('needs a policy, a capability and a coverage rule before a unit can be active', () => {
@@ -124,6 +135,7 @@ describe('mobile unit setup rules', () => {
         maxDistance: { value: 25, unit: DistanceDtoUnitEnum.Mi },
       }),
       'k',
+      DistanceDtoUnitEnum.Km,
     );
     expect(draft).toEqual({
       key: 'k',
@@ -133,6 +145,7 @@ describe('mobile unit setup rules', () => {
       validFrom: '2026-10-01',
       validTo: '',
       maxDistance: '25',
+      maxDistanceUnit: 'MI',
     });
     expect(toRuleRequest(draft)).toEqual({
       serviceAreaId: 'area-1',
@@ -140,13 +153,37 @@ describe('mobile unit setup rules', () => {
       priority: 3,
       validFrom: '2026-10-01',
     });
-    // toRuleRequest always sends kilometres (COVERAGE_DISTANCE_UNIT): this editor isn't
-    // location-scoped, so it can't know a location's preferred distanceUnit (DECISION-LOCATION-028).
+    // A brand-new row (no rule.maxDistance yet) takes the location's unit.
     expect(toRuleRequest(row({ ruleType: 'DISTANCE_TIER', maxDistance: '12.5' }))).toEqual({
       serviceAreaId: 'area-1',
       ruleType: 'DISTANCE_TIER',
       priority: 1,
       maxDistance: { value: 12.5, unit: 'KM' },
+    });
+  });
+
+  it('keeps a rule saved in miles on edit, in miles, regardless of the location', () => {
+    const draft = draftFromRule(
+      rule({ ruleType: 'DISTANCE_TIER' as CoverageRuleResponseRuleTypeEnum, maxDistance: { value: 25, unit: DistanceDtoUnitEnum.Mi } }),
+      'k',
+      DistanceDtoUnitEnum.Km, // location is KM; the rule's own unit still wins
+    );
+    expect(draft.maxDistanceUnit).toBe('MI');
+    expect(toRuleRequest(draft)).toEqual({
+      serviceAreaId: 'area-1',
+      ruleType: 'DISTANCE_TIER',
+      priority: 1,
+      maxDistance: { value: 25, unit: 'MI' },
+    });
+  });
+
+  it('sends a new rule in the base location\'s unit when the location is MI', () => {
+    const newRow = row({ ruleType: 'DISTANCE_TIER', maxDistance: '15', maxDistanceUnit: DistanceDtoUnitEnum.Mi });
+    expect(toRuleRequest(newRow)).toEqual({
+      serviceAreaId: 'area-1',
+      ruleType: 'DISTANCE_TIER',
+      priority: 1,
+      maxDistance: { value: 15, unit: 'MI' },
     });
   });
 

@@ -4,6 +4,7 @@ import { ProductsAPIService } from '@durion-sdk/catalog';
 import type { ServiceDto } from '@durion-sdk/catalog';
 import {
   BayAPIService,
+  DistanceDtoUnitEnum,
   LocationAPIService,
   MobileUnitAPIService,
   MobileUnitEligibilityControllerService,
@@ -111,6 +112,17 @@ export class LocationService {
   updateLocation(locationId: string, body: Record<string, unknown>, _idempotencyKey?: string): Observable<unknown> {
     const request = this.toLocationRequest(body);
     return this.locationApi.updateLocation(locationId, request) as Observable<unknown>;
+  }
+
+  /**
+   * The unit distances are shown and accepted in at this location (DECISION-LOCATION-028); KM on
+   * any read failure, matching pos-location's own default for an unset location.
+   */
+  getLocationDistanceUnit(locationId: string): Observable<DistanceDtoUnitEnum> {
+    return this.locationApi.getLocationById(locationId).pipe(
+      map(location => (String(location.distanceUnit ?? '') === 'MI' ? DistanceDtoUnitEnum.Mi : DistanceDtoUnitEnum.Km)),
+      catchError(() => of(DistanceDtoUnitEnum.Km)),
+    );
   }
 
   getLocationDefaults(locationId: string): Observable<unknown> {

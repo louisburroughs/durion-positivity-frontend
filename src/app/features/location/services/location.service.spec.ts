@@ -361,6 +361,36 @@ describe('LocationService', () => {
     });
   });
 
+  describe('getLocationDistanceUnit()', () => {
+    it('reads the location and returns its own distance unit', () => {
+      locationApiStub.getLocationById.mockReturnValueOnce(of({ distanceUnit: 'MI' }));
+
+      let result: string | undefined;
+      service.getLocationDistanceUnit('loc-1').subscribe(r => (result = r));
+
+      expect(locationApiStub.getLocationById).toHaveBeenCalledWith('loc-1');
+      expect(result).toBe('MI');
+    });
+
+    it('defaults to KM for a location with no recognised unit', () => {
+      locationApiStub.getLocationById.mockReturnValueOnce(of({ distanceUnit: undefined }));
+
+      let result: string | undefined;
+      service.getLocationDistanceUnit('loc-1').subscribe(r => (result = r));
+
+      expect(result).toBe('KM');
+    });
+
+    it('defaults to KM when the read fails (ADR-0064)', () => {
+      locationApiStub.getLocationById.mockReturnValueOnce(throwError(() => new Error('boom')));
+
+      let result: string | undefined;
+      service.getLocationDistanceUnit('loc-1').subscribe(r => (result = r));
+
+      expect(result).toBe('KM');
+    });
+  });
+
   describe('getLocationDefaults()', () => {
     it('delegates to SiteDefaultsAPIService.getSiteDefaults with the locationId', () => {
       siteDefaultsApiStub.getSiteDefaults.mockReturnValueOnce(of({ taxRate: 7 }));

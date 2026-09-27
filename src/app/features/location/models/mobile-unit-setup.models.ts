@@ -29,16 +29,12 @@ export type CoverageRuleType = (typeof COVERAGE_RULE_TYPES)[number];
 export const TRAVEL_BUFFER_TYPES = ['FIXED_MINUTES', 'DISTANCE_TIER'] as const;
 export type TravelBufferType = (typeof TRAVEL_BUFFER_TYPES)[number];
 
-/**
- * The unit a coverage rule's max distance is recorded in. Locations carry their own preferred
- * distanceUnit (DECISION-LOCATION-028), but this editor isn't location-scoped, so it always sends
- * kilometres, the backend's canonical storage unit and default; not surfaced in the UI.
- */
-const COVERAGE_DISTANCE_UNIT = DistanceDtoUnitEnum.Km;
-
-/** The two groups the Mobile Units page shows. */
-export const UNIT_GROUPS = ['ACTIVE', 'INACTIVE'] as const;
+/** The two groups the Mobile Units page shows. RETIRED units fall in with the non-active ones. */
+export const UNIT_GROUPS = ['ACTIVE', 'OUT_OF_SERVICE'] as const;
 export type UnitGroup = (typeof UNIT_GROUPS)[number];
+
+/** The status badge on a unit's card: its own status if recognised, else OUT_OF_SERVICE. */
+export type UnitBadgeStatus = MobileUnitStatus | 'RETIRED';
 
 /** Fields `PATCH /v1/mobile-units/{id}` reads; an absent key is left unchanged. */
 export interface MobileUnitPatch {
@@ -83,6 +79,8 @@ export interface CoverageRuleDraft {
   validFrom: string;
   validTo: string;
   maxDistance: string;
+  /** Unit `maxDistance` is entered/shown in: the rule's own on edit, else the location's (DECISION-LOCATION-028). */
+  maxDistanceUnit: DistanceDtoUnitEnum;
 }
 
 export type CoverageField = 'serviceAreaId' | 'priority' | 'validTo' | 'maxDistance';
@@ -105,7 +103,17 @@ export function isActiveUnit(unit: MobileUnitResponse): boolean {
 }
 
 export function unitGroupOf(unit: MobileUnitResponse): UnitGroup {
-  return isActiveUnit(unit) ? 'ACTIVE' : 'INACTIVE';
+  return isActiveUnit(unit) ? 'ACTIVE' : 'OUT_OF_SERVICE';
+}
+
+/**
+ * The status a unit's card badges: its own status when it is ACTIVE or RETIRED, else
+ * OUT_OF_SERVICE — which is also pos-location's own default for a missing/unrecognised value
+ * (DECISION-LOCATION-026).
+ */
+export function unitBadgeStatus(unit: MobileUnitResponse): UnitBadgeStatus {
+  const status = (unit.status ?? '').toUpperCase();
+  return status === 'ACTIVE' || status === 'RETIRED' ? status : 'OUT_OF_SERVICE';
 }
 
 export function isCoverageRuleType(value: string | null | undefined): value is CoverageRuleType {
@@ -211,7 +219,13 @@ export function draftFromUnit(unit: MobileUnitResponse): MobileUnitDraft {
   };
 }
 
-export function draftFromRule(rule: CoverageRuleResponse, key: string): CoverageRuleDraft {
+/**
+ * Turns a saved rule into an editor row. `maxDistanceUnit` keeps the rule's own unit — the
+ * response is expressed in the base location's `distanceUnit` (DECISION-LOCATION-028) but a rule
+ * saved under a different setting stays in the unit it was recorded in; `defaultUnit` (the
+ * location's current unit) only applies to a row with no distance yet.
+ */
+export function draftFromRule(rule: CoverageRuleResponse, key: string, defaultUnit: DistanceDtoUnitEnum): CoverageRuleDraft {
   return {
     key,
     serviceAreaId: rule.serviceAreaId ?? '',
@@ -220,6 +234,7 @@ export function draftFromRule(rule: CoverageRuleResponse, key: string): Coverage
     validFrom: rule.validFrom ?? '',
     validTo: rule.validTo ?? '',
     maxDistance: rule.maxDistance == null ? '' : String(rule.maxDistance.value),
+    maxDistanceUnit: rule.maxDistance?.unit ?? defaultUnit,
   };
 }
 
@@ -271,11 +286,15 @@ export function validateCoverage(rows: readonly CoverageRuleDraft[], unitActive:
   return { rows: errors, form };
 }
 
-/** The request for one valid editor row. Max distance travels only on a distance tier. */
+/**
+ * The request for one valid editor row. Max distance travels only on a distance tier, in the
+ * row's own unit (the rule's own on edit, else the location's, DECISION-LOCATION-028) — pos-location
+ * accepts either unit and converts it, storing km.
+ */
 export function toRuleRequest(row: CoverageRuleDraft): CoverageRuleRequest {
   const maxDistance =
     row.ruleType === 'DISTANCE_TIER' && row.maxDistance.trim()
-      ? { value: Number(row.maxDistance), unit: COVERAGE_DISTANCE_UNIT }
+      ? { value: Number(row.maxDistance), unit: row.maxDistanceUnit }
       : undefined;
   return {
     serviceAreaId: row.serviceAreaId,
