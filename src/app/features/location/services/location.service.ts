@@ -115,7 +115,7 @@ export class LocationService {
   }
 
   /**
-   * The unit distances are shown and accepted in at this location (DECISION-LOCATION-028), or null
+   * The unit distances are shown and accepted at this location (DECISION-LOCATION-028), or null
    * when the read fails (ADR-0064): a failure must stay distinguishable from a real KM location,
    * since guessing the unit would silently rescale any distance saved in it.
    */
