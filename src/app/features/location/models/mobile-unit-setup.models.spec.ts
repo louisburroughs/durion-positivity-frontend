@@ -41,7 +41,7 @@ const row = (overrides: Partial<CoverageRuleDraft> = {}): CoverageRuleDraft => (
   validFrom: '',
   validTo: '',
   maxDistance: '',
-  maxDistanceUnit: DistanceDtoUnitEnum.Km,
+  maxDistanceUnit: null,
   ...overrides,
 });
 
@@ -135,7 +135,6 @@ describe('mobile unit setup rules', () => {
         maxDistance: { value: 25, unit: DistanceDtoUnitEnum.Mi },
       }),
       'k',
-      DistanceDtoUnitEnum.Km,
     );
     expect(draft).toEqual({
       key: 'k',
@@ -147,14 +146,14 @@ describe('mobile unit setup rules', () => {
       maxDistance: '25',
       maxDistanceUnit: 'MI',
     });
-    expect(toRuleRequest(draft)).toEqual({
+    expect(toRuleRequest(draft, DistanceDtoUnitEnum.Km)).toEqual({
       serviceAreaId: 'area-1',
       ruleType: 'SERVICE_AREA',
       priority: 3,
       validFrom: '2026-10-01',
     });
     // A brand-new row (no rule.maxDistance yet) takes the location's unit.
-    expect(toRuleRequest(row({ ruleType: 'DISTANCE_TIER', maxDistance: '12.5' }))).toEqual({
+    expect(toRuleRequest(row({ ruleType: 'DISTANCE_TIER', maxDistance: '12.5' }), DistanceDtoUnitEnum.Km)).toEqual({
       serviceAreaId: 'area-1',
       ruleType: 'DISTANCE_TIER',
       priority: 1,
@@ -166,10 +165,10 @@ describe('mobile unit setup rules', () => {
     const draft = draftFromRule(
       rule({ ruleType: 'DISTANCE_TIER' as CoverageRuleResponseRuleTypeEnum, maxDistance: { value: 25, unit: DistanceDtoUnitEnum.Mi } }),
       'k',
-      DistanceDtoUnitEnum.Km, // location is KM; the rule's own unit still wins
     );
     expect(draft.maxDistanceUnit).toBe('MI');
-    expect(toRuleRequest(draft)).toEqual({
+    // The location is KM; the unit the rule came back in still wins.
+    expect(toRuleRequest(draft, DistanceDtoUnitEnum.Km)).toEqual({
       serviceAreaId: 'area-1',
       ruleType: 'DISTANCE_TIER',
       priority: 1,
@@ -178,8 +177,9 @@ describe('mobile unit setup rules', () => {
   });
 
   it('sends a new rule in the base location\'s unit when the location is MI', () => {
-    const newRow = row({ ruleType: 'DISTANCE_TIER', maxDistance: '15', maxDistanceUnit: DistanceDtoUnitEnum.Mi });
-    expect(toRuleRequest(newRow)).toEqual({
+    const newRow = row({ ruleType: 'DISTANCE_TIER', maxDistance: '15' });
+    expect(newRow.maxDistanceUnit).toBeNull();
+    expect(toRuleRequest(newRow, DistanceDtoUnitEnum.Mi)).toEqual({
       serviceAreaId: 'area-1',
       ruleType: 'DISTANCE_TIER',
       priority: 1,
@@ -187,47 +187,66 @@ describe('mobile unit setup rules', () => {
     });
   });
 
+  it('gives a rule with no distance no unit of its own', () => {
+    const draft = draftFromRule(rule({ ruleType: 'DISTANCE_TIER' as CoverageRuleResponseRuleTypeEnum }), 'k');
+    expect(draft.maxDistanceUnit).toBeNull();
+  });
+
   describe('validateCoverage', () => {
+    it("refuses a new distance while the location's unit is unknown, never guessing KM (ADR-0064)", () => {
+      const rows = [row({ key: 'a', ruleType: 'DISTANCE_TIER', maxDistance: '10' }), row({ key: 'b', ruleType: 'DISTANCE_TIER' })];
+      expect(validateCoverage(rows, false, null).rows.get('a')).toEqual({ maxDistance: `${PREFIX}.UNIT_UNKNOWN` });
+      expect(validateCoverage(rows, false, DistanceDtoUnitEnum.Mi).rows.size).toBe(0);
+    });
+
+    it('accepts a saved distance in its own unit even while the location unit is unknown', () => {
+      const rows = [
+        row({ key: 'a', ruleType: 'DISTANCE_TIER', maxDistance: '10', maxDistanceUnit: DistanceDtoUnitEnum.Mi }),
+        row({ key: 'b', ruleType: 'DISTANCE_TIER' }),
+      ];
+      expect(validateCoverage(rows, false, null).rows.size).toBe(0);
+    });
+
     it('passes a complete set of rules', () => {
-      const result = validateCoverage([row(), row({ key: 'r2', priority: '0', validFrom: '2026-01-01', validTo: '2026-01-01' })], true);
+      const result = validateCoverage([row(), row({ key: 'r2', priority: '0', validFrom: '2026-01-01', validTo: '2026-01-01' })], true, DistanceDtoUnitEnum.Km);
       expect(result.rows.size).toBe(0);
       expect(result.form).toBeNull();
     });
 
     it('needs a service area and a whole-number priority', () => {
-      const result = validateCoverage([row({ serviceAreaId: '', priority: '1.5' })], false);
+      const result = validateCoverage([row({ serviceAreaId: '', priority: '1.5' })], false, DistanceDtoUnitEnum.Km);
       expect(result.rows.get('r1')).toEqual({ serviceAreaId: `${PREFIX}.AREA_REQUIRED`, priority: `${PREFIX}.PRIORITY` });
     });
 
     it('refuses an end date before the start date', () => {
-      const result = validateCoverage([row({ validFrom: '2026-10-02', validTo: '2026-10-01' })], false);
+      const result = validateCoverage([row({ validFrom: '2026-10-02', validTo: '2026-10-01' })], false, DistanceDtoUnitEnum.Km);
       expect(result.rows.get('r1')).toEqual({ validTo: `${PREFIX}.DATES` });
     });
 
     it('needs distance tiers to increase and end with one blank catch-all', () => {
       const tier = (key: string, maxDistance: string): CoverageRuleDraft => row({ key, ruleType: 'DISTANCE_TIER', maxDistance });
-      expect(validateCoverage([tier('a', '10'), tier('b', '25'), tier('c', '')], false).rows.size).toBe(0);
-      expect(validateCoverage([tier('a', '25'), tier('b', '10'), tier('c', '')], false).rows.get('b')).toEqual({
+      expect(validateCoverage([tier('a', '10'), tier('b', '25'), tier('c', '')], false, DistanceDtoUnitEnum.Km).rows.size).toBe(0);
+      expect(validateCoverage([tier('a', '25'), tier('b', '10'), tier('c', '')], false, DistanceDtoUnitEnum.Km).rows.get('b')).toEqual({
         maxDistance: `${PREFIX}.TIERS_ASCENDING`,
       });
-      expect(validateCoverage([tier('a', ''), tier('b', '')], false).rows.get('a')).toEqual({
+      expect(validateCoverage([tier('a', ''), tier('b', '')], false, DistanceDtoUnitEnum.Km).rows.get('a')).toEqual({
         maxDistance: `${PREFIX}.CATCH_ALL_LAST`,
       });
-      expect(validateCoverage([tier('a', '10'), tier('b', '25')], false).rows.get('b')).toEqual({
+      expect(validateCoverage([tier('a', '10'), tier('b', '25')], false, DistanceDtoUnitEnum.Km).rows.get('b')).toEqual({
         maxDistance: `${PREFIX}.CATCH_ALL_MISSING`,
       });
-      expect(validateCoverage([tier('a', 'far'), tier('b', '')], false).rows.get('a')).toEqual({
+      expect(validateCoverage([tier('a', 'far'), tier('b', '')], false, DistanceDtoUnitEnum.Km).rows.get('a')).toEqual({
         maxDistance: `${PREFIX}.DISTANCE`,
       });
     });
 
     it('ignores max distance on service-area rules', () => {
-      expect(validateCoverage([row({ maxDistance: 'anything' })], false).rows.size).toBe(0);
+      expect(validateCoverage([row({ maxDistance: 'anything' })], false, DistanceDtoUnitEnum.Km).rows.size).toBe(0);
     });
 
     it('stops an active unit losing its last rule, but lets an inactive one', () => {
-      expect(validateCoverage([], true).form).toBe(`${PREFIX}.ACTIVE_NEEDS_RULE`);
-      expect(validateCoverage([], false).form).toBeNull();
+      expect(validateCoverage([], true, DistanceDtoUnitEnum.Km).form).toBe(`${PREFIX}.ACTIVE_NEEDS_RULE`);
+      expect(validateCoverage([], false, DistanceDtoUnitEnum.Km).form).toBeNull();
     });
   });
 });

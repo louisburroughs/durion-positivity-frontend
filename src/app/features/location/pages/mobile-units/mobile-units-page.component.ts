@@ -62,6 +62,7 @@ import {
   isReadyToActivate,
   newUnitDraft,
   postalCodeCount,
+  rowDistanceUnit,
   toRuleRequest,
   unitBadgeStatus,
   unitGroupOf,
@@ -194,7 +195,8 @@ export class MobileUnitsPageComponent {
   readonly policies = signal<TravelBufferPolicyResponse[]>([]);
   readonly policiesRead = signal<ReadOutcome>('PENDING');
   /** The base location's distance unit (DECISION-LOCATION-028); KM until the location read answers. */
-  readonly locationDistanceUnit = signal<DistanceDtoUnitEnum>(DistanceDtoUnitEnum.Km);
+  /** The page location's distance unit; null until read, and when the read fails (ADR-0064). */
+  readonly locationDistanceUnit = signal<DistanceDtoUnitEnum | null>(null);
   readonly announcement = signal<Announcement | null>(null);
   /** Per-card refusal, keyed by unit id. */
   readonly cardErrors = signal<ReadonlyMap<string, string>>(new Map());
@@ -280,7 +282,11 @@ export class MobileUnitsPageComponent {
   readonly coverageSaveErrorKey = signal<string | null>(null);
   private rowSeq = 0;
   readonly coverageValidation = computed<CoverageValidation>(() =>
-    validateCoverage(this.ruleRows(), this.coverageUnit() != null && isActiveUnit(this.coverageUnit()!)),
+    validateCoverage(
+      this.ruleRows(),
+      this.coverageUnit() != null && isActiveUnit(this.coverageUnit()!),
+      this.locationDistanceUnit(),
+    ),
   );
   /** Field errors show once the user has tried to save; the active-unit guard shows at once. */
   readonly showRowErrors = computed(() => this.coverageSubmitted());
@@ -315,10 +321,11 @@ export class MobileUnitsPageComponent {
       this.reloadTick();
       this.coverage.set(new Map());
       this.coverageRead.set('PENDING');
+      // The previous location's unit never carries over, even for the moment the new read is in flight.
+      this.locationDistanceUnit.set(null);
       if (!locationId) {
         this.units.set([]);
         this.state.set('idle');
-        this.locationDistanceUnit.set(DistanceDtoUnitEnum.Km);
         return;
       }
       this.state.set('loading');
@@ -336,7 +343,7 @@ export class MobileUnitsPageComponent {
             this.errorKey.set('LOCATION.MOBILE_UNITS.ERROR.LOAD');
           },
         });
-      // Never errors: the service itself falls back to KM (ADR-0064).
+      // Never errors: the service answers null on a failed read (ADR-0064).
       const unitSub = this.locationService
         .getLocationDistanceUnit(locationId)
         .subscribe(unit => this.locationDistanceUnit.set(unit));
@@ -716,8 +723,7 @@ export class MobileUnitsPageComponent {
   openCoverage(unit: MobileUnitResponse): void {
     if (!this.canEdit()) return;
     const rules = [...(this.coverage().get(unit.id) ?? [])].sort((a, b) => (a.priority ?? 0) - (b.priority ?? 0));
-    const defaultUnit = this.locationDistanceUnit();
-    this.ruleRows.set(rules.map(rule => draftFromRule(rule, this.nextRowKey(), defaultUnit)));
+    this.ruleRows.set(rules.map(rule => draftFromRule(rule, this.nextRowKey())));
     this.coverageSubmitted.set(false);
     this.coverageSaveErrorKey.set(null);
     this.coverageUnit.set(unit);
@@ -741,7 +747,7 @@ export class MobileUnitsPageComponent {
       validFrom: '',
       validTo: '',
       maxDistance: '',
-      maxDistanceUnit: this.locationDistanceUnit(),
+      maxDistanceUnit: null,
     };
     this.ruleRows.set([...rows, row]);
     this.focus(`#rule-${row.key}-area`);
@@ -794,7 +800,7 @@ export class MobileUnitsPageComponent {
     this.coverageSaving.set(true);
     this.coverageSaveErrorKey.set(null);
     this.coverageSub = this.locationService
-      .replaceCoverageRules(unit.id, this.ruleRows().map(toRuleRequest))
+      .replaceCoverageRules(unit.id, this.ruleRows().map(row => toRuleRequest(row, this.locationDistanceUnit())))
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: rules => {
@@ -1121,8 +1127,9 @@ export class MobileUnitsPageComponent {
     return `${I18N}.COVERAGE.RULE_TYPE.${type}`;
   }
 
-  distanceUnitKey(unit: DistanceDtoUnitEnum): string {
-    return `${I18N}.COVERAGE.UNIT.${unit}`;
+  /** The suffix for a row's distance: its own unit, else the location's, else "unit unavailable". */
+  distanceUnitKey(row: CoverageRuleDraft): string {
+    return `${I18N}.COVERAGE.UNIT.${rowDistanceUnit(row, this.locationDistanceUnit()) ?? 'UNKNOWN'}`;
   }
 
   /** The buffer in words, e.g. "15 minutes flat"; "type needs fixing" for an unknown type. */

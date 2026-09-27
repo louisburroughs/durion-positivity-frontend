@@ -631,7 +631,7 @@
                           [attr.aria-invalid]="ruleError(row.key, 'maxDistance') ? true : null"
                           [attr.aria-describedby]="ruleDescribedBy(row.key, 'maxDistance', 'rule-' + row.key + '-unit coverage-distance-hint')"
                           (input)="setRuleField(row.key, 'maxDistance', $any($event.target).value)" />
-                        <span [id]="'rule-' + row.key + '-unit'" class="distance-unit">{{ distanceUnitKey(row.maxDistanceUnit) | translate }}</span>
+                        <span [id]="'rule-' + row.key + '-unit'" class="distance-unit">{{ distanceUnitKey(row) | translate }}</span>
                       </div>
                       @if (ruleError(row.key, 'maxDistance'); as error) {
                         <p [id]="'rule-' + row.key + '-maxDistance-error'" class="field-error">{{ error | translate }}</p>

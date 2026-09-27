@@ -92,7 +92,7 @@ const locationServiceStub = {
   listMobileUnits: vi.fn<(locationId: string) => Observable<MobileUnitsRead>>(),
   listServiceAreas: vi.fn<() => Observable<{ areas: ServiceAreaResponse[]; ok: boolean }>>(),
   listTravelBufferPolicies: vi.fn<() => Observable<{ policies: TravelBufferPolicyResponse[]; ok: boolean }>>(),
-  getLocationDistanceUnit: vi.fn<(locationId: string) => Observable<DistanceDtoUnitEnum>>(),
+  getLocationDistanceUnit: vi.fn<(locationId: string) => Observable<DistanceDtoUnitEnum | null>>(),
   createMobileUnit: vi.fn<(request: MobileUnitRequest) => Observable<MobileUnitResponse>>(),
   patchMobileUnit: vi.fn<(id: string, patch: MobileUnitPatch) => Observable<MobileUnitResponse>>(),
   replaceCoverageRules: vi.fn<(id: string, rules: CoverageRuleRequest[]) => Observable<CoverageRuleResponse[]>>(),
@@ -562,6 +562,45 @@ describe('MobileUnitsPageComponent', () => {
         { serviceAreaId: 'area-n', ruleType: 'DISTANCE_TIER', priority: 2 },
       ]);
       expect(row2.maxDistance).toBe('');
+    });
+
+    it("won't save a new distance when the location's unit can't be read", () => {
+      locationServiceStub.getLocationDistanceUnit.mockReturnValue(of(null));
+      component.retry();
+      render();
+
+      component.openCoverage(VAN_7);
+      component.addRule();
+      const key1 = component.ruleRows()[0].key;
+      component.setRuleField(key1, 'serviceAreaId', 'area-n');
+      component.setRuleType(key1, 'DISTANCE_TIER');
+      component.setRuleField(key1, 'maxDistance', '8');
+      component.addRule();
+      const key2 = component.ruleRows()[1].key;
+      component.setRuleField(key2, 'serviceAreaId', 'area-n');
+      component.setRuleType(key2, 'DISTANCE_TIER');
+      render();
+      expect(query(`#rule-${key1}-unit`)?.textContent?.trim()).toBe('unit unavailable');
+
+      component.saveCoverage();
+      render();
+      expect(locationServiceStub.replaceCoverageRules).not.toHaveBeenCalled();
+      expect(text()).toContain("This location's distance unit couldn't be read.");
+    });
+
+    it("drops the previous location's unit the moment another location is picked", () => {
+      locationServiceStub.getLocationDistanceUnit.mockReturnValue(of(DistanceDtoUnitEnum.Mi));
+      component.retry();
+      render();
+      expect(component.locationDistanceUnit()).toBe('MI');
+
+      // The next location's unit read is still in flight: nothing may assume MI meanwhile.
+      const pending = new Subject<DistanceDtoUnitEnum | null>();
+      locationServiceStub.getLocationDistanceUnit.mockReturnValue(pending);
+      queryParams.next({ locationId: 'loc-2' });
+      render();
+      expect(locationServiceStub.getLocationDistanceUnit).toHaveBeenLastCalledWith('loc-2');
+      expect(component.locationDistanceUnit()).toBeNull();
     });
 
     it('sends a new rule in the base location\'s unit when the location is MI', () => {

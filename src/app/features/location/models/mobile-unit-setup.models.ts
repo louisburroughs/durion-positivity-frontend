@@ -79,8 +79,11 @@ export interface CoverageRuleDraft {
   validFrom: string;
   validTo: string;
   maxDistance: string;
-  /** Unit `maxDistance` is entered/shown in: the rule's own on edit, else the location's (DECISION-LOCATION-028). */
-  maxDistanceUnit: DistanceDtoUnitEnum;
+  /**
+   * The unit a saved rule's `maxDistance` came back in (DECISION-LOCATION-028); null for a row with
+   * no saved distance, which takes the location's unit when it is saved.
+   */
+  maxDistanceUnit: DistanceDtoUnitEnum | null;
 }
 
 export type CoverageField = 'serviceAreaId' | 'priority' | 'validTo' | 'maxDistance';
@@ -222,10 +225,9 @@ export function draftFromUnit(unit: MobileUnitResponse): MobileUnitDraft {
 /**
  * Turns a saved rule into an editor row. `maxDistanceUnit` keeps the unit the response carries
  * (pos-location expresses it in the base location's `distanceUnit`, DECISION-LOCATION-028), so the
- * value is resent in the unit it was shown in; `defaultUnit` (the location's current unit) only
- * applies to a row with no distance yet.
+ * value is resent in the unit it was shown in; a rule with no distance has none.
  */
-export function draftFromRule(rule: CoverageRuleResponse, key: string, defaultUnit: DistanceDtoUnitEnum): CoverageRuleDraft {
+export function draftFromRule(rule: CoverageRuleResponse, key: string): CoverageRuleDraft {
   return {
     key,
     serviceAreaId: rule.serviceAreaId ?? '',
@@ -234,12 +236,20 @@ export function draftFromRule(rule: CoverageRuleResponse, key: string, defaultUn
     validFrom: rule.validFrom ?? '',
     validTo: rule.validTo ?? '',
     maxDistance: rule.maxDistance == null ? '' : String(rule.maxDistance.value),
-    maxDistanceUnit: rule.maxDistance?.unit ?? defaultUnit,
+    maxDistanceUnit: rule.maxDistance?.unit ?? null,
   };
 }
 
 const WHOLE_NUMBER = /^\d+$/;
 const DECIMAL = /^\d+(\.\d+)?$/;
+
+/** The unit a row's distance is saved in: its own, else the location's; null while neither is known. */
+export function rowDistanceUnit(
+  row: CoverageRuleDraft,
+  locationUnit: DistanceDtoUnitEnum | null,
+): DistanceDtoUnitEnum | null {
+  return row.maxDistanceUnit ?? locationUnit;
+}
 
 /**
  * Checks the coverage editor's rows before a save, since pos-location's replace checks nothing
@@ -248,9 +258,15 @@ const DECIMAL = /^\d+(\.\d+)?$/;
  * - valid to not before valid from;
  * - distance tiers, in list order, strictly increasing and ending with exactly one blank catch-all
  *   (the rule pos-location applies on create);
+ * - a distance has a known unit: the row's own, else the location's (`locationUnit`, null while
+ *   unread or unreadable — never guessed, since a wrong unit silently rescales the tier);
  * - an active unit keeps at least one rule.
  */
-export function validateCoverage(rows: readonly CoverageRuleDraft[], unitActive: boolean): CoverageValidation {
+export function validateCoverage(
+  rows: readonly CoverageRuleDraft[],
+  unitActive: boolean,
+  locationUnit: DistanceDtoUnitEnum | null,
+): CoverageValidation {
   const errors = new Map<string, Partial<Record<CoverageField, string>>>();
   const flag = (key: string, field: CoverageField, message: string): void => {
     errors.set(key, { ...errors.get(key), [field]: message });
@@ -277,7 +293,8 @@ export function validateCoverage(rows: readonly CoverageRuleDraft[], unitActive:
       return;
     }
     const value = Number(text);
-    if (previous != null && value <= previous) flag(row.key, 'maxDistance', `${prefix}.TIERS_ASCENDING`);
+    if (rowDistanceUnit(row, locationUnit) == null) flag(row.key, 'maxDistance', `${prefix}.UNIT_UNKNOWN`);
+    else if (previous != null && value <= previous) flag(row.key, 'maxDistance', `${prefix}.TIERS_ASCENDING`);
     else if (last) flag(row.key, 'maxDistance', `${prefix}.CATCH_ALL_MISSING`);
     previous = value;
   });
@@ -287,14 +304,15 @@ export function validateCoverage(rows: readonly CoverageRuleDraft[], unitActive:
 }
 
 /**
- * The request for one valid editor row. Max distance travels only on a distance tier, in the
- * row's own unit (the rule's own on edit, else the location's, DECISION-LOCATION-028) — pos-location
- * accepts either unit and converts it, storing km.
+ * The request for one row that passed `validateCoverage`. Max distance travels only on a distance
+ * tier, in `rowDistanceUnit` (DECISION-LOCATION-028) — pos-location accepts either unit and converts
+ * it, storing km. Validation refuses a distance with no known unit, so one never reaches here.
  */
-export function toRuleRequest(row: CoverageRuleDraft): CoverageRuleRequest {
+export function toRuleRequest(row: CoverageRuleDraft, locationUnit: DistanceDtoUnitEnum | null): CoverageRuleRequest {
+  const unit = rowDistanceUnit(row, locationUnit);
   const maxDistance =
-    row.ruleType === 'DISTANCE_TIER' && row.maxDistance.trim()
-      ? { value: Number(row.maxDistance), unit: row.maxDistanceUnit }
+    row.ruleType === 'DISTANCE_TIER' && row.maxDistance.trim() && unit != null
+      ? { value: Number(row.maxDistance), unit }
       : undefined;
   return {
     serviceAreaId: row.serviceAreaId,

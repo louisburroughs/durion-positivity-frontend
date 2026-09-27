@@ -115,13 +115,14 @@ export class LocationService {
   }
 
   /**
-   * The unit distances are shown and accepted in at this location (DECISION-LOCATION-028); KM on
-   * any read failure, matching pos-location's own default for an unset location.
+   * The unit distances are shown and accepted in at this location (DECISION-LOCATION-028), or null
+   * when the read fails (ADR-0064): a failure must stay distinguishable from a real KM location,
+   * since guessing the unit would silently rescale any distance saved in it.
    */
-  getLocationDistanceUnit(locationId: string): Observable<DistanceDtoUnitEnum> {
+  getLocationDistanceUnit(locationId: string): Observable<DistanceDtoUnitEnum | null> {
     return this.locationApi.getLocationById(locationId).pipe(
       map(location => (String(location.distanceUnit ?? '') === 'MI' ? DistanceDtoUnitEnum.Mi : DistanceDtoUnitEnum.Km)),
-      catchError(() => of(DistanceDtoUnitEnum.Km)),
+      catchError(() => of(null)),
     );
   }
 

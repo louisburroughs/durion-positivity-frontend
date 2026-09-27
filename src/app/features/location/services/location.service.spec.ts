@@ -365,7 +365,7 @@ describe('LocationService', () => {
     it('reads the location and returns its own distance unit', () => {
       locationApiStub.getLocationById.mockReturnValueOnce(of({ distanceUnit: 'MI' }));
 
-      let result: string | undefined;
+      let result: string | null | undefined;
       service.getLocationDistanceUnit('loc-1').subscribe(r => (result = r));
 
       expect(locationApiStub.getLocationById).toHaveBeenCalledWith('loc-1');
@@ -375,19 +375,19 @@ describe('LocationService', () => {
     it('defaults to KM for a location with no recognised unit', () => {
       locationApiStub.getLocationById.mockReturnValueOnce(of({ distanceUnit: undefined }));
 
-      let result: string | undefined;
+      let result: string | null | undefined;
       service.getLocationDistanceUnit('loc-1').subscribe(r => (result = r));
 
       expect(result).toBe('KM');
     });
 
-    it('defaults to KM when the read fails (ADR-0064)', () => {
+    it('answers null, not KM, when the read fails (ADR-0064)', () => {
       locationApiStub.getLocationById.mockReturnValueOnce(throwError(() => new Error('boom')));
 
-      let result: string | undefined;
+      let result: string | null | undefined;
       service.getLocationDistanceUnit('loc-1').subscribe(r => (result = r));
 
-      expect(result).toBe('KM');
+      expect(result).toBeNull();
     });
   });
 

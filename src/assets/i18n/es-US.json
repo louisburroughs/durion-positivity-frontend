@@ -2348,7 +2348,8 @@
         "MAX_DISTANCE": "Distancia máxima",
         "UNIT": {
           "KM": "km",
-          "MI": "mi"
+          "MI": "mi",
+          "UNKNOWN": "unidad no disponible"
         },
         "REMOVE": "Quitar",
         "REMOVE_NAMED": "Quitar regla {{number}}",
@@ -2375,7 +2376,8 @@
           "DISTANCE": "Escriba una distancia de 0 o más.",
           "TIERS_ASCENDING": "Cada nivel de distancia debe llegar más lejos que el anterior.",
           "CATCH_ALL_MISSING": "Deje en blanco la distancia máxima del último nivel, como nivel general.",
-          "ACTIVE_NEEDS_RULE": "Una unidad activa necesita al menos una regla de cobertura. Desactive {{unit}} primero, o agregue una regla."
+          "ACTIVE_NEEDS_RULE": "Una unidad activa necesita al menos una regla de cobertura. Desactive {{unit}} primero, o agregue una regla.",
+          "UNIT_UNKNOWN": "No se pudo leer la unidad de distancia de esta ubicación. Vuelva a cargar la página antes de guardar una distancia."
         }
       },
       "ERROR": {

@@ -2348,7 +2348,8 @@
         "MAX_DISTANCE": "Max distance",
         "UNIT": {
           "KM": "km",
-          "MI": "mi"
+          "MI": "mi",
+          "UNKNOWN": "unit unavailable"
         },
         "REMOVE": "Remove",
         "REMOVE_NAMED": "Remove rule {{number}}",
@@ -2375,7 +2376,8 @@
           "DISTANCE": "Enter a distance of 0 or more.",
           "TIERS_ASCENDING": "Each distance tier must go further than the one before it.",
           "CATCH_ALL_MISSING": "Leave the last distance tier's max distance blank, as the catch-all.",
-          "ACTIVE_NEEDS_RULE": "An active unit needs at least one coverage rule. Set {{unit}} inactive first, or add a rule."
+          "ACTIVE_NEEDS_RULE": "An active unit needs at least one coverage rule. Set {{unit}} inactive first, or add a rule.",
+          "UNIT_UNKNOWN": "This location's distance unit couldn't be read. Reload the page before saving a distance."
         }
       },
       "ERROR": {
