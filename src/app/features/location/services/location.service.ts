@@ -116,12 +116,17 @@ export class LocationService {
 
   /**
    * The unit distances are shown and accepted at this location (DECISION-LOCATION-028), or null
-   * when the read fails (ADR-0064): a failure must stay distinguishable from a real KM location,
-   * since guessing the unit would silently rescale any distance saved in it.
+   * when the read fails or answers no recognised unit (ADR-0064): neither may be read as KM, since
+   * guessing the unit would silently rescale any distance saved in it.
    */
   getLocationDistanceUnit(locationId: string): Observable<DistanceDtoUnitEnum | null> {
     return this.locationApi.getLocationById(locationId).pipe(
-      map(location => (String(location.distanceUnit ?? '') === 'MI' ? DistanceDtoUnitEnum.Mi : DistanceDtoUnitEnum.Km)),
+      map(location => {
+        const unit = String(location.distanceUnit ?? '').toUpperCase();
+        if (unit === 'MI') return DistanceDtoUnitEnum.Mi;
+        if (unit === 'KM') return DistanceDtoUnitEnum.Km;
+        return null;
+      }),
       catchError(() => of(null)),
     );
   }

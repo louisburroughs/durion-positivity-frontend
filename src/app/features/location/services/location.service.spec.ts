@@ -372,13 +372,25 @@ describe('LocationService', () => {
       expect(result).toBe('MI');
     });
 
-    it('defaults to KM for a location with no recognised unit', () => {
-      locationApiStub.getLocationById.mockReturnValueOnce(of({ distanceUnit: undefined }));
+    it('answers KM only for an explicit KM', () => {
+      locationApiStub.getLocationById.mockReturnValueOnce(of({ distanceUnit: 'KM' }));
 
       let result: string | null | undefined;
       service.getLocationDistanceUnit('loc-1').subscribe(r => (result = r));
 
       expect(result).toBe('KM');
+    });
+
+    it('answers null, never KM, for a missing or unrecognised unit (ADR-0064)', () => {
+      locationApiStub.getLocationById.mockReturnValueOnce(of({ distanceUnit: undefined }));
+      let missing: string | null | undefined;
+      service.getLocationDistanceUnit('loc-1').subscribe(r => (missing = r));
+      expect(missing).toBeNull();
+
+      locationApiStub.getLocationById.mockReturnValueOnce(of({ distanceUnit: 'FURLONG' }));
+      let odd: string | null | undefined;
+      service.getLocationDistanceUnit('loc-1').subscribe(r => (odd = r));
+      expect(odd).toBeNull();
     });
 
     it('answers null, not KM, when the read fails (ADR-0064)', () => {
