@@ -334,6 +334,56 @@ describe('BaysPageComponent', () => {
       );
     });
 
+    it('blocks an out-of-service bay with no reason, tying the error to the reason field', () => {
+      component.openCreate();
+      component.setName('Bay 20');
+      component.setStatus('OUT_OF_SERVICE');
+      component.submit();
+      render();
+      expect(locationServiceStub.createBay).not.toHaveBeenCalled();
+      expect(component.reasonErrorKey()).toBe('LOCATION.BAYS.ERROR.REASON_REQUIRED');
+      expect(query('#bay-reason-error')?.textContent).toContain('Choose a reason the bay is out of service.');
+      expect(query('#bay-reason')?.getAttribute('aria-describedby')).toBe('bay-reason-error bay-reason-hint');
+      expect(query('#bay-reason-note-error')).toBeNull();
+    });
+
+    it('blocks an out-of-service bay with reason Other and no note, tying the error to the note field', () => {
+      component.openCreate();
+      component.setName('Bay 21');
+      component.setStatus('OUT_OF_SERVICE');
+      component.setOutOfServiceReason('OTHER');
+      component.submit();
+      render();
+      expect(locationServiceStub.createBay).not.toHaveBeenCalled();
+      expect(component.noteErrorKey()).toBe('LOCATION.BAYS.ERROR.NOTE_REQUIRED');
+      expect(query('#bay-reason-note-error')?.textContent).toContain('Enter a short note for "Other".');
+      expect(query('#bay-reason-note')?.getAttribute('aria-describedby')).toBe('bay-reason-note-error bay-reason-note-hint');
+      // One error per control: the reason field itself is not also flagged.
+      expect(component.reasonErrorKey()).toBeNull();
+      expect(query('#bay-reason-error')).toBeNull();
+    });
+
+    it('sends the reason and note for a valid out-of-service bay', () => {
+      const saved = bay({ id: 'b30', name: 'Bay 30', status: 'OUT_OF_SERVICE' });
+      locationServiceStub.createBay.mockReturnValueOnce(of(saved));
+      component.openCreate();
+      component.setName('Bay 30');
+      component.setStatus('OUT_OF_SERVICE');
+      component.setOutOfServiceReason('OTHER');
+      component.setOutOfServiceNote('Waiting on a lift part');
+      component.submit();
+
+      expect(locationServiceStub.createBay).toHaveBeenCalledWith('loc-1', {
+        name: 'Bay 30',
+        bayType: 'GENERAL_SERVICE',
+        status: 'OUT_OF_SERVICE',
+        capacity: { maxConcurrentVehicles: 1 },
+        serviceCapabilityCodes: [],
+        outOfServiceReason: 'OTHER',
+        outOfServiceNote: 'Waiting on a lift part',
+      });
+    });
+
     it('puts a duplicate name error under Name and keeps the dialog open', () => {
       locationServiceStub.createBay.mockReturnValueOnce(throwError(() => new HttpErrorResponse({ status: 409 })));
       component.openCreate();
@@ -488,6 +538,45 @@ describe('BaysPageComponent', () => {
       component.submit();
       expect(component.bays().find(b => b.id === 'b10')?.name).toBe('Bay 1A');
       expect(component.bays()).toHaveLength(RIVERSIDE.length);
+    });
+
+    it('blocks setting a bay out of service with no reason, tying the error to the reason field', () => {
+      component.openEdit(RIVERSIDE[0]);
+      component.setStatus('OUT_OF_SERVICE');
+      component.submit();
+      render();
+      expect(locationServiceStub.patchBay).not.toHaveBeenCalled();
+      expect(component.reasonErrorKey()).toBe('LOCATION.BAYS.ERROR.REASON_REQUIRED');
+      expect(query('#bay-reason-error')).not.toBeNull();
+    });
+
+    it('blocks setting a bay out of service with reason Other and no note, tying the error to the note field', () => {
+      component.openEdit(RIVERSIDE[0]);
+      component.setStatus('OUT_OF_SERVICE');
+      component.setOutOfServiceReason('OTHER');
+      component.submit();
+      render();
+      expect(locationServiceStub.patchBay).not.toHaveBeenCalled();
+      expect(component.noteErrorKey()).toBe('LOCATION.BAYS.ERROR.NOTE_REQUIRED');
+      expect(component.reasonErrorKey()).toBeNull();
+    });
+
+    it('sends the reason and note for a valid out-of-service save', () => {
+      locationServiceStub.patchBay.mockReturnValueOnce(of(bay({ id: 'b10', name: 'Bay 10', status: 'OUT_OF_SERVICE' })));
+      component.openEdit(RIVERSIDE[0]);
+      component.setStatus('OUT_OF_SERVICE');
+      component.setOutOfServiceReason('OTHER');
+      component.setOutOfServiceNote('Compressor down');
+      component.submit();
+
+      expect(locationServiceStub.patchBay).toHaveBeenCalledWith('loc-1', 'b10', {
+        name: 'Bay 10',
+        bayType: 'GENERAL_SERVICE',
+        status: 'OUT_OF_SERVICE',
+        capacity: { maxConcurrentVehicles: 1 },
+        outOfServiceReason: 'OTHER',
+        outOfServiceNote: 'Compressor down',
+      });
     });
   });
 

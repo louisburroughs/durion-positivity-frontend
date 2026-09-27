@@ -214,6 +214,7 @@ export class BaysPageComponent {
   private saveSub: Subscription | null = null;
   readonly nameErrorKey = signal<string | null>(null);
   readonly reasonErrorKey = signal<string | null>(null);
+  readonly noteErrorKey = signal<string | null>(null);
   readonly saveErrorKey = signal<string | null>(null);
 
   // --- specialty changes straight from the cards ---
@@ -433,6 +434,7 @@ export class BaysPageComponent {
     this.filledFrom.set(null);
     this.nameErrorKey.set(null);
     this.reasonErrorKey.set(null);
+    this.noteErrorKey.set(null);
     this.saveErrorKey.set(null);
   }
 
@@ -466,6 +468,7 @@ export class BaysPageComponent {
     const status = BAY_STATUSES.find(s => s === value);
     if (!status) return;
     this.reasonErrorKey.set(null);
+    this.noteErrorKey.set(null);
     this.patchDraft({ status });
   }
 
@@ -473,11 +476,12 @@ export class BaysPageComponent {
     const reason = OUT_OF_SERVICE_REASONS.find(r => r === value);
     if (!reason) return;
     this.reasonErrorKey.set(null);
+    this.noteErrorKey.set(null);
     this.patchDraft({ outOfServiceReason: reason });
   }
 
   setOutOfServiceNote(note: string): void {
-    this.reasonErrorKey.set(null);
+    this.noteErrorKey.set(null);
     this.patchDraft({ outOfServiceNote: note });
   }
 
@@ -541,7 +545,7 @@ export class BaysPageComponent {
       return;
     }
     if (draft.status === 'OUT_OF_SERVICE' && draft.outOfServiceReason === 'OTHER' && !draft.outOfServiceNote.trim()) {
-      this.reasonErrorKey.set('LOCATION.BAYS.ERROR.NOTE_REQUIRED');
+      this.noteErrorKey.set('LOCATION.BAYS.ERROR.NOTE_REQUIRED');
       this.focusInDialog('#bay-reason-note');
       return;
     }
