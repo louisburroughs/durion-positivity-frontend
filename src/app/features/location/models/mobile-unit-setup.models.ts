@@ -105,6 +105,11 @@ export function isActiveUnit(unit: MobileUnitResponse): boolean {
   return (unit.status ?? '').toUpperCase() === 'ACTIVE';
 }
 
+/** Retired only via `DELETE` (DECISION-LOCATION-026); reactivating one is a separate story (#395). */
+export function isRetired(unit: MobileUnitResponse): boolean {
+  return (unit.status ?? '').toUpperCase() === 'RETIRED';
+}
+
 export function unitGroupOf(unit: MobileUnitResponse): UnitGroup {
   return isActiveUnit(unit) ? 'ACTIVE' : 'OUT_OF_SERVICE';
 }
@@ -210,7 +215,18 @@ export function newUnitDraft(): MobileUnitDraft {
   };
 }
 
+/**
+ * A draft holding an existing unit's values, for the create/edit dialog. Throws for a `RETIRED` unit:
+ * retiring is only via `DELETE` and reactivating one is a separate story (#395), so there is no
+ * `MobileUnitDraft.status` this could honestly map to — mapping it to the editable `OUT_OF_SERVICE`
+ * would let an ordinary save silently reactivate a terminal record. The page's only call site
+ * (`openEdit`) guards against a retired unit first, so this is a second, load-bearing guard against a
+ * bug reintroducing that one, not the primary defense.
+ */
 export function draftFromUnit(unit: MobileUnitResponse): MobileUnitDraft {
+  if (isRetired(unit)) {
+    throw new Error('draftFromUnit: unit is RETIRED and cannot be edited (reactivation is tracked separately, #395)');
+  }
   return {
     name: unit.name ?? '',
     status: isActiveUnit(unit) ? 'ACTIVE' : 'OUT_OF_SERVICE',

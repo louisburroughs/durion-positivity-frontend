@@ -14,6 +14,7 @@ import {
   bufferKey,
   coverageTimeline,
   draftFromRule,
+  draftFromUnit,
   eligibilityInstant,
   isReadyToActivate,
   ruleInEffect,
@@ -67,6 +68,10 @@ describe('mobile unit setup rules', () => {
     expect(unitBadgeStatus({ id: 'c', status: MobileUnitResponseStatusEnum.Retired })).toBe('RETIRED');
     expect(unitBadgeStatus({ id: 'd' })).toBe('OUT_OF_SERVICE');
     expect(unitBadgeStatus({ id: 'e', status: 'BOGUS' as MobileUnitResponseStatusEnum })).toBe('OUT_OF_SERVICE');
+  });
+
+  it('refuses to draft a retired unit: retiring is DELETE-only and reactivating it is a separate story', () => {
+    expect(() => draftFromUnit({ id: 'u', status: MobileUnitResponseStatusEnum.Retired })).toThrow(/RETIRED/);
   });
 
   it('needs a policy, a capability and a coverage rule before a unit can be active', () => {

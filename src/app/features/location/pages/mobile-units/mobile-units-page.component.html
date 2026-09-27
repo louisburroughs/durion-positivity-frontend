@@ -200,7 +200,7 @@
                         <p class="card-error" role="alert">{{ refusal | translate: { unit: card.name } }}</p>
                       }
 
-                      @if (!card.active && card.checklist; as checklist) {
+                      @if (!card.active && !card.retired && card.checklist; as checklist) {
                         <div class="checklist-block">
                           <h4 class="overline" [id]="'checklist-' + card.unit.id">{{ 'LOCATION.MOBILE_UNITS.CHECKLIST.TITLE' | translate }}</h4>
                           <ul class="checklist" [attr.aria-labelledby]="'checklist-' + card.unit.id">
@@ -289,10 +289,10 @@
                           <ul class="chips" [attr.aria-label]="'LOCATION.MOBILE_UNITS.CAPABILITY_LIST' | translate: { unit: card.name }">
                             @for (capability of card.capabilities; track capability.code) {
                               <li class="chip" [class.chip-pending]="capability.pending"
-                                [attr.draggable]="canEdit() && !card.saving ? 'true' : null"
+                                [attr.draggable]="canEdit() && !card.saving && !card.retired ? 'true' : null"
                                 (dragstart)="onChipDragStart(card.unit, capability.code, $event)" (dragend)="onDragEnd()">
                                 <span>{{ capability.label }}</span>
-                                @if (canEdit() && !capability.pending) {
+                                @if (canEdit() && !capability.pending && !card.retired) {
                                   <button type="button" class="chip-remove" [id]="'cap-remove-' + card.unit.id + '-' + capability.code"
                                     [attr.aria-label]="'LOCATION.MOBILE_UNITS.REMOVE_FROM' | translate: { service: capability.label, unit: card.name }"
                                     [disabled]="card.saving"
@@ -326,7 +326,7 @@
                         }
                       </dl>
 
-                      @if (canEdit()) {
+                      @if (canEdit() && !card.retired) {
                         <div class="card-actions">
                           @if (canSearchServices()) {
                             <button type="button" class="btn-secondary add-capability-btn" [id]="'add-capability-' + card.unit.id"

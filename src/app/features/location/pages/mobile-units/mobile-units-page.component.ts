@@ -60,6 +60,7 @@ import {
   eligibilityInstant,
   isActiveUnit,
   isReadyToActivate,
+  isRetired,
   newUnitDraft,
   postalCodeCount,
   rowDistanceUnit,
@@ -105,6 +106,7 @@ interface UnitCardView {
   readonly unit: MobileUnitResponse;
   readonly name: string;
   readonly active: boolean;
+  readonly retired: boolean;
   readonly statusBadge: UnitBadgeStatus;
   readonly testRecord: boolean;
   readonly sentLine: Message;
@@ -194,7 +196,6 @@ export class MobileUnitsPageComponent {
   readonly areasRead = signal<ReadOutcome>('PENDING');
   readonly policies = signal<TravelBufferPolicyResponse[]>([]);
   readonly policiesRead = signal<ReadOutcome>('PENDING');
-  /** The base location's distance unit (DECISION-LOCATION-028); KM until the location read answers. */
   /** The page location's distance unit; null until read, and when the read fails (ADR-0064). */
   readonly locationDistanceUnit = signal<DistanceDtoUnitEnum | null>(null);
   readonly announcement = signal<Announcement | null>(null);
@@ -437,7 +438,8 @@ export class MobileUnitsPageComponent {
    * checklist row and the page says what is missing.
    */
   activate(card: UnitCardView): void {
-    if (!this.canEdit() || this.activating() || card.checklist == null) return;
+    // A retired unit is never activated this way: reactivating one is a separate story (#395).
+    if (!this.canEdit() || this.activating() || card.checklist == null || card.retired) return;
     const unit = card.unit;
     if (!card.ready) {
       const missing = (['policy', 'capability', 'coverage'] as const).find(item => !card.checklist![item])!;
@@ -512,7 +514,9 @@ export class MobileUnitsPageComponent {
   }
 
   openEdit(unit: MobileUnitResponse, focusField?: string): void {
-    if (!this.canEdit()) return;
+    // Retiring is only via DELETE and reactivating is a separate story (#395): a retired unit is
+    // never editable, so the dialog is never opened for one.
+    if (!this.canEdit() || isRetired(unit)) return;
     this.resetDialog();
     this.editingUnit.set(unit);
     this.draft.set(draftFromUnit(unit));
@@ -721,7 +725,8 @@ export class MobileUnitsPageComponent {
   // --- coverage editor ---
 
   openCoverage(unit: MobileUnitResponse): void {
-    if (!this.canEdit()) return;
+    // Coverage replace is also a mutation; a retired unit never gets one (#395).
+    if (!this.canEdit() || isRetired(unit)) return;
     const rules = [...(this.coverage().get(unit.id) ?? [])].sort((a, b) => (a.priority ?? 0) - (b.priority ?? 0));
     this.ruleRows.set(rules.map(rule => draftFromRule(rule, this.nextRowKey())));
     this.coverageSubmitted.set(false);
@@ -931,7 +936,7 @@ export class MobileUnitsPageComponent {
 
   dropState(card: UnitCardView): 'READY' | 'ALREADY' | 'BUSY' | null {
     const dragging = this.dragging();
-    if (dragging?.kind !== 'SERVICE' || !this.canEdit()) return null;
+    if (dragging?.kind !== 'SERVICE' || !this.canEdit() || card.retired) return null;
     if (card.codes.includes(dragging.service.operationCode)) return 'ALREADY';
     return card.saving ? 'BUSY' : 'READY';
   }
@@ -960,6 +965,7 @@ export class MobileUnitsPageComponent {
   }
 
   addCapabilities(unit: MobileUnitResponse, services: readonly ClaimableService[]): void {
+    if (isRetired(unit)) return;
     const current = this.currentCodesOf(unit);
     const fresh = services.filter(service => !current.includes(service.operationCode));
     if (fresh.length === 0) return;
@@ -976,7 +982,7 @@ export class MobileUnitsPageComponent {
    * would refuse it (422), and the fix is to set the unit inactive first.
    */
   removeCapabilityFromUnit(unit: MobileUnitResponse, code: string): void {
-    if (!this.canEdit()) return;
+    if (!this.canEdit() || isRetired(unit)) return;
     const current = this.currentCodesOf(unit);
     const index = current.indexOf(code);
     if (index < 0) return;
@@ -1027,7 +1033,8 @@ export class MobileUnitsPageComponent {
    */
   private changeCodes(unit: MobileUnitResponse, next: string[], message: Message, offerUndo: boolean): void {
     const locationId = this.locationId();
-    if (!this.canEdit() || !locationId) return;
+    // Defense in depth: every caller already guards against a retired unit before reaching here.
+    if (!this.canEdit() || !locationId || isRetired(unit)) return;
     if (this.pendingCodes().has(unit.id)) {
       this.setCardError(unit.id, `${I18N}.DROP.BUSY`);
       return;
@@ -1073,7 +1080,7 @@ export class MobileUnitsPageComponent {
   }
 
   openAddDialog(unit: MobileUnitResponse): void {
-    if (!this.canEdit() || !this.canSearchServices()) return;
+    if (!this.canEdit() || !this.canSearchServices() || isRetired(unit)) return;
     this.picked.set([]);
     this.addDialogUnit.set(unit);
   }
@@ -1156,6 +1163,7 @@ export class MobileUnitsPageComponent {
     const pending = this.pendingCodes().get(unit.id);
     const codes = pending ?? unit.serviceCapabilityCodes ?? [];
     const active = isActiveUnit(unit);
+    const retired = isRetired(unit);
     const rules = this.coverage().get(unit.id);
     const coverageKnown = rules != null;
     const timeline = coverageTimeline(rules ?? [], this.today());
@@ -1172,6 +1180,7 @@ export class MobileUnitsPageComponent {
       unit,
       name,
       active,
+      retired,
       statusBadge: unitBadgeStatus(unit),
       testRecord: isTestRecord(name),
       sentLine,

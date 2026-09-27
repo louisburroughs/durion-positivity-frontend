@@ -331,6 +331,49 @@ describe('MobileUnitsPageComponent', () => {
     });
   });
 
+  describe('retired units', () => {
+    const retired = unit({ id: 'mu-ret', name: 'Van 20', status: MobileUnitResponseStatusEnum.Retired });
+
+    beforeEach(async () => {
+      locationServiceStub.listMobileUnits.mockReturnValue(
+        of({
+          units: [...UNITS, retired],
+          coverage: new Map<string, CoverageRuleResponse[]>([...COVERAGE, ['mu-ret', []]]),
+          coverageOk: true,
+        }),
+      );
+      await setUp();
+    });
+
+    it('badges it Retired, groups it with the non-active, and shows no Edit, coverage-edit or activation control', () => {
+      expect(cardText('mu-ret')).toContain('Retired');
+      expect(component.groups().find(g => g.group === 'OUT_OF_SERVICE')?.cards.map(c => c.unit.id)).toContain('mu-ret');
+      expect(query('#unit-mu-ret .edit-unit-btn')).toBeNull();
+      expect(query('#unit-mu-ret .edit-coverage-btn')).toBeNull();
+      expect(query('#unit-mu-ret .add-capability-btn')).toBeNull();
+      // Policy and capability are both already set on the fixture, so before this fix the missing-
+      // coverage checklist (and its Activate button) would still have rendered for a retired unit.
+      expect(query('#unit-mu-ret .activate-btn')).toBeNull();
+      expect(query('#unit-mu-ret .checklist-block')).toBeNull();
+    });
+
+    it('openEdit, openCoverage and openAddDialog all open nothing for it', () => {
+      component.openEdit(retired);
+      expect(component.dialogMode()).toBeNull();
+      component.openCoverage(retired);
+      expect(component.coverageUnit()).toBeNull();
+      component.openAddDialog(retired);
+      expect(component.addDialogUnit()).toBeNull();
+    });
+
+    it('never mutates it: capability add/remove and activate all refuse it', () => {
+      component.addCapabilities(retired, [{ operationCode: 'X-1', name: 'X', operationCategory: null }]);
+      component.removeCapabilityFromUnit(retired, TPMS);
+      component.activate(card('mu-ret'));
+      expect(locationServiceStub.patchMobileUnit).not.toHaveBeenCalled();
+    });
+  });
+
   describe('permissions', () => {
     it('is view only without location:mobile-unit:manage, in the controls and the handlers', async () => {
       session.permissions = [...LOCATION_PAGE.mobileUnits];
