@@ -2207,12 +2207,12 @@
       },
       "GROUP": {
         "ACTIVE": "Actives",
-        "INACTIVE": "Configurées, non actives"
+        "OUT_OF_SERVICE": "Hors service"
       },
       "STATUS": {
         "ACTIVE": "Active",
-        "INACTIVE": "Inactive",
-        "OUT_OF_SERVICE": "Hors service"
+        "OUT_OF_SERVICE": "Hors service",
+        "RETIRED": "Retirée"
       },
       "OUT_OF_SERVICE_REASON": {
         "CHOOSE": "Choisir un motif"
@@ -2327,7 +2327,7 @@
         "ADD_COVERAGE": "Ajouter une couverture"
       },
       "SAVED": {
-        "CREATED": "{{unit}} ajoutée à Configurées, non actives.",
+        "CREATED": "{{unit}} ajoutée à Hors service.",
         "UPDATED": "{{unit}} enregistrée.",
         "COVERAGE_ONE": "Couverture de {{unit}} enregistrée : 1 règle.",
         "COVERAGE_MANY": "Couverture de {{unit}} enregistrée : {{count}} règles."
@@ -2346,6 +2346,10 @@
         "RECORDED_ONLY": "Enregistré seulement : pas encore utilisé pour la correspondance.",
         "RULE_TYPE_LABEL": "Type de règle",
         "MAX_DISTANCE": "Distance maximale",
+        "UNIT": {
+          "KM": "km",
+          "MI": "mi"
+        },
         "REMOVE": "Retirer",
         "REMOVE_NAMED": "Retirer la règle {{number}}",
         "ADD_RULE": "Ajouter une règle",

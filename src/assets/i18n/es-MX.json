@@ -2207,12 +2207,12 @@
       },
       "GROUP": {
         "ACTIVE": "Activas",
-        "INACTIVE": "Configuradas, no activas"
+        "OUT_OF_SERVICE": "Fuera de servicio"
       },
       "STATUS": {
         "ACTIVE": "Activa",
-        "INACTIVE": "Inactiva",
-        "OUT_OF_SERVICE": "Fuera de servicio"
+        "OUT_OF_SERVICE": "Fuera de servicio",
+        "RETIRED": "Retirada"
       },
       "OUT_OF_SERVICE_REASON": {
         "CHOOSE": "Elige un motivo"
@@ -2327,7 +2327,7 @@
         "ADD_COVERAGE": "Agregar cobertura"
       },
       "SAVED": {
-        "CREATED": "{{unit}} agregada a Configuradas, no activas.",
+        "CREATED": "{{unit}} agregada a Fuera de servicio.",
         "UPDATED": "{{unit}} guardada.",
         "COVERAGE_ONE": "Cobertura de {{unit}} guardada: 1 regla.",
         "COVERAGE_MANY": "Cobertura de {{unit}} guardada: {{count}} reglas."
@@ -2346,6 +2346,10 @@
         "RECORDED_ONLY": "Solo se registra: todavía no se usa para la coincidencia.",
         "RULE_TYPE_LABEL": "Tipo de regla",
         "MAX_DISTANCE": "Distancia máxima",
+        "UNIT": {
+          "KM": "km",
+          "MI": "mi"
+        },
         "REMOVE": "Quitar",
         "REMOVE_NAMED": "Quitar regla {{number}}",
         "ADD_RULE": "Agregar regla",

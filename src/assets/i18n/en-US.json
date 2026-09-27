@@ -2207,12 +2207,12 @@
       },
       "GROUP": {
         "ACTIVE": "Active",
-        "INACTIVE": "Set up, not active"
+        "OUT_OF_SERVICE": "Out of service"
       },
       "STATUS": {
         "ACTIVE": "Active",
-        "INACTIVE": "Inactive",
-        "OUT_OF_SERVICE": "Out of service"
+        "OUT_OF_SERVICE": "Out of service",
+        "RETIRED": "Retired"
       },
       "OUT_OF_SERVICE_REASON": {
         "CHOOSE": "Choose a reason"
@@ -2327,7 +2327,7 @@
         "ADD_COVERAGE": "Add coverage"
       },
       "SAVED": {
-        "CREATED": "{{unit}} added to Set up, not active.",
+        "CREATED": "{{unit}} added to Out of service.",
         "UPDATED": "{{unit}} saved.",
         "COVERAGE_ONE": "Coverage for {{unit}} saved: 1 rule.",
         "COVERAGE_MANY": "Coverage for {{unit}} saved: {{count}} rules."
@@ -2346,6 +2346,10 @@
         "RECORDED_ONLY": "Recorded only: not used for matching yet.",
         "RULE_TYPE_LABEL": "Rule type",
         "MAX_DISTANCE": "Max distance",
+        "UNIT": {
+          "KM": "km",
+          "MI": "mi"
+        },
         "REMOVE": "Remove",
         "REMOVE_NAMED": "Remove rule {{number}}",
         "ADD_RULE": "Add rule",
