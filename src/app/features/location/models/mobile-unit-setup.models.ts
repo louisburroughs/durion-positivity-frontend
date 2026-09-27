@@ -76,7 +76,9 @@ export interface CoverageRuleDraft {
   serviceAreaId: string;
   ruleType: CoverageRuleType;
   priority: string;
+  /** Calendar day (`YYYY-MM-DD`), the first day the rule is valid; `''` for no start. */
   validFrom: string;
+  /** Calendar day (`YYYY-MM-DD`), the LAST day the rule is valid, inclusive; `''` for no end. */
   validTo: string;
   maxDistance: string;
   /**
@@ -148,22 +150,94 @@ export function isReadyToActivate(checklist: ActivationChecklist): boolean {
 }
 
 /**
- * True when the rule applies on `isoDate` (`YYYY-MM-DD`). Both ends are inclusive and a blank end is
- * open, as pos-location's eligibility query reads them. Dates compare as strings, never through
- * `new Date()` (ADR-0038).
+ * `validFrom`/`validTo` are UTC instants (DECISION-LOCATION-027): `validFrom` inclusive, `validTo`
+ * exclusive and after `validFrom` (pos-location's `CoverageRuleRequest`/`CoverageRuleResponse`).
+ * `new Date(instant)` is safe here — this is a UTC instant with a `Z`/offset designator, not a
+ * date-only string, so the ADR-0038 §1/§5 prohibition (which governs local-date semantics) does not
+ * apply; it's the §5-permitted server/UTC context.
  */
-export function ruleInEffect(rule: Pick<CoverageRuleResponse, 'validFrom' | 'validTo'>, isoDate: string): boolean {
-  return (!rule.validFrom || rule.validFrom <= isoDate) && (!rule.validTo || rule.validTo >= isoDate);
+function instantMillis(instant: string): number {
+  return new Date(instant).getTime();
 }
 
+/**
+ * `YYYY-MM-DD` for a UTC instant, read through the UTC getters — never `toISOString().slice(0, 10)`,
+ * which ADR-0038 §1/§8's pattern check forbids by name even in a UTC-instant context like this one.
+ */
+function formatUtcDay(date: Date): string {
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+/**
+ * The instant a coverage-editor calendar day `D` starts, UTC midnight — `validFrom`'s wire value
+ * (inclusive per DECISION-LOCATION-027).
+ */
+export function dayStartInstant(isoDate: string): string {
+  return `${isoDate}T00:00:00Z`;
+}
+
+/**
+ * The instant just past the LAST day the rule is valid — UTC midnight at the start of the NEXT UTC
+ * day — `validTo`'s wire value (exclusive per DECISION-LOCATION-027). The editor's "Valid to" picks
+ * the last valid calendar day; this is its exclusive-end instant.
+ */
+export function dayEndExclusiveInstant(isoDate: string): string {
+  const [year, month, day] = isoDate.split('-').map(Number);
+  const next = new Date(Date.UTC(year, (month ?? 1) - 1, (day ?? 1) + 1));
+  return `${formatUtcDay(next)}T00:00:00Z`;
+}
+
+/** A `validFrom` instant's own UTC calendar date, for the editor/display. */
+export function instantToDay(instant: string): string {
+  return instant.slice(0, 10);
+}
+
+/**
+ * A `validTo` instant (exclusive end) → the last day the rule is valid, inclusive, for the
+ * editor/display. An instant exactly at UTC midnight names the PREVIOUS UTC day (the last day the
+ * exclusive boundary leaves fully valid); one not at midnight — a rule written by another client —
+ * names its own UTC day, since that day is only partly valid. Saving the row again normalises a
+ * non-midnight end to the next UTC midnight (`dayEndExclusiveInstant` on the day this returns).
+ */
+export function exclusiveEndToLastDay(instant: string): string {
+  const day = instant.slice(0, 10);
+  if (!/T00:00:00(\.0+)?Z$/.test(instant)) return day;
+  const [year, month, dayOfMonth] = day.split('-').map(Number);
+  const previous = new Date(Date.UTC(year, (month ?? 1) - 1, (dayOfMonth ?? 1) - 1));
+  return formatUtcDay(previous);
+}
+
+/**
+ * True when the rule applies on `isoDate` (`YYYY-MM-DD`), under `validFrom`/`validTo`'s UTC-instant,
+ * exclusive-end semantics: in effect on `D` iff (no `validFrom` or it starts before `D`+1) and (no
+ * `validTo` or it ends after `D` starts). Compares parsed instants, never raw strings against dates.
+ */
+export function ruleInEffect(rule: Pick<CoverageRuleResponse, 'validFrom' | 'validTo'>, isoDate: string): boolean {
+  const dayStart = instantMillis(dayStartInstant(isoDate));
+  const nextDayStart = instantMillis(dayEndExclusiveInstant(isoDate));
+  return (
+    (!rule.validFrom || instantMillis(rule.validFrom) < nextDayStart) &&
+    (!rule.validTo || instantMillis(rule.validTo) > dayStart)
+  );
+}
+
+/**
+ * Upcoming: `validFrom` on or after the start of `D`+1 (starts strictly after `D`). Past: `validTo`
+ * at or before the start of `D` (ended on or before `D`, since the end is exclusive).
+ */
 export function coverageTimeline(rules: readonly CoverageRuleResponse[], isoDate: string): CoverageTimeline {
   const byPriority = [...rules].sort((a, b) => (a.priority ?? 0) - (b.priority ?? 0));
+  const dayStart = instantMillis(dayStartInstant(isoDate));
+  const nextDayStart = instantMillis(dayEndExclusiveInstant(isoDate));
   return {
     current: byPriority.filter(rule => ruleInEffect(rule, isoDate)),
     upcoming: byPriority
-      .filter(rule => !!rule.validFrom && rule.validFrom > isoDate)
-      .sort((a, b) => ((a.validFrom ?? '') < (b.validFrom ?? '') ? -1 : 1)),
-    past: byPriority.filter(rule => !!rule.validTo && rule.validTo < isoDate),
+      .filter(rule => !!rule.validFrom && instantMillis(rule.validFrom) >= nextDayStart)
+      .sort((a, b) => instantMillis(a.validFrom ?? '') - instantMillis(b.validFrom ?? '')),
+    past: byPriority.filter(rule => !!rule.validTo && instantMillis(rule.validTo) <= dayStart),
   };
 }
 
@@ -241,7 +315,9 @@ export function draftFromUnit(unit: MobileUnitResponse): MobileUnitDraft {
 /**
  * Turns a saved rule into an editor row. `maxDistanceUnit` keeps the unit the response carries
  * (pos-location expresses it in the base location's `distanceUnit`, DECISION-LOCATION-028), so the
- * value is resent in the unit it was shown in; a rule with no distance has none.
+ * value is resent in the unit it was shown in; a rule with no distance has none. `validFrom`/`validTo`
+ * come back as UTC instants and the editor is date-granular, so they're read down to calendar days
+ * (`instantToDay`/`exclusiveEndToLastDay`, DECISION-LOCATION-027).
  */
 export function draftFromRule(rule: CoverageRuleResponse, key: string): CoverageRuleDraft {
   return {
@@ -249,8 +325,8 @@ export function draftFromRule(rule: CoverageRuleResponse, key: string): Coverage
     serviceAreaId: rule.serviceAreaId ?? '',
     ruleType: isCoverageRuleType(rule.ruleType) ? rule.ruleType : 'SERVICE_AREA',
     priority: rule.priority == null ? '' : String(rule.priority),
-    validFrom: rule.validFrom ?? '',
-    validTo: rule.validTo ?? '',
+    validFrom: rule.validFrom ? instantToDay(rule.validFrom) : '',
+    validTo: rule.validTo ? exclusiveEndToLastDay(rule.validTo) : '',
     maxDistance: rule.maxDistance == null ? '' : String(rule.maxDistance.value),
     maxDistanceUnit: rule.maxDistance?.unit ?? null,
   };
@@ -271,7 +347,9 @@ export function rowDistanceUnit(
  * Checks the coverage editor's rows before a save, since pos-location's replace checks nothing
  * (durion-positivity-backend#2248):
  * - a service area and a whole-number priority on every row;
- * - valid to not before valid from;
+ * - valid to not before valid from, on the draft's calendar days — the same day is a valid one-day
+ *   window, since `toRuleRequest` sends it as `[dayStart, nextDayStart)`, a non-empty UTC instant
+ *   range;
  * - distance tiers, in list order, strictly increasing and ending with exactly one blank catch-all
  *   (the rule pos-location applies on create);
  * - a distance has a known unit: the row's own, else the location's (`locationUnit`, null while
@@ -323,6 +401,10 @@ export function validateCoverage(
  * The request for one row that passed `validateCoverage`. Max distance travels only on a distance
  * tier, in `rowDistanceUnit` (DECISION-LOCATION-028) — pos-location accepts either unit and converts
  * it, storing km. Validation refuses a distance with no known unit, so one never reaches here.
+ * `validFrom`/`validTo` are draft calendar days; the wire values are the UTC instants
+ * `[dayStartInstant(validFrom), dayEndExclusiveInstant(validTo))` (DECISION-LOCATION-027) — the day
+ * picked for "Valid to" is the last day the rule is valid, inclusive, so its instant is the NEXT UTC
+ * day's start.
  */
 export function toRuleRequest(row: CoverageRuleDraft, locationUnit: DistanceDtoUnitEnum | null): CoverageRuleRequest {
   const unit = rowDistanceUnit(row, locationUnit);
@@ -337,8 +419,8 @@ export function toRuleRequest(row: CoverageRuleDraft, locationUnit: DistanceDtoU
         ? CoverageRuleRequestRuleTypeEnum.DistanceTier
         : CoverageRuleRequestRuleTypeEnum.ServiceArea,
     priority: Number(row.priority.trim()),
-    ...(row.validFrom ? { validFrom: row.validFrom } : {}),
-    ...(row.validTo ? { validTo: row.validTo } : {}),
+    ...(row.validFrom ? { validFrom: dayStartInstant(row.validFrom) } : {}),
+    ...(row.validTo ? { validTo: dayEndExclusiveInstant(row.validTo) } : {}),
     ...(maxDistance == null ? {} : { maxDistance }),
   };
 }

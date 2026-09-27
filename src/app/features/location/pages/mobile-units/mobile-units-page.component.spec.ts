@@ -23,6 +23,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { LOCATION_PAGE } from '../../../../core/security/route-permissions';
 import { isoDateLocal } from '../../../../core/utils/local-date';
 import { LOCATION_LOOKUP_SOURCE } from '../../../../shared/location-picker/location-lookup-source.tokens';
+import { dayEndExclusiveInstant, dayStartInstant } from '../../models/mobile-unit-setup.models';
 import type { MobileUnitPatch } from '../../models/mobile-unit-setup.models';
 import { ClaimableService, LocationService, MobileUnitsRead } from '../../services/location.service';
 import { MobileUnitsPageComponent } from './mobile-units-page.component';
@@ -75,7 +76,7 @@ const ITEST = unit({ id: 'mu-t', name: 'Itest unit itest-1790388132', travelBuff
 const UNITS = [VAN_9, VAN_3, VAN_7, VAN_11, ITEST];
 const COVERAGE = new Map<string, CoverageRuleResponse[]>([
   ['mu-9', [rule({ mobileUnitId: 'mu-9' })]],
-  ['mu-3', [rule({ id: 'rule-3', mobileUnitId: 'mu-3', validFrom: inDays(10) })]],
+  ['mu-3', [rule({ id: 'rule-3', mobileUnitId: 'mu-3', validFrom: dayStartInstant(inDays(10)) })]],
   ['mu-7', []],
   ['mu-11', [rule({ id: 'rule-11', mobileUnitId: 'mu-11', serviceAreaId: 'area-e' })]],
   ['mu-t', []],
@@ -672,6 +673,49 @@ describe('MobileUnitsPageComponent', () => {
         { serviceAreaId: 'area-n', ruleType: 'DISTANCE_TIER', priority: 2 },
       ]);
     });
+    it('saves a dated rule as UTC instants, and shows a returned instant rule at the right days and grouping (DECISION-LOCATION-027)', () => {
+      component.openCoverage(VAN_7);
+      component.addRule();
+      const key = component.ruleRows()[0].key;
+      component.setRuleField(key, 'serviceAreaId', 'area-n');
+      component.setRuleField(key, 'validFrom', TODAY);
+      component.setRuleField(key, 'validTo', inDays(5));
+      render();
+
+      const saved = rule({
+        id: 'dated',
+        mobileUnitId: 'mu-7',
+        validFrom: dayStartInstant(TODAY),
+        validTo: dayEndExclusiveInstant(inDays(5)),
+      });
+      locationServiceStub.replaceCoverageRules.mockReturnValueOnce(of([saved]));
+      component.saveCoverage();
+
+      // The draft's calendar days are sent as the UTC-instant pair [dayStart(from), nextDayStart(to)).
+      expect(locationServiceStub.replaceCoverageRules).toHaveBeenCalledWith('mu-7', [
+        {
+          serviceAreaId: 'area-n',
+          ruleType: 'SERVICE_AREA',
+          priority: 1,
+          validFrom: dayStartInstant(TODAY),
+          validTo: dayEndExclusiveInstant(inDays(5)),
+        },
+      ]);
+
+      // Reopening the editor reads the saved instants back to the same calendar days.
+      component.openCoverage(VAN_7);
+      const [savedRow] = component.ruleRows();
+      expect(savedRow.validFrom).toBe(TODAY);
+      expect(savedRow.validTo).toBe(inDays(5));
+      component.closeCoverage();
+
+      // In effect today (validFrom <= today < validTo), so it groups as current, not upcoming/past.
+      render();
+      expect(card('mu-7').current.length).toBe(1);
+      expect(card('mu-7').upcoming.length).toBe(0);
+      expect(card('mu-7').pastCount).toBe(0);
+    });
+
   });
 
   describe('check coverage', () => {

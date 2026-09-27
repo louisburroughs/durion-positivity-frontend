@@ -58,6 +58,7 @@ import {
   draftFromRule,
   draftFromUnit,
   eligibilityInstant,
+  instantToDay,
   isActiveUnit,
   isReadyToActivate,
   isRetired,
@@ -1170,9 +1171,11 @@ export class MobileUnitsPageComponent {
     const checklist = coverageKnown ? activationChecklist(unit, rules.length) : null;
     const { sentLine, sentWarning } = this.sentLine(active, coverageKnown, timeline.current);
 
+    // rule.validFrom is a UTC instant (DECISION-LOCATION-027); group by its calendar day, not the
+    // instant itself, so two rules starting the same UTC day land under one chip.
     const upcomingByDate = new Map<string, AreaChip[]>();
     for (const rule of timeline.upcoming) {
-      const from = rule.validFrom ?? '';
+      const from = rule.validFrom ? instantToDay(rule.validFrom) : '';
       upcomingByDate.set(from, [...(upcomingByDate.get(from) ?? []), this.areaChip(rule)]);
     }
 

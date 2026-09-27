@@ -13,9 +13,13 @@ import {
   activationChecklist,
   bufferKey,
   coverageTimeline,
+  dayEndExclusiveInstant,
+  dayStartInstant,
   draftFromRule,
   draftFromUnit,
   eligibilityInstant,
+  exclusiveEndToLastDay,
+  instantToDay,
   isReadyToActivate,
   ruleInEffect,
   toRuleRequest,
@@ -83,19 +87,70 @@ describe('mobile unit setup rules', () => {
     expect(isReadyToActivate({ ...complete, coverage: false })).toBe(false);
   });
 
-  it('treats both ends of a rule as inclusive and a blank end as open', () => {
-    expect(ruleInEffect({}, '2026-09-26')).toBe(true);
-    expect(ruleInEffect({ validFrom: '2026-09-26', validTo: '2026-09-26' }, '2026-09-26')).toBe(true);
-    expect(ruleInEffect({ validFrom: '2026-09-27' }, '2026-09-26')).toBe(false);
-    expect(ruleInEffect({ validTo: '2026-09-25' }, '2026-09-26')).toBe(false);
+  describe('UTC-instant day helpers (DECISION-LOCATION-027)', () => {
+    it('turns a calendar day into its UTC-midnight start instant', () => {
+      expect(dayStartInstant('2026-10-01')).toBe('2026-10-01T00:00:00Z');
+    });
+
+    it('turns the last valid day into the exclusive end instant, the next UTC day', () => {
+      expect(dayEndExclusiveInstant('2026-10-31')).toBe('2026-11-01T00:00:00Z');
+      // Crosses a year boundary too, not just a month.
+      expect(dayEndExclusiveInstant('2026-12-31')).toBe('2027-01-01T00:00:00Z');
+    });
+
+    it('reads a validFrom instant back to its own UTC calendar day', () => {
+      expect(instantToDay('2026-10-01T00:00:00Z')).toBe('2026-10-01');
+    });
+
+    it('reads a midnight validTo instant back to the PREVIOUS UTC day, the last one fully valid', () => {
+      expect(exclusiveEndToLastDay('2026-11-01T00:00:00Z')).toBe('2026-10-31');
+      expect(exclusiveEndToLastDay('2027-01-01T00:00:00Z')).toBe('2026-12-31');
+    });
+
+    it('reads a non-midnight validTo instant (another client) as its own UTC day, partly valid', () => {
+      expect(exclusiveEndToLastDay('2026-11-01T15:00:00Z')).toBe('2026-11-01');
+    });
   });
 
-  it('splits coverage into current by priority, upcoming by start date, and past', () => {
-    const later = rule({ id: 'later', validFrom: '2026-12-01' });
-    const sooner = rule({ id: 'sooner', validFrom: '2026-10-01' });
+  it('treats validFrom as inclusive, validTo as exclusive, and a blank end as open, against UTC instants', () => {
+    expect(ruleInEffect({}, '2026-09-26')).toBe(true);
+    // A one-day window: valid on its own day only.
+    expect(ruleInEffect({ validFrom: dayStartInstant('2026-09-26'), validTo: dayEndExclusiveInstant('2026-09-26') }, '2026-09-26')).toBe(true);
+    expect(ruleInEffect({ validFrom: dayStartInstant('2026-09-26'), validTo: dayEndExclusiveInstant('2026-09-26') }, '2026-09-27')).toBe(false);
+    expect(ruleInEffect({ validFrom: dayStartInstant('2026-09-26'), validTo: dayEndExclusiveInstant('2026-09-26') }, '2026-09-25')).toBe(false);
+    expect(ruleInEffect({ validFrom: dayStartInstant('2026-09-27') }, '2026-09-26')).toBe(false);
+    // validTo is exclusive: a rule ending at the start of D is NOT in effect on D.
+    expect(ruleInEffect({ validTo: dayStartInstant('2026-09-26') }, '2026-09-26')).toBe(false);
+    expect(ruleInEffect({ validTo: dayStartInstant('2026-09-26') }, '2026-09-25')).toBe(true);
+  });
+
+  it('is true on the last valid day, false the day after, and false the day before validFrom', () => {
+    const window = { validFrom: dayStartInstant('2026-10-01'), validTo: dayEndExclusiveInstant('2026-10-31') };
+    expect(ruleInEffect(window, '2026-09-30')).toBe(false); // day before validFrom
+    expect(ruleInEffect(window, '2026-10-01')).toBe(true); // first valid day
+    expect(ruleInEffect(window, '2026-10-31')).toBe(true); // last valid day
+    expect(ruleInEffect(window, '2026-11-01')).toBe(false); // day after the last valid day
+  });
+
+  it('classifies upcoming/past at the exact boundary: upcoming from D+1, past through D', () => {
+    const rules = [
+      rule({ id: 'starts-tomorrow', validFrom: dayStartInstant('2026-09-27') }),
+      rule({ id: 'starts-today', validFrom: dayStartInstant('2026-09-26') }),
+      rule({ id: 'ended-today', validTo: dayStartInstant('2026-09-26') }),
+      rule({ id: 'ends-tomorrow', validTo: dayStartInstant('2026-09-27') }),
+    ];
+    const timeline = coverageTimeline(rules, '2026-09-26');
+    expect(timeline.upcoming.map(r => r.id)).toEqual(['starts-tomorrow']);
+    expect(timeline.current.map(r => r.id)).toEqual(['starts-today', 'ends-tomorrow']);
+    expect(timeline.past.map(r => r.id)).toEqual(['ended-today']);
+  });
+
+  it('splits coverage into current by priority, upcoming by start date, and past, under the UTC-instant/exclusive-end contract', () => {
+    const later = rule({ id: 'later', validFrom: dayStartInstant('2026-12-01') });
+    const sooner = rule({ id: 'sooner', validFrom: dayStartInstant('2026-10-01') });
     const second = rule({ id: 'second', priority: 2 });
     const first = rule({ id: 'first', priority: 1 });
-    const ended = rule({ id: 'ended', validTo: '2026-01-01' });
+    const ended = rule({ id: 'ended', validTo: dayStartInstant('2026-09-26') }); // exclusive end at start of "today"
     const timeline = coverageTimeline([later, second, ended, first, sooner], '2026-09-26');
     expect(timeline.current.map(r => r.id)).toEqual(['first', 'second']);
     expect(timeline.upcoming.map(r => r.id)).toEqual(['sooner', 'later']);
@@ -136,7 +191,7 @@ describe('mobile unit setup rules', () => {
       rule({
         ruleType: 'INCLUDE' as CoverageRuleResponseRuleTypeEnum,
         priority: 3,
-        validFrom: '2026-10-01',
+        validFrom: '2026-10-01T00:00:00Z',
         maxDistance: { value: 25, unit: DistanceDtoUnitEnum.Mi },
       }),
       'k',
@@ -155,7 +210,7 @@ describe('mobile unit setup rules', () => {
       serviceAreaId: 'area-1',
       ruleType: 'SERVICE_AREA',
       priority: 3,
-      validFrom: '2026-10-01',
+      validFrom: '2026-10-01T00:00:00Z',
     });
     // A brand-new row (no rule.maxDistance yet) takes the location's unit.
     expect(toRuleRequest(row({ ruleType: 'DISTANCE_TIER', maxDistance: '12.5' }), DistanceDtoUnitEnum.Km)).toEqual({
@@ -163,6 +218,33 @@ describe('mobile unit setup rules', () => {
       ruleType: 'DISTANCE_TIER',
       priority: 1,
       maxDistance: { value: 12.5, unit: 'KM' },
+    });
+  });
+
+  it('round-trips validFrom/validTo through draftFromRule and toRuleRequest as UTC instants', () => {
+    const draft = draftFromRule(rule({ validFrom: '2026-10-01T00:00:00Z', validTo: '2026-11-01T00:00:00Z' }), 'k');
+    expect(draft.validFrom).toBe('2026-10-01');
+    expect(draft.validTo).toBe('2026-10-31'); // exclusive end read back to the last inclusive day
+    expect(toRuleRequest(draft, DistanceDtoUnitEnum.Km)).toEqual({
+      serviceAreaId: 'area-1',
+      ruleType: 'SERVICE_AREA',
+      priority: 1,
+      validFrom: '2026-10-01T00:00:00Z',
+      validTo: '2026-11-01T00:00:00Z', // re-sent as the next UTC day's start
+    });
+  });
+
+  it('reads a non-midnight validTo (another client) as its own day, and sends a one-day window back as an instant pair', () => {
+    const draft = draftFromRule(rule({ validTo: '2026-11-01T15:00:00Z' }), 'k');
+    expect(draft.validTo).toBe('2026-11-01');
+    // A one-day window (same start/end day) is valid: it becomes [dayStart, nextDayStart).
+    const oneDayDraft = row({ validFrom: '2026-10-01', validTo: '2026-10-01' });
+    expect(toRuleRequest(oneDayDraft, DistanceDtoUnitEnum.Km)).toEqual({
+      serviceAreaId: 'area-1',
+      ruleType: 'SERVICE_AREA',
+      priority: 1,
+      validFrom: '2026-10-01T00:00:00Z',
+      validTo: '2026-10-02T00:00:00Z',
     });
   });
 
