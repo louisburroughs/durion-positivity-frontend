@@ -180,7 +180,7 @@
                             <span class="tag tag-neutral">{{ 'LOCATION.MOBILE_UNITS.TEST_RECORD' | translate }}</span>
                           }
                           <span class="tag" [class.tag-success]="card.active" [class.tag-neutral]="!card.active">
-                            {{ statusKey(card.active ? 'ACTIVE' : 'INACTIVE') | translate }}
+                            {{ statusKey(card.statusBadge) | translate }}
                           </span>
                         </div>
                       </div>
@@ -200,7 +200,7 @@
                         <p class="card-error" role="alert">{{ refusal | translate: { unit: card.name } }}</p>
                       }
 
-                      @if (!card.active && card.checklist; as checklist) {
+                      @if (!card.active && !card.retired && card.checklist; as checklist) {
                         <div class="checklist-block">
                           <h4 class="overline" [id]="'checklist-' + card.unit.id">{{ 'LOCATION.MOBILE_UNITS.CHECKLIST.TITLE' | translate }}</h4>
                           <ul class="checklist" [attr.aria-labelledby]="'checklist-' + card.unit.id">
@@ -289,10 +289,10 @@
                           <ul class="chips" [attr.aria-label]="'LOCATION.MOBILE_UNITS.CAPABILITY_LIST' | translate: { unit: card.name }">
                             @for (capability of card.capabilities; track capability.code) {
                               <li class="chip" [class.chip-pending]="capability.pending"
-                                [attr.draggable]="canEdit() && !card.saving ? 'true' : null"
+                                [attr.draggable]="canEdit() && !card.saving && !card.retired ? 'true' : null"
                                 (dragstart)="onChipDragStart(card.unit, capability.code, $event)" (dragend)="onDragEnd()">
                                 <span>{{ capability.label }}</span>
-                                @if (canEdit() && !capability.pending) {
+                                @if (canEdit() && !capability.pending && !card.retired) {
                                   <button type="button" class="chip-remove" [id]="'cap-remove-' + card.unit.id + '-' + capability.code"
                                     [attr.aria-label]="'LOCATION.MOBILE_UNITS.REMOVE_FROM' | translate: { service: capability.label, unit: card.name }"
                                     [disabled]="card.saving"
@@ -326,7 +326,7 @@
                         }
                       </dl>
 
-                      @if (canEdit()) {
+                      @if (canEdit() && !card.retired) {
                         <div class="card-actions">
                           @if (canSearchServices()) {
                             <button type="button" class="btn-secondary add-capability-btn" [id]="'add-capability-' + card.unit.id"
@@ -485,6 +485,41 @@
               }
             </p>
           </fieldset>
+          @if (draft().status === 'OUT_OF_SERVICE') {
+            <div class="field">
+              <label for="unit-reason">{{ 'LOCATION.MOBILE_UNITS.FIELD.OUT_OF_SERVICE_REASON' | translate }} <span aria-hidden="true">*</span></label>
+              <select id="unit-reason" required
+                [attr.aria-invalid]="reasonErrorKey() ? true : null"
+                [attr.aria-describedby]="reasonErrorKey() ? 'unit-reason-error unit-reason-hint' : 'unit-reason-hint'"
+                (change)="setOutOfServiceReason($any($event.target).value)">
+                <option value="" [selected]="!draft().outOfServiceReason">{{ 'LOCATION.MOBILE_UNITS.OUT_OF_SERVICE_REASON.CHOOSE' | translate }}</option>
+                @for (reason of outOfServiceReasons; track reason) {
+                  <option [value]="reason" [selected]="draft().outOfServiceReason === reason">{{ outOfServiceReasonKey(reason) | translate }}</option>
+                }
+              </select>
+              @if (reasonErrorKey(); as reasonError) {
+                <p id="unit-reason-error" class="field-error" role="alert">{{ reasonError | translate }}</p>
+              }
+              <p id="unit-reason-hint" class="hint">{{ 'LOCATION.MOBILE_UNITS.HINT.OUT_OF_SERVICE_REASON' | translate }}</p>
+            </div>
+            <div class="field">
+              <label for="unit-reason-note">
+                {{ 'LOCATION.MOBILE_UNITS.FIELD.OUT_OF_SERVICE_NOTE' | translate }}
+                @if (draft().outOfServiceReason === 'OTHER') {
+                  <span aria-hidden="true">*</span>
+                }
+              </label>
+              <textarea id="unit-reason-note" rows="2"
+                [required]="draft().outOfServiceReason === 'OTHER'"
+                [attr.aria-invalid]="noteErrorKey() ? true : null"
+                [attr.aria-describedby]="noteErrorKey() ? 'unit-reason-note-error unit-reason-note-hint' : 'unit-reason-note-hint'"
+                [value]="draft().outOfServiceNote" (input)="setOutOfServiceNote($any($event.target).value)"></textarea>
+              @if (noteErrorKey(); as noteError) {
+                <p id="unit-reason-note-error" class="field-error" role="alert">{{ noteError | translate }}</p>
+              }
+              <p id="unit-reason-note-hint" class="hint">{{ 'LOCATION.MOBILE_UNITS.HINT.OUT_OF_SERVICE_NOTE' | translate }}</p>
+            </div>
+          }
         }
 
         @if (saveErrorKey(); as saveError) {
@@ -592,10 +627,13 @@
                   @if (row.ruleType === 'DISTANCE_TIER') {
                     <div class="field">
                       <label [for]="'rule-' + row.key + '-maxDistance'">{{ 'LOCATION.MOBILE_UNITS.COVERAGE.MAX_DISTANCE' | translate }}</label>
-                      <input type="number" min="0" step="any" [id]="'rule-' + row.key + '-maxDistance'" [value]="row.maxDistance"
-                        [attr.aria-invalid]="ruleError(row.key, 'maxDistance') ? true : null"
-                        [attr.aria-describedby]="ruleDescribedBy(row.key, 'maxDistance', 'coverage-distance-hint')"
-                        (input)="setRuleField(row.key, 'maxDistance', $any($event.target).value)" />
+                      <div class="distance-input">
+                        <input type="number" min="0" step="any" [id]="'rule-' + row.key + '-maxDistance'" [value]="row.maxDistance"
+                          [attr.aria-invalid]="ruleError(row.key, 'maxDistance') ? true : null"
+                          [attr.aria-describedby]="ruleDescribedBy(row.key, 'maxDistance', 'rule-' + row.key + '-unit coverage-distance-hint')"
+                          (input)="setRuleField(row.key, 'maxDistance', $any($event.target).value)" />
+                        <span [id]="'rule-' + row.key + '-unit'" class="distance-unit">{{ distanceUnitKey(row) | translate }}</span>
+                      </div>
                       @if (ruleError(row.key, 'maxDistance'); as error) {
                         <p [id]="'rule-' + row.key + '-maxDistance-error'" class="field-error">{{ error | translate }}</p>
                       }

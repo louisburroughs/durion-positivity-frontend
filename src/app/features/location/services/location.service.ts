@@ -4,6 +4,7 @@ import { ProductsAPIService } from '@durion-sdk/catalog';
 import type { ServiceDto } from '@durion-sdk/catalog';
 import {
   BayAPIService,
+  DistanceDtoUnitEnum,
   LocationAPIService,
   MobileUnitAPIService,
   MobileUnitEligibilityControllerService,
@@ -111,6 +112,23 @@ export class LocationService {
   updateLocation(locationId: string, body: Record<string, unknown>, _idempotencyKey?: string): Observable<unknown> {
     const request = this.toLocationRequest(body);
     return this.locationApi.updateLocation(locationId, request) as Observable<unknown>;
+  }
+
+  /**
+   * The unit distances are shown and accepted at this location (DECISION-LOCATION-028), or null
+   * when the read fails or answers no recognised unit (ADR-0064): neither may be read as KM, since
+   * guessing the unit would silently rescale any distance saved in it.
+   */
+  getLocationDistanceUnit(locationId: string): Observable<DistanceDtoUnitEnum | null> {
+    return this.locationApi.getLocationById(locationId).pipe(
+      map(location => {
+        const unit = String(location.distanceUnit ?? '').toUpperCase();
+        if (unit === 'MI') return DistanceDtoUnitEnum.Mi;
+        if (unit === 'KM') return DistanceDtoUnitEnum.Km;
+        return null;
+      }),
+      catchError(() => of(null)),
+    );
   }
 
   getLocationDefaults(locationId: string): Observable<unknown> {
@@ -243,9 +261,14 @@ export class LocationService {
     return this.mobileUnitApi.replaceCoverageRules(mobileUnitId, { rules });
   }
 
-  /** Active units covering a postal code on a day, lowest priority first. */
-  findEligibleMobileUnits(postalCode: string, countryCode: string, at: string): Observable<EligibleMobileUnitResponse[]> {
-    return this.mobileUnitEligibilityApi.findEligibleMobileUnits(postalCode, countryCode, at);
+  /** Active units of one base location covering a postal code at an instant, lowest priority first. */
+  findEligibleMobileUnits(
+    postalCode: string,
+    countryCode: string,
+    at: string,
+    baseLocationId: string,
+  ): Observable<EligibleMobileUnitResponse[]> {
+    return this.mobileUnitEligibilityApi.findEligibleMobileUnits(postalCode, countryCode, at, baseLocationId);
   }
 
   listServiceAreas(): Observable<{ areas: ServiceAreaResponse[]; ok: boolean }> {

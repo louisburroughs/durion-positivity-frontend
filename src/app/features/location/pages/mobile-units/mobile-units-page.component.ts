@@ -16,6 +16,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { Subscription, interval } from 'rxjs';
+import { DistanceDtoUnitEnum } from '@durion-sdk/location';
 import type {
   CoverageRuleResponse,
   EligibleMobileUnitResponse,
@@ -23,7 +24,6 @@ import type {
   ServiceAreaResponse,
   TravelBufferPolicyResponse,
 } from '@durion-sdk/location';
-import { MobileUnitRequestStatusEnum } from '@durion-sdk/location';
 import { AuthService } from '../../../../core/services/auth.service';
 import { LOCATION_PAGE } from '../../../../core/security/route-permissions';
 import { isoDateLocal, parseIsoDateLocal } from '../../../../core/utils/local-date';
@@ -32,7 +32,13 @@ import { ModalDialogDirective } from '../../../../shared/modal-dialog.directive'
 import { RailCaption, ServiceRailComponent } from '../../components/service-rail/service-rail.component';
 import { ServiceSearchComponent } from '../../components/service-search/service-search.component';
 import { ClaimableService, LocationService } from '../../services/location.service';
-import { isTestRecord, naturalCompare, operationCodeLabel } from '../../models/bay-setup.models';
+import {
+  OUT_OF_SERVICE_REASONS,
+  OutOfServiceReason,
+  isTestRecord,
+  naturalCompare,
+  operationCodeLabel,
+} from '../../models/bay-setup.models';
 import {
   ActivationChecklist,
   COVERAGE_RULE_TYPES,
@@ -43,8 +49,8 @@ import {
   MOBILE_UNIT_STATUSES,
   MobileUnitDraft,
   MobileUnitPatch,
-  MobileUnitStatus,
   UNIT_GROUPS,
+  UnitBadgeStatus,
   UnitGroup,
   activationChecklist,
   bufferKey,
@@ -52,11 +58,15 @@ import {
   draftFromRule,
   draftFromUnit,
   eligibilityInstant,
+  instantToDay,
   isActiveUnit,
   isReadyToActivate,
+  isRetired,
   newUnitDraft,
   postalCodeCount,
+  rowDistanceUnit,
   toRuleRequest,
+  unitBadgeStatus,
   unitGroupOf,
   usualCountry,
   validateCoverage,
@@ -97,6 +107,8 @@ interface UnitCardView {
   readonly unit: MobileUnitResponse;
   readonly name: string;
   readonly active: boolean;
+  readonly retired: boolean;
+  readonly statusBadge: UnitBadgeStatus;
   readonly testRecord: boolean;
   readonly sentLine: Message;
   /** The sent line describes a unit that can't be matched. */
@@ -162,6 +174,7 @@ export class MobileUnitsPageComponent {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   readonly statuses = MOBILE_UNIT_STATUSES;
+  readonly outOfServiceReasons = OUT_OF_SERVICE_REASONS;
   readonly ruleTypes = COVERAGE_RULE_TYPES;
   /** The one clock read behind "today"; a method so a spec can pin it (ADR-0038 §7). */
   now(): Date {
@@ -184,6 +197,8 @@ export class MobileUnitsPageComponent {
   readonly areasRead = signal<ReadOutcome>('PENDING');
   readonly policies = signal<TravelBufferPolicyResponse[]>([]);
   readonly policiesRead = signal<ReadOutcome>('PENDING');
+  /** The page location's distance unit; null until read, and when the read fails (ADR-0064). */
+  readonly locationDistanceUnit = signal<DistanceDtoUnitEnum | null>(null);
   readonly announcement = signal<Announcement | null>(null);
   /** Per-card refusal, keyed by unit id. */
   readonly cardErrors = signal<ReadonlyMap<string, string>>(new Map());
@@ -244,6 +259,8 @@ export class MobileUnitsPageComponent {
   readonly createdUnit = signal<MobileUnitResponse | null>(null);
   readonly saving = signal(false);
   readonly nameErrorKey = signal<string | null>(null);
+  readonly reasonErrorKey = signal<string | null>(null);
+  readonly noteErrorKey = signal<string | null>(null);
   readonly saveErrorKey = signal<string | null>(null);
   readonly draftChips = computed(() =>
     this.draft().serviceCapabilityCodes.map(code => ({ code, label: this.serviceLabel(code) })),
@@ -267,7 +284,11 @@ export class MobileUnitsPageComponent {
   readonly coverageSaveErrorKey = signal<string | null>(null);
   private rowSeq = 0;
   readonly coverageValidation = computed<CoverageValidation>(() =>
-    validateCoverage(this.ruleRows(), this.coverageUnit() != null && isActiveUnit(this.coverageUnit()!)),
+    validateCoverage(
+      this.ruleRows(),
+      this.coverageUnit() != null && isActiveUnit(this.coverageUnit()!),
+      this.locationDistanceUnit(),
+    ),
   );
   /** Field errors show once the user has tried to save; the active-unit guard shows at once. */
   readonly showRowErrors = computed(() => this.coverageSubmitted());
@@ -302,6 +323,8 @@ export class MobileUnitsPageComponent {
       this.reloadTick();
       this.coverage.set(new Map());
       this.coverageRead.set('PENDING');
+      // The previous location's unit never carries over, even for the moment the new read is in flight.
+      this.locationDistanceUnit.set(null);
       if (!locationId) {
         this.units.set([]);
         this.state.set('idle');
@@ -322,7 +345,14 @@ export class MobileUnitsPageComponent {
             this.errorKey.set('LOCATION.MOBILE_UNITS.ERROR.LOAD');
           },
         });
-      onCleanup(() => sub.unsubscribe());
+      // Never errors: the service answers null on a failed read (ADR-0064).
+      const unitSub = this.locationService
+        .getLocationDistanceUnit(locationId)
+        .subscribe(unit => this.locationDistanceUnit.set(unit));
+      onCleanup(() => {
+        sub.unsubscribe();
+        unitSub.unsubscribe();
+      });
     });
 
     // Browser only: a server render has no midnight to cross.
@@ -409,7 +439,8 @@ export class MobileUnitsPageComponent {
    * checklist row and the page says what is missing.
    */
   activate(card: UnitCardView): void {
-    if (!this.canEdit() || this.activating() || card.checklist == null) return;
+    // A retired unit is never activated this way: reactivating one is a separate story (#395).
+    if (!this.canEdit() || this.activating() || card.checklist == null || card.retired) return;
     const unit = card.unit;
     if (!card.ready) {
       const missing = (['policy', 'capability', 'coverage'] as const).find(item => !card.checklist![item])!;
@@ -484,7 +515,9 @@ export class MobileUnitsPageComponent {
   }
 
   openEdit(unit: MobileUnitResponse, focusField?: string): void {
-    if (!this.canEdit()) return;
+    // Retiring is only via DELETE and reactivating is a separate story (#395): a retired unit is
+    // never editable, so the dialog is never opened for one.
+    if (!this.canEdit() || isRetired(unit)) return;
     this.resetDialog();
     this.editingUnit.set(unit);
     this.draft.set(draftFromUnit(unit));
@@ -504,6 +537,8 @@ export class MobileUnitsPageComponent {
   private resetDialog(): void {
     this.createdUnit.set(null);
     this.nameErrorKey.set(null);
+    this.reasonErrorKey.set(null);
+    this.noteErrorKey.set(null);
     this.saveErrorKey.set(null);
   }
 
@@ -524,7 +559,26 @@ export class MobileUnitsPageComponent {
   setStatus(value: string): void {
     const status = MOBILE_UNIT_STATUSES.find(s => s === value);
     if (!status || (status === 'ACTIVE' && !this.draftCanBeActive())) return;
+    this.reasonErrorKey.set(null);
+    this.noteErrorKey.set(null);
     this.draft.update(draft => ({ ...draft, status }));
+  }
+
+  setOutOfServiceReason(value: string): void {
+    if (value !== '' && !OUT_OF_SERVICE_REASONS.find(r => r === value)) return;
+    const reason = value as OutOfServiceReason | '';
+    this.reasonErrorKey.set(null);
+    this.noteErrorKey.set(null);
+    this.draft.update(draft => ({ ...draft, outOfServiceReason: reason }));
+  }
+
+  setOutOfServiceNote(note: string): void {
+    this.noteErrorKey.set(null);
+    this.draft.update(draft => ({ ...draft, outOfServiceNote: note }));
+  }
+
+  outOfServiceReasonKey(reason: OutOfServiceReason): string {
+    return `${I18N}.REASON.${reason}`;
   }
 
   addCapability(service: ClaimableService): void {
@@ -569,6 +623,16 @@ export class MobileUnitsPageComponent {
       this.saveErrorKey.set('LOCATION.MOBILE_UNITS.ERROR.ACTIVE_INCOMPLETE');
       return;
     }
+    if (mode === 'edit' && draft.status === 'OUT_OF_SERVICE' && !draft.outOfServiceReason) {
+      this.reasonErrorKey.set('LOCATION.MOBILE_UNITS.ERROR.REASON_REQUIRED');
+      this.focus('dialog #unit-reason');
+      return;
+    }
+    if (mode === 'edit' && draft.status === 'OUT_OF_SERVICE' && draft.outOfServiceReason === 'OTHER' && !draft.outOfServiceNote.trim()) {
+      this.noteErrorKey.set('LOCATION.MOBILE_UNITS.ERROR.NOTE_REQUIRED');
+      this.focus('dialog #unit-reason-note');
+      return;
+    }
     const editing = this.editingUnit();
     const fields = {
       name,
@@ -578,8 +642,11 @@ export class MobileUnitsPageComponent {
     };
     const save$ =
       mode === 'edit' && editing
-        ? this.locationService.patchMobileUnit(editing.id, this.toPatch(fields, draft.status, editing))
-        : this.locationService.createMobileUnit({ ...fields, baseLocationId: locationId, status: MobileUnitRequestStatusEnum.Inactive });
+        ? this.locationService.patchMobileUnit(editing.id, this.toPatch(fields, draft, editing))
+        // A create never shows the status field, and sends no reason or note: pos-location
+        // defaults them to OUT_OF_SERVICE, reason OTHER and note "not yet configured"
+        // (DECISION-LOCATION-026).
+        : this.locationService.createMobileUnit({ ...fields, baseLocationId: locationId });
 
     this.saving.set(true);
     this.saveErrorKey.set(null);
@@ -619,11 +686,13 @@ export class MobileUnitsPageComponent {
 
   /**
    * An edit sends only what changed. PATCH re-checks every capability code it is sent against the
-   * catalog, so resending an unchanged list could refuse an unrelated rename.
+   * catalog, so resending an unchanged list could refuse an unrelated rename. Going OUT_OF_SERVICE
+   * always resends the reason (and note): the value may be unchanged, but pos-location requires it
+   * on the same request that carries the status (DECISION-LOCATION-026).
    */
   private toPatch(
     fields: { name: string; notes: string; serviceCapabilityCodes: string[]; travelBufferPolicyId?: string },
-    status: MobileUnitStatus,
+    draft: MobileUnitDraft,
     unit: MobileUnitResponse,
   ): MobileUnitPatch {
     const patch: MobileUnitPatch = {};
@@ -637,7 +706,12 @@ export class MobileUnitsPageComponent {
     if (before.length !== after.length || before.some(code => !after.includes(code))) {
       patch.serviceCapabilityCodes = after;
     }
-    if (status !== (isActiveUnit(unit) ? 'ACTIVE' : 'INACTIVE')) patch.status = status;
+    const status = draft.status;
+    if (status !== (isActiveUnit(unit) ? 'ACTIVE' : 'OUT_OF_SERVICE')) patch.status = status;
+    if (status === 'OUT_OF_SERVICE' && draft.outOfServiceReason) {
+      patch.outOfServiceReason = draft.outOfServiceReason;
+      if (draft.outOfServiceNote.trim()) patch.outOfServiceNote = draft.outOfServiceNote.trim();
+    }
     return patch;
   }
 
@@ -652,7 +726,8 @@ export class MobileUnitsPageComponent {
   // --- coverage editor ---
 
   openCoverage(unit: MobileUnitResponse): void {
-    if (!this.canEdit()) return;
+    // Coverage replace is also a mutation; a retired unit never gets one (#395).
+    if (!this.canEdit() || isRetired(unit)) return;
     const rules = [...(this.coverage().get(unit.id) ?? [])].sort((a, b) => (a.priority ?? 0) - (b.priority ?? 0));
     this.ruleRows.set(rules.map(rule => draftFromRule(rule, this.nextRowKey())));
     this.coverageSubmitted.set(false);
@@ -678,6 +753,7 @@ export class MobileUnitsPageComponent {
       validFrom: '',
       validTo: '',
       maxDistance: '',
+      maxDistanceUnit: null,
     };
     this.ruleRows.set([...rows, row]);
     this.focus(`#rule-${row.key}-area`);
@@ -730,7 +806,7 @@ export class MobileUnitsPageComponent {
     this.coverageSaving.set(true);
     this.coverageSaveErrorKey.set(null);
     this.coverageSub = this.locationService
-      .replaceCoverageRules(unit.id, this.ruleRows().map(toRuleRequest))
+      .replaceCoverageRules(unit.id, this.ruleRows().map(row => toRuleRequest(row, this.locationDistanceUnit())))
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: rules => {
@@ -801,12 +877,13 @@ export class MobileUnitsPageComponent {
     // Only the latest check may answer: a slower earlier one is dropped, not raced.
     this.checkSub?.unsubscribe();
     this.checkSub = this.locationService
-      .findEligibleMobileUnits(postalCode, this.checkCountryValue(), eligibilityInstant(date))
+      .findEligibleMobileUnits(postalCode, this.checkCountryValue(), eligibilityInstant(date), locationId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: results => {
           this.checkSub = null;
-          // Eligibility isn't filtered by base location; this page answers for its own shop.
+          // The server scopes eligibility to the base location (DECISION-SHOPMGMT-023); the filter
+          // only guards against a response that ignores it.
           this.checkResults.set(results.filter(result => result.baseLocationId === locationId));
           this.checkedFor.set({ postalCode, date, day: parseIsoDateLocal(date) });
           this.checkState.set('ready');
@@ -860,7 +937,7 @@ export class MobileUnitsPageComponent {
 
   dropState(card: UnitCardView): 'READY' | 'ALREADY' | 'BUSY' | null {
     const dragging = this.dragging();
-    if (dragging?.kind !== 'SERVICE' || !this.canEdit()) return null;
+    if (dragging?.kind !== 'SERVICE' || !this.canEdit() || card.retired) return null;
     if (card.codes.includes(dragging.service.operationCode)) return 'ALREADY';
     return card.saving ? 'BUSY' : 'READY';
   }
@@ -889,6 +966,7 @@ export class MobileUnitsPageComponent {
   }
 
   addCapabilities(unit: MobileUnitResponse, services: readonly ClaimableService[]): void {
+    if (isRetired(unit)) return;
     const current = this.currentCodesOf(unit);
     const fresh = services.filter(service => !current.includes(service.operationCode));
     if (fresh.length === 0) return;
@@ -905,7 +983,7 @@ export class MobileUnitsPageComponent {
    * would refuse it (422), and the fix is to set the unit inactive first.
    */
   removeCapabilityFromUnit(unit: MobileUnitResponse, code: string): void {
-    if (!this.canEdit()) return;
+    if (!this.canEdit() || isRetired(unit)) return;
     const current = this.currentCodesOf(unit);
     const index = current.indexOf(code);
     if (index < 0) return;
@@ -956,7 +1034,8 @@ export class MobileUnitsPageComponent {
    */
   private changeCodes(unit: MobileUnitResponse, next: string[], message: Message, offerUndo: boolean): void {
     const locationId = this.locationId();
-    if (!this.canEdit() || !locationId) return;
+    // Defense in depth: every caller already guards against a retired unit before reaching here.
+    if (!this.canEdit() || !locationId || isRetired(unit)) return;
     if (this.pendingCodes().has(unit.id)) {
       this.setCardError(unit.id, `${I18N}.DROP.BUSY`);
       return;
@@ -1002,7 +1081,7 @@ export class MobileUnitsPageComponent {
   }
 
   openAddDialog(unit: MobileUnitResponse): void {
-    if (!this.canEdit() || !this.canSearchServices()) return;
+    if (!this.canEdit() || !this.canSearchServices() || isRetired(unit)) return;
     this.picked.set([]);
     this.addDialogUnit.set(unit);
   }
@@ -1056,6 +1135,11 @@ export class MobileUnitsPageComponent {
     return `${I18N}.COVERAGE.RULE_TYPE.${type}`;
   }
 
+  /** The suffix for a row's distance: its own unit, else the location's, else "unit unavailable". */
+  distanceUnitKey(row: CoverageRuleDraft): string {
+    return `${I18N}.COVERAGE.UNIT.${rowDistanceUnit(row, this.locationDistanceUnit()) ?? 'UNKNOWN'}`;
+  }
+
   /** The buffer in words, e.g. "15 minutes flat"; "type needs fixing" for an unknown type. */
   bufferText(policy: TravelBufferPolicyResponse): Message {
     return { key: bufferKey(policy), params: { value: policy.bufferValue ?? '' } };
@@ -1080,15 +1164,18 @@ export class MobileUnitsPageComponent {
     const pending = this.pendingCodes().get(unit.id);
     const codes = pending ?? unit.serviceCapabilityCodes ?? [];
     const active = isActiveUnit(unit);
+    const retired = isRetired(unit);
     const rules = this.coverage().get(unit.id);
     const coverageKnown = rules != null;
     const timeline = coverageTimeline(rules ?? [], this.today());
     const checklist = coverageKnown ? activationChecklist(unit, rules.length) : null;
     const { sentLine, sentWarning } = this.sentLine(active, coverageKnown, timeline.current);
 
+    // rule.validFrom is a UTC instant (DECISION-LOCATION-027); group by its calendar day, not the
+    // instant itself, so two rules starting the same UTC day land under one chip.
     const upcomingByDate = new Map<string, AreaChip[]>();
     for (const rule of timeline.upcoming) {
-      const from = rule.validFrom ?? '';
+      const from = rule.validFrom ? instantToDay(rule.validFrom) : '';
       upcomingByDate.set(from, [...(upcomingByDate.get(from) ?? []), this.areaChip(rule)]);
     }
 
@@ -1096,6 +1183,8 @@ export class MobileUnitsPageComponent {
       unit,
       name,
       active,
+      retired,
+      statusBadge: unitBadgeStatus(unit),
       testRecord: isTestRecord(name),
       sentLine,
       sentWarning,

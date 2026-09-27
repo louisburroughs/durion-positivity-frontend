@@ -1039,6 +1039,23 @@ app-mobile-units-page .recorded-only label {
   color: var(--text-muted);
 }
 
+app-mobile-units-page .distance-input {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+app-mobile-units-page .distance-input input {
+  flex: 1;
+  min-width: 0;
+}
+
+app-mobile-units-page .distance-unit {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
 app-mobile-units-page .dialog-error {
   margin: var(--space-3) 0;
   padding: var(--space-2) var(--space-3);

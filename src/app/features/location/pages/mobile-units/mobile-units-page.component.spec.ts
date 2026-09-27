@@ -12,12 +12,18 @@ import type {
   ServiceAreaResponse,
   TravelBufferPolicyResponse,
 } from '@durion-sdk/location';
-import { CoverageRuleResponseRuleTypeEnum, MobileUnitResponseStatusEnum } from '@durion-sdk/location';
+import {
+  CoverageRuleResponseRuleTypeEnum,
+  DistanceDtoUnitEnum,
+  MobileUnitResponseStatusEnum,
+  TravelBufferPolicyResponseBufferTypeEnum,
+} from '@durion-sdk/location';
 import enUS from '../../../../../assets/i18n/en-US.json';
 import { AuthService } from '../../../../core/services/auth.service';
 import { LOCATION_PAGE } from '../../../../core/security/route-permissions';
 import { isoDateLocal } from '../../../../core/utils/local-date';
 import { LOCATION_LOOKUP_SOURCE } from '../../../../shared/location-picker/location-lookup-source.tokens';
+import { dayEndExclusiveInstant, dayStartInstant } from '../../models/mobile-unit-setup.models';
 import type { MobileUnitPatch } from '../../models/mobile-unit-setup.models';
 import { ClaimableService, LocationService, MobileUnitsRead } from '../../services/location.service';
 import { MobileUnitsPageComponent } from './mobile-units-page.component';
@@ -34,7 +40,7 @@ const unit = (overrides: Partial<MobileUnitResponse> = {}): MobileUnitResponse =
   id: 'mu-1',
   name: 'Van 1',
   baseLocationId: 'loc-1',
-  status: MobileUnitResponseStatusEnum.Inactive,
+  status: MobileUnitResponseStatusEnum.OutOfService,
   travelBufferPolicyId: 'p-std',
   serviceCapabilityCodes: [TPMS],
   ...overrides,
@@ -58,8 +64,8 @@ const AREAS: ServiceAreaResponse[] = [
   { id: 'area-e', name: 'Eastside', active: false, postalCodes: [{ postalCode: '78721', countryCode: 'US' }] },
 ];
 const POLICIES: TravelBufferPolicyResponse[] = [
-  { id: 'p-std', name: 'Standard', bufferType: 'FLAT_MINUTES', bufferValue: 15 },
-  { id: 'p-bad', name: 'Seeded', bufferType: 'MINUTES', bufferValue: 10 },
+  { id: 'p-std', name: 'Standard', bufferType: TravelBufferPolicyResponseBufferTypeEnum.FixedMinutes, bufferValue: 15 },
+  { id: 'p-bad', name: 'Seeded', bufferType: 'MINUTES' as TravelBufferPolicyResponseBufferTypeEnum, bufferValue: 10 },
 ];
 
 const VAN_9 = unit({ id: 'mu-9', name: 'Van 9', status: MobileUnitResponseStatusEnum.Active });
@@ -70,7 +76,7 @@ const ITEST = unit({ id: 'mu-t', name: 'Itest unit itest-1790388132', travelBuff
 const UNITS = [VAN_9, VAN_3, VAN_7, VAN_11, ITEST];
 const COVERAGE = new Map<string, CoverageRuleResponse[]>([
   ['mu-9', [rule({ mobileUnitId: 'mu-9' })]],
-  ['mu-3', [rule({ id: 'rule-3', mobileUnitId: 'mu-3', validFrom: inDays(10) })]],
+  ['mu-3', [rule({ id: 'rule-3', mobileUnitId: 'mu-3', validFrom: dayStartInstant(inDays(10)) })]],
   ['mu-7', []],
   ['mu-11', [rule({ id: 'rule-11', mobileUnitId: 'mu-11', serviceAreaId: 'area-e' })]],
   ['mu-t', []],
@@ -87,10 +93,11 @@ const locationServiceStub = {
   listMobileUnits: vi.fn<(locationId: string) => Observable<MobileUnitsRead>>(),
   listServiceAreas: vi.fn<() => Observable<{ areas: ServiceAreaResponse[]; ok: boolean }>>(),
   listTravelBufferPolicies: vi.fn<() => Observable<{ policies: TravelBufferPolicyResponse[]; ok: boolean }>>(),
+  getLocationDistanceUnit: vi.fn<(locationId: string) => Observable<DistanceDtoUnitEnum | null>>(),
   createMobileUnit: vi.fn<(request: MobileUnitRequest) => Observable<MobileUnitResponse>>(),
   patchMobileUnit: vi.fn<(id: string, patch: MobileUnitPatch) => Observable<MobileUnitResponse>>(),
   replaceCoverageRules: vi.fn<(id: string, rules: CoverageRuleRequest[]) => Observable<CoverageRuleResponse[]>>(),
-  findEligibleMobileUnits: vi.fn<(postalCode: string, country: string, at: string) => Observable<EligibleMobileUnitResponse[]>>(),
+  findEligibleMobileUnits: vi.fn<(postalCode: string, country: string, at: string, baseLocationId: string) => Observable<EligibleMobileUnitResponse[]>>(),
   searchClaimableServices: vi.fn<(query: string) => Observable<{ services: ClaimableService[]; ok: boolean }>>(),
 };
 
@@ -143,6 +150,7 @@ describe('MobileUnitsPageComponent', () => {
     locationServiceStub.listMobileUnits.mockReturnValue(of({ units: UNITS, coverage: COVERAGE, coverageOk: true }));
     locationServiceStub.listServiceAreas.mockReturnValue(of({ areas: AREAS, ok: true }));
     locationServiceStub.listTravelBufferPolicies.mockReturnValue(of({ policies: POLICIES, ok: true }));
+    locationServiceStub.getLocationDistanceUnit.mockReturnValue(of(DistanceDtoUnitEnum.Km));
     locationServiceStub.searchClaimableServices.mockReturnValue(of({ services: [], ok: true }));
   });
 
@@ -183,12 +191,28 @@ describe('MobileUnitsPageComponent', () => {
   describe('groups and cards', () => {
     beforeEach(async () => setUp());
 
-    it('groups units into Active and Set up, not active, in natural order, hiding test records', () => {
+    it('groups units into Active and Out of service, in natural order, hiding test records', () => {
       expect(component.groups().map(group => [group.group, group.cards.map(view => view.name)])).toEqual([
         ['ACTIVE', ['Van 3', 'Van 9']],
-        ['INACTIVE', ['Van 7', 'Van 11']],
+        ['OUT_OF_SERVICE', ['Van 7', 'Van 11']],
       ]);
       expect(text()).toContain('(1 hidden)');
+    });
+
+    it('badges a card by its own status, and a retired unit falls into Out of service', () => {
+      locationServiceStub.listMobileUnits.mockReturnValue(
+        of({
+          units: [...UNITS, unit({ id: 'mu-ret', name: 'Van 20', status: MobileUnitResponseStatusEnum.Retired })],
+          coverage: new Map<string, CoverageRuleResponse[]>([...COVERAGE, ['mu-ret', []]]),
+          coverageOk: true,
+        }),
+      );
+      component.retry();
+      render();
+      expect(cardText('mu-9')).toContain('Active');
+      expect(cardText('mu-7')).toContain('Out of service');
+      expect(cardText('mu-ret')).toContain('Retired');
+      expect(component.groups().find(g => g.group === 'OUT_OF_SERVICE')?.cards.map(c => c.name)).toContain('Van 20');
     });
 
     it('says where an active unit can be sent, with its coverage, capabilities and travel buffer', () => {
@@ -308,6 +332,49 @@ describe('MobileUnitsPageComponent', () => {
     });
   });
 
+  describe('retired units', () => {
+    const retired = unit({ id: 'mu-ret', name: 'Van 20', status: MobileUnitResponseStatusEnum.Retired });
+
+    beforeEach(async () => {
+      locationServiceStub.listMobileUnits.mockReturnValue(
+        of({
+          units: [...UNITS, retired],
+          coverage: new Map<string, CoverageRuleResponse[]>([...COVERAGE, ['mu-ret', []]]),
+          coverageOk: true,
+        }),
+      );
+      await setUp();
+    });
+
+    it('badges it Retired, groups it with the non-active, and shows no Edit, coverage-edit or activation control', () => {
+      expect(cardText('mu-ret')).toContain('Retired');
+      expect(component.groups().find(g => g.group === 'OUT_OF_SERVICE')?.cards.map(c => c.unit.id)).toContain('mu-ret');
+      expect(query('#unit-mu-ret .edit-unit-btn')).toBeNull();
+      expect(query('#unit-mu-ret .edit-coverage-btn')).toBeNull();
+      expect(query('#unit-mu-ret .add-capability-btn')).toBeNull();
+      // Policy and capability are both already set on the fixture, so before this fix the missing-
+      // coverage checklist (and its Activate button) would still have rendered for a retired unit.
+      expect(query('#unit-mu-ret .activate-btn')).toBeNull();
+      expect(query('#unit-mu-ret .checklist-block')).toBeNull();
+    });
+
+    it('openEdit, openCoverage and openAddDialog all open nothing for it', () => {
+      component.openEdit(retired);
+      expect(component.dialogMode()).toBeNull();
+      component.openCoverage(retired);
+      expect(component.coverageUnit()).toBeNull();
+      component.openAddDialog(retired);
+      expect(component.addDialogUnit()).toBeNull();
+    });
+
+    it('never mutates it: capability add/remove and activate all refuse it', () => {
+      component.addCapabilities(retired, [{ operationCode: 'X-1', name: 'X', operationCategory: null }]);
+      component.removeCapabilityFromUnit(retired, TPMS);
+      component.activate(card('mu-ret'));
+      expect(locationServiceStub.patchMobileUnit).not.toHaveBeenCalled();
+    });
+  });
+
   describe('permissions', () => {
     it('is view only without location:mobile-unit:manage, in the controls and the handlers', async () => {
       session.permissions = [...LOCATION_PAGE.mobileUnits];
@@ -335,7 +402,7 @@ describe('MobileUnitsPageComponent', () => {
   describe('create and edit', () => {
     beforeEach(async () => setUp());
 
-    it('creates an inactive unit at the base location, then offers to add coverage', () => {
+    it('creates a unit with no status, letting pos-location default it to out of service, then offers to add coverage', () => {
       const saved = unit({ id: 'mu-12', name: 'Van 12' });
       locationServiceStub.createMobileUnit.mockReturnValueOnce(of(saved));
       component.openCreate();
@@ -346,13 +413,14 @@ describe('MobileUnitsPageComponent', () => {
       component.submit();
       render();
 
+      // No status field: pos-location defaults an omitted status to OUT_OF_SERVICE, reason OTHER
+      // (DECISION-LOCATION-026), matching the prior explicit INACTIVE start.
       expect(locationServiceStub.createMobileUnit).toHaveBeenCalledWith({
         name: 'Van 12',
         notes: 'Parks at the north lot',
         serviceCapabilityCodes: [TPMS],
         travelBufferPolicyId: 'p-std',
         baseLocationId: 'loc-1',
-        status: 'INACTIVE',
       });
       expect(text()).toContain('Add coverage for Van 12 now?');
       component.addCoverageForCreated();
@@ -412,13 +480,81 @@ describe('MobileUnitsPageComponent', () => {
     it("won't set an incomplete unit active, and keeps an active unit's last capability", () => {
       component.openEdit(VAN_7);
       component.setStatus('ACTIVE');
-      expect(component.draft().status).toBe('INACTIVE');
+      expect(component.draft().status).toBe('OUT_OF_SERVICE');
       component.closeDialog();
 
       component.openEdit(VAN_9);
       render();
       expect(component.lastCapabilityLocked()).toBe(true);
       expect(query('dialog .chip-remove')?.getAttribute('aria-disabled')).toBe('true');
+    });
+
+    it("blocks an out-of-service save with no reason, tying the error to the reason field", () => {
+      component.openEdit(VAN_7);
+      component.submit();
+      render();
+      expect(locationServiceStub.patchMobileUnit).not.toHaveBeenCalled();
+      expect(component.reasonErrorKey()).toBe('LOCATION.MOBILE_UNITS.ERROR.REASON_REQUIRED');
+      expect(query('#unit-reason-error')?.textContent).toContain('Choose a reason the unit is out of service.');
+      expect(query('#unit-reason')?.getAttribute('aria-describedby')).toBe('unit-reason-error unit-reason-hint');
+      expect(query('#unit-reason-note-error')).toBeNull();
+    });
+
+    it('blocks an out-of-service save with reason Other and no note, tying the error to the note field', () => {
+      component.openEdit(VAN_7);
+      component.setOutOfServiceReason('OTHER');
+      component.submit();
+      render();
+      expect(locationServiceStub.patchMobileUnit).not.toHaveBeenCalled();
+      expect(component.noteErrorKey()).toBe('LOCATION.MOBILE_UNITS.ERROR.NOTE_REQUIRED');
+      expect(query('#unit-reason-note-error')?.textContent).toContain('Enter a short note for "Other".');
+      expect(query('#unit-reason-note')?.getAttribute('aria-describedby')).toBe('unit-reason-note-error unit-reason-note-hint');
+      // One error per control: the reason field itself is not also flagged.
+      expect(component.reasonErrorKey()).toBeNull();
+      expect(query('#unit-reason-error')).toBeNull();
+    });
+
+    it('sends the reason and note on a valid out-of-service save', () => {
+      locationServiceStub.patchMobileUnit.mockReturnValueOnce(of(VAN_7));
+      component.openEdit(VAN_7);
+      component.setOutOfServiceReason('OTHER');
+      component.setOutOfServiceNote('Awaiting parts');
+      component.submit();
+      expect(locationServiceStub.patchMobileUnit).toHaveBeenCalledWith('mu-7', {
+        outOfServiceReason: 'OTHER',
+        outOfServiceNote: 'Awaiting parts',
+      });
+    });
+
+    it('clears a chosen reason back to the placeholder, retriggering the required-reason validation', () => {
+      component.openEdit(VAN_7);
+      component.setOutOfServiceReason('OTHER');
+      expect(component.draft().outOfServiceReason).toBe('OTHER');
+
+      component.setOutOfServiceReason('');
+      expect(component.draft().outOfServiceReason).toBe('');
+
+      component.submit();
+      render();
+      expect(locationServiceStub.patchMobileUnit).not.toHaveBeenCalled();
+      expect(component.reasonErrorKey()).toBe('LOCATION.MOBILE_UNITS.ERROR.REASON_REQUIRED');
+    });
+
+    it('ignores an unrecognised non-empty reason value', () => {
+      component.openEdit(VAN_7);
+      component.setOutOfServiceReason('OTHER');
+      component.setOutOfServiceReason('NOT_A_REAL_REASON');
+      expect(component.draft().outOfServiceReason).toBe('OTHER');
+    });
+
+    it('marks the out-of-service note required only while the reason is Other', () => {
+      component.openEdit(VAN_7);
+      render();
+      expect(query<HTMLTextAreaElement>('#unit-reason-note')?.required).toBe(false);
+
+      component.setOutOfServiceReason('OTHER');
+      render();
+      expect(query<HTMLTextAreaElement>('#unit-reason-note')?.required).toBe(true);
     });
   });
 
@@ -477,6 +613,139 @@ describe('MobileUnitsPageComponent', () => {
       component.openCoverage(VAN_11);
       render();
       expect(text()).toContain('1 postal code. Switched off, but still counts.');
+    });
+
+    it('keeps an existing rule in miles through the editor and back, whatever the location is set to', () => {
+      const tierMi = rule({ id: 'rule-mi', mobileUnitId: 'mu-7', ruleType: CoverageRuleResponseRuleTypeEnum.DistanceTier, priority: 1, maxDistance: { value: 10, unit: DistanceDtoUnitEnum.Mi } });
+      const catchAll = rule({ id: 'rule-catch', mobileUnitId: 'mu-7', ruleType: CoverageRuleResponseRuleTypeEnum.DistanceTier, priority: 2 });
+      locationServiceStub.listMobileUnits.mockReturnValueOnce(
+        of({ units: UNITS, coverage: new Map<string, CoverageRuleResponse[]>([...COVERAGE, ['mu-7', [tierMi, catchAll]]]), coverageOk: true }),
+      );
+      component.retry(); // location itself is KM (the default mock); the rule's own unit still wins
+      render();
+      component.openCoverage(VAN_7);
+      render();
+
+      const [row1, row2] = component.ruleRows();
+      expect(row1.maxDistanceUnit).toBe('MI');
+      expect(query(`#rule-${row1.key}-unit`)?.textContent?.trim()).toBe('mi');
+
+      locationServiceStub.replaceCoverageRules.mockReturnValueOnce(of([tierMi, catchAll]));
+      component.saveCoverage();
+      expect(locationServiceStub.replaceCoverageRules).toHaveBeenCalledWith('mu-7', [
+        { serviceAreaId: 'area-n', ruleType: 'DISTANCE_TIER', priority: 1, maxDistance: { value: 10, unit: 'MI' } },
+        { serviceAreaId: 'area-n', ruleType: 'DISTANCE_TIER', priority: 2 },
+      ]);
+      expect(row2.maxDistance).toBe('');
+    });
+
+    it("won't save a new distance when the location's unit can't be read", () => {
+      locationServiceStub.getLocationDistanceUnit.mockReturnValue(of(null));
+      component.retry();
+      render();
+
+      component.openCoverage(VAN_7);
+      component.addRule();
+      const key1 = component.ruleRows()[0].key;
+      component.setRuleField(key1, 'serviceAreaId', 'area-n');
+      component.setRuleType(key1, 'DISTANCE_TIER');
+      component.setRuleField(key1, 'maxDistance', '8');
+      component.addRule();
+      const key2 = component.ruleRows()[1].key;
+      component.setRuleField(key2, 'serviceAreaId', 'area-n');
+      component.setRuleType(key2, 'DISTANCE_TIER');
+      render();
+      expect(query(`#rule-${key1}-unit`)?.textContent?.trim()).toBe('unit unavailable');
+
+      component.saveCoverage();
+      render();
+      expect(locationServiceStub.replaceCoverageRules).not.toHaveBeenCalled();
+      expect(text()).toContain("This location's distance unit couldn't be read.");
+    });
+
+    it("drops the previous location's unit the moment another location is picked", () => {
+      locationServiceStub.getLocationDistanceUnit.mockReturnValue(of(DistanceDtoUnitEnum.Mi));
+      component.retry();
+      render();
+      expect(component.locationDistanceUnit()).toBe('MI');
+
+      // The next location's unit read is still in flight: nothing may assume MI meanwhile.
+      const pending = new Subject<DistanceDtoUnitEnum | null>();
+      locationServiceStub.getLocationDistanceUnit.mockReturnValue(pending);
+      queryParams.next({ locationId: 'loc-2' });
+      render();
+      expect(locationServiceStub.getLocationDistanceUnit).toHaveBeenLastCalledWith('loc-2');
+      expect(component.locationDistanceUnit()).toBeNull();
+    });
+
+    it('sends a new rule in the base location\'s unit when the location is MI', () => {
+      locationServiceStub.getLocationDistanceUnit.mockReturnValue(of(DistanceDtoUnitEnum.Mi));
+      component.retry();
+      render();
+
+      component.openCoverage(VAN_7);
+      component.addRule();
+      const key1 = component.ruleRows()[0].key;
+      component.setRuleField(key1, 'serviceAreaId', 'area-n');
+      component.setRuleType(key1, 'DISTANCE_TIER');
+      component.setRuleField(key1, 'maxDistance', '8');
+      render();
+      expect(query(`#rule-${key1}-unit`)?.textContent?.trim()).toBe('mi');
+
+      component.addRule();
+      const key2 = component.ruleRows()[1].key;
+      component.setRuleField(key2, 'serviceAreaId', 'area-n');
+      component.setRuleType(key2, 'DISTANCE_TIER');
+
+      locationServiceStub.replaceCoverageRules.mockReturnValueOnce(of([]));
+      component.saveCoverage();
+      expect(locationServiceStub.replaceCoverageRules).toHaveBeenCalledWith('mu-7', [
+        { serviceAreaId: 'area-n', ruleType: 'DISTANCE_TIER', priority: 1, maxDistance: { value: 8, unit: 'MI' } },
+        { serviceAreaId: 'area-n', ruleType: 'DISTANCE_TIER', priority: 2 },
+      ]);
+    });
+
+    it('saves a dated rule as UTC instants, and shows a returned instant rule at the right days and grouping (DECISION-LOCATION-027)', () => {
+      component.openCoverage(VAN_7);
+      component.addRule();
+      const key = component.ruleRows()[0].key;
+      component.setRuleField(key, 'serviceAreaId', 'area-n');
+      component.setRuleField(key, 'validFrom', TODAY);
+      component.setRuleField(key, 'validTo', inDays(5));
+      render();
+
+      const saved = rule({
+        id: 'dated',
+        mobileUnitId: 'mu-7',
+        validFrom: dayStartInstant(TODAY),
+        validTo: dayEndExclusiveInstant(inDays(5)),
+      });
+      locationServiceStub.replaceCoverageRules.mockReturnValueOnce(of([saved]));
+      component.saveCoverage();
+
+      // The draft's calendar days are sent as the UTC-instant pair [dayStart(from), nextDayStart(to)).
+      expect(locationServiceStub.replaceCoverageRules).toHaveBeenCalledWith('mu-7', [
+        {
+          serviceAreaId: 'area-n',
+          ruleType: 'SERVICE_AREA',
+          priority: 1,
+          validFrom: dayStartInstant(TODAY),
+          validTo: dayEndExclusiveInstant(inDays(5)),
+        },
+      ]);
+
+      // Reopening the editor reads the saved instants back to the same calendar days.
+      component.openCoverage(VAN_7);
+      const [savedRow] = component.ruleRows();
+      expect(savedRow.validFrom).toBe(TODAY);
+      expect(savedRow.validTo).toBe(inDays(5));
+      component.closeCoverage();
+
+      // In effect today (validFrom <= today < validTo), so it groups as current, not upcoming/past.
+      render();
+      expect(card('mu-7').current.length).toBe(1);
+      expect(card('mu-7').upcoming.length).toBe(0);
+      expect(card('mu-7').pastCount).toBe(0);
     });
   });
 
@@ -545,7 +814,7 @@ describe('MobileUnitsPageComponent', () => {
       component.runCheck();
       render();
 
-      expect(locationServiceStub.findEligibleMobileUnits).toHaveBeenCalledWith('78701', 'US', `${TODAY}T12:00:00Z`);
+      expect(locationServiceStub.findEligibleMobileUnits).toHaveBeenCalledWith('78701', 'US', `${TODAY}T12:00:00Z`, 'loc-1');
       expect(Array.from(el().querySelectorAll('.check-list li')).map(li => li.textContent?.trim())).toEqual([
         'Van 9, priority 1',
       ]);

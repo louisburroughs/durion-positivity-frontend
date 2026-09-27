@@ -166,7 +166,9 @@
                             @if (card.testRecord) {
                               <span class="tag tag-neutral">{{ 'LOCATION.BAYS.TEST_RECORD' | translate }}</span>
                             }
-                            @if (card.outOfService) {
+                            @if (card.retired) {
+                              <span class="tag tag-neutral">{{ 'LOCATION.BAYS.STATUS.RETIRED' | translate }}</span>
+                            } @else if (card.outOfService) {
                               <span class="tag tag-warning">{{ 'LOCATION.BAYS.STATUS.OUT_OF_SERVICE' | translate }}</span>
                             }
                           </div>
@@ -191,13 +193,13 @@
                           <ul class="chips" [attr.aria-label]="'LOCATION.BAYS.SPECIALTY_LIST' | translate: { bay: card.bay.name }">
                             @for (chip of card.chips; track chip.code) {
                               <li class="chip" [class.chip-pending]="chip.pending"
-                                [attr.draggable]="canEdit() && !card.saving ? 'true' : null"
+                                [attr.draggable]="canEdit() && !card.saving && !card.retired ? 'true' : null"
                                 (dragstart)="onChipDragStart(card.bay, chip.code, $event)" (dragend)="onDragEnd()">
                                 <span>{{ chip.label }}</span>
                                 @if (chip.onlyBay) {
                                   <span class="chip-marker">{{ 'LOCATION.BAYS.ONLY_BAY' | translate }}</span>
                                 }
-                                @if (canEdit() && !chip.pending) {
+                                @if (canEdit() && !chip.pending && !card.retired) {
                                   <button type="button" class="chip-remove" [id]="'chip-remove-' + card.bay.id + '-' + chip.code"
                                     [attr.aria-label]="'LOCATION.BAYS.REMOVE_FROM' | translate: { service: chip.label, bay: card.bay.name }"
                                     [disabled]="card.saving"
@@ -214,7 +216,7 @@
                                 : ('LOCATION.BAYS.MORE_SERVICES' | translate: { count: card.hiddenChips }) }}
                             </button>
                           }
-                        } @else if (!card.isWash && !card.outOfService) {
+                        } @else if (!card.isWash && !card.outOfService && !card.retired) {
                           <p class="muted">{{ 'LOCATION.BAYS.GENERAL_NO_SPECIALTY' | translate }}</p>
                         }
 
@@ -229,7 +231,7 @@
                           </div>
                         </dl>
 
-                        @if (canEdit()) {
+                        @if (canEdit() && !card.retired) {
                           <div class="card-actions">
                             @if (canSearchServices()) {
                               <button type="button" class="btn-secondary add-service-btn" [id]="'add-service-' + card.bay.id"
@@ -362,6 +364,42 @@
             </div>
             <p id="bay-status-hint" class="hint">{{ 'LOCATION.BAYS.HINT.STATUS' | translate }}</p>
           </fieldset>
+
+          @if (draft().status === 'OUT_OF_SERVICE') {
+            <div class="field">
+              <label for="bay-reason">{{ 'LOCATION.BAYS.FIELD.OUT_OF_SERVICE_REASON' | translate }} <span aria-hidden="true">*</span></label>
+              <select id="bay-reason" required
+                [attr.aria-invalid]="reasonErrorKey() ? true : null"
+                [attr.aria-describedby]="reasonErrorKey() ? 'bay-reason-error bay-reason-hint' : 'bay-reason-hint'"
+                (change)="setOutOfServiceReason($any($event.target).value)">
+                <option value="" [selected]="!draft().outOfServiceReason">{{ 'LOCATION.BAYS.OUT_OF_SERVICE_REASON.CHOOSE' | translate }}</option>
+                @for (reason of outOfServiceReasons; track reason) {
+                  <option [value]="reason" [selected]="draft().outOfServiceReason === reason">{{ outOfServiceReasonKey(reason) | translate }}</option>
+                }
+              </select>
+              @if (reasonErrorKey(); as reasonError) {
+                <p id="bay-reason-error" class="field-error" role="alert">{{ reasonError | translate }}</p>
+              }
+              <p id="bay-reason-hint" class="hint">{{ 'LOCATION.BAYS.HINT.OUT_OF_SERVICE_REASON' | translate }}</p>
+            </div>
+            <div class="field">
+              <label for="bay-reason-note">
+                {{ 'LOCATION.BAYS.FIELD.OUT_OF_SERVICE_NOTE' | translate }}
+                @if (draft().outOfServiceReason === 'OTHER') {
+                  <span aria-hidden="true">*</span>
+                }
+              </label>
+              <textarea id="bay-reason-note" rows="2"
+                [required]="draft().outOfServiceReason === 'OTHER'"
+                [attr.aria-invalid]="noteErrorKey() ? true : null"
+                [attr.aria-describedby]="noteErrorKey() ? 'bay-reason-note-error bay-reason-note-hint' : 'bay-reason-note-hint'"
+                [value]="draft().outOfServiceNote" (input)="setOutOfServiceNote($any($event.target).value)"></textarea>
+              @if (noteErrorKey(); as noteError) {
+                <p id="bay-reason-note-error" class="field-error" role="alert">{{ noteError | translate }}</p>
+              }
+              <p id="bay-reason-note-hint" class="hint">{{ 'LOCATION.BAYS.HINT.OUT_OF_SERVICE_NOTE' | translate }}</p>
+            </div>
+          }
 
           <fieldset class="field specialty-field" aria-describedby="bay-specialty-hint">
             <legend>{{ 'LOCATION.BAYS.FIELD.SPECIALTY' | translate }}</legend>

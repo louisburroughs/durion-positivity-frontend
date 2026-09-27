@@ -1994,7 +1994,19 @@
       },
       "STATUS": {
         "ACTIVE": "Active",
-        "OUT_OF_SERVICE": "Hors service"
+        "OUT_OF_SERVICE": "Hors service",
+        "RETIRED": "Retirée"
+      },
+      "OUT_OF_SERVICE_REASON": {
+        "CHOOSE": "Choisir un motif"
+      },
+      "REASON": {
+        "EQUIPMENT_FAILURE": "Panne d'équipement",
+        "SCHEDULED_MAINTENANCE": "Entretien programmé",
+        "INSPECTION": "Inspection",
+        "SAFETY_HOLD": "Retenue de sécurité",
+        "FACILITY_ISSUE": "Problème d'installation",
+        "OTHER": "Autre"
       },
       "CAN_BE_ASSIGNED": {
         "GENERAL": "Peut recevoir n'importe quel service général, proposé avant les baies spécialisées.",
@@ -2028,6 +2040,8 @@
         "VEHICLES": "Véhicules à la fois",
         "DUTY": "Classe de poids maximale",
         "STATUS": "Statut",
+        "OUT_OF_SERVICE_REASON": "Motif",
+        "OUT_OF_SERVICE_NOTE": "Remarque",
         "SPECIALTY": "Services spécialisés"
       },
       "HINT": {
@@ -2036,6 +2050,8 @@
         "TYPE_EDIT": "Le type de travail pour lequel cette baie est équipée. Le changer remplace les services spécialisés par ceux du nouveau type, sauf si vous gardez les services actuels.",
         "TYPE_WASH": "Les baies de lavage et esthétique n'acceptent que les services ajoutés ici, jamais de services généraux.",
         "STATUS": "Hors service empêche l'arrivée de nouveaux bons de travail dans cette baie; ceux qui y sont déjà restent. Pendant ce temps, ses services spécialisés sont ouverts aux autres baies.",
+        "OUT_OF_SERVICE_REASON": "Pourquoi la baie est hors service.",
+        "OUT_OF_SERVICE_NOTE": "Une courte remarque. Obligatoire lorsque le motif est Autre.",
         "VEHICLES": "Le nombre de véhicules qui tiennent physiquement. La baie n'accepte toujours qu'un bon de travail ouvert à la fois : ajoutez une baie pour chaque poste réservé séparément.",
         "DUTY": "Le véhicule le plus lourd que cette baie accepte : classes 1–3 léger, 4–6 moyen, 7–8 lourd. Choisissez Aucune limite si tout véhicule convient. Les véhicules sans classe enregistrée ne sont pas vérifiés.",
         "DUTY_LOCKED": "Une limite déjà définie ne peut pas encore être retirée, seulement changée pour une autre classe.",
@@ -2085,7 +2101,9 @@
         "NOT_ALLOWED": "Vous ne pouvez pas modifier les baies de cet emplacement.",
         "GONE": "Cette baie n'existe plus. Fermez la boîte de dialogue pour voir les baies actuelles.",
         "INVALID_SERVICES": "Un des services spécialisés n'est pas un service actif du catalogue. Retirez-le et réessayez.",
-        "SAVE_FAILED": "Impossible d'enregistrer la baie. Réessayez."
+        "SAVE_FAILED": "Impossible d'enregistrer la baie. Réessayez.",
+        "REASON_REQUIRED": "Choisissez un motif pour lequel la baie est hors service.",
+        "NOTE_REQUIRED": "Saisissez une courte remarque pour « Autre »."
       },
       "REMOVE_FROM": "Retirer {{service}} de {{bay}}",
       "ADD_SERVICE": "Ajouter un service",
@@ -2190,11 +2208,23 @@
       },
       "GROUP": {
         "ACTIVE": "Actives",
-        "INACTIVE": "Configurées, non actives"
+        "OUT_OF_SERVICE": "Hors service"
       },
       "STATUS": {
         "ACTIVE": "Active",
-        "INACTIVE": "Inactive"
+        "OUT_OF_SERVICE": "Hors service",
+        "RETIRED": "Retirée"
+      },
+      "OUT_OF_SERVICE_REASON": {
+        "CHOOSE": "Choisir un motif"
+      },
+      "REASON": {
+        "EQUIPMENT_FAILURE": "Panne d'équipement",
+        "SCHEDULED_MAINTENANCE": "Entretien programmé",
+        "INSPECTION": "Inspection",
+        "SAFETY_HOLD": "Retenue de sécurité",
+        "FACILITY_ISSUE": "Problème d'installation",
+        "OTHER": "Autre"
       },
       "CARD": {
         "OVERLINE": "Unité mobile",
@@ -2255,9 +2285,8 @@
         "READ_FAILED": "La liste des politiques n'a pas pu être chargée."
       },
       "BUFFER": {
-        "FLAT_MINUTES": "{{value}} minutes fixes",
-        "PERCENTAGE_OF_TRAVEL": "{{value}} % du temps de déplacement",
-        "DISTANCE_MULTIPLIER": "{{value}} × distance",
+        "FIXED_MINUTES": "{{value}} minutes fixes",
+        "DISTANCE_TIER": "{{value}} (palier de distance)",
         "NEEDS_FIXING": "type à corriger",
         "NO_VALUE": "aucune marge"
       },
@@ -2266,7 +2295,9 @@
         "POLICY": "Politique de marge de déplacement",
         "CAPABILITIES": "Capacités",
         "NOTES": "Notes",
-        "STATUS": "Statut"
+        "STATUS": "Statut",
+        "OUT_OF_SERVICE_REASON": "Motif",
+        "OUT_OF_SERVICE_NOTE": "Remarque"
       },
       "HINT": {
         "NAME": "Le nom que les répartiteurs donnent à cette unité, p. ex. « Fourgon 7 ». Aucune autre unité basée à cet atelier ne peut porter le même nom.",
@@ -2277,6 +2308,8 @@
         "NOTES": "Ce que les répartiteurs doivent savoir sur cette unité, p. ex. où elle stationne la nuit.",
         "STATUS": "Seules les unités actives peuvent recevoir des bons de travail.",
         "STATUS_INCOMPLETE": "Pour être activée, une unité a besoin d'une politique de marge de déplacement, d'au moins une capacité et d'au moins une règle de couverture.",
+        "OUT_OF_SERVICE_REASON": "Pourquoi l'unité est hors service.",
+        "OUT_OF_SERVICE_NOTE": "Une courte remarque. Obligatoire lorsque le motif est Autre.",
         "PRIORITY": "Priorité : les plus petits numéros sont proposés en premier, comparés entre toutes les unités d'ici qui couvrent le même code postal.",
         "DATES": "Valide du / au : les dates où la règle s'applique. Laissez Valide au vide pour ne pas fixer de fin.",
         "RULE_TYPE": "Le type de règle est enregistré pour plus tard. La correspondance n'utilise que la zone de service.",
@@ -2288,14 +2321,14 @@
         "EDIT_TITLE": "Modifier {{unit}}",
         "CREATE": "Créer l'unité",
         "SAVE": "Enregistrer",
-        "STARTS_INACTIVE": "Les nouvelles unités commencent inactives. Ajoutez ensuite la couverture, puis activez-la depuis la carte.",
+        "STARTS_INACTIVE": "Les nouvelles unités commencent hors service. Ajoutez ensuite la couverture, puis activez-la depuis la carte.",
         "CREATED_TITLE": "{{unit}} créée",
         "CREATED_BODY": "Ajouter maintenant la couverture de {{unit}}? Une unité a besoin d'une règle de couverture avant d'être activée.",
         "LATER": "Plus tard",
         "ADD_COVERAGE": "Ajouter une couverture"
       },
       "SAVED": {
-        "CREATED": "{{unit}} ajoutée à Configurées, non actives.",
+        "CREATED": "{{unit}} ajoutée à Hors service.",
         "UPDATED": "{{unit}} enregistrée.",
         "COVERAGE_ONE": "Couverture de {{unit}} enregistrée : 1 règle.",
         "COVERAGE_MANY": "Couverture de {{unit}} enregistrée : {{count}} règles."
@@ -2314,6 +2347,11 @@
         "RECORDED_ONLY": "Enregistré seulement : pas encore utilisé pour la correspondance.",
         "RULE_TYPE_LABEL": "Type de règle",
         "MAX_DISTANCE": "Distance maximale",
+        "UNIT": {
+          "KM": "km",
+          "MI": "mi",
+          "UNKNOWN": "unité non disponible"
+        },
         "REMOVE": "Retirer",
         "REMOVE_NAMED": "Retirer la règle {{number}}",
         "ADD_RULE": "Ajouter une règle",
@@ -2339,7 +2377,8 @@
           "DISTANCE": "Saisissez une distance de 0 ou plus.",
           "TIERS_ASCENDING": "Chaque palier de distance doit aller plus loin que le précédent.",
           "CATCH_ALL_MISSING": "Laissez vide la distance maximale du dernier palier, comme palier général.",
-          "ACTIVE_NEEDS_RULE": "Une unité active a besoin d'au moins une règle de couverture. Désactivez d'abord {{unit}}, ou ajoutez une règle."
+          "ACTIVE_NEEDS_RULE": "Une unité active a besoin d'au moins une règle de couverture. Désactivez d'abord {{unit}}, ou ajoutez une règle.",
+          "UNIT_UNKNOWN": "Impossible de lire l'unité de distance de cet emplacement. Rechargez la page avant d'enregistrer une distance."
         }
       },
       "ERROR": {
@@ -2352,7 +2391,9 @@
         "GONE": "Cette unité n'existe plus. Fermez la boîte de dialogue pour voir les unités actuelles.",
         "CONFLICT": "Quelqu'un d'autre a modifié cette unité en même temps. Fermez la boîte de dialogue et réessayez.",
         "UNPROCESSABLE": "L'unité n'a pas pu être enregistrée : une capacité n'est pas un service actif du catalogue, ou l'unité n'est pas prête à être active.",
-        "SAVE_FAILED": "Impossible d'enregistrer. Réessayez."
+        "SAVE_FAILED": "Impossible d'enregistrer. Réessayez.",
+        "REASON_REQUIRED": "Choisissez un motif pour lequel l'unité est hors service.",
+        "NOTE_REQUIRED": "Saisissez une courte remarque pour « Autre »."
       },
       "CAPABILITY_LIST": "Capacités de {{unit}}",
       "REMOVE_FROM": "Retirer {{service}} de {{unit}}",
@@ -2724,14 +2765,12 @@
       "SAVING": "Enregistrement",
       "CHOOSE_TYPE": "Choisissez un type de marge",
       "TYPE": {
-        "FLAT_MINUTES": "Minutes fixes",
-        "PERCENTAGE_OF_TRAVEL": "Pourcentage du temps de déplacement",
-        "DISTANCE_MULTIPLIER": "Multiplicateur de distance"
+        "FIXED_MINUTES": "Minutes fixes",
+        "DISTANCE_TIER": "Palier de distance"
       },
       "SUFFIX": {
-        "FLAT_MINUTES": "minutes",
-        "PERCENTAGE_OF_TRAVEL": "%",
-        "DISTANCE_MULTIPLIER": "× distance"
+        "FIXED_MINUTES": "minutes",
+        "DISTANCE_TIER": "(palier de distance)"
       },
       "FIELD": {
         "NAME": "Nom",
@@ -2742,7 +2781,7 @@
       "HINT": {
         "NAME": "Ne peut plus être changé après la création de la politique.",
         "TYPE": "Comment le temps ajouté est calculé.",
-        "VALUE": "Des minutes pour fixe, un pourcentage pour le temps de déplacement, un multiplicateur pour la distance. Laissez vide pour aucune."
+        "VALUE": "Des minutes pour une marge fixe; enregistré, mais pas encore utilisé, pour un palier de distance. Laissez vide pour aucune."
       },
       "DIALOG": {
         "CREATE_TITLE": "Nouvelle politique de marge de déplacement",

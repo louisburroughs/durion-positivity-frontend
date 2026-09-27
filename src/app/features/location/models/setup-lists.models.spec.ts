@@ -1,3 +1,4 @@
+import type { TravelBufferPolicyResponseBufferTypeEnum } from '@durion-sdk/location';
 import {
   isCountryCode,
   parseBufferValue,
@@ -62,9 +63,16 @@ describe('setup list rules', () => {
     expect(parseBufferValue('ten')).toBeUndefined();
   });
 
-  it('starts a new policy as flat minutes, and leaves an invalid stored type empty', () => {
-    expect(policyDraft(null)).toEqual({ name: '', bufferType: 'FLAT_MINUTES', bufferValue: '', notes: '' });
-    expect(policyDraft({ id: 'p', name: 'Seeded', bufferType: 'MINUTES', bufferValue: 10 })).toEqual({
+  it('starts a new policy as fixed minutes, and leaves an invalid stored type empty', () => {
+    expect(policyDraft(null)).toEqual({ name: '', bufferType: 'FIXED_MINUTES', bufferValue: '', notes: '' });
+    expect(
+      policyDraft({
+        id: 'p',
+        name: 'Seeded',
+        bufferType: 'MINUTES' as TravelBufferPolicyResponseBufferTypeEnum,
+        bufferValue: 10,
+      }),
+    ).toEqual({
       name: 'Seeded',
       bufferType: '',
       bufferValue: '10',
