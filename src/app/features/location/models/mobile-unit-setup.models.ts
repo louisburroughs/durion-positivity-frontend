@@ -220,10 +220,10 @@ export function draftFromUnit(unit: MobileUnitResponse): MobileUnitDraft {
 }
 
 /**
- * Turns a saved rule into an editor row. `maxDistanceUnit` keeps the rule's own unit — the
- * response is expressed in the base location's `distanceUnit` (DECISION-LOCATION-028) but a rule
- * saved under a different setting stays in the unit it was recorded in; `defaultUnit` (the
- * location's current unit) only applies to a row with no distance yet.
+ * Turns a saved rule into an editor row. `maxDistanceUnit` keeps the unit the response carries
+ * (pos-location expresses it in the base location's `distanceUnit`, DECISION-LOCATION-028), so the
+ * value is resent in the unit it was shown in; `defaultUnit` (the location's current unit) only
+ * applies to a row with no distance yet.
  */
 export function draftFromRule(rule: CoverageRuleResponse, key: string, defaultUnit: DistanceDtoUnitEnum): CoverageRuleDraft {
   return {
