@@ -284,8 +284,8 @@ describe('LocationService', () => {
 
     it('checks eligibility with the postal code, country and instant as positional args', () => {
       eligibilityApiStub.findEligibleMobileUnits.mockReturnValueOnce(of([]));
-      service.findEligibleMobileUnits('78701', 'US', '2026-10-01T12:00:00Z').subscribe();
-      expect(eligibilityApiStub.findEligibleMobileUnits).toHaveBeenCalledWith('78701', 'US', '2026-10-01T12:00:00Z');
+      service.findEligibleMobileUnits('78701', 'US', '2026-10-01T12:00:00Z', 'loc-1').subscribe();
+      expect(eligibilityApiStub.findEligibleMobileUnits).toHaveBeenCalledWith('78701', 'US', '2026-10-01T12:00:00Z', 'loc-1');
     });
 
     it('degrades the service-area and policy reads to empty, not ok', () => {

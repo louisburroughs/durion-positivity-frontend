@@ -243,9 +243,14 @@ export class LocationService {
     return this.mobileUnitApi.replaceCoverageRules(mobileUnitId, { rules });
   }
 
-  /** Active units covering a postal code on a day, lowest priority first. */
-  findEligibleMobileUnits(postalCode: string, countryCode: string, at: string): Observable<EligibleMobileUnitResponse[]> {
-    return this.mobileUnitEligibilityApi.findEligibleMobileUnits(postalCode, countryCode, at);
+  /** Active units of one base location covering a postal code at an instant, lowest priority first. */
+  findEligibleMobileUnits(
+    postalCode: string,
+    countryCode: string,
+    at: string,
+    baseLocationId: string,
+  ): Observable<EligibleMobileUnitResponse[]> {
+    return this.mobileUnitEligibilityApi.findEligibleMobileUnits(postalCode, countryCode, at, baseLocationId);
   }
 
   listServiceAreas(): Observable<{ areas: ServiceAreaResponse[]; ok: boolean }> {

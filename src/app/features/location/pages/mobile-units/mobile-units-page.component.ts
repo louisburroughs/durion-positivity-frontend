@@ -844,12 +844,13 @@ export class MobileUnitsPageComponent {
     // Only the latest check may answer: a slower earlier one is dropped, not raced.
     this.checkSub?.unsubscribe();
     this.checkSub = this.locationService
-      .findEligibleMobileUnits(postalCode, this.checkCountryValue(), eligibilityInstant(date))
+      .findEligibleMobileUnits(postalCode, this.checkCountryValue(), eligibilityInstant(date), locationId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: results => {
           this.checkSub = null;
-          // Eligibility isn't filtered by base location; this page answers for its own shop.
+          // The server scopes eligibility to the base location (DECISION-SHOPMGMT-023); the filter
+          // only guards against a response that ignores it.
           this.checkResults.set(results.filter(result => result.baseLocationId === locationId));
           this.checkedFor.set({ postalCode, date, day: parseIsoDateLocal(date) });
           this.checkState.set('ready');

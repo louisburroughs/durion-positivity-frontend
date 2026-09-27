@@ -94,7 +94,7 @@ const locationServiceStub = {
   createMobileUnit: vi.fn<(request: MobileUnitRequest) => Observable<MobileUnitResponse>>(),
   patchMobileUnit: vi.fn<(id: string, patch: MobileUnitPatch) => Observable<MobileUnitResponse>>(),
   replaceCoverageRules: vi.fn<(id: string, rules: CoverageRuleRequest[]) => Observable<CoverageRuleResponse[]>>(),
-  findEligibleMobileUnits: vi.fn<(postalCode: string, country: string, at: string) => Observable<EligibleMobileUnitResponse[]>>(),
+  findEligibleMobileUnits: vi.fn<(postalCode: string, country: string, at: string, baseLocationId: string) => Observable<EligibleMobileUnitResponse[]>>(),
   searchClaimableServices: vi.fn<(query: string) => Observable<{ services: ClaimableService[]; ok: boolean }>>(),
 };
 
@@ -550,7 +550,7 @@ describe('MobileUnitsPageComponent', () => {
       component.runCheck();
       render();
 
-      expect(locationServiceStub.findEligibleMobileUnits).toHaveBeenCalledWith('78701', 'US', `${TODAY}T12:00:00Z`);
+      expect(locationServiceStub.findEligibleMobileUnits).toHaveBeenCalledWith('78701', 'US', `${TODAY}T12:00:00Z`, 'loc-1');
       expect(Array.from(el().querySelectorAll('.check-list li')).map(li => li.textContent?.trim())).toEqual([
         'Van 9, priority 1',
       ]);
