@@ -510,6 +510,7 @@
                 }
               </label>
               <textarea id="unit-reason-note" rows="2"
+                [required]="draft().outOfServiceReason === 'OTHER'"
                 [attr.aria-invalid]="noteErrorKey() ? true : null"
                 [attr.aria-describedby]="noteErrorKey() ? 'unit-reason-note-error unit-reason-note-hint' : 'unit-reason-note-hint'"
                 [value]="draft().outOfServiceNote" (input)="setOutOfServiceNote($any($event.target).value)"></textarea>

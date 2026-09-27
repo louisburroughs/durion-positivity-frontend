@@ -478,11 +478,10 @@ export class BaysPageComponent {
   }
 
   setOutOfServiceReason(value: string): void {
-    const reason = OUT_OF_SERVICE_REASONS.find(r => r === value);
-    if (!reason) return;
+    if (value !== '' && !OUT_OF_SERVICE_REASONS.find(r => r === value)) return;
     this.reasonErrorKey.set(null);
     this.noteErrorKey.set(null);
-    this.patchDraft({ outOfServiceReason: reason });
+    this.patchDraft({ outOfServiceReason: value as OutOfServiceReason | '' });
   }
 
   setOutOfServiceNote(note: string): void {

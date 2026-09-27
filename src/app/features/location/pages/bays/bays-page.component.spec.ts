@@ -384,6 +384,41 @@ describe('BaysPageComponent', () => {
       });
     });
 
+    it('clears a chosen reason back to the placeholder, retriggering the required-reason validation', () => {
+      component.openCreate();
+      component.setName('Bay 31');
+      component.setStatus('OUT_OF_SERVICE');
+      component.setOutOfServiceReason('OTHER');
+      expect(component.draft().outOfServiceReason).toBe('OTHER');
+
+      component.setOutOfServiceReason('');
+      expect(component.draft().outOfServiceReason).toBe('');
+
+      component.submit();
+      render();
+      expect(locationServiceStub.createBay).not.toHaveBeenCalled();
+      expect(component.reasonErrorKey()).toBe('LOCATION.BAYS.ERROR.REASON_REQUIRED');
+    });
+
+    it('ignores an unrecognised non-empty reason value', () => {
+      component.openCreate();
+      component.setOutOfServiceReason('OTHER');
+      component.setOutOfServiceReason('NOT_A_REAL_REASON');
+      expect(component.draft().outOfServiceReason).toBe('OTHER');
+    });
+
+    it('marks the out-of-service note required only while the reason is Other', () => {
+      component.openCreate();
+      component.setStatus('OUT_OF_SERVICE');
+      component.setOutOfServiceReason('EQUIPMENT_FAILURE');
+      render();
+      expect(query<HTMLTextAreaElement>('#bay-reason-note')?.required).toBe(false);
+
+      component.setOutOfServiceReason('OTHER');
+      render();
+      expect(query<HTMLTextAreaElement>('#bay-reason-note')?.required).toBe(true);
+    });
+
     it('puts a duplicate name error under Name and keeps the dialog open', () => {
       locationServiceStub.createBay.mockReturnValueOnce(throwError(() => new HttpErrorResponse({ status: 409 })));
       component.openCreate();

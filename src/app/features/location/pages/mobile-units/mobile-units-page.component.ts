@@ -565,8 +565,8 @@ export class MobileUnitsPageComponent {
   }
 
   setOutOfServiceReason(value: string): void {
-    const reason = OUT_OF_SERVICE_REASONS.find(r => r === value);
-    if (!reason) return;
+    if (value !== '' && !OUT_OF_SERVICE_REASONS.find(r => r === value)) return;
+    const reason = value as OutOfServiceReason | '';
     this.reasonErrorKey.set(null);
     this.noteErrorKey.set(null);
     this.draft.update(draft => ({ ...draft, outOfServiceReason: reason }));

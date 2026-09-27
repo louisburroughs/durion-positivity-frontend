@@ -390,6 +390,7 @@
                 }
               </label>
               <textarea id="bay-reason-note" rows="2"
+                [required]="draft().outOfServiceReason === 'OTHER'"
                 [attr.aria-invalid]="noteErrorKey() ? true : null"
                 [attr.aria-describedby]="noteErrorKey() ? 'bay-reason-note-error bay-reason-note-hint' : 'bay-reason-note-hint'"
                 [value]="draft().outOfServiceNote" (input)="setOutOfServiceNote($any($event.target).value)"></textarea>

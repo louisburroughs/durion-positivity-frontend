@@ -525,6 +525,37 @@ describe('MobileUnitsPageComponent', () => {
         outOfServiceNote: 'Awaiting parts',
       });
     });
+
+    it('clears a chosen reason back to the placeholder, retriggering the required-reason validation', () => {
+      component.openEdit(VAN_7);
+      component.setOutOfServiceReason('OTHER');
+      expect(component.draft().outOfServiceReason).toBe('OTHER');
+
+      component.setOutOfServiceReason('');
+      expect(component.draft().outOfServiceReason).toBe('');
+
+      component.submit();
+      render();
+      expect(locationServiceStub.patchMobileUnit).not.toHaveBeenCalled();
+      expect(component.reasonErrorKey()).toBe('LOCATION.MOBILE_UNITS.ERROR.REASON_REQUIRED');
+    });
+
+    it('ignores an unrecognised non-empty reason value', () => {
+      component.openEdit(VAN_7);
+      component.setOutOfServiceReason('OTHER');
+      component.setOutOfServiceReason('NOT_A_REAL_REASON');
+      expect(component.draft().outOfServiceReason).toBe('OTHER');
+    });
+
+    it('marks the out-of-service note required only while the reason is Other', () => {
+      component.openEdit(VAN_7);
+      render();
+      expect(query<HTMLTextAreaElement>('#unit-reason-note')?.required).toBe(false);
+
+      component.setOutOfServiceReason('OTHER');
+      render();
+      expect(query<HTMLTextAreaElement>('#unit-reason-note')?.required).toBe(true);
+    });
   });
 
   describe('coverage editor', () => {
@@ -673,6 +704,7 @@ describe('MobileUnitsPageComponent', () => {
         { serviceAreaId: 'area-n', ruleType: 'DISTANCE_TIER', priority: 2 },
       ]);
     });
+
     it('saves a dated rule as UTC instants, and shows a returned instant rule at the right days and grouping (DECISION-LOCATION-027)', () => {
       component.openCoverage(VAN_7);
       component.addRule();
@@ -715,7 +747,6 @@ describe('MobileUnitsPageComponent', () => {
       expect(card('mu-7').upcoming.length).toBe(0);
       expect(card('mu-7').pastCount).toBe(0);
     });
-
   });
 
   describe('check coverage', () => {
