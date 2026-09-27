@@ -15,7 +15,15 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
-import type { BayPatchRequest, BayRequest, BayResponse } from '@durion-sdk/location';
+import type {
+  BayPatchRequest,
+  BayPatchRequestOutOfServiceReasonEnum,
+  BayPatchRequestStatusEnum,
+  BayRequest,
+  BayRequestOutOfServiceReasonEnum,
+  BayRequestStatusEnum,
+  BayResponse,
+} from '@durion-sdk/location';
 import { AuthService } from '../../../../core/services/auth.service';
 import { LOCATION_PAGE } from '../../../../core/security/route-permissions';
 import { LocationPickerComponent } from '../../../../shared/location-picker/location-picker.component';
@@ -35,6 +43,8 @@ import {
   BayType,
   DUTY_CLASSES,
   DutyBand,
+  OUT_OF_SERVICE_REASONS,
+  OutOfServiceReason,
   activeClaimants,
   bayChanges,
   codeChanges,
@@ -141,6 +151,7 @@ export class BaysPageComponent {
 
   readonly bayTypes = BAY_TYPES;
   readonly bayStatuses = BAY_STATUSES;
+  readonly outOfServiceReasons = OUT_OF_SERVICE_REASONS;
   readonly dutyClasses = DUTY_CLASSES;
 
   // --- page state (ADR-0031): `state` always moves before `errorKey` ---
@@ -202,6 +213,7 @@ export class BaysPageComponent {
   /** The save in flight; dropped with the dialog when the location changes (ADR-0063). */
   private saveSub: Subscription | null = null;
   readonly nameErrorKey = signal<string | null>(null);
+  readonly reasonErrorKey = signal<string | null>(null);
   readonly saveErrorKey = signal<string | null>(null);
 
   // --- specialty changes straight from the cards ---
@@ -420,6 +432,7 @@ export class BaysPageComponent {
     this.typeChoice.set('DEFAULTS');
     this.filledFrom.set(null);
     this.nameErrorKey.set(null);
+    this.reasonErrorKey.set(null);
     this.saveErrorKey.set(null);
   }
 
@@ -451,7 +464,25 @@ export class BaysPageComponent {
 
   setStatus(value: string): void {
     const status = BAY_STATUSES.find(s => s === value);
-    if (status) this.patchDraft({ status });
+    if (!status) return;
+    this.reasonErrorKey.set(null);
+    this.patchDraft({ status });
+  }
+
+  setOutOfServiceReason(value: string): void {
+    const reason = OUT_OF_SERVICE_REASONS.find(r => r === value);
+    if (!reason) return;
+    this.reasonErrorKey.set(null);
+    this.patchDraft({ outOfServiceReason: reason });
+  }
+
+  setOutOfServiceNote(note: string): void {
+    this.reasonErrorKey.set(null);
+    this.patchDraft({ outOfServiceNote: note });
+  }
+
+  outOfServiceReasonKey(reason: OutOfServiceReason): string {
+    return `${I18N}.REASON.${reason}`;
   }
 
   /** Anything but a whole number (blank, `1.5`) is kept as NaN so the save refuses it rather than rounding. */
@@ -504,18 +535,34 @@ export class BaysPageComponent {
       this.saveErrorKey.set('LOCATION.BAYS.ERROR.VEHICLES');
       return;
     }
+    if (draft.status === 'OUT_OF_SERVICE' && !draft.outOfServiceReason) {
+      this.reasonErrorKey.set('LOCATION.BAYS.ERROR.REASON_REQUIRED');
+      this.focusInDialog('#bay-reason');
+      return;
+    }
+    if (draft.status === 'OUT_OF_SERVICE' && draft.outOfServiceReason === 'OTHER' && !draft.outOfServiceNote.trim()) {
+      this.reasonErrorKey.set('LOCATION.BAYS.ERROR.NOTE_REQUIRED');
+      this.focusInDialog('#bay-reason-note');
+      return;
+    }
     const editing = this.editingBay();
     const request: BayRequest = {
       name,
       bayType: draft.bayType,
-      status: draft.status,
+      status: draft.status as BayRequestStatusEnum,
       capacity: { maxConcurrentVehicles: draft.maxConcurrentVehicles },
       serviceCapabilityCodes: [...draft.serviceCapabilityCodes],
       ...(draft.maxDutyClass == null ? {} : { maxDutyClass: draft.maxDutyClass }),
+      ...(draft.status === 'OUT_OF_SERVICE'
+        ? {
+            outOfServiceReason: draft.outOfServiceReason as BayRequestOutOfServiceReasonEnum,
+            ...(draft.outOfServiceNote.trim() ? { outOfServiceNote: draft.outOfServiceNote.trim() } : {}),
+          }
+        : {}),
     };
     const save$ =
       mode === 'edit' && editing
-        ? this.locationService.patchBay(locationId, editing.id, this.toPatch(request, editing))
+        ? this.locationService.patchBay(locationId, editing.id, this.toPatch(name, draft, editing))
         : this.locationService.createBay(locationId, request);
 
     this.saving.set(true);
@@ -555,15 +602,29 @@ export class BaysPageComponent {
   }
 
   /**
-   * An edit resends the specialty list only when it or the type changed: pos-location re-validates
-   * every code it is sent, so an unrelated rename would otherwise fail on a code the catalog has
-   * since retired. A retype always carries the list, which stops the backend resetting it.
+   * `BayPatchRequest` is a distinct type from `BayRequest` (same field names, its own status and
+   * out-of-service-reason enums), so the patch is built fresh from the draft rather than reusing the
+   * create request. An edit resends the specialty list only when it or the type changed: pos-location
+   * re-validates every code it is sent, so an unrelated rename would otherwise fail on a code the
+   * catalog has since retired. A retype always carries the list, which stops the backend resetting it.
    */
-  private toPatch(request: BayRequest, bay: BayResponse): BayPatchRequest {
-    const { serviceCapabilityCodes, ...rest } = request;
-    const { added, removed } = codeChanges(specialtyCodes(bay), serviceCapabilityCodes ?? []);
-    const listChanged = added.length > 0 || removed.length > 0 || request.bayType !== bay.bayType;
-    return listChanged ? request : rest;
+  private toPatch(name: string, draft: BayDraft, bay: BayResponse): BayPatchRequest {
+    const { added, removed } = codeChanges(specialtyCodes(bay), draft.serviceCapabilityCodes);
+    const listChanged = added.length > 0 || removed.length > 0 || draft.bayType !== bay.bayType;
+    return {
+      name,
+      bayType: draft.bayType,
+      capacity: { maxConcurrentVehicles: draft.maxConcurrentVehicles },
+      status: draft.status as BayPatchRequestStatusEnum,
+      ...(draft.maxDutyClass == null ? {} : { maxDutyClass: draft.maxDutyClass }),
+      ...(listChanged ? { serviceCapabilityCodes: [...draft.serviceCapabilityCodes] } : {}),
+      ...(draft.status === 'OUT_OF_SERVICE'
+        ? {
+            outOfServiceReason: draft.outOfServiceReason as BayPatchRequestOutOfServiceReasonEnum,
+            ...(draft.outOfServiceNote.trim() ? { outOfServiceNote: draft.outOfServiceNote.trim() } : {}),
+          }
+        : {}),
+    };
   }
 
   private focusInDialog(selector: string): void {

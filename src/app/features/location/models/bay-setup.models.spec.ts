@@ -1,3 +1,4 @@
+import { BayResponseStatusEnum } from '@durion-sdk/location';
 import type { BayResponse } from '@durion-sdk/location';
 import {
   BAY_TYPE_DEFAULT_CODES,
@@ -15,16 +16,22 @@ import {
   operationCodeLabel,
 } from './bay-setup.models';
 
-const bay = (overrides: Partial<BayResponse> = {}): BayResponse => ({
-  id: 'bay-1',
-  locationId: 'loc-1',
-  name: 'Bay 1',
-  bayType: 'GENERAL_SERVICE',
-  status: 'ACTIVE',
-  maxConcurrentVehicles: 1,
-  serviceCapabilityCodes: [],
-  ...overrides,
-});
+/**
+ * `status` accepts any string, not just `BayResponseStatusEnum`, so a fixture can assert
+ * `isOutOfService`/`laneOf` read it case-insensitively (`'out_of_service'`), the same tolerance a
+ * real value from the wire could carry.
+ */
+const bay = (overrides: Partial<Omit<BayResponse, 'status'>> & { status?: string } = {}): BayResponse =>
+  ({
+    id: 'bay-1',
+    locationId: 'loc-1',
+    name: 'Bay 1',
+    bayType: 'GENERAL_SERVICE',
+    status: BayResponseStatusEnum.Active,
+    maxConcurrentVehicles: 1,
+    serviceCapabilityCodes: [],
+    ...overrides,
+  }) as BayResponse;
 
 const ALIGN = 'WHEEL-ALIGNMENT-4-WHEEL';
 
@@ -94,6 +101,8 @@ describe('bay setup rules', () => {
       name: '',
       bayType: 'GENERAL_SERVICE',
       status: 'ACTIVE',
+      outOfServiceReason: '',
+      outOfServiceNote: '',
       maxConcurrentVehicles: 1,
       maxDutyClass: null,
       serviceCapabilityCodes: [],
@@ -102,10 +111,24 @@ describe('bay setup rules', () => {
       name: 'Bay 1',
       bayType: 'GENERAL_SERVICE',
       status: 'OUT_OF_SERVICE',
+      outOfServiceReason: '',
+      outOfServiceNote: '',
       maxConcurrentVehicles: 1,
       maxDutyClass: 6,
       serviceCapabilityCodes: [],
     });
+  });
+
+  it('carries a valid out-of-service reason and note into the draft, and drops an unrecognised reason', () => {
+    const withReason = bay({
+      status: 'OUT_OF_SERVICE',
+      outOfServiceReason: 'EQUIPMENT_FAILURE',
+      outOfServiceNote: 'Lift arm jammed',
+    });
+    expect(draftFromBay(withReason).outOfServiceReason).toBe('EQUIPMENT_FAILURE');
+    expect(draftFromBay(withReason).outOfServiceNote).toBe('Lift arm jammed');
+    const unrecognised = bay({ status: 'OUT_OF_SERVICE', outOfServiceReason: 'SOMETHING_NEW' });
+    expect(draftFromBay(unrecognised).outOfServiceReason).toBe('');
   });
 
   it('diffs code lists in both directions', () => {

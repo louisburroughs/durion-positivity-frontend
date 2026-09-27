@@ -4,6 +4,7 @@ import { ProductsAPIService } from '@durion-sdk/catalog';
 import type { ServiceDto } from '@durion-sdk/catalog';
 import {
   BayAPIService,
+  BayRequestStatusEnum,
   CoverageRuleRequestRuleTypeEnum,
   CoverageRuleResponseRuleTypeEnum,
   MobileUnitRequestStatusEnum,
@@ -15,8 +16,11 @@ import {
   SiteDefaultsAPIService,
   StorageLocationAPIService,
   TravelBufferPolicyAPIService,
+  TravelBufferPolicyRequestBufferTypeEnum,
+  TravelBufferPolicyResponseBufferTypeEnum,
 } from '@durion-sdk/location';
 import type {
+  BayPatchRequest,
   BayRequest,
   BayResponse,
   CoverageRuleRequest,
@@ -27,22 +31,23 @@ import type {
 } from '@durion-sdk/location';
 import { LocationService, MobileUnitsRead } from './location.service';
 
-const bayResponse = (overrides: Partial<BayResponse> = {}): BayResponse => ({
-  id: 'bay-1',
-  locationId: 'loc-01',
-  name: 'Bay 01',
-  bayType: 'GENERAL_SERVICE',
-  status: 'ACTIVE',
-  maxConcurrentVehicles: 1,
-  serviceCapabilityCodes: [],
-  ...overrides,
-});
+const bayResponse = (overrides: Partial<Omit<BayResponse, 'status'>> & { status?: string } = {}): BayResponse =>
+  ({
+    id: 'bay-1',
+    locationId: 'loc-01',
+    name: 'Bay 01',
+    bayType: 'GENERAL_SERVICE',
+    status: 'ACTIVE',
+    maxConcurrentVehicles: 1,
+    serviceCapabilityCodes: [],
+    ...overrides,
+  }) as BayResponse;
 
 const mobileUnit = (overrides: Partial<MobileUnitResponse> = {}): MobileUnitResponse => ({
   id: 'mu-1',
   name: 'Van 7',
   baseLocationId: 'loc-01',
-  status: MobileUnitResponseStatusEnum.Inactive,
+  status: MobileUnitResponseStatusEnum.OutOfService,
   serviceCapabilityCodes: [],
   ...overrides,
 });
@@ -155,7 +160,7 @@ describe('LocationService', () => {
       capacity: { maxConcurrentVehicles: 1 },
       serviceCapabilityCodes: ['WHEEL-ALIGNMENT-4-WHEEL'],
       maxDutyClass: 3,
-      status: 'ACTIVE',
+      status: BayRequestStatusEnum.Active,
     };
     bayApiStub.createBay.mockReturnValueOnce(of(bayResponse({ name: 'Rack 1' })));
 
@@ -167,7 +172,7 @@ describe('LocationService', () => {
   it('sends a bay patch to the bay it names', () => {
     bayApiStub.patchBay.mockReturnValueOnce(of(bayResponse({ status: 'OUT_OF_SERVICE' })));
 
-    service.patchBay('loc-01', 'bay-1', { status: 'OUT_OF_SERVICE' }).subscribe();
+    service.patchBay('loc-01', 'bay-1', { status: 'OUT_OF_SERVICE' as BayPatchRequest['status'] }).subscribe();
 
     expect(bayApiStub.patchBay).toHaveBeenCalledWith('loc-01', 'bay-1', { status: 'OUT_OF_SERVICE' });
   });
@@ -253,14 +258,14 @@ describe('LocationService', () => {
       mobileUnitApiStub.patchMobileUnit.mockReturnValueOnce(of(mobileUnit({ status: MobileUnitResponseStatusEnum.Active })));
 
       service
-        .createMobileUnit({ name: 'Van 7', baseLocationId: 'loc-01', status: MobileUnitRequestStatusEnum.Inactive, serviceCapabilityCodes: ['TPMS-SENSOR-SERVICE'] })
+        .createMobileUnit({ name: 'Van 7', baseLocationId: 'loc-01', status: MobileUnitRequestStatusEnum.OutOfService, serviceCapabilityCodes: ['TPMS-SENSOR-SERVICE'] })
         .subscribe();
       service.patchMobileUnit('mu-1', { status: 'ACTIVE' }).subscribe();
 
       expect(mobileUnitApiStub.createMobileUnit).toHaveBeenCalledWith({
         name: 'Van 7',
         baseLocationId: 'loc-01',
-        status: 'INACTIVE',
+        status: 'OUT_OF_SERVICE',
         serviceCapabilityCodes: ['TPMS-SENSOR-SERVICE'],
       });
       expect(mobileUnitApiStub.patchMobileUnit).toHaveBeenCalledWith('mu-1', { status: 'ACTIVE' });
@@ -286,7 +291,14 @@ describe('LocationService', () => {
     it('degrades the service-area and policy reads to empty, not ok', () => {
       serviceAreaApiStub.listServiceAreas.mockReturnValueOnce(throwError(() => new Error('403')));
       travelBufferPolicyApiStub.listTravelBufferPolicies.mockReturnValueOnce(
-        of([{ id: 'p-1', name: 'Standard', bufferType: 'FLAT_MINUTES', bufferValue: 15 } satisfies TravelBufferPolicyResponse]),
+        of([
+          {
+            id: 'p-1',
+            name: 'Standard',
+            bufferType: TravelBufferPolicyResponseBufferTypeEnum.FixedMinutes,
+            bufferValue: 15,
+          } satisfies TravelBufferPolicyResponse,
+        ]),
       );
 
       let areas: { areas: ServiceAreaResponse[]; ok: boolean } | undefined;
@@ -322,12 +334,14 @@ describe('LocationService', () => {
       travelBufferPolicyApiStub.createTravelBufferPolicy.mockReturnValueOnce(of(policy));
       travelBufferPolicyApiStub.patchTravelBufferPolicy.mockReturnValueOnce(of(policy));
 
-      service.createTravelBufferPolicy({ name: 'Standard', bufferType: 'FLAT_MINUTES', bufferValue: 15 }).subscribe();
+      service
+        .createTravelBufferPolicy({ name: 'Standard', bufferType: TravelBufferPolicyRequestBufferTypeEnum.FixedMinutes, bufferValue: 15 })
+        .subscribe();
       service.patchTravelBufferPolicy('p-1', { bufferValue: null }).subscribe();
 
       expect(travelBufferPolicyApiStub.createTravelBufferPolicy).toHaveBeenCalledWith({
         name: 'Standard',
-        bufferType: 'FLAT_MINUTES',
+        bufferType: 'FIXED_MINUTES',
         bufferValue: 15,
       });
       expect(travelBufferPolicyApiStub.patchTravelBufferPolicy).toHaveBeenCalledWith('p-1', { bufferValue: null });

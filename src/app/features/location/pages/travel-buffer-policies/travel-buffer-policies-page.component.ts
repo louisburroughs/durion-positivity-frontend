@@ -14,7 +14,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpErrorResponse } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
-import type { TravelBufferPolicyResponse } from '@durion-sdk/location';
+import type { TravelBufferPolicyRequestBufferTypeEnum, TravelBufferPolicyResponse } from '@durion-sdk/location';
 import { AuthService } from '../../../../core/services/auth.service';
 import { LOCATION_PAGE } from '../../../../core/security/route-permissions';
 import { ModalDialogDirective } from '../../../../shared/modal-dialog.directive';
@@ -203,7 +203,7 @@ export class TravelBufferPoliciesPageComponent {
         ? this.locationService.patchTravelBufferPolicy(editing.id, toPatch(editing, draft.bufferType, value, notes))
         : this.locationService.createTravelBufferPolicy({
             name,
-            bufferType: draft.bufferType,
+            bufferType: draft.bufferType as TravelBufferPolicyRequestBufferTypeEnum,
             ...(value === null ? {} : { bufferValue: value }),
             ...(notes ? { notes } : {}),
           });

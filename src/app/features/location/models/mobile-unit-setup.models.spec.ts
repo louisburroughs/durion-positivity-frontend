@@ -1,5 +1,13 @@
-import { CoverageRuleResponseRuleTypeEnum, MobileUnitResponseStatusEnum } from '@durion-sdk/location';
-import type { CoverageRuleResponse, ServiceAreaResponse } from '@durion-sdk/location';
+import {
+  CoverageRuleResponseRuleTypeEnum,
+  DistanceDtoUnitEnum,
+  MobileUnitResponseStatusEnum,
+} from '@durion-sdk/location';
+import type {
+  CoverageRuleResponse,
+  ServiceAreaResponse,
+  TravelBufferPolicyResponseBufferTypeEnum,
+} from '@durion-sdk/location';
 import {
   CoverageRuleDraft,
   activationChecklist,
@@ -46,7 +54,7 @@ const PREFIX = 'LOCATION.MOBILE_UNITS.COVERAGE.ERROR';
 describe('mobile unit setup rules', () => {
   it('groups units by status, reading it case-insensitively', () => {
     expect(unitGroupOf({ id: 'a', status: 'active' as MobileUnitResponseStatusEnum })).toBe('ACTIVE');
-    expect(unitGroupOf({ id: 'b', status: MobileUnitResponseStatusEnum.Inactive })).toBe('INACTIVE');
+    expect(unitGroupOf({ id: 'b', status: MobileUnitResponseStatusEnum.OutOfService })).toBe('INACTIVE');
     expect(unitGroupOf({ id: 'c' })).toBe('INACTIVE');
   });
 
@@ -84,10 +92,21 @@ describe('mobile unit setup rules', () => {
   });
 
   it('names each travel buffer type, and flags an unknown one', () => {
-    expect(bufferKey({ id: 'p', bufferType: 'FLAT_MINUTES', bufferValue: 15 })).toBe('LOCATION.MOBILE_UNITS.BUFFER.FLAT_MINUTES');
-    expect(bufferKey({ id: 'p', bufferType: 'MINUTES' })).toBe('LOCATION.MOBILE_UNITS.BUFFER.NEEDS_FIXING');
-    expect(bufferKey({ id: 'p', bufferType: 'FLAT_MINUTES', bufferValue: 0 })).toBe('LOCATION.MOBILE_UNITS.BUFFER.FLAT_MINUTES');
-    expect(bufferKey({ id: 'p', bufferType: 'PERCENTAGE_OF_TRAVEL', bufferValue: undefined })).toBe(
+    expect(bufferKey({ id: 'p', bufferType: 'FIXED_MINUTES' as TravelBufferPolicyResponseBufferTypeEnum, bufferValue: 15 })).toBe(
+      'LOCATION.MOBILE_UNITS.BUFFER.FIXED_MINUTES',
+    );
+    expect(bufferKey({ id: 'p', bufferType: 'MINUTES' as TravelBufferPolicyResponseBufferTypeEnum })).toBe(
+      'LOCATION.MOBILE_UNITS.BUFFER.NEEDS_FIXING',
+    );
+    expect(bufferKey({ id: 'p', bufferType: 'FIXED_MINUTES' as TravelBufferPolicyResponseBufferTypeEnum, bufferValue: 0 })).toBe(
+      'LOCATION.MOBILE_UNITS.BUFFER.FIXED_MINUTES',
+    );
+    // FLAT_MINUTES was renamed to FIXED_MINUTES (DECISION-LOCATION-028); a record still carrying the
+    // old name is treated the same as any other unrecognised type.
+    expect(bufferKey({ id: 'p', bufferType: 'FLAT_MINUTES' as TravelBufferPolicyResponseBufferTypeEnum, bufferValue: 5 })).toBe(
+      'LOCATION.MOBILE_UNITS.BUFFER.NEEDS_FIXING',
+    );
+    expect(bufferKey({ id: 'p', bufferType: 'DISTANCE_TIER' as TravelBufferPolicyResponseBufferTypeEnum, bufferValue: undefined })).toBe(
       'LOCATION.MOBILE_UNITS.BUFFER.NO_VALUE',
     );
   });
@@ -97,7 +116,15 @@ describe('mobile unit setup rules', () => {
   });
 
   it('turns a saved rule into an editor row and a valid row back into a request', () => {
-    const draft = draftFromRule(rule({ ruleType: 'INCLUDE' as CoverageRuleResponseRuleTypeEnum, priority: 3, validFrom: '2026-10-01', maxDistance: 25 }), 'k');
+    const draft = draftFromRule(
+      rule({
+        ruleType: 'INCLUDE' as CoverageRuleResponseRuleTypeEnum,
+        priority: 3,
+        validFrom: '2026-10-01',
+        maxDistance: { value: 25, unit: DistanceDtoUnitEnum.Mi },
+      }),
+      'k',
+    );
     expect(draft).toEqual({
       key: 'k',
       serviceAreaId: 'area-1',
@@ -113,11 +140,13 @@ describe('mobile unit setup rules', () => {
       priority: 3,
       validFrom: '2026-10-01',
     });
+    // toRuleRequest always sends kilometres (COVERAGE_DISTANCE_UNIT): this editor isn't
+    // location-scoped, so it can't know a location's preferred distanceUnit (DECISION-LOCATION-028).
     expect(toRuleRequest(row({ ruleType: 'DISTANCE_TIER', maxDistance: '12.5' }))).toEqual({
       serviceAreaId: 'area-1',
       ruleType: 'DISTANCE_TIER',
       priority: 1,
-      maxDistance: 12.5,
+      maxDistance: { value: 12.5, unit: 'KM' },
     });
   });
 

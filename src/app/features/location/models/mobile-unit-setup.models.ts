@@ -1,4 +1,4 @@
-import { CoverageRuleRequestRuleTypeEnum } from '@durion-sdk/location';
+import { CoverageRuleRequestRuleTypeEnum, DistanceDtoUnitEnum } from '@durion-sdk/location';
 import type {
   CoverageRuleRequest,
   CoverageRuleResponse,
@@ -6,9 +6,13 @@ import type {
   ServiceAreaResponse,
   TravelBufferPolicyResponse,
 } from '@durion-sdk/location';
+import { OutOfServiceReason, isOutOfServiceReason } from './bay-setup.models';
 
-/** Mobile-unit statuses pos-location stores. New units start INACTIVE. */
-export const MOBILE_UNIT_STATUSES = ['ACTIVE', 'INACTIVE'] as const;
+/**
+ * Mobile-unit statuses pos-location accepts (DECISION-LOCATION-026); a unit created without one
+ * starts OUT_OF_SERVICE. RETIRED is reached only via delete.
+ */
+export const MOBILE_UNIT_STATUSES = ['ACTIVE', 'OUT_OF_SERVICE'] as const;
 export type MobileUnitStatus = (typeof MOBILE_UNIT_STATUSES)[number];
 
 /**
@@ -18,9 +22,19 @@ export type MobileUnitStatus = (typeof MOBILE_UNIT_STATUSES)[number];
 export const COVERAGE_RULE_TYPES = ['SERVICE_AREA', 'DISTANCE_TIER'] as const;
 export type CoverageRuleType = (typeof COVERAGE_RULE_TYPES)[number];
 
-/** Travel buffer policy types pos-location accepts (`TravelBufferPolicyServiceImpl`). */
-export const TRAVEL_BUFFER_TYPES = ['FLAT_MINUTES', 'PERCENTAGE_OF_TRAVEL', 'DISTANCE_MULTIPLIER'] as const;
+/**
+ * Travel buffer policy types pos-location accepts (DECISION-LOCATION-028). FLAT_MINUTES was
+ * renamed to FIXED_MINUTES; PERCENTAGE_OF_TRAVEL and DISTANCE_MULTIPLIER were removed.
+ */
+export const TRAVEL_BUFFER_TYPES = ['FIXED_MINUTES', 'DISTANCE_TIER'] as const;
 export type TravelBufferType = (typeof TRAVEL_BUFFER_TYPES)[number];
+
+/**
+ * The unit a coverage rule's max distance is recorded in. Locations carry their own preferred
+ * distanceUnit (DECISION-LOCATION-028), but this editor isn't location-scoped, so it always sends
+ * kilometres, the backend's canonical storage unit and default; not surfaced in the UI.
+ */
+const COVERAGE_DISTANCE_UNIT = DistanceDtoUnitEnum.Km;
 
 /** The two groups the Mobile Units page shows. */
 export const UNIT_GROUPS = ['ACTIVE', 'INACTIVE'] as const;
@@ -30,6 +44,10 @@ export type UnitGroup = (typeof UNIT_GROUPS)[number];
 export interface MobileUnitPatch {
   name?: string;
   status?: MobileUnitStatus;
+  /** Required when the resulting status is OUT_OF_SERVICE (DECISION-LOCATION-026). */
+  outOfServiceReason?: OutOfServiceReason;
+  /** Required in addition to the reason when it is OTHER. */
+  outOfServiceNote?: string;
   notes?: string;
   travelBufferPolicyId?: string;
   serviceCapabilityCodes?: string[];
@@ -46,6 +64,10 @@ export interface ActivationChecklist {
 export interface MobileUnitDraft {
   name: string;
   status: MobileUnitStatus;
+  /** Required when `status` is OUT_OF_SERVICE (DECISION-LOCATION-026). */
+  outOfServiceReason: OutOfServiceReason | '';
+  /** Required in addition to the reason when it is OTHER. */
+  outOfServiceNote: string;
   travelBufferPolicyId: string;
   serviceCapabilityCodes: string[];
   notes: string;
@@ -166,13 +188,23 @@ export function bufferKey(policy: TravelBufferPolicyResponse): string {
 }
 
 export function newUnitDraft(): MobileUnitDraft {
-  return { name: '', status: 'INACTIVE', travelBufferPolicyId: '', serviceCapabilityCodes: [], notes: '' };
+  return {
+    name: '',
+    status: 'OUT_OF_SERVICE',
+    outOfServiceReason: '',
+    outOfServiceNote: '',
+    travelBufferPolicyId: '',
+    serviceCapabilityCodes: [],
+    notes: '',
+  };
 }
 
 export function draftFromUnit(unit: MobileUnitResponse): MobileUnitDraft {
   return {
     name: unit.name ?? '',
-    status: isActiveUnit(unit) ? 'ACTIVE' : 'INACTIVE',
+    status: isActiveUnit(unit) ? 'ACTIVE' : 'OUT_OF_SERVICE',
+    outOfServiceReason: isOutOfServiceReason(unit.outOfServiceReason) ? unit.outOfServiceReason : '',
+    outOfServiceNote: unit.outOfServiceNote ?? '',
     travelBufferPolicyId: unit.travelBufferPolicyId ?? '',
     serviceCapabilityCodes: [...(unit.serviceCapabilityCodes ?? [])],
     notes: unit.notes ?? '',
@@ -187,7 +219,7 @@ export function draftFromRule(rule: CoverageRuleResponse, key: string): Coverage
     priority: rule.priority == null ? '' : String(rule.priority),
     validFrom: rule.validFrom ?? '',
     validTo: rule.validTo ?? '',
-    maxDistance: rule.maxDistance == null ? '' : String(rule.maxDistance),
+    maxDistance: rule.maxDistance == null ? '' : String(rule.maxDistance.value),
   };
 }
 
@@ -241,7 +273,10 @@ export function validateCoverage(rows: readonly CoverageRuleDraft[], unitActive:
 
 /** The request for one valid editor row. Max distance travels only on a distance tier. */
 export function toRuleRequest(row: CoverageRuleDraft): CoverageRuleRequest {
-  const maxDistance = row.ruleType === 'DISTANCE_TIER' && row.maxDistance.trim() ? Number(row.maxDistance) : undefined;
+  const maxDistance =
+    row.ruleType === 'DISTANCE_TIER' && row.maxDistance.trim()
+      ? { value: Number(row.maxDistance), unit: COVERAGE_DISTANCE_UNIT }
+      : undefined;
   return {
     serviceAreaId: row.serviceAreaId,
     ruleType:

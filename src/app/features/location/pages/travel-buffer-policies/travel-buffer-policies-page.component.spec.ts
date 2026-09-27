@@ -3,6 +3,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Observable, of, throwError } from 'rxjs';
+import { TravelBufferPolicyResponseBufferTypeEnum } from '@durion-sdk/location';
 import type { TravelBufferPolicyRequest, TravelBufferPolicyResponse } from '@durion-sdk/location';
 import enUS from '../../../../../assets/i18n/en-US.json';
 import { AuthService } from '../../../../core/services/auth.service';
@@ -12,9 +13,11 @@ import { LocationService } from '../../services/location.service';
 import { TravelBufferPoliciesPageComponent } from './travel-buffer-policies-page.component';
 
 const POLICIES: TravelBufferPolicyResponse[] = [
-  { id: 'p-std', name: 'Standard', bufferType: 'FLAT_MINUTES', bufferValue: 15, notes: 'Most visits' },
-  { id: 'p-pct', name: 'Rush hour', bufferType: 'PERCENTAGE_OF_TRAVEL', bufferValue: 20 },
-  { id: 'p-bad', name: 'Seeded', bufferType: 'MINUTES', bufferValue: 10 },
+  { id: 'p-std', name: 'Standard', bufferType: TravelBufferPolicyResponseBufferTypeEnum.FixedMinutes, bufferValue: 15, notes: 'Most visits' },
+  { id: 'p-tier', name: 'Long routes', bufferType: TravelBufferPolicyResponseBufferTypeEnum.DistanceTier, bufferValue: 20 },
+  // FLAT_MINUTES/PERCENTAGE_OF_TRAVEL/DISTANCE_MULTIPLIER were removed (DECISION-LOCATION-028); a
+  // record that still carries a stale type is treated as needing a fix, same as the seeded "MINUTES".
+  { id: 'p-bad', name: 'Seeded', bufferType: 'MINUTES' as TravelBufferPolicyResponseBufferTypeEnum, bufferValue: 10 },
 ];
 
 const session: { permissions: string[] | null } = { permissions: null };
@@ -63,13 +66,13 @@ describe('TravelBufferPoliciesPageComponent', () => {
     await setUp();
     expect(text()).toContain("Travel buffers are recorded on mobile units. Scheduling doesn't use them yet.");
     expect(el().querySelector('#policy-p-std')!.textContent).toContain('15 minutes flat');
-    expect(el().querySelector('#policy-p-pct')!.textContent).toContain('20% of travel time');
+    expect(el().querySelector('#policy-p-tier')!.textContent).toContain('20 (distance tier)');
     expect(el().querySelector('#policy-p-bad')!.textContent).toContain('Type needs fixing');
   });
 
   it('shows a policy with no value as no buffer, never as zero', async () => {
     locationServiceStub.listTravelBufferPolicies.mockReturnValue(
-      of({ policies: [{ id: 'p-none', name: 'None', bufferType: 'FLAT_MINUTES' }], ok: true }),
+      of({ policies: [{ id: 'p-none', name: 'None', bufferType: TravelBufferPolicyResponseBufferTypeEnum.FixedMinutes }], ok: true }),
     );
     await setUp();
     const row = el().querySelector('#policy-p-none')!.textContent ?? '';
@@ -100,17 +103,17 @@ describe('TravelBufferPoliciesPageComponent', () => {
 
     it('creates a policy, showing the unit for the chosen type', () => {
       locationServiceStub.createTravelBufferPolicy.mockReturnValueOnce(
-        of({ id: 'p-new', name: 'Long haul', bufferType: 'DISTANCE_MULTIPLIER', bufferValue: 1.5 }),
+        of({ id: 'p-new', name: 'Long haul', bufferType: TravelBufferPolicyResponseBufferTypeEnum.DistanceTier, bufferValue: 1.5 }),
       );
       component.openCreate();
       component.patchDraft({ name: ' Long haul ', bufferValue: '1.5' });
-      component.setType('DISTANCE_MULTIPLIER');
+      component.setType('DISTANCE_TIER');
       render();
-      expect(el().querySelector('.suffix')?.textContent).toBe('× distance');
+      expect(el().querySelector('.suffix')?.textContent).toBe('(distance tier)');
       component.submit();
       expect(locationServiceStub.createTravelBufferPolicy).toHaveBeenCalledWith({
         name: 'Long haul',
-        bufferType: 'DISTANCE_MULTIPLIER',
+        bufferType: 'DISTANCE_TIER',
         bufferValue: 1.5,
       });
       expect(component.rows().map(row => row.name)).toContain('Long haul');
@@ -138,15 +141,17 @@ describe('TravelBufferPoliciesPageComponent', () => {
     });
 
     it('makes a seeded policy with an invalid type choose a valid one', () => {
-      locationServiceStub.patchTravelBufferPolicy.mockReturnValueOnce(of({ ...POLICIES[2], bufferType: 'FLAT_MINUTES' }));
+      locationServiceStub.patchTravelBufferPolicy.mockReturnValueOnce(
+        of({ ...POLICIES[2], bufferType: TravelBufferPolicyResponseBufferTypeEnum.FixedMinutes }),
+      );
       component.openEdit(POLICIES[2]);
       component.submit();
       expect(component.typeErrorKey()).toBe('LOCATION.TRAVEL_BUFFERS.ERROR.TYPE_REQUIRED');
       expect(locationServiceStub.patchTravelBufferPolicy).not.toHaveBeenCalled();
 
-      component.setType('FLAT_MINUTES');
+      component.setType('FIXED_MINUTES');
       component.submit();
-      expect(locationServiceStub.patchTravelBufferPolicy).toHaveBeenCalledWith('p-bad', { bufferType: 'FLAT_MINUTES' });
+      expect(locationServiceStub.patchTravelBufferPolicy).toHaveBeenCalledWith('p-bad', { bufferType: 'FIXED_MINUTES' });
     });
 
     it('puts a duplicate name error under Name', () => {

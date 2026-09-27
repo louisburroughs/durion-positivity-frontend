@@ -12,7 +12,11 @@ import type {
   ServiceAreaResponse,
   TravelBufferPolicyResponse,
 } from '@durion-sdk/location';
-import { CoverageRuleResponseRuleTypeEnum, MobileUnitResponseStatusEnum } from '@durion-sdk/location';
+import {
+  CoverageRuleResponseRuleTypeEnum,
+  MobileUnitResponseStatusEnum,
+  TravelBufferPolicyResponseBufferTypeEnum,
+} from '@durion-sdk/location';
 import enUS from '../../../../../assets/i18n/en-US.json';
 import { AuthService } from '../../../../core/services/auth.service';
 import { LOCATION_PAGE } from '../../../../core/security/route-permissions';
@@ -34,7 +38,7 @@ const unit = (overrides: Partial<MobileUnitResponse> = {}): MobileUnitResponse =
   id: 'mu-1',
   name: 'Van 1',
   baseLocationId: 'loc-1',
-  status: MobileUnitResponseStatusEnum.Inactive,
+  status: MobileUnitResponseStatusEnum.OutOfService,
   travelBufferPolicyId: 'p-std',
   serviceCapabilityCodes: [TPMS],
   ...overrides,
@@ -58,8 +62,8 @@ const AREAS: ServiceAreaResponse[] = [
   { id: 'area-e', name: 'Eastside', active: false, postalCodes: [{ postalCode: '78721', countryCode: 'US' }] },
 ];
 const POLICIES: TravelBufferPolicyResponse[] = [
-  { id: 'p-std', name: 'Standard', bufferType: 'FLAT_MINUTES', bufferValue: 15 },
-  { id: 'p-bad', name: 'Seeded', bufferType: 'MINUTES', bufferValue: 10 },
+  { id: 'p-std', name: 'Standard', bufferType: TravelBufferPolicyResponseBufferTypeEnum.FixedMinutes, bufferValue: 15 },
+  { id: 'p-bad', name: 'Seeded', bufferType: 'MINUTES' as TravelBufferPolicyResponseBufferTypeEnum, bufferValue: 10 },
 ];
 
 const VAN_9 = unit({ id: 'mu-9', name: 'Van 9', status: MobileUnitResponseStatusEnum.Active });
@@ -335,7 +339,7 @@ describe('MobileUnitsPageComponent', () => {
   describe('create and edit', () => {
     beforeEach(async () => setUp());
 
-    it('creates an inactive unit at the base location, then offers to add coverage', () => {
+    it('creates a unit with no status, letting pos-location default it to out of service, then offers to add coverage', () => {
       const saved = unit({ id: 'mu-12', name: 'Van 12' });
       locationServiceStub.createMobileUnit.mockReturnValueOnce(of(saved));
       component.openCreate();
@@ -346,13 +350,14 @@ describe('MobileUnitsPageComponent', () => {
       component.submit();
       render();
 
+      // No status field: pos-location defaults an omitted status to OUT_OF_SERVICE, reason OTHER
+      // (DECISION-LOCATION-026), matching the prior explicit INACTIVE start.
       expect(locationServiceStub.createMobileUnit).toHaveBeenCalledWith({
         name: 'Van 12',
         notes: 'Parks at the north lot',
         serviceCapabilityCodes: [TPMS],
         travelBufferPolicyId: 'p-std',
         baseLocationId: 'loc-1',
-        status: 'INACTIVE',
       });
       expect(text()).toContain('Add coverage for Van 12 now?');
       component.addCoverageForCreated();
@@ -412,7 +417,7 @@ describe('MobileUnitsPageComponent', () => {
     it("won't set an incomplete unit active, and keeps an active unit's last capability", () => {
       component.openEdit(VAN_7);
       component.setStatus('ACTIVE');
-      expect(component.draft().status).toBe('INACTIVE');
+      expect(component.draft().status).toBe('OUT_OF_SERVICE');
       component.closeDialog();
 
       component.openEdit(VAN_9);

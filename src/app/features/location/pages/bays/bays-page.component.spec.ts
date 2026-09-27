@@ -15,16 +15,17 @@ import { BaysPageComponent } from './bays-page.component';
 const ALIGN = 'WHEEL-ALIGNMENT-4-WHEEL';
 const TIRE_CODES = BAY_TYPE_DEFAULT_CODES.TIRE_SERVICE;
 
-const bay = (overrides: Partial<BayResponse> = {}): BayResponse => ({
-  id: 'bay-1',
-  locationId: 'loc-1',
-  name: 'Bay 1',
-  bayType: 'GENERAL_SERVICE',
-  status: 'ACTIVE',
-  maxConcurrentVehicles: 1,
-  serviceCapabilityCodes: [],
-  ...overrides,
-});
+const bay = (overrides: Partial<Omit<BayResponse, 'status'>> & { status?: string } = {}): BayResponse =>
+  ({
+    id: 'bay-1',
+    locationId: 'loc-1',
+    name: 'Bay 1',
+    bayType: 'GENERAL_SERVICE',
+    status: 'ACTIVE',
+    maxConcurrentVehicles: 1,
+    serviceCapabilityCodes: [],
+    ...overrides,
+  }) as BayResponse;
 
 const RIVERSIDE: BayResponse[] = [
   bay({ id: 'b10', name: 'Bay 10' }),

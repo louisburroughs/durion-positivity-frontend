@@ -101,7 +101,7 @@ export function parseBufferValue(text: string): number | null | undefined {
 export function policyDraft(policy: TravelBufferPolicyResponse | null): TravelBufferPolicyDraft {
   return {
     name: policy?.name ?? '',
-    bufferType: policy && isTravelBufferType(policy.bufferType) ? policy.bufferType : policy ? '' : 'FLAT_MINUTES',
+    bufferType: policy && isTravelBufferType(policy.bufferType) ? policy.bufferType : policy ? '' : 'FIXED_MINUTES',
     bufferValue: policy?.bufferValue == null ? '' : String(policy.bufferValue),
     notes: policy?.notes ?? '',
   };

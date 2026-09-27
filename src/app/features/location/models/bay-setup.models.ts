@@ -11,9 +11,28 @@ export const BAY_TYPES = [
 ] as const;
 export type BayType = (typeof BAY_TYPES)[number];
 
-/** Bay statuses pos-location accepts (`BayServiceImpl.ALLOWED_STATUSES`). */
+/** Bay statuses pos-location accepts (`BayServiceImpl.ALLOWED_STATUSES`). RETIRED is reached only via delete. */
 export const BAY_STATUSES = ['ACTIVE', 'OUT_OF_SERVICE'] as const;
 export type BayStatus = (typeof BAY_STATUSES)[number];
+
+/**
+ * Reasons pos-location accepts for `outOfServiceReason` on a bay or mobile unit
+ * (DECISION-LOCATION-026); required whenever the resulting status is OUT_OF_SERVICE, and
+ * `outOfServiceNote` is additionally required when the reason is OTHER.
+ */
+export const OUT_OF_SERVICE_REASONS = [
+  'EQUIPMENT_FAILURE',
+  'SCHEDULED_MAINTENANCE',
+  'INSPECTION',
+  'SAFETY_HOLD',
+  'FACILITY_ISSUE',
+  'OTHER',
+] as const;
+export type OutOfServiceReason = (typeof OUT_OF_SERVICE_REASONS)[number];
+
+export function isOutOfServiceReason(value: string | null | undefined): value is OutOfServiceReason {
+  return (OUT_OF_SERVICE_REASONS as readonly string[]).includes(value ?? '');
+}
 
 /** GVWR duty classes a bay can cap at (CAP-325 D13). */
 export const DUTY_CLASSES = [1, 2, 3, 4, 5, 6, 7, 8] as const;
@@ -60,6 +79,10 @@ export interface BayDraft {
   name: string;
   bayType: BayType;
   status: BayStatus;
+  /** Required when `status` is OUT_OF_SERVICE (DECISION-LOCATION-026). */
+  outOfServiceReason: OutOfServiceReason | '';
+  /** Required in addition to the reason when it is OTHER. */
+  outOfServiceNote: string;
   maxConcurrentVehicles: number;
   /** Null means no limit. */
   maxDutyClass: number | null;
@@ -159,6 +182,8 @@ export function newBayDraft(bayType: BayType = 'GENERAL_SERVICE'): BayDraft {
     name: '',
     bayType,
     status: 'ACTIVE',
+    outOfServiceReason: '',
+    outOfServiceNote: '',
     maxConcurrentVehicles: 1,
     maxDutyClass: null,
     serviceCapabilityCodes: [...BAY_TYPE_DEFAULT_CODES[bayType]],
@@ -171,6 +196,8 @@ export function draftFromBay(bay: BayResponse): BayDraft {
     name: bay.name,
     bayType: isBayType(bay.bayType) ? bay.bayType : 'GENERAL_SERVICE',
     status: isOutOfService(bay) ? 'OUT_OF_SERVICE' : 'ACTIVE',
+    outOfServiceReason: isOutOfServiceReason(bay.outOfServiceReason) ? bay.outOfServiceReason : '',
+    outOfServiceNote: bay.outOfServiceNote ?? '',
     maxConcurrentVehicles: bay.maxConcurrentVehicles ?? 1,
     maxDutyClass: bay.maxDutyClass ?? null,
     serviceCapabilityCodes: [...specialtyCodes(bay)],

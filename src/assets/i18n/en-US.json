@@ -1996,6 +1996,17 @@
         "ACTIVE": "Active",
         "OUT_OF_SERVICE": "Out of service"
       },
+      "OUT_OF_SERVICE_REASON": {
+        "CHOOSE": "Choose a reason"
+      },
+      "REASON": {
+        "EQUIPMENT_FAILURE": "Equipment failure",
+        "SCHEDULED_MAINTENANCE": "Scheduled maintenance",
+        "INSPECTION": "Inspection",
+        "SAFETY_HOLD": "Safety hold",
+        "FACILITY_ISSUE": "Facility issue",
+        "OTHER": "Other"
+      },
       "CAN_BE_ASSIGNED": {
         "GENERAL": "Can be assigned any general service, offered before specialty bays.",
         "SPECIALTY_ONE": "Can be assigned 1 specialty service, plus general services.",
@@ -2028,6 +2039,8 @@
         "VEHICLES": "Vehicles at once",
         "DUTY": "Max duty class",
         "STATUS": "Status",
+        "OUT_OF_SERVICE_REASON": "Reason",
+        "OUT_OF_SERVICE_NOTE": "Note",
         "SPECIALTY": "Specialty services"
       },
       "HINT": {
@@ -2036,6 +2049,8 @@
         "TYPE_EDIT": "The kind of work this bay is set up for. Changing it replaces the specialty services with the new type's usual ones, unless you keep the current ones.",
         "TYPE_WASH": "Wash & detail bays take only the services you add here, never general services.",
         "STATUS": "Out of service stops new workorders coming to this bay; any already on it stay. While it's out, its specialty services open up to other bays.",
+        "OUT_OF_SERVICE_REASON": "Why the bay is out of service.",
+        "OUT_OF_SERVICE_NOTE": "A short note. Required when the reason is Other.",
         "VEHICLES": "How many vehicles physically fit. The bay still takes one open workorder at a time, so add a separate bay for each stall you book separately.",
         "DUTY": "The heaviest vehicle this bay takes: classes 1–3 light, 4–6 medium, 7–8 heavy. Choose No limit if any vehicle fits. Vehicles with no class on record aren't checked.",
         "DUTY_LOCKED": "A limit that has been set can't be removed yet, only changed to another class.",
@@ -2085,7 +2100,9 @@
         "NOT_ALLOWED": "You can't change bays at this location.",
         "GONE": "This bay no longer exists. Close the dialog to see the current bays.",
         "INVALID_SERVICES": "One of the specialty services isn't an active catalog service. Remove it and try again.",
-        "SAVE_FAILED": "Couldn't save the bay. Try again."
+        "SAVE_FAILED": "Couldn't save the bay. Try again.",
+        "REASON_REQUIRED": "Choose a reason the bay is out of service.",
+        "NOTE_REQUIRED": "Enter a short note for \"Other\"."
       },
       "REMOVE_FROM": "Remove {{service}} from {{bay}}",
       "ADD_SERVICE": "Add service",
@@ -2194,7 +2211,19 @@
       },
       "STATUS": {
         "ACTIVE": "Active",
-        "INACTIVE": "Inactive"
+        "INACTIVE": "Inactive",
+        "OUT_OF_SERVICE": "Out of service"
+      },
+      "OUT_OF_SERVICE_REASON": {
+        "CHOOSE": "Choose a reason"
+      },
+      "REASON": {
+        "EQUIPMENT_FAILURE": "Equipment failure",
+        "SCHEDULED_MAINTENANCE": "Scheduled maintenance",
+        "INSPECTION": "Inspection",
+        "SAFETY_HOLD": "Safety hold",
+        "FACILITY_ISSUE": "Facility issue",
+        "OTHER": "Other"
       },
       "CARD": {
         "OVERLINE": "Mobile unit",
@@ -2255,9 +2284,8 @@
         "READ_FAILED": "The policy list couldn't be loaded."
       },
       "BUFFER": {
-        "FLAT_MINUTES": "{{value}} minutes flat",
-        "PERCENTAGE_OF_TRAVEL": "{{value}}% of travel time",
-        "DISTANCE_MULTIPLIER": "{{value}} × distance",
+        "FIXED_MINUTES": "{{value}} minutes flat",
+        "DISTANCE_TIER": "{{value}} (distance tier)",
         "NEEDS_FIXING": "type needs fixing",
         "NO_VALUE": "no buffer"
       },
@@ -2266,7 +2294,9 @@
         "POLICY": "Travel buffer policy",
         "CAPABILITIES": "Capabilities",
         "NOTES": "Notes",
-        "STATUS": "Status"
+        "STATUS": "Status",
+        "OUT_OF_SERVICE_REASON": "Reason",
+        "OUT_OF_SERVICE_NOTE": "Note"
       },
       "HINT": {
         "NAME": "What dispatchers call this unit, e.g. \"Van 7\". No other unit based at this shop can have the same name.",
@@ -2277,6 +2307,8 @@
         "NOTES": "Anything dispatchers should know about this unit, e.g. where it parks overnight.",
         "STATUS": "Only active units can be assigned workorders.",
         "STATUS_INCOMPLETE": "To activate, a unit needs a travel buffer policy, at least one capability and at least one coverage rule.",
+        "OUT_OF_SERVICE_REASON": "Why the unit is out of service.",
+        "OUT_OF_SERVICE_NOTE": "A short note. Required when the reason is Other.",
         "PRIORITY": "Priority: lower numbers are offered first, compared across every unit here that covers the same postal code.",
         "DATES": "Valid from and to: the dates the rule applies. Leave Valid to blank for no end date.",
         "RULE_TYPE": "Rule type is recorded for later. Matching uses the service area only.",
@@ -2288,7 +2320,7 @@
         "EDIT_TITLE": "Edit {{unit}}",
         "CREATE": "Create unit",
         "SAVE": "Save",
-        "STARTS_INACTIVE": "New units start inactive. Add coverage next, then activate from the card.",
+        "STARTS_INACTIVE": "New units start out of service. Add coverage next, then activate from the card.",
         "CREATED_TITLE": "{{unit}} created",
         "CREATED_BODY": "Add coverage for {{unit}} now? A unit needs a coverage rule before it can be activated.",
         "LATER": "Later",
@@ -2352,7 +2384,9 @@
         "GONE": "This unit no longer exists. Close the dialog to see the current units.",
         "CONFLICT": "Someone else changed this unit at the same time. Close the dialog and try again.",
         "UNPROCESSABLE": "The unit couldn't be saved: a capability isn't an active catalog service, or the unit isn't ready to be active.",
-        "SAVE_FAILED": "Couldn't save. Try again."
+        "SAVE_FAILED": "Couldn't save. Try again.",
+        "REASON_REQUIRED": "Choose a reason the unit is out of service.",
+        "NOTE_REQUIRED": "Enter a short note for \"Other\"."
       },
       "CAPABILITY_LIST": "Capabilities of {{unit}}",
       "REMOVE_FROM": "Remove {{service}} from {{unit}}",
@@ -2724,14 +2758,12 @@
       "SAVING": "Saving",
       "CHOOSE_TYPE": "Choose a buffer type",
       "TYPE": {
-        "FLAT_MINUTES": "Flat minutes",
-        "PERCENTAGE_OF_TRAVEL": "Percentage of travel time",
-        "DISTANCE_MULTIPLIER": "Distance multiplier"
+        "FIXED_MINUTES": "Fixed minutes",
+        "DISTANCE_TIER": "Distance tier"
       },
       "SUFFIX": {
-        "FLAT_MINUTES": "minutes",
-        "PERCENTAGE_OF_TRAVEL": "%",
-        "DISTANCE_MULTIPLIER": "× distance"
+        "FIXED_MINUTES": "minutes",
+        "DISTANCE_TIER": "(distance tier)"
       },
       "FIELD": {
         "NAME": "Name",
@@ -2742,7 +2774,7 @@
       "HINT": {
         "NAME": "Can't be changed after the policy is created.",
         "TYPE": "How the extra time is worked out.",
-        "VALUE": "Minutes for flat, a percentage for travel time, a multiplier for distance. Leave blank for none."
+        "VALUE": "Minutes for a fixed buffer; recorded, but not yet used, for a distance tier. Leave blank for none."
       },
       "DIALOG": {
         "CREATE_TITLE": "New travel buffer policy",

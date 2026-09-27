@@ -26,7 +26,7 @@ import {
   VendorProfileViewRetryBackoffEnum,
   VendorProfileViewSourceOfTruthEnum,
 } from '@durion-sdk/supplier';
-import { LocationAPIService, LocationResponseDTO } from '@durion-sdk/location';
+import { LocationAPIService, LocationResponseDTO, LocationResponseDTODistanceUnitEnum } from '@durion-sdk/location';
 import { SupplierProfileService } from './supplier-profile.service';
 import {
   SupplierAccounts,
@@ -97,6 +97,7 @@ const activeLocation: LocationResponseDTO = {
   activeBayCount: 2,
   activeMobileUnitCount: 0,
   hasRepairCapability: true,
+  distanceUnit: LocationResponseDTODistanceUnitEnum.Km,
 };
 const secondActiveLocation: LocationResponseDTO = {
   id: LOCATION_B,
@@ -105,6 +106,7 @@ const secondActiveLocation: LocationResponseDTO = {
   activeBayCount: 1,
   activeMobileUnitCount: 1,
   hasRepairCapability: true,
+  distanceUnit: LocationResponseDTODistanceUnitEnum.Km,
 };
 const inactiveLocation: LocationResponseDTO = {
   id: 'loc-dead',
@@ -113,6 +115,7 @@ const inactiveLocation: LocationResponseDTO = {
   activeBayCount: 0,
   activeMobileUnitCount: 0,
   hasRepairCapability: false,
+  distanceUnit: LocationResponseDTODistanceUnitEnum.Km,
 };
 
 const profileRequest: VendorProfileRequest = {

@@ -23,7 +23,6 @@ import type {
   ServiceAreaResponse,
   TravelBufferPolicyResponse,
 } from '@durion-sdk/location';
-import { MobileUnitRequestStatusEnum } from '@durion-sdk/location';
 import { AuthService } from '../../../../core/services/auth.service';
 import { LOCATION_PAGE } from '../../../../core/security/route-permissions';
 import { isoDateLocal, parseIsoDateLocal } from '../../../../core/utils/local-date';
@@ -32,7 +31,13 @@ import { ModalDialogDirective } from '../../../../shared/modal-dialog.directive'
 import { RailCaption, ServiceRailComponent } from '../../components/service-rail/service-rail.component';
 import { ServiceSearchComponent } from '../../components/service-search/service-search.component';
 import { ClaimableService, LocationService } from '../../services/location.service';
-import { isTestRecord, naturalCompare, operationCodeLabel } from '../../models/bay-setup.models';
+import {
+  OUT_OF_SERVICE_REASONS,
+  OutOfServiceReason,
+  isTestRecord,
+  naturalCompare,
+  operationCodeLabel,
+} from '../../models/bay-setup.models';
 import {
   ActivationChecklist,
   COVERAGE_RULE_TYPES,
@@ -43,7 +48,6 @@ import {
   MOBILE_UNIT_STATUSES,
   MobileUnitDraft,
   MobileUnitPatch,
-  MobileUnitStatus,
   UNIT_GROUPS,
   UnitGroup,
   activationChecklist,
@@ -162,6 +166,7 @@ export class MobileUnitsPageComponent {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   readonly statuses = MOBILE_UNIT_STATUSES;
+  readonly outOfServiceReasons = OUT_OF_SERVICE_REASONS;
   readonly ruleTypes = COVERAGE_RULE_TYPES;
   /** The one clock read behind "today"; a method so a spec can pin it (ADR-0038 §7). */
   now(): Date {
@@ -244,6 +249,7 @@ export class MobileUnitsPageComponent {
   readonly createdUnit = signal<MobileUnitResponse | null>(null);
   readonly saving = signal(false);
   readonly nameErrorKey = signal<string | null>(null);
+  readonly reasonErrorKey = signal<string | null>(null);
   readonly saveErrorKey = signal<string | null>(null);
   readonly draftChips = computed(() =>
     this.draft().serviceCapabilityCodes.map(code => ({ code, label: this.serviceLabel(code) })),
@@ -504,6 +510,7 @@ export class MobileUnitsPageComponent {
   private resetDialog(): void {
     this.createdUnit.set(null);
     this.nameErrorKey.set(null);
+    this.reasonErrorKey.set(null);
     this.saveErrorKey.set(null);
   }
 
@@ -524,7 +531,24 @@ export class MobileUnitsPageComponent {
   setStatus(value: string): void {
     const status = MOBILE_UNIT_STATUSES.find(s => s === value);
     if (!status || (status === 'ACTIVE' && !this.draftCanBeActive())) return;
+    this.reasonErrorKey.set(null);
     this.draft.update(draft => ({ ...draft, status }));
+  }
+
+  setOutOfServiceReason(value: string): void {
+    const reason = OUT_OF_SERVICE_REASONS.find(r => r === value);
+    if (!reason) return;
+    this.reasonErrorKey.set(null);
+    this.draft.update(draft => ({ ...draft, outOfServiceReason: reason }));
+  }
+
+  setOutOfServiceNote(note: string): void {
+    this.reasonErrorKey.set(null);
+    this.draft.update(draft => ({ ...draft, outOfServiceNote: note }));
+  }
+
+  outOfServiceReasonKey(reason: OutOfServiceReason): string {
+    return `${I18N}.REASON.${reason}`;
   }
 
   addCapability(service: ClaimableService): void {
@@ -569,6 +593,16 @@ export class MobileUnitsPageComponent {
       this.saveErrorKey.set('LOCATION.MOBILE_UNITS.ERROR.ACTIVE_INCOMPLETE');
       return;
     }
+    if (mode === 'edit' && draft.status === 'OUT_OF_SERVICE' && !draft.outOfServiceReason) {
+      this.reasonErrorKey.set('LOCATION.MOBILE_UNITS.ERROR.REASON_REQUIRED');
+      this.focus('dialog #unit-reason');
+      return;
+    }
+    if (mode === 'edit' && draft.status === 'OUT_OF_SERVICE' && draft.outOfServiceReason === 'OTHER' && !draft.outOfServiceNote.trim()) {
+      this.reasonErrorKey.set('LOCATION.MOBILE_UNITS.ERROR.NOTE_REQUIRED');
+      this.focus('dialog #unit-reason-note');
+      return;
+    }
     const editing = this.editingUnit();
     const fields = {
       name,
@@ -578,8 +612,10 @@ export class MobileUnitsPageComponent {
     };
     const save$ =
       mode === 'edit' && editing
-        ? this.locationService.patchMobileUnit(editing.id, this.toPatch(fields, draft.status, editing))
-        : this.locationService.createMobileUnit({ ...fields, baseLocationId: locationId, status: MobileUnitRequestStatusEnum.Inactive });
+        ? this.locationService.patchMobileUnit(editing.id, this.toPatch(fields, draft, editing))
+        // A create never shows the status field: pos-location defaults an omitted status to
+        // OUT_OF_SERVICE with reason OTHER (DECISION-LOCATION-026), matching the prior INACTIVE start.
+        : this.locationService.createMobileUnit({ ...fields, baseLocationId: locationId });
 
     this.saving.set(true);
     this.saveErrorKey.set(null);
@@ -619,11 +655,13 @@ export class MobileUnitsPageComponent {
 
   /**
    * An edit sends only what changed. PATCH re-checks every capability code it is sent against the
-   * catalog, so resending an unchanged list could refuse an unrelated rename.
+   * catalog, so resending an unchanged list could refuse an unrelated rename. Going OUT_OF_SERVICE
+   * always resends the reason (and note): the value may be unchanged, but pos-location requires it
+   * on the same request that carries the status (DECISION-LOCATION-026).
    */
   private toPatch(
     fields: { name: string; notes: string; serviceCapabilityCodes: string[]; travelBufferPolicyId?: string },
-    status: MobileUnitStatus,
+    draft: MobileUnitDraft,
     unit: MobileUnitResponse,
   ): MobileUnitPatch {
     const patch: MobileUnitPatch = {};
@@ -637,7 +675,12 @@ export class MobileUnitsPageComponent {
     if (before.length !== after.length || before.some(code => !after.includes(code))) {
       patch.serviceCapabilityCodes = after;
     }
-    if (status !== (isActiveUnit(unit) ? 'ACTIVE' : 'INACTIVE')) patch.status = status;
+    const status = draft.status;
+    if (status !== (isActiveUnit(unit) ? 'ACTIVE' : 'OUT_OF_SERVICE')) patch.status = status;
+    if (status === 'OUT_OF_SERVICE' && draft.outOfServiceReason) {
+      patch.outOfServiceReason = draft.outOfServiceReason;
+      if (draft.outOfServiceNote.trim()) patch.outOfServiceNote = draft.outOfServiceNote.trim();
+    }
     return patch;
   }
 

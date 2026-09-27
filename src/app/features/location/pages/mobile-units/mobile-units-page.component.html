@@ -485,6 +485,35 @@
               }
             </p>
           </fieldset>
+          @if (draft().status === 'OUT_OF_SERVICE') {
+            <div class="field">
+              <label for="unit-reason">{{ 'LOCATION.MOBILE_UNITS.FIELD.OUT_OF_SERVICE_REASON' | translate }} <span aria-hidden="true">*</span></label>
+              <select id="unit-reason" required aria-describedby="unit-reason-hint"
+                [attr.aria-invalid]="reasonErrorKey() ? true : null"
+                (change)="setOutOfServiceReason($any($event.target).value)">
+                <option value="" [selected]="!draft().outOfServiceReason">{{ 'LOCATION.MOBILE_UNITS.OUT_OF_SERVICE_REASON.CHOOSE' | translate }}</option>
+                @for (reason of outOfServiceReasons; track reason) {
+                  <option [value]="reason" [selected]="draft().outOfServiceReason === reason">{{ outOfServiceReasonKey(reason) | translate }}</option>
+                }
+              </select>
+              <p id="unit-reason-hint" class="hint">{{ 'LOCATION.MOBILE_UNITS.HINT.OUT_OF_SERVICE_REASON' | translate }}</p>
+            </div>
+            <div class="field">
+              <label for="unit-reason-note">
+                {{ 'LOCATION.MOBILE_UNITS.FIELD.OUT_OF_SERVICE_NOTE' | translate }}
+                @if (draft().outOfServiceReason === 'OTHER') {
+                  <span aria-hidden="true">*</span>
+                }
+              </label>
+              <textarea id="unit-reason-note" rows="2" aria-describedby="unit-reason-note-hint"
+                [attr.aria-invalid]="reasonErrorKey() ? true : null"
+                [value]="draft().outOfServiceNote" (input)="setOutOfServiceNote($any($event.target).value)"></textarea>
+              <p id="unit-reason-note-hint" class="hint">{{ 'LOCATION.MOBILE_UNITS.HINT.OUT_OF_SERVICE_NOTE' | translate }}</p>
+            </div>
+            @if (reasonErrorKey(); as reasonError) {
+              <p class="field-error" role="alert">{{ reasonError | translate }}</p>
+            }
+          }
         }
 
         @if (saveErrorKey(); as saveError) {
