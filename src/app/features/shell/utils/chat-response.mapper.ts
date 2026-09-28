@@ -95,13 +95,26 @@ export function parseAnswerText(raw: string): readonly ChatBlock[] {
     blocks.push({
       kind: 'code',
       language: language.length > 0 ? language : null,
-      code: fence[2].replace(/\n+$/, ''),
+      code: trimTrailingNewlines(fence[2]),
     });
 
     rest = rest.slice(fence.index + fence[0].length);
   }
 
   return blocks;
+}
+
+/**
+ * Strips trailing `\n` with a manual scan rather than `/\n+$/`: an unbounded
+ * quantifier abutting an anchor forces the regex engine to retry every
+ * starting position inside a long, non-terminal run of newlines — a code
+ * fence's body can legitimately contain one — an O(n^2) shape flagged by
+ * typescript:S8786. The loop below is O(n) with no backtracking.
+ */
+function trimTrailingNewlines(value: string): string {
+  let end = value.length;
+  while (end > 0 && value[end - 1] === '\n') end -= 1;
+  return value.slice(0, end);
 }
 
 /** Pull GFM tables out of a markdown run, leaving the prose as markdown blocks. */

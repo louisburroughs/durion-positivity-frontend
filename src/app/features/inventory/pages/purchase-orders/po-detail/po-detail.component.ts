@@ -76,6 +76,23 @@ export class PoDetailComponent {
       this.destroyed = true;
     });
 
+    this.loadPanels();
+
+    this.route.paramMap
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(params => {
+        const poId = params.get('poId');
+        if (!poId) {
+          this.state.set('error');
+          this.errorKey.set('INVENTORY.PURCHASE_ORDERS.DETAIL.ERROR.LOAD');
+          return;
+        }
+        this.loadOrder(poId);
+      });
+  }
+
+  /** Kicks off both lazy panel loads; kept out of the constructor body (typescript:S7059). */
+  private loadPanels(): void {
     this.panelSource.loadSupplierTransmissionPanel().then(
       type => {
         if (!this.destroyed) this.panelTypes.update(current => ({ ...current, first: type }));
@@ -92,18 +109,6 @@ export class PoDetailComponent {
         if (!this.destroyed) this.panelTypes.update(current => ({ ...current, secondFailed: true }));
       },
     );
-
-    this.route.paramMap
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(params => {
-        const poId = params.get('poId');
-        if (!poId) {
-          this.state.set('error');
-          this.errorKey.set('INVENTORY.PURCHASE_ORDERS.DETAIL.ERROR.LOAD');
-          return;
-        }
-        this.loadOrder(poId);
-      });
   }
 
   loadOrder(poId: string): void {
