@@ -58,22 +58,35 @@ const RULE_RE = /^(?:-{3,}|\*{3,}|_{3,})$/;
  * Emphasis with `_` requires a non-word character either side, so an identifier
  * such as `order_line_id` keeps its underscores instead of turning into emphasis.
  *
- * The code span opener is `(\x60{1,3})` rather than an unbounded `(\x60+)`:
+ * The code span opener is `(\x60{1,20})` rather than an unbounded `(\x60+)`:
  * a variable-length delimiter captured by an unbounded quantifier and
  * re-matched later via `\1` is the classic ReDoS shape (typescript:S8786) —
  * on a run of backticks with no matching close, the engine retries every
  * shorter delimiter length at every position in the run, which is
  * quadratic in the run length. Capping the quantifier bounds that retry to
  * a constant (verified with a 2M-backtick adversarial input — linear, no
- * measurable backtracking cost) while still covering every fence width
- * this renderer's markdown subset actually uses (1–3 backticks); an
- * earlier `(?=(\x60+))\1` lookahead/backreference "atomic" rewrite looked
- * safe but was proven, by the same benchmark, to stay quadratic — a global
- * regex still re-evaluates the lookahead's own `+` from every position in
- * an unclosed run, so atomicity alone doesn't bound that cost.
+ * measurable backtracking cost, all the way up to the cap). An earlier
+ * `(?=(\x60+))\1` lookahead/backreference "atomic" rewrite looked safe but
+ * was proven, by the same benchmark, to stay quadratic — a global regex
+ * still re-evaluates the lookahead's own `+` from every position in an
+ * unclosed run, so atomicity alone doesn't bound that cost.
+ *
+ * 20 is a generous, not a tight, cap: real inline code never needs more
+ * than 2 backticks (one more than the longest literal backtick run the
+ * content itself contains), so this covers every fence width realistic
+ * input — including anything odd the MCP server might emit — could use,
+ * confirmed byte-identical to the unbounded original on delimiters up to
+ * and including that width. It stops short of true unbounded-length
+ * support (which the widest realistic input never needs) because doing
+ * that safely means resolving code spans in their own linear pass before
+ * the rest of inline parsing runs, so a `**`/`_` delimiter that opens
+ * before a code span can still find its close after one; retrofitting
+ * that here risked the opposite regression — breaking a delimiter that
+ * spans across a code span — for a width this parser's real input never
+ * approaches.
  */
 const INLINE_RE =
-  /(\x60{1,3})([^\x60]+?)\1|!\[([^\]]*)\]\(([^)\s]*)\)|\[([^\]]*)\]\(([^)\s]*)\)|\*\*([\s\S]+?)\*\*|(?<![A-Za-z0-9])__([\s\S]+?)__(?![A-Za-z0-9])|\*([^*\n]+?)\*|(?<![A-Za-z0-9])_([^_\n]+?)_(?![A-Za-z0-9])/g;
+  /(\x60{1,20})([^\x60]+?)\1|!\[([^\]]*)\]\(([^)\s]*)\)|\[([^\]]*)\]\(([^)\s]*)\)|\*\*([\s\S]+?)\*\*|(?<![A-Za-z0-9])__([\s\S]+?)__(?![A-Za-z0-9])|\*([^*\n]+?)\*|(?<![A-Za-z0-9])_([^_\n]+?)_(?![A-Za-z0-9])/g;
 
 /**
  * Schemes something the browser FETCHES may carry — an image source, a file
