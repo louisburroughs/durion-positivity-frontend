@@ -460,7 +460,7 @@ export class ProductCatalogService {
       name: '',
       conditionDimension: dto.conditionType ?? '',
       conditionValue: dto.conditionValue ?? '',
-      adjustment: parseFloat(dto.pricingLogic ?? '0'),
+      adjustment: Number.parseFloat(dto.pricingLogic ?? '0'),
       adjustmentType: 'FIXED',
       priority: dto.priority ?? 0,
       effectiveAt: dto.effectiveStartAt ?? '',
@@ -473,7 +473,7 @@ export class ProductCatalogService {
     return {
       id: dto.msrpId ?? '',
       productSku: dto.productId ?? '',
-      amount: parseFloat(dto.amount ?? '0'),
+      amount: Number.parseFloat(dto.amount ?? '0'),
       currency: dto.currency ?? '',
       effectiveAt: dto.effectiveStartDate ?? '',
       endAt: dto.effectiveEndDate ?? null,

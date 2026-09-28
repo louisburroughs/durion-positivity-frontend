@@ -67,7 +67,7 @@ export class CreateVehicleComponent implements OnInit {
     const raw = this.form.getRawValue();
     this.crm.createVehicleForParty(this.partyId, {
       vin:        raw.vin,
-      year:       raw.year ? parseInt(raw.year, 10) : undefined,
+      year:       raw.year ? Number.parseInt(raw.year, 10) : undefined,
       make:       raw.make || undefined,
       model:      raw.model || undefined,
       unitNumber: raw.unitNumber || undefined,

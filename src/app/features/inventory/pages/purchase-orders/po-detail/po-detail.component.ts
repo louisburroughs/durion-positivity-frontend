@@ -1,5 +1,5 @@
 
-import { Component, DestroyRef, Type, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, Type, inject, signal } from '@angular/core';
 import { NgComponentOutlet } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -44,7 +44,7 @@ interface HostedPanelTypes {
   templateUrl: './po-detail.component.html',
   styleUrl: './po-detail.component.css',
 })
-export class PoDetailComponent {
+export class PoDetailComponent implements OnInit {
   private readonly poService = inject(InventoryPurchaseOrderService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -75,7 +75,34 @@ export class PoDetailComponent {
     this.destroyRef.onDestroy(() => {
       this.destroyed = true;
     });
+  }
 
+  /**
+   * All initialization — including the two lazy panel loads — lives here
+   * rather than the constructor: a constructor is expected to stay
+   * synchronous, and even a same-tick call to an async-kicking method
+   * still starts that work during construction, which is what
+   * typescript:S7059 actually objects to, not the literal syntax of the
+   * `.then()`/`await`. `ngOnInit` is Angular's designated hook for this.
+   */
+  ngOnInit(): void {
+    this.loadPanels();
+
+    this.route.paramMap
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(params => {
+        const poId = params.get('poId');
+        if (!poId) {
+          this.state.set('error');
+          this.errorKey.set('INVENTORY.PURCHASE_ORDERS.DETAIL.ERROR.LOAD');
+          return;
+        }
+        this.loadOrder(poId);
+      });
+  }
+
+  /** Kicks off both lazy panel loads. */
+  private loadPanels(): void {
     this.panelSource.loadSupplierTransmissionPanel().then(
       type => {
         if (!this.destroyed) this.panelTypes.update(current => ({ ...current, first: type }));
@@ -92,18 +119,6 @@ export class PoDetailComponent {
         if (!this.destroyed) this.panelTypes.update(current => ({ ...current, secondFailed: true }));
       },
     );
-
-    this.route.paramMap
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(params => {
-        const poId = params.get('poId');
-        if (!poId) {
-          this.state.set('error');
-          this.errorKey.set('INVENTORY.PURCHASE_ORDERS.DETAIL.ERROR.LOAD');
-          return;
-        }
-        this.loadOrder(poId);
-      });
   }
 
   loadOrder(poId: string): void {

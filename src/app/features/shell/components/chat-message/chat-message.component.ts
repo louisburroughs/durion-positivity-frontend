@@ -254,9 +254,20 @@ function safeFileName(name: string): string {
 /** Filename-safe stem derived from a block title or attachment name. */
 function slug(title: string | null): string {
   if (!title) return '';
-  return title
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 40);
+  return trimHyphens(title.toLowerCase().replace(/[^a-z0-9]+/g, '-')).slice(0, 40);
+}
+
+/**
+ * Strips leading and trailing `-` runs with a manual scan rather than
+ * `/^-+|-+$/`: an unbounded quantifier abutting an anchor forces the regex
+ * engine to retry every starting position inside a long, non-terminal run of
+ * the same character, an O(n^2) shape flagged by typescript:S8786. The loop
+ * below is O(n) with no backtracking, for the same result.
+ */
+function trimHyphens(value: string): string {
+  let start = 0;
+  let end = value.length;
+  while (start < end && value[start] === '-') start += 1;
+  while (end > start && value[end - 1] === '-') end -= 1;
+  return value.slice(start, end);
 }

@@ -132,12 +132,9 @@ function outcome(
   errorKey: string,
   retryable = false,
   detail: string | null = null,
-  fields: { fieldErrors: Record<string, string>; fieldDetails: Record<string, string> } = {
-    fieldErrors: {},
-    fieldDetails: {},
-  },
+  fields?: { fieldErrors: Record<string, string>; fieldDetails: Record<string, string> },
 ): PlatformErrorOutcome {
-  return { kind, errorKey, retryable, detail, ...fields };
+  return { kind, errorKey, retryable, detail, ...(fields ?? { fieldErrors: {}, fieldDetails: {} }) };
 }
 
 /**

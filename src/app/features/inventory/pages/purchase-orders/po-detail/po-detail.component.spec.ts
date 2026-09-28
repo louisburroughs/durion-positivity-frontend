@@ -104,12 +104,14 @@ describe('PoDetailComponent', () => {
   it('should be in ready state after successful load', () => {
     mockPoService.getPurchaseOrder.mockReturnValue(of(poFixture));
     const fixture = TestBed.createComponent(PoDetailComponent);
+    fixture.detectChanges();
     expect(fixture.componentInstance.state()).toBe('ready');
   });
 
   it('should set error state before errorKey on load failure', () => {
     mockPoService.getPurchaseOrder.mockReturnValue(throwError(() => new Error('fail')));
     const fixture = TestBed.createComponent(PoDetailComponent);
+    fixture.detectChanges();
     const component = fixture.componentInstance;
 
     expect(component.state()).toBe('error');
@@ -120,6 +122,7 @@ describe('PoDetailComponent', () => {
     mockPoService.getPurchaseOrder.mockReturnValue(of(poFixture));
     mockPoService.cancelPurchaseOrder.mockReturnValue(throwError(() => new Error('fail')));
     const fixture = TestBed.createComponent(PoDetailComponent);
+    fixture.detectChanges();
     const component = fixture.componentInstance;
     const calls: string[] = [];
     const origState = component.state.set.bind(component.state);
