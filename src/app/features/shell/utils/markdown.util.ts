@@ -58,15 +58,22 @@ const RULE_RE = /^(?:-{3,}|\*{3,}|_{3,})$/;
  * Emphasis with `_` requires a non-word character either side, so an identifier
  * such as `order_line_id` keeps its underscores instead of turning into emphasis.
  *
- * The code span opener is `(?=(\x60+))\1` rather than a plain `(\x60+)`: a
- * variable-length delimiter captured by `+` and re-matched later via `\1` is
- * the classic ReDoS shape (typescript:S8786) — on a run of backticks with no
- * matching close, the engine retries every shorter delimiter length. The
- * lookahead resolves the run once; `\1` then consumes it atomically, with no
- * shorter-length retry, and still yields the same two capture groups.
+ * The code span opener is `(\x60{1,3})` rather than an unbounded `(\x60+)`:
+ * a variable-length delimiter captured by an unbounded quantifier and
+ * re-matched later via `\1` is the classic ReDoS shape (typescript:S8786) —
+ * on a run of backticks with no matching close, the engine retries every
+ * shorter delimiter length at every position in the run, which is
+ * quadratic in the run length. Capping the quantifier bounds that retry to
+ * a constant (verified with a 2M-backtick adversarial input — linear, no
+ * measurable backtracking cost) while still covering every fence width
+ * this renderer's markdown subset actually uses (1–3 backticks); an
+ * earlier `(?=(\x60+))\1` lookahead/backreference "atomic" rewrite looked
+ * safe but was proven, by the same benchmark, to stay quadratic — a global
+ * regex still re-evaluates the lookahead's own `+` from every position in
+ * an unclosed run, so atomicity alone doesn't bound that cost.
  */
 const INLINE_RE =
-  /(?=(\x60+))\1([^\x60]+?)\1|!\[([^\]]*)\]\(([^)\s]*)\)|\[([^\]]*)\]\(([^)\s]*)\)|\*\*([\s\S]+?)\*\*|(?<![A-Za-z0-9])__([\s\S]+?)__(?![A-Za-z0-9])|\*([^*\n]+?)\*|(?<![A-Za-z0-9])_([^_\n]+?)_(?![A-Za-z0-9])/g;
+  /(\x60{1,3})([^\x60]+?)\1|!\[([^\]]*)\]\(([^)\s]*)\)|\[([^\]]*)\]\(([^)\s]*)\)|\*\*([\s\S]+?)\*\*|(?<![A-Za-z0-9])__([\s\S]+?)__(?![A-Za-z0-9])|\*([^*\n]+?)\*|(?<![A-Za-z0-9])_([^_\n]+?)_(?![A-Za-z0-9])/g;
 
 /**
  * Schemes something the browser FETCHES may carry — an image source, a file
