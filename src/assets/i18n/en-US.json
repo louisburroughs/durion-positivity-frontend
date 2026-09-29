@@ -8308,7 +8308,10 @@
       "WORK_SESSION": "Work Session",
       "PERSON": "Person",
       "PERIODS": "Pay periods",
-      "ACCOUNTING_PERIODS": "Accounting Periods"
+      "ACCOUNTING_PERIODS": "Accounting Periods",
+      "BANK_ACCOUNTS": "Bank accounts",
+      "BANK_IMPORTS": "Bank statement imports",
+      "IMPORT": "Import"
     }
   },
   "POSITIVITY": {
