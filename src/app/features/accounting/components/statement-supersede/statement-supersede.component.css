@@ -1,0 +1,77 @@
+.supersede {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.supersede-toggle {
+  display: flex;
+  gap: var(--space-2);
+  align-items: baseline;
+  font-weight: 600;
+}
+
+.supersede-body {
+  display: grid;
+  gap: var(--space-3);
+  margin-inline-start: var(--space-5);
+}
+
+.form-field {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.form-field label {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.form-field select,
+.form-field textarea {
+  min-height: 2.25rem;
+  padding: var(--space-2);
+  border: 1px solid var(--input-border);
+  border-radius: 0.125rem;
+  background: var(--input-background);
+  color: var(--currentTextColor);
+  font: inherit;
+}
+
+.form-field textarea {
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+}
+
+.hint-text {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.field-error {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--status-error-fg);
+}
+
+.link-button {
+  border: none;
+  background: transparent;
+  color: var(--link-color);
+  text-decoration: underline;
+  padding: 0 var(--space-1);
+  min-height: 1.5rem;
+  cursor: pointer;
+}
+
+select:focus-visible,
+textarea:focus-visible,
+input:focus-visible,
+.link-button:focus-visible {
+  outline: 2px solid var(--input-focus-border);
+  outline-offset: 2px;
+}

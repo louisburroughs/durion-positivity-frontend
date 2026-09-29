@@ -1,0 +1,224 @@
+<main class="accounting-page" aria-labelledby="bank-accounts-heading">
+  <header class="page-header">
+    <p class="section-overline">{{ 'ACCOUNTING.BANK_ACCOUNTS.OVERLINE' | translate }}</p>
+    <h1 id="bank-accounts-heading">{{ 'ACCOUNTING.BANK_ACCOUNTS.TITLE' | translate }}</h1>
+    <p class="page-subtitle">{{ 'ACCOUNTING.BANK_ACCOUNTS.SUBTITLE' | translate }}</p>
+  </header>
+
+  <!-- Both live regions stay in the DOM so a rebuild never drops an announcement (ADR-0029 §8.8). -->
+  <div class="outcome-region" role="status" aria-live="polite">
+    @if (outcome(); as result) {
+      @if (result.tone === 'success') {
+        <p #outcomeSuccess class="alert alert-success" tabindex="-1" data-testid="outcome-success">
+          {{ result.key | translate: { account: result.account } }}
+        </p>
+      }
+    }
+  </div>
+  <div class="outcome-region" role="alert" aria-live="assertive">
+    @if (outcome(); as result) {
+      @if (result.tone === 'error') {
+        <p #outcomeError class="alert alert-error" tabindex="-1" data-testid="outcome-error">
+          {{ result.key | translate: { account: result.account } }}
+        </p>
+      }
+    }
+  </div>
+
+  @if (state() === 'loading') {
+    <section class="state-panel" aria-live="polite" aria-busy="true" data-testid="loading-state">
+      {{ 'ACCOUNTING.BANK_ACCOUNTS.LOADING' | translate }}
+    </section>
+  }
+
+  @if (state() === 'error' && errorKey(); as key) {
+    <section class="state-panel state-panel--error" role="alert" data-testid="error-state">
+      {{ key | translate }}
+      <button type="button" class="link-button" (click)="load()">{{ 'ACCOUNTING.COMMON.RETRY' | translate }}</button>
+    </section>
+  }
+
+  @if (state() === 'ready') {
+    @if (!canAdjust()) {
+      <p class="alert alert-info" data-testid="view-only-note">{{ 'ACCOUNTING.BANK_ACCOUNTS.VIEW_ONLY' | translate }}</p>
+    }
+
+    @if (accounts().length === 0) {
+      <p class="state-panel state-panel--empty" data-testid="empty-state">{{ 'ACCOUNTING.BANK_ACCOUNTS.EMPTY' | translate }}</p>
+    } @else {
+      <div class="table-scroll-container" [attr.aria-busy]="refreshing() ? 'true' : null">
+        <table class="ledger-table">
+          <caption class="sr-only">{{ 'ACCOUNTING.BANK_ACCOUNTS.CAPTION' | translate }}</caption>
+          <thead>
+            <tr>
+              <th scope="col">{{ 'ACCOUNTING.BANK_ACCOUNTS.COL_ACCOUNT' | translate }}</th>
+              <th scope="col">{{ 'ACCOUNTING.BANK_ACCOUNTS.COL_BANK' | translate }}</th>
+              <th scope="col">{{ 'ACCOUNTING.BANK_ACCOUNTS.COL_CURRENCY' | translate }}</th>
+              <th scope="col">{{ 'ACCOUNTING.BANK_ACCOUNTS.COL_BASELINE' | translate }}</th>
+              <th scope="col">{{ 'ACCOUNTING.BANK_ACCOUNTS.COL_COVERAGE' | translate }}</th>
+              <th scope="col">{{ 'ACCOUNTING.BANK_ACCOUNTS.COL_RECONCILED' | translate }}</th>
+              <th scope="col">{{ 'ACCOUNTING.BANK_ACCOUNTS.COL_UNEXPLAINED' | translate }}</th>
+              <th scope="col">{{ 'ACCOUNTING.BANK_ACCOUNTS.COL_OPEN_ITEMS' | translate }}</th>
+              <th scope="col">{{ 'ACCOUNTING.BANK_ACCOUNTS.COL_ACTIONS' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (account of accounts(); track account.glAccountId) {
+              <tr data-testid="account-row" [attr.data-account]="account.glAccountId">
+                <th scope="row">
+                  @if (account.accountCode || account.accountName) {
+                    <span class="account-code">{{ account.accountCode }}</span>
+                    <span class="account-name">{{ account.accountName }}</span>
+                  } @else {
+                    {{ 'COMMON.NOT_AVAILABLE' | translate }}
+                  }
+                </th>
+                <td>
+                  @if (account.bankName || account.accountMask) {
+                    {{ account.bankName }}
+                    @if (account.accountMask) {
+                      <span class="account-mask">{{ 'ACCOUNTING.BANK_ACCOUNTS.MASK' | translate: { mask: account.accountMask } }}</span>
+                    }
+                  } @else {
+                    <span data-testid="no-profile">{{ 'ACCOUNTING.BANK_ACCOUNTS.NO_PROFILE' | translate }}</span>
+                  }
+                </td>
+                <td>{{ account.currency ?? ('COMMON.NOT_AVAILABLE' | translate) }}</td>
+                <td data-testid="baseline">{{ account.reconciliationBaselineDate ? (dateOnly(account.reconciliationBaselineDate) | date: 'mediumDate') : ('COMMON.NOT_AVAILABLE' | translate) }}</td>
+                <td>{{ account.coverageFrontier ? (dateOnly(account.coverageFrontier) | date: 'mediumDate') : ('COMMON.NOT_AVAILABLE' | translate) }}</td>
+                <td>{{ account.reconciledFrontier ? (dateOnly(account.reconciledFrontier) | date: 'mediumDate') : ('COMMON.NOT_AVAILABLE' | translate) }}</td>
+                <td>{{ account.unexplainedBankTransactionCount !== null ? (account.unexplainedBankTransactionCount | number) : ('COMMON.NOT_AVAILABLE' | translate) }}</td>
+                <td>{{ account.openOutstandingItemCount !== null ? (account.openOutstandingItemCount | number) : ('COMMON.NOT_AVAILABLE' | translate) }}</td>
+                <td class="actions-cell">
+                  <button type="button" class="btn btn--outline" data-testid="edit-profile"
+                    [disabled]="!canAdjust() || refreshing() || saving()"
+                    (click)="openProfile(account.glAccountId)">
+                    {{ 'ACCOUNTING.BANK_ACCOUNTS.ACTION.EDIT_PROFILE' | translate }}<span class="sr-only">&nbsp;{{ accountLabel(account) }}</span>
+                  </button>
+                  <button type="button" class="btn btn--accent" data-testid="start-reconciliation"
+                    [disabled]="!canAdjust() || refreshing() || saving()"
+                    (click)="openStart(account.glAccountId)">
+                    {{ 'ACCOUNTING.BANK_ACCOUNTS.ACTION.START' | translate }}<span class="sr-only">&nbsp;{{ accountLabel(account) }}</span>
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  }
+
+  @if (dialog(); as pending) {
+    @if (pending.kind === 'profile') {
+      <dialog class="confirm-panel" appModalDialog (modalCancel)="cancelDialog()"
+        aria-labelledby="profile-title" data-testid="profile-dialog">
+        <h2 id="profile-title" class="confirm-heading">
+          {{ 'ACCOUNTING.BANK_ACCOUNTS.PROFILE.TITLE' | translate: { account: accountLabel(dialogAccount()) } }}
+        </h2>
+        <form class="stacked-form" [formGroup]="profileForm" (ngSubmit)="saveProfile()" novalidate>
+          <div class="form-field">
+            <label for="profile-bank-name">{{ 'ACCOUNTING.BANK_ACCOUNTS.PROFILE.BANK_NAME' | translate }}</label>
+            <input id="profile-bank-name" type="text" formControlName="bankName" maxlength="120" data-testid="profile-bank-name" />
+          </div>
+          <div class="form-field">
+            <label for="profile-mask">{{ 'ACCOUNTING.BANK_ACCOUNTS.PROFILE.MASK' | translate }}</label>
+            <input id="profile-mask" type="text" formControlName="accountMask" maxlength="8" aria-describedby="profile-mask-hint" data-testid="profile-mask" />
+            <p id="profile-mask-hint" class="hint-text">{{ 'ACCOUNTING.BANK_ACCOUNTS.PROFILE.MASK_HINT' | translate }}</p>
+          </div>
+          <div class="form-field">
+            <label for="profile-currency">{{ 'ACCOUNTING.BANK_ACCOUNTS.PROFILE.CURRENCY' | translate }}</label>
+            <select id="profile-currency" formControlName="currency" aria-describedby="profile-currency-hint" data-testid="profile-currency">
+              @for (code of currencies; track code) {
+                <option [value]="code">{{ code }}</option>
+              }
+            </select>
+            <p id="profile-currency-hint" class="hint-text">{{ 'ACCOUNTING.BANK_ACCOUNTS.PROFILE.CURRENCY_HINT' | translate }}</p>
+          </div>
+          @if (dialogErrorKey(); as key) {
+            <p class="field-error" role="alert" data-testid="dialog-error">{{ key | translate }}</p>
+          }
+          <div class="form-actions">
+            <button type="submit" class="btn btn--accent" data-testid="save-profile" [disabled]="saving()">
+              {{ 'ACCOUNTING.BANK_ACCOUNTS.PROFILE.SAVE' | translate }}
+            </button>
+            <button type="button" class="btn btn--outline" data-testid="cancel-dialog" (click)="cancelDialog()">
+              {{ 'COMMON.CANCEL' | translate }}
+            </button>
+          </div>
+        </form>
+      </dialog>
+    } @else {
+      <dialog class="confirm-panel" appModalDialog (modalCancel)="cancelDialog()"
+        aria-labelledby="start-title" data-testid="start-dialog">
+        <h2 id="start-title" class="confirm-heading">
+          {{ 'ACCOUNTING.BANK_ACCOUNTS.START.TITLE' | translate: { account: accountLabel(dialogAccount()) } }}
+        </h2>
+        <form class="stacked-form" [formGroup]="startForm" (ngSubmit)="confirmStart()" novalidate>
+          <fieldset class="start-options">
+            <legend>{{ 'ACCOUNTING.BANK_ACCOUNTS.START.LEGEND' | translate }}</legend>
+            <label class="start-option">
+              <input type="radio" formControlName="option" value="STATEMENT" data-testid="option-statement"
+                [attr.disabled]="statementsState() === 'ready' && eligibleStatements().length === 0 ? true : null" />
+              <span>{{ 'ACCOUNTING.BANK_ACCOUNTS.START.OPTION_STATEMENT' | translate }}</span>
+            </label>
+            @if (startOptionValue() === 'STATEMENT') {
+              <div class="statement-picker" data-testid="statement-picker">
+                @switch (statementsState()) {
+                  @case ('loading') {
+                    <p aria-busy="true">{{ 'ACCOUNTING.BANK_ACCOUNTS.START.STATEMENTS_LOADING' | translate }}</p>
+                  }
+                  @case ('error') {
+                    <p class="field-error">
+                      {{ 'ACCOUNTING.BANK_ACCOUNTS.START.STATEMENTS_ERROR' | translate }}
+                      <button type="button" class="link-button" (click)="retryStatements()">{{ 'ACCOUNTING.COMMON.RETRY' | translate }}</button>
+                    </p>
+                  }
+                  @default {
+                    @for (statement of eligibleStatements(); track statement.statementId) {
+                      <label class="statement-choice">
+                        <input type="radio" formControlName="statementId" [value]="statement.statementId" data-testid="statement-choice" />
+                        <span>
+                          {{ 'ACCOUNTING.BANK_ACCOUNTS.START.STATEMENT_LABEL' | translate: {
+                            start: (dateOnly(statement.startDate) | date: 'mediumDate'),
+                            end: (dateOnly(statement.endDate) | date: 'mediumDate'),
+                            closing: (statement.closingBalance | money: statement.currency),
+                            ref: (statement.statementRef ?? ('COMMON.NOT_AVAILABLE' | translate))
+                          } }}
+                        </span>
+                      </label>
+                    }
+                  }
+                }
+              </div>
+            }
+            <label class="start-option">
+              <input type="radio" formControlName="option" value="IMPORT" data-testid="option-import" />
+              <span>{{ 'ACCOUNTING.BANK_ACCOUNTS.START.OPTION_IMPORT' | translate }}</span>
+            </label>
+            <label class="start-option">
+              <input type="radio" formControlName="option" value="MANUAL" data-testid="option-manual" />
+              <span>{{ 'ACCOUNTING.BANK_ACCOUNTS.START.OPTION_MANUAL' | translate }}</span>
+            </label>
+            <label class="start-option">
+              <input type="radio" formControlName="option" value="INTERIM" data-testid="option-interim" aria-describedby="interim-hint" />
+              <span>{{ 'ACCOUNTING.BANK_ACCOUNTS.START.OPTION_INTERIM' | translate }}</span>
+            </label>
+            <p id="interim-hint" class="hint-text">{{ 'ACCOUNTING.BANK_ACCOUNTS.START.INTERIM_HINT' | translate }}</p>
+          </fieldset>
+          @if (dialogErrorKey(); as key) {
+            <p class="field-error" role="alert" data-testid="dialog-error">{{ key | translate }}</p>
+          }
+          <div class="form-actions">
+            <button type="submit" class="btn btn--accent" data-testid="confirm-start" [disabled]="saving()">
+              {{ 'ACCOUNTING.BANK_ACCOUNTS.START.CONFIRM' | translate }}
+            </button>
+            <button type="button" class="btn btn--outline" data-testid="cancel-dialog" (click)="cancelDialog()">
+              {{ 'COMMON.CANCEL' | translate }}
+            </button>
+          </div>
+        </form>
+      </dialog>
+    }
+  }
+</main>

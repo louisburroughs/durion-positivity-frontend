@@ -1,0 +1,63 @@
+<fieldset class="supersede" [disabled]="disabled()" data-testid="supersede-control">
+  <legend class="sr-only">{{ 'ACCOUNTING.BANK_IMPORT.SUPERSEDE.LEGEND' | translate }}</legend>
+  <label class="supersede-toggle">
+    <input type="checkbox" [formControl]="enabled" data-testid="supersede-toggle" />
+    <span>{{ 'ACCOUNTING.BANK_IMPORT.SUPERSEDE.TOGGLE' | translate }}</span>
+  </label>
+
+  @if (on()) {
+    <div class="supersede-body">
+      @switch (listState()) {
+        @case ('loading') {
+          <p aria-busy="true">{{ 'ACCOUNTING.BANK_IMPORT.SUPERSEDE.LOADING' | translate }}</p>
+        }
+        @case ('error') {
+          <p class="field-error">
+            {{ 'ACCOUNTING.BANK_IMPORT.SUPERSEDE.LOAD_ERROR' | translate }}
+            <button type="button" class="link-button" (click)="reload()">{{ 'ACCOUNTING.COMMON.RETRY' | translate }}</button>
+          </p>
+        }
+        @case ('ready') {
+          @if (statements().length === 0) {
+            <p data-testid="supersede-empty">{{ 'ACCOUNTING.BANK_IMPORT.SUPERSEDE.EMPTY' | translate }}</p>
+          } @else {
+            <div class="form-field">
+              <label for="supersede-statement">{{ 'ACCOUNTING.BANK_IMPORT.SUPERSEDE.STATEMENT' | translate }}</label>
+              <select id="supersede-statement" [formControl]="statementId" data-testid="supersede-statement">
+                <option value="">{{ 'ACCOUNTING.BANK_IMPORT.SUPERSEDE.CHOOSE' | translate }}</option>
+                @for (statement of statements(); track statement.statementId) {
+                  <option [value]="statement.statementId">
+                    {{ 'ACCOUNTING.BANK_IMPORT.SUPERSEDE.OPTION' | translate: {
+                      start: (dateOnly(statement.startDate) | date: 'mediumDate'),
+                      end: (dateOnly(statement.endDate) | date: 'mediumDate'),
+                      closing: (statement.closingBalance | money: statement.currency),
+                      ref: (statement.statementRef ?? ('COMMON.NOT_AVAILABLE' | translate))
+                    } }}
+                  </option>
+                }
+              </select>
+            </div>
+          }
+        }
+      }
+
+      @if (invalidatesApproval()) {
+        <p class="alert alert-warning" role="status" data-testid="supersede-invalidates">
+          {{ 'ACCOUNTING.BANK_IMPORT.SUPERSEDE.INVALIDATES' | translate }}
+        </p>
+      }
+      @if (chosenState() === 'error') {
+        <p class="field-error" data-testid="supersede-chosen-error">{{ 'ACCOUNTING.BANK_IMPORT.SUPERSEDE.CHOSEN_ERROR' | translate }}</p>
+      }
+
+      <div class="form-field">
+        <label for="supersede-justification">{{ 'ACCOUNTING.BANK_IMPORT.SUPERSEDE.JUSTIFICATION' | translate }}</label>
+        <textarea id="supersede-justification" rows="3" [formControl]="justification"
+          aria-describedby="supersede-justification-hint" data-testid="supersede-justification"></textarea>
+        <p id="supersede-justification-hint" class="hint-text">
+          {{ 'ACCOUNTING.BANK_IMPORT.SUPERSEDE.JUSTIFICATION_HINT' | translate: { min: justificationMin } }}
+        </p>
+      </div>
+    </div>
+  }
+</fieldset>

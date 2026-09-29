@@ -181,6 +181,32 @@ export const ACCOUNTING_ROUTES: Routes = [
           import('./pages/period-close/period-close-page.component').then(m => m.PeriodClosePageComponent),
       },
       {
+        path: 'bank-accounts',
+        data: { permissions: ACCOUNTING_PAGE.bankAccounts },
+        loadComponent: () =>
+          import('./pages/bank-accounts/bank-accounts-page.component').then(m => m.BankAccountsPageComponent),
+      },
+      {
+        path: 'bank-accounts/:glAccountId/import',
+        data: { permissions: ACCOUNTING_PAGE.bankImport },
+        loadComponent: () =>
+          import('./pages/bank-import/bank-import-page.component').then(m => m.BankImportPageComponent),
+      },
+      {
+        path: 'bank-accounts/:glAccountId/statements/new',
+        data: { permissions: ACCOUNTING_PAGE.bankStatementEntry },
+        loadComponent: () =>
+          import('./pages/bank-statement-entry/bank-statement-entry-page.component').then(
+            m => m.BankStatementEntryPageComponent,
+          ),
+      },
+      {
+        path: 'bank-imports/:importId',
+        data: { permissions: ACCOUNTING_PAGE.bankImport },
+        loadComponent: () =>
+          import('./pages/bank-import/bank-import-page.component').then(m => m.BankImportPageComponent),
+      },
+      {
         path: 'invoices/:invoiceId/payment-status',
         data: { permissions: ACCOUNTING_PAGE.invoicePaymentStatus },
         loadComponent: () =>

@@ -246,6 +246,25 @@ export const ACCOUNTING_LANDING_CONFIG: LandingPageConfig = {
       ],
     },
     /**
+     * Bank reconciliation (CAP-055). A direct card: the bank-accounts page
+     * lists every reconcilable account and starts each reconciliation.
+     */
+    {
+      titleKey: 'ACCOUNTING.LANDING.SECTION.BANK_RECONCILIATION.TITLE',
+      descriptionKey: 'ACCOUNTING.LANDING.SECTION.BANK_RECONCILIATION.DESCRIPTION',
+      cards: [
+        {
+          kind: 'direct',
+          icon: 'account_balance',
+          titleKey: 'ACCOUNTING.LANDING.CARD.BANK_RECONCILIATION.TITLE',
+          descriptionKey: 'ACCOUNTING.LANDING.CARD.BANK_RECONCILIATION.DESCRIPTION',
+          ctaKey: 'ACCOUNTING.LANDING.ACTION.OPEN_PAGE',
+          route: '/app/accounting/bank-accounts',
+          permissions: ACCOUNTING_PAGE.bankAccounts,
+        },
+      ],
+    },
+    /**
      * Month-end close. A direct card: the page lists every period with its own
      * close and reopen controls, so there is no record id to ask for first.
      */

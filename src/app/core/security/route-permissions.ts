@@ -323,6 +323,12 @@ export const ACCOUNTING_PAGE = {
   invoicePaymentStatus: ['accounting:ap:view'],
   /** `listAccountingPeriods`. Closing and reopening are gated by {@link ACCOUNTING_SECTION}. */
   periodClose: ['accounting:period:view'],
+  /** `listBankAccounts`. Profile edits and starting a reconciliation are gated by {@link ACCOUNTING_SECTION}. */
+  bankAccounts: ['accounting:reconciliation:view'],
+  /** The import wizard only writes: `createBankImport` and every step after it enforce `adjust`. */
+  bankImport: ['accounting:reconciliation:adjust'],
+  /** `createBankStatement`, the manual-entry and interim statement form. */
+  bankStatementEntry: ['accounting:reconciliation:adjust'],
 } as const satisfies Record<string, readonly string[]>;
 
 /**
@@ -342,6 +348,12 @@ export const ACCOUNTING_SECTION = {
    * (SPEC-manual-bank-reconciliation §5.2, decision D4).
    */
   periodOverride: ['accounting:period:override'],
+  /**
+   * Bank-reconciliation preparer actions: profile edit, import, manual
+   * statement, start, match, outstanding items, adjustments, submit
+   * (SPEC-manual-bank-reconciliation §6.2).
+   */
+  reconciliationAdjust: ['accounting:reconciliation:adjust'],
   /**
    * Bank-reconciliation approver actions: finalize, return, cancel, supersede,
    * exclude/restore, adjustment reverse and clear-in-gap

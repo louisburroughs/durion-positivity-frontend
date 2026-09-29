@@ -1,0 +1,150 @@
+<main class="accounting-page" aria-labelledby="statement-entry-heading">
+  <header class="page-header">
+    <p class="section-overline">{{ 'ACCOUNTING.BANK_STATEMENT_ENTRY.OVERLINE' | translate }}</p>
+    <h1 id="statement-entry-heading">
+      {{ (interim() ? 'ACCOUNTING.BANK_STATEMENT_ENTRY.TITLE_INTERIM' : 'ACCOUNTING.BANK_STATEMENT_ENTRY.TITLE') | translate }}
+    </h1>
+    @if (accountLabel()) {
+      <p class="page-subtitle" data-testid="entry-account">{{ 'ACCOUNTING.BANK_IMPORT.FOR_ACCOUNT' | translate: { account: accountLabel() } }}</p>
+    }
+    <p class="page-subtitle">
+      {{ (interim() ? 'ACCOUNTING.BANK_STATEMENT_ENTRY.SUBTITLE_INTERIM' : 'ACCOUNTING.BANK_STATEMENT_ENTRY.SUBTITLE') | translate }}
+    </p>
+    <a class="link-button" [routerLink]="bankAccountsLink">{{ 'ACCOUNTING.BANK_IMPORT.BACK' | translate }}</a>
+  </header>
+
+  <div class="outcome-region" role="alert" aria-live="assertive">
+    @if (failureKey(); as key) {
+      <div #failureRegion class="alert alert-error" tabindex="-1" data-testid="entry-failure">
+        <p>{{ key | translate }}</p>
+        @if (failureDetail(); as detail) {
+          <p>{{ detail }}</p>
+        }
+      </div>
+    }
+  </div>
+
+  @if (state() === 'loading') {
+    <section class="state-panel" aria-live="polite" aria-busy="true" data-testid="loading-state">
+      {{ 'ACCOUNTING.BANK_IMPORT.LOADING' | translate }}
+    </section>
+  }
+
+  @if (state() === 'error' && errorKey(); as key) {
+    <section class="state-panel state-panel--error" role="alert" data-testid="error-state">
+      {{ key | translate }}
+      <button type="button" class="link-button" (click)="retry()">{{ 'ACCOUNTING.COMMON.RETRY' | translate }}</button>
+    </section>
+  }
+
+  @if (state() === 'ready') {
+    <form class="stacked-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <fieldset class="header-fields">
+        <legend>{{ 'ACCOUNTING.BANK_IMPORT.UPLOAD.HEADER_LEGEND' | translate }}</legend>
+        <div class="form-field">
+          <label for="entry-start">{{ 'ACCOUNTING.BANK_IMPORT.UPLOAD.START' | translate }}</label>
+          <input id="entry-start" type="date" formControlName="startDate" data-testid="entry-start"
+            [attr.aria-describedby]="interim() && account()?.reconciledFrontier ? 'entry-start-hint' : null" />
+          @if (interim() && account()?.reconciledFrontier) {
+            <p id="entry-start-hint" class="hint-text">
+              {{ 'ACCOUNTING.BANK_STATEMENT_ENTRY.INTERIM_START_HINT' | translate: { frontier: (dateOnly(account()?.reconciledFrontier ?? null) | date: 'mediumDate') } }}
+            </p>
+          }
+        </div>
+        <div class="form-field">
+          <label for="entry-end">{{ (interim() ? 'ACCOUNTING.BANK_STATEMENT_ENTRY.INTERIM_END' : 'ACCOUNTING.BANK_IMPORT.UPLOAD.END') | translate }}</label>
+          <input id="entry-end" type="date" formControlName="endDate" data-testid="entry-end" />
+        </div>
+        <div class="form-field">
+          <label for="entry-opening">{{ 'ACCOUNTING.BANK_IMPORT.UPLOAD.OPENING' | translate }}</label>
+          <input id="entry-opening" type="text" inputmode="decimal" formControlName="openingBalance" data-testid="entry-opening" />
+        </div>
+        <div class="form-field">
+          <label for="entry-closing">{{ 'ACCOUNTING.BANK_IMPORT.UPLOAD.CLOSING' | translate }}</label>
+          <input id="entry-closing" type="text" inputmode="decimal" formControlName="closingBalance" data-testid="entry-closing" />
+        </div>
+        <div class="form-field">
+          <label for="entry-ref">{{ 'ACCOUNTING.BANK_IMPORT.UPLOAD.REF' | translate }}</label>
+          <input id="entry-ref" type="text" formControlName="statementRef" maxlength="64" data-testid="entry-ref" />
+        </div>
+      </fieldset>
+
+      <section class="page-section" aria-labelledby="transactions-heading">
+        <h2 id="transactions-heading">{{ 'ACCOUNTING.BANK_STATEMENT_ENTRY.TRANSACTIONS' | translate }}</h2>
+        <p class="hint-text">{{ 'ACCOUNTING.BANK_STATEMENT_ENTRY.TRANSACTIONS_HINT' | translate }}</p>
+        <div class="table-scroll-container">
+          <table class="ledger-table" formArrayName="transactions">
+            <caption class="sr-only">{{ 'ACCOUNTING.BANK_STATEMENT_ENTRY.TRANSACTIONS' | translate }}</caption>
+            <thead>
+              <tr>
+                <th scope="col">{{ 'ACCOUNTING.BANK_STATEMENT_ENTRY.COL_N' | translate }}</th>
+                <th scope="col">{{ 'ACCOUNTING.BANK_IMPORT.PREVIEW.DATE' | translate }}</th>
+                <th scope="col">{{ 'ACCOUNTING.BANK_IMPORT.CORRECT.AMOUNT' | translate }}</th>
+                <th scope="col">{{ 'ACCOUNTING.BANK_IMPORT.PREVIEW.DESCRIPTION' | translate }}</th>
+                <th scope="col">{{ 'ACCOUNTING.BANK_STATEMENT_ENTRY.COL_REFERENCE' | translate }}</th>
+                <th scope="col">{{ 'ACCOUNTING.BANK_STATEMENT_ENTRY.COL_CHECK' | translate }}</th>
+                <th scope="col">{{ 'ACCOUNTING.BANK_IMPORT.ROWS.COL_ACTIONS' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of transactions.controls; track row; let i = $index) {
+                <tr [formGroupName]="i" data-testid="transaction-row" [attr.data-index]="i" [class.row--flagged]="flaggedTransactions().has(i)">
+                  <th scope="row">{{ i + 1 }}</th>
+                  <td><input class="grid-input" type="date" formControlName="date" [attr.aria-label]="('ACCOUNTING.BANK_IMPORT.PREVIEW.DATE' | translate) + ' ' + (i + 1)" data-testid="tx-date" /></td>
+                  <td><input class="grid-input" type="text" inputmode="decimal" formControlName="amount" [attr.aria-label]="('ACCOUNTING.BANK_IMPORT.CORRECT.AMOUNT' | translate) + ' ' + (i + 1)" data-testid="tx-amount" /></td>
+                  <td><input class="grid-input" type="text" formControlName="description" [attr.aria-label]="('ACCOUNTING.BANK_IMPORT.PREVIEW.DESCRIPTION' | translate) + ' ' + (i + 1)" data-testid="tx-description" /></td>
+                  <td><input class="grid-input" type="text" formControlName="reference" [attr.aria-label]="('ACCOUNTING.BANK_STATEMENT_ENTRY.COL_REFERENCE' | translate) + ' ' + (i + 1)" /></td>
+                  <td><input class="grid-input" type="text" formControlName="checkNumber" [attr.aria-label]="('ACCOUNTING.BANK_STATEMENT_ENTRY.COL_CHECK' | translate) + ' ' + (i + 1)" /></td>
+                  <td>
+                    <button type="button" class="btn btn--outline" [disabled]="transactions.length === 1" (click)="removeTransaction(i)">
+                      {{ 'ACCOUNTING.BANK_STATEMENT_ENTRY.REMOVE' | translate }}<span class="sr-only">&nbsp;{{ i + 1 }}</span>
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <button type="button" class="btn btn--outline" data-testid="add-transaction" (click)="addTransaction()">
+          {{ 'ACCOUNTING.BANK_STATEMENT_ENTRY.ADD' | translate }}
+        </button>
+      </section>
+
+      @if (gapPrompt(); as gap) {
+        <div class="gap-prompt" data-testid="gap-prompt">
+          <p class="alert alert-warning">
+            @if (gap.firstStatement) {
+              {{ 'ACCOUNTING.BANK_IMPORT.GAP.FIRST_STATEMENT' | translate }}
+            } @else {
+              {{ 'ACCOUNTING.BANK_IMPORT.GAP.NOT_CONTIGUOUS' | translate }}
+            }
+          </p>
+          <div class="form-field">
+            <label for="entry-gap">{{ 'ACCOUNTING.BANK_IMPORT.GAP.LABEL' | translate }}</label>
+            <textarea id="entry-gap" rows="3" formControlName="gapAcknowledgement" aria-describedby="entry-gap-hint" data-testid="gap-ack"></textarea>
+            <p id="entry-gap-hint" class="hint-text">{{ 'ACCOUNTING.BANK_IMPORT.GAP.HINT' | translate: { min: justificationMin } }}</p>
+          </div>
+        </div>
+      }
+
+      @if (canAdjust() && account(); as current) {
+        <app-statement-supersede [glAccountId]="current.glAccountId" (choice)="onSupersede($event)" />
+      }
+
+      <label class="checkbox-field">
+        <input type="checkbox" formControlName="startReconciliation" data-testid="start-reconciliation" />
+        <span>{{ 'ACCOUNTING.BANK_IMPORT.COMMIT.START' | translate }}</span>
+      </label>
+
+      @if (formErrorKey(); as key) {
+        <p class="field-error" role="alert" data-testid="form-error">{{ key | translate: { min: justificationMin } }}</p>
+      }
+      <div class="form-actions">
+        <button type="submit" class="btn btn--accent" data-testid="entry-submit"
+          [disabled]="!canAdjust() || submitting() || supersede().state === 'incomplete' || (gapPrompt() !== null && gapLength() < justificationMin)">
+          {{ 'ACCOUNTING.BANK_STATEMENT_ENTRY.SUBMIT' | translate }}
+        </button>
+      </div>
+    </form>
+  }
+</main>
