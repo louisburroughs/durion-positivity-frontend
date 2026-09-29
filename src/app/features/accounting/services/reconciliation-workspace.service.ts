@@ -37,6 +37,7 @@ import {
   ReviewBankRow,
   ReviewLedgerRow,
 } from '../models/bank-reconciliation.models';
+import { displayActor } from '../models/period-close.models';
 import { uuidV7 } from '../utils/uuid-v7.util';
 
 const AUDIT_PAGE_SIZE = 50;
@@ -72,7 +73,7 @@ export class ReconciliationWorkspaceService {
           auditLogId: entry.auditLogId ?? '',
           operation: text(entry.operation),
           entityType: text(entry.entityType),
-          userId: text(entry.userId),
+          userId: displayActor(entry.userId),
           timestamp: entry.timestamp ?? null,
           justification: text(entry.justification),
         })),
@@ -389,8 +390,8 @@ function toReview(requestedId: string, response: ReconciliationReviewResponse): 
       baselineDate: header.baselineDate ?? null,
       baselineSetByThisStatement: header.baselineSetByThisStatement === true,
       gapAcknowledgement: text(header.gapAcknowledgement ?? evidence.statement?.gapAcknowledgement),
-      preparer: text(header.preparer),
-      approver: text(header.approver),
+      preparer: displayActor(header.preparer),
+      approver: displayActor(header.approver),
       currency: text(header.currency),
       sourceKind: header.sourceKind ?? null,
       version: header.version ?? 0,

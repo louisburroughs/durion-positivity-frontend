@@ -128,6 +128,24 @@ describe('ReconciliationWorkspaceService', () => {
     expect(review?.adjustments[0]).toMatchObject({ type: 'BANK_FEE', status: 'POSTED', amount: -5 });
   });
 
+  it('never passes a UUID actor through as a name (ADR-0064)', () => {
+    recSdk.getReconciliationAudit.mockReturnValueOnce(
+      of({ entries: [{ auditLogId: 'a1', userId: '0190b3a4-0000-7000-8000-000000000001' }, { auditLogId: 'a2', userId: 'controller.jane' }] }),
+    );
+    recSdk.getReconciliationReview.mockReturnValueOnce(
+      of({ header: { preparer: '0190b3a4-0000-7000-8000-000000000002', approver: 'controller.jane' } }),
+    );
+
+    let users: (string | null)[] = [];
+    service.getAudit('rec-1').subscribe(entries => (users = entries.map(e => e.userId)));
+    let review: ReconciliationReview | undefined;
+    service.getReview('rec-1').subscribe(value => (review = value));
+
+    expect(users).toEqual([null, 'controller.jane']);
+    expect(review?.header.preparer).toBeNull();
+    expect(review?.header.approver).toBe('controller.jane');
+  });
+
   it('keys a review without a header by the id it asked for', () => {
     recSdk.getReconciliationReview.mockReturnValueOnce(of({}));
 
