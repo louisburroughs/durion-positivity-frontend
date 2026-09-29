@@ -74,7 +74,7 @@
     </div>
     <div class="payment-capture__success-field">
       <span>{{ 'BILLING.PAYMENT.FIELD.AMOUNT' | translate }}</span>
-      <strong>{{ transaction()!.amount | currency: transaction()!.currency }}</strong>
+      <strong data-testid="payment-capture-amount">{{ transaction()!.amount | money: transaction()!.currency }}</strong>
     </div>
     <div class="payment-capture__success-field">
       <span>{{ 'BILLING.PAYMENT.FIELD.CAPTURED_AT' | translate }}</span>

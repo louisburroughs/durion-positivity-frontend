@@ -80,7 +80,7 @@
             </td>
             <td>
               @if (p.msrp !== null) {
-              {{ p.msrp | currency:(p.msrpCurrency || 'USD'):'symbol':'1.2-2' }}
+              {{ p.msrp | money:(p.msrpCurrency || 'USD'):'symbol':'1.2-2' }}
               } @else {
               <span class="muted">{{ 'COMMON.EMPTY_VALUE' | translate }}</span>
               }

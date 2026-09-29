@@ -12,15 +12,15 @@
   <dl>
     <div>
       <dt>{{ 'WORKEXEC.OPERATIONAL_COST.DEBIT_TOTAL' | translate }}</dt>
-      <dd class="amount">{{ debitTotal() | currency:'USD' }}</dd>
+      <dd class="amount">{{ debitTotal() | money:'USD' }}</dd>
     </div>
     <div>
       <dt>{{ 'WORKEXEC.OPERATIONAL_COST.CREDIT_TOTAL' | translate }}</dt>
-      <dd class="amount">{{ creditTotal() | currency:'USD' }}</dd>
+      <dd class="amount">{{ creditTotal() | money:'USD' }}</dd>
     </div>
     <div>
       <dt>{{ 'WORKEXEC.OPERATIONAL_COST.NET' | translate }}</dt>
-      <dd class="amount">{{ netTotal() | currency:'USD' }}</dd>
+      <dd class="amount">{{ netTotal() | money:'USD' }}</dd>
     </div>
   </dl>
   }

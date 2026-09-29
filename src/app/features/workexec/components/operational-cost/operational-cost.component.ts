@@ -1,13 +1,13 @@
-import { CurrencyPipe } from '@angular/common';
 import { Component, DestroyRef, Input, computed, inject, signal, OnInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
 import { WorkexecService } from '../../services/workexec.service';
+import { MoneyPipe } from '../../../../shared/money.pipe';
 
 @Component({
   selector: 'app-operational-cost',
   standalone: true,
-  imports: [CurrencyPipe, TranslatePipe],
+  imports: [MoneyPipe, TranslatePipe],
   templateUrl: './operational-cost.component.html',
   styleUrl: './operational-cost.component.css',
 })

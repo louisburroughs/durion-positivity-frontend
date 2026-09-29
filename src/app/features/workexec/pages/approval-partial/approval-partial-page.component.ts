@@ -7,6 +7,7 @@ import { WorkexecService } from '../../services/workexec.service';
 import { EstimateItemResponse, EstimateResponse, LineItemApprovalDto, PageState } from '../../models/workexec.models';
 import { CustomerLookupComponent } from '../../../../shared/customer-lookup/customer-lookup.component';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { MoneyPipe } from '../../../../shared/money.pipe';
 
 /**
  * ApprovalPartialPageComponent — Story 269 (CAP-003)
@@ -22,7 +23,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 @Component({
   selector: 'app-approval-partial-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, CustomerLookupComponent, TranslatePipe],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, CustomerLookupComponent, TranslatePipe, MoneyPipe],
   templateUrl: './approval-partial-page.component.html',
   styleUrl: './approval-partial-page.component.css',
 })

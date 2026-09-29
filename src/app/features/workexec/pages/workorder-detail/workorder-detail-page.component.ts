@@ -19,6 +19,7 @@ import {
 } from '../../models/workexec.models';
 import { WorkexecService } from '../../services/workexec.service';
 import { ModalDialogDirective } from '../../../../shared/modal-dialog.directive';
+import { MoneyPipe } from '../../../../shared/money.pipe';
 
 type PageState = 'loading' | 'ready' | 'error';
 type WorkorderTab = 'items' | 'labor' | 'parts' | 'change-requests' | 'audit';
@@ -38,13 +39,7 @@ type ModalState = 'idle' | 'confirming' | 'loading' | 'success' | 'error';
 @Component({
   selector: 'app-workorder-detail-page',
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    RouterLink,
-    TranslatePipe,
-    ModalDialogDirective,
-  ],
+  imports: [CommonModule, FormsModule, RouterLink, TranslatePipe, ModalDialogDirective, MoneyPipe],
   templateUrl: './workorder-detail-page.component.html',
   styleUrl: './workorder-detail-page.component.css',
 })

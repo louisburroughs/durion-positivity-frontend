@@ -70,7 +70,7 @@
             <td>{{ rule.conditionDimension }}: {{ rule.conditionValue }}</td>
             <td>
               {{ rule.adjustmentType === 'PERCENT' ? (rule.adjustment | percent:'1.0-2') : (rule.adjustment |
-              currency:'USD':'symbol':'1.2-2') }}
+              money:'USD':'symbol':'1.2-2') }}
             </td>
             <td>{{ rule.priority }}</td>
             <td>

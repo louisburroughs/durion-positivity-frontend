@@ -12,6 +12,7 @@ import {
   CatalogProductSummary as ProductSummary,
   PRODUCT_CATALOG_SOURCE,
 } from '../../../../shared/product-catalog/product-catalog-source.tokens';
+import { MoneyPipe } from '../../../../shared/money.pipe';
 
 /**
  * EstimatePartsPageComponent — Story 238 (CAP-002)
@@ -21,7 +22,7 @@ import {
 @Component({
   selector: 'app-estimate-parts-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, TranslatePipe],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, TranslatePipe, MoneyPipe],
   templateUrl: './estimate-parts-page.component.html',
   styleUrl: './estimate-parts-page.component.css',
 })

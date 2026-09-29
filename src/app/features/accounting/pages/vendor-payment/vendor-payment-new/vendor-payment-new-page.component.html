@@ -33,7 +33,7 @@
           <tr>
             <td>{{ bill.billNumber }}</td>
             <td>{{ bill.dueDate | date:'short' }}</td>
-            <td class="col-amount">{{ bill.openAmount | currency:'USD' }}</td>
+            <td class="col-amount">{{ bill.openAmount | money:'USD' }}</td>
           </tr>
           }
         </tbody>

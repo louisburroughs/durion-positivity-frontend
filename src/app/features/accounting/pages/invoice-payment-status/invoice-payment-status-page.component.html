@@ -50,7 +50,7 @@
       <div class="ips-field-group ips-field-group--amount">
         <p class="body-md">{{ 'ACCOUNTING.INVOICE_PAYMENT_STATUS.FIELD.BALANCE_DUE' | translate }}</p>
         <p class="display-lg">
-          {{ invoiceStatus()?.balanceDue ?? 0 | currency:(invoiceStatus()?.currency ?? 'USD') }}
+          {{ invoiceStatus()?.balanceDue ?? 0 | money:(invoiceStatus()?.currency ?? 'USD') }}
         </p>
       </div>
     </div>
@@ -58,12 +58,12 @@
     <div class="ips-payment-card__details">
       <div class="ips-field-group">
         <p class="body-md">{{ 'ACCOUNTING.INVOICE_PAYMENT_STATUS.FIELD.TOTAL_AMOUNT' | translate }}</p>
-        <p>{{ invoiceStatus()?.totalAmount ?? 0 | currency:(invoiceStatus()?.currency ?? 'USD') }}</p>
+        <p>{{ invoiceStatus()?.totalAmount ?? 0 | money:(invoiceStatus()?.currency ?? 'USD') }}</p>
       </div>
 
       <div class="ips-field-group">
         <p class="body-md">{{ 'ACCOUNTING.INVOICE_PAYMENT_STATUS.FIELD.PAID_AMOUNT' | translate }}</p>
-        <p>{{ invoiceStatus()?.paidAmount ?? 0 | currency:(invoiceStatus()?.currency ?? 'USD') }}</p>
+        <p>{{ invoiceStatus()?.paidAmount ?? 0 | money:(invoiceStatus()?.currency ?? 'USD') }}</p>
       </div>
     </div>
   </article>

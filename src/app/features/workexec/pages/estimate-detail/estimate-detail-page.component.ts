@@ -22,6 +22,7 @@ import {
   TotalsState,
   WorkorderResponse,
 } from '../../models/workexec.models';
+import { MoneyPipe } from '../../../../shared/money.pipe';
 
 /**
  * EstimateDetailPageComponent — Story 236 (CAP-002)
@@ -42,7 +43,7 @@ import {
 @Component({
   selector: 'app-estimate-detail-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, TranslatePipe],
+  imports: [CommonModule, RouterLink, TranslatePipe, MoneyPipe],
   templateUrl: './estimate-detail-page.component.html',
   styleUrl: './estimate-detail-page.component.css',
 })

@@ -13,11 +13,12 @@ import {
   customerDirectoryLabel,
 } from '../../../../shared/customer-directory/customer-directory-source.tokens';
 import { CustomerLookupComponent } from '../../../../shared/customer-lookup/customer-lookup.component';
+import { MoneyPipe } from '../../../../shared/money.pipe';
 
 @Component({
   selector: 'app-estimate-list-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslatePipe, CustomerLookupComponent],
+  imports: [CommonModule, ReactiveFormsModule, TranslatePipe, CustomerLookupComponent, MoneyPipe],
   templateUrl: './estimate-list-page.component.html',
   styleUrl: './estimate-list-page.component.css',
 })

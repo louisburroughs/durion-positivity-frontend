@@ -59,8 +59,8 @@
         <div class="line-item">
           <span class="line-item__desc">{{ item.description }}</span>
           <div class="line-item__meta">
-            <span>{{ 'WORKEXEC.ESTIMATE_COMMON.QTY_X_PRICE' | translate: { qty: item.quantity, price: (item.unitPrice | currency) } }}</span>
-            <span class="line-item__total">{{ item.lineTotal | currency }}</span>
+            <span>{{ 'WORKEXEC.ESTIMATE_COMMON.QTY_X_PRICE' | translate: { qty: item.quantity, price: (item.unitPrice | money) } }}</span>
+            <span class="line-item__total">{{ item.lineTotal | money }}</span>
           </div>
         </div>
         }
@@ -75,8 +75,8 @@
         <div class="line-item">
           <span class="line-item__desc">{{ item.description }}</span>
           <div class="line-item__meta">
-            <span>{{ 'WORKEXEC.ESTIMATE_COMMON.UNITS_X_PRICE' | translate: { qty: item.quantity, price: (item.unitPrice | currency) } }}</span>
-            <span class="line-item__total">{{ item.lineTotal | currency }}</span>
+            <span>{{ 'WORKEXEC.ESTIMATE_COMMON.UNITS_X_PRICE' | translate: { qty: item.quantity, price: (item.unitPrice | money) } }}</span>
+            <span class="line-item__total">{{ item.lineTotal | money }}</span>
           </div>
         </div>
         }
@@ -115,9 +115,9 @@
 
       @if (estimate()!.subtotal !== undefined) {
       <div class="totals-list">
-        <div class="totals-row"><span>{{ 'WORKEXEC.ESTIMATE_COMMON.SUBTOTAL' | translate }}</span><span>{{ estimate()!.subtotal | currency }}</span></div>
-        <div class="totals-row"><span>{{ 'WORKEXEC.ESTIMATE_COMMON.TAX' | translate }}</span><span>{{ estimate()!.taxAmount | currency }}</span></div>
-        <div class="totals-row totals-row--total"><span>{{ 'WORKEXEC.ESTIMATE_COMMON.TOTAL' | translate }}</span><span>{{ estimate()!.total | currency }}</span>
+        <div class="totals-row"><span>{{ 'WORKEXEC.ESTIMATE_COMMON.SUBTOTAL' | translate }}</span><span>{{ estimate()!.subtotal | money }}</span></div>
+        <div class="totals-row"><span>{{ 'WORKEXEC.ESTIMATE_COMMON.TAX' | translate }}</span><span>{{ estimate()!.taxAmount | money }}</span></div>
+        <div class="totals-row totals-row--total"><span>{{ 'WORKEXEC.ESTIMATE_COMMON.TOTAL' | translate }}</span><span>{{ estimate()!.total | money }}</span>
         </div>
       </div>
       }

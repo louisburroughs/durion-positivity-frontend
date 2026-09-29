@@ -6,11 +6,12 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { CancelOrderRequest, CancellationResponse, SalesOrderResponse } from '@durion-sdk/order';
 import { Subscription, distinctUntilChanged, finalize, map, of, switchMap } from 'rxjs';
 import { OrderService } from '../../services/order.service';
+import { MoneyPipe } from '../../../../shared/money.pipe';
 
 @Component({
   selector: 'app-order-cancel-page',
   standalone: true,
-  imports: [CommonModule, TranslatePipe],
+  imports: [CommonModule, TranslatePipe, MoneyPipe],
   templateUrl: './order-cancel-page.component.html',
   styleUrl: './order-cancel-page.component.css',
 })

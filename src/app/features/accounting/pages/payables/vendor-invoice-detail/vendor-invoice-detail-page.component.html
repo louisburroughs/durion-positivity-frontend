@@ -42,7 +42,7 @@
       </div>
       <div>
         <dt>{{ 'ACCOUNTING.PAYABLES.DETAIL.FIELD.AMOUNT' | translate }}</dt>
-        <dd>{{ bill()!.totalAmount | currency:'USD':'symbol':'1.2-2' }}</dd>
+        <dd>{{ bill()!.totalAmount | money:'USD':'symbol':'1.2-2' }}</dd>
       </div>
       <div>
         <dt>{{ 'ACCOUNTING.PAYABLES.DETAIL.FIELD.BILL_DATE' | translate }}</dt>

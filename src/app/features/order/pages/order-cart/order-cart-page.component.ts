@@ -7,11 +7,12 @@ import { AddItemRequest, CreateCartRequest, SalesOrderResponse } from '@durion-s
 import { Subscription, distinctUntilChanged, map, of, switchMap } from 'rxjs';
 import { AuthService } from '../../../../core/services/auth.service';
 import { OrderService } from '../../services/order.service';
+import { MoneyPipe } from '../../../../shared/money.pipe';
 
 @Component({
   selector: 'app-order-cart-page',
   standalone: true,
-  imports: [CommonModule, TranslatePipe],
+  imports: [CommonModule, TranslatePipe, MoneyPipe],
   templateUrl: './order-cart-page.component.html',
   styleUrl: './order-cart-page.component.css',
 })

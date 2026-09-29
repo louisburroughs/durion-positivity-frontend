@@ -7,13 +7,14 @@ import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { ProductSummary } from '../../../models/product.models';
 import { ProductCatalogService } from '../../../services/product-catalog.service';
+import { MoneyPipe } from '../../../../../shared/money.pipe';
 
 type PageState = 'idle' | 'loading' | 'empty' | 'ready' | 'error';
 
 @Component({
   selector: 'app-product-list',
   standalone: true,
-  imports: [CommonModule, TranslatePipe],
+  imports: [CommonModule, TranslatePipe, MoneyPipe],
   templateUrl: './product-list.component.html',
   styleUrl: './product-list.component.css',
 })

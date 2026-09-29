@@ -5,6 +5,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
 import { PaymentApplication } from '../../models/accounting.models';
 import { AccountingService } from '../../services/accounting.service';
+import { MoneyPipe } from '../../../../shared/money.pipe';
 
 function generateApplicationRequestId(): string {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -19,7 +20,7 @@ type ApplyState = 'idle' | 'submitting' | 'success' | 'error' | 'forbidden';
 @Component({
   selector: 'app-payment-apply-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslatePipe],
+  imports: [CommonModule, ReactiveFormsModule, TranslatePipe, MoneyPipe],
   templateUrl: './payment-apply-page.component.html',
   styleUrl: './payment-apply-page.component.css',
 })

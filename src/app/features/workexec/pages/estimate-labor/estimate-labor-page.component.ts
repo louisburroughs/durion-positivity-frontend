@@ -12,6 +12,7 @@ import {
   CatalogServiceSummary as ServiceSummary,
   PRODUCT_CATALOG_SOURCE,
 } from '../../../../shared/product-catalog/product-catalog-source.tokens';
+import { MoneyPipe } from '../../../../shared/money.pipe';
 
 /**
  * EstimateLaborPageComponent — Story 237 (CAP-002)
@@ -21,7 +22,7 @@ import {
 @Component({
   selector: 'app-estimate-labor-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, TranslatePipe],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, TranslatePipe, MoneyPipe],
   templateUrl: './estimate-labor-page.component.html',
   styleUrl: './estimate-labor-page.component.css',
 })

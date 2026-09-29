@@ -2,7 +2,7 @@
   <header class="page-header">
     <p class="page-overline">{{ 'WORKEXEC.APPROVAL.IN_PERSON.OVERLINE' | translate }}</p>
     <h1 id="approval-inperson-heading">{{ 'WORKEXEC.APPROVAL.IN_PERSON.TITLE' | translate }}</h1>
-    @if (estimate()) { <p class="page-meta">{{ estimate()!.estimateNumber ?? estimateId }} · {{ 'WORKEXEC.APPROVAL.COMMON.TOTAL_INLINE' | translate }} {{ estimate()!.total | currency }}</p> }
+    @if (estimate()) { <p class="page-meta">{{ estimate()!.estimateNumber ?? estimateId }} · {{ 'WORKEXEC.APPROVAL.COMMON.TOTAL_INLINE' | translate }} {{ estimate()!.total | money }}</p> }
   </header>
   @if (pageState() === 'loading') { <p class="hint-text" aria-busy="true">{{ 'WORKEXEC.APPROVAL.COMMON.LOADING' | translate }}</p> }
   @if (pageState() === 'error') { <div class="alert alert--error" role="alert">{{ errorMessage() }}</div> }

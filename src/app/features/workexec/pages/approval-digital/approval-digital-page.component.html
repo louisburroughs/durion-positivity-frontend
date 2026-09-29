@@ -4,7 +4,7 @@
     <p class="page-overline">{{ 'WORKEXEC.APPROVAL.DIGITAL.OVERLINE' | translate }}</p>
     <h1 id="approval-digital-heading">{{ 'WORKEXEC.APPROVAL.DIGITAL.TITLE' | translate }}</h1>
     @if (estimate()) {
-      <p class="page-meta">{{ estimate()!.estimateNumber ?? estimateId }} · {{ 'WORKEXEC.APPROVAL.COMMON.TOTAL_INLINE' | translate }} {{ estimate()!.total | currency }}</p>
+      <p class="page-meta">{{ estimate()!.estimateNumber ?? estimateId }} · {{ 'WORKEXEC.APPROVAL.COMMON.TOTAL_INLINE' | translate }} {{ estimate()!.total | money }}</p>
     }
   </header>
 

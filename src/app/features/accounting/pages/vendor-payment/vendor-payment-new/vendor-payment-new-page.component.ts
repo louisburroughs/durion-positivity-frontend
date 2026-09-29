@@ -7,6 +7,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { VendorLookupComponent } from '../../../components/vendor-lookup/vendor-lookup.component';
 import { VendorBill, VendorPaymentResult } from '../../../models/accounting.models';
 import { AccountingService } from '../../../services/accounting.service';
+import { MoneyPipe } from '../../../../../shared/money.pipe';
 
 // Human-readable payment reference (PAY-YYYYMMDD-XXXXXXXXXXXX) — shown in a
 // visible input, so no raw UUIDs; but it is also the payment's idempotency /
@@ -38,7 +39,7 @@ type VendorPaymentState =
 @Component({
   selector: 'app-vendor-payment-new-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslatePipe, VendorLookupComponent],
+  imports: [CommonModule, ReactiveFormsModule, TranslatePipe, VendorLookupComponent, MoneyPipe],
   templateUrl: './vendor-payment-new-page.component.html',
   styleUrl: './vendor-payment-new-page.component.css',
 })
