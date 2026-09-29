@@ -126,6 +126,22 @@ describe('[self] I18N-10 money is formatted in the user locale', () => {
     expect(keys.some((k) => k.includes('fxi18n-money-ok.component.html'))).toBe(false);
   });
 
+  it('catches CurrencyPipe and formatCurrency reached through a namespace import', () => {
+    const findings = i18n10Findings({
+      path: 'x.ts',
+      content: [
+        "import * as common from '@angular/common';",
+        "export const f = () => common.formatCurrency(1, 'en-US', '$');",
+        'export const P = common.CurrencyPipe;',
+        'export const D = common.DatePipe;',
+      ].join('\n'),
+    });
+    expect(findings).toEqual([
+      'uses CurrencyPipe from @angular/common through a namespace import',
+      'uses formatCurrency from @angular/common through a namespace import',
+    ]);
+  });
+
   it('does not treat a logical OR with a `currency` field as the pipe', () => {
     const findings = i18n10Findings({ path: 'x.ts', content: "const t = '{{ total || currency }}';" });
     expect(findings).toEqual([]);
