@@ -434,9 +434,30 @@ export interface ReturnToStockResult {
 // Shortage Resolution (CAP-220 #89). Field names mirror the backend's ShortageOptionDto /
 // ShortageResolveRequest / ShortageResolutionResultDto (backend #2206) — the old
 // optionId/decisionType/label/clientRequestId shape doesn't exist on the SDK. The
-// shortage-resolution PAGE stays a "not available yet" notice pending backend
-// louisburroughs/durion-positivity-backend#2233 (no read supplies the allocationId a
-// workorder route would need); this model backs the service methods only.
+// allocationId the shortage calls need comes from a workorder's reservations
+// (`listReservationsForWorkorder`, backend #2233, issue #422).
+
+/** One allocation of a workorder line's reservation; only allocations in the caller's location scope are served. */
+export interface WorkorderReservationAllocation {
+  readonly allocationId: string;
+  readonly locationId: string | null;
+  readonly allocatedQuantity: number | null;
+  readonly allocationState: string | null;
+  readonly status: string | null;
+}
+
+/** A workorder line's reservation, with the shortage the server computed (`shortQuantity`). */
+export interface WorkorderReservation {
+  readonly reservationId: string;
+  readonly workorderLineId: string | null;
+  readonly sku: string | null;
+  readonly requiredQuantity: number | null;
+  readonly allocatedQuantity: number | null;
+  readonly shortQuantity: number | null;
+  readonly status: string | null;
+  readonly allocations: readonly WorkorderReservationAllocation[];
+}
+
 export interface ShortageOption {
   allocationId: string;
   optionType: string;

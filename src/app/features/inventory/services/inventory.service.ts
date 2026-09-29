@@ -21,6 +21,8 @@ import {
   ShortageOptionDto,
   ShortageResolutionResultDto,
   ShortageResolutionService,
+  InventoryReservationsService,
+  WorkorderReservationResponse,
   ShortageResolveRequest,
   ReturnsService,
 } from '@durion-sdk/inventory';
@@ -44,6 +46,7 @@ import {
   ShortageResolutionRequest,
   ShortageResolutionResult,
   StorageLocation,
+  WorkorderReservation,
 } from '../models/inventory.models';
 
 /**
@@ -102,6 +105,7 @@ export class InventoryDomainService {
   private readonly putawaySdk = inject(PutawayService);
   private readonly replenishmentSdk = inject(ReplenishmentService);
   private readonly shortageSdk = inject(ShortageResolutionService);
+  private readonly reservationsSdk = inject(InventoryReservationsService);
 
   queryAvailability(
     sku: string,
@@ -240,6 +244,17 @@ export class InventoryDomainService {
       .pipe(map(dto => this.toReturnToStockResult(dto)));
   }
 
+  /**
+   * A workorder's line reservations with their allocations (backend #2233): the read that
+   * supplies the allocationId `getShortageOptions`/`resolveShortage` need. An unknown workorder,
+   * or one with no reservations, answers an empty list.
+   */
+  getWorkorderReservations(workorderId: string): Observable<WorkorderReservation[]> {
+    return this.reservationsSdk
+      .listReservationsForWorkorder(workorderId)
+      .pipe(map(rows => (rows ?? []).map(row => this.toWorkorderReservation(row))));
+  }
+
   getShortageOptions(
     allocationId: string,
     sku?: string,
@@ -366,6 +381,28 @@ export class InventoryDomainService {
       processedLineCount: dto.processedLines,
       status: dto.status,
       createdAt: dto.processedAt,
+    };
+  }
+
+  private toWorkorderReservation(row: WorkorderReservationResponse): WorkorderReservation {
+    const num = (value: number | undefined): number | null => (typeof value === 'number' ? value : null);
+    return {
+      reservationId: row.reservationId ?? '',
+      workorderLineId: row.workorderLineId ?? null,
+      sku: row.sku?.trim() || null,
+      requiredQuantity: num(row.requiredQuantity),
+      allocatedQuantity: num(row.allocatedQuantity),
+      shortQuantity: num(row.shortQuantity),
+      status: row.status ?? null,
+      allocations: (row.allocations ?? [])
+        .filter(allocation => !!allocation.allocationId)
+        .map(allocation => ({
+          allocationId: allocation.allocationId as string,
+          locationId: allocation.locationId ?? null,
+          allocatedQuantity: num(allocation.allocatedQuantity),
+          allocationState: allocation.allocationState ?? null,
+          status: allocation.status ?? null,
+        })),
     };
   }
 

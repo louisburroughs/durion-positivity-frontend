@@ -7571,29 +7571,56 @@
       },
       "SHORTAGE_RESOLUTION": {
         "TITLE": "Résolution de Rupture",
-        "NOT_AVAILABLE": "La résolution de rupture n'est pas encore disponible ; le backend ne fournit pas encore les données requises par cette page pour calculer les options en toute sécurité.",
         "STATE": {
-          "LOADING": "Chargement des options de rupture..."
-        },
-        "WARNING": {
-          "PARTIAL_OPTIONS": "Certaines options peuvent offrir un traitement partiel."
+          "LOADING": "Chargement des options de rupture...",
+          "LOADING_LINES": "Chargement des lignes en rupture du bon de travail…"
         },
         "FIELD": {
-          "OPTIONS": "Options de Résolution"
+          "OPTIONS": "Options de Résolution",
+          "NOTES": "Notes (facultatif)"
         },
-        "LEAD_TIME_DAYS": "Délai : {{days}} jour(s)",
         "ACTION": {
           "CONFIRM": "Confirmer la résolution"
         },
         "SUCCESS": {
           "TITLE": "Rupture Résolue",
-          "DECISION": "Décision sélectionnée"
+          "DECISION": "Décision sélectionnée",
+          "STATUS": "Statut : {{status}}"
         },
         "ERROR": {
-          "MISSING_ID": "Les ID d'ordre de travail et de ligne d'allocation sont requis.",
+          "MISSING_ID": "Un identifiant de bon de travail est requis.",
           "LOAD": "Impossible de charger les options de rupture.",
-          "SUBMIT": "Impossible de soumettre la résolution de rupture."
-        }
+          "SUBMIT": "Impossible de soumettre la résolution de rupture.",
+          "FORBIDDEN": "Vous n’êtes pas autorisé à consulter les ruptures.",
+          "LOAD_RESERVATIONS": "Impossible de charger les réservations du bon de travail.",
+          "ALLOCATION_NOT_FOUND": "Cette allocation n’existe plus. Les lignes ont changé ; rechargez-les.",
+          "VALIDATION": "La résolution a été refusée comme non valide.",
+          "FORBIDDEN_RESOLVE": "Vous n’êtes pas autorisé à résoudre les ruptures.",
+          "NOT_RESOLVABLE": "Cette option ne peut pas être appliquée : la ligne n’est peut-être plus en rupture, ou les conditions de l’option ne sont pas remplies."
+        },
+        "EMPTY": "Aucune ligne de ce bon de travail n’est en rupture.",
+        "LINES": {
+          "HEADING": "Lignes en rupture",
+          "QUANTITIES": "{{required}} requises, {{allocated}} allouées, {{short}} manquantes",
+          "NO_ALLOCATION": "Aucune allocation de cette ligne n’est dans vos emplacements : elle ne peut pas être résolue ici.",
+          "ALLOCATION": "Résoudre l’allocation de {{location}} ({{quantity}} allouées)"
+        },
+        "OPTION": {
+          "BACKORDER": "Commande en souffrance",
+          "SUBSTITUTE": "Pièce de remplacement",
+          "TRANSFER_IN": "Transfert depuis un autre site",
+          "EMERGENCY_PURCHASE": "Achat d’urgence",
+          "CANCEL_LINE": "Annuler la ligne",
+          "OTHER": "Autre option ({{type}})"
+        },
+        "DETAIL": {
+          "AVAILABLE": "{{quantity}} disponibles",
+          "COST_DELTA": "Écart de coût : {{amount}}",
+          "EXPECTED": "Prévu pour le {{date}}",
+          "FROM": "Depuis {{location}}"
+        },
+        "NO_OPTIONS": "Aucune option de résolution n’est disponible pour cette allocation.",
+        "RESOLVE_DENIED": "Résoudre une rupture exige l’autorisation inventory:shortage:resolve."
       }
     },
     "SECURITY": {

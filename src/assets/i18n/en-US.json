@@ -7571,29 +7571,56 @@
       },
       "SHORTAGE_RESOLUTION": {
         "TITLE": "Shortage Resolution",
-        "NOT_AVAILABLE": "Shortage resolution isn't available yet — the backend doesn't yet provide the data this page needs to compute options safely.",
         "STATE": {
-          "LOADING": "Loading shortage options..."
-        },
-        "WARNING": {
-          "PARTIAL_OPTIONS": "Some options may provide only partial fulfillment."
+          "LOADING": "Loading shortage options...",
+          "LOADING_LINES": "Loading the workorder’s short lines…"
         },
         "FIELD": {
-          "OPTIONS": "Resolution Options"
+          "OPTIONS": "Resolution Options",
+          "NOTES": "Notes (optional)"
         },
-        "LEAD_TIME_DAYS": "Lead time: {{days}} day(s)",
         "ACTION": {
           "CONFIRM": "Confirm Resolution"
         },
         "SUCCESS": {
           "TITLE": "Shortage Resolved",
-          "DECISION": "Selected Decision"
+          "DECISION": "Selected Decision",
+          "STATUS": "Status: {{status}}"
         },
         "ERROR": {
-          "MISSING_ID": "Workorder and allocation line IDs are required.",
+          "MISSING_ID": "A workorder ID is required.",
           "LOAD": "Failed to load shortage options.",
-          "SUBMIT": "Failed to submit shortage resolution."
-        }
+          "SUBMIT": "Failed to submit shortage resolution.",
+          "FORBIDDEN": "You don't have permission to view shortages.",
+          "LOAD_RESERVATIONS": "The workorder's reservations couldn't be loaded.",
+          "ALLOCATION_NOT_FOUND": "That allocation no longer exists. The lines have changed; reload them.",
+          "VALIDATION": "The resolution was rejected as invalid.",
+          "FORBIDDEN_RESOLVE": "You don't have permission to resolve shortages.",
+          "NOT_RESOLVABLE": "This option can't be applied: the line may no longer be short, or the option's conditions are not met."
+        },
+        "EMPTY": "No line on this workorder is short.",
+        "LINES": {
+          "HEADING": "Short lines",
+          "QUANTITIES": "{{required}} required, {{allocated}} allocated, {{short}} short",
+          "NO_ALLOCATION": "No allocation of this line is within your locations, so it cannot be resolved here.",
+          "ALLOCATION": "Resolve the allocation at {{location}} ({{quantity}} allocated)"
+        },
+        "OPTION": {
+          "BACKORDER": "Backorder",
+          "SUBSTITUTE": "Substitute part",
+          "TRANSFER_IN": "Transfer in from another site",
+          "EMERGENCY_PURCHASE": "Emergency purchase",
+          "CANCEL_LINE": "Cancel the line",
+          "OTHER": "Other option ({{type}})"
+        },
+        "DETAIL": {
+          "AVAILABLE": "{{quantity}} available",
+          "COST_DELTA": "Cost difference: {{amount}}",
+          "EXPECTED": "Expected by {{date}}",
+          "FROM": "From {{location}}"
+        },
+        "NO_OPTIONS": "No resolution options are available for this allocation.",
+        "RESOLVE_DENIED": "Resolving a shortage needs the inventory:shortage:resolve permission."
       }
     },
     "SECURITY": {
