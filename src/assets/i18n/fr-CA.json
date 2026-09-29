@@ -5689,12 +5689,16 @@
       "ISSUED": "Émis",
       "FINALIZED": "Finalisé",
       "VOID": "Annulé",
-      "CANCELLED": "Annulé"
+      "CANCELLED": "Annulé",
+      "POSTED": "Comptabilisée",
+      "ERROR": "Erreur",
+      "OTHER": "{{status}}"
     },
     "ITEM_TYPE": {
       "PART": "Pièce",
       "LABOR": "Main-d'œuvre",
-      "FEE": "Frais"
+      "FEE": "Frais",
+      "OTHER": "Autre ({{type}})"
     },
     "WIP": {
       "TITLE": "Travaux En Cours",
@@ -5739,7 +5743,12 @@
       "ERROR": {
         "LOAD": "Impossible de charger la facture.",
         "MISSING_WORKORDER_ID": "Aucun ID de workorder fourni.",
-        "SUBMIT": "Impossible de demander la finalisation. Veuillez réessayer."
+        "SUBMIT": "Impossible de demander la finalisation. Veuillez réessayer.",
+        "NO_INVOICE": "Aucune facture n’a encore été générée pour ce bon de travail.",
+        "FORBIDDEN": "Vous n’êtes pas autorisé à consulter les factures.",
+        "FORBIDDEN_FINALIZE": "Vous n’êtes pas autorisé à finaliser les factures.",
+        "MANAGER_APPROVAL": "Cette facture doit être approuvée par un gestionnaire pour être finalisée.",
+        "NOT_FINALIZABLE": "Cette facture ne peut pas être finalisée : ce n’est plus un brouillon, ou sa taxe n’a pas été calculée."
       },
       "COLUMN": {
         "DESCRIPTION": "Description",

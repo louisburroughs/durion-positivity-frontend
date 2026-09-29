@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { EmployeeAPIService, PeopleAvailabilityAPIService, PeopleAvailabilityResponse } from '@durion-sdk/people';
-import { ApiBaseService } from '../../../core/services/api-base.service';
+import { InvoiceDetailsResponse, InvoiceService } from '@durion-sdk/invoice';
 import { isoDateLocal } from '../../../core/utils/local-date';
 import {
   ChangeRequestAPIService,
@@ -45,7 +45,6 @@ import {
   EstimateSummaryResponse,
   EstimateStatus,
   FinalizeInvoiceRequest,
-  FinalizeInvoiceResponse,
   IssuePartsRequest,
   OperationalContextResponse,
   PartUsageResponse,
@@ -90,7 +89,7 @@ import {
  *   approveEstimate         → POST   /v1/workorders/estimates/{estimateId}/approval
  *
  * Idempotency-Key header is forwarded for mutating operations per
- * DECISION-INVENTORY-012 via ApiBaseService options.
+ * DECISION-INVENTORY-012.
  *
  * CAP-004 (Promotion) operationId mapping:
  *   promoteEstimateToWorkorder → POST /v1/workorders/estimates/{estimateId}/promote
@@ -139,7 +138,7 @@ interface RawEstimateSummary {
 
 @Injectable({ providedIn: 'root' })
 export class WorkexecService {
-  private readonly api = inject(ApiBaseService);
+  private readonly invoiceApi = inject(InvoiceService);
   private readonly estimateApi = inject(EstimateAPIService);
   private readonly estimateSearchApi = inject(EstimateSearchService);
   private readonly workorderSearchApi = inject(WorkorderSearchService);
@@ -890,36 +889,34 @@ export class WorkexecService {
   }
 
   /**
-   * operationId: getWorkorderInvoiceView
-   * GET /v1/workorders/{workorderId}/invoice-view
+   * operationId: getInvoiceByWorkorder (pos-invoice)
+   * GET /v1/invoices/by-workorder/{workorderId}
    *
-   * (durion-positivity-backend#2210 ruling, issue #350) Neither this operation nor
-   * `requestInvoiceFinalization` below has a published contract: invoice content and
-   * finalization belong in pos-invoice (`getInvoice`/`finalizeInvoice`), reached from a
-   * workorder via `generateWorkorderInvoice`, but `WorkorderResponse` still has no
-   * `invoiceId` to look one up read-only. Blocked on
-   * durion-positivity-backend#2232 (add `invoiceId` to `WorkorderResponse`, or
-   * `GET /v1/invoices/by-workorder/{workorderId}`); stays on `ApiBaseService` until then.
+   * The invoice linked to a workorder, as the invoice finalization page renders it
+   * (durion-positivity-backend#2232, issue #350). A workorder with no generated invoice
+   * answers 404.
    */
   getWorkorderInvoiceView(workorderId: string): Observable<WorkorderInvoiceView> {
-    return this.api.get<WorkorderInvoiceView>(`/v1/workorders/${workorderId}/invoice-view`);
+    return this.invoiceApi
+      .getInvoiceByWorkorder(workorderId)
+      .pipe(map(invoice => toWorkorderInvoiceView(workorderId, invoice)));
   }
 
   /**
-   * operationId: requestInvoiceFinalization
-   * POST /v1/workorders/{workorderId}/invoice/finalize
+   * operationId: finalizeInvoice (pos-invoice)
+   * POST /v1/invoices/{invoiceId}/finalize
    *
-   * (durion-positivity-backend#2210 ruling, issue #350) Blocked on
-   * durion-positivity-backend#2232 — see `getWorkorderInvoiceView` above.
+   * DRAFT → FINALIZED. `reason` is sent as the override reason and `authorityCode` as the
+   * manager approval (elevation) code; the server decides whether either is required
+   * (403 MANAGER_APPROVAL_REQUIRED) and refuses a non-DRAFT invoice with 409.
    */
-  requestInvoiceFinalization(
-    workorderId: string,
-    request?: FinalizeInvoiceRequest,
-  ): Observable<FinalizeInvoiceResponse> {
-    return this.api.post<FinalizeInvoiceResponse>(
-      `/v1/workorders/${workorderId}/invoice/finalize`,
-      request ?? {},
-    );
+  finalizeInvoice(invoiceId: string, request?: FinalizeInvoiceRequest): Observable<WorkorderInvoiceView> {
+    return this.invoiceApi
+      .finalizeInvoice(invoiceId, {
+        ...(request?.reason ? { overrideReason: request.reason } : {}),
+        ...(request?.authorityCode ? { managerApprovalCode: request.authorityCode } : {}),
+      })
+      .pipe(map(invoice => toWorkorderInvoiceView(invoice.workorderId ?? '', invoice)));
   }
 
   // ── CAP-005: Technician Assignment (Story 225) ────────────────────────────
@@ -1417,4 +1414,31 @@ export class WorkexecService {
   stopTimers(_idempotencyKey: string): Observable<unknown> {
     return this.timeTracking.stopTimers();
   }
+}
+
+/** The invoice detail in the shape the finalization page renders; nothing is recomputed. */
+function toWorkorderInvoiceView(requestedWorkorderId: string, invoice: InvoiceDetailsResponse): WorkorderInvoiceView {
+  const number = (value: number | undefined): number | null => (typeof value === 'number' ? value : null);
+  return {
+    workorderId: invoice.workorderId ?? requestedWorkorderId,
+    workorderNumber: invoice.workorderNumber?.trim() || null,
+    invoiceId: invoice.invoiceId ?? '',
+    invoiceNumber: invoice.invoiceNumber?.trim() || null,
+    lineItems: (invoice.items ?? []).map((item, index) => ({
+      lineItemId: item.id ?? `line-${index}`,
+      description: item.description ?? '',
+      quantity: number(item.quantity),
+      unitPrice: number(item.unitPrice),
+      lineTotal: number(item.amount),
+      itemType: item.type ?? '',
+    })),
+    subtotal: number(invoice.subtotal),
+    taxAmount: number(invoice.tax),
+    total: number(invoice.total),
+    // The invoice detail carries no currency; the fallback is ADR-0067 PC-14.
+    currency: null,
+    invoiceStatus: invoice.status ?? 'DRAFT',
+    finalizedAt: invoice.finalizedAt,
+    createdAt: invoice.createdAt,
+  };
 }

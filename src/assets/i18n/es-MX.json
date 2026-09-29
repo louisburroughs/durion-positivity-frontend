@@ -5689,12 +5689,16 @@
       "ISSUED": "Emitido",
       "FINALIZED": "Finalizado",
       "VOID": "Anulado",
-      "CANCELLED": "Cancelado"
+      "CANCELLED": "Cancelado",
+      "POSTED": "Contabilizada",
+      "ERROR": "Error",
+      "OTHER": "{{status}}"
     },
     "ITEM_TYPE": {
       "PART": "Pieza",
       "LABOR": "Mano de obra",
-      "FEE": "Cargo"
+      "FEE": "Cargo",
+      "OTHER": "Otro ({{type}})"
     },
     "WIP": {
       "TITLE": "Trabajo En Progreso",
@@ -5739,7 +5743,12 @@
       "ERROR": {
         "LOAD": "No se pudo cargar la factura.",
         "MISSING_WORKORDER_ID": "No se proporciónó ID de workorder.",
-        "SUBMIT": "No se pudo solicitar la finalización. Intente de nuevo."
+        "SUBMIT": "No se pudo solicitar la finalización. Intente de nuevo.",
+        "NO_INVOICE": "Todavía no se ha generado una factura para esta orden de trabajo.",
+        "FORBIDDEN": "No tiene permiso para ver facturas.",
+        "FORBIDDEN_FINALIZE": "No tiene permiso para finalizar facturas.",
+        "MANAGER_APPROVAL": "Esta factura necesita la aprobación de un gerente para finalizarse.",
+        "NOT_FINALIZABLE": "Esta factura no se puede finalizar: ya no es un borrador o aún no se calculó su impuesto."
       },
       "COLUMN": {
         "DESCRIPTION": "Descripción",

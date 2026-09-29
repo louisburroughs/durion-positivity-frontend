@@ -215,6 +215,7 @@ export const WORKEXEC_ROUTES: Routes = [
       /** Story 261: Invoice visibility and finalization request */
       {
         path: 'workorders/:workorderId/invoice-finalization',
+        data: { permissions: WORKEXEC_PAGE.invoiceFinalization },
         loadComponent: () =>
           import('./pages/invoice-finalization/invoice-finalization-page.component').then(
             m => m.InvoiceFinalizationPageComponent,
