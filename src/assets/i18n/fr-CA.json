@@ -4361,7 +4361,8 @@
       },
       "ACTION": {
         "CLOSE": "Clôturer la période",
-        "REOPEN": "Rouvrir la période"
+        "REOPEN": "Rouvrir la période",
+        "CLOSE_WITH_EXCEPTION": "Clôturer avec exception"
       },
       "CLOSE_MONTH": {
         "HEADING": "Clôturer un mois",
@@ -4393,7 +4394,8 @@
       },
       "OUTCOME": {
         "CLOSED": "{{period}} est clôturé.",
-        "REOPENED": "{{period}} est de nouveau ouvert."
+        "REOPENED": "{{period}} est de nouveau ouvert.",
+        "CLOSED_WITH_EXCEPTION": "{{period}} est clôturé avec une exception de rapprochement bancaire."
       },
       "ERROR": {
         "LOAD": "Impossible de charger les périodes comptables.",
@@ -4409,7 +4411,74 @@
         "FORBIDDEN_CLOSE": "Vous n'êtes pas autorisé à clôturer les périodes comptables.",
         "FORBIDDEN_REOPEN": "Vous n'êtes pas autorisé à rouvrir les périodes comptables.",
         "OTHER_CLOSE": "Impossible de clôturer {{period}}. Réessayez.",
-        "OTHER_REOPEN": "Impossible de rouvrir {{period}}. Réessayez."
+        "OTHER_REOPEN": "Impossible de rouvrir {{period}}. Réessayez.",
+        "BANK_RECONCILIATION_INCOMPLETE": "{{period}} ne peut pas être clôturé tant que le rapprochement bancaire n'est pas terminé ({{count}} comptes non prêts). Ouvrez l'état de préparation de la période pour voir ce qui bloque.",
+        "BANK_RECONCILIATION_INCOMPLETE_UNCOUNTED": "{{period}} ne peut pas être clôturé tant que le rapprochement bancaire n'est pas terminé. Ouvrez l'état de préparation de la période pour voir ce qui bloque.",
+        "EXCEPTION_NOT_PERMITTED": "Clôturer {{period}} avec une exception exige l’autorisation {{override}}.",
+        "JUSTIFICATION_REQUIRED": "La justification est trop courte. Expliquez pourquoi {{period}} est clôturé sans rapprochement bancaire, puis réessayez."
+      },
+      "READINESS": {
+        "TOGGLE": "Préparation",
+        "HEADING": "Préparation du rapprochement bancaire pour {{period}}",
+        "LOADING": "Vérification de la préparation du rapprochement bancaire…",
+        "UNAVAILABLE": "Impossible de lire la préparation du rapprochement bancaire.",
+        "READY": "Prêt à clôturer",
+        "NOT_READY": "Pas prêt à clôturer",
+        "COUNTS": "{{blocking}} bloquants, {{warning}} avertissements",
+        "TENANT_HEADING": "Tous les comptes",
+        "NO_ACCOUNTS": "Aucun compte bancaire n’est concerné pour cette période.",
+        "ACCOUNTS_CAPTION": "Comptes bancaires et leur préparation pour {{period}}",
+        "COL_ACCOUNT": "Compte",
+        "COL_BASELINE": "Date de référence",
+        "COL_COVERAGE": "Relevés jusqu’au",
+        "COL_RECONCILED": "Rapproché jusqu’au",
+        "COL_CHECKS": "Contrôles",
+        "NO_CHECKS": "Aucun problème",
+        "CLEARING_DETAIL": "Le compte d’attente {{account}} présente {{atEnd}} à la fin de la période et {{atAgingDate}} au {{agingDate}} ; {{count}} ajustements sont antérieurs à cette date.",
+        "POLICY": {
+          "ADVISORY": "Politique : indicative (ne bloque jamais la clôture)",
+          "REQUIRED": "Politique : obligatoire",
+          "REQUIRED_WITH_EXCEPTION": "Politique : obligatoire, exception permise",
+          "UNKNOWN": "Politique : non disponible"
+        },
+        "SEVERITY": {
+          "BLOCKING": "Bloquant",
+          "WARNING": "Avertissement",
+          "INFO": "Information"
+        },
+        "CHECK": {
+          "DRAFT_JOURNAL_ENTRIES": "Écritures en brouillon dans la période",
+          "STATEMENT_COVERAGE": "Les relevés n’atteignent pas la fin de la période",
+          "RECONCILIATION_APPROVED": "Aucun rapprochement approuvé n’atteint la fin de la période",
+          "RECONCILIATION_IN_FLIGHT": "Un rapprochement est en cours ou en attente d’approbation",
+          "RECONCILIATION_INVALIDATED": "Un rapprochement approuvé a été invalidé",
+          "BALANCE_AGREEMENT": "Le solde comptable a changé depuis l’approbation",
+          "UNEXPLAINED_BANK_TRANSACTIONS": "Opérations bancaires non expliquées",
+          "UNEXPLAINED_LEDGER_LINES": "Lignes comptables non expliquées",
+          "UNPOSTED_ADJUSTMENTS": "Ajustements de rapprochement non comptabilisés",
+          "COVERAGE_LAG_APPLIED": "Validé uniquement grâce au délai de couverture",
+          "INCOMPLETE_IMPORTS": "Importations de relevés non validées",
+          "OUTSTANDING_ITEMS_AGING": "Éléments en suspens anciens",
+          "CLEARING_BALANCE_AGING": "Compte d’attente non ramené à zéro",
+          "LATE_BANK_TRANSACTIONS": "Opérations bancaires arrivées après l’approbation",
+          "RECONCILED_AFTER_CLOSE": "Rapprochement approuvé après la clôture de la période",
+          "OTHER": "Autre contrôle ({{code}})"
+        },
+        "REFUSED": {
+          "BLOCKED": "{{period}} ne peut pas être clôturé : des contrôles de rapprochement bancaire le bloquent. Ouvrez sa préparation pour voir pourquoi.",
+          "BLOCKED_NO_OVERRIDE": "{{period}} ne peut pas être clôturé : des contrôles de rapprochement bancaire le bloquent, et une clôture avec exception exige l’autorisation {{override}}.",
+          "UNAVAILABLE": "{{period}} ne peut pas être clôturé tant que sa préparation de rapprochement bancaire ne peut pas être lue."
+        }
+      },
+      "EXCEPTION": {
+        "TITLE": "Clôturer {{period}} avec une exception ?",
+        "BODY": "Le rapprochement bancaire de {{period}} n’est pas terminé. Si vous clôturez quand même, votre justification et l’état de préparation actuel sont consignés dans la piste d’audit.",
+        "LABEL": "Pourquoi clôturer sans terminer le rapprochement bancaire",
+        "HINT": "Obligatoire, au moins {{min}} caractères.",
+        "CONFIRM": "Clôturer avec exception",
+        "ERROR": {
+          "TOO_SHORT": "Saisissez au moins {{min}} caractères."
+        }
       }
     }
   },

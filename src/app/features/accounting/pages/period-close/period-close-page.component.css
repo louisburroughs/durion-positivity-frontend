@@ -145,6 +145,102 @@
   white-space: nowrap;
 }
 
+.actions-cell .btn + .btn {
+  margin-inline-start: var(--space-2);
+}
+
+.status-badge--blocking,
+.severity-badge--blocking {
+  background: var(--status-error-bg);
+  color: var(--status-error-fg);
+}
+
+/* The reason a close cannot go ahead, named beside the disabled button. */
+.close-refused {
+  display: block;
+  max-width: 22rem;
+  margin-top: var(--space-1);
+  color: var(--status-error-fg);
+  font-size: 0.8125rem;
+  white-space: normal;
+}
+
+.readiness-row > td {
+  background: var(--surface-inset);
+}
+
+.readiness-panel {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.readiness-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  margin: 0;
+}
+
+.readiness-policy {
+  font-weight: 600;
+}
+
+.readiness-tenant h3 {
+  margin: 0 0 var(--space-1);
+  font-size: 0.9375rem;
+}
+
+.check-list {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.check-item {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: baseline;
+}
+
+.check-detail {
+  flex-basis: 100%;
+  font-size: 0.8125rem;
+}
+
+.severity-badge {
+  display: inline-block;
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--radius-sm);
+  background: var(--status-neutral-bg);
+  color: var(--status-neutral-fg);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.severity-badge--warning {
+  background: var(--status-warning-bg);
+  color: var(--status-warning-fg);
+}
+
+.severity-badge--info {
+  background: var(--status-info-bg);
+  color: var(--status-info-fg);
+}
+
+.account-code {
+  display: block;
+  font-weight: 600;
+}
+
+.account-name {
+  display: block;
+  font-weight: 400;
+}
+
 .btn {
   min-height: 2.25rem;
   padding: var(--space-2) var(--space-4);

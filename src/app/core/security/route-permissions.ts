@@ -337,6 +337,12 @@ export const ACCOUNTING_SECTION = {
   periodClose: ['accounting:period:close'],
   periodReopen: ['accounting:period:reopen'],
   /**
+   * A close despite BLOCKING bank-reconciliation checks under
+   * `REQUIRED_WITH_EXCEPTION` needs this beside `periodClose`
+   * (SPEC-manual-bank-reconciliation §5.2, decision D4).
+   */
+  periodOverride: ['accounting:period:override'],
+  /**
    * Bank-reconciliation approver actions: finalize, return, cancel, supersede,
    * exclude/restore, adjustment reverse and clear-in-gap
    * (SPEC-manual-bank-reconciliation §6.2).
