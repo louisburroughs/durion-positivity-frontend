@@ -42,6 +42,16 @@ export type PeriodActionFailure =
   | { readonly kind: 'ALREADY_OPEN' }
   /** 404 PERIOD_NOT_FOUND: no row, and (on close) the month has not started. */
   | { readonly kind: 'NOT_FOUND' }
+  /**
+   * 422 PERIOD_BANK_RECONCILIATION_INCOMPLETE: the close policy refused the
+   * close. `accountCount` counts the `fieldErrors[unreconciledGlAccountIds]`
+   * entries, or is null when the body listed none.
+   */
+  | { readonly kind: 'BANK_RECONCILIATION_INCOMPLETE'; readonly accountCount: number | null }
+  /** 403 PERIOD_CLOSE_EXCEPTION_NOT_PERMITTED: the exception needs `accounting:period:override`. */
+  | { readonly kind: 'EXCEPTION_NOT_PERMITTED' }
+  /** 400 JUSTIFICATION_REQUIRED: the exception justification is shorter than the server accepts. */
+  | { readonly kind: 'JUSTIFICATION_REQUIRED' }
   /** 400: a malformed code, or a blank or oversized justification. */
   | { readonly kind: 'INVALID' }
   | { readonly kind: 'FORBIDDEN' }
@@ -49,6 +59,65 @@ export type PeriodActionFailure =
 
 /** The backend caps the reopen justification at 500 characters. */
 export const REOPEN_JUSTIFICATION_MAX = 500;
+
+/**
+ * The backend refuses a bank-reconciliation exception justification shorter
+ * than this (400 JUSTIFICATION_REQUIRED, decision D15). Hinted here; the
+ * server stays authoritative.
+ */
+export const EXCEPTION_JUSTIFICATION_MIN = 10;
+
+/**
+ * Bank reconciliation close policy (SPEC-manual-bank-reconciliation §5.2).
+ * `ADVISORY` reports every check but never blocks; `REQUIRED` blocks on any
+ * BLOCKING check; `REQUIRED_WITH_EXCEPTION` blocks unless the close carries an
+ * exception from a holder of `accounting:period:close` and `:override`.
+ */
+export type BankReconciliationClosePolicy = 'ADVISORY' | 'REQUIRED_WITH_EXCEPTION' | 'REQUIRED';
+
+export type ReadinessSeverity = 'BLOCKING' | 'WARNING' | 'INFO';
+
+/** One readiness check that fired (§5.3). `code` is kept as served, so an unknown code still renders. */
+export interface ReadinessCheck {
+  readonly code: string;
+  readonly severity: ReadinessSeverity;
+  /** What the check names: ids, frontier dates, balances, counts. Shape varies by `code`. */
+  readonly references: Readonly<Record<string, unknown>>;
+}
+
+/** The readiness of one in-scope bank account. */
+export interface ReadinessAccount {
+  readonly glAccountId: string;
+  readonly accountCode: string | null;
+  readonly accountName: string | null;
+  /** Baseline that applies at the period end, a bare `YYYY-MM-DD`; null before the first acknowledged statement. */
+  readonly baselineDate: string | null;
+  /** End date of the latest COMMITTED statement. */
+  readonly coverageFrontier: string | null;
+  /** End of the contiguous FINALIZED chain from the baseline. */
+  readonly reconciledFrontier: string | null;
+  readonly checks: readonly ReadinessCheck[];
+}
+
+/** Bank reconciliation close readiness of one period (§5.3). Every gate is served, never derived. */
+export interface CloseReadiness {
+  readonly periodCode: string;
+  readonly policy: BankReconciliationClosePolicy | null;
+  /** Whether the period may close under the policy without an exception. */
+  readonly ready: boolean;
+  readonly blockingCount: number;
+  readonly warningCount: number;
+  /** Tenant-wide checks (`DRAFT_JOURNAL_ENTRIES`, `CLEARING_BALANCE_AGING`), outside any account. */
+  readonly checks: readonly ReadinessCheck[];
+  readonly accounts: readonly ReadinessAccount[];
+}
+
+/** The tenant's close policy as the page needs it (`GET /periods/bank-reconciliation-policy`). */
+export interface BankReconciliationPolicy {
+  readonly closePolicy: BankReconciliationClosePolicy | null;
+  /** ISO 4217 functional currency readiness amounts are expressed in. */
+  readonly currency: string | null;
+}
 
 const PERIOD_CODE = /^\d{4}-(0[1-9]|1[0-2])$/;
 const UUID_SHAPED = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

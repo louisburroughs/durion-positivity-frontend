@@ -4361,7 +4361,8 @@
       },
       "ACTION": {
         "CLOSE": "Close period",
-        "REOPEN": "Reopen period"
+        "REOPEN": "Reopen period",
+        "CLOSE_WITH_EXCEPTION": "Close with exception"
       },
       "CLOSE_MONTH": {
         "HEADING": "Close a month",
@@ -4393,7 +4394,8 @@
       },
       "OUTCOME": {
         "CLOSED": "{{period}} is closed.",
-        "REOPENED": "{{period}} is open again."
+        "REOPENED": "{{period}} is open again.",
+        "CLOSED_WITH_EXCEPTION": "{{period}} is closed with a bank reconciliation exception."
       },
       "ERROR": {
         "LOAD": "Accounting periods couldn't be loaded.",
@@ -4409,7 +4411,74 @@
         "FORBIDDEN_CLOSE": "You don't have permission to close accounting periods.",
         "FORBIDDEN_REOPEN": "You don't have permission to reopen accounting periods.",
         "OTHER_CLOSE": "{{period}} couldn't be closed. Try again.",
-        "OTHER_REOPEN": "{{period}} couldn't be reopened. Try again."
+        "OTHER_REOPEN": "{{period}} couldn't be reopened. Try again.",
+        "BANK_RECONCILIATION_INCOMPLETE": "{{period}} can't be closed until bank reconciliation is complete ({{count}} accounts not ready). Open the period's readiness to see what blocks it.",
+        "BANK_RECONCILIATION_INCOMPLETE_UNCOUNTED": "{{period}} can't be closed until bank reconciliation is complete. Open the period's readiness to see what blocks it.",
+        "EXCEPTION_NOT_PERMITTED": "Closing {{period}} with an exception needs the {{override}} permission.",
+        "JUSTIFICATION_REQUIRED": "The justification was too short. Explain why {{period}} closes without bank reconciliation and try again."
+      },
+      "READINESS": {
+        "TOGGLE": "Readiness",
+        "HEADING": "Bank reconciliation readiness for {{period}}",
+        "LOADING": "Checking bank reconciliation readiness…",
+        "UNAVAILABLE": "Bank reconciliation readiness couldn't be read.",
+        "READY": "Ready to close",
+        "NOT_READY": "Not ready to close",
+        "COUNTS": "{{blocking}} blocking, {{warning}} warnings",
+        "TENANT_HEADING": "All accounts",
+        "NO_ACCOUNTS": "No bank accounts are in scope for this period.",
+        "ACCOUNTS_CAPTION": "Bank accounts and their readiness for {{period}}",
+        "COL_ACCOUNT": "Account",
+        "COL_BASELINE": "Baseline",
+        "COL_COVERAGE": "Statements through",
+        "COL_RECONCILED": "Reconciled through",
+        "COL_CHECKS": "Checks",
+        "NO_CHECKS": "No issues",
+        "CLEARING_DETAIL": "Clearing account {{account}} holds {{atEnd}} at the period end and {{atAgingDate}} on {{agingDate}}; {{count}} adjustments are older than that.",
+        "POLICY": {
+          "ADVISORY": "Policy: advisory (never blocks the close)",
+          "REQUIRED": "Policy: required",
+          "REQUIRED_WITH_EXCEPTION": "Policy: required, exception allowed",
+          "UNKNOWN": "Policy: not available"
+        },
+        "SEVERITY": {
+          "BLOCKING": "Blocking",
+          "WARNING": "Warning",
+          "INFO": "Info"
+        },
+        "CHECK": {
+          "DRAFT_JOURNAL_ENTRIES": "Draft journal entries in the period",
+          "STATEMENT_COVERAGE": "Statements do not reach the period end",
+          "RECONCILIATION_APPROVED": "No approved reconciliation reaches the period end",
+          "RECONCILIATION_IN_FLIGHT": "A reconciliation is still in progress or awaiting approval",
+          "RECONCILIATION_INVALIDATED": "An approved reconciliation was invalidated",
+          "BALANCE_AGREEMENT": "The ledger balance changed since approval",
+          "UNEXPLAINED_BANK_TRANSACTIONS": "Unexplained bank transactions",
+          "UNEXPLAINED_LEDGER_LINES": "Unexplained ledger lines",
+          "UNPOSTED_ADJUSTMENTS": "Reconciliation adjustments not posted",
+          "COVERAGE_LAG_APPLIED": "Passed only because of the coverage lag",
+          "INCOMPLETE_IMPORTS": "Statement imports not committed",
+          "OUTSTANDING_ITEMS_AGING": "Outstanding items are aging",
+          "CLEARING_BALANCE_AGING": "Clearing account not cleared back to zero",
+          "LATE_BANK_TRANSACTIONS": "Bank transactions arrived after approval",
+          "RECONCILED_AFTER_CLOSE": "Reconciliation approved after the period closed",
+          "OTHER": "Other check ({{code}})"
+        },
+        "REFUSED": {
+          "BLOCKED": "{{period}} can't be closed: bank reconciliation checks block it. Open its readiness to see why.",
+          "BLOCKED_NO_OVERRIDE": "{{period}} can't be closed: bank reconciliation checks block it, and closing with an exception needs the {{override}} permission.",
+          "UNAVAILABLE": "{{period}} can't be closed until its bank reconciliation readiness can be read."
+        }
+      },
+      "EXCEPTION": {
+        "TITLE": "Close {{period}} with an exception?",
+        "BODY": "Bank reconciliation is not complete for {{period}}. Closing it anyway records your justification and the readiness at this moment in the audit trail.",
+        "LABEL": "Why close without completing bank reconciliation",
+        "HINT": "Required, at least {{min}} characters.",
+        "CONFIRM": "Close with exception",
+        "ERROR": {
+          "TOO_SHORT": "Enter at least {{min}} characters."
+        }
       }
     }
   },

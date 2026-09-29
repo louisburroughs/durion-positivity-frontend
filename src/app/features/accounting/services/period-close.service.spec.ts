@@ -7,8 +7,15 @@ import {
   AccountingPeriodResponseStatusEnum,
   AccountingPeriodsService as AccountingPeriodsSdk,
   ApiError,
+  BankReconciliationPolicyResponse,
+  BankReconciliationPolicyResponseClosePolicyEnum,
+  BankReconciliationPolicyResponseCloseScopeEnum,
+  CloseReadinessCheckCodeEnum,
+  CloseReadinessCheckSeverityEnum,
+  CloseReadinessResponse,
+  CloseReadinessResponsePolicyEnum,
 } from '@durion-sdk/accounting';
-import { AccountingPeriod } from '../models/period-close.models';
+import { AccountingPeriod, BankReconciliationPolicy, CloseReadiness } from '../models/period-close.models';
 import { PeriodCloseService, classifyPeriodActionError } from './period-close.service';
 
 const sdkRow = (overrides: Partial<AccountingPeriodResponse> = {}): AccountingPeriodResponse => ({
@@ -39,6 +46,8 @@ describe('PeriodCloseService', () => {
     listAccountingPeriods: vi.fn(),
     closeAccountingPeriod: vi.fn(),
     reopenAccountingPeriod: vi.fn(),
+    getAccountingPeriodCloseReadiness: vi.fn(),
+    getBankReconciliationPolicy: vi.fn(),
   };
 
   beforeEach(() => {
@@ -131,7 +140,7 @@ describe('PeriodCloseService', () => {
   });
 
   describe('closePeriod()', () => {
-    it('passes the period code as the only argument and maps the response', () => {
+    it('sends no body without an exception and maps the response', () => {
       sdkStub.closeAccountingPeriod.mockReturnValueOnce(
         of(sdkRow({ status: AccountingPeriodResponseStatusEnum.Closed, closedBy: 'controller.jane' })),
       );
@@ -139,9 +148,114 @@ describe('PeriodCloseService', () => {
       let row: AccountingPeriod | undefined;
       service.closePeriod('2026-07').subscribe(value => (row = value));
 
-      expect(sdkStub.closeAccountingPeriod).toHaveBeenCalledWith('2026-07');
+      expect(sdkStub.closeAccountingPeriod).toHaveBeenCalledWith('2026-07', undefined);
       expect(row?.status).toBe('CLOSED');
       expect(row?.closedBy).toBe('controller.jane');
+    });
+
+    it('sends the exception justification as the bank reconciliation exception body', () => {
+      sdkStub.closeAccountingPeriod.mockReturnValueOnce(of(sdkRow({ status: AccountingPeriodResponseStatusEnum.Closed })));
+
+      service.closePeriod('2026-07', 'Bank statement delayed by the bank').subscribe();
+
+      expect(sdkStub.closeAccountingPeriod).toHaveBeenCalledWith('2026-07', {
+        bankReconciliationException: { justification: 'Bank statement delayed by the bank' },
+      });
+    });
+  });
+
+  describe('getCloseReadiness()', () => {
+    const sdkReadiness: CloseReadinessResponse = {
+      periodCode: '2026-07',
+      policy: CloseReadinessResponsePolicyEnum.RequiredWithException,
+      ready: false,
+      blockingCount: 1,
+      warningCount: 1,
+      checks: [
+        {
+          code: CloseReadinessCheckCodeEnum.ClearingBalanceAging,
+          severity: CloseReadinessCheckSeverityEnum.Warning,
+          detail: 'Clearing account 2360 holds $125.50',
+          references: { accountCode: '2360', balanceAtPeriodEnd: 125.5 },
+        },
+      ],
+      accounts: [
+        {
+          glAccountId: 'gl-1010',
+          accountCode: '1010',
+          accountName: 'Operating Checking',
+          baselineDate: '2026-05-01',
+          coverageFrontier: '2026-07-31',
+          reconciledFrontier: null,
+          checks: [
+            {
+              code: CloseReadinessCheckCodeEnum.ReconciliationApproved,
+              severity: CloseReadinessCheckSeverityEnum.Blocking,
+              detail: 'No FINALIZED reconciliation',
+              references: {},
+            },
+          ],
+        },
+      ],
+    };
+
+    it('reads the period and maps the served gates, tenant-wide checks and accounts as served', () => {
+      sdkStub.getAccountingPeriodCloseReadiness.mockReturnValueOnce(of(sdkReadiness));
+
+      let result: CloseReadiness | undefined;
+      service.getCloseReadiness('2026-07').subscribe(value => (result = value));
+
+      expect(sdkStub.getAccountingPeriodCloseReadiness).toHaveBeenCalledWith('2026-07');
+      expect(result).toEqual({
+        periodCode: '2026-07',
+        policy: 'REQUIRED_WITH_EXCEPTION',
+        ready: false,
+        blockingCount: 1,
+        warningCount: 1,
+        checks: [{ code: 'CLEARING_BALANCE_AGING', severity: 'WARNING', references: { accountCode: '2360', balanceAtPeriodEnd: 125.5 } }],
+        accounts: [
+          {
+            glAccountId: 'gl-1010',
+            accountCode: '1010',
+            accountName: 'Operating Checking',
+            baselineDate: '2026-05-01',
+            coverageFrontier: '2026-07-31',
+            reconciledFrontier: null,
+            checks: [{ code: 'RECONCILIATION_APPROVED', severity: 'BLOCKING', references: {} }],
+          },
+        ],
+      });
+    });
+
+    it('keys a response without a period code by the code it asked for, and reads a missing ready as not ready', () => {
+      sdkStub.getAccountingPeriodCloseReadiness.mockReturnValueOnce(of({ policy: CloseReadinessResponsePolicyEnum.Required }));
+
+      let result: CloseReadiness | undefined;
+      service.getCloseReadiness('2026-08').subscribe(value => (result = value));
+
+      expect(result?.periodCode).toBe('2026-08');
+      expect(result?.ready).toBe(false);
+      expect(result?.checks).toEqual([]);
+      expect(result?.accounts).toEqual([]);
+    });
+  });
+
+  describe('getBankReconciliationPolicy()', () => {
+    it('reads the close policy and the functional currency only', () => {
+      const response: BankReconciliationPolicyResponse = {
+        closePolicy: BankReconciliationPolicyResponseClosePolicyEnum.Advisory,
+        closeScope: BankReconciliationPolicyResponseCloseScopeEnum.BankCashSubtype,
+        currency: 'USD',
+        allowSelfApproval: false,
+        closeCoverageLagDays: 0,
+        otherApprovalThreshold: null,
+      };
+      sdkStub.getBankReconciliationPolicy.mockReturnValueOnce(of(response));
+
+      let result: BankReconciliationPolicy | undefined;
+      service.getBankReconciliationPolicy().subscribe(value => (result = value));
+
+      expect(result).toEqual({ closePolicy: 'ADVISORY', currency: 'USD' });
     });
   });
 
@@ -202,6 +316,37 @@ describe('classifyPeriodActionError()', () => {
     [0, 'OTHER'],
   ])('falls back to the HTTP status %s when the body carries no known code', (status, kind) => {
     expect(classifyPeriodActionError(httpError(status, null))).toEqual({ kind });
+  });
+
+  it('counts one blocked account per unreconciledGlAccountIds field error', () => {
+    const failure = classifyPeriodActionError(
+      httpError(
+        422,
+        apiError({
+          code: 'PERIOD_BANK_RECONCILIATION_INCOMPLETE',
+          fieldErrors: [
+            { field: 'unreconciledGlAccountIds', message: 'gl-1010 1010: RECONCILIATION_APPROVED' },
+            { field: 'unreconciledGlAccountIds', message: 'gl-1020 1020: STATEMENT_COVERAGE' },
+            { field: 'bankReconciliationException', message: 'policy REQUIRED refuses an exception' },
+          ],
+        }),
+      ),
+    );
+
+    expect(failure).toEqual({ kind: 'BANK_RECONCILIATION_INCOMPLETE', accountCount: 2 });
+  });
+
+  it('reports a bank reconciliation refusal without a count when the body lists no account', () => {
+    expect(
+      classifyPeriodActionError(httpError(422, apiError({ code: 'PERIOD_BANK_RECONCILIATION_INCOMPLETE' }))),
+    ).toEqual({ kind: 'BANK_RECONCILIATION_INCOMPLETE', accountCount: null });
+  });
+
+  it.each([
+    ['PERIOD_CLOSE_EXCEPTION_NOT_PERMITTED', 403, 'EXCEPTION_NOT_PERMITTED'],
+    ['JUSTIFICATION_REQUIRED', 400, 'JUSTIFICATION_REQUIRED'],
+  ])('maps %s ahead of its HTTP status', (code, status, kind) => {
+    expect(classifyPeriodActionError(httpError(status, apiError({ code, status })))).toEqual({ kind });
   });
 
   it('reads a non-HTTP error as OTHER', () => {

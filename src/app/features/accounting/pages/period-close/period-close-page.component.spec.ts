@@ -2,14 +2,20 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
 import { TranslateModule, TranslateService, TranslationObject } from '@ngx-translate/core';
 import { Subject, of, throwError } from 'rxjs';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import enUS from '../../../../../assets/i18n/en-US.json';
 import esUS from '../../../../../assets/i18n/es-US.json';
 import esMX from '../../../../../assets/i18n/es-MX.json';
 import frCA from '../../../../../assets/i18n/fr-CA.json';
 import frFR from '../../../../../assets/i18n/fr-FR.json';
 import { AuthService } from '../../../../core/services/auth.service';
-import { AccountingPeriod, periodCodeOf } from '../../models/period-close.models';
+import {
+  AccountingPeriod,
+  BankReconciliationPolicy,
+  CloseReadiness,
+  ReadinessAccount,
+  periodCodeOf,
+} from '../../models/period-close.models';
 import { PeriodCloseService } from '../../services/period-close.service';
 import { PeriodClosePageComponent } from './period-close-page.component';
 
@@ -38,6 +44,51 @@ const CLOSED_JUNE = period({
 
 const CLOSE = 'accounting:period:close';
 const REOPEN = 'accounting:period:reopen';
+const OVERRIDE = 'accounting:period:override';
+
+const readiness = (overrides: Partial<CloseReadiness> = {}): CloseReadiness => ({
+  periodCode: '2026-07',
+  policy: 'REQUIRED_WITH_EXCEPTION',
+  ready: true,
+  blockingCount: 0,
+  warningCount: 0,
+  checks: [],
+  accounts: [],
+  ...overrides,
+});
+
+const OPERATING: ReadinessAccount = {
+  glAccountId: 'gl-1010',
+  accountCode: '1010',
+  accountName: 'Operating Checking',
+  baselineDate: '2026-05-01',
+  coverageFrontier: '2026-07-31',
+  reconciledFrontier: '2026-06-30',
+  checks: [{ code: 'RECONCILIATION_APPROVED', severity: 'BLOCKING', references: { requiredThrough: '2026-07-31' } }],
+};
+
+/** Readiness that blocks July under REQUIRED_WITH_EXCEPTION, with a tenant-wide clearing warning. */
+const BLOCKED_JULY = readiness({
+  ready: false,
+  blockingCount: 1,
+  warningCount: 1,
+  accounts: [OPERATING],
+  checks: [
+    {
+      code: 'CLEARING_BALANCE_AGING',
+      severity: 'WARNING',
+      references: {
+        accountCode: '2360',
+        balanceAtPeriodEnd: 125.5,
+        agingDate: '2026-05-02',
+        balanceAtAgingDate: 80,
+        adjustmentIds: ['adj-1', 'adj-2'],
+      },
+    },
+  ],
+});
+
+const POLICY: BankReconciliationPolicy = { closePolicy: 'REQUIRED_WITH_EXCEPTION', currency: 'USD' };
 
 /** Permissions known, both write codes held, unless a test narrows them before `setup()`. */
 const authStub = {
@@ -55,6 +106,8 @@ const serviceStub = {
   listPeriods: vi.fn(),
   closePeriod: vi.fn(),
   reopenPeriod: vi.fn(),
+  getCloseReadiness: vi.fn(),
+  getBankReconciliationPolicy: vi.fn(),
 };
 
 const httpError = (status: number, body: unknown = null): HttpErrorResponse => new HttpErrorResponse({ status, error: body });
@@ -92,8 +145,16 @@ describe('PeriodClosePageComponent', () => {
     fixture.detectChanges();
   };
 
+  beforeEach(() => {
+    // Ready by default, so a close goes straight to its confirmation as it did before readiness existed.
+    serviceStub.getCloseReadiness.mockImplementation((code: string) => of(readiness({ periodCode: code })));
+    serviceStub.getBankReconciliationPolicy.mockReturnValue(of(POLICY));
+  });
+
   afterEach(() => {
     vi.clearAllMocks();
+    serviceStub.getCloseReadiness.mockReset();
+    serviceStub.getBankReconciliationPolicy.mockReset();
     authStub.known = true;
     authStub.granted = [CLOSE, REOPEN];
     TestBed.resetTestingModule();
@@ -371,6 +432,286 @@ describe('PeriodClosePageComponent', () => {
     });
   });
 
+  describe('bank reconciliation readiness (§5.3, §5.9)', () => {
+    const expand = (code: string): void => click(buttonIn(code, 'readiness-toggle'));
+    const readinessRow = (code: string): HTMLElement | null => el.querySelector(`[data-readiness="${code}"]`);
+
+    it('expands a row into its accounts, frontier dates and check badges, reading readiness once', () => {
+      serviceStub.getCloseReadiness.mockReturnValue(of(BLOCKED_JULY));
+      setup();
+
+      const toggle = buttonIn('2026-07', 'readiness-toggle');
+      expect(toggle.getAttribute('aria-expanded')).toBe('false');
+      expand('2026-07');
+
+      expect(serviceStub.getCloseReadiness).toHaveBeenCalledWith('2026-07');
+      expect(toggle.getAttribute('aria-expanded')).toBe('true');
+      const panel = readinessRow('2026-07') as HTMLElement;
+      const account = panel.querySelector('[data-account="gl-1010"]') as HTMLElement;
+      expect(account.textContent).toContain('1010');
+      expect(account.textContent).toContain('Operating Checking');
+      expect(account.textContent).not.toContain('gl-1010');
+      expect(account.textContent).toContain('May 1, 2026');
+      expect(account.textContent).toContain('Jul 31, 2026');
+      expect(account.textContent).toContain('Jun 30, 2026');
+      const badge = account.querySelector('[data-check="RECONCILIATION_APPROVED"]') as HTMLElement;
+      expect(badge.textContent).toContain('ACCOUNTING.PERIOD_CLOSE.READINESS.SEVERITY.BLOCKING');
+      expect(badge.textContent).toContain('ACCOUNTING.PERIOD_CLOSE.READINESS.CHECK.RECONCILIATION_APPROVED');
+
+      expand('2026-07');
+      expect(readinessRow('2026-07')).toBeNull();
+      expand('2026-07');
+      expect(serviceStub.getCloseReadiness).toHaveBeenCalledTimes(1);
+    });
+
+    it('renders a tenant-wide clearing aging warning in its own block, outside every account row', () => {
+      serviceStub.getCloseReadiness.mockReturnValue(of(BLOCKED_JULY));
+      setup();
+      expand('2026-07');
+
+      const tenant = query('readiness-tenant-checks') as HTMLElement;
+      const clearing = tenant.querySelector('[data-check="CLEARING_BALANCE_AGING"]') as HTMLElement;
+      expect(clearing.textContent).toContain('ACCOUNTING.PERIOD_CLOSE.READINESS.SEVERITY.WARNING');
+      expect(clearing.closest('[data-testid="readiness-account"]')).toBeNull();
+      expect(query('clearing-aging-detail')?.textContent).toContain('ACCOUNTING.PERIOD_CLOSE.READINESS.CLEARING_DETAIL');
+    });
+
+    it('offers a holder of close and override the exception dialog, which sends the justification', async () => {
+      authStub.granted = [CLOSE, REOPEN, OVERRIDE];
+      serviceStub.getCloseReadiness.mockReturnValue(of(BLOCKED_JULY));
+      serviceStub.closePeriod.mockReturnValue(of({ ...OPEN_JULY, status: 'CLOSED' }));
+      setup();
+      expand('2026-07');
+
+      const close = buttonIn('2026-07', 'close-button');
+      expect(close.disabled).toBe(false);
+      expect(close.textContent).toContain('ACCOUNTING.PERIOD_CLOSE.ACTION.CLOSE_WITH_EXCEPTION');
+      click(close);
+
+      const dialog = query('confirm-exception-dialog') as HTMLDialogElement;
+      expect(dialog.tagName).toBe('DIALOG');
+      expect(dialog.matches(':modal')).toBe(true);
+      const confirm = query('confirm-exception') as HTMLButtonElement;
+      expect(confirm.disabled).toBe(true);
+
+      component.exceptionControl.setValue('too short');
+      fixture.detectChanges();
+      expect(confirm.disabled).toBe(true);
+
+      component.exceptionControl.setValue('  Bank statement delayed by the bank  ');
+      fixture.detectChanges();
+      expect(confirm.disabled).toBe(false);
+      click(confirm);
+      await fixture.whenStable();
+
+      expect(serviceStub.closePeriod).toHaveBeenCalledWith('2026-07', 'Bank statement delayed by the bank');
+      expect(component.outcome()?.key).toBe('ACCOUNTING.PERIOD_CLOSE.OUTCOME.CLOSED_WITH_EXCEPTION');
+    });
+
+    it('disables the close for a close-only user under REQUIRED_WITH_EXCEPTION, naming the override', () => {
+      serviceStub.getCloseReadiness.mockReturnValue(of(BLOCKED_JULY));
+      setup();
+      expand('2026-07');
+
+      const close = buttonIn('2026-07', 'close-button');
+      expect(close.disabled).toBe(true);
+      const reason = row('2026-07').querySelector('[data-testid="close-refused"]') as HTMLElement;
+      expect(close.getAttribute('aria-describedby')).toBe(reason.id);
+      expect(reason.textContent).toContain('ACCOUNTING.PERIOD_CLOSE.READINESS.REFUSED.BLOCKED_NO_OVERRIDE');
+
+      component.requestClose('2026-07');
+      fixture.detectChanges();
+      expect(query('confirm-exception-dialog')).toBeNull();
+      expect(query('confirm-close-dialog')).toBeNull();
+      expect(component.outcome()?.key).toBe('ACCOUNTING.PERIOD_CLOSE.READINESS.REFUSED.BLOCKED');
+    });
+
+    it('refuses the exception in its handler, not only at the button, without the override', () => {
+      setup();
+
+      component.dialog.set({ action: 'exception', periodCode: '2026-07' });
+      component.exceptionControl.setValue('Bank statement delayed by the bank');
+      component.confirmException();
+
+      expect(serviceStub.closePeriod).not.toHaveBeenCalled();
+    });
+
+    it('refuses the exception in its handler with a justification under the minimum', () => {
+      authStub.granted = [CLOSE, REOPEN, OVERRIDE];
+      setup();
+
+      component.dialog.set({ action: 'exception', periodCode: '2026-07' });
+      component.exceptionControl.setValue(' short ');
+      component.confirmException();
+
+      expect(serviceStub.closePeriod).not.toHaveBeenCalled();
+      expect(component.justificationErrorKey()).toBe('ACCOUNTING.PERIOD_CLOSE.EXCEPTION.ERROR.TOO_SHORT');
+    });
+
+    it('disables the close under REQUIRED even for a holder of the override', () => {
+      authStub.granted = [CLOSE, REOPEN, OVERRIDE];
+      serviceStub.getCloseReadiness.mockReturnValue(of({ ...BLOCKED_JULY, policy: 'REQUIRED' }));
+      setup();
+      expand('2026-07');
+
+      expect(buttonIn('2026-07', 'close-button').disabled).toBe(true);
+    });
+
+    it('closes plainly under ADVISORY even when readiness reports blocking checks', () => {
+      serviceStub.getCloseReadiness.mockReturnValue(of({ ...BLOCKED_JULY, policy: 'ADVISORY' }));
+      setup();
+
+      click(buttonIn('2026-07', 'close-button'));
+
+      expect(query('confirm-close-dialog')).not.toBeNull();
+      expect(query('confirm-exception-dialog')).toBeNull();
+    });
+
+    it('reads readiness before a close that has none, keeping the button disabled until it lands', () => {
+      const answer = new Subject<CloseReadiness>();
+      serviceStub.getCloseReadiness.mockReturnValue(answer);
+      setup();
+
+      click(buttonIn('2026-07', 'close-button'));
+      expect(serviceStub.getCloseReadiness).toHaveBeenCalledWith('2026-07');
+      expect(query('confirm-close-dialog')).toBeNull();
+      expect(buttonIn('2026-07', 'close-button').disabled).toBe(true);
+      expect(query('readiness-loading')).not.toBeNull();
+
+      answer.next(readiness());
+      fixture.detectChanges();
+
+      expect(query('confirm-close-dialog')).not.toBeNull();
+    });
+
+    it('shows readiness as unavailable when it cannot be read, and refuses the close outside ADVISORY', () => {
+      serviceStub.getCloseReadiness.mockReturnValue(throwError(() => httpError(500)));
+      setup();
+
+      click(buttonIn('2026-07', 'close-button'));
+
+      expect(query('readiness-unavailable')).not.toBeNull();
+      expect(query('confirm-close-dialog')).toBeNull();
+      expect(buttonIn('2026-07', 'close-button').disabled).toBe(true);
+      expect(component.outcome()?.key).toBe('ACCOUNTING.PERIOD_CLOSE.READINESS.REFUSED.UNAVAILABLE');
+    });
+
+    it('keeps the close available when readiness cannot be read under an ADVISORY policy', () => {
+      serviceStub.getCloseReadiness.mockReturnValue(throwError(() => httpError(500)));
+      serviceStub.getBankReconciliationPolicy.mockReturnValue(of({ closePolicy: 'ADVISORY', currency: 'USD' }));
+      setup();
+
+      click(buttonIn('2026-07', 'close-button'));
+
+      expect(query('readiness-unavailable')).not.toBeNull();
+      expect(query('confirm-close-dialog')).not.toBeNull();
+    });
+
+    it('refuses when readiness cannot be read and the policy could not be read either', () => {
+      serviceStub.getCloseReadiness.mockReturnValue(throwError(() => httpError(500)));
+      serviceStub.getBankReconciliationPolicy.mockReturnValue(throwError(() => httpError(500)));
+      setup();
+
+      click(buttonIn('2026-07', 'close-button'));
+
+      expect(query('confirm-close-dialog')).toBeNull();
+      expect(component.policy()).toBeNull();
+    });
+
+    it('drops a superseded readiness read of the same period (ADR-0063)', () => {
+      const first = new Subject<CloseReadiness>();
+      const second = new Subject<CloseReadiness>();
+      serviceStub.getCloseReadiness.mockReturnValueOnce(first).mockReturnValueOnce(second);
+      setup();
+
+      expand('2026-07');
+      component.retryReadiness('2026-07');
+      second.next(readiness({ ready: true }));
+      first.next(BLOCKED_JULY);
+
+      const read = component.readinessOf('2026-07');
+      expect(read?.status === 'OK' && read.readiness.ready).toBe(true);
+    });
+
+    it('reports a PERIOD_BANK_RECONCILIATION_INCOMPLETE refusal with its account count, without re-reading', () => {
+      setup();
+      serviceStub.closePeriod.mockReturnValue(
+        throwError(() =>
+          httpError(422, {
+            code: 'PERIOD_BANK_RECONCILIATION_INCOMPLETE',
+            fieldErrors: [
+              { field: 'unreconciledGlAccountIds', message: 'gl-1010 1010: RECONCILIATION_APPROVED' },
+              { field: 'unreconciledGlAccountIds', message: 'gl-1020 1020: STATEMENT_COVERAGE' },
+            ],
+          }),
+        ),
+      );
+
+      click(buttonIn('2026-07', 'close-button'));
+      click(query('confirm-close'));
+
+      expect(component.outcome()).toEqual({
+        tone: 'error',
+        key: 'ACCOUNTING.PERIOD_CLOSE.ERROR.BANK_RECONCILIATION_INCOMPLETE',
+        periodCode: '2026-07',
+        count: 2,
+      });
+      expect(serviceStub.listPeriods).toHaveBeenCalledTimes(1);
+      expect(serviceStub.getCloseReadiness).toHaveBeenCalledTimes(1);
+    });
+
+    it('names the override permission when the server refuses the exception', () => {
+      authStub.granted = [CLOSE, REOPEN, OVERRIDE];
+      serviceStub.getCloseReadiness.mockReturnValue(of(BLOCKED_JULY));
+      serviceStub.closePeriod.mockReturnValue(
+        throwError(() => httpError(403, { code: 'PERIOD_CLOSE_EXCEPTION_NOT_PERMITTED' })),
+      );
+      setup();
+
+      click(buttonIn('2026-07', 'close-button'));
+      component.exceptionControl.setValue('Bank statement delayed by the bank');
+      fixture.detectChanges();
+      click(query('confirm-exception'));
+
+      expect(component.outcome()?.key).toBe('ACCOUNTING.PERIOD_CLOSE.ERROR.EXCEPTION_NOT_PERMITTED');
+      expect(query('outcome-error')?.textContent).toContain('ACCOUNTING.PERIOD_CLOSE.ERROR.EXCEPTION_NOT_PERMITTED');
+    });
+
+    it('re-reads an open panel after the period is closed', () => {
+      setup();
+      serviceStub.closePeriod.mockReturnValue(of({ ...OPEN_JULY, status: 'CLOSED' }));
+      expand('2026-07');
+
+      click(buttonIn('2026-07', 'close-button'));
+      click(query('confirm-close'));
+
+      expect(serviceStub.getCloseReadiness).toHaveBeenCalledTimes(2);
+    });
+
+    it('gates a month closed by code on that month readiness', () => {
+      serviceStub.getCloseReadiness.mockReturnValue(of({ ...BLOCKED_JULY, periodCode: '2026-05', policy: 'REQUIRED' }));
+      setup();
+
+      component.monthControl.setValue('2026-05');
+      click(query('close-month-submit'));
+
+      expect(serviceStub.getCloseReadiness).toHaveBeenCalledWith('2026-05');
+      expect(query('confirm-close-dialog')).toBeNull();
+      expect(component.outcome()?.key).toBe('ACCOUNTING.PERIOD_CLOSE.READINESS.REFUSED.BLOCKED');
+    });
+
+    it('offers the exception under the canAccess() fallback when the token carries no permissions', () => {
+      authStub.known = false;
+      authStub.granted = [];
+      serviceStub.getCloseReadiness.mockReturnValue(of(BLOCKED_JULY));
+      setup();
+
+      click(buttonIn('2026-07', 'close-button'));
+
+      expect(query('confirm-exception-dialog')).not.toBeNull();
+    });
+  });
+
   describe('closing a month by code', () => {
     const monthAfter = (today: Date): string => periodCodeOf(new Date(today.getFullYear(), today.getMonth() + 1, 1));
 
@@ -590,6 +931,7 @@ describe('PeriodClosePageComponent', () => {
         const pairs: readonly (readonly [HTMLButtonElement, string])[] = [
           [buttonIn('2026-07', 'close-button'), 'ACCOUNTING.PERIOD_CLOSE.ACTION.CLOSE'],
           [buttonIn('2026-06', 'reopen-button'), 'ACCOUNTING.PERIOD_CLOSE.ACTION.REOPEN'],
+          [buttonIn('2026-07', 'readiness-toggle'), 'ACCOUNTING.PERIOD_CLOSE.READINESS.TOGGLE'],
         ];
         for (const [button, key] of pairs) {
           const visible = lookup(bundle, key);
@@ -599,6 +941,23 @@ describe('PeriodClosePageComponent', () => {
           // The row's month follows the label, so each button names its own period.
           expect(name.length).toBeGreaterThan((visible as string).length);
         }
+      });
+    }
+
+    for (const [locale, bundle] of SHIPPED) {
+      it(`${locale}: the close-with-exception button's accessible name starts with its visible label`, () => {
+        authStub.granted = [CLOSE, REOPEN, OVERRIDE];
+        serviceStub.getCloseReadiness.mockReturnValue(of(BLOCKED_JULY));
+        setup();
+        const translate = TestBed.inject(TranslateService);
+        translate.setTranslation(locale, bundle as TranslationObject);
+        translate.use(locale);
+        click(buttonIn('2026-07', 'readiness-toggle'));
+
+        const visible = lookup(bundle, 'ACCOUNTING.PERIOD_CLOSE.ACTION.CLOSE_WITH_EXCEPTION') as string;
+        const name = (buttonIn('2026-07', 'close-button').textContent ?? '').replace(/\s+/g, ' ').trim();
+        expect(name.startsWith(visible)).toBe(true);
+        expect(name.length).toBeGreaterThan(visible.length);
       });
     }
 

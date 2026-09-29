@@ -19,7 +19,7 @@
     @if (outcome(); as result) {
       @if (result.tone === 'error') {
         <p #outcomeError class="alert alert-error" tabindex="-1" data-testid="outcome-error">
-          {{ result.key | translate: { period: (monthOf(result.periodCode) | date: 'MMMM y'), count: (result.count | number) } }}
+          {{ result.key | translate: { period: (monthOf(result.periodCode) | date: 'MMMM y'), count: (result.count | number), override: overridePermission } }}
         </p>
       }
     }
@@ -125,12 +125,41 @@
                     }
                   </td>
                   <td class="actions-cell">
+                    <button type="button" class="btn btn--outline" data-testid="readiness-toggle"
+                      [attr.aria-expanded]="expanded().has(period.periodCode)"
+                      [attr.aria-controls]="'readiness-' + period.periodCode"
+                      (click)="toggleReadiness(period.periodCode)">
+                      {{ 'ACCOUNTING.PERIOD_CLOSE.READINESS.TOGGLE' | translate }}<span class="sr-only">&nbsp;{{ monthOf(period.periodCode) | date: 'MMMM y' }}</span>
+                    </button>
                     @if (period.status === 'OPEN') {
                       <button type="button" class="btn btn--accent" data-testid="close-button"
-                        [disabled]="!canClose() || pendingCode() !== null || refreshing()"
+                        [disabled]="!canClose() || pendingCode() !== null || refreshing() || closeRefused(period.periodCode)"
+                        [attr.aria-describedby]="closeRefused(period.periodCode) ? 'close-refused-' + period.periodCode : null"
                         (click)="requestClose(period.periodCode)">
-                        {{ 'ACCOUNTING.PERIOD_CLOSE.ACTION.CLOSE' | translate }}<span class="sr-only">&nbsp;{{ monthOf(period.periodCode) | date: 'MMMM y' }}</span>
+                        @if (closeGate(period.periodCode) === 'EXCEPTION') {
+                          {{ 'ACCOUNTING.PERIOD_CLOSE.ACTION.CLOSE_WITH_EXCEPTION' | translate }}
+                        } @else {
+                          {{ 'ACCOUNTING.PERIOD_CLOSE.ACTION.CLOSE' | translate }}
+                        }<span class="sr-only">&nbsp;{{ monthOf(period.periodCode) | date: 'MMMM y' }}</span>
                       </button>
+                      @switch (closeGate(period.periodCode)) {
+                        @case ('BLOCKED') {
+                          <span id="close-refused-{{ period.periodCode }}" class="close-refused" data-testid="close-refused">
+                            {{ (canOverride() ? 'ACCOUNTING.PERIOD_CLOSE.READINESS.REFUSED.BLOCKED' : 'ACCOUNTING.PERIOD_CLOSE.READINESS.REFUSED.BLOCKED_NO_OVERRIDE')
+                              | translate: { period: (monthOf(period.periodCode) | date: 'MMMM y'), override: overridePermission } }}
+                          </span>
+                        }
+                        @case ('UNAVAILABLE') {
+                          <span id="close-refused-{{ period.periodCode }}" class="close-refused" data-testid="close-refused">
+                            {{ 'ACCOUNTING.PERIOD_CLOSE.READINESS.REFUSED.UNAVAILABLE' | translate: { period: (monthOf(period.periodCode) | date: 'MMMM y') } }}
+                          </span>
+                        }
+                        @case ('LOADING') {
+                          <span id="close-refused-{{ period.periodCode }}" class="close-refused" data-testid="close-refused">
+                            {{ 'ACCOUNTING.PERIOD_CLOSE.READINESS.LOADING' | translate }}
+                          </span>
+                        }
+                      }
                     } @else if (period.status === 'CLOSED') {
                       <button type="button" class="btn btn--outline" data-testid="reopen-button"
                         [disabled]="!canReopen() || pendingCode() !== null || refreshing()"
@@ -140,6 +169,114 @@
                     }
                   </td>
                 </tr>
+                @if (expanded().has(period.periodCode)) {
+                  <tr class="readiness-row" data-testid="readiness-row" [attr.data-readiness]="period.periodCode">
+                    <td colspan="5" [id]="'readiness-' + period.periodCode">
+            <section class="readiness-panel" [attr.aria-label]="'ACCOUNTING.PERIOD_CLOSE.READINESS.HEADING' | translate: { period: (monthOf(period.periodCode) | date: 'MMMM y') }">
+              @switch (readinessOf(period.periodCode)?.status) {
+                @case ('OK') {
+                  @if (readinessOf(period.periodCode); as read) {
+                    @if (read.status === 'OK') {
+                      @let r = read.readiness;
+                      <p class="readiness-summary" data-testid="readiness-summary">
+                        <span class="readiness-policy">{{ policyLabelKey(r.policy) | translate }}</span>
+                        @if (r.ready) {
+                          <span class="status-badge status-badge--open" data-testid="readiness-ready">{{ 'ACCOUNTING.PERIOD_CLOSE.READINESS.READY' | translate }}</span>
+                        } @else {
+                          <span class="status-badge status-badge--blocking" data-testid="readiness-not-ready">{{ 'ACCOUNTING.PERIOD_CLOSE.READINESS.NOT_READY' | translate }}</span>
+                        }
+                        <span>{{ 'ACCOUNTING.PERIOD_CLOSE.READINESS.COUNTS' | translate: { blocking: (r.blockingCount | number), warning: (r.warningCount | number) } }}</span>
+                      </p>
+
+                      @if (r.checks.length > 0) {
+                        <div class="readiness-tenant" data-testid="readiness-tenant-checks">
+                          <h3>{{ 'ACCOUNTING.PERIOD_CLOSE.READINESS.TENANT_HEADING' | translate }}</h3>
+                          <ul class="check-list">
+                            @for (check of r.checks; track $index) {
+                              <li class="check-item" [attr.data-check]="check.code">
+                                <span class="severity-badge severity-badge--{{ check.severity.toLowerCase() }}">{{ severityLabelKey(check.severity) | translate }}</span>
+                                <span>{{ checkLabelKey(check) | translate: { code: check.code } }}</span>
+                                @if (check.code === 'CLEARING_BALANCE_AGING') {
+                                  <span class="check-detail" data-testid="clearing-aging-detail">
+                                    {{ 'ACCOUNTING.PERIOD_CLOSE.READINESS.CLEARING_DETAIL' | translate: {
+                                      account: (textRef(check, 'accountCode') ?? ('COMMON.NOT_AVAILABLE' | translate)),
+                                      atEnd: (amountRef(check, 'balanceAtPeriodEnd') | money: policy()?.currency),
+                                      agingDate: (dateOnly(textRef(check, 'agingDate')) | date: 'mediumDate'),
+                                      atAgingDate: (amountRef(check, 'balanceAtAgingDate') | money: policy()?.currency),
+                                      count: (countRef(check, 'adjustmentIds') | number)
+                                    } }}
+                                  </span>
+                                }
+                              </li>
+                            }
+                          </ul>
+                        </div>
+                      }
+
+                      @if (r.accounts.length === 0) {
+                        <p class="state-panel state-panel--empty" data-testid="readiness-no-accounts">{{ 'ACCOUNTING.PERIOD_CLOSE.READINESS.NO_ACCOUNTS' | translate }}</p>
+                      } @else {
+                        <table class="ledger-table readiness-table" data-testid="readiness-accounts">
+                          <caption class="sr-only">{{ 'ACCOUNTING.PERIOD_CLOSE.READINESS.ACCOUNTS_CAPTION' | translate: { period: (monthOf(period.periodCode) | date: 'MMMM y') } }}</caption>
+                          <thead>
+                            <tr>
+                              <th scope="col">{{ 'ACCOUNTING.PERIOD_CLOSE.READINESS.COL_ACCOUNT' | translate }}</th>
+                              <th scope="col">{{ 'ACCOUNTING.PERIOD_CLOSE.READINESS.COL_BASELINE' | translate }}</th>
+                              <th scope="col">{{ 'ACCOUNTING.PERIOD_CLOSE.READINESS.COL_COVERAGE' | translate }}</th>
+                              <th scope="col">{{ 'ACCOUNTING.PERIOD_CLOSE.READINESS.COL_RECONCILED' | translate }}</th>
+                              <th scope="col">{{ 'ACCOUNTING.PERIOD_CLOSE.READINESS.COL_CHECKS' | translate }}</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            @for (account of r.accounts; track account.glAccountId) {
+                              <tr data-testid="readiness-account" [attr.data-account]="account.glAccountId">
+                                <th scope="row">
+                                  @if (account.accountCode || account.accountName) {
+                                    <span class="account-period.periodCode">{{ account.accountCode }}</span>
+                                    <span class="account-name">{{ account.accountName }}</span>
+                                  } @else {
+                                    {{ 'COMMON.NOT_AVAILABLE' | translate }}
+                                  }
+                                </th>
+                                <td>{{ account.baselineDate ? (dateOnly(account.baselineDate) | date: 'mediumDate') : ('COMMON.NOT_AVAILABLE' | translate) }}</td>
+                                <td>{{ account.coverageFrontier ? (dateOnly(account.coverageFrontier) | date: 'mediumDate') : ('COMMON.NOT_AVAILABLE' | translate) }}</td>
+                                <td>{{ account.reconciledFrontier ? (dateOnly(account.reconciledFrontier) | date: 'mediumDate') : ('COMMON.NOT_AVAILABLE' | translate) }}</td>
+                                <td>
+                                  @if (account.checks.length === 0) {
+                                    {{ 'ACCOUNTING.PERIOD_CLOSE.READINESS.NO_CHECKS' | translate }}
+                                  } @else {
+                                    <ul class="check-list">
+                                      @for (check of account.checks; track $index) {
+                                        <li class="check-item" [attr.data-check]="check.code">
+                                          <span class="severity-badge severity-badge--{{ check.severity.toLowerCase() }}">{{ severityLabelKey(check.severity) | translate }}</span>
+                                          <span>{{ checkLabelKey(check) | translate: { code: check.code } }}</span>
+                                        </li>
+                                      }
+                                    </ul>
+                                  }
+                                </td>
+                              </tr>
+                            }
+                          </tbody>
+                        </table>
+                      }
+                    }
+                  }
+                }
+                @case ('ERROR') {
+                  <p class="state-panel state-panel--error" data-testid="readiness-unavailable">
+                    {{ 'ACCOUNTING.PERIOD_CLOSE.READINESS.UNAVAILABLE' | translate }}
+                    <button type="button" class="link-button" (click)="retryReadiness(period.periodCode)">{{ 'ACCOUNTING.COMMON.RETRY' | translate }}</button>
+                  </p>
+                }
+                @default {
+                  <p class="state-panel" aria-busy="true" data-testid="readiness-loading">{{ 'ACCOUNTING.PERIOD_CLOSE.READINESS.LOADING' | translate }}</p>
+                }
+              }
+            </section>
+                    </td>
+                  </tr>
+                }
               }
             </tbody>
           </table>
@@ -173,7 +310,43 @@
   }
 
   @if (dialog(); as pending) {
-    @if (pending.action === 'close') {
+    @if (pending.action === 'exception') {
+      <dialog class="confirm-panel" appModalDialog (modalCancel)="cancelDialog()"
+        aria-labelledby="confirm-exception-title" aria-describedby="confirm-exception-body" data-testid="confirm-exception-dialog">
+        <h2 id="confirm-exception-title" class="confirm-heading">
+          {{ 'ACCOUNTING.PERIOD_CLOSE.EXCEPTION.TITLE' | translate: { period: (monthOf(pending.periodCode) | date: 'MMMM y') } }}
+        </h2>
+        <p id="confirm-exception-body">
+          {{ 'ACCOUNTING.PERIOD_CLOSE.EXCEPTION.BODY' | translate: { period: (monthOf(pending.periodCode) | date: 'MMMM y') } }}
+        </p>
+        <form class="reopen-form" [formGroup]="exceptionForm" (ngSubmit)="confirmException()" novalidate>
+          <div class="form-field">
+            <label for="exception-justification">{{ 'ACCOUNTING.PERIOD_CLOSE.EXCEPTION.LABEL' | translate }}</label>
+            <textarea id="exception-justification" rows="4" data-testid="exception-justification"
+              formControlName="justification"
+              [attr.aria-invalid]="justificationErrorKey() ? 'true' : null"
+              [attr.aria-describedby]="justificationErrorKey() ? 'exception-hint exception-error' : 'exception-hint'"></textarea>
+            <p id="exception-hint" class="hint-text">
+              {{ 'ACCOUNTING.PERIOD_CLOSE.EXCEPTION.HINT' | translate: { min: (exceptionJustificationMin | number) } }}
+            </p>
+            @if (justificationErrorKey(); as key) {
+              <p id="exception-error" class="field-error" role="alert" data-testid="exception-error">
+                {{ key | translate: { min: (exceptionJustificationMin | number) } }}
+              </p>
+            }
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn--accent" data-testid="confirm-exception"
+              [disabled]="exceptionLength() < exceptionJustificationMin">
+              {{ 'ACCOUNTING.PERIOD_CLOSE.EXCEPTION.CONFIRM' | translate }}
+            </button>
+            <button type="button" class="btn btn--outline" data-testid="cancel-dialog" (click)="cancelDialog()">
+              {{ 'COMMON.CANCEL' | translate }}
+            </button>
+          </div>
+        </form>
+      </dialog>
+    } @else if (pending.action === 'close') {
       <dialog class="confirm-panel" appModalDialog (modalCancel)="cancelDialog()"
         aria-labelledby="confirm-close-title" aria-describedby="confirm-close-body" data-testid="confirm-close-dialog">
         <h2 id="confirm-close-title" class="confirm-heading">

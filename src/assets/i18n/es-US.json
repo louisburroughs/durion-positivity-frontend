@@ -4361,7 +4361,8 @@
       },
       "ACTION": {
         "CLOSE": "Cerrar período",
-        "REOPEN": "Reabrir período"
+        "REOPEN": "Reabrir período",
+        "CLOSE_WITH_EXCEPTION": "Cerrar con excepción"
       },
       "CLOSE_MONTH": {
         "HEADING": "Cerrar un mes",
@@ -4393,7 +4394,8 @@
       },
       "OUTCOME": {
         "CLOSED": "{{period}} está cerrado.",
-        "REOPENED": "{{period}} está abierto de nuevo."
+        "REOPENED": "{{period}} está abierto de nuevo.",
+        "CLOSED_WITH_EXCEPTION": "{{period}} está cerrado con una excepción de conciliación bancaria."
       },
       "ERROR": {
         "LOAD": "No se pudieron cargar los períodos contables.",
@@ -4409,7 +4411,74 @@
         "FORBIDDEN_CLOSE": "No tiene permiso para cerrar períodos contables.",
         "FORBIDDEN_REOPEN": "No tiene permiso para reabrir períodos contables.",
         "OTHER_CLOSE": "No se pudo cerrar {{period}}. Inténtelo de nuevo.",
-        "OTHER_REOPEN": "No se pudo reabrir {{period}}. Inténtelo de nuevo."
+        "OTHER_REOPEN": "No se pudo reabrir {{period}}. Inténtelo de nuevo.",
+        "BANK_RECONCILIATION_INCOMPLETE": "{{period}} no se puede cerrar hasta completar la conciliación bancaria ({{count}} cuentas no listas). Abra la preparación del período para ver qué lo impide.",
+        "BANK_RECONCILIATION_INCOMPLETE_UNCOUNTED": "{{period}} no se puede cerrar hasta completar la conciliación bancaria. Abra la preparación del período para ver qué lo impide.",
+        "EXCEPTION_NOT_PERMITTED": "Cerrar {{period}} con una excepción requiere el permiso {{override}}.",
+        "JUSTIFICATION_REQUIRED": "La justificación es demasiado corta. Explique por qué {{period}} se cierra sin conciliación bancaria e inténtelo de nuevo."
+      },
+      "READINESS": {
+        "TOGGLE": "Preparación",
+        "HEADING": "Preparación de la conciliación bancaria para {{period}}",
+        "LOADING": "Comprobando la preparación de la conciliación bancaria…",
+        "UNAVAILABLE": "No se pudo leer la preparación de la conciliación bancaria.",
+        "READY": "Listo para cerrar",
+        "NOT_READY": "No listo para cerrar",
+        "COUNTS": "{{blocking}} bloqueantes, {{warning}} advertencias",
+        "TENANT_HEADING": "Todas las cuentas",
+        "NO_ACCOUNTS": "No hay cuentas bancarias incluidas en este período.",
+        "ACCOUNTS_CAPTION": "Cuentas bancarias y su preparación para {{period}}",
+        "COL_ACCOUNT": "Cuenta",
+        "COL_BASELINE": "Fecha base",
+        "COL_COVERAGE": "Estados de cuenta hasta",
+        "COL_RECONCILED": "Conciliado hasta",
+        "COL_CHECKS": "Comprobaciones",
+        "NO_CHECKS": "Sin problemas",
+        "CLEARING_DETAIL": "La cuenta puente {{account}} tiene {{atEnd}} al cierre del período y {{atAgingDate}} el {{agingDate}}; {{count}} ajustes son anteriores a esa fecha.",
+        "POLICY": {
+          "ADVISORY": "Política: informativa (nunca bloquea el cierre)",
+          "REQUIRED": "Política: obligatoria",
+          "REQUIRED_WITH_EXCEPTION": "Política: obligatoria, se permite excepción",
+          "UNKNOWN": "Política: no disponible"
+        },
+        "SEVERITY": {
+          "BLOCKING": "Bloqueante",
+          "WARNING": "Advertencia",
+          "INFO": "Información"
+        },
+        "CHECK": {
+          "DRAFT_JOURNAL_ENTRIES": "Asientos en borrador en el período",
+          "STATEMENT_COVERAGE": "Los estados de cuenta no llegan al cierre del período",
+          "RECONCILIATION_APPROVED": "Ninguna conciliación aprobada llega al cierre del período",
+          "RECONCILIATION_IN_FLIGHT": "Una conciliación sigue en curso o pendiente de aprobación",
+          "RECONCILIATION_INVALIDATED": "Se invalidó una conciliación aprobada",
+          "BALANCE_AGREEMENT": "El saldo contable cambió desde la aprobación",
+          "UNEXPLAINED_BANK_TRANSACTIONS": "Movimientos bancarios sin explicar",
+          "UNEXPLAINED_LEDGER_LINES": "Líneas contables sin explicar",
+          "UNPOSTED_ADJUSTMENTS": "Ajustes de conciliación sin contabilizar",
+          "COVERAGE_LAG_APPLIED": "Aprobado solo por el margen de cobertura",
+          "INCOMPLETE_IMPORTS": "Importaciones de estados de cuenta sin confirmar",
+          "OUTSTANDING_ITEMS_AGING": "Partidas pendientes antiguas",
+          "CLEARING_BALANCE_AGING": "Cuenta puente sin saldar a cero",
+          "LATE_BANK_TRANSACTIONS": "Movimientos bancarios llegados después de la aprobación",
+          "RECONCILED_AFTER_CLOSE": "Conciliación aprobada después del cierre del período",
+          "OTHER": "Otra comprobación ({{code}})"
+        },
+        "REFUSED": {
+          "BLOCKED": "{{period}} no se puede cerrar: las comprobaciones de conciliación bancaria lo impiden. Abra su preparación para ver por qué.",
+          "BLOCKED_NO_OVERRIDE": "{{period}} no se puede cerrar: las comprobaciones de conciliación bancaria lo impiden, y cerrar con una excepción requiere el permiso {{override}}.",
+          "UNAVAILABLE": "{{period}} no se puede cerrar hasta que se pueda leer su preparación de conciliación bancaria."
+        }
+      },
+      "EXCEPTION": {
+        "TITLE": "¿Cerrar {{period}} con una excepción?",
+        "BODY": "La conciliación bancaria de {{period}} no está completa. Si lo cierra de todos modos, su justificación y la preparación actual quedan registradas en la auditoría.",
+        "LABEL": "Por qué cerrar sin completar la conciliación bancaria",
+        "HINT": "Obligatorio, al menos {{min}} caracteres.",
+        "CONFIRM": "Cerrar con excepción",
+        "ERROR": {
+          "TOO_SHORT": "Escriba al menos {{min}} caracteres."
+        }
       }
     }
   },
