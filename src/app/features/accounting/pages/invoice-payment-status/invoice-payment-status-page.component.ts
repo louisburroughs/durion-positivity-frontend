@@ -10,11 +10,12 @@ import {
   InvoicePaymentStatus,
 } from '../../models/accounting.models';
 import { AccountingService } from '../../services/accounting.service';
+import { MoneyPipe } from '../../../../shared/money.pipe';
 
 @Component({
   selector: 'app-invoice-payment-status-page',
   standalone: true,
-  imports: [CommonModule, TranslatePipe],
+  imports: [CommonModule, TranslatePipe, MoneyPipe],
   templateUrl: './invoice-payment-status-page.component.html',
   styleUrl: './invoice-payment-status-page.component.css',
 })

@@ -95,8 +95,8 @@
                 }
               </span>
               <span>{{ item.quantity }}</span>
-              <span>{{ item.unitPrice | currency }}</span>
-              <span class="line-total">{{ item.lineTotal | currency }}</span>
+              <span>{{ item.unitPrice | money }}</span>
+              <span class="line-total">{{ item.lineTotal | money }}</span>
             </div>
           }
         </div>
@@ -106,23 +106,23 @@
       <div class="totals-breakdown" role="complementary" [attr.aria-label]="'BILLING.INVOICE_DETAIL.ARIA.TOTALS' | translate">
         <div class="totals-breakdown__row">
           <span class="totals-breakdown__label">{{ 'BILLING.INVOICE_DETAIL.TOTAL.SUBTOTAL' | translate }}</span>
-          <span class="totals-breakdown__value">{{ invoice()!.subtotal | currency }}</span>
+          <span class="totals-breakdown__value">{{ invoice()!.subtotal | money }}</span>
         </div>
         @if ((invoice()!.taxAmount ?? 0) > 0) {
           <div class="totals-breakdown__row">
             <span class="totals-breakdown__label">{{ 'BILLING.INVOICE_DETAIL.TOTAL.TAX' | translate }}</span>
-            <span class="totals-breakdown__value">{{ invoice()!.taxAmount | currency }}</span>
+            <span class="totals-breakdown__value">{{ invoice()!.taxAmount | money }}</span>
           </div>
         }
         @if ((invoice()!.discountAmount ?? 0) > 0) {
           <div class="totals-breakdown__row totals-breakdown__row--discount">
             <span class="totals-breakdown__label">{{ 'BILLING.INVOICE_DETAIL.TOTAL.DISCOUNT' | translate }}</span>
-            <span class="totals-breakdown__value">−{{ invoice()!.discountAmount | currency }}</span>
+            <span class="totals-breakdown__value">−{{ invoice()!.discountAmount | money }}</span>
           </div>
         }
         <div class="totals-breakdown__row totals-breakdown__row--grand">
           <span class="totals-breakdown__label">{{ 'BILLING.INVOICE_DETAIL.TOTAL.GRAND_TOTAL' | translate }}</span>
-          <span class="totals-breakdown__value totals-breakdown__value--grand">{{ invoice()!.grandTotal | currency }}</span>
+          <span class="totals-breakdown__value totals-breakdown__value--grand">{{ invoice()!.grandTotal | money }}</span>
         </div>
       </div>
     </div>
@@ -144,7 +144,7 @@
               [class.adjustment-card__amount--debit]="adj.amount > 0"
               [class.adjustment-card__amount--credit]="adj.amount < 0"
             >
-              {{ adj.amount >= 0 ? '+' : '' }}{{ adj.amount | currency }}
+              {{ adj.amount >= 0 ? '+' : '' }}{{ adj.amount | money }}
             </div>
           </div>
         }

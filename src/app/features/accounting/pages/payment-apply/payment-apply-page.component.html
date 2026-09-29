@@ -31,9 +31,9 @@
     <h2>{{ 'ACCOUNTING.PAYMENT_APPLY.RESULT_TITLE' | translate }}</h2>
     <p>{{ 'ACCOUNTING.PAYMENT_APPLY.RESULT_PAYMENT_ID' | translate }}: {{ result()?.paymentId }}</p>
     <p class="amount-field">{{ 'ACCOUNTING.PAYMENT_APPLY.RESULT_TOTAL' | translate }}: {{ result()?.totalAmount |
-      currency:'USD' }}</p>
+      money:result()?.currency }}</p>
     <p class="amount-field">{{ 'ACCOUNTING.PAYMENT_APPLY.RESULT_APPLIED' | translate }}: {{ result()?.appliedAmount |
-      currency:'USD' }}</p>
+      money:result()?.currency }}</p>
   </section>
   }
 

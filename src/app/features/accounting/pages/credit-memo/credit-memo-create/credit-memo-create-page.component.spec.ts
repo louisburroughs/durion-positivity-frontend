@@ -1,4 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { formatCurrency, getCurrencySymbol } from '@angular/common';
+import type { CreditMemo } from '../../../models/accounting.models';
 import { TranslateModule } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 import { AccountingService } from '../../../services/accounting.service';
@@ -132,5 +134,33 @@ describe('CreditMemoCreatePageComponent', () => {
       justificationNote: 'Long enough note here',
     });
     expect(component.form.hasError('exceedsOutstandingBalance')).toBe(true);
+  });
+
+  describe('result total (#409)', () => {
+    const money = (value: number, currency: string): string =>
+      formatCurrency(value, 'en-US', getCurrencySymbol(currency, 'wide', 'en-US'), currency);
+
+    const memo = (currency: string): CreditMemo => ({
+      creditMemoId: 'cm-new',
+      creditMemoReference: 'CM-202609-1',
+      totalAmount: 250,
+      currency,
+    });
+
+    const total = (): string =>
+      (fixture.nativeElement as HTMLElement).querySelector('.state-panel--success .amount-field')?.textContent ?? '';
+
+    it('formats the total in the currency of the memo (EUR)', () => {
+      component.result.set(memo('EUR'));
+      fixture.detectChanges();
+      expect(total()).toContain(money(250, 'EUR'));
+      expect(total()).not.toContain(money(250, 'USD'));
+    });
+
+    it('formats a USD memo as USD', () => {
+      component.result.set(memo('USD'));
+      fixture.detectChanges();
+      expect(total()).toContain(money(250, 'USD'));
+    });
   });
 });

@@ -9,13 +9,14 @@ import {
   LocationPriceOverride,
 } from '../../../models/pricing.models';
 import { ProductCatalogService } from '../../../services/product-catalog.service';
+import { MoneyPipe } from '../../../../../shared/money.pipe';
 
 type PageState = 'idle' | 'loading' | 'empty' | 'ready' | 'error';
 
 @Component({
   selector: 'app-location-overrides',
   standalone: true,
-  imports: [CommonModule, TranslatePipe],
+  imports: [CommonModule, TranslatePipe, MoneyPipe],
   templateUrl: './location-overrides.component.html',
   styleUrl: './location-overrides.component.css',
 })

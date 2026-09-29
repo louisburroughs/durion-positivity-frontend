@@ -19,7 +19,7 @@
       <strong>{{ view.workorderId }}</strong>
       <span>{{ ('WORKEXEC.INVOICE_STATUS.' + view.invoiceStatus) | translate }}</span>
     </p>
-    <p class="invoice-fin__grand-total">{{ view.total | currency:view.currency:'symbol':'1.2-2' }}</p>
+    <p class="invoice-fin__grand-total">{{ view.total | money:view.currency:'symbol':'1.2-2' }}</p>
   </section>
 
   <table class="invoice-fin__items-table" data-testid="invoice-line-items">
@@ -38,8 +38,8 @@
       <tr data-testid="invoice-line-item">
         <td>{{ item.description }}</td>
         <td>{{ item.quantity }}</td>
-        <td>{{ item.unitPrice | currency:view.currency:'symbol':'1.2-2' }}</td>
-        <td>{{ item.lineTotal | currency:view.currency:'symbol':'1.2-2' }}</td>
+        <td>{{ item.unitPrice | money:view.currency:'symbol':'1.2-2' }}</td>
+        <td>{{ item.lineTotal | money:view.currency:'symbol':'1.2-2' }}</td>
         <td>{{ ('WORKEXEC.ITEM_TYPE.' + item.itemType) | translate }}</td>
       </tr>
       }
@@ -48,11 +48,11 @@
 
   <section class="invoice-fin__totals">
     <p><span>{{ 'WORKEXEC.INVOICE_FINALIZATION.SUMMARY.SUBTOTAL' | translate }}</span><span>{{ view.subtotal |
-        currency:view.currency:'symbol':'1.2-2' }}</span></p>
+        money:view.currency:'symbol':'1.2-2' }}</span></p>
     <p><span>{{ 'WORKEXEC.INVOICE_FINALIZATION.SUMMARY.TAX' | translate }}</span><span>{{ view.taxAmount |
-        currency:view.currency:'symbol':'1.2-2' }}</span></p>
+        money:view.currency:'symbol':'1.2-2' }}</span></p>
     <p class="invoice-fin__totals-total"><span>{{ 'WORKEXEC.INVOICE_FINALIZATION.SUMMARY.TOTAL' | translate
-        }}</span><span>{{ view.total | currency:view.currency:'symbol':'1.2-2' }}</span></p>
+        }}</span><span>{{ view.total | money:view.currency:'symbol':'1.2-2' }}</span></p>
   </section>
 
   <section class="invoice-fin__form" [attr.aria-busy]="isSubmitting() ? 'true' : null">

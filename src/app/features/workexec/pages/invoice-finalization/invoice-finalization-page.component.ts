@@ -6,6 +6,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { map, of, switchMap } from 'rxjs';
 import { WorkorderInvoiceView } from '../../models/workexec.models';
 import { WorkexecService } from '../../services/workexec.service';
+import { MoneyPipe } from '../../../../shared/money.pipe';
 
 /**
  * (durion-positivity-backend#2210 ruling, issue #350) The standalone workorder
@@ -19,7 +20,7 @@ import { WorkexecService } from '../../services/workexec.service';
 @Component({
   selector: 'app-invoice-finalization-page',
   standalone: true,
-  imports: [CommonModule, TranslatePipe],
+  imports: [CommonModule, TranslatePipe, MoneyPipe],
   templateUrl: './invoice-finalization-page.component.html',
   styleUrl: './invoice-finalization-page.component.css',
 })

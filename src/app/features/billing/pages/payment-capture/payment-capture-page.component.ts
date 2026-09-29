@@ -1,4 +1,4 @@
-import { CurrencyPipe, DatePipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -8,11 +8,12 @@ import {
   PaymentTransactionRef,
 } from '../../models/billing.models';
 import { BillingTransportService } from '../../services/billing-transport.service';
+import { MoneyPipe } from '../../../../shared/money.pipe';
 
 @Component({
   selector: 'app-payment-capture-page',
   standalone: true,
-  imports: [CurrencyPipe, DatePipe, RouterLink, TranslatePipe],
+  imports: [MoneyPipe, DatePipe, RouterLink, TranslatePipe],
   templateUrl: './payment-capture-page.component.html',
   styleUrl: './payment-capture-page.component.css',
 })

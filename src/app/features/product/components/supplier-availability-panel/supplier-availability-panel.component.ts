@@ -8,7 +8,7 @@ import {
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { CurrencyPipe, DatePipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
 import { integerAtLeast, notBlank } from '../../../../core/utils/form-validators';
@@ -18,6 +18,7 @@ import {
   SupplierAvailabilityVendor,
 } from '../../../../shared/supplier-availability/models/supplier-availability.models';
 import { SupplierAvailabilityService } from '../../../../shared/supplier-availability/services/supplier-availability.service';
+import { MoneyPipe } from '../../../../shared/money.pipe';
 
 type PanelState = 'idle' | 'loading' | 'ready' | 'error';
 
@@ -39,7 +40,7 @@ type PanelState = 'idle' | 'loading' | 'ready' | 'error';
 @Component({
   selector: 'app-supplier-availability-panel',
   standalone: true,
-  imports: [ReactiveFormsModule, TranslatePipe, CurrencyPipe, DatePipe],
+  imports: [ReactiveFormsModule, TranslatePipe, MoneyPipe, DatePipe],
   templateUrl: './supplier-availability-panel.component.html',
   styleUrl: './supplier-availability-panel.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

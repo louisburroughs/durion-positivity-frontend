@@ -124,8 +124,8 @@
           {{ item.description }}
         </span>
         <span class="ledger__cell">{{ item.quantity }}</span>
-        <span class="ledger__cell">{{ item.unitPrice | currency }}</span>
-        <span class="ledger__cell ledger__cell--total">{{ item.lineTotal | currency }}</span>
+        <span class="ledger__cell">{{ item.unitPrice | money }}</span>
+        <span class="ledger__cell ledger__cell--total">{{ item.lineTotal | money }}</span>
         <span class="ledger__cell ledger__cell--done">
           <input
             type="checkbox"

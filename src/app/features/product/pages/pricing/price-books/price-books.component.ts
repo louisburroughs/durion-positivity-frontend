@@ -5,13 +5,14 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { forkJoin, Subscription } from 'rxjs';
 import { PriceBook, PriceRule } from '../../../models/pricing.models';
 import { ProductCatalogService } from '../../../services/product-catalog.service';
+import { MoneyPipe } from '../../../../../shared/money.pipe';
 
 type PageState = 'idle' | 'loading' | 'empty' | 'ready' | 'error';
 
 @Component({
   selector: 'app-price-books',
   standalone: true,
-  imports: [CommonModule, TranslatePipe],
+  imports: [CommonModule, TranslatePipe, MoneyPipe],
   templateUrl: './price-books.component.html',
   styleUrl: './price-books.component.css',
 })

@@ -6,13 +6,14 @@ import { Subject, forkJoin } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { ActiveMsrp, Msrp } from '../../../models/pricing.models';
 import { ProductCatalogService } from '../../../services/product-catalog.service';
+import { MoneyPipe } from '../../../../../shared/money.pipe';
 
 type PageState = 'idle' | 'loading' | 'empty' | 'ready' | 'error';
 
 @Component({
   selector: 'app-msrp',
   standalone: true,
-  imports: [CommonModule, TranslatePipe],
+  imports: [CommonModule, TranslatePipe, MoneyPipe],
   templateUrl: './msrp.component.html',
   styleUrl: './msrp.component.css',
 })

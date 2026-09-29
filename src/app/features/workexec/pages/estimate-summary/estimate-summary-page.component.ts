@@ -6,6 +6,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { switchMap } from 'rxjs/operators';
 import { WorkexecService } from '../../services/workexec.service';
 import { EstimateSummaryResponse, PageState } from '../../models/workexec.models';
+import { MoneyPipe } from '../../../../shared/money.pipe';
 
 /**
  * EstimateSummaryPageComponent — Story 234 (CAP-002)
@@ -19,7 +20,7 @@ import { EstimateSummaryResponse, PageState } from '../../models/workexec.models
 @Component({
   selector: 'app-estimate-summary-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, TranslatePipe],
+  imports: [CommonModule, RouterLink, TranslatePipe, MoneyPipe],
   templateUrl: './estimate-summary-page.component.html',
   styleUrl: './estimate-summary-page.component.css',
 })

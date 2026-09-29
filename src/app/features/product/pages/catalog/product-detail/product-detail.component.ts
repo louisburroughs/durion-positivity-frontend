@@ -19,6 +19,7 @@ import {
 import { ProductCatalogService } from '../../../services/product-catalog.service';
 import { SupplierAvailabilityPanelComponent } from '../../../components/supplier-availability-panel/supplier-availability-panel.component';
 import { TreadDesignEnrichmentPanelComponent } from '../../../components/tread-design-enrichment-panel/tread-design-enrichment-panel.component';
+import { MoneyPipe } from '../../../../../shared/money.pipe';
 
 type PageState = 'idle' | 'loading' | 'empty' | 'ready' | 'error';
 
@@ -39,12 +40,7 @@ type PageState = 'idle' | 'loading' | 'empty' | 'ready' | 'error';
 @Component({
   selector: 'app-product-detail',
   standalone: true,
-  imports: [
-    CommonModule,
-    TranslatePipe,
-    SupplierAvailabilityPanelComponent,
-    TreadDesignEnrichmentPanelComponent,
-  ],
+  imports: [CommonModule, TranslatePipe, SupplierAvailabilityPanelComponent, TreadDesignEnrichmentPanelComponent, MoneyPipe],
   templateUrl: './product-detail.component.html',
   styleUrl: './product-detail.component.css',
 })
