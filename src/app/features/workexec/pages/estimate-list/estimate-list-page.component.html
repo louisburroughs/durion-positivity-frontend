@@ -40,7 +40,7 @@
           <span>{{ 'WORKEXEC.ESTIMATE_LIST.CARD.LAST_UPDATED' | translate }}: {{ (item.lastUpdatedAt ?? item.createdAt)
             | date: 'medium' }}</span>
           <span class="estimate-list__total">{{ 'WORKEXEC.ESTIMATE_LIST.CARD.TOTAL' | translate }}: {{ item.totalAmount
-            | currency:item.currency:'symbol':'1.2-2' }}</span>
+            | money:item.currency:'symbol':'1.2-2' }}</span>
         </span>
       </button>
     </li>

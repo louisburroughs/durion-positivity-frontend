@@ -7,6 +7,7 @@ import { WorkexecService } from '../../services/workexec.service';
 import { EstimateResponse, PageState } from '../../models/workexec.models';
 import { CustomerLookupComponent } from '../../../../shared/customer-lookup/customer-lookup.component';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { MoneyPipe } from '../../../../shared/money.pipe';
 
 /**
  * ApprovalDigitalPageComponent — Story 271 (CAP-003)
@@ -23,7 +24,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 @Component({
   selector: 'app-approval-digital-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, CustomerLookupComponent, TranslatePipe],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, CustomerLookupComponent, TranslatePipe, MoneyPipe],
   templateUrl: './approval-digital-page.component.html',
   styleUrl: './approval-digital-page.component.css',
 })

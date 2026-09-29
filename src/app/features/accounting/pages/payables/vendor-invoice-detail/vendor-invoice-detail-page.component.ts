@@ -2,10 +2,11 @@ import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
-import { CurrencyPipe, DatePipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { ExceptionResolutionAction, PayableBillDetail } from '../../../models/payables.models';
 import { PayablesService } from '../../../services/payables.service';
 import { toDatePipeInput } from '../../../utils/date-only.util';
+import { MoneyPipe } from '../../../../../shared/money.pipe';
 
 type PageState = 'idle' | 'loading' | 'ready' | 'error';
 
@@ -19,7 +20,7 @@ type PageState = 'idle' | 'loading' | 'ready' | 'error';
 @Component({
   selector: 'app-vendor-invoice-detail-page',
   standalone: true,
-  imports: [TranslatePipe, DatePipe, CurrencyPipe],
+  imports: [TranslatePipe, DatePipe, MoneyPipe],
   templateUrl: './vendor-invoice-detail-page.component.html',
   styleUrl: './vendor-invoice-detail-page.component.css',
 })

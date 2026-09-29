@@ -2,12 +2,13 @@ import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
-import { CurrencyPipe, DatePipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PayableBillListRow, PayableBillStatus } from '../../../models/payables.models';
 import { PayablesService } from '../../../services/payables.service';
 import { toDatePipeInput } from '../../../utils/date-only.util';
 import { addCalendarDays, toIsoDate } from '../../../utils/date-window.util';
+import { MoneyPipe } from '../../../../../shared/money.pipe';
 
 /** Re-exported for existing callers/specs of this module's `toIsoDate`. */
 export { toIsoDate };
@@ -27,7 +28,7 @@ const PAGE_SIZE = 25;
 @Component({
   selector: 'app-vendor-invoices-list-page',
   standalone: true,
-  imports: [TranslatePipe, DatePipe, CurrencyPipe, FormsModule],
+  imports: [TranslatePipe, DatePipe, MoneyPipe, FormsModule],
   templateUrl: './vendor-invoices-list-page.component.html',
   styleUrl: './vendor-invoices-list-page.component.css',
 })

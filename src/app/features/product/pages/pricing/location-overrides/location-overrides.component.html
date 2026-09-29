@@ -68,7 +68,7 @@
           <tr>
             <td>{{ entry.locationId }}</td>
             <td>{{ entry.productSku }}</td>
-            <td>{{ entry.overridePrice | currency:entry.currency:'symbol':'1.2-2' }}</td>
+            <td>{{ entry.overridePrice | money:entry.currency:'symbol':'1.2-2' }}</td>
             <td>
               <span class="badge" [class.badge--success]="entry.status === 'ACTIVE'"
                 [class.badge--warning]="entry.status === 'PENDING_APPROVAL'"
@@ -152,7 +152,7 @@
     <h2>{{ 'PRODUCT.PRICING.LOCATION_OVERRIDES.EFFECTIVE_PRICE.TITLE' | translate }}</h2>
     <p>
       {{ effectivePrice()?.locationId }} · {{ effectivePrice()?.productSku }} ·
-      {{ effectivePrice()?.finalPrice ?? 0 | currency:(effectivePrice()?.currency ?? 'USD'):'symbol':'1.2-2' }}
+      {{ effectivePrice()?.finalPrice ?? 0 | money:(effectivePrice()?.currency ?? 'USD'):'symbol':'1.2-2' }}
     </p>
   </section>
   }

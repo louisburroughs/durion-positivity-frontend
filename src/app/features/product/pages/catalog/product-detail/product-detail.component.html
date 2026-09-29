@@ -215,15 +215,15 @@
     <div class="stats-grid">
       <article class="stat-card">
         <h3>{{ 'PRODUCT.CATALOG.DETAIL.STANDARD_COST.CURRENT' | translate }}</h3>
-        <p>{{ itemCost()?.standardCost ?? 0 | currency:(itemCost()?.currency ?? 'USD'):'symbol':'1.2-2' }}</p>
+        <p>{{ itemCost()?.standardCost ?? 0 | money:(itemCost()?.currency ?? 'USD'):'symbol':'1.2-2' }}</p>
       </article>
       <article class="stat-card">
         <h3>{{ 'PRODUCT.CATALOG.DETAIL.STANDARD_COST.LAST' | translate }}</h3>
-        <p>{{ itemCost()?.lastCost ?? 0 | currency:(itemCost()?.currency ?? 'USD'):'symbol':'1.2-2' }}</p>
+        <p>{{ itemCost()?.lastCost ?? 0 | money:(itemCost()?.currency ?? 'USD'):'symbol':'1.2-2' }}</p>
       </article>
       <article class="stat-card">
         <h3>{{ 'PRODUCT.CATALOG.DETAIL.STANDARD_COST.AVERAGE' | translate }}</h3>
-        <p>{{ itemCost()?.averageCost ?? 0 | currency:(itemCost()?.currency ?? 'USD'):'symbol':'1.2-2' }}</p>
+        <p>{{ itemCost()?.averageCost ?? 0 | money:(itemCost()?.currency ?? 'USD'):'symbol':'1.2-2' }}</p>
       </article>
     </div>
 

@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { FIXTURES } from '../../support/projects';
 import type { Source } from '../../support/ast';
-import { i18n01, i18n05, i18n06, i18n06Findings, loadEnUsKeys, staticTranslateKeysInTs } from '../i18n.rules';
+import { i18n01, i18n05, i18n06, i18n06Findings, i18n10, i18n10Findings, loadEnUsKeys, staticTranslateKeysInTs } from '../i18n.rules';
 
 const read = (path: string): Source => ({ path, content: readFileSync(path, 'utf8') });
 
@@ -104,5 +104,46 @@ describe('[I18N-01] exact en-US key set', () => {
 
   it('passes identical key sets', async () => {
     expect(await withLocales({ 'en-US': { A: { B: 'x' } }, 'fr-FR': { A: { B: 'y' } } })).toEqual([]);
+  });
+});
+
+describe('[self] I18N-10 money is formatted in the user locale', () => {
+  const MONEY_TS = 'arch/fixtures/src/app/core/fxi18n-money.component.ts';
+
+  it('catches CurrencyPipe and formatCurrency imported from @angular/common', () => {
+    const findings = i18n10Findings(read(MONEY_TS));
+    expect(findings).toContain('imports CurrencyPipe from @angular/common');
+    expect(findings).toContain('imports formatCurrency from @angular/common');
+  });
+
+  it('catches a bare `| currency` in an inline template', () => {
+    expect(i18n10Findings(read(MONEY_TS))).toContain('bare `| currency` pipe in an inline template');
+  });
+
+  it('catches a bare `| currency` in an external template, and only there', async () => {
+    const keys = await i18n10(FIXTURES).keys();
+    expect(keys).toContain('src/app/core/fxi18n-money.component.html :: bare `| currency` pipe');
+    expect(keys.some((k) => k.includes('fxi18n-money-ok.component.html'))).toBe(false);
+  });
+
+  it('catches CurrencyPipe and formatCurrency reached through a namespace import', () => {
+    const findings = i18n10Findings({
+      path: 'x.ts',
+      content: [
+        "import * as common from '@angular/common';",
+        "export const f = () => common.formatCurrency(1, 'en-US', '$');",
+        'export const P = common.CurrencyPipe;',
+        'export const D = common.DatePipe;',
+      ].join('\n'),
+    });
+    expect(findings).toEqual([
+      'uses CurrencyPipe from @angular/common through a namespace import',
+      'uses formatCurrency from @angular/common through a namespace import',
+    ]);
+  });
+
+  it('does not treat a logical OR with a `currency` field as the pipe', () => {
+    const findings = i18n10Findings({ path: 'x.ts', content: "const t = '{{ total || currency }}';" });
+    expect(findings).toEqual([]);
   });
 });

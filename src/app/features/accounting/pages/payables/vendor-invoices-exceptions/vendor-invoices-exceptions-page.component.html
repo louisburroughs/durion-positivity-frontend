@@ -37,7 +37,7 @@
         <div class="exception-summary">
           <span class="exception-bill-id">{{ row.billId }}</span>
           <span class="exception-vendor">{{ 'ACCOUNTING.PAYABLES.EXCEPTIONS.TABLE.VENDOR' | translate }}: {{ row.vendorId }}</span>
-          <span class="exception-amount">{{ row.amount | currency:'USD':'symbol':'1.2-2' }}</span>
+          <span class="exception-amount">{{ row.amount | money:'USD':'symbol':'1.2-2' }}</span>
           <span>{{ row.dueDate ? (dateOnlyFor(row.dueDate) | date:'mediumDate') : ('COMMON.NOT_AVAILABLE' | translate) }}</span>
         </div>
 
@@ -133,7 +133,7 @@
       <li class="candidate-row">
         <span>{{ candidate.billNumber ?? candidate.vendorBillId }}</span>
         <span>{{ 'ACCOUNTING.PAYABLES.EXCEPTIONS.CANDIDATES.SCORE' | translate }}: {{ candidate.matchScore ?? ('COMMON.NOT_AVAILABLE' | translate) }}</span>
-        <span>{{ candidate.billTotalAmount !== null && candidate.billTotalAmount !== undefined ? (candidate.billTotalAmount | currency:'USD':'symbol':'1.2-2') : ('COMMON.NOT_AVAILABLE' | translate) }}</span>
+        <span>{{ candidate.billTotalAmount !== null && candidate.billTotalAmount !== undefined ? (candidate.billTotalAmount | money:'USD':'symbol':'1.2-2') : ('COMMON.NOT_AVAILABLE' | translate) }}</span>
         @if (candidate.resolved) {
         <span class="badge badge--success">{{ 'ACCOUNTING.PAYABLES.EXCEPTIONS.CANDIDATES.RESOLVED' | translate }}</span>
         } @else {

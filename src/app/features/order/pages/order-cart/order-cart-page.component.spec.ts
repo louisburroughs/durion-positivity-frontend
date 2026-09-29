@@ -1,9 +1,11 @@
+import { formatCurrency, getCurrencySymbol } from '@angular/common';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { BehaviorSubject, of, throwError } from 'rxjs';
 import { SalesOrderLineResponse, SalesOrderResponse } from '@durion-sdk/order';
 import { AuthService } from '../../../../core/services/auth.service';
+import { LocaleService } from '../../../../core/services/locale.service';
 import { OrderCartPageComponent } from './order-cart-page.component';
 import { OrderService } from '../../services/order.service';
 
@@ -156,5 +158,48 @@ describe('OrderCartPageComponent', () => {
     const stateOrder = stateSetSpy.mock.invocationCallOrder.at(-1) ?? 0;
     const errorKeyOrder = errorKeySetSpy.mock.invocationCallOrder.at(-1) ?? 0;
     expect(stateOrder).toBeLessThan(errorKeyOrder);
+  });
+
+  describe('line total column (#410) and locale (#408)', () => {
+    const usd = (value: number, locale = 'en-US'): string =>
+      formatCurrency(value, locale, getCurrencySymbol('USD', 'wide', locale), 'USD', '1.2-2');
+
+    // A discounted line: the server's lineSubtotal (90) is not quantity × unitPrice (100).
+    const discountedLine: SalesOrderLineResponse = { ...orderLineFixture, lineSubtotal: 90 };
+
+    const lineTotals = (): string[] =>
+      Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('[data-testid="order-cart-line-total"]'))
+        .map((el) => el.textContent?.trim() ?? '');
+
+    const load = (lines: SalesOrderLineResponse[]): void => {
+      orderServiceMock.getOrder.mockReturnValue(of({ ...orderFixture, subtotal: 90, lines }));
+      fixture.detectChanges();
+    };
+
+    afterEach(() => TestBed.inject(LocaleService).currentLocale.set('en-US'));
+
+    it("renders the server's lineSubtotal, not quantity × unitPrice", () => {
+      load([discountedLine]);
+      expect(lineTotals()).toEqual([usd(90)]);
+    });
+
+    it('renders the not-available placeholder when the line has no lineSubtotal', () => {
+      load([{ ...orderLineFixture, lineSubtotal: undefined }]);
+      expect(lineTotals()).toEqual(['COMMON.NOT_AVAILABLE']);
+    });
+
+    for (const locale of ['fr-FR', 'es-MX', 'fr-CA'] as const) {
+      it(`formats amounts in the user locale ${locale} and back to en-US`, () => {
+        load([discountedLine]);
+        const service = TestBed.inject(LocaleService);
+        service.currentLocale.set(locale);
+        fixture.detectChanges();
+        expect(lineTotals()).toEqual([usd(90, locale)]);
+
+        service.currentLocale.set('en-US');
+        fixture.detectChanges();
+        expect(lineTotals()).toEqual([usd(90)]);
+      });
+    }
   });
 });

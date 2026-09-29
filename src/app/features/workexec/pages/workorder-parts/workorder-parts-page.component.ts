@@ -17,6 +17,7 @@ import {
 } from '../../models/workexec.models';
 import { WorkexecService } from '../../services/workexec.service';
 import { ModalDialogDirective } from '../../../../shared/modal-dialog.directive';
+import { MoneyPipe } from '../../../../shared/money.pipe';
 
 type PageState = 'loading' | 'ready' | 'error';
 type PartAction = 'issue' | 'consume' | 'return';
@@ -32,7 +33,7 @@ type PartAction = 'issue' | 'consume' | 'return';
 @Component({
   selector: 'app-workorder-parts-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe, ModalDialogDirective],
+  imports: [CommonModule, FormsModule, TranslatePipe, ModalDialogDirective, MoneyPipe],
   templateUrl: './workorder-parts-page.component.html',
   styleUrl: './workorder-parts-page.component.css',
 })

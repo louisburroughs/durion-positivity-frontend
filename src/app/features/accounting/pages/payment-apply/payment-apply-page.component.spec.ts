@@ -1,4 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { formatCurrency, getCurrencySymbol } from '@angular/common';
+import { LocaleService } from '../../../../core/services/locale.service';
+import type { PaymentApplication } from '../../models/accounting.models';
 import { provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
@@ -88,5 +91,54 @@ describe('PaymentApplyPageComponent', () => {
       component.submit();
       expect(component.state()).toBe('error');
     });
+  });
+
+  describe('result amounts (#408, #409)', () => {
+    const money = (value: number, currency: string, locale = 'en-US'): string =>
+      formatCurrency(value, locale, getCurrencySymbol(currency, 'wide', locale), currency);
+
+    const applied = (currency: string): PaymentApplication => ({
+      paymentId: 'pay-1',
+      currency,
+      totalAmount: 1234.5,
+      appliedAmount: 1000,
+    });
+
+    const amounts = (): string[] =>
+      Array.from(fixture.nativeElement.querySelectorAll('[data-testid="apply-result"] .amount-field') as NodeListOf<HTMLElement>)
+        .map((el) => el.textContent ?? '');
+
+    afterEach(() => TestBed.inject(LocaleService).currentLocale.set('en-US'));
+
+    it('formats the total and applied amounts in the currency of the response (EUR)', () => {
+      component.result.set(applied('EUR'));
+      fixture.detectChanges();
+      const [total, appliedAmount] = amounts();
+      expect(total).toContain(money(1234.5, 'EUR'));
+      expect(appliedAmount).toContain(money(1000, 'EUR'));
+      expect(total).not.toContain(money(1234.5, 'USD'));
+    });
+
+    it('formats a USD response as USD', () => {
+      component.result.set(applied('USD'));
+      fixture.detectChanges();
+      const [total, appliedAmount] = amounts();
+      expect(total).toContain(money(1234.5, 'USD'));
+      expect(appliedAmount).toContain(money(1000, 'USD'));
+    });
+
+    for (const locale of ['fr-FR', 'es-MX', 'fr-CA'] as const) {
+      it(`formats in the user locale ${locale} and re-renders on switch`, () => {
+        const service = TestBed.inject(LocaleService);
+        component.result.set(applied('EUR'));
+        service.currentLocale.set(locale);
+        fixture.detectChanges();
+        expect(amounts()[0]).toContain(money(1234.5, 'EUR', locale));
+
+        service.currentLocale.set('en-US');
+        fixture.detectChanges();
+        expect(amounts()[0]).toContain(money(1234.5, 'EUR'));
+      });
+    }
   });
 });

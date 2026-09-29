@@ -86,7 +86,7 @@
           <td>{{ firstLine(vendor)?.availableQuantity ?? ('COMMON.NOT_AVAILABLE' | translate) }}</td>
           <td>
             @if (firstLine(vendor)?.quotedUnitPrice !== null && firstLine(vendor)?.quotedUnitPrice !== undefined) {
-            {{ firstLine(vendor)!.quotedUnitPrice | currency:(firstLine(vendor)?.currency ?? 'USD'):'symbol':'1.2-2' }}
+            {{ firstLine(vendor)!.quotedUnitPrice | money:(firstLine(vendor)?.currency ?? 'USD'):'symbol':'1.2-2' }}
             } @else {
             {{ 'COMMON.NOT_AVAILABLE' | translate }}
             }

@@ -1,8 +1,10 @@
+import { formatCurrency, getCurrencySymbol } from '@angular/common';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { afterEach, describe, it, expect, beforeEach, vi } from 'vitest';
+import { LocaleService } from '../../../../core/services/locale.service';
 import { PaymentTransactionRef } from '../../models/billing.models';
 import { BillingTransportService } from '../../services/billing-transport.service';
 import { PaymentCapturePageComponent } from './payment-capture-page.component';
@@ -105,5 +107,29 @@ describe('PaymentCapturePageComponent', () => {
     expect(component.state()).toBe('error');
     expect(component.errorKey()).toBe('BILLING.PAYMENT.ERROR.CAPTURE');
     expect(billingTransportStub.initiateAndCapturePayment).not.toHaveBeenCalled();
+  });
+
+  describe('captured amount locale (#408)', () => {
+    const usd = (value: number, locale: string): string =>
+      formatCurrency(value, locale, getCurrencySymbol('USD', 'wide', locale), 'USD');
+
+    const amount = (): string =>
+      (fixture.nativeElement as HTMLElement).querySelector('[data-testid="payment-capture-amount"]')?.textContent ?? '';
+
+    afterEach(() => TestBed.inject(LocaleService).currentLocale.set('en-US'));
+
+    it.each(['fr-FR', 'es-MX', 'fr-CA'] as const)('formats the amount in the user locale %s, and back to en-US on switch', (locale) => {
+      billingTransportStub.initiateAndCapturePayment.mockReturnValueOnce(of(capturedTxFixture));
+      component.initiateAndCapture('CARD', 150);
+      const service = TestBed.inject(LocaleService);
+
+      service.currentLocale.set(locale);
+      fixture.detectChanges();
+      expect(amount()).toBe(usd(150, locale));
+
+      service.currentLocale.set('en-US');
+      fixture.detectChanges();
+      expect(amount()).toBe(usd(150, 'en-US'));
+    });
   });
 });

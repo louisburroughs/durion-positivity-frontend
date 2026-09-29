@@ -1,4 +1,4 @@
-import { CurrencyPipe, DatePipe, SlicePipe } from '@angular/common';
+import { DatePipe, SlicePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Component, DestroyRef, OnInit, inject, signal, computed } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -12,6 +12,7 @@ import {
 import { BillingTransportService } from '../../services/billing-transport.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { ModalDialogDirective } from '../../../../shared/modal-dialog.directive';
+import { MoneyPipe } from '../../../../shared/money.pipe';
 
 type PageState = 'loading' | 'ready' | 'error';
 type IssueState = 'idle' | 'elevating' | 'issuing' | 'success' | 'error';
@@ -46,7 +47,7 @@ const FINALIZE_OVERRIDE_ROLES = [
 @Component({
   selector: 'app-invoice-detail-page',
   standalone: true,
-  imports: [CurrencyPipe, DatePipe, SlicePipe, FormsModule, TranslatePipe, ModalDialogDirective],
+  imports: [MoneyPipe, DatePipe, SlicePipe, FormsModule, TranslatePipe, ModalDialogDirective],
   templateUrl: './invoice-detail-page.component.html',
   styleUrl: './invoice-detail-page.component.css',
 })

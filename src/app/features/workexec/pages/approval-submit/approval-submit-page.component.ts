@@ -6,6 +6,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { WorkexecService } from '../../services/workexec.service';
 import { EstimateResponse, PageState } from '../../models/workexec.models';
 import { ModalDialogDirective } from '../../../../shared/modal-dialog.directive';
+import { MoneyPipe } from '../../../../shared/money.pipe';
 
 /**
  * ApprovalSubmitPageComponent — Story 233 (CAP-003)
@@ -23,7 +24,7 @@ import { ModalDialogDirective } from '../../../../shared/modal-dialog.directive'
 @Component({
   selector: 'app-approval-submit-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, TranslatePipe, ModalDialogDirective],
+  imports: [CommonModule, RouterLink, TranslatePipe, ModalDialogDirective, MoneyPipe],
   templateUrl: './approval-submit-page.component.html',
   styleUrl: './approval-submit-page.component.css',
 })

@@ -73,7 +73,7 @@
           <tr>
             <td>{{ row.billId }}</td>
             <td>{{ row.vendorId }}</td>
-            <td>{{ row.amount | currency:'USD':'symbol':'1.2-2' }}</td>
+            <td>{{ row.amount | money:'USD':'symbol':'1.2-2' }}</td>
             <td>{{ row.dueDate ? (dateOnlyFor(row.dueDate) | date:'mediumDate') : ('COMMON.NOT_AVAILABLE' | translate) }}</td>
             <td>
               <span class="badge"

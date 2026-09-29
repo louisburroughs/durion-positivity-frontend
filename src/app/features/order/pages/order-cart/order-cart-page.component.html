@@ -64,8 +64,14 @@
           <td>{{ line.itemDescription }}</td>
           <td>{{ line.itemSku }}</td>
           <td>{{ line.quantity }}</td>
-          <td>{{ line.unitPrice | currency:'USD':'symbol':'1.2-2' }}</td>
-          <td>{{ line.quantity * (line.unitPrice ?? 0) | currency:'USD':'symbol':'1.2-2' }}</td>
+          <td>{{ line.unitPrice | money:'USD':'symbol':'1.2-2' }}</td>
+          <td data-testid="order-cart-line-total">
+            @if (line.lineSubtotal !== undefined && line.lineSubtotal !== null) {
+            {{ line.lineSubtotal | money:'USD':'symbol':'1.2-2' }}
+            } @else {
+            {{ 'COMMON.NOT_AVAILABLE' | translate }}
+            }
+          </td>
           <td>
             <button class="order-cart__remove-btn" type="button" (click)="removeItem(line.orderLineId!)">
               {{ 'ORDER.CART.ACTION.REMOVE_ITEM' | translate }}
@@ -86,7 +92,7 @@
       <dl>
         <div class="order-cart__total-row order-cart__total-row--grand">
           <dt>{{ 'ORDER.CART.SUMMARY.SUBTOTAL' | translate }}</dt>
-          <dd>{{ currentOrder.subtotal | currency:'USD':'symbol':'1.2-2' }}</dd>
+          <dd>{{ currentOrder.subtotal | money:'USD':'symbol':'1.2-2' }}</dd>
         </div>
       </dl>
       }

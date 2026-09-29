@@ -1,8 +1,8 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { ASTWithSource, BindingPipe, LiteralPrimitive, RecursiveAstVisitor } from '@angular/compiler';
-import { calls, enclosing, insideCallback, ts, type Source } from '../support/ast';
-import { onDisk, type Project, selectors } from '../support/projects';
+import { calls, enclosing, importedNames, insideCallback, nodes, stringLiterals, ts, type Source } from '../support/ast';
+import { file, onDisk, type Project, selectors } from '../support/projects';
 import { type ArchRule, type Finder, combine, contentRule, customRule, templateRule } from '../support/rule';
 import { parseHtml, templateFiles, elements } from '../support/templates';
 import { checkPseudoLocale } from '../../scripts/i18n/generate-pseudo-locale.mjs';
@@ -12,7 +12,7 @@ import { scan as scanHardcodedTs } from '../../scripts/i18n/check-hardcoded-ts-s
 
 /**
  * i18n rules (plan §5.7). I18N-01..04 wrap the four `scripts/i18n/*.mjs` checkers' pure `scan()`s
- * (plan step 1). I18N-05..09 are new suite-hosted rules: I18N-05 walks the Angular template
+ * (plan step 1). I18N-05..10 are new suite-hosted rules: I18N-05 walks the Angular template
  * expression AST (via `@angular/compiler`) for literal `| translate` pipes, and the TS AST (via
  * `support/ast.ts`) for `translate.instant/get/stream` and `errorKey.set` literal args plus
  * `errorKey`-typed field initializers, cross-checked against `en-US.json` (plan §11.4).
@@ -87,17 +87,29 @@ export function loadEnUsKeys(p: Project): Set<string> {
 export function templateTranslateKeys(f: Source): { keys: string[]; dynamicCount: number } {
   const keys: string[] = [];
   let dynamicCount = 0;
+  for (const pipe of templatePipes(f)) {
+    if (pipe.name !== 'translate') continue;
+    if (pipe.exp instanceof LiteralPrimitive && typeof pipe.exp.value === 'string') {
+      keys.push(pipe.exp.value);
+    } else {
+      dynamicCount++;
+    }
+  }
+  return { keys, dynamicCount };
+}
+
+/**
+ * Every pipe application anywhere in a template's expression AST, nested pipes included. See
+ * {@link templateTranslateKeys} for why a generic walk over `ASTWithSource` nodes covers
+ * interpolations, bindings, events and control-flow block expressions alike.
+ */
+export function templatePipes(f: Source): BindingPipe[] {
+  const out: BindingPipe[] = [];
   const seen = new Set<unknown>();
 
   class PipeVisitor extends RecursiveAstVisitor {
     override visitPipe(pipe: BindingPipe, context: unknown): unknown {
-      if (pipe.name === 'translate') {
-        if (pipe.exp instanceof LiteralPrimitive && typeof pipe.exp.value === 'string') {
-          keys.push(pipe.exp.value);
-        } else {
-          dynamicCount++;
-        }
-      }
+      out.push(pipe);
       return super.visitPipe(pipe, context);
     }
   }
@@ -119,7 +131,7 @@ export function templateTranslateKeys(f: Source): { keys: string[]; dynamicCount
   };
   walk(parseHtml(f));
 
-  return { keys, dynamicCount };
+  return out;
 }
 
 const TRANSLATE_CALL_RE = /(^|\.)translate\.(instant|get|stream)$/;
@@ -314,3 +326,64 @@ export const i18n09 = (p: Project): ArchRule => {
     return unusedCount ? [`${unusedCount} unused key(s) in en-US.json (dynamic-key usages are not counted as used)`] : [];
   });
 };
+
+// ---------------------------------------------------------------------------------------------
+// I18N-10: money is formatted in the user's selected locale — the `money` pipe
+// (`shared/money.pipe.ts`), never the bare `currency` pipe or `CurrencyPipe`/`formatCurrency`,
+// which fall back to the bootstrap `LOCALE_ID` (en-US) whatever locale the user picked (#408).
+// ---------------------------------------------------------------------------------------------
+
+const I18N10 = {
+  id: 'I18N-10',
+  title: "money is formatted in the user's locale: `| money`, never `| currency`, CurrencyPipe or formatCurrency (ADR-0030 §4)",
+  mode: 'enforce',
+} as const;
+const BARE_CURRENCY_PIPE_RE = /(^|[^|])\|\s*currency\b/;
+const LOCALE_BLIND_MONEY_API = new Set(['CurrencyPipe', 'formatCurrency']);
+
+/** Local names bound by `import * as x from '@angular/common'`. */
+function commonNamespaces(f: Source): Set<string> {
+  const out = new Set<string>();
+  for (const n of nodes(f, ts.isImportDeclaration)) {
+    const bindings = n.importClause?.namedBindings;
+    if (
+      ts.isStringLiteral(n.moduleSpecifier) &&
+      n.moduleSpecifier.text === '@angular/common' &&
+      bindings &&
+      ts.isNamespaceImport(bindings)
+    ) {
+      out.add(bindings.name.text);
+    }
+  }
+  return out;
+}
+
+export const i18n10Findings: Finder = (f) => {
+  const namespaces = commonNamespaces(f);
+  return uniqSorted([
+    ...importedNames(f, '@angular/common')
+      .filter((i) => LOCALE_BLIND_MONEY_API.has(i.name))
+      .map((i) => `imports ${i.name} from @angular/common`),
+    // `import * as common …` then `common.CurrencyPipe` / `common.formatCurrency(…)` is the same bypass.
+    ...nodes(f, ts.isPropertyAccessExpression)
+      .filter(
+        (n) => ts.isIdentifier(n.expression) && namespaces.has(n.expression.text) && LOCALE_BLIND_MONEY_API.has(n.name.text),
+      )
+      .map((n) => `uses ${n.name.text} from @angular/common through a namespace import`),
+    ...stringLiterals(f)
+      .filter((l) => BARE_CURRENCY_PIPE_RE.test(l.text))
+      .map(() => 'bare `| currency` pipe in an inline template'),
+  ]);
+};
+
+export const i18n10 = (p: Project): ArchRule =>
+  combine(I18N10, [
+    templateRule(I18N10, p, {
+      finder: (f) => (templatePipes(f).some((pipe) => pipe.name === 'currency') ? ['bare `| currency` pipe'] : []),
+    }),
+    contentRule(I18N10, p, {
+      subject: selectors.appTree(p),
+      except: [/\.spec\.ts$/, file(p, 'shared/money.pipe.ts')],
+      finder: i18n10Findings,
+    }),
+  ]);

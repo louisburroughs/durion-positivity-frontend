@@ -7,6 +7,7 @@ import { WorkexecService } from '../../services/workexec.service';
 import { EstimateResponse, PageState } from '../../models/workexec.models';
 import { CustomerLookupComponent } from '../../../../shared/customer-lookup/customer-lookup.component';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { MoneyPipe } from '../../../../shared/money.pipe';
 
 /**
  * ApprovalInPersonPageComponent — Story 270 (CAP-003)
@@ -21,7 +22,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 @Component({
   selector: 'app-approval-in-person-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, CustomerLookupComponent, TranslatePipe],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, CustomerLookupComponent, TranslatePipe, MoneyPipe],
   templateUrl: './approval-in-person-page.component.html',
   styleUrl: './approval-in-person-page.component.css',
 })

@@ -33,7 +33,7 @@
             <div class="ledger__row" [class.ledger__row--alt]="even">
               <span class="ledger__cell">{{ item.description }}</span>
               <span class="ledger__cell">{{ item.quantity }}</span>
-              <span class="ledger__cell">{{ item.unitPrice | currency }}</span>
+              <span class="ledger__cell">{{ item.unitPrice | money }}</span>
               <span class="ledger__cell ledger__cell--actions">
                 <button class="btn-link" (click)="openAction('issue', item.id)">{{ 'WORKEXEC.WORKORDER_PARTS.ISSUE' | translate }}</button>
                 <button class="btn-link" (click)="openSubstPanel(item.id)">{{ 'WORKEXEC.WORKORDER_PARTS.SUBSTITUTE' | translate }}</button>
