@@ -175,8 +175,15 @@ export class PeriodClosePageComponent {
   readonly readiness = signal<ReadonlyMap<string, ReadinessRead>>(new Map());
   /** Period codes whose readiness panel is open. */
   readonly expanded = signal<ReadonlySet<string>>(new Set());
-  /** The tenant policy, or null while unread or when the read failed. */
+  /** The tenant policy, or null while unread or when the read failed; `policyStatus` tells which. */
   readonly policy = signal<BankReconciliationPolicy | null>(null);
+  /** The policy read's own status, so "still loading" and "failed" gate differently (ADR-0064). */
+  readonly policyStatus = signal<'loading' | 'OK' | 'ERROR'>('loading');
+  /**
+   * The period a close is waiting on (its readiness or the policy); every
+   * close control waits with it, including close-by-month.
+   */
+  readonly closePending = signal<string | null>(null);
 
   /**
    * `closeAccountingPeriod` enforces `accounting:period:close`. Permissions
@@ -212,8 +219,8 @@ export class PeriodClosePageComponent {
   /** One counter per period's readiness entry, and one for the policy (ADR-0063). */
   private readonly readinessSeq = new Map<string, number>();
   private policySeq = 0;
-  /** A close waiting on its readiness read; it continues when that read settles. */
-  private closeAfterRead: string | null = null;
+  /** Bumped on every foreground load, so a readiness read from before it never lands. */
+  private readinessEpoch = 0;
 
   constructor() {
     // A field error describes the value it was raised for; editing the field retires it.
@@ -233,9 +240,11 @@ export class PeriodClosePageComponent {
   }
 
   load(): void {
+    // A read already in flight belongs to the previous load: bumping the epoch drops it.
+    this.readinessEpoch++;
     this.readiness.set(new Map());
     this.expanded.set(new Set());
-    this.closeAfterRead = null;
+    this.closePending.set(null);
     this.readPolicy();
     this.read(false);
   }
@@ -286,7 +295,7 @@ export class PeriodClosePageComponent {
 
   /** Starts a close of a listed OPEN period, through its readiness gate. */
   requestClose(periodCode: string): void {
-    if (!this.canClose() || this.pendingCode() || this.refreshing()) return;
+    if (!this.canClose() || this.pendingCode() || this.refreshing() || this.closePending()) return;
     const row = this.periods().find(period => period.periodCode === periodCode);
     if (row?.status !== 'OPEN') return;
     this.proceedToClose(periodCode);
@@ -306,8 +315,21 @@ export class PeriodClosePageComponent {
       if (policy === 'REQUIRED_WITH_EXCEPTION') return this.canOverride() ? 'EXCEPTION' : 'BLOCKED';
       return 'BLOCKED';
     }
-    if (read?.status === 'ERROR') return this.policy()?.closePolicy === 'ADVISORY' ? 'CLOSE' : 'UNAVAILABLE';
+    if (read?.status === 'ERROR') {
+      // Readiness failed: only a policy read as ADVISORY lets the close go ahead; one still loading waits.
+      if (this.policyStatus() === 'loading') return 'LOADING';
+      return this.policyStatus() === 'OK' && this.policy()?.closePolicy === 'ADVISORY' ? 'CLOSE' : 'UNAVAILABLE';
+    }
     return read?.status === 'loading' ? 'LOADING' : 'UNREAD';
+  }
+
+  /** The refusal copy: naming the override permission only where an exception exists (REQUIRED_WITH_EXCEPTION). */
+  blockedKey(periodCode: string): string {
+    const read = this.readiness().get(periodCode);
+    const exceptionPolicy = read?.status === 'OK' && read.readiness.policy === 'REQUIRED_WITH_EXCEPTION';
+    return exceptionPolicy && !this.canOverride()
+      ? 'ACCOUNTING.PERIOD_CLOSE.READINESS.REFUSED.BLOCKED_NO_OVERRIDE'
+      : 'ACCOUNTING.PERIOD_CLOSE.READINESS.REFUSED.BLOCKED';
   }
 
   /** True when a close of the period cannot go ahead from its current readiness. */
@@ -390,7 +412,7 @@ export class PeriodClosePageComponent {
    * asking: a future month would only answer 404, and a closed one 409.
    */
   submitMonth(): void {
-    if (!this.canClose() || this.pendingCode() || this.refreshing()) return;
+    if (!this.canClose() || this.pendingCode() || this.refreshing() || this.closePending()) return;
     this.today.set(new Date());
     const periodCode = this.monthControl.value.trim();
 
@@ -530,24 +552,32 @@ export class PeriodClosePageComponent {
         this.openDialog('exception', periodCode);
         return;
       case 'BLOCKED':
-        this.refuseClose(periodCode, 'ACCOUNTING.PERIOD_CLOSE.READINESS.REFUSED.BLOCKED');
+        this.refuseClose(periodCode, this.blockedKey(periodCode));
         return;
       case 'UNAVAILABLE':
         this.refuseClose(periodCode, 'ACCOUNTING.PERIOD_CLOSE.READINESS.REFUSED.UNAVAILABLE');
         return;
       case 'UNREAD':
         this.rememberOpener();
-        this.closeAfterRead = periodCode;
+        this.closePending.set(periodCode);
         this.expanded.update(open => new Set(open).add(periodCode));
         this.readReadiness(periodCode);
         return;
       case 'LOADING':
+        // Readiness or the policy is still being read: the close continues when it lands.
+        if (!this.closePending()) this.rememberOpener();
+        this.closePending.set(periodCode);
         return;
     }
   }
 
-  /** Refuses a close before asking the server, and opens the row's readiness so the reasons are in view. */
+  /**
+   * Refuses a close before asking the server, and opens the row's readiness
+   * so the reasons are in view. Focus moves to the announcement, so no
+   * dialog will hand it back to the button that started the close.
+   */
   private refuseClose(periodCode: string, key: string): void {
+    this.dialogOpener = null;
     this.expanded.update(open => new Set(open).add(periodCode));
     this.announce({ tone: 'error', key, periodCode });
   }
@@ -560,30 +590,37 @@ export class PeriodClosePageComponent {
    */
   private readReadiness(periodCode: string): void {
     const seq = (this.readinessSeq.get(periodCode) ?? 0) + 1;
+    const epoch = this.readinessEpoch;
     this.readinessSeq.set(periodCode, seq);
     this.setReadiness(periodCode, { status: 'loading' });
+    const current = (): boolean => epoch === this.readinessEpoch && this.readinessSeq.get(periodCode) === seq;
 
     this.periodCloseService
       .getCloseReadiness(periodCode)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: readiness => {
-          if (this.readinessSeq.get(periodCode) !== seq) return;
+          if (!current()) return;
           this.setReadiness(periodCode, { status: 'OK', readiness });
           this.continueClose(periodCode);
         },
         error: () => {
-          if (this.readinessSeq.get(periodCode) !== seq) return;
+          if (!current()) return;
           this.setReadiness(periodCode, { status: 'ERROR' });
           this.continueClose(periodCode);
         },
       });
   }
 
+  /** Continues a close that waited; it keeps waiting while the gate is still LOADING (the policy read). */
   private continueClose(periodCode: string): void {
-    if (this.closeAfterRead !== periodCode) return;
-    this.closeAfterRead = null;
-    if (!this.canClose() || this.pendingCode() || this.refreshing()) return;
+    if (this.closePending() !== periodCode) return;
+    if (this.closeGate(periodCode) === 'LOADING') return;
+    this.closePending.set(null);
+    if (!this.canClose() || this.pendingCode() || this.refreshing()) {
+      this.dialogOpener = null;
+      return;
+    }
     this.proceedToClose(periodCode);
   }
 
@@ -605,21 +642,36 @@ export class PeriodClosePageComponent {
     });
   }
 
-  /** The policy decides whether a close may go ahead when readiness cannot be read; a failure leaves it null. */
+  /**
+   * The policy decides whether a close may go ahead when readiness cannot be
+   * read. A close waiting on it continues once it settles, on either branch.
+   */
   private readPolicy(): void {
     const seq = ++this.policySeq;
     this.policy.set(null);
+    this.policyStatus.set('loading');
     this.periodCloseService
       .getBankReconciliationPolicy()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: policy => {
-          if (seq === this.policySeq) this.policy.set(policy);
+          if (seq !== this.policySeq) return;
+          this.policy.set(policy);
+          this.policyStatus.set('OK');
+          this.resumePendingClose();
         },
         error: () => {
-          if (seq === this.policySeq) this.policy.set(null);
+          if (seq !== this.policySeq) return;
+          this.policy.set(null);
+          this.policyStatus.set('ERROR');
+          this.resumePendingClose();
         },
       });
+  }
+
+  private resumePendingClose(): void {
+    const pending = this.closePending();
+    if (pending) this.continueClose(pending);
   }
 
   private openDialog(action: DialogKind, periodCode: string): void {
