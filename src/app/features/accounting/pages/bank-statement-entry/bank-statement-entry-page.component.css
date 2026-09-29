@@ -1,0 +1,30 @@
+.header-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.header-fields legend {
+  margin-bottom: var(--space-2);
+  font-weight: 600;
+}
+
+.grid-input {
+  width: 100%;
+  min-width: 7rem;
+  box-sizing: border-box;
+}
+
+.checkbox-field {
+  display: flex;
+  gap: var(--space-2);
+  align-items: baseline;
+}
+
+.gap-prompt {
+  display: grid;
+  gap: var(--space-2);
+}

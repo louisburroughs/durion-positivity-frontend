@@ -3846,6 +3846,10 @@
         "PERIOD_CLOSE": {
           "TITLE": "Period Close",
           "DESCRIPTION": "Close each month once its journal entries are posted, and reopen a closed month for late adjustments."
+        },
+        "BANK_RECONCILIATION": {
+          "TITLE": "Bank Reconciliation",
+          "DESCRIPTION": "Match bank statements to the ledger, explain the differences, and approve each reconciliation."
         }
       },
       "CARD": {
@@ -3928,6 +3932,10 @@
         "PERIOD_CLOSE": {
           "TITLE": "Accounting Periods",
           "DESCRIPTION": "See which months are open or closed, close a month, or reopen one with a recorded reason."
+        },
+        "BANK_RECONCILIATION": {
+          "TITLE": "Bank Accounts",
+          "DESCRIPTION": "See each bank account's reconciliation status, import a statement, or start a reconciliation."
         }
       },
       "FIELD": {
@@ -4480,6 +4488,301 @@
           "TOO_SHORT": "Enter at least {{min}} characters."
         }
       }
+    },
+    "BANK_ACCOUNTS": {
+      "OVERLINE": "Accounting",
+      "TITLE": "Bank Accounts",
+      "SUBTITLE": "Reconcile each bank account against its statements. Counts and dates start from the account's reconciliation baseline.",
+      "LOADING": "Loading bank accounts…",
+      "VIEW_ONLY": "You can view bank accounts. Editing a profile or starting a reconciliation needs additional permissions.",
+      "EMPTY": "No reconcilable bank accounts were found. A cash account appears here once it is set up as a reconcilable bank account.",
+      "CAPTION": "Reconcilable bank accounts, by account code",
+      "COL_ACCOUNT": "Account",
+      "COL_BANK": "Bank",
+      "COL_CURRENCY": "Currency",
+      "COL_BASELINE": "Baseline",
+      "COL_COVERAGE": "Statements through",
+      "COL_RECONCILED": "Reconciled through",
+      "COL_UNEXPLAINED": "Unexplained bank transactions",
+      "COL_OPEN_ITEMS": "Open outstanding items",
+      "COL_ACTIONS": "Actions",
+      "MASK": "Account ending {{mask}}",
+      "NO_PROFILE": "No bank profile yet",
+      "ACTION": {
+        "EDIT_PROFILE": "Edit profile",
+        "START": "Start reconciliation"
+      },
+      "OUTCOME": {
+        "PROFILE_SAVED": "The bank profile for {{account}} is saved."
+      },
+      "PROFILE": {
+        "TITLE": "Bank profile for {{account}}",
+        "BANK_NAME": "Bank name",
+        "MASK": "Last digits of the account number",
+        "MASK_HINT": "Up to 8 characters, e.g. the last four digits.",
+        "CURRENCY": "Currency",
+        "CURRENCY_HINT": "Bank accounts are reconciled in US dollars only for now.",
+        "SAVE": "Save profile"
+      },
+      "START": {
+        "TITLE": "Start a reconciliation of {{account}}",
+        "LEGEND": "How do you want to start?",
+        "OPTION_STATEMENT": "Reconcile a statement that is already committed",
+        "OPTION_IMPORT": "Import a statement file",
+        "OPTION_MANUAL": "Enter a statement by hand",
+        "OPTION_INTERIM": "Interim reconciliation to a date",
+        "INTERIM_HINT": "For a period end in the middle of a bank cycle: key the transactions from online banking since the last reconciled date, up to the date you choose.",
+        "STATEMENTS_LOADING": "Loading committed statements…",
+        "STATEMENTS_ERROR": "Committed statements couldn't be loaded.",
+        "STATEMENT_LABEL": "{{start}} to {{end}}, closing {{closing}} (reference {{ref}})",
+        "CONFIRM": "Continue",
+        "ERROR": {
+          "CHOOSE_STATEMENT": "Choose a statement to reconcile."
+        }
+      },
+      "ERROR": {
+        "LOAD": "Bank accounts couldn't be loaded.",
+        "FORBIDDEN": "You don't have permission to view bank accounts.",
+        "FORBIDDEN_WRITE": "You don't have permission to change bank reconciliations (accounting:reconciliation:adjust).",
+        "CURRENCY_NOT_SUPPORTED": "That currency is not supported. Bank accounts are reconciled in US dollars only.",
+        "ACCOUNT_NOT_RECONCILABLE": "This account is not set up for bank reconciliation.",
+        "WINDOW_ALREADY_RECONCILED": "That statement already has a reconciliation. Finish or cancel it first; the list has been refreshed.",
+        "GL_ACCOUNT_NOT_ACTIVE": "The account is not active.",
+        "INVALID": "The request was rejected as invalid. Check the values and try again.",
+        "OTHER": "The change couldn't be saved. Try again.",
+        "REFRESH": "The list couldn't be refreshed; it may be out of date. Reload the page to try again."
+      }
+    },
+    "BANK_IMPORT": {
+      "OVERLINE": "Bank reconciliation",
+      "TITLE": "Import a bank statement",
+      "FOR_ACCOUNT": "Account {{account}}",
+      "BACK": "Back to bank accounts",
+      "LOADING": "Loading…",
+      "STEPS": {
+        "LABEL": "Import steps",
+        "UPLOAD": "Upload",
+        "MAPPING": "Map columns",
+        "ROWS": "Review rows",
+        "DONE": "Done"
+      },
+      "UPLOAD": {
+        "HEADING": "Statement file and header",
+        "FILE": "CSV file",
+        "FILE_HINT": "The CSV download from your bank, with a header row.",
+        "HEADER_LEGEND": "Statement header, as printed on the statement",
+        "START": "Start date",
+        "END": "End date",
+        "OPENING": "Opening balance",
+        "CLOSING": "Closing balance",
+        "REF": "Statement reference (optional)",
+        "SUBMIT": "Upload",
+        "ERROR": {
+          "HEADER": "Enter the start and end dates and both balances as numbers.",
+          "GAP_TOO_SHORT": "Enter at least {{min}} characters to acknowledge the gap."
+        }
+      },
+      "GAP": {
+        "FIRST_STATEMENT": "This is the account's first statement. Committing it with an acknowledgement sets the account's reconciliation baseline to the statement's start date: earlier ledger lines and bank transactions stop counting as unexplained.",
+        "NOT_CONTIGUOUS": "This statement does not continue the previous one. Correct the header, or acknowledge the gap: acknowledging moves the account's reconciliation baseline to this statement's start date.",
+        "EXPECTED": "The server expected: {{expected}}",
+        "LABEL": "Why the statement does not continue the previous one",
+        "HINT": "At least {{min}} characters. Recorded in the audit trail."
+      },
+      "SUPERSEDE": {
+        "LEGEND": "Replace a committed statement",
+        "TOGGLE": "This corrects a statement that is already committed",
+        "LOADING": "Loading committed statements…",
+        "LOAD_ERROR": "Committed statements couldn't be loaded.",
+        "EMPTY": "This account has no committed statement to replace.",
+        "STATEMENT": "Statement to replace",
+        "CHOOSE": "Choose a statement",
+        "OPTION": "{{start}} to {{end}}, closing {{closing}} (reference {{ref}})",
+        "INVALIDATES": "This statement's reconciliation is approved. Replacing it invalidates that approval, and the period can't close until a new reconciliation is approved.",
+        "CHOSEN_ERROR": "The chosen statement's reconciliations couldn't be read.",
+        "JUSTIFICATION": "Why the statement is replaced",
+        "JUSTIFICATION_HINT": "At least {{min}} characters. Recorded in the audit trail."
+      },
+      "MAPPING": {
+        "HEADING": "Map the columns",
+        "REQUIRED": "The file's columns couldn't be matched automatically. Choose which column holds each field.",
+        "COLUMNS": "Columns in the file: {{columns}}",
+        "UNMAPPED": "Not in the file",
+        "ROLE": {
+          "date": "Date",
+          "description": "Description",
+          "amount": "Amount",
+          "debit": "Debit",
+          "credit": "Credit",
+          "reference": "Reference",
+          "checkNumber": "Check number",
+          "sourceTransactionId": "Bank transaction ID"
+        },
+        "SIGN": "Sign convention",
+        "SIGN_HINT": "How the file shows money in and out. The preview below shows the result.",
+        "SIGN_OPTION": {
+          "SIGNED_AMOUNT": "One amount column, positive is money in",
+          "SIGNED_AMOUNT_INVERTED": "One amount column, positive is money out",
+          "DEBIT_CREDIT_COLUMNS": "Separate debit and credit columns"
+        },
+        "DATE_FORMAT": "Date format (optional)",
+        "DATE_FORMAT_HINT": "For example dd/MM/yyyy. Leave blank to detect it.",
+        "SAVE_DEFAULT": "Use this mapping for this account's future imports",
+        "SUBMIT": "Apply mapping",
+        "EDIT": "Change mapping"
+      },
+      "PREVIEW": {
+        "HEADING": "Preview",
+        "ROWS_CAPTION": "The first rows with their sign and running balance",
+        "DATE": "Date",
+        "DESCRIPTION": "Description",
+        "AMOUNT": "Amount",
+        "RUNNING": "Running balance",
+        "OPENING": "Opening",
+        "ACTIVITY": "Activity",
+        "EXPECTED": "Opening plus activity",
+        "CLOSING": "Closing",
+        "DIFFERENCE": "Difference",
+        "TIES_LABEL": "Totals",
+        "TIES": "Totals agree",
+        "OFF": "Totals do not agree"
+      },
+      "ROWS": {
+        "HEADING": "Rows",
+        "COUNTS": "{{total}} rows: {{accepted}} accepted, {{rejected}} rejected, {{skipped}} skipped, {{duplicates}} possible duplicates, {{outOfWindow}} outside the statement dates.",
+        "FILTER": "Show",
+        "FILTER_ALL": "All rows",
+        "LOADING": "Loading rows…",
+        "LOAD_ERROR": "Rows couldn't be loaded.",
+        "CAPTION": "Rows of the file, in file order",
+        "COL_ROW": "Row",
+        "COL_RAW": "In the file",
+        "COL_PARSED": "Read as",
+        "COL_STATUS": "Status",
+        "COL_ACTIONS": "Actions",
+        "CORRECTED": "Corrected",
+        "DUPLICATE_OF": "May duplicate row {{row}}",
+        "DECIDED": {
+          "DISTINCT": "Marked as distinct",
+          "DUPLICATE": "Marked as a duplicate"
+        },
+        "SKIP_REASON": "Skipped: {{reason}}",
+        "CORRECT": "Correct",
+        "SKIP": "Skip",
+        "DISTINCT": "Not a duplicate",
+        "DUPLICATE": "Duplicate",
+        "ROW_N": "row {{row}}",
+        "EMPTY": "No rows to show.",
+        "PAGER": "Row pages",
+        "PREVIOUS": "Previous",
+        "NEXT": "Next",
+        "PAGE": "Page {{page}} of {{pages}}",
+        "ERROR": {
+          "AMOUNT": "Enter the amount as a number.",
+          "REASON": "Enter a reason."
+        }
+      },
+      "ROW_STATUS": {
+        "PARSED": "Accepted",
+        "REJECTED": "Rejected",
+        "CORRECTED": "Corrected",
+        "SKIPPED": "Skipped",
+        "POSSIBLE_DUPLICATE": "Possible duplicate",
+        "OUT_OF_WINDOW": "Outside statement dates",
+        "COMMITTED": "Committed"
+      },
+      "REJECTION": {
+        "DATE_UNPARSEABLE": "The date couldn't be read.",
+        "AMOUNT_UNPARSEABLE": "The amount couldn't be read.",
+        "AMOUNT_ZERO": "The amount is zero.",
+        "AMOUNT_AND_DEBIT_CREDIT_BOTH": "The row has both an amount and debit or credit values.",
+        "REQUIRED_COLUMN_MISSING": "A required column is empty.",
+        "DATE_OUTSIDE_STATEMENT": "The date is outside the statement dates.",
+        "OTHER": "Rejected ({{code}})."
+      },
+      "CORRECT": {
+        "TITLE": "Correct row {{row}}",
+        "AMOUNT": "Signed amount",
+        "AMOUNT_HINT": "Positive for money in, negative for money out.",
+        "CONFIRM": "Save correction"
+      },
+      "SKIP": {
+        "TITLE": "Skip row {{row}}",
+        "REASON": "Reason",
+        "CONFIRM": "Skip row"
+      },
+      "DISCARD": {
+        "ACTION": "Discard import",
+        "TITLE": "Discard this import?",
+        "BODY": "Nothing from the file is committed. The reason is recorded.",
+        "CONFIRM": "Discard import",
+        "ERROR": {
+          "REASON": "Enter a reason."
+        }
+      },
+      "COMMIT": {
+        "HEADING": "Commit the statement",
+        "DUPLICATES": "Possible duplicates not yet decided",
+        "DUPLICATES_LATER": "Commit them for review during reconciliation",
+        "DUPLICATES_DISTINCT": "Mark them all as not duplicates",
+        "DUPLICATES_DUPLICATE": "Mark them all as duplicates",
+        "START": "Start the reconciliation after committing",
+        "BLOCKED": "Correct or skip the {{count}} rejected rows before committing.",
+        "SUBMIT": "Commit statement"
+      },
+      "DONE": {
+        "COMMITTED": "This import is committed.",
+        "DISCARDED": "This import was discarded: {{reason}}"
+      },
+      "ERROR": {
+        "LOAD": "The import couldn't be loaded.",
+        "FORBIDDEN": "You don't have permission to import bank statements.",
+        "NOT_FOUND": "No such import was found.",
+        "ACCOUNT_NOT_FOUND": "That bank account was not found among the reconcilable accounts.",
+        "FORBIDDEN_WRITE": "You don't have permission to change bank reconciliations (accounting:reconciliation:adjust).",
+        "INVALID": "The request was rejected as invalid. Check the values and try again.",
+        "OTHER": "The request couldn't be completed. Try again.",
+        "IMPORT_FILE_ALREADY_COMMITTED": "This exact file was already committed for this account.",
+        "STATEMENT_IMPORT_FAILED": "The file couldn't be read. Check that it is a CSV with a header row and try again.",
+        "STATEMENT_PERIOD_OVERLAP": "The statement dates overlap a committed statement. Statements can't overlap.",
+        "STATEMENT_NOT_CONTIGUOUS": "The statement does not continue the previous one.",
+        "GAP_ACKNOWLEDGEMENT_NOT_APPLICABLE": "This statement continues the previous one, so no gap acknowledgement is needed. It has been removed; submit again.",
+        "TRANSACTION_OUT_OF_WINDOW": "Some transactions are dated outside the statement dates. They're highlighted below.",
+        "CURRENCY_NOT_SUPPORTED": "The currency is not supported. Statements are in US dollars only.",
+        "IMPORT_NOT_COMMITTABLE": "The statement can't be committed yet. Fix the highlighted rows, or check the header balances.",
+        "IMPORT_ALREADY_COMMITTED": "This import was already committed.",
+        "IMPORT_DISCARDED": "This import was discarded.",
+        "STATEMENT_ALREADY_IMPORTED": "This statement was already imported.",
+        "ACCOUNT_NOT_RECONCILABLE": "This account is not set up for bank reconciliation.",
+        "JUSTIFICATION_REQUIRED": "A justification of at least 10 characters is required.",
+        "SUPERSESSION_NOT_ELIGIBLE": "The chosen statement can't be replaced. The list has been refreshed; choose again.",
+        "WINDOW_ALREADY_RECONCILED": "A reconciliation of that statement is in progress or awaiting approval. Finish or cancel it first.",
+        "AMOUNT_PRECISION_EXCEEDS_CURRENCY": "An amount has more decimal places than the currency allows.",
+        "OPTIMISTIC_LOCK": "Someone else changed this import. It has been reloaded; try again.",
+        "REFRESH": "The import couldn't be reloaded; what is shown may be out of date. Reload the page before continuing."
+      }
+    },
+    "BANK_STATEMENT_ENTRY": {
+      "OVERLINE": "Bank reconciliation",
+      "TITLE": "Enter a statement",
+      "TITLE_INTERIM": "Interim reconciliation to a date",
+      "SUBTITLE": "Key the statement header and every transaction on it.",
+      "SUBTITLE_INTERIM": "Key the transactions from online banking since the last reconciled date, and the balance on the date you choose.",
+      "INTERIM_START_HINT": "The day after the last reconciled date, {{frontier}}.",
+      "INTERIM_END": "Reconcile to",
+      "TRANSACTIONS": "Transactions",
+      "TRANSACTIONS_HINT": "Positive amounts are money in, negative amounts money out.",
+      "COL_N": "#",
+      "COL_REFERENCE": "Reference",
+      "COL_CHECK": "Check number",
+      "ADD": "Add transaction",
+      "REMOVE": "Remove",
+      "SUBMIT": "Commit statement",
+      "ERROR": {
+        "HEADER": "Enter the start and end dates and both balances as numbers.",
+        "TRANSACTIONS": "Every transaction needs a date, an amount and a description."
+      },
+      "INTERIM_UNAVAILABLE": "This account has no reconciled date yet, so there is no interim window to reconcile. Enter or import its first statement instead."
     }
   },
   "PRODUCT": {
@@ -8008,7 +8311,10 @@
       "WORK_SESSION": "Work Session",
       "PERSON": "Person",
       "PERIODS": "Pay periods",
-      "ACCOUNTING_PERIODS": "Accounting Periods"
+      "ACCOUNTING_PERIODS": "Accounting Periods",
+      "BANK_ACCOUNTS": "Bank accounts",
+      "BANK_IMPORTS": "Bank statement imports",
+      "IMPORT": "Import"
     }
   },
   "POSITIVITY": {

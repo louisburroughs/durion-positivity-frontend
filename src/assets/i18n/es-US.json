@@ -3846,6 +3846,10 @@
         "PERIOD_CLOSE": {
           "TITLE": "Cierre de períodos",
           "DESCRIPTION": "Cierre cada mes cuando sus asientos contables estén contabilizados y reabra un mes cerrado para ajustes tardíos."
+        },
+        "BANK_RECONCILIATION": {
+          "TITLE": "Conciliación bancaria",
+          "DESCRIPTION": "Asocie los estados de cuenta con la contabilidad, explique las diferencias y apruebe cada conciliación."
         }
       },
       "CARD": {
@@ -3928,6 +3932,10 @@
         "PERIOD_CLOSE": {
           "TITLE": "Períodos contables",
           "DESCRIPTION": "Vea qué meses están abiertos o cerrados, cierre un mes o reabra uno con un motivo registrado."
+        },
+        "BANK_RECONCILIATION": {
+          "TITLE": "Cuentas bancarias",
+          "DESCRIPTION": "Vea el estado de conciliación de cada cuenta bancaria, importe un estado de cuenta o inicie una conciliación."
         }
       },
       "FIELD": {
@@ -4480,6 +4488,301 @@
           "TOO_SHORT": "Escriba al menos {{min}} caracteres."
         }
       }
+    },
+    "BANK_ACCOUNTS": {
+      "OVERLINE": "Contabilidad",
+      "TITLE": "Cuentas bancarias",
+      "SUBTITLE": "Concilie cada cuenta bancaria con sus estados de cuenta. Los conteos y las fechas comienzan en la fecha base de conciliación de la cuenta.",
+      "LOADING": "Cargando cuentas bancarias…",
+      "VIEW_ONLY": "Puede ver las cuentas bancarias. Editar un perfil o iniciar una conciliación requiere permisos adicionales.",
+      "EMPTY": "No se encontraron cuentas bancarias conciliables. Una cuenta de efectivo aparece aquí cuando se configura como cuenta bancaria conciliable.",
+      "CAPTION": "Cuentas bancarias conciliables, por código de cuenta",
+      "COL_ACCOUNT": "Cuenta",
+      "COL_BANK": "Banco",
+      "COL_CURRENCY": "Moneda",
+      "COL_BASELINE": "Fecha base",
+      "COL_COVERAGE": "Estados de cuenta hasta",
+      "COL_RECONCILED": "Conciliado hasta",
+      "COL_UNEXPLAINED": "Movimientos bancarios sin explicar",
+      "COL_OPEN_ITEMS": "Partidas pendientes abiertas",
+      "COL_ACTIONS": "Acciones",
+      "MASK": "Cuenta terminada en {{mask}}",
+      "NO_PROFILE": "Sin perfil bancario",
+      "ACTION": {
+        "EDIT_PROFILE": "Editar perfil",
+        "START": "Iniciar conciliación"
+      },
+      "OUTCOME": {
+        "PROFILE_SAVED": "Se guardó el perfil bancario de {{account}}."
+      },
+      "PROFILE": {
+        "TITLE": "Perfil bancario de {{account}}",
+        "BANK_NAME": "Nombre del banco",
+        "MASK": "Últimos dígitos del número de cuenta",
+        "MASK_HINT": "Hasta 8 caracteres, por ejemplo los últimos cuatro dígitos.",
+        "CURRENCY": "Moneda",
+        "CURRENCY_HINT": "Por ahora las cuentas bancarias solo se concilian en dólares estadounidenses.",
+        "SAVE": "Guardar perfil"
+      },
+      "START": {
+        "TITLE": "Iniciar una conciliación de {{account}}",
+        "LEGEND": "¿Cómo desea empezar?",
+        "OPTION_STATEMENT": "Conciliar un estado de cuenta ya confirmado",
+        "OPTION_IMPORT": "Importar un archivo de estado de cuenta",
+        "OPTION_MANUAL": "Capturar un estado de cuenta a mano",
+        "OPTION_INTERIM": "Conciliación interina hasta una fecha",
+        "INTERIM_HINT": "Para un cierre de período a mitad de un ciclo bancario: capture los movimientos de la banca en línea desde la última fecha conciliada hasta la fecha que elija.",
+        "STATEMENTS_LOADING": "Cargando estados de cuenta confirmados…",
+        "STATEMENTS_ERROR": "No se pudieron cargar los estados de cuenta confirmados.",
+        "STATEMENT_LABEL": "Del {{start}} al {{end}}, cierre {{closing}} (referencia {{ref}})",
+        "CONFIRM": "Continuar",
+        "ERROR": {
+          "CHOOSE_STATEMENT": "Elija un estado de cuenta para conciliar."
+        }
+      },
+      "ERROR": {
+        "LOAD": "No se pudieron cargar las cuentas bancarias.",
+        "FORBIDDEN": "No tiene permiso para ver las cuentas bancarias.",
+        "FORBIDDEN_WRITE": "No tiene permiso para modificar conciliaciones bancarias (accounting:reconciliation:adjust).",
+        "CURRENCY_NOT_SUPPORTED": "Esa moneda no es compatible. Las cuentas bancarias solo se concilian en dólares estadounidenses.",
+        "ACCOUNT_NOT_RECONCILABLE": "Esta cuenta no está configurada para conciliación bancaria.",
+        "WINDOW_ALREADY_RECONCILED": "Ese estado de cuenta ya tiene una conciliación. Termínela o cancélela primero; la lista se actualizó.",
+        "GL_ACCOUNT_NOT_ACTIVE": "La cuenta no está activa.",
+        "INVALID": "La solicitud se rechazó por no ser válida. Revise los valores e inténtelo de nuevo.",
+        "OTHER": "No se pudo guardar el cambio. Inténtelo de nuevo.",
+        "REFRESH": "No se pudo actualizar la lista; puede estar desactualizada. Vuelva a cargar la página para intentarlo de nuevo."
+      }
+    },
+    "BANK_IMPORT": {
+      "OVERLINE": "Conciliación bancaria",
+      "TITLE": "Importar un estado de cuenta",
+      "FOR_ACCOUNT": "Cuenta {{account}}",
+      "BACK": "Volver a cuentas bancarias",
+      "LOADING": "Cargando…",
+      "STEPS": {
+        "LABEL": "Pasos de la importación",
+        "UPLOAD": "Cargar",
+        "MAPPING": "Asignar columnas",
+        "ROWS": "Revisar filas",
+        "DONE": "Listo"
+      },
+      "UPLOAD": {
+        "HEADING": "Archivo y encabezado del estado de cuenta",
+        "FILE": "Archivo CSV",
+        "FILE_HINT": "La descarga CSV de su banco, con una fila de encabezado.",
+        "HEADER_LEGEND": "Encabezado del estado de cuenta, tal como aparece impreso",
+        "START": "Fecha de inicio",
+        "END": "Fecha de fin",
+        "OPENING": "Saldo inicial",
+        "CLOSING": "Saldo final",
+        "REF": "Referencia del estado de cuenta (opcional)",
+        "SUBMIT": "Cargar",
+        "ERROR": {
+          "HEADER": "Indique las fechas de inicio y fin y ambos saldos como números.",
+          "GAP_TOO_SHORT": "Escriba al menos {{min}} caracteres para reconocer el intervalo."
+        }
+      },
+      "GAP": {
+        "FIRST_STATEMENT": "Es el primer estado de cuenta de la cuenta. Confirmarlo con un reconocimiento fija la fecha base de conciliación en su fecha de inicio: las líneas contables y los movimientos bancarios anteriores dejan de contar como sin explicar.",
+        "NOT_CONTIGUOUS": "Este estado de cuenta no continúa el anterior. Corrija el encabezado o reconozca el intervalo: reconocerlo mueve la fecha base de conciliación de la cuenta a la fecha de inicio de este estado de cuenta.",
+        "EXPECTED": "El servidor esperaba: {{expected}}",
+        "LABEL": "Por qué el estado de cuenta no continúa el anterior",
+        "HINT": "Al menos {{min}} caracteres. Se registra en la auditoría."
+      },
+      "SUPERSEDE": {
+        "LEGEND": "Reemplazar un estado de cuenta confirmado",
+        "TOGGLE": "Esto corrige un estado de cuenta ya confirmado",
+        "LOADING": "Cargando estados de cuenta confirmados…",
+        "LOAD_ERROR": "No se pudieron cargar los estados de cuenta confirmados.",
+        "EMPTY": "Esta cuenta no tiene estados de cuenta confirmados que reemplazar.",
+        "STATEMENT": "Estado de cuenta que se reemplaza",
+        "CHOOSE": "Elija un estado de cuenta",
+        "OPTION": "Del {{start}} al {{end}}, cierre {{closing}} (referencia {{ref}})",
+        "INVALIDATES": "La conciliación de este estado de cuenta está aprobada. Reemplazarlo invalida esa aprobación, y el período no podrá cerrarse hasta aprobar una nueva conciliación.",
+        "CHOSEN_ERROR": "No se pudieron leer las conciliaciones del estado de cuenta elegido.",
+        "JUSTIFICATION": "Por qué se reemplaza el estado de cuenta",
+        "JUSTIFICATION_HINT": "Al menos {{min}} caracteres. Se registra en la auditoría."
+      },
+      "MAPPING": {
+        "HEADING": "Asignar las columnas",
+        "REQUIRED": "Las columnas del archivo no se pudieron asociar automáticamente. Elija qué columna contiene cada campo.",
+        "COLUMNS": "Columnas del archivo: {{columns}}",
+        "UNMAPPED": "No está en el archivo",
+        "ROLE": {
+          "date": "Fecha",
+          "description": "Descripción",
+          "amount": "Importe",
+          "debit": "Cargo",
+          "credit": "Abono",
+          "reference": "Referencia",
+          "checkNumber": "Número de cheque",
+          "sourceTransactionId": "ID del movimiento bancario"
+        },
+        "SIGN": "Convención de signo",
+        "SIGN_HINT": "Cómo muestra el archivo las entradas y salidas de dinero. La vista previa muestra el resultado.",
+        "SIGN_OPTION": {
+          "SIGNED_AMOUNT": "Una columna de importe, positivo es entrada",
+          "SIGNED_AMOUNT_INVERTED": "Una columna de importe, positivo es salida",
+          "DEBIT_CREDIT_COLUMNS": "Columnas separadas de cargo y abono"
+        },
+        "DATE_FORMAT": "Formato de fecha (opcional)",
+        "DATE_FORMAT_HINT": "Por ejemplo dd/MM/yyyy. Déjelo en blanco para detectarlo.",
+        "SAVE_DEFAULT": "Usar esta asignación en las próximas importaciones de esta cuenta",
+        "SUBMIT": "Aplicar asignación",
+        "EDIT": "Cambiar asignación"
+      },
+      "PREVIEW": {
+        "HEADING": "Vista previa",
+        "ROWS_CAPTION": "Las primeras filas con su signo y saldo acumulado",
+        "DATE": "Fecha",
+        "DESCRIPTION": "Descripción",
+        "AMOUNT": "Importe",
+        "RUNNING": "Saldo acumulado",
+        "OPENING": "Inicial",
+        "ACTIVITY": "Movimientos",
+        "EXPECTED": "Inicial más movimientos",
+        "CLOSING": "Final",
+        "DIFFERENCE": "Diferencia",
+        "TIES_LABEL": "Totales",
+        "TIES": "Los totales cuadran",
+        "OFF": "Los totales no cuadran"
+      },
+      "ROWS": {
+        "HEADING": "Filas",
+        "COUNTS": "{{total}} filas: {{accepted}} aceptadas, {{rejected}} rechazadas, {{skipped}} omitidas, {{duplicates}} posibles duplicados, {{outOfWindow}} fuera de las fechas del estado de cuenta.",
+        "FILTER": "Mostrar",
+        "FILTER_ALL": "Todas las filas",
+        "LOADING": "Cargando filas…",
+        "LOAD_ERROR": "No se pudieron cargar las filas.",
+        "CAPTION": "Filas del archivo, en el orden del archivo",
+        "COL_ROW": "Fila",
+        "COL_RAW": "En el archivo",
+        "COL_PARSED": "Leído como",
+        "COL_STATUS": "Estado",
+        "COL_ACTIONS": "Acciones",
+        "CORRECTED": "Corregida",
+        "DUPLICATE_OF": "Puede duplicar la fila {{row}}",
+        "DECIDED": {
+          "DISTINCT": "Marcada como distinta",
+          "DUPLICATE": "Marcada como duplicado"
+        },
+        "SKIP_REASON": "Omitida: {{reason}}",
+        "CORRECT": "Corregir",
+        "SKIP": "Omitir",
+        "DISTINCT": "No es duplicado",
+        "DUPLICATE": "Duplicado",
+        "ROW_N": "fila {{row}}",
+        "EMPTY": "No hay filas que mostrar.",
+        "PAGER": "Páginas de filas",
+        "PREVIOUS": "Anterior",
+        "NEXT": "Siguiente",
+        "PAGE": "Página {{page}} de {{pages}}",
+        "ERROR": {
+          "AMOUNT": "Indique el importe como número.",
+          "REASON": "Indique un motivo."
+        }
+      },
+      "ROW_STATUS": {
+        "PARSED": "Aceptada",
+        "REJECTED": "Rechazada",
+        "CORRECTED": "Corregida",
+        "SKIPPED": "Omitida",
+        "POSSIBLE_DUPLICATE": "Posible duplicado",
+        "OUT_OF_WINDOW": "Fuera de las fechas",
+        "COMMITTED": "Confirmada"
+      },
+      "REJECTION": {
+        "DATE_UNPARSEABLE": "No se pudo leer la fecha.",
+        "AMOUNT_UNPARSEABLE": "No se pudo leer el importe.",
+        "AMOUNT_ZERO": "El importe es cero.",
+        "AMOUNT_AND_DEBIT_CREDIT_BOTH": "La fila tiene un importe y también cargo o abono.",
+        "REQUIRED_COLUMN_MISSING": "Falta una columna obligatoria.",
+        "DATE_OUTSIDE_STATEMENT": "La fecha está fuera de las fechas del estado de cuenta.",
+        "OTHER": "Rechazada ({{code}})."
+      },
+      "CORRECT": {
+        "TITLE": "Corregir la fila {{row}}",
+        "AMOUNT": "Importe con signo",
+        "AMOUNT_HINT": "Positivo para entradas, negativo para salidas.",
+        "CONFIRM": "Guardar corrección"
+      },
+      "SKIP": {
+        "TITLE": "Omitir la fila {{row}}",
+        "REASON": "Motivo",
+        "CONFIRM": "Omitir fila"
+      },
+      "DISCARD": {
+        "ACTION": "Descartar importación",
+        "TITLE": "¿Descartar esta importación?",
+        "BODY": "No se confirma nada del archivo. El motivo queda registrado.",
+        "CONFIRM": "Descartar importación",
+        "ERROR": {
+          "REASON": "Indique un motivo."
+        }
+      },
+      "COMMIT": {
+        "HEADING": "Confirmar el estado de cuenta",
+        "DUPLICATES": "Posibles duplicados sin decidir",
+        "DUPLICATES_LATER": "Confirmarlos para revisarlos durante la conciliación",
+        "DUPLICATES_DISTINCT": "Marcarlos todos como no duplicados",
+        "DUPLICATES_DUPLICATE": "Marcarlos todos como duplicados",
+        "START": "Iniciar la conciliación después de confirmar",
+        "BLOCKED": "Corrija u omita las {{count}} filas rechazadas antes de confirmar.",
+        "SUBMIT": "Confirmar estado de cuenta"
+      },
+      "DONE": {
+        "COMMITTED": "Esta importación está confirmada.",
+        "DISCARDED": "Esta importación se descartó: {{reason}}"
+      },
+      "ERROR": {
+        "LOAD": "No se pudo cargar la importación.",
+        "FORBIDDEN": "No tiene permiso para importar estados de cuenta.",
+        "NOT_FOUND": "No se encontró esa importación.",
+        "ACCOUNT_NOT_FOUND": "Esa cuenta bancaria no está entre las cuentas conciliables.",
+        "FORBIDDEN_WRITE": "No tiene permiso para modificar conciliaciones bancarias (accounting:reconciliation:adjust).",
+        "INVALID": "La solicitud se rechazó por no ser válida. Revise los valores e inténtelo de nuevo.",
+        "OTHER": "No se pudo completar la solicitud. Inténtelo de nuevo.",
+        "IMPORT_FILE_ALREADY_COMMITTED": "Este mismo archivo ya se confirmó para esta cuenta.",
+        "STATEMENT_IMPORT_FAILED": "No se pudo leer el archivo. Compruebe que sea un CSV con fila de encabezado e inténtelo de nuevo.",
+        "STATEMENT_PERIOD_OVERLAP": "Las fechas se superponen con un estado de cuenta confirmado. Los estados de cuenta no pueden superponerse.",
+        "STATEMENT_NOT_CONTIGUOUS": "El estado de cuenta no continúa el anterior.",
+        "GAP_ACKNOWLEDGEMENT_NOT_APPLICABLE": "Este estado de cuenta continúa el anterior, así que no se necesita reconocer un intervalo. Se quitó; envíelo de nuevo.",
+        "TRANSACTION_OUT_OF_WINDOW": "Algunos movimientos tienen fechas fuera del estado de cuenta. Están resaltados abajo.",
+        "CURRENCY_NOT_SUPPORTED": "La moneda no es compatible. Los estados de cuenta son solo en dólares estadounidenses.",
+        "IMPORT_NOT_COMMITTABLE": "El estado de cuenta aún no se puede confirmar. Corrija las filas resaltadas o revise los saldos del encabezado.",
+        "IMPORT_ALREADY_COMMITTED": "Esta importación ya se confirmó.",
+        "IMPORT_DISCARDED": "Esta importación se descartó.",
+        "STATEMENT_ALREADY_IMPORTED": "Este estado de cuenta ya se importó.",
+        "ACCOUNT_NOT_RECONCILABLE": "Esta cuenta no está configurada para conciliación bancaria.",
+        "JUSTIFICATION_REQUIRED": "Se requiere una justificación de al menos 10 caracteres.",
+        "SUPERSESSION_NOT_ELIGIBLE": "El estado de cuenta elegido no se puede reemplazar. La lista se actualizó; elija de nuevo.",
+        "WINDOW_ALREADY_RECONCILED": "Hay una conciliación de ese estado de cuenta en curso o pendiente de aprobación. Termínela o cancélela primero.",
+        "AMOUNT_PRECISION_EXCEEDS_CURRENCY": "Un importe tiene más decimales de los que permite la moneda.",
+        "OPTIMISTIC_LOCK": "Otra persona modificó esta importación. Se volvió a cargar; inténtelo de nuevo.",
+        "REFRESH": "No se pudo volver a cargar la importación; lo que se muestra puede estar desactualizado. Vuelva a cargar la página antes de continuar."
+      }
+    },
+    "BANK_STATEMENT_ENTRY": {
+      "OVERLINE": "Conciliación bancaria",
+      "TITLE": "Capturar un estado de cuenta",
+      "TITLE_INTERIM": "Conciliación interina hasta una fecha",
+      "SUBTITLE": "Capture el encabezado del estado de cuenta y cada movimiento.",
+      "SUBTITLE_INTERIM": "Capture los movimientos de la banca en línea desde la última fecha conciliada y el saldo a la fecha que elija.",
+      "INTERIM_START_HINT": "El día siguiente a la última fecha conciliada, {{frontier}}.",
+      "INTERIM_END": "Conciliar hasta",
+      "TRANSACTIONS": "Movimientos",
+      "TRANSACTIONS_HINT": "Los importes positivos son entradas y los negativos, salidas.",
+      "COL_N": "N.º",
+      "COL_REFERENCE": "Referencia",
+      "COL_CHECK": "Número de cheque",
+      "ADD": "Agregar movimiento",
+      "REMOVE": "Quitar",
+      "SUBMIT": "Confirmar estado de cuenta",
+      "ERROR": {
+        "HEADER": "Indique las fechas de inicio y fin y ambos saldos como números.",
+        "TRANSACTIONS": "Cada movimiento necesita fecha, importe y descripción."
+      },
+      "INTERIM_UNAVAILABLE": "Esta cuenta aún no tiene una fecha conciliada, así que no hay un período interino que conciliar. Capture o importe primero su estado de cuenta inicial."
     }
   },
   "PRODUCT": {
@@ -8008,7 +8311,10 @@
       "WORK_SESSION": "Sesión de trabajo",
       "PERSON": "Persona",
       "PERIODS": "Períodos de pago",
-      "ACCOUNTING_PERIODS": "Períodos contables"
+      "ACCOUNTING_PERIODS": "Períodos contables",
+      "BANK_ACCOUNTS": "Cuentas bancarias",
+      "BANK_IMPORTS": "Importaciones de estados de cuenta",
+      "IMPORT": "Importar"
     }
   },
   "POSITIVITY": {

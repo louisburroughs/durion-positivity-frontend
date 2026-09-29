@@ -1,0 +1,462 @@
+<main class="accounting-page" aria-labelledby="bank-import-heading">
+  <header class="page-header">
+    <p class="section-overline">{{ 'ACCOUNTING.BANK_IMPORT.OVERLINE' | translate }}</p>
+    <h1 id="bank-import-heading">{{ 'ACCOUNTING.BANK_IMPORT.TITLE' | translate }}</h1>
+    @if (accountLabel()) {
+      <p class="page-subtitle" data-testid="import-account">{{ 'ACCOUNTING.BANK_IMPORT.FOR_ACCOUNT' | translate: { account: accountLabel() } }}</p>
+    }
+    <a class="link-button" [routerLink]="bankAccountsLink">{{ 'ACCOUNTING.BANK_IMPORT.BACK' | translate }}</a>
+  </header>
+
+  <div class="outcome-region" role="alert" aria-live="assertive">
+    @if (failureKey(); as key) {
+      <div #failureRegion class="alert alert-error" tabindex="-1" data-testid="import-failure">
+        <p>{{ key | translate }}</p>
+        @if (failureDetail(); as detail) {
+          <p class="failure-detail" data-testid="import-failure-detail">{{ detail }}</p>
+        }
+      </div>
+    }
+  </div>
+
+  @if (state() === 'loading') {
+    <section class="state-panel" aria-live="polite" aria-busy="true" data-testid="loading-state">
+      {{ 'ACCOUNTING.BANK_IMPORT.LOADING' | translate }}
+    </section>
+  }
+
+  @if (state() === 'error' && errorKey(); as key) {
+    <section class="state-panel state-panel--error" role="alert" data-testid="error-state">
+      {{ key | translate }}
+      <button type="button" class="link-button" (click)="retry()">{{ 'ACCOUNTING.COMMON.RETRY' | translate }}</button>
+    </section>
+  }
+
+  @if (state() === 'ready') {
+    <ol class="wizard-steps" [attr.aria-label]="'ACCOUNTING.BANK_IMPORT.STEPS.LABEL' | translate">
+      <li [attr.aria-current]="step() === 'upload' ? 'step' : null">{{ 'ACCOUNTING.BANK_IMPORT.STEPS.UPLOAD' | translate }}</li>
+      <li [attr.aria-current]="step() === 'mapping' ? 'step' : null">{{ 'ACCOUNTING.BANK_IMPORT.STEPS.MAPPING' | translate }}</li>
+      <li [attr.aria-current]="step() === 'rows' ? 'step' : null">{{ 'ACCOUNTING.BANK_IMPORT.STEPS.ROWS' | translate }}</li>
+      <li [attr.aria-current]="step() === 'done' ? 'step' : null">{{ 'ACCOUNTING.BANK_IMPORT.STEPS.DONE' | translate }}</li>
+    </ol>
+
+    @switch (step()) {
+      @case ('upload') {
+        <section class="page-section" aria-labelledby="upload-heading" data-testid="step-upload">
+          <h2 id="upload-heading">{{ 'ACCOUNTING.BANK_IMPORT.UPLOAD.HEADING' | translate }}</h2>
+          <form class="stacked-form" [formGroup]="uploadForm" (ngSubmit)="upload()" novalidate>
+            <div class="form-field">
+              <label for="import-file">{{ 'ACCOUNTING.BANK_IMPORT.UPLOAD.FILE' | translate }}</label>
+              <input id="import-file" type="file" accept=".csv,text/csv" (change)="onFile($event)" aria-describedby="import-file-hint" data-testid="import-file" />
+              <p id="import-file-hint" class="hint-text">{{ 'ACCOUNTING.BANK_IMPORT.UPLOAD.FILE_HINT' | translate }}</p>
+            </div>
+            <fieldset class="header-fields">
+              <legend>{{ 'ACCOUNTING.BANK_IMPORT.UPLOAD.HEADER_LEGEND' | translate }}</legend>
+              <div class="form-field">
+                <label for="stmt-start">{{ 'ACCOUNTING.BANK_IMPORT.UPLOAD.START' | translate }}</label>
+                <input id="stmt-start" type="date" formControlName="startDate" data-testid="stmt-start" />
+              </div>
+              <div class="form-field">
+                <label for="stmt-end">{{ 'ACCOUNTING.BANK_IMPORT.UPLOAD.END' | translate }}</label>
+                <input id="stmt-end" type="date" formControlName="endDate" data-testid="stmt-end" />
+              </div>
+              <div class="form-field">
+                <label for="stmt-opening">{{ 'ACCOUNTING.BANK_IMPORT.UPLOAD.OPENING' | translate }}</label>
+                <input id="stmt-opening" type="text" inputmode="decimal" formControlName="openingBalance" data-testid="stmt-opening" />
+              </div>
+              <div class="form-field">
+                <label for="stmt-closing">{{ 'ACCOUNTING.BANK_IMPORT.UPLOAD.CLOSING' | translate }}</label>
+                <input id="stmt-closing" type="text" inputmode="decimal" formControlName="closingBalance" data-testid="stmt-closing" />
+              </div>
+              <div class="form-field">
+                <label for="stmt-ref">{{ 'ACCOUNTING.BANK_IMPORT.UPLOAD.REF' | translate }}</label>
+                <input id="stmt-ref" type="text" formControlName="statementRef" maxlength="64" data-testid="stmt-ref" />
+              </div>
+            </fieldset>
+
+            @if (gapPrompt(); as gap) {
+              <div class="gap-prompt" data-testid="gap-prompt">
+                <p class="alert alert-warning">
+                  @if (gap.firstStatement) {
+                    {{ 'ACCOUNTING.BANK_IMPORT.GAP.FIRST_STATEMENT' | translate }}
+                  } @else {
+                    {{ 'ACCOUNTING.BANK_IMPORT.GAP.NOT_CONTIGUOUS' | translate }}
+                  }
+                </p>
+                @if (gap.expected && !gap.firstStatement) {
+                  <p data-testid="gap-expected">{{ 'ACCOUNTING.BANK_IMPORT.GAP.EXPECTED' | translate: { expected: gap.expected } }}</p>
+                }
+                <div class="form-field">
+                  <label for="gap-ack">{{ 'ACCOUNTING.BANK_IMPORT.GAP.LABEL' | translate }}</label>
+                  <textarea id="gap-ack" rows="3" formControlName="gapAcknowledgement" aria-describedby="gap-ack-hint" data-testid="gap-ack"></textarea>
+                  <p id="gap-ack-hint" class="hint-text">{{ 'ACCOUNTING.BANK_IMPORT.GAP.HINT' | translate: { min: justificationMin } }}</p>
+                </div>
+              </div>
+            }
+
+            @if (canAdjust()) {
+              <app-statement-supersede [glAccountId]="account()?.glAccountId ?? ''" (choice)="onSupersede($event)" />
+            }
+
+            @if (uploadErrorKey(); as key) {
+              <p class="field-error" role="alert" data-testid="upload-error">{{ key | translate: { min: justificationMin } }}</p>
+            }
+            <div class="form-actions">
+              <button type="submit" class="btn btn--accent" data-testid="upload-submit"
+                [disabled]="!canAdjust() || busy() || !uploadReady() || (gapPrompt() !== null && gapLength() < justificationMin)">
+                {{ 'ACCOUNTING.BANK_IMPORT.UPLOAD.SUBMIT' | translate }}
+              </button>
+            </div>
+          </form>
+        </section>
+      }
+
+      @case ('mapping') {
+        @if (bankImport(); as current) {
+          <section class="page-section" aria-labelledby="mapping-heading" data-testid="step-mapping">
+            <h2 id="mapping-heading">{{ 'ACCOUNTING.BANK_IMPORT.MAPPING.HEADING' | translate }}</h2>
+            @if (current.mappingRequired) {
+              <p class="alert alert-info" data-testid="mapping-required">{{ 'ACCOUNTING.BANK_IMPORT.MAPPING.REQUIRED' | translate }}</p>
+            }
+            <p class="hint-text" data-testid="raw-columns">{{ 'ACCOUNTING.BANK_IMPORT.MAPPING.COLUMNS' | translate: { columns: current.columns.join(', ') } }}</p>
+            <form class="stacked-form" [formGroup]="mappingForm" (ngSubmit)="saveMapping()" novalidate>
+              <div class="mapping-grid">
+                @for (role of columnRoles; track role) {
+                  <div class="form-field">
+                    <label [for]="'map-' + role">{{ 'ACCOUNTING.BANK_IMPORT.MAPPING.ROLE.' + role | translate }}</label>
+                    <select [id]="'map-' + role" [formControlName]="role" [attr.data-testid]="'map-' + role">
+                      <option value="">{{ 'ACCOUNTING.BANK_IMPORT.MAPPING.UNMAPPED' | translate }}</option>
+                      @for (column of current.columns; track column) {
+                        <option [value]="column">{{ column }}</option>
+                      }
+                    </select>
+                  </div>
+                }
+              </div>
+              <div class="form-field">
+                <label for="sign-convention">{{ 'ACCOUNTING.BANK_IMPORT.MAPPING.SIGN' | translate }}</label>
+                <select id="sign-convention" formControlName="signConvention" aria-describedby="sign-hint" data-testid="sign-convention">
+                  @for (convention of signConventions; track convention) {
+                    <option [value]="convention">{{ 'ACCOUNTING.BANK_IMPORT.MAPPING.SIGN_OPTION.' + convention | translate }}</option>
+                  }
+                </select>
+                <p id="sign-hint" class="hint-text">{{ 'ACCOUNTING.BANK_IMPORT.MAPPING.SIGN_HINT' | translate }}</p>
+              </div>
+              <div class="form-field">
+                <label for="date-format">{{ 'ACCOUNTING.BANK_IMPORT.MAPPING.DATE_FORMAT' | translate }}</label>
+                <input id="date-format" type="text" formControlName="dateFormat" aria-describedby="date-format-hint" data-testid="date-format" />
+                <p id="date-format-hint" class="hint-text">{{ 'ACCOUNTING.BANK_IMPORT.MAPPING.DATE_FORMAT_HINT' | translate }}</p>
+              </div>
+              <label class="checkbox-field">
+                <input type="checkbox" formControlName="saveAsAccountDefault" data-testid="save-default" />
+                <span>{{ 'ACCOUNTING.BANK_IMPORT.MAPPING.SAVE_DEFAULT' | translate }}</span>
+              </label>
+              <div class="form-actions">
+                <button type="submit" class="btn btn--accent" data-testid="mapping-submit" [disabled]="!canAdjust() || busy()">
+                  {{ 'ACCOUNTING.BANK_IMPORT.MAPPING.SUBMIT' | translate }}
+                </button>
+                @if (current.status === 'VALIDATED') {
+                  <button type="button" class="btn btn--outline" (click)="cancelMapping()">{{ 'COMMON.CANCEL' | translate }}</button>
+                }
+                <button type="button" class="btn btn--outline" data-testid="discard" [disabled]="!canAdjust() || busy()" (click)="openDiscard()">
+                  {{ 'ACCOUNTING.BANK_IMPORT.DISCARD.ACTION' | translate }}
+                </button>
+              </div>
+            </form>
+          </section>
+          <ng-container *ngTemplateOutlet="previewBlock" />
+        }
+      }
+
+      @case ('rows') {
+        @if (bankImport(); as current) {
+          <ng-container *ngTemplateOutlet="previewBlock" />
+          <section class="page-section" aria-labelledby="rows-heading" data-testid="step-rows">
+            <h2 id="rows-heading" #rowsHeading tabindex="-1">{{ 'ACCOUNTING.BANK_IMPORT.ROWS.HEADING' | translate }}</h2>
+            <p data-testid="row-counts">
+              {{ 'ACCOUNTING.BANK_IMPORT.ROWS.COUNTS' | translate: {
+                total: (current.rowCount | number),
+                accepted: (current.acceptedCount | number),
+                rejected: (current.rejectedCount | number),
+                skipped: (current.skippedCount | number),
+                duplicates: (current.possibleDuplicateCount | number),
+                outOfWindow: (current.outOfWindowCount | number)
+              } }}
+            </p>
+            <div class="form-field row-filter">
+              <label for="row-filter">{{ 'ACCOUNTING.BANK_IMPORT.ROWS.FILTER' | translate }}</label>
+              <select id="row-filter" [formControl]="rowFilter" data-testid="row-filter">
+                @for (status of rowStatusFilters; track status) {
+                  <option [value]="status">{{ (status ? 'ACCOUNTING.BANK_IMPORT.ROW_STATUS.' + status : 'ACCOUNTING.BANK_IMPORT.ROWS.FILTER_ALL') | translate }}</option>
+                }
+              </select>
+            </div>
+
+            @switch (rowsState()) {
+              @case ('loading') {
+                <p aria-busy="true" data-testid="rows-loading">{{ 'ACCOUNTING.BANK_IMPORT.ROWS.LOADING' | translate }}</p>
+              }
+              @case ('error') {
+                <p class="state-panel state-panel--error" data-testid="rows-error">
+                  {{ 'ACCOUNTING.BANK_IMPORT.ROWS.LOAD_ERROR' | translate }}
+                  <button type="button" class="link-button" (click)="readRows(rowsPage())">{{ 'ACCOUNTING.COMMON.RETRY' | translate }}</button>
+                </p>
+              }
+              @default {
+                <div class="table-scroll-container">
+                  <table class="ledger-table" data-testid="rows-table">
+                    <caption class="sr-only">{{ 'ACCOUNTING.BANK_IMPORT.ROWS.CAPTION' | translate }}</caption>
+                    <thead>
+                      <tr>
+                        <th scope="col">{{ 'ACCOUNTING.BANK_IMPORT.ROWS.COL_ROW' | translate }}</th>
+                        <th scope="col">{{ 'ACCOUNTING.BANK_IMPORT.ROWS.COL_RAW' | translate }}</th>
+                        <th scope="col">{{ 'ACCOUNTING.BANK_IMPORT.ROWS.COL_PARSED' | translate }}</th>
+                        <th scope="col">{{ 'ACCOUNTING.BANK_IMPORT.ROWS.COL_STATUS' | translate }}</th>
+                        <th scope="col">{{ 'ACCOUNTING.BANK_IMPORT.ROWS.COL_ACTIONS' | translate }}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (row of rows(); track row.rowId) {
+                        <tr data-testid="import-row" [attr.data-row]="row.rowNumber" [class.row--flagged]="flaggedRows().has(row.rowNumber)">
+                          <th scope="row">{{ row.rowNumber }}</th>
+                          <td data-testid="raw-values">
+                            <dl class="kv-list">
+                              @for (cell of row.rawValues | keyvalue; track cell.key) {
+                                <div><dt>{{ cell.key }}</dt><dd>{{ cell.value }}</dd></div>
+                              }
+                            </dl>
+                          </td>
+                          <td>
+                            <span class="secondary-line">{{ row.date ? (dateOnly(row.date) | date: 'mediumDate') : ('COMMON.NOT_AVAILABLE' | translate) }}</span>
+                            <span class="secondary-line">{{ row.description ?? ('COMMON.NOT_AVAILABLE' | translate) }}</span>
+                            <span class="secondary-line numeric">{{ row.signedAmount !== null ? (row.signedAmount | money: current.currency) : ('COMMON.NOT_AVAILABLE' | translate) }}</span>
+                            @if (row.correctedValues) {
+                              <span class="secondary-line status-badge status-badge--open" data-testid="corrected-values">{{ 'ACCOUNTING.BANK_IMPORT.ROWS.CORRECTED' | translate }}</span>
+                            }
+                          </td>
+                          <td>
+                            <span class="status-badge" [class.status-badge--blocking]="row.rowStatus === 'REJECTED' || row.rowStatus === 'OUT_OF_WINDOW'"
+                              [class.status-badge--warning]="row.rowStatus === 'POSSIBLE_DUPLICATE'">
+                              {{ (row.rowStatus ? 'ACCOUNTING.BANK_IMPORT.ROW_STATUS.' + row.rowStatus : 'COMMON.NOT_AVAILABLE') | translate }}
+                            </span>
+                            @if (row.rejectionCode) {
+                              <span class="secondary-line" data-testid="rejection">{{ rejectionKey(row.rejectionCode) | translate: { code: row.rejectionCode } }}</span>
+                            }
+                            @if (row.duplicateOfRowNumber !== null) {
+                              <span class="secondary-line">{{ 'ACCOUNTING.BANK_IMPORT.ROWS.DUPLICATE_OF' | translate: { row: row.duplicateOfRowNumber } }}</span>
+                            }
+                            @if (row.duplicateDecision) {
+                              <span class="secondary-line">{{ 'ACCOUNTING.BANK_IMPORT.ROWS.DECIDED.' + row.duplicateDecision | translate }}</span>
+                            }
+                            @if (row.skipReason) {
+                              <span class="secondary-line">{{ 'ACCOUNTING.BANK_IMPORT.ROWS.SKIP_REASON' | translate: { reason: row.skipReason } }}</span>
+                            }
+                          </td>
+                          <td class="actions-cell">
+                            @if (row.rowStatus === 'REJECTED' || row.rowStatus === 'OUT_OF_WINDOW' || row.rowStatus === 'CORRECTED' || row.rowStatus === 'PARSED') {
+                              <button type="button" class="btn btn--outline" data-testid="correct-row" [disabled]="!canAdjust() || busy()" (click)="openCorrect(row)">
+                                {{ 'ACCOUNTING.BANK_IMPORT.ROWS.CORRECT' | translate }}<span class="sr-only">&nbsp;{{ 'ACCOUNTING.BANK_IMPORT.ROWS.ROW_N' | translate: { row: row.rowNumber } }}</span>
+                              </button>
+                            }
+                            @if (row.rowStatus !== 'SKIPPED' && row.rowStatus !== 'COMMITTED') {
+                              <button type="button" class="btn btn--outline" data-testid="skip-row" [disabled]="!canAdjust() || busy()" (click)="openSkip(row)">
+                                {{ 'ACCOUNTING.BANK_IMPORT.ROWS.SKIP' | translate }}<span class="sr-only">&nbsp;{{ 'ACCOUNTING.BANK_IMPORT.ROWS.ROW_N' | translate: { row: row.rowNumber } }}</span>
+                              </button>
+                            }
+                            @if (row.rowStatus === 'POSSIBLE_DUPLICATE') {
+                              <button type="button" class="btn btn--outline" data-testid="decide-distinct" [disabled]="!canAdjust() || busy()" (click)="decideDuplicate(row, 'DISTINCT')">
+                                {{ 'ACCOUNTING.BANK_IMPORT.ROWS.DISTINCT' | translate }}<span class="sr-only">&nbsp;{{ 'ACCOUNTING.BANK_IMPORT.ROWS.ROW_N' | translate: { row: row.rowNumber } }}</span>
+                              </button>
+                              <button type="button" class="btn btn--outline" data-testid="decide-duplicate" [disabled]="!canAdjust() || busy()" (click)="decideDuplicate(row, 'DUPLICATE')">
+                                {{ 'ACCOUNTING.BANK_IMPORT.ROWS.DUPLICATE' | translate }}<span class="sr-only">&nbsp;{{ 'ACCOUNTING.BANK_IMPORT.ROWS.ROW_N' | translate: { row: row.rowNumber } }}</span>
+                              </button>
+                            }
+                          </td>
+                        </tr>
+                      } @empty {
+                        <tr><td colspan="5" data-testid="rows-empty">{{ 'ACCOUNTING.BANK_IMPORT.ROWS.EMPTY' | translate }}</td></tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+                @if (rowsTotalPages() > 1) {
+                  <nav class="pager" [attr.aria-label]="'ACCOUNTING.BANK_IMPORT.ROWS.PAGER' | translate">
+                    <button type="button" class="btn btn--outline" [disabled]="rowsPage() === 0" (click)="readRows(rowsPage() - 1)">{{ 'ACCOUNTING.BANK_IMPORT.ROWS.PREVIOUS' | translate }}</button>
+                    <span>{{ 'ACCOUNTING.BANK_IMPORT.ROWS.PAGE' | translate: { page: rowsPage() + 1, pages: rowsTotalPages() } }}</span>
+                    <button type="button" class="btn btn--outline" [disabled]="rowsPage() + 1 >= rowsTotalPages()" (click)="readRows(rowsPage() + 1)">{{ 'ACCOUNTING.BANK_IMPORT.ROWS.NEXT' | translate }}</button>
+                  </nav>
+                }
+              }
+            }
+          </section>
+
+          <section class="page-section" aria-labelledby="commit-heading" data-testid="step-commit">
+            <h2 id="commit-heading">{{ 'ACCOUNTING.BANK_IMPORT.COMMIT.HEADING' | translate }}</h2>
+            <form class="stacked-form" [formGroup]="commitForm" (ngSubmit)="commit()" novalidate>
+              @if (current.possibleDuplicateCount > 0) {
+                <div class="form-field">
+                  <label for="bulk-duplicates">{{ 'ACCOUNTING.BANK_IMPORT.COMMIT.DUPLICATES' | translate }}</label>
+                  <select id="bulk-duplicates" formControlName="duplicates" data-testid="bulk-duplicates">
+                    <option value="">{{ 'ACCOUNTING.BANK_IMPORT.COMMIT.DUPLICATES_LATER' | translate }}</option>
+                    <option value="DISTINCT">{{ 'ACCOUNTING.BANK_IMPORT.COMMIT.DUPLICATES_DISTINCT' | translate }}</option>
+                    <option value="DUPLICATE">{{ 'ACCOUNTING.BANK_IMPORT.COMMIT.DUPLICATES_DUPLICATE' | translate }}</option>
+                  </select>
+                </div>
+              }
+              <label class="checkbox-field">
+                <input type="checkbox" formControlName="startReconciliation" data-testid="start-reconciliation" />
+                <span>{{ 'ACCOUNTING.BANK_IMPORT.COMMIT.START' | translate }}</span>
+              </label>
+              @if (!canCommit()) {
+                <p class="hint-text" id="commit-blocked" data-testid="commit-blocked">{{ 'ACCOUNTING.BANK_IMPORT.COMMIT.BLOCKED' | translate: { count: (current.rejectedCount | number) } }}</p>
+              }
+              <div class="form-actions">
+                <button type="submit" class="btn btn--accent" data-testid="commit" [disabled]="!canAdjust() || busy() || !canCommit()"
+                  [attr.aria-describedby]="canCommit() ? null : 'commit-blocked'">
+                  {{ 'ACCOUNTING.BANK_IMPORT.COMMIT.SUBMIT' | translate }}
+                </button>
+                <button type="button" class="btn btn--outline" data-testid="edit-mapping" [disabled]="!canAdjust() || busy()" (click)="editMapping()">
+                  {{ 'ACCOUNTING.BANK_IMPORT.MAPPING.EDIT' | translate }}
+                </button>
+                <button type="button" class="btn btn--outline" data-testid="discard" [disabled]="!canAdjust() || busy()" (click)="openDiscard()">
+                  {{ 'ACCOUNTING.BANK_IMPORT.DISCARD.ACTION' | translate }}
+                </button>
+              </div>
+            </form>
+          </section>
+        }
+      }
+
+      @case ('done') {
+        @if (bankImport(); as current) {
+          <section class="page-section" aria-labelledby="done-heading" data-testid="step-done">
+            <h2 id="done-heading" #doneHeading tabindex="-1">{{ 'ACCOUNTING.BANK_IMPORT.STEPS.DONE' | translate }}</h2>
+            @if (current.status === 'COMMITTED') {
+              <p class="alert alert-success">{{ 'ACCOUNTING.BANK_IMPORT.DONE.COMMITTED' | translate }}</p>
+            } @else {
+              <p class="alert alert-info" data-testid="discarded">{{ 'ACCOUNTING.BANK_IMPORT.DONE.DISCARDED' | translate: { reason: current.discardReason ?? ('COMMON.NOT_AVAILABLE' | translate) } }}</p>
+            }
+          </section>
+        }
+      }
+    }
+
+    <ng-template #previewBlock>
+      @if (bankImport()?.preview; as preview) {
+        <section class="page-section" aria-labelledby="preview-heading" data-testid="preview">
+          <h2 id="preview-heading">{{ 'ACCOUNTING.BANK_IMPORT.PREVIEW.HEADING' | translate }}</h2>
+          <div class="table-scroll-container">
+            <table class="ledger-table" data-testid="preview-rows">
+              <caption class="sr-only">{{ 'ACCOUNTING.BANK_IMPORT.PREVIEW.ROWS_CAPTION' | translate }}</caption>
+              <thead>
+                <tr>
+                  <th scope="col">{{ 'ACCOUNTING.BANK_IMPORT.ROWS.COL_ROW' | translate }}</th>
+                  <th scope="col">{{ 'ACCOUNTING.BANK_IMPORT.PREVIEW.DATE' | translate }}</th>
+                  <th scope="col">{{ 'ACCOUNTING.BANK_IMPORT.PREVIEW.DESCRIPTION' | translate }}</th>
+                  <th scope="col" class="numeric">{{ 'ACCOUNTING.BANK_IMPORT.PREVIEW.AMOUNT' | translate }}</th>
+                  <th scope="col" class="numeric">{{ 'ACCOUNTING.BANK_IMPORT.PREVIEW.RUNNING' | translate }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of preview.firstRows; track row.rowNumber) {
+                  <tr data-testid="preview-row">
+                    <th scope="row">{{ row.rowNumber }}</th>
+                    <td>{{ row.date ? (dateOnly(row.date) | date: 'mediumDate') : ('COMMON.NOT_AVAILABLE' | translate) }}</td>
+                    <td>{{ row.description ?? ('COMMON.NOT_AVAILABLE' | translate) }}</td>
+                    <td class="numeric" data-testid="preview-amount">{{ row.signedAmount !== null ? (row.signedAmount | money: bankImport()?.currency) : ('COMMON.NOT_AVAILABLE' | translate) }}</td>
+                    <td class="numeric" data-testid="preview-running">{{ row.runningBalance !== null ? (row.runningBalance | money: bankImport()?.currency) : ('COMMON.NOT_AVAILABLE' | translate) }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          @for (segment of preview.segments; track $index) {
+            <dl class="segment-totals" data-testid="segment-total" [class.segment--off]="!segment.ties">
+              <div><dt>{{ 'ACCOUNTING.BANK_IMPORT.PREVIEW.OPENING' | translate }}</dt><dd class="numeric">{{ segment.openingBalance | money: bankImport()?.currency }}</dd></div>
+              <div><dt>{{ 'ACCOUNTING.BANK_IMPORT.PREVIEW.ACTIVITY' | translate }}</dt><dd class="numeric">{{ segment.activityTotal | money: bankImport()?.currency }}</dd></div>
+              <div><dt>{{ 'ACCOUNTING.BANK_IMPORT.PREVIEW.EXPECTED' | translate }}</dt><dd class="numeric" data-testid="segment-expected">{{ segment.expectedClosing | money: bankImport()?.currency }}</dd></div>
+              <div><dt>{{ 'ACCOUNTING.BANK_IMPORT.PREVIEW.CLOSING' | translate }}</dt><dd class="numeric">{{ segment.closingBalance | money: bankImport()?.currency }}</dd></div>
+              <div><dt>{{ 'ACCOUNTING.BANK_IMPORT.PREVIEW.DIFFERENCE' | translate }}</dt><dd class="numeric" data-testid="segment-difference">{{ segment.difference | money: bankImport()?.currency }}</dd></div>
+              <div>
+                <dt class="sr-only">{{ 'ACCOUNTING.BANK_IMPORT.PREVIEW.TIES_LABEL' | translate }}</dt>
+                <dd>
+                  @if (segment.ties) {
+                    <span class="status-badge status-badge--open" data-testid="segment-ties">{{ 'ACCOUNTING.BANK_IMPORT.PREVIEW.TIES' | translate }}</span>
+                  } @else {
+                    <span class="status-badge status-badge--blocking" data-testid="segment-off">{{ 'ACCOUNTING.BANK_IMPORT.PREVIEW.OFF' | translate }}</span>
+                  }
+                </dd>
+              </div>
+            </dl>
+          }
+        </section>
+      }
+    </ng-template>
+  }
+
+  @if (rowDialog(); as dialog) {
+    <dialog class="confirm-panel" appModalDialog (modalCancel)="cancelRowDialog()" aria-labelledby="row-dialog-title" data-testid="row-dialog">
+      @switch (dialog.kind) {
+        @case ('correct') {
+          @if (dialog.kind === 'correct') {
+            <h2 id="row-dialog-title" class="confirm-heading">{{ 'ACCOUNTING.BANK_IMPORT.CORRECT.TITLE' | translate: { row: dialog.row.rowNumber } }}</h2>
+            <dl class="kv-list" data-testid="dialog-raw-values">
+              @for (cell of dialog.row.rawValues | keyvalue; track cell.key) {
+                <div><dt>{{ cell.key }}</dt><dd>{{ cell.value }}</dd></div>
+              }
+            </dl>
+            <form class="stacked-form" [formGroup]="correctForm" (ngSubmit)="confirmCorrect()" novalidate>
+              <div class="form-field">
+                <label for="correct-date">{{ 'ACCOUNTING.BANK_IMPORT.PREVIEW.DATE' | translate }}</label>
+                <input id="correct-date" type="date" formControlName="date" data-testid="correct-date" />
+              </div>
+              <div class="form-field">
+                <label for="correct-amount">{{ 'ACCOUNTING.BANK_IMPORT.CORRECT.AMOUNT' | translate }}</label>
+                <input id="correct-amount" type="text" inputmode="decimal" formControlName="signedAmount" aria-describedby="correct-amount-hint" data-testid="correct-amount" />
+                <p id="correct-amount-hint" class="hint-text">{{ 'ACCOUNTING.BANK_IMPORT.CORRECT.AMOUNT_HINT' | translate }}</p>
+              </div>
+              <div class="form-field">
+                <label for="correct-description">{{ 'ACCOUNTING.BANK_IMPORT.PREVIEW.DESCRIPTION' | translate }}</label>
+                <input id="correct-description" type="text" formControlName="description" data-testid="correct-description" />
+              </div>
+              @if (dialogErrorKey(); as key) {
+                <p class="field-error" role="alert">{{ key | translate }}</p>
+              }
+              <div class="form-actions">
+                <button type="submit" class="btn btn--accent" data-testid="confirm-correct" [disabled]="busy()">{{ 'ACCOUNTING.BANK_IMPORT.CORRECT.CONFIRM' | translate }}</button>
+                <button type="button" class="btn btn--outline" (click)="cancelRowDialog()">{{ 'COMMON.CANCEL' | translate }}</button>
+              </div>
+            </form>
+          }
+        }
+        @default {
+          <h2 id="row-dialog-title" class="confirm-heading">
+            @if (dialog.kind === 'skip') {
+              {{ 'ACCOUNTING.BANK_IMPORT.SKIP.TITLE' | translate: { row: dialog.row.rowNumber } }}
+            } @else {
+              {{ 'ACCOUNTING.BANK_IMPORT.DISCARD.TITLE' | translate }}
+            }
+          </h2>
+          @if (dialog.kind === 'discard') {
+            <p>{{ 'ACCOUNTING.BANK_IMPORT.DISCARD.BODY' | translate }}</p>
+          }
+          <form class="stacked-form" [formGroup]="reasonForm" (ngSubmit)="dialog.kind === 'skip' ? confirmSkip() : confirmDiscard()" novalidate>
+            <div class="form-field">
+              <label for="reason">{{ 'ACCOUNTING.BANK_IMPORT.SKIP.REASON' | translate }}</label>
+              <textarea id="reason" rows="3" formControlName="reason" data-testid="reason"></textarea>
+            </div>
+            @if (dialogErrorKey(); as key) {
+              <p class="field-error" role="alert">{{ key | translate }}</p>
+            }
+            <div class="form-actions">
+              <button type="submit" class="btn btn--accent" data-testid="confirm-reason" [disabled]="busy() || reasonLength() === 0">
+                {{ (dialog.kind === 'skip' ? 'ACCOUNTING.BANK_IMPORT.SKIP.CONFIRM' : 'ACCOUNTING.BANK_IMPORT.DISCARD.CONFIRM') | translate }}
+              </button>
+              <button type="button" class="btn btn--outline" (click)="cancelRowDialog()">{{ 'COMMON.CANCEL' | translate }}</button>
+            </div>
+          </form>
+        }
+      }
+    </dialog>
+  }
+</main>

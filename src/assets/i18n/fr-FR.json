@@ -3846,6 +3846,10 @@
         "PERIOD_CLOSE": {
           "TITLE": "Clôture des périodes",
           "DESCRIPTION": "Clôturez chaque mois une fois ses écritures comptabilisées, et rouvrez un mois clôturé pour des ajustements tardifs."
+        },
+        "BANK_RECONCILIATION": {
+          "TITLE": "Rapprochement bancaire",
+          "DESCRIPTION": "Rapprochez les relevés bancaires de la comptabilité, expliquez les écarts et approuvez chaque rapprochement."
         }
       },
       "CARD": {
@@ -3928,6 +3932,10 @@
         "PERIOD_CLOSE": {
           "TITLE": "Périodes comptables",
           "DESCRIPTION": "Voyez quels mois sont ouverts ou clôturés, clôturez un mois ou rouvrez-en un avec un motif consigné."
+        },
+        "BANK_RECONCILIATION": {
+          "TITLE": "Comptes bancaires",
+          "DESCRIPTION": "Consultez l’état de rapprochement de chaque compte bancaire, importez un relevé ou démarrez un rapprochement."
         }
       },
       "FIELD": {
@@ -4480,6 +4488,301 @@
           "TOO_SHORT": "Saisissez au moins {{min}} caractères."
         }
       }
+    },
+    "BANK_ACCOUNTS": {
+      "OVERLINE": "Comptabilité",
+      "TITLE": "Comptes bancaires",
+      "SUBTITLE": "Rapprochez chaque compte bancaire de ses relevés. Les nombres et les dates partent de la date de référence du compte.",
+      "LOADING": "Chargement des comptes bancaires…",
+      "VIEW_ONLY": "Vous pouvez consulter les comptes bancaires. Modifier un profil ou démarrer un rapprochement exige des autorisations supplémentaires.",
+      "EMPTY": "Aucun compte bancaire rapprochable n’a été trouvé. Un compte de trésorerie apparaît ici une fois configuré comme compte bancaire rapprochable.",
+      "CAPTION": "Comptes bancaires rapprochables, par code de compte",
+      "COL_ACCOUNT": "Compte",
+      "COL_BANK": "Banque",
+      "COL_CURRENCY": "Devise",
+      "COL_BASELINE": "Date de référence",
+      "COL_COVERAGE": "Relevés jusqu’au",
+      "COL_RECONCILED": "Rapproché jusqu’au",
+      "COL_UNEXPLAINED": "Opérations bancaires non expliquées",
+      "COL_OPEN_ITEMS": "Éléments en suspens ouverts",
+      "COL_ACTIONS": "Actions",
+      "MASK": "Compte se terminant par {{mask}}",
+      "NO_PROFILE": "Pas encore de profil bancaire",
+      "ACTION": {
+        "EDIT_PROFILE": "Modifier le profil",
+        "START": "Démarrer un rapprochement"
+      },
+      "OUTCOME": {
+        "PROFILE_SAVED": "Le profil bancaire de {{account}} est enregistré."
+      },
+      "PROFILE": {
+        "TITLE": "Profil bancaire de {{account}}",
+        "BANK_NAME": "Nom de la banque",
+        "MASK": "Derniers chiffres du numéro de compte",
+        "MASK_HINT": "Jusqu’à 8 caractères, par exemple les quatre derniers chiffres.",
+        "CURRENCY": "Devise",
+        "CURRENCY_HINT": "Pour l’instant, les comptes bancaires sont rapprochés en dollars américains uniquement.",
+        "SAVE": "Enregistrer le profil"
+      },
+      "START": {
+        "TITLE": "Démarrer un rapprochement de {{account}}",
+        "LEGEND": "Comment voulez-vous commencer ?",
+        "OPTION_STATEMENT": "Rapprocher un relevé déjà validé",
+        "OPTION_IMPORT": "Importer un fichier de relevé",
+        "OPTION_MANUAL": "Saisir un relevé à la main",
+        "OPTION_INTERIM": "Rapprochement intermédiaire à une date",
+        "INTERIM_HINT": "Pour une fin de période au milieu d’un cycle bancaire : saisissez les opérations de la banque en ligne depuis la dernière date rapprochée jusqu’à la date choisie.",
+        "STATEMENTS_LOADING": "Chargement des relevés validés…",
+        "STATEMENTS_ERROR": "Impossible de charger les relevés validés.",
+        "STATEMENT_LABEL": "Du {{start}} au {{end}}, solde final {{closing}} (référence {{ref}})",
+        "CONFIRM": "Continuer",
+        "ERROR": {
+          "CHOOSE_STATEMENT": "Choisissez un relevé à rapprocher."
+        }
+      },
+      "ERROR": {
+        "LOAD": "Impossible de charger les comptes bancaires.",
+        "FORBIDDEN": "Vous n’êtes pas autorisé à consulter les comptes bancaires.",
+        "FORBIDDEN_WRITE": "Vous n’êtes pas autorisé à modifier les rapprochements bancaires (accounting:reconciliation:adjust).",
+        "CURRENCY_NOT_SUPPORTED": "Cette devise n’est pas prise en charge. Les comptes bancaires sont rapprochés en dollars américains uniquement.",
+        "ACCOUNT_NOT_RECONCILABLE": "Ce compte n’est pas configuré pour le rapprochement bancaire.",
+        "WINDOW_ALREADY_RECONCILED": "Ce relevé a déjà un rapprochement. Terminez-le ou annulez-le d’abord ; la liste a été actualisée.",
+        "GL_ACCOUNT_NOT_ACTIVE": "Le compte n’est pas actif.",
+        "INVALID": "La demande a été refusée comme non valide. Vérifiez les valeurs et réessayez.",
+        "OTHER": "Impossible d’enregistrer la modification. Réessayez.",
+        "REFRESH": "Impossible d’actualiser la liste ; elle peut être obsolète. Rechargez la page pour réessayer."
+      }
+    },
+    "BANK_IMPORT": {
+      "OVERLINE": "Rapprochement bancaire",
+      "TITLE": "Importer un relevé bancaire",
+      "FOR_ACCOUNT": "Compte {{account}}",
+      "BACK": "Retour aux comptes bancaires",
+      "LOADING": "Chargement…",
+      "STEPS": {
+        "LABEL": "Étapes de l’importation",
+        "UPLOAD": "Téléverser",
+        "MAPPING": "Associer les colonnes",
+        "ROWS": "Vérifier les lignes",
+        "DONE": "Terminé"
+      },
+      "UPLOAD": {
+        "HEADING": "Fichier et en-tête du relevé",
+        "FILE": "Fichier CSV",
+        "FILE_HINT": "Le téléchargement CSV de votre banque, avec une ligne d’en-tête.",
+        "HEADER_LEGEND": "En-tête du relevé, tel qu’imprimé",
+        "START": "Date de début",
+        "END": "Date de fin",
+        "OPENING": "Solde d’ouverture",
+        "CLOSING": "Solde de clôture",
+        "REF": "Référence du relevé (facultatif)",
+        "SUBMIT": "Téléverser",
+        "ERROR": {
+          "HEADER": "Indiquez les dates de début et de fin et les deux soldes sous forme de nombres.",
+          "GAP_TOO_SHORT": "Saisissez au moins {{min}} caractères pour reconnaître l’écart."
+        }
+      },
+      "GAP": {
+        "FIRST_STATEMENT": "C’est le premier relevé du compte. Le valider avec une reconnaissance fixe la date de référence du compte à sa date de début : les lignes comptables et les opérations bancaires antérieures ne comptent plus comme non expliquées.",
+        "NOT_CONTIGUOUS": "Ce relevé ne fait pas suite au précédent. Corrigez l’en-tête ou reconnaissez l’écart : le reconnaître déplace la date de référence du compte à la date de début de ce relevé.",
+        "EXPECTED": "Le serveur attendait : {{expected}}",
+        "LABEL": "Pourquoi le relevé ne fait pas suite au précédent",
+        "HINT": "Au moins {{min}} caractères. Consigné dans la piste d’audit."
+      },
+      "SUPERSEDE": {
+        "LEGEND": "Remplacer un relevé validé",
+        "TOGGLE": "Ceci corrige un relevé déjà validé",
+        "LOADING": "Chargement des relevés validés…",
+        "LOAD_ERROR": "Impossible de charger les relevés validés.",
+        "EMPTY": "Ce compte n’a aucun relevé validé à remplacer.",
+        "STATEMENT": "Relevé à remplacer",
+        "CHOOSE": "Choisissez un relevé",
+        "OPTION": "Du {{start}} au {{end}}, solde final {{closing}} (référence {{ref}})",
+        "INVALIDATES": "Le rapprochement de ce relevé est approuvé. Le remplacer invalide cette approbation, et la période ne pourra pas être clôturée avant l’approbation d’un nouveau rapprochement.",
+        "CHOSEN_ERROR": "Impossible de lire les rapprochements du relevé choisi.",
+        "JUSTIFICATION": "Pourquoi le relevé est remplacé",
+        "JUSTIFICATION_HINT": "Au moins {{min}} caractères. Consigné dans la piste d’audit."
+      },
+      "MAPPING": {
+        "HEADING": "Associer les colonnes",
+        "REQUIRED": "Les colonnes du fichier n’ont pas pu être associées automatiquement. Choisissez la colonne de chaque champ.",
+        "COLUMNS": "Colonnes du fichier : {{columns}}",
+        "UNMAPPED": "Absent du fichier",
+        "ROLE": {
+          "date": "Date",
+          "description": "Description",
+          "amount": "Montant",
+          "debit": "Débit",
+          "credit": "Crédit",
+          "reference": "Référence",
+          "checkNumber": "Numéro de chèque",
+          "sourceTransactionId": "ID de l’opération bancaire"
+        },
+        "SIGN": "Convention de signe",
+        "SIGN_HINT": "Comment le fichier indique les entrées et sorties d’argent. L’aperçu ci-dessous montre le résultat.",
+        "SIGN_OPTION": {
+          "SIGNED_AMOUNT": "Une colonne de montant, positif = entrée",
+          "SIGNED_AMOUNT_INVERTED": "Une colonne de montant, positif = sortie",
+          "DEBIT_CREDIT_COLUMNS": "Colonnes de débit et de crédit séparées"
+        },
+        "DATE_FORMAT": "Format de date (facultatif)",
+        "DATE_FORMAT_HINT": "Par exemple dd/MM/yyyy. Laissez vide pour le détecter.",
+        "SAVE_DEFAULT": "Utiliser cette association pour les prochaines importations de ce compte",
+        "SUBMIT": "Appliquer l’association",
+        "EDIT": "Modifier l’association"
+      },
+      "PREVIEW": {
+        "HEADING": "Aperçu",
+        "ROWS_CAPTION": "Les premières lignes avec leur signe et leur solde cumulé",
+        "DATE": "Date",
+        "DESCRIPTION": "Description",
+        "AMOUNT": "Montant",
+        "RUNNING": "Solde cumulé",
+        "OPENING": "Ouverture",
+        "ACTIVITY": "Mouvements",
+        "EXPECTED": "Ouverture plus mouvements",
+        "CLOSING": "Clôture",
+        "DIFFERENCE": "Écart",
+        "TIES_LABEL": "Totaux",
+        "TIES": "Les totaux concordent",
+        "OFF": "Les totaux ne concordent pas"
+      },
+      "ROWS": {
+        "HEADING": "Lignes",
+        "COUNTS": "{{total}} lignes : {{accepted}} acceptées, {{rejected}} rejetées, {{skipped}} ignorées, {{duplicates}} doublons possibles, {{outOfWindow}} hors des dates du relevé.",
+        "FILTER": "Afficher",
+        "FILTER_ALL": "Toutes les lignes",
+        "LOADING": "Chargement des lignes…",
+        "LOAD_ERROR": "Impossible de charger les lignes.",
+        "CAPTION": "Lignes du fichier, dans l’ordre du fichier",
+        "COL_ROW": "Ligne",
+        "COL_RAW": "Dans le fichier",
+        "COL_PARSED": "Lu comme",
+        "COL_STATUS": "Statut",
+        "COL_ACTIONS": "Actions",
+        "CORRECTED": "Corrigée",
+        "DUPLICATE_OF": "Doublon possible de la ligne {{row}}",
+        "DECIDED": {
+          "DISTINCT": "Marquée comme distincte",
+          "DUPLICATE": "Marquée comme doublon"
+        },
+        "SKIP_REASON": "Ignorée : {{reason}}",
+        "CORRECT": "Corriger",
+        "SKIP": "Ignorer",
+        "DISTINCT": "Pas un doublon",
+        "DUPLICATE": "Doublon",
+        "ROW_N": "ligne {{row}}",
+        "EMPTY": "Aucune ligne à afficher.",
+        "PAGER": "Pages de lignes",
+        "PREVIOUS": "Précédent",
+        "NEXT": "Suivant",
+        "PAGE": "Page {{page}} sur {{pages}}",
+        "ERROR": {
+          "AMOUNT": "Saisissez le montant sous forme de nombre.",
+          "REASON": "Indiquez un motif."
+        }
+      },
+      "ROW_STATUS": {
+        "PARSED": "Acceptée",
+        "REJECTED": "Rejetée",
+        "CORRECTED": "Corrigée",
+        "SKIPPED": "Ignorée",
+        "POSSIBLE_DUPLICATE": "Doublon possible",
+        "OUT_OF_WINDOW": "Hors des dates du relevé",
+        "COMMITTED": "Validée"
+      },
+      "REJECTION": {
+        "DATE_UNPARSEABLE": "La date n’a pas pu être lue.",
+        "AMOUNT_UNPARSEABLE": "Le montant n’a pas pu être lu.",
+        "AMOUNT_ZERO": "Le montant est nul.",
+        "AMOUNT_AND_DEBIT_CREDIT_BOTH": "La ligne a à la fois un montant et un débit ou un crédit.",
+        "REQUIRED_COLUMN_MISSING": "Une colonne obligatoire est vide.",
+        "DATE_OUTSIDE_STATEMENT": "La date est hors des dates du relevé.",
+        "OTHER": "Rejetée ({{code}})."
+      },
+      "CORRECT": {
+        "TITLE": "Corriger la ligne {{row}}",
+        "AMOUNT": "Montant signé",
+        "AMOUNT_HINT": "Positif pour une entrée, négatif pour une sortie.",
+        "CONFIRM": "Enregistrer la correction"
+      },
+      "SKIP": {
+        "TITLE": "Ignorer la ligne {{row}}",
+        "REASON": "Motif",
+        "CONFIRM": "Ignorer la ligne"
+      },
+      "DISCARD": {
+        "ACTION": "Abandonner l’importation",
+        "TITLE": "Abandonner cette importation ?",
+        "BODY": "Rien du fichier n’est validé. Le motif est consigné.",
+        "CONFIRM": "Abandonner l’importation",
+        "ERROR": {
+          "REASON": "Indiquez un motif."
+        }
+      },
+      "COMMIT": {
+        "HEADING": "Valider le relevé",
+        "DUPLICATES": "Doublons possibles non tranchés",
+        "DUPLICATES_LATER": "Les valider pour examen pendant le rapprochement",
+        "DUPLICATES_DISTINCT": "Les marquer tous comme non doublons",
+        "DUPLICATES_DUPLICATE": "Les marquer tous comme doublons",
+        "START": "Démarrer le rapprochement après la validation",
+        "BLOCKED": "Corrigez ou ignorez les {{count}} lignes rejetées avant de valider.",
+        "SUBMIT": "Valider le relevé"
+      },
+      "DONE": {
+        "COMMITTED": "Cette importation est validée.",
+        "DISCARDED": "Cette importation a été abandonnée : {{reason}}"
+      },
+      "ERROR": {
+        "LOAD": "Impossible de charger l’importation.",
+        "FORBIDDEN": "Vous n’êtes pas autorisé à importer des relevés bancaires.",
+        "NOT_FOUND": "Cette importation est introuvable.",
+        "ACCOUNT_NOT_FOUND": "Ce compte bancaire ne figure pas parmi les comptes rapprochables.",
+        "FORBIDDEN_WRITE": "Vous n’êtes pas autorisé à modifier les rapprochements bancaires (accounting:reconciliation:adjust).",
+        "INVALID": "La demande a été refusée comme non valide. Vérifiez les valeurs et réessayez.",
+        "OTHER": "La demande n’a pas pu aboutir. Réessayez.",
+        "IMPORT_FILE_ALREADY_COMMITTED": "Ce même fichier a déjà été validé pour ce compte.",
+        "STATEMENT_IMPORT_FAILED": "Le fichier n’a pas pu être lu. Vérifiez qu’il s’agit d’un CSV avec une ligne d’en-tête et réessayez.",
+        "STATEMENT_PERIOD_OVERLAP": "Les dates chevauchent un relevé validé. Les relevés ne peuvent pas se chevaucher.",
+        "STATEMENT_NOT_CONTIGUOUS": "Le relevé ne fait pas suite au précédent.",
+        "GAP_ACKNOWLEDGEMENT_NOT_APPLICABLE": "Ce relevé fait suite au précédent : aucune reconnaissance d’écart n’est nécessaire. Elle a été retirée ; soumettez de nouveau.",
+        "TRANSACTION_OUT_OF_WINDOW": "Certaines opérations sont datées hors du relevé. Elles sont mises en évidence ci-dessous.",
+        "CURRENCY_NOT_SUPPORTED": "La devise n’est pas prise en charge. Les relevés sont en dollars américains uniquement.",
+        "IMPORT_NOT_COMMITTABLE": "Le relevé ne peut pas encore être validé. Corrigez les lignes mises en évidence ou vérifiez les soldes de l’en-tête.",
+        "IMPORT_ALREADY_COMMITTED": "Cette importation a déjà été validée.",
+        "IMPORT_DISCARDED": "Cette importation a été abandonnée.",
+        "STATEMENT_ALREADY_IMPORTED": "Ce relevé a déjà été importé.",
+        "ACCOUNT_NOT_RECONCILABLE": "Ce compte n’est pas configuré pour le rapprochement bancaire.",
+        "JUSTIFICATION_REQUIRED": "Une justification d’au moins 10 caractères est requise.",
+        "SUPERSESSION_NOT_ELIGIBLE": "Le relevé choisi ne peut pas être remplacé. La liste a été actualisée ; choisissez de nouveau.",
+        "WINDOW_ALREADY_RECONCILED": "Un rapprochement de ce relevé est en cours ou en attente d’approbation. Terminez-le ou annulez-le d’abord.",
+        "AMOUNT_PRECISION_EXCEEDS_CURRENCY": "Un montant a plus de décimales que la devise ne le permet.",
+        "OPTIMISTIC_LOCK": "Quelqu’un d’autre a modifié cette importation. Elle a été rechargée ; réessayez.",
+        "REFRESH": "Impossible de recharger l’importation ; l’affichage peut être obsolète. Rechargez la page avant de continuer."
+      }
+    },
+    "BANK_STATEMENT_ENTRY": {
+      "OVERLINE": "Rapprochement bancaire",
+      "TITLE": "Saisir un relevé",
+      "TITLE_INTERIM": "Rapprochement intermédiaire à une date",
+      "SUBTITLE": "Saisissez l’en-tête du relevé et chacune de ses opérations.",
+      "SUBTITLE_INTERIM": "Saisissez les opérations de la banque en ligne depuis la dernière date rapprochée, et le solde à la date choisie.",
+      "INTERIM_START_HINT": "Le lendemain de la dernière date rapprochée, {{frontier}}.",
+      "INTERIM_END": "Rapprocher jusqu’au",
+      "TRANSACTIONS": "Opérations",
+      "TRANSACTIONS_HINT": "Les montants positifs sont des entrées, les négatifs des sorties.",
+      "COL_N": "N°",
+      "COL_REFERENCE": "Référence",
+      "COL_CHECK": "Numéro de chèque",
+      "ADD": "Ajouter une opération",
+      "REMOVE": "Retirer",
+      "SUBMIT": "Valider le relevé",
+      "ERROR": {
+        "HEADER": "Indiquez les dates de début et de fin et les deux soldes sous forme de nombres.",
+        "TRANSACTIONS": "Chaque opération doit avoir une date, un montant et une description."
+      },
+      "INTERIM_UNAVAILABLE": "Ce compte n’a pas encore de date rapprochée : il n’y a donc pas de période intermédiaire à rapprocher. Saisissez ou importez plutôt son premier relevé."
     }
   },
   "PRODUCT": {
@@ -8008,7 +8311,10 @@
       "WORK_SESSION": "Séance de travail",
       "PERSON": "Personne",
       "PERIODS": "Périodes de paie",
-      "ACCOUNTING_PERIODS": "Périodes comptables"
+      "ACCOUNTING_PERIODS": "Périodes comptables",
+      "BANK_ACCOUNTS": "Comptes bancaires",
+      "BANK_IMPORTS": "Importations de relevés",
+      "IMPORT": "Importer"
     }
   },
   "POSITIVITY": {
