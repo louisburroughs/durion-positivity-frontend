@@ -336,6 +336,12 @@ export const ACCOUNTING_PAGE = {
 export const ACCOUNTING_SECTION = {
   periodClose: ['accounting:period:close'],
   periodReopen: ['accounting:period:reopen'],
+  /**
+   * Bank-reconciliation approver actions: finalize, return, cancel, supersede,
+   * exclude/restore, adjustment reverse and clear-in-gap
+   * (SPEC-manual-bank-reconciliation §6.2).
+   */
+  reconciliationApprove: ['accounting:reconciliation:approve'],
 } as const satisfies Record<string, readonly string[]>;
 
 /** `/app/crm/*` — one entry per routed page, keyed by route path. */
