@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
+import { Observable, forkJoin, map, of, switchMap } from 'rxjs';
 import {
   ApiError,
   BankAccountResponse,
@@ -96,11 +96,11 @@ export class BankReconciliationService {
   private readonly statementsSdk = inject(BankStatementsSdk);
   private readonly reconciliationSdk = inject(BankReconciliationSdk);
 
-  /** Every reconcilable bank account, by account code. */
+  /** Every reconcilable bank account, by account code, across every page the server reports. */
   listBankAccounts(): Observable<BankAccount[]> {
-    return this.accountsSdk.listBankAccounts(0, LIST_PAGE_SIZE).pipe(
-      map(page =>
-        (page?.accounts ?? [])
+    return allPages(page => this.accountsSdk.listBankAccounts(page, LIST_PAGE_SIZE), response => response?.accounts ?? []).pipe(
+      map(rows =>
+        rows
           .map(toBankAccount)
           .filter(account => account.glAccountId !== '')
           .sort((a, b) => (a.accountCode ?? '').localeCompare(b.accountCode ?? '')),
@@ -121,9 +121,12 @@ export class BankReconciliationService {
 
   /** The account's statements, most recent first. */
   listStatements(glAccountId: string): Observable<BankStatement[]> {
-    return this.statementsSdk.listBankStatements(glAccountId, undefined, undefined, 0, LIST_PAGE_SIZE).pipe(
-      map(page =>
-        (page?.statements ?? [])
+    return allPages(
+      page => this.statementsSdk.listBankStatements(glAccountId, undefined, undefined, page, LIST_PAGE_SIZE),
+      response => response?.statements ?? [],
+    ).pipe(
+      map(rows =>
+        rows
           .map(toBankStatement)
           .filter(statement => statement.statementId !== '')
           .sort((a, b) => (b.endDate ?? '').localeCompare(a.endDate ?? '')),
@@ -274,6 +277,25 @@ export class BankReconciliationService {
       .createReconciliation({ glAccountId, statementId, requestId: uuidV7() })
       .pipe(map(response => response.reconciliationId ?? ''));
   }
+}
+
+/**
+ * Reads page 0, then every further page the response's `totalPages` names, in
+ * parallel, and concatenates the rows in page order.
+ */
+function allPages<R extends { totalPages?: number }, T>(
+  readPage: (page: number) => Observable<R>,
+  rows: (response: R) => readonly T[],
+): Observable<T[]> {
+  return readPage(0).pipe(
+    switchMap(first => {
+      const pages = Math.max(1, first?.totalPages ?? 1);
+      if (pages === 1) return of([rows(first)]);
+      const rest = Array.from({ length: pages - 1 }, (_, i) => readPage(i + 1).pipe(map(rows)));
+      return forkJoin(rest).pipe(map(later => [rows(first), ...later]));
+    }),
+    map(chunks => chunks.flatMap(chunk => [...chunk])),
+  );
 }
 
 /** The refused request as the `ApiError` envelope stated it; a non-HTTP error reads as status 0. */

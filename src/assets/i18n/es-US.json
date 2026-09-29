@@ -4549,7 +4549,8 @@
         "WINDOW_ALREADY_RECONCILED": "Ese estado de cuenta ya tiene una conciliación. Termínela o cancélela primero; la lista se actualizó.",
         "GL_ACCOUNT_NOT_ACTIVE": "La cuenta no está activa.",
         "INVALID": "La solicitud se rechazó por no ser válida. Revise los valores e inténtelo de nuevo.",
-        "OTHER": "No se pudo guardar el cambio. Inténtelo de nuevo."
+        "OTHER": "No se pudo guardar el cambio. Inténtelo de nuevo.",
+        "REFRESH": "No se pudo actualizar la lista; puede estar desactualizada. Vuelva a cargar la página para intentarlo de nuevo."
       }
     },
     "BANK_IMPORT": {
@@ -4757,7 +4758,8 @@
         "SUPERSESSION_NOT_ELIGIBLE": "El estado de cuenta elegido no se puede reemplazar. La lista se actualizó; elija de nuevo.",
         "WINDOW_ALREADY_RECONCILED": "Hay una conciliación de ese estado de cuenta en curso o pendiente de aprobación. Termínela o cancélela primero.",
         "AMOUNT_PRECISION_EXCEEDS_CURRENCY": "Un importe tiene más decimales de los que permite la moneda.",
-        "OPTIMISTIC_LOCK": "Otra persona modificó esta importación. Se volvió a cargar; inténtelo de nuevo."
+        "OPTIMISTIC_LOCK": "Otra persona modificó esta importación. Se volvió a cargar; inténtelo de nuevo.",
+        "REFRESH": "No se pudo volver a cargar la importación; lo que se muestra puede estar desactualizado. Vuelva a cargar la página antes de continuar."
       }
     },
     "BANK_STATEMENT_ENTRY": {
@@ -4779,7 +4781,8 @@
       "ERROR": {
         "HEADER": "Indique las fechas de inicio y fin y ambos saldos como números.",
         "TRANSACTIONS": "Cada movimiento necesita fecha, importe y descripción."
-      }
+      },
+      "INTERIM_UNAVAILABLE": "Esta cuenta aún no tiene una fecha conciliada, así que no hay un período interino que conciliar. Capture o importe primero su estado de cuenta inicial."
     }
   },
   "PRODUCT": {

@@ -131,6 +131,16 @@ export class BankStatementEntryPageComponent {
     [this.account()?.accountCode, this.account()?.accountName].filter(Boolean).join(' '),
   );
 
+  /**
+   * An interim window starts the day after the reconciled frontier (§4.1 d).
+   * Without a frontier there is no interim window to key: the account's first
+   * statement is entered as a normal statement.
+   */
+  readonly interimUnavailable = computed(() => this.interim() && !!this.account() && !this.account()?.reconciledFrontier);
+
+  /** One writer to `account` (ADR-0063): a superseded account read never lands. */
+  private accountSeq = 0;
+
   constructor() {
     this.form.controls.gapAcknowledgement.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -138,6 +148,7 @@ export class BankStatementEntryPageComponent {
     this.addTransaction();
 
     this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
+      this.resetForRoute();
       this.interim.set(this.route.snapshot.queryParamMap.get('interim') === 'true');
       const glAccountId = params.get('glAccountId');
       if (glAccountId) this.readAccount(glAccountId);
@@ -176,7 +187,7 @@ export class BankStatementEntryPageComponent {
 
   submit(): void {
     const account = this.account();
-    if (!this.canAdjust() || this.submitting() || !account) return;
+    if (!this.canAdjust() || this.submitting() || !account || this.interimUnavailable()) return;
     const header = this.readHeader();
     const transactions = this.readTransactions();
     if (!header || !transactions) {
@@ -252,6 +263,7 @@ export class BankStatementEntryPageComponent {
   }
 
   private readAccount(glAccountId: string): void {
+    const seq = ++this.accountSeq;
     this.state.set('loading');
     this.errorKey.set(null);
     this.service
@@ -259,6 +271,7 @@ export class BankStatementEntryPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: accounts => {
+          if (seq !== this.accountSeq) return;
           const account = accounts.find(row => row.glAccountId === glAccountId) ?? null;
           if (!account) {
             this.state.set('error');
@@ -268,11 +281,14 @@ export class BankStatementEntryPageComponent {
           this.account.set(account);
           // The interim window starts the day after the reconciled frontier (§4.1 d).
           if (this.interim() && account.reconciledFrontier) {
+            // The server's frontier fixes the start: the field shows it and cannot be edited.
             this.form.controls.startDate.setValue(nextDay(account.reconciledFrontier));
+            this.form.controls.startDate.disable();
           }
           this.state.set('ready');
         },
         error: (error: unknown) => {
+          if (seq !== this.accountSeq) return;
           // ADR-0031: state first, then the key.
           this.state.set('error');
           this.errorKey.set(
@@ -282,6 +298,22 @@ export class BankStatementEntryPageComponent {
           );
         },
       });
+  }
+
+  /** A new route key starts over: nothing read or keyed for the previous account carries across. */
+  private resetForRoute(): void {
+    this.accountSeq++;
+    this.account.set(null);
+    this.form.controls.startDate.enable();
+    this.form.reset({ startReconciliation: true });
+    this.transactions.clear();
+    this.addTransaction();
+    this.gapPrompt.set(null);
+    this.formErrorKey.set(null);
+    this.failureKey.set(null);
+    this.failureDetail.set(null);
+    this.flaggedTransactions.set(new Set());
+    this.supersede.set({ state: 'off' });
   }
 
   private readHeader(): StatementHeader | null {

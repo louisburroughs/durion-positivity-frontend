@@ -233,10 +233,15 @@ export class BankImportPageComponent {
   readonly uploadReady = computed(() => this.file() !== null && this.supersede().state !== 'incomplete');
 
   private readonly failureRegion = viewChild<ElementRef<HTMLElement>>('failureRegion');
+  private readonly rowsHeading = viewChild<ElementRef<HTMLElement>>('rowsHeading');
+  private readonly doneHeading = viewChild<ElementRef<HTMLElement>>('doneHeading');
   private dialogOpener: HTMLElement | null = null;
   /** One counter per writer (ADR-0063): the import, and the rows page. */
   private importSeq = 0;
+  private accountSeq = 0;
   private rowsSeq = 0;
+  /** A row write succeeded: focus the rows heading once the re-read lands. */
+  private focusAfterRefresh = false;
   private rowsSub: Subscription | null = null;
 
   constructor() {
@@ -250,6 +255,7 @@ export class BankImportPageComponent {
     this.destroyRef.onDestroy(() => this.rowsSub?.unsubscribe());
 
     this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
+      this.resetForRoute();
       const importId = params.get('importId');
       const glAccountId = params.get('glAccountId');
       if (importId) {
@@ -527,7 +533,10 @@ export class BankImportPageComponent {
         next: discarded => {
           this.busy.set(false);
           this.rowDialog.set(null);
+          this.dialogOpener = null;
           this.setImport(discarded);
+          // The dialog and the step it was opened from are gone: focus the read-only outcome.
+          afterNextRender(() => this.doneHeading()?.nativeElement.focus(), { injector: this.injector });
         },
         error: (error: unknown) => {
           this.rowDialog.set(null);
@@ -590,6 +599,7 @@ export class BankImportPageComponent {
   // ── Reads and shared plumbing ──────────────────────────────────────────
 
   private readAccount(glAccountId: string): void {
+    const seq = ++this.accountSeq;
     this.state.set('loading');
     this.errorKey.set(null);
     this.service
@@ -597,6 +607,7 @@ export class BankImportPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: accounts => {
+          if (seq !== this.accountSeq) return;
           const account = accounts.find(row => row.glAccountId === glAccountId) ?? null;
           if (!account) {
             this.state.set('error');
@@ -607,6 +618,7 @@ export class BankImportPageComponent {
           this.state.set('ready');
         },
         error: (error: unknown) => {
+          if (seq !== this.accountSeq) return;
           // ADR-0031: state first, then the key.
           this.state.set('error');
           this.errorKey.set(this.loadErrorKey(toBankRecFailure(error)));
@@ -634,10 +646,20 @@ export class BankImportPageComponent {
           this.setImport(loaded);
           this.state.set('ready');
           this.errorKey.set(null);
+          this.restoreFocus();
         },
         error: (error: unknown) => {
           if (seq !== this.importSeq) return;
           this.busy.set(false);
+          if (background && this.bankImport()) {
+            // The wizard on screen stays; the refresh failure is announced (and takes focus).
+            this.focusAfterRefresh = false;
+            this.failureKey.set('ACCOUNTING.BANK_IMPORT.ERROR.REFRESH');
+            this.failureDetail.set(null);
+            afterNextRender(() => this.failureRegion()?.nativeElement.focus(), { injector: this.injector });
+            return;
+          }
+          // ADR-0031: state first, then the key.
           this.state.set('error');
           this.errorKey.set(this.loadErrorKey(toBankRecFailure(error)));
         },
@@ -680,6 +702,8 @@ export class BankImportPageComponent {
       next: () => {
         this.rowDialog.set(null);
         this.dialogOpener = null;
+        // The focused row action is rebuilt: focus moves to the rows heading once the re-read lands.
+        this.focusAfterRefresh = true;
         // Counts and the version moved: re-read the import, which re-reads the rows page.
         this.readImport(current.importId, true);
       },
@@ -692,7 +716,6 @@ export class BankImportPageComponent {
 
   /** A refused write keeps the step on screen; a stale version or a concurrent change re-reads the import. */
   private onWriteFailure(failure: BankRecFailure): void {
-    this.busy.set(false);
     this.showFailure(failure);
     const current = this.bankImport();
     const stale =
@@ -701,7 +724,41 @@ export class BankImportPageComponent {
       failure.code === 'IMPORT_DISCARDED' ||
       failure.code === 'IMPORT_NOT_COMMITTABLE' ||
       failure.status === 409;
-    if (stale && current) this.readImport(current.importId, true);
+    if (stale && current) {
+      // Writes stay disabled against the stale version until the re-read lands (it clears `busy`).
+      this.readImport(current.importId, true);
+      return;
+    }
+    this.busy.set(false);
+  }
+
+  private restoreFocus(): void {
+    if (!this.focusAfterRefresh) return;
+    this.focusAfterRefresh = false;
+    afterNextRender(() => this.rowsHeading()?.nativeElement.focus(), { injector: this.injector });
+  }
+
+  /** A new route key starts over: nothing read or typed for the previous import or account carries across. */
+  private resetForRoute(): void {
+    this.importSeq++;
+    this.accountSeq++;
+    this.rowsSeq++;
+    this.rowsSub?.unsubscribe();
+    this.bankImport.set(null);
+    this.account.set(null);
+    this.glAccountId.set(null);
+    this.remapping.set(false);
+    this.rowDialog.set(null);
+    this.dialogOpener = null;
+    this.busy.set(false);
+    this.clearFailure();
+    this.gapPrompt.set(null);
+    this.uploadErrorKey.set(null);
+    this.file.set(null);
+    this.uploadForm.reset();
+    this.rows.set([]);
+    this.rowsPage.set(0);
+    this.focusAfterRefresh = false;
   }
 
   private showFailure(failure: BankRecFailure): void {

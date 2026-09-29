@@ -12,12 +12,14 @@ export async function fileToBase64(file: Blob): Promise<string> {
 /**
  * A keyed amount as a number, accepting a comma as the decimal separator
  * (fr/es locales) and ignoring spaces used for grouping. Returns null for
- * anything that is not a plain decimal number; the server stays the judge of
+ * anything that is not a plain, finite decimal number; the server stays the judge of
  * precision (AMOUNT_PRECISION_EXCEEDS_CURRENCY).
  */
 export function parseAmountInput(value: string): number | null {
   let text = value.replace(/[\s\u00a0\u202f]/g, '');
   if (text.includes(',') && !text.includes('.')) text = text.replace(',', '.');
   if (!/^[-+]?\d+(\.\d+)?$/.test(text)) return null;
-  return Number(text);
+  const amount = Number(text);
+  // An oversized literal becomes Infinity, which JSON would send as null.
+  return Number.isFinite(amount) ? amount : null;
 }

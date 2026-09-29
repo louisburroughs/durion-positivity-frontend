@@ -122,11 +122,23 @@ describe('BankStatementEntryPageComponent', () => {
     expect(navigate).toHaveBeenCalledWith(['/app', 'accounting', 'reconciliations', 'rec-10']);
   });
 
+  it('refuses an interim window for an account with no reconciled date', () => {
+    setup(true, { ...ACCOUNT, reconciledFrontier: null });
+    fill();
+
+    expect(query('interim-unavailable')).not.toBeNull();
+    expect((query('entry-submit') as HTMLButtonElement).disabled).toBe(true);
+    component.submit();
+    expect(serviceStub.createManualStatement).not.toHaveBeenCalled();
+  });
+
   it('starts an interim window the day after the reconciled frontier (§4.1 d)', () => {
     setup(true);
 
     expect(component.interim()).toBe(true);
     expect(component.form.controls.startDate.value).toBe('2026-09-01');
+    expect(component.form.controls.startDate.disabled).toBe(true);
+    expect((query('entry-start') as HTMLInputElement).disabled).toBe(true);
     expect(query('entry-start')?.getAttribute('aria-describedby')).toBe('entry-start-hint');
   });
 
