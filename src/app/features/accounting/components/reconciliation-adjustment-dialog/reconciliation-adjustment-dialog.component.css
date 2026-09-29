@@ -1,0 +1,26 @@
+.adjustment-dialog {
+  width: min(38rem, calc(100vw - 2rem));
+}
+
+.link-options {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.link-options legend {
+  margin-bottom: var(--space-1);
+  font-weight: 600;
+}
+
+.radio-field {
+  display: flex;
+  gap: var(--space-2);
+  align-items: baseline;
+}
+
+.served-amount {
+  font-weight: 600;
+}

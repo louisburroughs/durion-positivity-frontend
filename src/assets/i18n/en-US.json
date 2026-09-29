@@ -4476,7 +4476,9 @@
           "BLOCKED": "{{period}} can't be closed: bank reconciliation checks block it. Open its readiness to see why.",
           "BLOCKED_NO_OVERRIDE": "{{period}} can't be closed: bank reconciliation checks block it, and closing with an exception needs the {{override}} permission.",
           "UNAVAILABLE": "{{period}} can't be closed until its bank reconciliation readiness can be read."
-        }
+        },
+        "OPEN_RECONCILIATION": "Open the reconciliation",
+        "OPEN_BANK_ACCOUNTS": "Bank accounts"
       },
       "EXCEPTION": {
         "TITLE": "Close {{period}} with an exception?",
@@ -4783,6 +4785,378 @@
         "TRANSACTIONS": "Every transaction needs a date, an amount and a description."
       },
       "INTERIM_UNAVAILABLE": "This account has no reconciled date yet, so there is no interim window to reconcile. Enter or import its first statement instead."
+    },
+    "RECONCILIATION_WORKSPACE": {
+      "OVERLINE": "Bank reconciliation",
+      "TITLE": "Reconciliation",
+      "SUBTITLE": "{{account}}, statement {{start}} to {{end}}",
+      "LOADING": "Loading the reconciliation…",
+      "HEADER": {
+        "HEADING": "Summary",
+        "STATUS": "Status",
+        "PERIOD": "Period",
+        "BASELINE": "Baseline",
+        "PREPARER": "Prepared by",
+        "APPROVER": "Approved by",
+        "GAP_ACKNOWLEDGED": "This statement set the account's reconciliation baseline with this gap acknowledgement:"
+      },
+      "STATUS": {
+        "IN_PROGRESS": "In progress",
+        "SUBMITTED": "Submitted for approval",
+        "FINALIZED": "Approved",
+        "INVALIDATED": "Invalidated",
+        "SUPERSEDED": "Superseded",
+        "CANCELLED": "Cancelled",
+        "UNKNOWN": "Unknown"
+      },
+      "ACTION": {
+        "SUBMIT": "Submit for approval",
+        "APPROVE": "Approve",
+        "RETURN": "Return to preparer",
+        "CANCEL": "Cancel reconciliation",
+        "SUPERSEDE": "Supersede",
+        "AUTO_MATCH": "Auto-match",
+        "MATCH_SELECTED": "Match selected ({{bank}} bank, {{ledger}} ledger)",
+        "ADD_ADJUSTMENT": "Add adjustment",
+        "ACCEPT": "Accept",
+        "REJECT": "Reject",
+        "ACCEPT_ALL": "Accept all",
+        "CANDIDATES": "Candidates",
+        "EXPLAIN": "Explain",
+        "OUTSTANDING": "Mark outstanding",
+        "EXCLUDE": "Exclude",
+        "RESTORE": "Restore",
+        "REVERSE": "Reverse",
+        "UNMATCH": "Unmatch",
+        "SETTLE_RESIDUAL": "Settle residual",
+        "SELECT_CANDIDATE": "Select",
+        "REVIEW_DUPLICATE": "Review duplicate",
+        "REAFFIRM": "Reaffirm",
+        "RELEASE": "Release",
+        "CLEAR_IN_GAP": "Clear in gap"
+      },
+      "PROPOSALS": {
+        "HEADING": "Proposed matches",
+        "ITEM": "Proposal {{n}}: bank {{bank}}, ledger {{ledger}}"
+      },
+      "BROKEN": "{{count}} earlier matches were broken by ledger changes and need to be matched again.",
+      "COL_SELECT": "Select",
+      "COL_DATE": "Date",
+      "COL_DESCRIPTION": "Description",
+      "COL_AMOUNT": "Amount",
+      "COL_ACTIONS": "Actions",
+      "BANK": {
+        "HEADING": "Unexplained bank transactions ({{count}})",
+        "EMPTY": "Every bank transaction is explained.",
+        "CAPTION": "Unexplained bank transactions, late arrivals first",
+        "SELECT": "Select bank transaction {{n}}",
+        "REFERENCE": "Reference {{reference}}",
+        "CHECK": "Check {{check}}",
+        "LATE": "Arrived after approval"
+      },
+      "LEDGER": {
+        "HEADING": "Unexplained ledger lines ({{count}})",
+        "EMPTY": "Every ledger line is explained.",
+        "CAPTION": "Unexplained ledger lines",
+        "SELECT": "Select ledger line {{n}}"
+      },
+      "CANDIDATES": {
+        "HEADING": "Candidates for the {{date}} transaction of {{amount}}",
+        "LOADING": "Finding candidates…",
+        "ERROR": "Candidates couldn't be loaded.",
+        "EMPTY": "No ledger line looks like this transaction.",
+        "SCORE": "Score {{score}}"
+      },
+      "CANDIDATE_REASON": {
+        "EXACT_AMOUNT": "Exact amount",
+        "WITHIN_TOLERANCE": "Within tolerance",
+        "DATE_IN_WINDOW": "Date close",
+        "DATE_OUT_OF_WINDOW": "Date far",
+        "REFERENCE_MATCH": "Reference matches",
+        "DESCRIPTION_SIMILAR": "Similar description"
+      },
+      "DUPLICATES": {
+        "HEADING": "Possible duplicates to review"
+      },
+      "OUTSTANDING": {
+        "HEADING": "Outstanding items",
+        "AWAITING": "Aged items awaiting reaffirmation",
+        "AGE": "{{days}} days old"
+      },
+      "ITEM_KIND": {
+        "DEPOSIT_IN_TRANSIT": "Deposit in transit",
+        "OUTSTANDING_CHECK": "Outstanding check",
+        "OTHER_LEDGER_TIMING": "Other ledger timing",
+        "BANK_ERROR_PENDING": "Bank error pending",
+        "UNKNOWN": "Other"
+      },
+      "ITEM_STATUS": {
+        "OPEN": "Open",
+        "CLEARED": "Cleared",
+        "CLEARED_IN_GAP": "Cleared in gap",
+        "VOIDED": "Voided",
+        "RELEASED": "Released",
+        "UNKNOWN": "Unknown"
+      },
+      "MATCH_STATE": {
+        "PROPOSED": "Proposed",
+        "ACCEPTED": "Accepted",
+        "REJECTED": "Rejected",
+        "UNMATCHED": "Unmatched",
+        "BROKEN": "Broken",
+        "UNKNOWN": "Unknown"
+      },
+      "ADJUSTMENT_TYPE": {
+        "BANK_FEE": "Bank fee",
+        "NSF_FEE": "NSF fee",
+        "INTEREST_EARNED": "Interest earned",
+        "OTHER": "Other",
+        "TRANSFER": "Transfer",
+        "UNKNOWN": "Adjustment"
+      },
+      "REVIEW": {
+        "HEADING": "Review"
+      },
+      "READINESS": {
+        "HEADING": "Readiness",
+        "CAN_SUBMIT": "Can be submitted",
+        "CANNOT_SUBMIT": "Not ready to submit",
+        "CAN_APPROVE": "Can be approved",
+        "CANNOT_APPROVE": "Not ready to approve",
+        "PROPOSALS_PENDING": "Some proposed matches are still waiting for a decision.",
+        "REASON": {
+          "NOT_BALANCED": "The adjusted bank and book balances differ.",
+          "UNEXPLAINED_BANK": "{{bank}} bank transactions are unexplained.",
+          "UNEXPLAINED_LEDGER": "{{ledger}} ledger lines are unexplained.",
+          "SELF_APPROVAL": "The person who submitted it cannot approve it.",
+          "OTHER": "Not ready ({{code}})."
+        }
+      },
+      "EQUATION": {
+        "HEADING": "Reconciliation",
+        "STATEMENT_CLOSING": "Statement closing balance",
+        "OUTSTANDING_LEDGER": "Outstanding ledger items",
+        "OUTSTANDING_BANK": "Outstanding bank items",
+        "ADJUSTED_BANK": "Adjusted bank balance",
+        "GL_ENDING": "Ledger ending balance",
+        "LATE_ADJUSTMENTS": "Late adjustments",
+        "ADJUSTED_BOOK": "Adjusted book balance",
+        "DIFFERENCE": "Difference",
+        "SHOW_ITEMS": "Show the {{count}} items",
+        "OWNED_BY_OTHER": "from another reconciliation",
+        "REVERSAL": "reversal"
+      },
+      "DIAGNOSTICS": {
+        "HEADING": "Diagnostics",
+        "INFO_ONLY": "For information only. These figures never block submitting or approving.",
+        "OPENING_DIFFERENCE": "Opening difference",
+        "STATEMENT_OPENING": "Statement opening balance",
+        "GL_OPENING": "Ledger opening balance",
+        "OPENING_LEDGER_ITEMS": "Outstanding ledger items at the start",
+        "OPENING_BANK_ITEMS": "Outstanding bank items at the start",
+        "OPENING_ADJUSTMENTS": "Opening adjustments",
+        "FLAG": "The opening balances do not agree.",
+        "CAUSE_GAP": "The likely cause is the acknowledged gap, which has not been bridged yet.",
+        "CAUSE_INVALIDATED": "The likely cause is an earlier reconciliation that was invalidated; no gap bridge applies."
+      },
+      "EVIDENCE": {
+        "HEADING": "Evidence",
+        "MATCHES": "Matches",
+        "NO_MATCHES": "No matches yet.",
+        "COL_STATE": "State",
+        "COL_BANK_TOTAL": "Bank total",
+        "COL_LEDGER_TOTAL": "Ledger total",
+        "COL_TOLERANCE": "Tolerance used",
+        "COL_RESIDUAL": "Residual",
+        "COL_NOTES": "Notes",
+        "REPLACES": "Replaces an earlier match",
+        "OUTSTANDING": "Outstanding items",
+        "NO_OUTSTANDING": "No outstanding items.",
+        "CLOSED_ON": "closed {{date}}",
+        "REAFFIRMED": "last reaffirmed {{date}}",
+        "CLEARING": "Adjustments to clearing",
+        "NO_CLEARING": "No adjustments to clearing.",
+        "CLEARING_DETAIL": "linked to {{link}}, posted by {{by}}, {{age}} days old",
+        "EXCLUSIONS": "Excluded bank transactions"
+      },
+      "ADJUSTMENTS": {
+        "HEADING": "Posted adjustments",
+        "EMPTY": "No adjustments posted.",
+        "REVERSED": "Reversed"
+      },
+      "AUDIT": {
+        "HEADING": "Audit trail",
+        "LOADING": "Loading the audit trail…",
+        "ERROR": "The audit trail couldn't be loaded.",
+        "EMPTY": "No audit entries yet."
+      },
+      "JUSTIFICATION_HINT": "At least {{min}} characters. Recorded in the audit trail.",
+      "ADJUST": {
+        "TITLE": "Add an adjustment",
+        "TYPE": "Type",
+        "CHOOSE_TYPE": "Choose a type",
+        "LINK_LEGEND": "What does this adjustment explain?",
+        "LINK_BANK": "A bank transaction",
+        "LINK_RESIDUAL": "The residual of an accepted match",
+        "LINK_BRIDGE": "The acknowledged gap (bridge the opening difference)",
+        "BANK_TRANSACTION": "Bank transaction",
+        "CHOOSE_BANK": "Choose a bank transaction",
+        "NO_LINK": "Not linked to a bank transaction",
+        "MATCH": "Match",
+        "CHOOSE_MATCH": "Choose a match",
+        "MATCH_OPTION": "Match {{n}}: bank {{bank}}, ledger {{ledger}}",
+        "SERVED_RESIDUAL": "The server will post the residual of {{amount}}.",
+        "SERVED_BRIDGE": "The server will post the opening difference of {{amount}}.",
+        "COUNTER": "Other bank account",
+        "CHOOSE_COUNTER": "Choose a bank account",
+        "COUNTER_HINT": "Positive for money in from that account, negative for money out to it.",
+        "AMOUNT": "Amount",
+        "AMOUNT_HINT": "Signed: positive increases cash, negative decreases it.",
+        "DATE": "Posting date",
+        "DATE_HINT": "Leave blank to use the date of what it explains. A proposed date means that period is closed.",
+        "DESCRIPTION": "Description",
+        "JUSTIFICATION": "Justification (optional)",
+        "JUSTIFICATION_REQUIRED": "Justification",
+        "OVERRIDE": "Closed-period override justification (optional)",
+        "OVERRIDE_HINT": "Only to post into a closed period instead of the proposed date.",
+        "CONFIRM": "Post adjustment",
+        "TYPES_ERROR": "The adjustment types couldn't be loaded.",
+        "ACCOUNTS_ERROR": "The bank accounts couldn't be loaded, so no transfer account can be chosen.",
+        "ACCOUNTS_LOADING": "Loading bank accounts…"
+      },
+      "OUTCOME": {
+        "MATCHED": "The match is recorded.",
+        "AUTO_MATCHED": "{{proposed}} matches proposed, {{ambiguous}} left for review.",
+        "PROPOSAL_ACCEPTED": "The proposed match is accepted.",
+        "PROPOSAL_REJECTED": "The proposed match is rejected.",
+        "PROPOSALS_ACCEPTED": "{{count}} proposed matches are accepted.",
+        "UNMATCHED": "The match is undone.",
+        "REGISTERED": "The outstanding item is recorded.",
+        "RELEASED": "The outstanding item is released.",
+        "REAFFIRMED": "The outstanding item is reaffirmed for this reconciliation.",
+        "CLEARED_IN_GAP": "The outstanding item is cleared in the gap.",
+        "DUPLICATE_REVIEWED": "The duplicate review is recorded.",
+        "EXCLUDED": "The bank transaction is excluded.",
+        "RESTORED": "The bank transaction is restored.",
+        "REVERSED": "The adjustment is reversed.",
+        "ADJUSTED": "The adjustment is posted.",
+        "SUBMITTED": "The reconciliation is submitted for approval.",
+        "APPROVED": "The reconciliation is approved.",
+        "RETURNED": "The reconciliation is returned to the preparer.",
+        "CANCELLED": "The reconciliation is cancelled."
+      },
+      "PROMPT": {
+        "REASON": "Reason",
+        "JUSTIFICATION": "Justification",
+        "REASON_HINT": "Required. Recorded in the audit trail.",
+        "OPTIONAL_HINT": "Optional unless the server asks for one.",
+        "TOO_SHORT": "Enter at least {{min}} characters.",
+        "ITEM_KIND": "Kind of item",
+        "DECISION": "Decision",
+        "DISTINCT": "Not a duplicate",
+        "DUPLICATE": "Duplicate of an earlier transaction",
+        "ORIGINAL": "Original transaction",
+        "unmatch": {
+          "TITLE": "Undo this match?",
+          "BODY": "Both sides become unexplained again.",
+          "CONFIRM": "Unmatch"
+        },
+        "register": {
+          "TITLE": "Mark as outstanding",
+          "BODY": "An outstanding item explains a timing difference until its other side appears.",
+          "CONFIRM": "Mark outstanding"
+        },
+        "release": {
+          "TITLE": "Release this outstanding item?",
+          "BODY": "The line becomes unexplained again.",
+          "CONFIRM": "Release"
+        },
+        "reaffirm": {
+          "TITLE": "Reaffirm this aged item",
+          "BODY": "An aged timing item counts as unexplained until it is reaffirmed in each reconciliation.",
+          "CONFIRM": "Reaffirm"
+        },
+        "clearInGap": {
+          "TITLE": "Clear this item in the gap",
+          "BODY": "Its other side appeared during the acknowledged gap.",
+          "CONFIRM": "Clear in gap"
+        },
+        "reverse": {
+          "TITLE": "Reverse this adjustment?",
+          "BODY": "A reversing journal entry is posted.",
+          "CONFIRM": "Reverse"
+        },
+        "return": {
+          "TITLE": "Return to the preparer?",
+          "BODY": "The preparer can change the reconciliation and submit it again.",
+          "CONFIRM": "Return"
+        },
+        "cancel": {
+          "TITLE": "Cancel this reconciliation?",
+          "BODY": "Its matches and items stay in the audit trail. The statement can be reconciled again.",
+          "CONFIRM": "Cancel reconciliation"
+        },
+        "supersede": {
+          "TITLE": "Supersede this reconciliation?",
+          "BODY": "A new reconciliation of the same statement starts; this one stays readable with its approval history.",
+          "CONFIRM": "Supersede"
+        },
+        "exclude": {
+          "TITLE": "Exclude this bank transaction?",
+          "BODY": "It no longer counts in the reconciliation.",
+          "CONFIRM": "Exclude"
+        },
+        "restore": {
+          "TITLE": "Restore this bank transaction?",
+          "BODY": "It counts in the reconciliation again.",
+          "CONFIRM": "Restore"
+        },
+        "matchJustification": {
+          "TITLE": "This match needs a justification",
+          "BODY": "The server asks for a justification because:",
+          "CONFIRM": "Match with justification"
+        },
+        "duplicateReview": {
+          "TITLE": "Review a possible duplicate",
+          "BODY": "Decide whether this transaction duplicates an earlier one.",
+          "CONFIRM": "Record decision"
+        }
+      },
+      "ERROR": {
+        "LOAD": "The reconciliation couldn't be loaded.",
+        "FORBIDDEN": "You don't have permission to view bank reconciliations.",
+        "NOT_FOUND": "No such reconciliation was found.",
+        "FORBIDDEN_WRITE": "You don't have permission to do that.",
+        "INVALID": "The request was rejected as invalid. Check the values and try again.",
+        "OTHER": "That couldn't be completed. Try again.",
+        "MATCH_AMOUNT_MISMATCH": "The selected bank and ledger amounts don't agree.",
+        "MATCH_CARDINALITY_NOT_ALLOWED": "That combination of transactions and lines can't be matched together.",
+        "MATCH_REQUIRES_REVIEW": "This match needs a justification.",
+        "MATCH_STATE_INVALID": "That match has already changed. The reconciliation has been reloaded.",
+        "LINE_INELIGIBLE": "A selected line or transaction is not eligible for this reconciliation.",
+        "OUTSTANDING_ITEM_NOT_ELIGIBLE": "That item is not eligible for this action. The reconciliation has been reloaded.",
+        "ADJUSTMENT_LINK_REQUIRED": "An Other adjustment needs exactly one link.",
+        "ADJUSTMENT_LINK_NOT_ELIGIBLE": "The link isn't eligible any more. The reconciliation has been reloaded; check the amounts and try again.",
+        "GL_ACCOUNT_NOT_ACTIVE": "The other bank account is not active.",
+        "ACCOUNT_NOT_RECONCILABLE": "The other account is not a reconcilable bank account.",
+        "ADJUSTMENT_SIGN_INVALID": "The amount's sign doesn't suit this adjustment type.",
+        "BRIDGE_ALREADY_POSTED": "The gap bridge for this statement is already posted.",
+        "ADJUSTMENT_APPROVAL_REQUIRED": "This adjustment exceeds your limit and needs someone with {{permission}}.",
+        "JUSTIFICATION_REQUIRED": "A justification of at least 10 characters is required.",
+        "NOT_BALANCED": "The reconciliation no longer balances. It has been reloaded.",
+        "HAS_UNEXPLAINED_ITEMS": "{{bank}} bank transactions and {{ledger}} ledger lines are still unexplained. They are highlighted.",
+        "SELF_APPROVAL": "You submitted this reconciliation, so you can't approve it.",
+        "NOT_SUBMITTED": "The reconciliation is not submitted.",
+        "ALREADY_FINALIZED": "The reconciliation is already approved.",
+        "NOT_EDITABLE": "The reconciliation can't be changed in its current state. It has been reloaded.",
+        "WINDOW_ALREADY_RECONCILED": "Another reconciliation of this statement is active.",
+        "ADJUSTMENT_ALREADY_REVERSED": "That adjustment is already reversed.",
+        "PERIOD_CLOSED": "The period for that date is closed. Choose an open date or give an override justification.",
+        "PERIOD_HARD_LOCKED": "The period for that date is locked.",
+        "GL_MAPPING_NOT_CONFIGURED": "No ledger mapping is set up for this adjustment type.",
+        "AMOUNT_PRECISION_EXCEEDS_CURRENCY": "The amount has more decimal places than the currency allows.",
+        "OPTIMISTIC_LOCK": "Someone else changed this reconciliation. It has been reloaded; try again."
+      }
     }
   },
   "PRODUCT": {
@@ -8314,7 +8688,8 @@
       "ACCOUNTING_PERIODS": "Accounting Periods",
       "BANK_ACCOUNTS": "Bank accounts",
       "BANK_IMPORTS": "Bank statement imports",
-      "IMPORT": "Import"
+      "IMPORT": "Import",
+      "RECONCILIATIONS": "Bank reconciliations"
     }
   },
   "POSITIVITY": {

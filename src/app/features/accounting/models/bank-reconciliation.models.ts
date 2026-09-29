@@ -260,3 +260,252 @@ export function indexedFieldErrors(failure: BankRecFailure, prefix: string): num
 export function fieldErrorMessage(failure: BankRecFailure, field: string): string | null {
   return failure.fieldErrors.find(entry => entry.field === field)?.message?.trim() || null;
 }
+
+// ── Reconciliation workspace (§4.6–§4.9) ─────────────────────────────────
+
+export type ReconciliationStatus = 'IN_PROGRESS' | 'SUBMITTED' | 'FINALIZED' | 'INVALIDATED' | 'SUPERSEDED' | 'CANCELLED';
+export const RECONCILIATION_STATUSES: readonly ReconciliationStatus[] = [
+  'IN_PROGRESS',
+  'SUBMITTED',
+  'FINALIZED',
+  'INVALIDATED',
+  'SUPERSEDED',
+  'CANCELLED',
+];
+
+export type CandidateReason =
+  | 'EXACT_AMOUNT'
+  | 'WITHIN_TOLERANCE'
+  | 'DATE_IN_WINDOW'
+  | 'DATE_OUT_OF_WINDOW'
+  | 'REFERENCE_MATCH'
+  | 'DESCRIPTION_SIMILAR';
+
+/** A ranked match candidate. `score` runs 0–110 and is not a percentage. */
+export interface MatchCandidate {
+  readonly bankTransactionId: string | null;
+  readonly glLineId: string | null;
+  readonly date: string | null;
+  readonly description: string | null;
+  readonly entryNumber: string | null;
+  readonly signedAmount: number | null;
+  readonly score: number | null;
+  readonly reasons: readonly string[];
+}
+
+/** An unexplained bank transaction as the review lists it. */
+export interface ReviewBankRow {
+  readonly bankTransactionId: string;
+  readonly transactionDate: string | null;
+  readonly description: string | null;
+  readonly reference: string | null;
+  readonly checkNumber: string | null;
+  readonly signedAmount: number | null;
+  readonly status: string | null;
+  /** A phase-2 late arrival (D10); listed first. */
+  readonly arrivedAfterApproval: boolean;
+  /** The served near-duplicate candidates (§4.5), offered as candidate originals. */
+  readonly nearDuplicates: readonly ReviewBankRow[];
+}
+
+/** An unexplained ledger line as the review lists it. */
+export interface ReviewLedgerRow {
+  readonly glLineId: string;
+  readonly journalEntryId: string | null;
+  readonly entryNumber: string | null;
+  readonly date: string | null;
+  readonly description: string | null;
+  readonly signedAmount: number | null;
+}
+
+export type MatchState = 'PROPOSED' | 'ACCEPTED' | 'REJECTED' | 'UNMATCHED' | 'BROKEN';
+
+export interface ReconciliationMatch {
+  readonly matchId: string;
+  readonly state: MatchState | null;
+  readonly matchKind: string | null;
+  readonly origin: string | null;
+  readonly bankTransactionIds: readonly string[];
+  readonly glLineIds: readonly string[];
+  readonly bankTotal: number | null;
+  readonly ledgerTotal: number | null;
+  readonly toleranceUsed: number | null;
+  /** Signed; what a residual settlement would post (§3.4). */
+  readonly residual: number | null;
+  readonly replacesMatchId: string | null;
+  readonly reasons: readonly string[];
+  readonly justification: string | null;
+  readonly confidenceScore: number | null;
+}
+
+export type OutstandingItemKind = 'DEPOSIT_IN_TRANSIT' | 'OUTSTANDING_CHECK' | 'OTHER_LEDGER_TIMING' | 'BANK_ERROR_PENDING';
+export const OUTSTANDING_ITEM_KINDS: readonly OutstandingItemKind[] = [
+  'DEPOSIT_IN_TRANSIT',
+  'OUTSTANDING_CHECK',
+  'OTHER_LEDGER_TIMING',
+  'BANK_ERROR_PENDING',
+];
+export type OutstandingItemStatus = 'OPEN' | 'CLEARED' | 'CLEARED_IN_GAP' | 'VOIDED' | 'RELEASED';
+
+export interface OutstandingItem {
+  readonly outstandingItemId: string;
+  readonly itemKind: OutstandingItemKind | null;
+  readonly side: 'LEDGER' | 'BANK' | null;
+  readonly status: OutstandingItemStatus | null;
+  readonly itemDate: string | null;
+  readonly signedAmount: number | null;
+  readonly ageDays: number | null;
+  readonly closedOn: string | null;
+  readonly justification: string | null;
+  readonly registeredInReconciliationId: string | null;
+  readonly lastReaffirmedAt: string | null;
+}
+
+export type AdjustmentType = 'BANK_FEE' | 'NSF_FEE' | 'INTEREST_EARNED' | 'OTHER' | 'TRANSFER';
+export const ADJUSTMENT_TYPES: readonly AdjustmentType[] = ['BANK_FEE', 'NSF_FEE', 'INTEREST_EARNED', 'OTHER', 'TRANSFER'];
+
+export interface ReconciliationAdjustment {
+  readonly adjustmentId: string;
+  readonly type: AdjustmentType | null;
+  readonly status: 'POSTED' | 'REVERSED' | null;
+  readonly amount: number | null;
+  readonly transactionDate: string | null;
+  readonly description: string | null;
+  readonly justification: string | null;
+  readonly entryNumber: string | null;
+  readonly bankTransactionId: string | null;
+  readonly settlesMatchId: string | null;
+  readonly bridgesStatementId: string | null;
+  readonly counterGlAccountId: string | null;
+  readonly createdBy: string | null;
+}
+
+/** An `OTHER` adjustment posted to a clearing account, with its link and age (§4.7). */
+export interface ClearingAdjustment {
+  readonly adjustmentId: string;
+  readonly amount: number | null;
+  readonly transactionDate: string | null;
+  readonly justification: string | null;
+  readonly linkKind: string | null;
+  readonly postedBy: string | null;
+  readonly ageDays: number | null;
+  readonly status: string | null;
+}
+
+export interface LateAdjustment {
+  readonly adjustmentId: string | null;
+  readonly reconciliationId: string | null;
+  readonly amount: number | null;
+  readonly date: string | null;
+  readonly reversal: boolean;
+}
+
+/** The live equation E3, every term as served (§3.7). */
+export interface ReconciliationEquation {
+  readonly statementClosingBalance: number | null;
+  readonly sumOutstandingLedgerItems: number | null;
+  readonly sumOutstandingBankItems: number | null;
+  readonly adjustedBankBalance: number | null;
+  readonly glEndingBalance: number | null;
+  readonly sumLateAdjustments: number | null;
+  readonly adjustedBookBalance: number | null;
+  readonly difference: number | null;
+  readonly outstandingLedgerItems: readonly OutstandingItem[];
+  readonly outstandingBankItems: readonly OutstandingItem[];
+  readonly lateAdjustments: readonly LateAdjustment[];
+}
+
+/** The opening diagnostics, never a blocker (§4.8, D2). */
+export interface ReconciliationDiagnostics {
+  readonly openingDifference: number | null;
+  readonly statementOpeningBalance: number | null;
+  readonly glOpeningBalance: number | null;
+  readonly openingLedgerItems: number | null;
+  readonly openingBankItems: number | null;
+  readonly sumOpeningAdjustments: number | null;
+  readonly flags: readonly string[];
+  readonly likelyCause: string | null;
+  /** The posted gap bridge, if any. */
+  readonly bridgeAdjustmentId: string | null;
+}
+
+export type ReadinessReason = 'NOT_BALANCED' | 'UNEXPLAINED_BANK' | 'UNEXPLAINED_LEDGER' | 'PROPOSALS_PENDING' | 'SELF_APPROVAL';
+
+export interface ReconciliationReadiness {
+  readonly canSubmit: boolean;
+  readonly canApprove: boolean;
+  readonly proposalsPending: boolean;
+  readonly reasons: readonly string[];
+  readonly countUnexplainedBank: number | null;
+  readonly countUnexplainedLedger: number | null;
+  readonly sumUnexplainedBank: number | null;
+  readonly sumUnexplainedLedger: number | null;
+}
+
+export interface ReconciliationHeader {
+  readonly reconciliationId: string;
+  readonly glAccountId: string | null;
+  readonly accountCode: string | null;
+  readonly accountName: string | null;
+  readonly status: ReconciliationStatus | null;
+  readonly statementId: string | null;
+  readonly statementStartDate: string | null;
+  readonly statementEndDate: string | null;
+  readonly accountingPeriodCode: string | null;
+  readonly periodState: string | null;
+  readonly baselineDate: string | null;
+  readonly baselineSetByThisStatement: boolean;
+  readonly gapAcknowledgement: string | null;
+  readonly preparer: string | null;
+  readonly approver: string | null;
+  readonly currency: string | null;
+  readonly sourceKind: string | null;
+  /** Sent back on every lifecycle transition; a stale one answers 409 OPTIMISTIC_LOCK. */
+  readonly version: number;
+}
+
+/** `GET /reconciliations/{id}/review`: everything the workspace renders (§4.8). */
+export interface ReconciliationReview {
+  readonly header: ReconciliationHeader;
+  readonly equation: ReconciliationEquation;
+  readonly diagnostics: ReconciliationDiagnostics;
+  readonly readiness: ReconciliationReadiness;
+  readonly unexplainedBank: readonly ReviewBankRow[];
+  readonly unexplainedLedger: readonly ReviewLedgerRow[];
+  readonly lateArrivals: readonly ReviewBankRow[];
+  readonly possibleDuplicates: readonly ReviewBankRow[];
+  readonly proposedMatches: readonly ReconciliationMatch[];
+  readonly brokenMatches: readonly ReconciliationMatch[];
+  readonly agedItemsAwaitingReaffirmation: readonly OutstandingItem[];
+  readonly matches: readonly ReconciliationMatch[];
+  readonly outstandingItems: readonly OutstandingItem[];
+  readonly exclusions: readonly ReviewBankRow[];
+  readonly adjustmentsToClearing: readonly ClearingAdjustment[];
+  readonly adjustments: readonly ReconciliationAdjustment[];
+}
+
+export interface ReconciliationAuditEntry {
+  readonly auditLogId: string;
+  readonly operation: string | null;
+  readonly entityType: string | null;
+  readonly userId: string | null;
+  readonly timestamp: string | null;
+  readonly justification: string | null;
+}
+
+/** The body of an adjustment (§3.5). `amount` is omitted for a residual settlement or a gap bridge. */
+export interface AdjustmentInput {
+  readonly type: AdjustmentType;
+  readonly amount: number | null;
+  readonly description: string | null;
+  readonly justification: string | null;
+  readonly transactionDate: string | null;
+  readonly overrideJustification: string | null;
+  readonly bankTransactionId: string | null;
+  readonly settlesMatchId: string | null;
+  readonly bridgesStatementId: string | null;
+  readonly counterGlAccountId: string | null;
+}
+
+/** The diagnostics flag the review raises when the opening balances disagree (§4.8). */
+export const OPENING_DIFFERENCE_FLAG = 'OPENING_DIFFERENCE';

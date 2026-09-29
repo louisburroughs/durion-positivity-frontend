@@ -1,0 +1,151 @@
+<dialog class="confirm-panel adjustment-dialog" appModalDialog (modalCancel)="cancelled.emit()"
+  aria-labelledby="adjustment-title" data-testid="adjustment-dialog">
+  <h2 id="adjustment-title" class="confirm-heading">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ADJUST.TITLE' | translate }}</h2>
+  <form class="stacked-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    @if (typesStatus() === 'ERROR') {
+      <p class="field-error" role="alert" data-testid="types-error">
+        {{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ADJUST.TYPES_ERROR' | translate }}
+        <button type="button" class="link-button" (click)="retryTypes.emit()">{{ 'ACCOUNTING.COMMON.RETRY' | translate }}</button>
+      </p>
+    }
+    <div class="form-field">
+      <label for="adjustment-type">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ADJUST.TYPE' | translate }}</label>
+      <select id="adjustment-type" formControlName="type" data-testid="adjustment-type">
+        <option value="">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ADJUST.CHOOSE_TYPE' | translate }}</option>
+        @for (type of types(); track type) {
+          <option [value]="type">{{ ('ACCOUNTING.RECONCILIATION_WORKSPACE.ADJUSTMENT_TYPE.' + type) | translate }}</option>
+        }
+      </select>
+    </div>
+
+    @if (type() === 'OTHER') {
+      <fieldset class="link-options" data-testid="other-links">
+        <legend>{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ADJUST.LINK_LEGEND' | translate }}</legend>
+        <label class="radio-field">
+          <input type="radio" formControlName="link" value="BANK" data-testid="link-bank" />
+          <span>{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ADJUST.LINK_BANK' | translate }}</span>
+        </label>
+        @if (residualMatches().length > 0) {
+          <label class="radio-field">
+            <input type="radio" formControlName="link" value="RESIDUAL" data-testid="link-residual" />
+            <span>{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ADJUST.LINK_RESIDUAL' | translate }}</span>
+          </label>
+        }
+        @if (bridgeOffered()) {
+          <label class="radio-field">
+            <input type="radio" formControlName="link" value="BRIDGE" data-testid="link-bridge" />
+            <span>{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ADJUST.LINK_BRIDGE' | translate }}</span>
+          </label>
+        }
+      </fieldset>
+    }
+
+    @if ((type() === 'OTHER' && link() === 'BANK') || (type() && type() !== 'OTHER' && type() !== 'TRANSFER')) {
+      <div class="form-field">
+        <label for="adjustment-bank">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ADJUST.BANK_TRANSACTION' | translate }}</label>
+        <select id="adjustment-bank" formControlName="bankTransactionId" data-testid="adjustment-bank">
+          <option value="">{{ (type() === 'OTHER' ? 'ACCOUNTING.RECONCILIATION_WORKSPACE.ADJUST.CHOOSE_BANK' : 'ACCOUNTING.RECONCILIATION_WORKSPACE.ADJUST.NO_LINK') | translate }}</option>
+          @for (row of bankRows(); track row.bankTransactionId) {
+            <option [value]="row.bankTransactionId">
+              {{ dateOnly(row.transactionDate) | date: 'mediumDate' }} · {{ row.description ?? '' }} · {{ row.signedAmount | money: review().header.currency }}
+            </option>
+          }
+        </select>
+      </div>
+    }
+
+    @if (type() === 'OTHER' && link() === 'RESIDUAL') {
+      <div class="form-field">
+        <label for="adjustment-match">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ADJUST.MATCH' | translate }}</label>
+        <select id="adjustment-match" formControlName="settlesMatchId" data-testid="adjustment-match">
+          <option value="">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ADJUST.CHOOSE_MATCH' | translate }}</option>
+          @for (match of residualMatches(); track match.matchId; let i = $index) {
+            <option [value]="match.matchId">
+              {{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ADJUST.MATCH_OPTION' | translate: {
+                n: i + 1,
+                bank: (match.bankTotal | money: review().header.currency),
+                ledger: (match.ledgerTotal | money: review().header.currency)
+              } }}
+            </option>
+          }
+        </select>
+      </div>
+      @if (chosenResidual(); as match) {
+        <p class="served-amount" data-testid="served-residual">
+          {{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ADJUST.SERVED_RESIDUAL' | translate: { amount: (match.residual | money: review().header.currency) } }}
+        </p>
+      }
+    }
+
+    @if (type() === 'OTHER' && link() === 'BRIDGE') {
+      <p class="served-amount" data-testid="served-opening-difference">
+        {{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ADJUST.SERVED_BRIDGE' | translate: { amount: (review().diagnostics.openingDifference | money: review().header.currency) } }}
+      </p>
+    }
+
+    @if (type() === 'TRANSFER') {
+      @if (accountsStatus() === 'ERROR') {
+        <p class="field-error" role="alert" data-testid="accounts-error">
+          {{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ADJUST.ACCOUNTS_ERROR' | translate }}
+          <button type="button" class="link-button" (click)="retryAccounts.emit()">{{ 'ACCOUNTING.COMMON.RETRY' | translate }}</button>
+        </p>
+      } @else if (accountsStatus() === 'loading') {
+        <p aria-busy="true" data-testid="accounts-loading">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ADJUST.ACCOUNTS_LOADING' | translate }}</p>
+      }
+      <div class="form-field">
+        <label for="adjustment-counter">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ADJUST.COUNTER' | translate }}</label>
+        <select id="adjustment-counter" formControlName="counterGlAccountId" data-testid="adjustment-counter">
+          <option value="">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ADJUST.CHOOSE_COUNTER' | translate }}</option>
+          @for (account of counterAccounts(); track account.glAccountId) {
+            <option [value]="account.glAccountId">{{ account.accountCode }} {{ account.accountName }}</option>
+          }
+        </select>
+        <p class="hint-text">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ADJUST.COUNTER_HINT' | translate }}</p>
+      </div>
+    }
+
+    @if (type() && !serverAmount()) {
+      <div class="form-field">
+        <label for="adjustment-amount">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ADJUST.AMOUNT' | translate }}</label>
+        <input id="adjustment-amount" type="text" inputmode="decimal" formControlName="amount" aria-describedby="adjustment-amount-hint" data-testid="adjustment-amount" />
+        <p id="adjustment-amount-hint" class="hint-text">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ADJUST.AMOUNT_HINT' | translate }}</p>
+      </div>
+    }
+
+    @if (type()) {
+      <div class="form-field">
+        <label for="adjustment-date">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ADJUST.DATE' | translate }}</label>
+        <input id="adjustment-date" type="date" formControlName="transactionDate" aria-describedby="adjustment-date-hint" data-testid="adjustment-date" />
+        <p id="adjustment-date-hint" class="hint-text">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ADJUST.DATE_HINT' | translate }}</p>
+      </div>
+      <div class="form-field">
+        <label for="adjustment-description">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ADJUST.DESCRIPTION' | translate }}</label>
+        <input id="adjustment-description" type="text" formControlName="description" maxlength="255" data-testid="adjustment-description" />
+      </div>
+      <div class="form-field">
+        <label for="adjustment-justification">
+          {{ (type() === 'OTHER' ? 'ACCOUNTING.RECONCILIATION_WORKSPACE.ADJUST.JUSTIFICATION_REQUIRED' : 'ACCOUNTING.RECONCILIATION_WORKSPACE.ADJUST.JUSTIFICATION') | translate }}
+        </label>
+        <textarea id="adjustment-justification" rows="3" formControlName="justification" aria-describedby="adjustment-justification-hint" data-testid="adjustment-justification"></textarea>
+        <p id="adjustment-justification-hint" class="hint-text">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.JUSTIFICATION_HINT' | translate: { min: justificationMin } }}</p>
+      </div>
+      @if (canOverride()) {
+        <div class="form-field">
+          <label for="adjustment-override">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ADJUST.OVERRIDE' | translate }}</label>
+          <textarea id="adjustment-override" rows="2" formControlName="overrideJustification" aria-describedby="adjustment-override-hint" data-testid="adjustment-override"></textarea>
+          <p id="adjustment-override-hint" class="hint-text">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ADJUST.OVERRIDE_HINT' | translate }}</p>
+        </div>
+      }
+    }
+
+    @if (errorKey(); as key) {
+      <p class="field-error" role="alert" data-testid="adjustment-error">{{ key | translate }}</p>
+    }
+    <div class="form-actions">
+      <button type="submit" class="btn btn--accent" data-testid="confirm-adjustment" [disabled]="!canSubmit() || busy()">
+        {{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ADJUST.CONFIRM' | translate }}
+      </button>
+      <button type="button" class="btn btn--outline" data-testid="cancel-adjustment" (click)="cancelled.emit()">{{ 'COMMON.CANCEL' | translate }}</button>
+    </div>
+  </form>
+</dialog>

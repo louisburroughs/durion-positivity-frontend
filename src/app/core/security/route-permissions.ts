@@ -329,6 +329,8 @@ export const ACCOUNTING_PAGE = {
   bankImport: ['accounting:reconciliation:adjust'],
   /** `createBankStatement`, the manual-entry and interim statement form. */
   bankStatementEntry: ['accounting:reconciliation:adjust'],
+  /** `getReconciliationReview`. Every write inside is gated by {@link ACCOUNTING_SECTION}. */
+  reconciliationWorkspace: ['accounting:reconciliation:view'],
 } as const satisfies Record<string, readonly string[]>;
 
 /**

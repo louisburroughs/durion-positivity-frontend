@@ -207,6 +207,14 @@ export const ACCOUNTING_ROUTES: Routes = [
           import('./pages/bank-import/bank-import-page.component').then(m => m.BankImportPageComponent),
       },
       {
+        path: 'reconciliations/:reconciliationId',
+        data: { permissions: ACCOUNTING_PAGE.reconciliationWorkspace },
+        loadComponent: () =>
+          import('./pages/reconciliation-workspace/reconciliation-workspace-page.component').then(
+            m => m.ReconciliationWorkspacePageComponent,
+          ),
+      },
+      {
         path: 'invoices/:invoiceId/payment-status',
         data: { permissions: ACCOUNTING_PAGE.invoicePaymentStatus },
         loadComponent: () =>
