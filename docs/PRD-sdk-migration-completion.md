@@ -201,9 +201,10 @@ keeping the reason current:
 `accounting.service.ts` is no longer an approved exception: D4 (`getEventEnvelopeContract`)
 is resolved (issue #380) by migrating to the SDK's `getEventContract` and treating the
 fields it does not return as optional. Rendering its `identifierStrategy`/`traceabilityIds`/
-`processingStatuses`/`idempotencyOutcomes` sections (durion-positivity-backend#2207) is
-blocked on durion-positivity-backend#2234: SDK 0.65.0-alpha was generated from a stale
-`pos-accounting/openapi.yaml` and dropped those fields.
+`processingStatuses`/`idempotencyOutcomes` sections (durion-positivity-backend#2207) was
+blocked on durion-positivity-backend#2234 (SDK 0.65.0-alpha was generated from a stale
+`pos-accounting/openapi.yaml` and dropped those fields); SDK 0.78.0-alpha carries them and
+the page renders them (issue #423).
 
 `billing-transport.service.ts` is no longer an approved exception: D7 (`executeRefund`
 no-amount branch) and D8 (`loadReceipt`) are resolved (issue #381) — the page still requires
@@ -379,9 +380,9 @@ tracked follow-up decisions.
 | D1  | `shopmgmt/mechanic-roster` — `createEmployee`        | SDK contract mismatch; `createPerson` used; `role` dropped        | SDK alignment or form redesign    |
 | ~~D2~~ | ~~`people/work-session-submit` — `submitSession`~~ | Resolved (durion-positivity-backend#2208 ruling, issue #350 revisit): `sessionId` on `WorkSessionDto` is the submission reference; migrated to `WorkSessionsAPIService.submitWorkSession()` | — |
 | D3  | `people/time-approval` — 5 operations                | Timekeeping approve/period/entries SDK operations absent          | Backend OpenAPI update            |
-| ~~D4~~ | ~~`accounting.service.ts` — `getEventEnvelopeContract`~~ | Resolved (issue #380): migrated to SDK `getEventContract()`. Rendering the #2207 sections is blocked on durion-positivity-backend#2234 (SDK 0.65 dropped them from a stale spec) | — |
+| ~~D4~~ | ~~`accounting.service.ts` — `getEventEnvelopeContract`~~ | Resolved (issue #380): migrated to SDK `getEventContract()`. The #2207 sections render from SDK 0.78 (issue #423; durion-positivity-backend#2234 fixed the stale spec) | — |
 | ~~D5~~ | ~~`inventory.service.ts` — all~~                  | Resolved (issue #350, backend #2206/#2211/#2227): ledger/putaway/replenishment/returns/cross-dock and the shortage service methods migrated onto `@durion-sdk/inventory`; `fromStorageLocationId`/`toStorageLocationId` dropped (ruled out — `fromLocationId`/`toLocationId` already carry the bin or site). The shortage-resolution *page* is wired up in issue #422: `listReservationsForWorkorder` (backend #2233) supplies the allocationId. | — |
-| D6 | `bulk-import.service.ts` — `submitCorrection` | Backend #2205 is merged, but SDK 0.65.0-alpha dropped the widened `CorrectionResultDto` row fields (stale `pos-bulk-loader/openapi.yaml`, durion-positivity-backend#2234); callers keep re-reading the audit list until the SDK carries them | durion-positivity-backend#2234 |
+| ~~D6~~ | ~~`bulk-import.service.ts` — `submitCorrection`~~ | Resolved (issue #423): SDK 0.78.0-alpha carries the widened `CorrectionResultDto` row (backend #2205, durion-positivity-backend#2234); callers splice a complete row in place and re-read the audit list only when a field comes back null | — |
 | —   | `workexec.service.ts` — `getWorkorderWipStatus`      | SDK path incompatible with legacy path                            | Consumer migration to new WIP API |
 | ~~—~~ | ~~`workexec.service.ts` — `getWorkorderInvoiceView`~~ | Resolved (issue #350, durion-positivity-backend#2232): reads pos-invoice's `getInvoiceByWorkorder` through `@durion-sdk/invoice` | — |
 | ~~—~~ | ~~`workexec.service.ts` — `requestInvoiceFinalization`~~ | Resolved (issue #350, durion-positivity-backend#2232): replaced by `finalizeInvoice(invoiceId)` on `@durion-sdk/invoice`; `workexec.service.ts` no longer imports `ApiBaseService` | — |
