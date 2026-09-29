@@ -8679,7 +8679,10 @@
       "WORK_SESSION": "Sesión de trabajo",
       "PERSON": "Persona",
       "PERIODS": "Períodos de pago",
-      "ACCOUNTING_PERIODS": "Períodos contables"
+      "ACCOUNTING_PERIODS": "Períodos contables",
+      "BANK_ACCOUNTS": "Cuentas bancarias",
+      "BANK_IMPORTS": "Importaciones de estados de cuenta",
+      "IMPORT": "Importar"
     }
   },
   "POSITIVITY": {

@@ -8679,7 +8679,10 @@
       "WORK_SESSION": "Séance de travail",
       "PERSON": "Personne",
       "PERIODS": "Périodes de paie",
-      "ACCOUNTING_PERIODS": "Périodes comptables"
+      "ACCOUNTING_PERIODS": "Périodes comptables",
+      "BANK_ACCOUNTS": "Comptes bancaires",
+      "BANK_IMPORTS": "Importations de relevés",
+      "IMPORT": "Importer"
     }
   },
   "POSITIVITY": {
