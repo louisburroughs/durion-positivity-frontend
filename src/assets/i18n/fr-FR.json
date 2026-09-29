@@ -8682,7 +8682,8 @@
       "ACCOUNTING_PERIODS": "Périodes comptables",
       "BANK_ACCOUNTS": "Comptes bancaires",
       "BANK_IMPORTS": "Importations de relevés",
-      "IMPORT": "Importer"
+      "IMPORT": "Importer",
+      "RECONCILIATIONS": "Rapprochements bancaires"
     }
   },
   "POSITIVITY": {
