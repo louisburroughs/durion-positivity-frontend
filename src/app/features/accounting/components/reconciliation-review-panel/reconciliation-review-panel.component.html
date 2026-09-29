@@ -1,0 +1,255 @@
+<section class="review-panel" aria-labelledby="review-heading" data-testid="review-panel">
+  <h2 id="review-heading">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.REVIEW.HEADING' | translate }}</h2>
+
+  <!-- Readiness (§4.8): the served gates and their reasons. -->
+  <div class="readiness-block" data-testid="review-readiness">
+    <h3>{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.READINESS.HEADING' | translate }}</h3>
+    <p>
+      <span class="status-badge" [class.status-badge--open]="review().readiness.canSubmit" data-testid="can-submit">
+        {{ (review().readiness.canSubmit ? 'ACCOUNTING.RECONCILIATION_WORKSPACE.READINESS.CAN_SUBMIT' : 'ACCOUNTING.RECONCILIATION_WORKSPACE.READINESS.CANNOT_SUBMIT') | translate }}
+      </span>
+      <span class="status-badge" [class.status-badge--open]="review().readiness.canApprove" data-testid="can-approve">
+        {{ (review().readiness.canApprove ? 'ACCOUNTING.RECONCILIATION_WORKSPACE.READINESS.CAN_APPROVE' : 'ACCOUNTING.RECONCILIATION_WORKSPACE.READINESS.CANNOT_APPROVE') | translate }}
+      </span>
+    </p>
+    @if (blockingReasons().length > 0) {
+      <ul class="reason-list" data-testid="readiness-reasons">
+        @for (reason of blockingReasons(); track reason) {
+          <li [attr.data-reason]="reason">
+            {{ reasonKey(reason) | translate: {
+              code: reason,
+              bank: (review().readiness.countUnexplainedBank ?? 0 | number),
+              ledger: (review().readiness.countUnexplainedLedger ?? 0 | number)
+            } }}
+          </li>
+        }
+      </ul>
+    }
+    @if (review().readiness.proposalsPending) {
+      <p class="hint-text" data-testid="proposals-pending">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.READINESS.PROPOSALS_PENDING' | translate }}</p>
+    }
+  </div>
+
+  <!-- E3 (§3.7): each term as served, with its drill-down. -->
+  <div class="equation" data-testid="equation">
+    <h3>{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.EQUATION.HEADING' | translate }}</h3>
+    <dl class="term-list">
+      <div data-term="statementClosingBalance"><dt>{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.EQUATION.STATEMENT_CLOSING' | translate }}</dt><dd class="numeric">{{ review().equation.statementClosingBalance | money: currency() }}</dd></div>
+      <div data-term="sumOutstandingLedgerItems">
+        <dt>{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.EQUATION.OUTSTANDING_LEDGER' | translate }}</dt>
+        <dd class="numeric">{{ review().equation.sumOutstandingLedgerItems | money: currency() }}</dd>
+        @if (review().equation.outstandingLedgerItems.length > 0) {
+          <details class="drill-down">
+            <summary>{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.EQUATION.SHOW_ITEMS' | translate: { count: review().equation.outstandingLedgerItems.length } }}</summary>
+            <ul>
+              @for (item of review().equation.outstandingLedgerItems; track item.outstandingItemId) {
+                <li>{{ dateOnly(item.itemDate) | date: 'mediumDate' }} · {{ ('ACCOUNTING.RECONCILIATION_WORKSPACE.ITEM_KIND.' + (item.itemKind ?? 'UNKNOWN')) | translate }} · {{ item.signedAmount | money: currency() }}</li>
+              }
+            </ul>
+          </details>
+        }
+      </div>
+      <div data-term="sumOutstandingBankItems">
+        <dt>{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.EQUATION.OUTSTANDING_BANK' | translate }}</dt>
+        <dd class="numeric">{{ review().equation.sumOutstandingBankItems | money: currency() }}</dd>
+        @if (review().equation.outstandingBankItems.length > 0) {
+          <details class="drill-down">
+            <summary>{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.EQUATION.SHOW_ITEMS' | translate: { count: review().equation.outstandingBankItems.length } }}</summary>
+            <ul>
+              @for (item of review().equation.outstandingBankItems; track item.outstandingItemId) {
+                <li>{{ dateOnly(item.itemDate) | date: 'mediumDate' }} · {{ ('ACCOUNTING.RECONCILIATION_WORKSPACE.ITEM_KIND.' + (item.itemKind ?? 'UNKNOWN')) | translate }} · {{ item.signedAmount | money: currency() }}</li>
+              }
+            </ul>
+          </details>
+        }
+      </div>
+      <div data-term="adjustedBankBalance"><dt>{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.EQUATION.ADJUSTED_BANK' | translate }}</dt><dd class="numeric">{{ review().equation.adjustedBankBalance | money: currency() }}</dd></div>
+      <div data-term="glEndingBalance"><dt>{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.EQUATION.GL_ENDING' | translate }}</dt><dd class="numeric">{{ review().equation.glEndingBalance | money: currency() }}</dd></div>
+      <div data-term="sumLateAdjustments">
+        <dt>{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.EQUATION.LATE_ADJUSTMENTS' | translate }}</dt>
+        <dd class="numeric">{{ review().equation.sumLateAdjustments | money: currency() }}</dd>
+        @if (review().equation.lateAdjustments.length > 0) {
+          <details class="drill-down">
+            <summary>{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.EQUATION.SHOW_ITEMS' | translate: { count: review().equation.lateAdjustments.length } }}</summary>
+            <ul>
+              @for (late of review().equation.lateAdjustments; track $index) {
+                <li data-testid="late-adjustment">
+                  {{ dateOnly(late.date) | date: 'mediumDate' }} · {{ late.amount | money: currency() }}
+                  @if (late.reconciliationId && late.reconciliationId !== review().header.reconciliationId) {
+                    · {{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.EQUATION.OWNED_BY_OTHER' | translate }}
+                  }
+                  @if (late.reversal) {
+                    · {{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.EQUATION.REVERSAL' | translate }}
+                  }
+                </li>
+              }
+            </ul>
+          </details>
+        }
+      </div>
+      <div data-term="adjustedBookBalance"><dt>{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.EQUATION.ADJUSTED_BOOK' | translate }}</dt><dd class="numeric">{{ review().equation.adjustedBookBalance | money: currency() }}</dd></div>
+      <div data-term="difference" class="term--total"><dt>{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.EQUATION.DIFFERENCE' | translate }}</dt><dd class="numeric">{{ review().equation.difference | money: currency() }}</dd></div>
+    </dl>
+  </div>
+
+  <!-- Diagnostics (§4.8): information only, never a blocker (D2). -->
+  <div class="diagnostics" data-testid="diagnostics">
+    <h3>{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.DIAGNOSTICS.HEADING' | translate }}</h3>
+    <p class="hint-text">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.DIAGNOSTICS.INFO_ONLY' | translate }}</p>
+    <dl class="term-list">
+      <div data-term="openingDifference"><dt>{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.DIAGNOSTICS.OPENING_DIFFERENCE' | translate }}</dt><dd class="numeric" data-testid="opening-difference">{{ review().diagnostics.openingDifference | money: currency() }}</dd></div>
+      <div><dt>{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.DIAGNOSTICS.STATEMENT_OPENING' | translate }}</dt><dd class="numeric">{{ review().diagnostics.statementOpeningBalance | money: currency() }}</dd></div>
+      <div><dt>{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.DIAGNOSTICS.GL_OPENING' | translate }}</dt><dd class="numeric">{{ review().diagnostics.glOpeningBalance | money: currency() }}</dd></div>
+      <div><dt>{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.DIAGNOSTICS.OPENING_LEDGER_ITEMS' | translate }}</dt><dd class="numeric">{{ review().diagnostics.openingLedgerItems | money: currency() }}</dd></div>
+      <div><dt>{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.DIAGNOSTICS.OPENING_BANK_ITEMS' | translate }}</dt><dd class="numeric">{{ review().diagnostics.openingBankItems | money: currency() }}</dd></div>
+      <div><dt>{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.DIAGNOSTICS.OPENING_ADJUSTMENTS' | translate }}</dt><dd class="numeric">{{ review().diagnostics.sumOpeningAdjustments | money: currency() }}</dd></div>
+    </dl>
+    @if (openingFlagged()) {
+      <p class="alert alert-info" data-testid="opening-flag">
+        {{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.DIAGNOSTICS.FLAG' | translate }}
+        {{ likelyCauseKey() | translate }}
+      </p>
+    }
+  </div>
+
+  <!-- Evidence (§4.8). -->
+  <div class="evidence" data-testid="evidence">
+    <h3>{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.EVIDENCE.HEADING' | translate }}</h3>
+
+    <h4>{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.EVIDENCE.MATCHES' | translate }}</h4>
+    @if (review().matches.length === 0) {
+      <p class="hint-text">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.EVIDENCE.NO_MATCHES' | translate }}</p>
+    } @else {
+      <div class="table-scroll-container">
+        <table class="ledger-table" data-testid="evidence-matches">
+          <caption class="sr-only">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.EVIDENCE.MATCHES' | translate }}</caption>
+          <thead>
+            <tr>
+              <th scope="col">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.EVIDENCE.COL_STATE' | translate }}</th>
+              <th scope="col" class="numeric">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.EVIDENCE.COL_BANK_TOTAL' | translate }}</th>
+              <th scope="col" class="numeric">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.EVIDENCE.COL_LEDGER_TOTAL' | translate }}</th>
+              <th scope="col" class="numeric">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.EVIDENCE.COL_TOLERANCE' | translate }}</th>
+              <th scope="col" class="numeric">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.EVIDENCE.COL_RESIDUAL' | translate }}</th>
+              <th scope="col">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.EVIDENCE.COL_NOTES' | translate }}</th>
+              <th scope="col">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.COL_ACTIONS' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (match of review().matches; track match.matchId; let i = $index) {
+              <tr data-testid="evidence-match" [attr.data-match]="match.matchId">
+                <td>{{ ('ACCOUNTING.RECONCILIATION_WORKSPACE.MATCH_STATE.' + (match.state ?? 'UNKNOWN')) | translate }}</td>
+                <td class="numeric">{{ match.bankTotal | money: currency() }}</td>
+                <td class="numeric">{{ match.ledgerTotal | money: currency() }}</td>
+                <td class="numeric">{{ match.toleranceUsed | money: currency() }}</td>
+                <td class="numeric" data-testid="match-residual">{{ match.residual | money: currency() }}</td>
+                <td>
+                  @if (match.replacesMatchId) {
+                    <span class="secondary-line">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.EVIDENCE.REPLACES' | translate }}</span>
+                  }
+                  @if (match.justification) {
+                    <span class="secondary-line">{{ match.justification }}</span>
+                  }
+                </td>
+                <td class="actions-cell">
+                  @if (match.state === 'ACCEPTED') {
+                    <button type="button" class="btn btn--outline" data-testid="unmatch" [disabled]="!canUnmatch() || busy()" (click)="unmatch.emit(match)">
+                      {{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ACTION.UNMATCH' | translate }}<span class="sr-only">&nbsp;{{ i + 1 }}</span>
+                    </button>
+                  }
+                  @if (settleable(match)) {
+                    <button type="button" class="btn btn--outline" data-testid="settle-residual" [disabled]="!canSettleResidual() || busy()" (click)="settleResidual.emit(match)">
+                      {{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ACTION.SETTLE_RESIDUAL' | translate }}<span class="sr-only">&nbsp;{{ i + 1 }}</span>
+                    </button>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <h4>{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.EVIDENCE.OUTSTANDING' | translate }}</h4>
+    @if (review().outstandingItems.length === 0) {
+      <p class="hint-text">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.EVIDENCE.NO_OUTSTANDING' | translate }}</p>
+    } @else {
+      <ul class="evidence-list" data-testid="evidence-outstanding">
+        @for (item of review().outstandingItems; track item.outstandingItemId) {
+          <li [attr.data-item]="item.outstandingItemId">
+            {{ ('ACCOUNTING.RECONCILIATION_WORKSPACE.ITEM_KIND.' + (item.itemKind ?? 'UNKNOWN')) | translate }} ·
+            {{ ('ACCOUNTING.RECONCILIATION_WORKSPACE.ITEM_STATUS.' + (item.status ?? 'UNKNOWN')) | translate }} ·
+            {{ item.signedAmount | money: currency() }}
+            @if (item.closedOn) {
+              · {{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.EVIDENCE.CLOSED_ON' | translate: { date: (dateOnly(item.closedOn) | date: 'mediumDate') } }}
+            }
+            @if (item.lastReaffirmedAt) {
+              · {{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.EVIDENCE.REAFFIRMED' | translate: { date: (item.lastReaffirmedAt | date: 'mediumDate') } }}
+            }
+          </li>
+        }
+      </ul>
+    }
+
+    <h4>{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.EVIDENCE.CLEARING' | translate }}</h4>
+    @if (review().adjustmentsToClearing.length === 0) {
+      <p class="hint-text">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.EVIDENCE.NO_CLEARING' | translate }}</p>
+    } @else {
+      <ul class="evidence-list" data-testid="evidence-clearing">
+        @for (clearing of review().adjustmentsToClearing; track clearing.adjustmentId) {
+          <li>
+            {{ dateOnly(clearing.transactionDate) | date: 'mediumDate' }} · {{ clearing.amount | money: currency() }}
+            · {{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.EVIDENCE.CLEARING_DETAIL' | translate: {
+              link: (clearing.linkKind ?? ('COMMON.NOT_AVAILABLE' | translate)),
+              by: (clearing.postedBy ?? ('COMMON.NOT_AVAILABLE' | translate)),
+              age: (clearing.ageDays ?? 0 | number)
+            } }}
+            @if (clearing.justification) {
+              <span class="secondary-line">{{ clearing.justification }}</span>
+            }
+          </li>
+        }
+      </ul>
+    }
+
+    @if (review().exclusions.length > 0) {
+      <h4>{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.EVIDENCE.EXCLUSIONS' | translate }}</h4>
+      <ul class="evidence-list" data-testid="evidence-exclusions">
+        @for (row of review().exclusions; track row.bankTransactionId) {
+          <li>
+            {{ dateOnly(row.transactionDate) | date: 'mediumDate' }} · {{ row.description ?? ('COMMON.NOT_AVAILABLE' | translate) }} · {{ row.signedAmount | money: currency() }}
+            <button type="button" class="btn btn--outline" data-testid="restore" [disabled]="!canRestore() || busy()" (click)="restore.emit(row)">
+              {{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ACTION.RESTORE' | translate }}
+            </button>
+          </li>
+        }
+      </ul>
+    }
+  </div>
+
+  <div class="adjustments" data-testid="adjustments">
+    <h3>{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ADJUSTMENTS.HEADING' | translate }}</h3>
+    @if (review().adjustments.length === 0) {
+      <p class="hint-text">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ADJUSTMENTS.EMPTY' | translate }}</p>
+    } @else {
+      <ul class="evidence-list">
+        @for (adjustment of review().adjustments; track adjustment.adjustmentId) {
+          <li data-testid="adjustment" [attr.data-adjustment]="adjustment.adjustmentId">
+            {{ ('ACCOUNTING.RECONCILIATION_WORKSPACE.ADJUSTMENT_TYPE.' + (adjustment.type ?? 'UNKNOWN')) | translate }} ·
+            {{ adjustment.amount | money: currency() }} ·
+            {{ dateOnly(adjustment.transactionDate) | date: 'mediumDate' }}
+            @if (adjustment.entryNumber) {
+              · {{ adjustment.entryNumber }}
+            }
+            @if (adjustment.status === 'REVERSED') {
+              <span class="status-badge">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ADJUSTMENTS.REVERSED' | translate }}</span>
+            } @else {
+              <button type="button" class="btn btn--outline" data-testid="reverse" [disabled]="!canReverse() || busy()" (click)="reverse.emit(adjustment)">
+                {{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ACTION.REVERSE' | translate }}
+              </button>
+            }
+          </li>
+        }
+      </ul>
+    }
+  </div>
+</section>

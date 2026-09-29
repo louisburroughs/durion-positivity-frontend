@@ -14,8 +14,9 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
-import { ACCOUNTING_SECTION } from '../../../../core/security/route-permissions';
+import { ACCOUNTING_PAGE, ACCOUNTING_SECTION } from '../../../../core/security/route-permissions';
 import { AuthService } from '../../../../core/services/auth.service';
 import { ModalDialogDirective } from '../../../../shared/modal-dialog.directive';
 import { MoneyPipe } from '../../../../shared/money.pipe';
@@ -35,6 +36,7 @@ import {
   previousPeriodCode,
 } from '../../models/period-close.models';
 import { PeriodCloseService, classifyPeriodActionError } from '../../services/period-close.service';
+import { bankAccountsCommands, reconciliationWorkspaceCommands } from '../../utils/bank-reconciliation-routes';
 import { toDatePipeInput } from '../../utils/date-only.util';
 
 type PageState = 'idle' | 'loading' | 'ready' | 'error';
@@ -125,7 +127,7 @@ interface ActionOutcome {
 @Component({
   selector: 'app-period-close-page',
   standalone: true,
-  imports: [DatePipe, DecimalPipe, MoneyPipe, ReactiveFormsModule, TranslatePipe, ModalDialogDirective],
+  imports: [DatePipe, DecimalPipe, MoneyPipe, ReactiveFormsModule, RouterLink, TranslatePipe, ModalDialogDirective],
   templateUrl: './period-close-page.component.html',
   styleUrl: './period-close-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -371,6 +373,19 @@ export class PeriodClosePageComponent {
     const value = check.references[key];
     const amount = typeof value === 'number' ? value : typeof value === 'string' ? Number(value) : Number.NaN;
     return Number.isFinite(amount) ? amount : null;
+  }
+
+  readonly bankAccountsLink = bankAccountsCommands();
+
+  /** The links into bank reconciliation need its view permission (same unknown-claim fallback). */
+  readonly canViewReconciliation = computed(
+    () => !this.auth.permissionsKnown() || this.auth.hasAnyPermission(ACCOUNTING_PAGE.reconciliationWorkspace),
+  );
+
+  /** The workspace of the reconciliation a check names, when it names one. */
+  workspaceLink(check: ReadinessCheck): string[] | null {
+    const id = this.textRef(check, 'reconciliationId');
+    return id ? reconciliationWorkspaceCommands(id) : null;
   }
 
   /** A served text reference (a code or a bare date), or null. */

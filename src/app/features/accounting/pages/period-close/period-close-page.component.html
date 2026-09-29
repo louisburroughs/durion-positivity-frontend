@@ -234,6 +234,9 @@
                                   @if (account.accountCode || account.accountName) {
                                     <span class="account-period.periodCode">{{ account.accountCode }}</span>
                                     <span class="account-name">{{ account.accountName }}</span>
+                                    @if (canViewReconciliation()) {
+                                      <a class="link-button" [routerLink]="bankAccountsLink" data-testid="readiness-accounts-link">{{ 'ACCOUNTING.PERIOD_CLOSE.READINESS.OPEN_BANK_ACCOUNTS' | translate }}</a>
+                                    }
                                   } @else {
                                     {{ 'COMMON.NOT_AVAILABLE' | translate }}
                                   }
@@ -250,6 +253,9 @@
                                         <li class="check-item" [attr.data-check]="check.code">
                                           <span class="severity-badge severity-badge--{{ check.severity.toLowerCase() }}">{{ severityLabelKey(check.severity) | translate }}</span>
                                           <span>{{ checkLabelKey(check) | translate: { code: check.code } }}</span>
+                                          @if (canViewReconciliation() && workspaceLink(check); as link) {
+                                            <a class="link-button" [routerLink]="link" data-testid="readiness-workspace-link">{{ 'ACCOUNTING.PERIOD_CLOSE.READINESS.OPEN_RECONCILIATION' | translate }}</a>
+                                          }
                                         </li>
                                       }
                                     </ul>

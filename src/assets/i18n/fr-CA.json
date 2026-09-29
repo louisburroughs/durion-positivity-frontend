@@ -4476,7 +4476,9 @@
           "BLOCKED": "{{period}} ne peut pas être clôturé : des contrôles de rapprochement bancaire le bloquent. Ouvrez sa préparation pour voir pourquoi.",
           "BLOCKED_NO_OVERRIDE": "{{period}} ne peut pas être clôturé : des contrôles de rapprochement bancaire le bloquent, et une clôture avec exception exige l’autorisation {{override}}.",
           "UNAVAILABLE": "{{period}} ne peut pas être clôturé tant que sa préparation de rapprochement bancaire ne peut pas être lue."
-        }
+        },
+        "OPEN_RECONCILIATION": "Ouvrir le rapprochement",
+        "OPEN_BANK_ACCOUNTS": "Comptes bancaires"
       },
       "EXCEPTION": {
         "TITLE": "Clôturer {{period}} avec une exception ?",
@@ -4779,6 +4781,375 @@
       "ERROR": {
         "HEADER": "Indiquez les dates de début et de fin et les deux soldes sous forme de nombres.",
         "TRANSACTIONS": "Chaque opération doit avoir une date, un montant et une description."
+      }
+    },
+    "RECONCILIATION_WORKSPACE": {
+      "OVERLINE": "Rapprochement bancaire",
+      "TITLE": "Rapprochement",
+      "SUBTITLE": "{{account}}, relevé du {{start}} au {{end}}",
+      "LOADING": "Chargement du rapprochement…",
+      "HEADER": {
+        "HEADING": "Résumé",
+        "STATUS": "Statut",
+        "PERIOD": "Période",
+        "BASELINE": "Date de référence",
+        "PREPARER": "Préparé par",
+        "APPROVER": "Approuvé par",
+        "GAP_ACKNOWLEDGED": "Ce relevé a fixé la date de référence du compte avec cette reconnaissance d’écart :"
+      },
+      "STATUS": {
+        "IN_PROGRESS": "En cours",
+        "SUBMITTED": "Soumis pour approbation",
+        "FINALIZED": "Approuvé",
+        "INVALIDATED": "Invalidé",
+        "SUPERSEDED": "Remplacé",
+        "CANCELLED": "Annulé",
+        "UNKNOWN": "Inconnu"
+      },
+      "ACTION": {
+        "SUBMIT": "Soumettre pour approbation",
+        "APPROVE": "Approuver",
+        "RETURN": "Renvoyer au préparateur",
+        "CANCEL": "Annuler le rapprochement",
+        "SUPERSEDE": "Remplacer",
+        "AUTO_MATCH": "Rapprocher automatiquement",
+        "MATCH_SELECTED": "Rapprocher la sélection ({{bank}} banque, {{ledger}} comptabilité)",
+        "ADD_ADJUSTMENT": "Ajouter un ajustement",
+        "ACCEPT": "Accepter",
+        "REJECT": "Refuser",
+        "ACCEPT_ALL": "Tout accepter",
+        "CANDIDATES": "Candidats",
+        "EXPLAIN": "Expliquer",
+        "OUTSTANDING": "Marquer en suspens",
+        "EXCLUDE": "Exclure",
+        "RESTORE": "Rétablir",
+        "REVERSE": "Contrepasser",
+        "UNMATCH": "Annuler le rapprochement de la ligne",
+        "SETTLE_RESIDUAL": "Solder le reliquat",
+        "SELECT_CANDIDATE": "Sélectionner",
+        "REVIEW_DUPLICATE": "Examiner le doublon",
+        "REAFFIRM": "Réaffirmer",
+        "RELEASE": "Libérer",
+        "CLEAR_IN_GAP": "Solder dans l’écart"
+      },
+      "PROPOSALS": {
+        "HEADING": "Rapprochements proposés",
+        "ITEM": "Proposition {{n}} : banque {{bank}}, comptabilité {{ledger}}"
+      },
+      "BROKEN": "{{count}} rapprochements antérieurs ont été rompus par des modifications comptables et doivent être refaits.",
+      "COL_SELECT": "Sélectionner",
+      "COL_DATE": "Date",
+      "COL_DESCRIPTION": "Description",
+      "COL_AMOUNT": "Montant",
+      "COL_ACTIONS": "Actions",
+      "BANK": {
+        "HEADING": "Opérations bancaires non expliquées ({{count}})",
+        "EMPTY": "Toutes les opérations bancaires sont expliquées.",
+        "CAPTION": "Opérations bancaires non expliquées, arrivées tardives en premier",
+        "SELECT": "Sélectionner l’opération bancaire {{n}}",
+        "REFERENCE": "Référence {{reference}}",
+        "CHECK": "Chèque {{check}}",
+        "LATE": "Arrivée après l’approbation"
+      },
+      "LEDGER": {
+        "HEADING": "Lignes comptables non expliquées ({{count}})",
+        "EMPTY": "Toutes les lignes comptables sont expliquées.",
+        "CAPTION": "Lignes comptables non expliquées",
+        "SELECT": "Sélectionner la ligne comptable {{n}}"
+      },
+      "CANDIDATES": {
+        "HEADING": "Candidats pour l’opération du {{date}} de {{amount}}",
+        "LOADING": "Recherche de candidats…",
+        "ERROR": "Impossible de charger les candidats.",
+        "EMPTY": "Aucune ligne comptable ne ressemble à cette opération.",
+        "SCORE": "Score {{score}}"
+      },
+      "CANDIDATE_REASON": {
+        "EXACT_AMOUNT": "Montant exact",
+        "WITHIN_TOLERANCE": "Dans la tolérance",
+        "DATE_IN_WINDOW": "Date proche",
+        "DATE_OUT_OF_WINDOW": "Date éloignée",
+        "REFERENCE_MATCH": "Référence identique",
+        "DESCRIPTION_SIMILAR": "Description semblable"
+      },
+      "DUPLICATES": {
+        "HEADING": "Doublons possibles à examiner"
+      },
+      "OUTSTANDING": {
+        "HEADING": "Éléments en suspens",
+        "AWAITING": "Éléments anciens à réaffirmer",
+        "AGE": "{{days}} jours"
+      },
+      "ITEM_KIND": {
+        "DEPOSIT_IN_TRANSIT": "Dépôt en transit",
+        "OUTSTANDING_CHECK": "Chèque en circulation",
+        "OTHER_LEDGER_TIMING": "Autre décalage comptable",
+        "BANK_ERROR_PENDING": "Erreur bancaire en attente",
+        "UNKNOWN": "Autre"
+      },
+      "ITEM_STATUS": {
+        "OPEN": "Ouvert",
+        "CLEARED": "Soldé",
+        "CLEARED_IN_GAP": "Soldé dans l’écart",
+        "VOIDED": "Annulé",
+        "RELEASED": "Libéré",
+        "UNKNOWN": "Inconnu"
+      },
+      "MATCH_STATE": {
+        "PROPOSED": "Proposé",
+        "ACCEPTED": "Accepté",
+        "REJECTED": "Refusé",
+        "UNMATCHED": "Défait",
+        "BROKEN": "Rompu",
+        "UNKNOWN": "Inconnu"
+      },
+      "ADJUSTMENT_TYPE": {
+        "BANK_FEE": "Frais bancaires",
+        "NSF_FEE": "Frais pour provision insuffisante",
+        "INTEREST_EARNED": "Intérêts perçus",
+        "OTHER": "Autre",
+        "TRANSFER": "Virement",
+        "UNKNOWN": "Ajustement"
+      },
+      "REVIEW": {
+        "HEADING": "Examen"
+      },
+      "READINESS": {
+        "HEADING": "Préparation",
+        "CAN_SUBMIT": "Peut être soumis",
+        "CANNOT_SUBMIT": "Pas prêt à soumettre",
+        "CAN_APPROVE": "Peut être approuvé",
+        "CANNOT_APPROVE": "Pas prêt à approuver",
+        "PROPOSALS_PENDING": "Certains rapprochements proposés attendent encore une décision.",
+        "REASON": {
+          "NOT_BALANCED": "Les soldes ajustés de la banque et des livres diffèrent.",
+          "UNEXPLAINED_BANK": "{{bank}} opérations bancaires non expliquées.",
+          "UNEXPLAINED_LEDGER": "{{ledger}} lignes comptables non expliquées.",
+          "SELF_APPROVAL": "La personne qui l’a soumis ne peut pas l’approuver.",
+          "OTHER": "Pas prêt ({{code}})."
+        }
+      },
+      "EQUATION": {
+        "HEADING": "Rapprochement",
+        "STATEMENT_CLOSING": "Solde de clôture du relevé",
+        "OUTSTANDING_LEDGER": "Éléments comptables en suspens",
+        "OUTSTANDING_BANK": "Éléments bancaires en suspens",
+        "ADJUSTED_BANK": "Solde bancaire ajusté",
+        "GL_ENDING": "Solde comptable de clôture",
+        "LATE_ADJUSTMENTS": "Ajustements tardifs",
+        "ADJUSTED_BOOK": "Solde comptable ajusté",
+        "DIFFERENCE": "Écart",
+        "SHOW_ITEMS": "Afficher les {{count}} éléments",
+        "OWNED_BY_OTHER": "d’un autre rapprochement",
+        "REVERSAL": "contrepassation"
+      },
+      "DIAGNOSTICS": {
+        "HEADING": "Diagnostic",
+        "INFO_ONLY": "À titre d’information seulement. Ces chiffres n’empêchent jamais de soumettre ni d’approuver.",
+        "OPENING_DIFFERENCE": "Écart d’ouverture",
+        "STATEMENT_OPENING": "Solde d’ouverture du relevé",
+        "GL_OPENING": "Solde comptable d’ouverture",
+        "OPENING_LEDGER_ITEMS": "Éléments comptables en suspens à l’ouverture",
+        "OPENING_BANK_ITEMS": "Éléments bancaires en suspens à l’ouverture",
+        "OPENING_ADJUSTMENTS": "Ajustements d’ouverture",
+        "FLAG": "Les soldes d’ouverture ne concordent pas.",
+        "CAUSE_GAP": "La cause probable est l’écart reconnu, qui n’a pas encore été comblé.",
+        "CAUSE_INVALIDATED": "La cause probable est un rapprochement antérieur invalidé ; aucun ajustement d’écart ne s’applique."
+      },
+      "EVIDENCE": {
+        "HEADING": "Justificatifs",
+        "MATCHES": "Rapprochements",
+        "NO_MATCHES": "Aucun rapprochement pour l’instant.",
+        "COL_STATE": "État",
+        "COL_BANK_TOTAL": "Total banque",
+        "COL_LEDGER_TOTAL": "Total comptabilité",
+        "COL_TOLERANCE": "Tolérance utilisée",
+        "COL_RESIDUAL": "Reliquat",
+        "COL_NOTES": "Notes",
+        "REPLACES": "Remplace un rapprochement antérieur",
+        "OUTSTANDING": "Éléments en suspens",
+        "NO_OUTSTANDING": "Aucun élément en suspens.",
+        "CLOSED_ON": "clos le {{date}}",
+        "REAFFIRMED": "réaffirmé le {{date}}",
+        "CLEARING": "Ajustements au compte d’attente",
+        "NO_CLEARING": "Aucun ajustement au compte d’attente.",
+        "CLEARING_DETAIL": "lié à {{link}}, saisi par {{by}}, {{age}} jours",
+        "EXCLUSIONS": "Opérations bancaires exclues"
+      },
+      "ADJUSTMENTS": {
+        "HEADING": "Ajustements comptabilisés",
+        "EMPTY": "Aucun ajustement comptabilisé.",
+        "REVERSED": "Contrepassé"
+      },
+      "AUDIT": {
+        "HEADING": "Piste d’audit",
+        "LOADING": "Chargement de la piste d’audit…",
+        "ERROR": "Impossible de charger la piste d’audit.",
+        "EMPTY": "Aucune entrée d’audit pour l’instant."
+      },
+      "JUSTIFICATION_HINT": "Au moins {{min}} caractères. Consigné dans la piste d’audit.",
+      "ADJUST": {
+        "TITLE": "Ajouter un ajustement",
+        "TYPE": "Type",
+        "CHOOSE_TYPE": "Choisissez un type",
+        "LINK_LEGEND": "Qu’explique cet ajustement ?",
+        "LINK_BANK": "Une opération bancaire",
+        "LINK_RESIDUAL": "Le reliquat d’un rapprochement accepté",
+        "LINK_BRIDGE": "L’écart reconnu (combler l’écart d’ouverture)",
+        "BANK_TRANSACTION": "Opération bancaire",
+        "CHOOSE_BANK": "Choisissez une opération bancaire",
+        "NO_LINK": "Sans lien avec une opération bancaire",
+        "MATCH": "Rapprochement",
+        "CHOOSE_MATCH": "Choisissez un rapprochement",
+        "MATCH_OPTION": "Rapprochement {{n}} : banque {{bank}}, comptabilité {{ledger}}",
+        "SERVED_RESIDUAL": "Le serveur comptabilisera le reliquat de {{amount}}.",
+        "SERVED_BRIDGE": "Le serveur comptabilisera l’écart d’ouverture de {{amount}}.",
+        "COUNTER": "Autre compte bancaire",
+        "CHOOSE_COUNTER": "Choisissez un compte bancaire",
+        "COUNTER_HINT": "Positif pour de l’argent reçu de ce compte, négatif pour de l’argent envoyé vers lui.",
+        "AMOUNT": "Montant",
+        "AMOUNT_HINT": "Signé : positif augmente la trésorerie, négatif la diminue.",
+        "DATE": "Date de comptabilisation",
+        "DATE_HINT": "Laissez vide pour utiliser la date de ce qui est expliqué. Une date proposée signifie que cette période est clôturée.",
+        "DESCRIPTION": "Description",
+        "JUSTIFICATION": "Justification (facultatif)",
+        "JUSTIFICATION_REQUIRED": "Justification",
+        "OVERRIDE": "Justification de dérogation pour période clôturée (facultatif)",
+        "OVERRIDE_HINT": "Seulement pour comptabiliser dans une période clôturée au lieu de la date proposée.",
+        "CONFIRM": "Comptabiliser l’ajustement"
+      },
+      "OUTCOME": {
+        "MATCHED": "Le rapprochement est enregistré.",
+        "AUTO_MATCHED": "{{proposed}} rapprochements proposés, {{ambiguous}} laissés à examiner.",
+        "PROPOSAL_ACCEPTED": "Le rapprochement proposé est accepté.",
+        "PROPOSAL_REJECTED": "Le rapprochement proposé est refusé.",
+        "PROPOSALS_ACCEPTED": "{{count}} rapprochements proposés sont acceptés.",
+        "UNMATCHED": "Le rapprochement est défait.",
+        "REGISTERED": "L’élément en suspens est enregistré.",
+        "RELEASED": "L’élément en suspens est libéré.",
+        "REAFFIRMED": "L’élément en suspens est réaffirmé pour ce rapprochement.",
+        "CLEARED_IN_GAP": "L’élément en suspens est soldé dans l’écart.",
+        "DUPLICATE_REVIEWED": "L’examen du doublon est enregistré.",
+        "EXCLUDED": "L’opération bancaire est exclue.",
+        "RESTORED": "L’opération bancaire est rétablie.",
+        "REVERSED": "L’ajustement est contrepassé.",
+        "ADJUSTED": "L’ajustement est comptabilisé.",
+        "SUBMITTED": "Le rapprochement est soumis pour approbation.",
+        "APPROVED": "Le rapprochement est approuvé.",
+        "RETURNED": "Le rapprochement est renvoyé au préparateur.",
+        "CANCELLED": "Le rapprochement est annulé."
+      },
+      "PROMPT": {
+        "REASON": "Motif",
+        "JUSTIFICATION": "Justification",
+        "REASON_HINT": "Obligatoire. Consigné dans la piste d’audit.",
+        "OPTIONAL_HINT": "Facultatif, sauf si le serveur en demande une.",
+        "TOO_SHORT": "Saisissez au moins {{min}} caractères.",
+        "ITEM_KIND": "Type d’élément",
+        "DECISION": "Décision",
+        "DISTINCT": "Pas un doublon",
+        "DUPLICATE": "Doublon d’une opération antérieure",
+        "ORIGINAL": "Opération d’origine",
+        "unmatch": {
+          "TITLE": "Défaire ce rapprochement ?",
+          "BODY": "Les deux côtés redeviennent non expliqués.",
+          "CONFIRM": "Défaire"
+        },
+        "register": {
+          "TITLE": "Marquer en suspens",
+          "BODY": "Un élément en suspens explique un décalage jusqu’à l’apparition de sa contrepartie.",
+          "CONFIRM": "Marquer en suspens"
+        },
+        "release": {
+          "TITLE": "Libérer cet élément en suspens ?",
+          "BODY": "La ligne redevient non expliquée.",
+          "CONFIRM": "Libérer"
+        },
+        "reaffirm": {
+          "TITLE": "Réaffirmer cet élément ancien",
+          "BODY": "Un décalage ancien compte comme non expliqué tant qu’il n’est pas réaffirmé à chaque rapprochement.",
+          "CONFIRM": "Réaffirmer"
+        },
+        "clearInGap": {
+          "TITLE": "Solder cet élément dans l’écart",
+          "BODY": "Sa contrepartie est apparue pendant l’écart reconnu.",
+          "CONFIRM": "Solder dans l’écart"
+        },
+        "reverse": {
+          "TITLE": "Contrepasser cet ajustement ?",
+          "BODY": "Une écriture de contrepassation est comptabilisée.",
+          "CONFIRM": "Contrepasser"
+        },
+        "return": {
+          "TITLE": "Renvoyer au préparateur ?",
+          "BODY": "Le préparateur peut modifier le rapprochement et le soumettre de nouveau.",
+          "CONFIRM": "Renvoyer"
+        },
+        "cancel": {
+          "TITLE": "Annuler ce rapprochement ?",
+          "BODY": "Ses rapprochements et éléments restent dans la piste d’audit. Le relevé peut être rapproché de nouveau.",
+          "CONFIRM": "Annuler le rapprochement"
+        },
+        "supersede": {
+          "TITLE": "Remplacer ce rapprochement ?",
+          "BODY": "Un nouveau rapprochement du même relevé commence ; celui-ci reste consultable avec son historique d’approbation.",
+          "CONFIRM": "Remplacer"
+        },
+        "exclude": {
+          "TITLE": "Exclure cette opération bancaire ?",
+          "BODY": "Elle ne compte plus dans le rapprochement.",
+          "CONFIRM": "Exclure"
+        },
+        "restore": {
+          "TITLE": "Rétablir cette opération bancaire ?",
+          "BODY": "Elle compte de nouveau dans le rapprochement.",
+          "CONFIRM": "Rétablir"
+        },
+        "matchJustification": {
+          "TITLE": "Ce rapprochement exige une justification",
+          "BODY": "Le serveur demande une justification pour les raisons suivantes :",
+          "CONFIRM": "Rapprocher avec justification"
+        },
+        "duplicateReview": {
+          "TITLE": "Examiner un doublon possible",
+          "BODY": "Décidez si cette opération fait double emploi avec une opération antérieure.",
+          "CONFIRM": "Enregistrer la décision"
+        }
+      },
+      "ERROR": {
+        "LOAD": "Impossible de charger le rapprochement.",
+        "FORBIDDEN": "Vous n’êtes pas autorisé à consulter les rapprochements bancaires.",
+        "NOT_FOUND": "Ce rapprochement est introuvable.",
+        "FORBIDDEN_WRITE": "Vous n’êtes pas autorisé à effectuer cette action.",
+        "INVALID": "La demande a été refusée comme non valide. Vérifiez les valeurs et réessayez.",
+        "OTHER": "L’action n’a pas pu aboutir. Réessayez.",
+        "MATCH_AMOUNT_MISMATCH": "Les montants bancaires et comptables sélectionnés ne concordent pas.",
+        "MATCH_CARDINALITY_NOT_ALLOWED": "Cette combinaison d’opérations et de lignes ne peut pas être rapprochée.",
+        "MATCH_REQUIRES_REVIEW": "Ce rapprochement exige une justification.",
+        "MATCH_STATE_INVALID": "Ce rapprochement a déjà changé. Le rapprochement a été rechargé.",
+        "LINE_INELIGIBLE": "Une ligne ou une opération sélectionnée n’est pas admissible pour ce rapprochement.",
+        "OUTSTANDING_ITEM_NOT_ELIGIBLE": "Cet élément n’est pas admissible pour cette action. Le rapprochement a été rechargé.",
+        "ADJUSTMENT_LINK_REQUIRED": "Un ajustement Autre exige exactement un lien.",
+        "ADJUSTMENT_LINK_NOT_ELIGIBLE": "Le lien n’est plus admissible. Le rapprochement a été rechargé ; vérifiez les montants et réessayez.",
+        "GL_ACCOUNT_NOT_ACTIVE": "L’autre compte bancaire n’est pas actif.",
+        "ACCOUNT_NOT_RECONCILABLE": "L’autre compte n’est pas un compte bancaire rapprochable.",
+        "ADJUSTMENT_SIGN_INVALID": "Le signe du montant ne convient pas à ce type d’ajustement.",
+        "BRIDGE_ALREADY_POSTED": "L’ajustement d’écart de ce relevé est déjà comptabilisé.",
+        "ADJUSTMENT_APPROVAL_REQUIRED": "Cet ajustement dépasse votre limite et exige une personne disposant de {{permission}}.",
+        "JUSTIFICATION_REQUIRED": "Une justification d’au moins 10 caractères est requise.",
+        "NOT_BALANCED": "Le rapprochement n’est plus équilibré. Il a été rechargé.",
+        "HAS_UNEXPLAINED_ITEMS": "{{bank}} opérations bancaires et {{ledger}} lignes comptables restent non expliquées. Elles sont mises en évidence.",
+        "SELF_APPROVAL": "Vous avez soumis ce rapprochement : vous ne pouvez pas l’approuver.",
+        "NOT_SUBMITTED": "Le rapprochement n’est pas soumis.",
+        "ALREADY_FINALIZED": "Le rapprochement est déjà approuvé.",
+        "NOT_EDITABLE": "Le rapprochement ne peut pas être modifié dans son état actuel. Il a été rechargé.",
+        "WINDOW_ALREADY_RECONCILED": "Un autre rapprochement de ce relevé est actif.",
+        "ADJUSTMENT_ALREADY_REVERSED": "Cet ajustement est déjà contrepassé.",
+        "PERIOD_CLOSED": "La période de cette date est clôturée. Choisissez une date ouverte ou fournissez une justification de dérogation.",
+        "PERIOD_HARD_LOCKED": "La période de cette date est verrouillée.",
+        "GL_MAPPING_NOT_CONFIGURED": "Aucune correspondance comptable n’est configurée pour ce type d’ajustement.",
+        "AMOUNT_PRECISION_EXCEEDS_CURRENCY": "Le montant a plus de décimales que la devise ne le permet.",
+        "OPTIMISTIC_LOCK": "Quelqu’un d’autre a modifié ce rapprochement. Il a été rechargé ; réessayez."
       }
     }
   },

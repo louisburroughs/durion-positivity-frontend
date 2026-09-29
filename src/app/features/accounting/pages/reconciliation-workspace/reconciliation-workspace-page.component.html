@@ -1,0 +1,454 @@
+<main class="accounting-page" aria-labelledby="workspace-heading">
+  <header class="page-header">
+    <p class="section-overline">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.OVERLINE' | translate }}</p>
+    <h1 id="workspace-heading">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.TITLE' | translate }}</h1>
+    @if (review(); as current) {
+      <p class="page-subtitle" data-testid="workspace-account">
+        {{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.SUBTITLE' | translate: {
+          account: accountLabel() || ('COMMON.NOT_AVAILABLE' | translate),
+          start: (dateOnly(current.header.statementStartDate) | date: 'mediumDate'),
+          end: (dateOnly(current.header.statementEndDate) | date: 'mediumDate')
+        } }}
+      </p>
+    }
+    <a class="link-button" [routerLink]="bankAccountsLink">{{ 'ACCOUNTING.BANK_IMPORT.BACK' | translate }}</a>
+  </header>
+
+  <!-- Both live regions stay in the DOM so a rebuild never drops an announcement (ADR-0029 §8.8). -->
+  <div class="outcome-region" role="status" aria-live="polite">
+    @if (outcome(); as result) {
+      @if (result.tone === 'success') {
+        <p #outcomeSuccess class="alert alert-success" tabindex="-1" data-testid="outcome-success">{{ result.key | translate: result.params }}</p>
+      }
+    }
+  </div>
+  <div class="outcome-region" role="alert" aria-live="assertive">
+    @if (outcome(); as result) {
+      @if (result.tone === 'error') {
+        <p #outcomeError class="alert alert-error" tabindex="-1" data-testid="outcome-error">{{ result.key | translate: result.params }}</p>
+      }
+    }
+  </div>
+
+  @if (state() === 'loading') {
+    <section class="state-panel" aria-live="polite" aria-busy="true" data-testid="loading-state">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.LOADING' | translate }}</section>
+  }
+
+  @if (state() === 'error' && errorKey(); as key) {
+    <section class="state-panel state-panel--error" role="alert" data-testid="error-state">
+      {{ key | translate }}
+      <button type="button" class="link-button" (click)="load()">{{ 'ACCOUNTING.COMMON.RETRY' | translate }}</button>
+    </section>
+  }
+
+  @if (state() === 'ready') {
+    @if (review(); as current) {
+      <section class="page-section header-card" aria-labelledby="workspace-summary" [attr.aria-busy]="refreshing() ? 'true' : null" data-testid="workspace-header">
+        <h2 id="workspace-summary" class="sr-only">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.HEADER.HEADING' | translate }}</h2>
+        <dl class="header-grid">
+          <div><dt>{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.HEADER.STATUS' | translate }}</dt>
+            <dd><span class="status-badge" data-testid="workspace-status">{{ ('ACCOUNTING.RECONCILIATION_WORKSPACE.STATUS.' + (current.header.status ?? 'UNKNOWN')) | translate }}</span></dd></div>
+          <div><dt>{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.HEADER.PERIOD' | translate }}</dt><dd>{{ current.header.accountingPeriodCode ?? ('COMMON.NOT_AVAILABLE' | translate) }}</dd></div>
+          <div><dt>{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.HEADER.BASELINE' | translate }}</dt>
+            <dd data-testid="workspace-baseline">{{ current.header.baselineDate ? (dateOnly(current.header.baselineDate) | date: 'mediumDate') : ('COMMON.NOT_AVAILABLE' | translate) }}</dd></div>
+          <div><dt>{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.HEADER.PREPARER' | translate }}</dt><dd>{{ current.header.preparer ?? ('COMMON.NOT_AVAILABLE' | translate) }}</dd></div>
+          <div><dt>{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.HEADER.APPROVER' | translate }}</dt><dd>{{ current.header.approver ?? ('COMMON.NOT_AVAILABLE' | translate) }}</dd></div>
+        </dl>
+        @if (current.header.baselineSetByThisStatement && current.header.gapAcknowledgement) {
+          <p class="alert alert-info" data-testid="gap-acknowledgement">
+            {{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.HEADER.GAP_ACKNOWLEDGED' | translate }}
+            <span class="quoted">{{ current.header.gapAcknowledgement }}</span>
+          </p>
+        }
+
+        <div class="lifecycle" data-testid="lifecycle">
+          @if (current.header.status === 'IN_PROGRESS') {
+            <button type="button" class="btn btn--accent" data-testid="submit" [disabled]="!canSubmit()" (click)="submit()">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ACTION.SUBMIT' | translate }}</button>
+          }
+          @if (current.header.status === 'SUBMITTED') {
+            <button type="button" class="btn btn--accent" data-testid="approve" [disabled]="!canApproveNow()" (click)="approve()">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ACTION.APPROVE' | translate }}</button>
+            <button type="button" class="btn btn--outline" data-testid="return" [disabled]="!canReturn()" (click)="openReturn()">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ACTION.RETURN' | translate }}</button>
+          }
+          @if (current.header.status === 'IN_PROGRESS' || current.header.status === 'SUBMITTED') {
+            <button type="button" class="btn btn--outline" data-testid="cancel" [disabled]="!canCancel()" (click)="openCancel()">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ACTION.CANCEL' | translate }}</button>
+          }
+          @if (current.header.status === 'FINALIZED' || current.header.status === 'INVALIDATED') {
+            <button type="button" class="btn btn--outline" data-testid="supersede" [disabled]="!canSupersede()" (click)="openSupersede()">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ACTION.SUPERSEDE' | translate }}</button>
+          }
+        </div>
+      </section>
+
+      @if (current.header.status === 'IN_PROGRESS') {
+        <div class="toolbar" data-testid="toolbar">
+          <button type="button" class="btn btn--outline" data-testid="auto-match" [disabled]="!preparerEnabled()" (click)="autoMatch()">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ACTION.AUTO_MATCH' | translate }}</button>
+          <button type="button" class="btn btn--accent" data-testid="match-selected" [disabled]="!canMatchSelected()" (click)="matchSelected()">
+            {{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ACTION.MATCH_SELECTED' | translate: { bank: selectedBank().size, ledger: selectedLedger().size } }}
+          </button>
+          <button type="button" class="btn btn--outline" data-testid="add-adjustment" [disabled]="!preparerEnabled()" (click)="openAdjustment()">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ACTION.ADD_ADJUSTMENT' | translate }}</button>
+        </div>
+      }
+
+      @if (current.proposedMatches.length > 0) {
+        <section class="page-section" aria-labelledby="proposals-heading" data-testid="proposals">
+          <h2 id="proposals-heading">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.PROPOSALS.HEADING' | translate }}</h2>
+          <ul class="plain-list">
+            @for (match of current.proposedMatches; track match.matchId; let i = $index) {
+              <li data-testid="proposal" [attr.data-match]="match.matchId">
+                {{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.PROPOSALS.ITEM' | translate: {
+                  n: i + 1,
+                  bank: (match.bankTotal | money: current.header.currency),
+                  ledger: (match.ledgerTotal | money: current.header.currency)
+                } }}
+                <button type="button" class="btn btn--outline" data-testid="accept-proposal" [disabled]="!preparerEnabled()" (click)="acceptProposal(match)">
+                  {{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ACTION.ACCEPT' | translate }}<span class="sr-only">&nbsp;{{ i + 1 }}</span>
+                </button>
+                <button type="button" class="btn btn--outline" data-testid="reject-proposal" [disabled]="!preparerEnabled()" (click)="rejectProposal(match)">
+                  {{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ACTION.REJECT' | translate }}<span class="sr-only">&nbsp;{{ i + 1 }}</span>
+                </button>
+              </li>
+            }
+          </ul>
+          <button type="button" class="btn btn--accent" data-testid="accept-all" [disabled]="!preparerEnabled()" (click)="acceptAllProposals()">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ACTION.ACCEPT_ALL' | translate }}</button>
+        </section>
+      }
+
+      @if (current.brokenMatches.length > 0) {
+        <p class="alert alert-warning" data-testid="broken-matches">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.BROKEN' | translate: { count: current.brokenMatches.length } }}</p>
+      }
+
+      <div class="columns">
+        <section class="page-section" aria-labelledby="bank-heading" data-testid="bank-column">
+          <h2 id="bank-heading">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.BANK.HEADING' | translate: { count: bankRows().length } }}</h2>
+          @if (bankRows().length === 0) {
+            <p class="hint-text">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.BANK.EMPTY' | translate }}</p>
+          } @else {
+            <div class="table-scroll-container">
+              <table class="ledger-table">
+                <caption class="sr-only">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.BANK.CAPTION' | translate }}</caption>
+                <thead>
+                  <tr>
+                    <th scope="col"><span class="sr-only">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.COL_SELECT' | translate }}</span></th>
+                    <th scope="col">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.COL_DATE' | translate }}</th>
+                    <th scope="col">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.COL_DESCRIPTION' | translate }}</th>
+                    <th scope="col" class="numeric">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.COL_AMOUNT' | translate }}</th>
+                    <th scope="col">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.COL_ACTIONS' | translate }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (row of bankRows(); track row.bankTransactionId; let i = $index) {
+                    <tr data-testid="bank-row" [attr.data-bank]="row.bankTransactionId" [class.row--flagged]="flaggedIds().has(row.bankTransactionId)"
+                      [class.row--selected]="selectedBank().has(row.bankTransactionId)">
+                      <td>
+                        <input type="checkbox" [checked]="selectedBank().has(row.bankTransactionId)" [disabled]="current.header.status !== 'IN_PROGRESS'"
+                          (change)="toggleBank(row.bankTransactionId)" [attr.aria-label]="'ACCOUNTING.RECONCILIATION_WORKSPACE.BANK.SELECT' | translate: { n: i + 1 }"
+                          data-testid="select-bank" />
+                      </td>
+                      <td>{{ dateOnly(row.transactionDate) | date: 'mediumDate' }}</td>
+                      <td>
+                        <span>{{ row.description ?? ('COMMON.NOT_AVAILABLE' | translate) }}</span>
+                        @if (row.reference) {
+                          <span class="secondary-line">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.BANK.REFERENCE' | translate: { reference: row.reference } }}</span>
+                        }
+                        @if (row.checkNumber) {
+                          <span class="secondary-line">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.BANK.CHECK' | translate: { check: row.checkNumber } }}</span>
+                        }
+                        @if (row.arrivedAfterApproval) {
+                          <span class="status-badge status-badge--warning" data-testid="late-arrival">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.BANK.LATE' | translate }}</span>
+                        }
+                      </td>
+                      <td class="numeric">{{ row.signedAmount | money: current.header.currency }}</td>
+                      <td class="actions-cell">
+                        <button type="button" class="btn btn--outline" data-testid="show-candidates" (click)="showCandidates(row)">
+                          {{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ACTION.CANDIDATES' | translate }}<span class="sr-only">&nbsp;{{ i + 1 }}</span>
+                        </button>
+                        <button type="button" class="btn btn--outline" data-testid="adjust-bank" [disabled]="!preparerEnabled()" (click)="adjustBankRow(row)">
+                          {{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ACTION.EXPLAIN' | translate }}<span class="sr-only">&nbsp;{{ i + 1 }}</span>
+                        </button>
+                        <button type="button" class="btn btn--outline" data-testid="register-bank" [disabled]="!preparerEnabled()" (click)="openRegister('BANK', row.bankTransactionId)">
+                          {{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ACTION.OUTSTANDING' | translate }}<span class="sr-only">&nbsp;{{ i + 1 }}</span>
+                        </button>
+                        <button type="button" class="btn btn--outline" data-testid="exclude" [disabled]="!approverEditEnabled()" (click)="openExclude(row)">
+                          {{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ACTION.EXCLUDE' | translate }}<span class="sr-only">&nbsp;{{ i + 1 }}</span>
+                        </button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </section>
+
+        <section class="page-section" aria-labelledby="ledger-heading" data-testid="ledger-column">
+          <h2 id="ledger-heading">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.LEDGER.HEADING' | translate: { count: current.unexplainedLedger.length } }}</h2>
+          @if (current.unexplainedLedger.length === 0) {
+            <p class="hint-text">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.LEDGER.EMPTY' | translate }}</p>
+          } @else {
+            <div class="table-scroll-container">
+              <table class="ledger-table">
+                <caption class="sr-only">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.LEDGER.CAPTION' | translate }}</caption>
+                <thead>
+                  <tr>
+                    <th scope="col"><span class="sr-only">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.COL_SELECT' | translate }}</span></th>
+                    <th scope="col">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.COL_DATE' | translate }}</th>
+                    <th scope="col">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.COL_DESCRIPTION' | translate }}</th>
+                    <th scope="col" class="numeric">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.COL_AMOUNT' | translate }}</th>
+                    <th scope="col">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.COL_ACTIONS' | translate }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (line of current.unexplainedLedger; track line.glLineId; let i = $index) {
+                    <tr data-testid="ledger-row" [attr.data-line]="line.glLineId" [class.row--flagged]="flaggedIds().has(line.glLineId)"
+                      [class.row--selected]="selectedLedger().has(line.glLineId)">
+                      <td>
+                        <input type="checkbox" [checked]="selectedLedger().has(line.glLineId)" [disabled]="current.header.status !== 'IN_PROGRESS'"
+                          (change)="toggleLedger(line.glLineId)" [attr.aria-label]="'ACCOUNTING.RECONCILIATION_WORKSPACE.LEDGER.SELECT' | translate: { n: i + 1 }"
+                          data-testid="select-ledger" />
+                      </td>
+                      <td>{{ dateOnly(line.date) | date: 'mediumDate' }}</td>
+                      <td>
+                        <span>{{ line.description ?? ('COMMON.NOT_AVAILABLE' | translate) }}</span>
+                        @if (line.entryNumber) {
+                          <span class="secondary-line">{{ line.entryNumber }}</span>
+                        }
+                      </td>
+                      <td class="numeric">{{ line.signedAmount | money: current.header.currency }}</td>
+                      <td class="actions-cell">
+                        <button type="button" class="btn btn--outline" data-testid="register-ledger" [disabled]="!preparerEnabled()" (click)="openRegister('LEDGER', line.glLineId)">
+                          {{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ACTION.OUTSTANDING' | translate }}<span class="sr-only">&nbsp;{{ i + 1 }}</span>
+                        </button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </section>
+      </div>
+
+      @if (candidatesFor(); as target) {
+        <section #candidatesRegion class="page-section candidates" tabindex="-1" aria-labelledby="candidates-heading" data-testid="candidates">
+          <h2 id="candidates-heading">
+            {{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.CANDIDATES.HEADING' | translate: {
+              date: (dateOnly(target.transactionDate) | date: 'mediumDate'),
+              amount: (target.signedAmount | money: current.header.currency)
+            } }}
+          </h2>
+          @switch (candidatesState()) {
+            @case ('loading') {
+              <p aria-busy="true">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.CANDIDATES.LOADING' | translate }}</p>
+            }
+            @case ('error') {
+              <p class="field-error">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.CANDIDATES.ERROR' | translate }}
+                <button type="button" class="link-button" (click)="showCandidates(target)">{{ 'ACCOUNTING.COMMON.RETRY' | translate }}</button></p>
+            }
+            @default {
+              @if (candidates().length === 0) {
+                <p class="hint-text" data-testid="no-candidates">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.CANDIDATES.EMPTY' | translate }}</p>
+              } @else {
+                <ul class="plain-list">
+                  @for (candidate of candidates(); track $index; let i = $index) {
+                    <li data-testid="candidate">
+                      <span>{{ dateOnly(candidate.date) | date: 'mediumDate' }} · {{ candidate.entryNumber ?? '' }} {{ candidate.description ?? '' }} · {{ candidate.signedAmount | money: current.header.currency }}</span>
+                      <span class="secondary-line" data-testid="candidate-score">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.CANDIDATES.SCORE' | translate: { score: (candidate.score | number) } }}</span>
+                      <span class="secondary-line">
+                        @for (reason of candidate.reasons; track reason) {
+                          <span class="status-badge" data-testid="candidate-reason">{{ ('ACCOUNTING.RECONCILIATION_WORKSPACE.CANDIDATE_REASON.' + reason) | translate }}</span>
+                        }
+                      </span>
+                      @if (candidate.glLineId) {
+                        <button type="button" class="btn btn--outline" data-testid="pick-candidate" [disabled]="current.header.status !== 'IN_PROGRESS'" (click)="pickCandidate(candidate)"
+                          [attr.aria-pressed]="selectedLedger().has(candidate.glLineId)">
+                          {{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ACTION.SELECT_CANDIDATE' | translate }}<span class="sr-only">&nbsp;{{ i + 1 }}</span>
+                        </button>
+                      }
+                    </li>
+                  }
+                </ul>
+              }
+            }
+          }
+        </section>
+      }
+
+      @if (current.possibleDuplicates.length > 0) {
+        <section class="page-section" aria-labelledby="duplicates-heading" data-testid="possible-duplicates">
+          <h2 id="duplicates-heading">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.DUPLICATES.HEADING' | translate }}</h2>
+          <ul class="plain-list">
+            @for (row of current.possibleDuplicates; track row.bankTransactionId; let i = $index) {
+              <li>
+                {{ dateOnly(row.transactionDate) | date: 'mediumDate' }} · {{ row.description ?? '' }} · {{ row.signedAmount | money: current.header.currency }}
+                <button type="button" class="btn btn--outline" data-testid="review-duplicate" [disabled]="!preparerEnabled()" (click)="openDuplicateReview(row)">
+                  {{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ACTION.REVIEW_DUPLICATE' | translate }}<span class="sr-only">&nbsp;{{ i + 1 }}</span>
+                </button>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+
+      <section class="page-section" aria-labelledby="items-heading" data-testid="outstanding">
+        <h2 id="items-heading">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.OUTSTANDING.HEADING' | translate }}</h2>
+        @if (current.agedItemsAwaitingReaffirmation.length > 0) {
+          <h3>{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.OUTSTANDING.AWAITING' | translate }}</h3>
+          <ul class="plain-list" data-testid="awaiting-reaffirmation">
+            @for (item of current.agedItemsAwaitingReaffirmation; track item.outstandingItemId; let i = $index) {
+              <li>
+                {{ dateOnly(item.itemDate) | date: 'mediumDate' }} · {{ item.signedAmount | money: current.header.currency }} · {{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.OUTSTANDING.AGE' | translate: { days: item.ageDays ?? 0 } }}
+                <button type="button" class="btn btn--outline" data-testid="reaffirm" [disabled]="!preparerEnabled()" (click)="openReaffirm(item)">
+                  {{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ACTION.REAFFIRM' | translate }}<span class="sr-only">&nbsp;{{ i + 1 }}</span>
+                </button>
+              </li>
+            }
+          </ul>
+        }
+        @if (current.outstandingItems.length === 0) {
+          <p class="hint-text">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.EVIDENCE.NO_OUTSTANDING' | translate }}</p>
+        } @else {
+          <ul class="plain-list">
+            @for (item of current.outstandingItems; track item.outstandingItemId; let i = $index) {
+              <li data-testid="outstanding-item" [attr.data-item]="item.outstandingItemId">
+                {{ ('ACCOUNTING.RECONCILIATION_WORKSPACE.ITEM_KIND.' + (item.itemKind ?? 'UNKNOWN')) | translate }} ·
+                {{ ('ACCOUNTING.RECONCILIATION_WORKSPACE.ITEM_STATUS.' + (item.status ?? 'UNKNOWN')) | translate }} ·
+                {{ item.signedAmount | money: current.header.currency }}
+                @if (item.status === 'OPEN') {
+                  <button type="button" class="btn btn--outline" data-testid="release" [disabled]="!preparerEnabled()" (click)="openRelease(item)">
+                    {{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ACTION.RELEASE' | translate }}<span class="sr-only">&nbsp;{{ i + 1 }}</span>
+                  </button>
+                }
+                @if (gapClearable().has(item.outstandingItemId)) {
+                  <button type="button" class="btn btn--outline" data-testid="clear-in-gap" [disabled]="!approverEditEnabled()" (click)="openClearInGap(item)">
+                    {{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ACTION.CLEAR_IN_GAP' | translate }}<span class="sr-only">&nbsp;{{ i + 1 }}</span>
+                  </button>
+                }
+              </li>
+            }
+          </ul>
+        }
+      </section>
+
+      <app-reconciliation-review-panel
+        [review]="current"
+        [canUnmatch]="preparerEnabled()"
+        [canSettleResidual]="preparerEnabled()"
+        [canRestore]="approverEditEnabled()"
+        [canReverse]="approverEditEnabled()"
+        [busy]="busy() || refreshing()"
+        (unmatch)="openUnmatch($event)"
+        (settleResidual)="settleResidual($event)"
+        (restore)="openRestore($event)"
+        (reverse)="openReverse($event)" />
+
+      <section class="page-section" aria-labelledby="audit-heading" data-testid="audit">
+        <h2 id="audit-heading">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.AUDIT.HEADING' | translate }}</h2>
+        @switch (auditState()) {
+          @case ('loading') {
+            <p aria-busy="true">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.AUDIT.LOADING' | translate }}</p>
+          }
+          @case ('error') {
+            <p class="field-error">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.AUDIT.ERROR' | translate }}
+              <button type="button" class="link-button" (click)="retryAudit()">{{ 'ACCOUNTING.COMMON.RETRY' | translate }}</button></p>
+          }
+          @default {
+            @if (audit().length === 0) {
+              <p class="hint-text">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.AUDIT.EMPTY' | translate }}</p>
+            } @else {
+              <ol class="plain-list">
+                @for (entry of audit(); track entry.auditLogId) {
+                  <li data-testid="audit-entry">
+                    {{ entry.timestamp | date: 'medium' }} · {{ entry.operation ?? '' }} · {{ entry.userId ?? ('COMMON.NOT_AVAILABLE' | translate) }}
+                    @if (entry.justification) {
+                      <span class="secondary-line">{{ entry.justification }}</span>
+                    }
+                  </li>
+                }
+              </ol>
+            }
+          }
+        }
+      </section>
+
+      @if (adjustmentOpen()) {
+        <app-reconciliation-adjustment-dialog
+          [review]="current"
+          [types]="adjustmentTypes()"
+          [bankAccounts]="bankAccounts()"
+          [preset]="adjustmentPreset()"
+          [canOverride]="canOverridePeriod()"
+          [proposedDate]="proposedDate()"
+          [busy]="busy()"
+          [errorKey]="adjustmentErrorKey()"
+          (submitted)="submitAdjustment($event)"
+          (cancelled)="cancelAdjustment()" />
+      }
+    }
+  }
+
+  @if (prompt(); as open) {
+    <dialog class="confirm-panel" appModalDialog (modalCancel)="cancelPrompt()" aria-labelledby="prompt-title" aria-describedby="prompt-body" data-testid="prompt-dialog">
+      <h2 id="prompt-title" class="confirm-heading">{{ ('ACCOUNTING.RECONCILIATION_WORKSPACE.PROMPT.' + open.kind + '.TITLE') | translate }}</h2>
+      <p id="prompt-body">{{ ('ACCOUNTING.RECONCILIATION_WORKSPACE.PROMPT.' + open.kind + '.BODY') | translate }}</p>
+      @if (open.reasons && open.reasons.length > 0) {
+        <ul class="plain-list" data-testid="prompt-reasons">
+          @for (reason of open.reasons; track $index) {
+            <li>{{ reason }}</li>
+          }
+        </ul>
+      }
+      <form class="stacked-form" [formGroup]="promptForm" (ngSubmit)="confirmPrompt()" novalidate>
+        @if (open.kind === 'register') {
+          <div class="form-field">
+            <label for="prompt-kind">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.PROMPT.ITEM_KIND' | translate }}</label>
+            <select id="prompt-kind" formControlName="kind" data-testid="prompt-kind">
+              @for (kind of itemKinds; track kind) {
+                <option [value]="kind">{{ ('ACCOUNTING.RECONCILIATION_WORKSPACE.ITEM_KIND.' + kind) | translate }}</option>
+              }
+            </select>
+          </div>
+        }
+        @if (open.kind === 'duplicateReview') {
+          <fieldset class="radio-group">
+            <legend>{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.PROMPT.DECISION' | translate }}</legend>
+            <label><input type="radio" formControlName="decision" value="DISTINCT" data-testid="decision-distinct" /> {{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.PROMPT.DISTINCT' | translate }}</label>
+            <label><input type="radio" formControlName="decision" value="DUPLICATE" data-testid="decision-duplicate" /> {{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.PROMPT.DUPLICATE' | translate }}</label>
+          </fieldset>
+          @if (open.originals && open.originals.length > 0) {
+            <div class="form-field">
+              <label for="prompt-original">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.PROMPT.ORIGINAL' | translate }}</label>
+              <select id="prompt-original" formControlName="original" data-testid="prompt-original">
+                @for (original of open.originals; track original.bankTransactionId) {
+                  <option [value]="original.bankTransactionId">
+                    {{ dateOnly(original.transactionDate) | date: 'mediumDate' }} · {{ original.description ?? '' }} · {{ original.signedAmount | money: review()?.header?.currency }}
+                  </option>
+                }
+              </select>
+            </div>
+          }
+        }
+        <div class="form-field">
+          <label for="prompt-text">{{ (promptMin(open.kind) > 1 ? 'ACCOUNTING.RECONCILIATION_WORKSPACE.PROMPT.JUSTIFICATION' : 'ACCOUNTING.RECONCILIATION_WORKSPACE.PROMPT.REASON') | translate }}</label>
+          <textarea id="prompt-text" rows="3" formControlName="text" aria-describedby="prompt-hint" data-testid="prompt-text"></textarea>
+          <p id="prompt-hint" class="hint-text">
+            @if (promptMin(open.kind) > 1) {
+              {{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.JUSTIFICATION_HINT' | translate: { min: promptMin(open.kind) } }}
+            } @else if (promptMin(open.kind) === 1) {
+              {{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.PROMPT.REASON_HINT' | translate }}
+            } @else {
+              {{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.PROMPT.OPTIONAL_HINT' | translate }}
+            }
+          </p>
+        </div>
+        @if (promptErrorKey(); as key) {
+          <p class="field-error" role="alert">{{ key | translate: { min: promptMin(open.kind) } }}</p>
+        }
+        <div class="form-actions">
+          <button type="submit" class="btn btn--accent" data-testid="confirm-prompt" [disabled]="busy() || promptLength() < promptMin(open.kind)">
+            {{ ('ACCOUNTING.RECONCILIATION_WORKSPACE.PROMPT.' + open.kind + '.CONFIRM') | translate }}
+          </button>
+          <button type="button" class="btn btn--outline" data-testid="cancel-prompt" (click)="cancelPrompt()">{{ 'COMMON.CANCEL' | translate }}</button>
+        </div>
+      </form>
+    </dialog>
+  }
+</main>

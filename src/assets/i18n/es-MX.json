@@ -4476,7 +4476,9 @@
           "BLOCKED": "{{period}} no se puede cerrar: las comprobaciones de conciliación bancaria lo impiden. Abra su preparación para ver por qué.",
           "BLOCKED_NO_OVERRIDE": "{{period}} no se puede cerrar: las comprobaciones de conciliación bancaria lo impiden, y cerrar con una excepción requiere el permiso {{override}}.",
           "UNAVAILABLE": "{{period}} no se puede cerrar hasta que se pueda leer su preparación de conciliación bancaria."
-        }
+        },
+        "OPEN_RECONCILIATION": "Abrir la conciliación",
+        "OPEN_BANK_ACCOUNTS": "Cuentas bancarias"
       },
       "EXCEPTION": {
         "TITLE": "¿Cerrar {{period}} con una excepción?",
@@ -4779,6 +4781,375 @@
       "ERROR": {
         "HEADER": "Indique las fechas de inicio y fin y ambos saldos como números.",
         "TRANSACTIONS": "Cada movimiento necesita fecha, importe y descripción."
+      }
+    },
+    "RECONCILIATION_WORKSPACE": {
+      "OVERLINE": "Conciliación bancaria",
+      "TITLE": "Conciliación",
+      "SUBTITLE": "{{account}}, estado de cuenta del {{start}} al {{end}}",
+      "LOADING": "Cargando la conciliación…",
+      "HEADER": {
+        "HEADING": "Resumen",
+        "STATUS": "Estado",
+        "PERIOD": "Período",
+        "BASELINE": "Fecha base",
+        "PREPARER": "Preparada por",
+        "APPROVER": "Aprobada por",
+        "GAP_ACKNOWLEDGED": "Este estado de cuenta fijó la fecha base de conciliación de la cuenta con este reconocimiento de intervalo:"
+      },
+      "STATUS": {
+        "IN_PROGRESS": "En curso",
+        "SUBMITTED": "Enviada a aprobación",
+        "FINALIZED": "Aprobada",
+        "INVALIDATED": "Invalidada",
+        "SUPERSEDED": "Reemplazada",
+        "CANCELLED": "Cancelada",
+        "UNKNOWN": "Desconocido"
+      },
+      "ACTION": {
+        "SUBMIT": "Enviar a aprobación",
+        "APPROVE": "Aprobar",
+        "RETURN": "Devolver al preparador",
+        "CANCEL": "Cancelar conciliación",
+        "SUPERSEDE": "Reemplazar",
+        "AUTO_MATCH": "Asociar automáticamente",
+        "MATCH_SELECTED": "Asociar selección ({{bank}} banco, {{ledger}} contabilidad)",
+        "ADD_ADJUSTMENT": "Agregar ajuste",
+        "ACCEPT": "Aceptar",
+        "REJECT": "Rechazar",
+        "ACCEPT_ALL": "Aceptar todo",
+        "CANDIDATES": "Candidatos",
+        "EXPLAIN": "Explicar",
+        "OUTSTANDING": "Marcar pendiente",
+        "EXCLUDE": "Excluir",
+        "RESTORE": "Restaurar",
+        "REVERSE": "Revertir",
+        "UNMATCH": "Deshacer asociación",
+        "SETTLE_RESIDUAL": "Saldar residuo",
+        "SELECT_CANDIDATE": "Seleccionar",
+        "REVIEW_DUPLICATE": "Revisar duplicado",
+        "REAFFIRM": "Reafirmar",
+        "RELEASE": "Liberar",
+        "CLEAR_IN_GAP": "Saldar en el intervalo"
+      },
+      "PROPOSALS": {
+        "HEADING": "Asociaciones propuestas",
+        "ITEM": "Propuesta {{n}}: banco {{bank}}, contabilidad {{ledger}}"
+      },
+      "BROKEN": "{{count}} asociaciones anteriores se rompieron por cambios contables y deben asociarse de nuevo.",
+      "COL_SELECT": "Seleccionar",
+      "COL_DATE": "Fecha",
+      "COL_DESCRIPTION": "Descripción",
+      "COL_AMOUNT": "Importe",
+      "COL_ACTIONS": "Acciones",
+      "BANK": {
+        "HEADING": "Movimientos bancarios sin explicar ({{count}})",
+        "EMPTY": "Todos los movimientos bancarios están explicados.",
+        "CAPTION": "Movimientos bancarios sin explicar, primero los que llegaron tarde",
+        "SELECT": "Seleccionar el movimiento bancario {{n}}",
+        "REFERENCE": "Referencia {{reference}}",
+        "CHECK": "Cheque {{check}}",
+        "LATE": "Llegó después de la aprobación"
+      },
+      "LEDGER": {
+        "HEADING": "Líneas contables sin explicar ({{count}})",
+        "EMPTY": "Todas las líneas contables están explicadas.",
+        "CAPTION": "Líneas contables sin explicar",
+        "SELECT": "Seleccionar la línea contable {{n}}"
+      },
+      "CANDIDATES": {
+        "HEADING": "Candidatos para el movimiento del {{date}} por {{amount}}",
+        "LOADING": "Buscando candidatos…",
+        "ERROR": "No se pudieron cargar los candidatos.",
+        "EMPTY": "Ninguna línea contable se parece a este movimiento.",
+        "SCORE": "Puntuación {{score}}"
+      },
+      "CANDIDATE_REASON": {
+        "EXACT_AMOUNT": "Importe exacto",
+        "WITHIN_TOLERANCE": "Dentro de la tolerancia",
+        "DATE_IN_WINDOW": "Fecha cercana",
+        "DATE_OUT_OF_WINDOW": "Fecha lejana",
+        "REFERENCE_MATCH": "Referencia coincidente",
+        "DESCRIPTION_SIMILAR": "Descripción similar"
+      },
+      "DUPLICATES": {
+        "HEADING": "Posibles duplicados por revisar"
+      },
+      "OUTSTANDING": {
+        "HEADING": "Partidas pendientes",
+        "AWAITING": "Partidas antiguas por reafirmar",
+        "AGE": "{{days}} días"
+      },
+      "ITEM_KIND": {
+        "DEPOSIT_IN_TRANSIT": "Depósito en tránsito",
+        "OUTSTANDING_CHECK": "Cheque pendiente",
+        "OTHER_LEDGER_TIMING": "Otra diferencia temporal contable",
+        "BANK_ERROR_PENDING": "Error bancario pendiente",
+        "UNKNOWN": "Otro"
+      },
+      "ITEM_STATUS": {
+        "OPEN": "Abierta",
+        "CLEARED": "Saldada",
+        "CLEARED_IN_GAP": "Saldada en el intervalo",
+        "VOIDED": "Anulada",
+        "RELEASED": "Liberada",
+        "UNKNOWN": "Desconocido"
+      },
+      "MATCH_STATE": {
+        "PROPOSED": "Propuesta",
+        "ACCEPTED": "Aceptada",
+        "REJECTED": "Rechazada",
+        "UNMATCHED": "Deshecha",
+        "BROKEN": "Rota",
+        "UNKNOWN": "Desconocido"
+      },
+      "ADJUSTMENT_TYPE": {
+        "BANK_FEE": "Comisión bancaria",
+        "NSF_FEE": "Comisión por fondos insuficientes",
+        "INTEREST_EARNED": "Intereses ganados",
+        "OTHER": "Otro",
+        "TRANSFER": "Transferencia",
+        "UNKNOWN": "Ajuste"
+      },
+      "REVIEW": {
+        "HEADING": "Revisión"
+      },
+      "READINESS": {
+        "HEADING": "Preparación",
+        "CAN_SUBMIT": "Se puede enviar",
+        "CANNOT_SUBMIT": "No está lista para enviar",
+        "CAN_APPROVE": "Se puede aprobar",
+        "CANNOT_APPROVE": "No está lista para aprobar",
+        "PROPOSALS_PENDING": "Algunas asociaciones propuestas siguen esperando una decisión.",
+        "REASON": {
+          "NOT_BALANCED": "Los saldos ajustados del banco y de libros difieren.",
+          "UNEXPLAINED_BANK": "{{bank}} movimientos bancarios sin explicar.",
+          "UNEXPLAINED_LEDGER": "{{ledger}} líneas contables sin explicar.",
+          "SELF_APPROVAL": "Quien la envió no puede aprobarla.",
+          "OTHER": "No está lista ({{code}})."
+        }
+      },
+      "EQUATION": {
+        "HEADING": "Conciliación",
+        "STATEMENT_CLOSING": "Saldo final del estado de cuenta",
+        "OUTSTANDING_LEDGER": "Partidas contables pendientes",
+        "OUTSTANDING_BANK": "Partidas bancarias pendientes",
+        "ADJUSTED_BANK": "Saldo bancario ajustado",
+        "GL_ENDING": "Saldo contable final",
+        "LATE_ADJUSTMENTS": "Ajustes tardíos",
+        "ADJUSTED_BOOK": "Saldo en libros ajustado",
+        "DIFFERENCE": "Diferencia",
+        "SHOW_ITEMS": "Mostrar las {{count}} partidas",
+        "OWNED_BY_OTHER": "de otra conciliación",
+        "REVERSAL": "reversión"
+      },
+      "DIAGNOSTICS": {
+        "HEADING": "Diagnóstico",
+        "INFO_ONLY": "Solo informativo. Estas cifras nunca impiden enviar ni aprobar.",
+        "OPENING_DIFFERENCE": "Diferencia inicial",
+        "STATEMENT_OPENING": "Saldo inicial del estado de cuenta",
+        "GL_OPENING": "Saldo contable inicial",
+        "OPENING_LEDGER_ITEMS": "Partidas contables pendientes al inicio",
+        "OPENING_BANK_ITEMS": "Partidas bancarias pendientes al inicio",
+        "OPENING_ADJUSTMENTS": "Ajustes iniciales",
+        "FLAG": "Los saldos iniciales no coinciden.",
+        "CAUSE_GAP": "La causa probable es el intervalo reconocido, que aún no se ha cubierto.",
+        "CAUSE_INVALIDATED": "La causa probable es una conciliación anterior invalidada; no aplica un ajuste de intervalo."
+      },
+      "EVIDENCE": {
+        "HEADING": "Evidencia",
+        "MATCHES": "Asociaciones",
+        "NO_MATCHES": "Aún no hay asociaciones.",
+        "COL_STATE": "Estado",
+        "COL_BANK_TOTAL": "Total banco",
+        "COL_LEDGER_TOTAL": "Total contabilidad",
+        "COL_TOLERANCE": "Tolerancia usada",
+        "COL_RESIDUAL": "Residuo",
+        "COL_NOTES": "Notas",
+        "REPLACES": "Reemplaza una asociación anterior",
+        "OUTSTANDING": "Partidas pendientes",
+        "NO_OUTSTANDING": "No hay partidas pendientes.",
+        "CLOSED_ON": "cerrada el {{date}}",
+        "REAFFIRMED": "reafirmada por última vez el {{date}}",
+        "CLEARING": "Ajustes a la cuenta puente",
+        "NO_CLEARING": "No hay ajustes a la cuenta puente.",
+        "CLEARING_DETAIL": "vinculado a {{link}}, registrado por {{by}}, {{age}} días",
+        "EXCLUSIONS": "Movimientos bancarios excluidos"
+      },
+      "ADJUSTMENTS": {
+        "HEADING": "Ajustes registrados",
+        "EMPTY": "No hay ajustes registrados.",
+        "REVERSED": "Revertido"
+      },
+      "AUDIT": {
+        "HEADING": "Auditoría",
+        "LOADING": "Cargando la auditoría…",
+        "ERROR": "No se pudo cargar la auditoría.",
+        "EMPTY": "Aún no hay registros de auditoría."
+      },
+      "JUSTIFICATION_HINT": "Al menos {{min}} caracteres. Se registra en la auditoría.",
+      "ADJUST": {
+        "TITLE": "Agregar un ajuste",
+        "TYPE": "Tipo",
+        "CHOOSE_TYPE": "Elija un tipo",
+        "LINK_LEGEND": "¿Qué explica este ajuste?",
+        "LINK_BANK": "Un movimiento bancario",
+        "LINK_RESIDUAL": "El residuo de una asociación aceptada",
+        "LINK_BRIDGE": "El intervalo reconocido (cubrir la diferencia inicial)",
+        "BANK_TRANSACTION": "Movimiento bancario",
+        "CHOOSE_BANK": "Elija un movimiento bancario",
+        "NO_LINK": "Sin vínculo con un movimiento bancario",
+        "MATCH": "Asociación",
+        "CHOOSE_MATCH": "Elija una asociación",
+        "MATCH_OPTION": "Asociación {{n}}: banco {{bank}}, contabilidad {{ledger}}",
+        "SERVED_RESIDUAL": "El servidor registrará el residuo de {{amount}}.",
+        "SERVED_BRIDGE": "El servidor registrará la diferencia inicial de {{amount}}.",
+        "COUNTER": "Otra cuenta bancaria",
+        "CHOOSE_COUNTER": "Elija una cuenta bancaria",
+        "COUNTER_HINT": "Positivo si entra dinero desde esa cuenta, negativo si sale hacia ella.",
+        "AMOUNT": "Importe",
+        "AMOUNT_HINT": "Con signo: positivo aumenta el efectivo, negativo lo disminuye.",
+        "DATE": "Fecha de registro",
+        "DATE_HINT": "Déjela en blanco para usar la fecha de lo que explica. Una fecha propuesta significa que ese período está cerrado.",
+        "DESCRIPTION": "Descripción",
+        "JUSTIFICATION": "Justificación (opcional)",
+        "JUSTIFICATION_REQUIRED": "Justificación",
+        "OVERRIDE": "Justificación para registrar en período cerrado (opcional)",
+        "OVERRIDE_HINT": "Solo para registrar en un período cerrado en lugar de la fecha propuesta.",
+        "CONFIRM": "Registrar ajuste"
+      },
+      "OUTCOME": {
+        "MATCHED": "Se registró la asociación.",
+        "AUTO_MATCHED": "{{proposed}} asociaciones propuestas, {{ambiguous}} pendientes de revisión.",
+        "PROPOSAL_ACCEPTED": "Se aceptó la asociación propuesta.",
+        "PROPOSAL_REJECTED": "Se rechazó la asociación propuesta.",
+        "PROPOSALS_ACCEPTED": "Se aceptaron {{count}} asociaciones propuestas.",
+        "UNMATCHED": "Se deshizo la asociación.",
+        "REGISTERED": "Se registró la partida pendiente.",
+        "RELEASED": "Se liberó la partida pendiente.",
+        "REAFFIRMED": "Se reafirmó la partida pendiente para esta conciliación.",
+        "CLEARED_IN_GAP": "Se saldó la partida pendiente en el intervalo.",
+        "DUPLICATE_REVIEWED": "Se registró la revisión del duplicado.",
+        "EXCLUDED": "Se excluyó el movimiento bancario.",
+        "RESTORED": "Se restauró el movimiento bancario.",
+        "REVERSED": "Se revirtió el ajuste.",
+        "ADJUSTED": "Se registró el ajuste.",
+        "SUBMITTED": "Se envió la conciliación a aprobación.",
+        "APPROVED": "Se aprobó la conciliación.",
+        "RETURNED": "Se devolvió la conciliación al preparador.",
+        "CANCELLED": "Se canceló la conciliación."
+      },
+      "PROMPT": {
+        "REASON": "Motivo",
+        "JUSTIFICATION": "Justificación",
+        "REASON_HINT": "Obligatorio. Se registra en la auditoría.",
+        "OPTIONAL_HINT": "Opcional, salvo que el servidor la pida.",
+        "TOO_SHORT": "Escriba al menos {{min}} caracteres.",
+        "ITEM_KIND": "Tipo de partida",
+        "DECISION": "Decisión",
+        "DISTINCT": "No es duplicado",
+        "DUPLICATE": "Duplica un movimiento anterior",
+        "ORIGINAL": "Movimiento original",
+        "unmatch": {
+          "TITLE": "¿Deshacer esta asociación?",
+          "BODY": "Ambos lados vuelven a quedar sin explicar.",
+          "CONFIRM": "Deshacer asociación"
+        },
+        "register": {
+          "TITLE": "Marcar como pendiente",
+          "BODY": "Una partida pendiente explica una diferencia temporal hasta que aparezca su contraparte.",
+          "CONFIRM": "Marcar pendiente"
+        },
+        "release": {
+          "TITLE": "¿Liberar esta partida pendiente?",
+          "BODY": "La línea vuelve a quedar sin explicar.",
+          "CONFIRM": "Liberar"
+        },
+        "reaffirm": {
+          "TITLE": "Reafirmar esta partida antigua",
+          "BODY": "Una partida temporal antigua cuenta como sin explicar hasta que se reafirma en cada conciliación.",
+          "CONFIRM": "Reafirmar"
+        },
+        "clearInGap": {
+          "TITLE": "Saldar esta partida en el intervalo",
+          "BODY": "Su contraparte apareció durante el intervalo reconocido.",
+          "CONFIRM": "Saldar en el intervalo"
+        },
+        "reverse": {
+          "TITLE": "¿Revertir este ajuste?",
+          "BODY": "Se registra un asiento de reversión.",
+          "CONFIRM": "Revertir"
+        },
+        "return": {
+          "TITLE": "¿Devolver al preparador?",
+          "BODY": "El preparador puede modificar la conciliación y enviarla de nuevo.",
+          "CONFIRM": "Devolver"
+        },
+        "cancel": {
+          "TITLE": "¿Cancelar esta conciliación?",
+          "BODY": "Sus asociaciones y partidas quedan en la auditoría. El estado de cuenta puede conciliarse de nuevo.",
+          "CONFIRM": "Cancelar conciliación"
+        },
+        "supersede": {
+          "TITLE": "¿Reemplazar esta conciliación?",
+          "BODY": "Comienza una nueva conciliación del mismo estado de cuenta; esta sigue disponible con su historial de aprobación.",
+          "CONFIRM": "Reemplazar"
+        },
+        "exclude": {
+          "TITLE": "¿Excluir este movimiento bancario?",
+          "BODY": "Deja de contar en la conciliación.",
+          "CONFIRM": "Excluir"
+        },
+        "restore": {
+          "TITLE": "¿Restaurar este movimiento bancario?",
+          "BODY": "Vuelve a contar en la conciliación.",
+          "CONFIRM": "Restaurar"
+        },
+        "matchJustification": {
+          "TITLE": "Esta asociación necesita una justificación",
+          "BODY": "El servidor pide una justificación porque:",
+          "CONFIRM": "Asociar con justificación"
+        },
+        "duplicateReview": {
+          "TITLE": "Revisar un posible duplicado",
+          "BODY": "Decida si este movimiento duplica uno anterior.",
+          "CONFIRM": "Registrar decisión"
+        }
+      },
+      "ERROR": {
+        "LOAD": "No se pudo cargar la conciliación.",
+        "FORBIDDEN": "No tiene permiso para ver conciliaciones bancarias.",
+        "NOT_FOUND": "No se encontró esa conciliación.",
+        "FORBIDDEN_WRITE": "No tiene permiso para hacer eso.",
+        "INVALID": "La solicitud se rechazó por no ser válida. Revise los valores e inténtelo de nuevo.",
+        "OTHER": "No se pudo completar. Inténtelo de nuevo.",
+        "MATCH_AMOUNT_MISMATCH": "Los importes del banco y de la contabilidad seleccionados no coinciden.",
+        "MATCH_CARDINALITY_NOT_ALLOWED": "Esa combinación de movimientos y líneas no se puede asociar.",
+        "MATCH_REQUIRES_REVIEW": "Esta asociación necesita una justificación.",
+        "MATCH_STATE_INVALID": "Esa asociación ya cambió. Se volvió a cargar la conciliación.",
+        "LINE_INELIGIBLE": "Una línea o movimiento seleccionado no es elegible para esta conciliación.",
+        "OUTSTANDING_ITEM_NOT_ELIGIBLE": "Esa partida no es elegible para esta acción. Se volvió a cargar la conciliación.",
+        "ADJUSTMENT_LINK_REQUIRED": "Un ajuste de tipo Otro necesita exactamente un vínculo.",
+        "ADJUSTMENT_LINK_NOT_ELIGIBLE": "El vínculo ya no es elegible. Se volvió a cargar la conciliación; revise los importes e inténtelo de nuevo.",
+        "GL_ACCOUNT_NOT_ACTIVE": "La otra cuenta bancaria no está activa.",
+        "ACCOUNT_NOT_RECONCILABLE": "La otra cuenta no es una cuenta bancaria conciliable.",
+        "ADJUSTMENT_SIGN_INVALID": "El signo del importe no corresponde a este tipo de ajuste.",
+        "BRIDGE_ALREADY_POSTED": "El ajuste de intervalo de este estado de cuenta ya está registrado.",
+        "ADJUSTMENT_APPROVAL_REQUIRED": "Este ajuste supera su límite y requiere a alguien con {{permission}}.",
+        "JUSTIFICATION_REQUIRED": "Se requiere una justificación de al menos 10 caracteres.",
+        "NOT_BALANCED": "La conciliación ya no cuadra. Se volvió a cargar.",
+        "HAS_UNEXPLAINED_ITEMS": "Quedan {{bank}} movimientos bancarios y {{ledger}} líneas contables sin explicar. Están resaltados.",
+        "SELF_APPROVAL": "Usted envió esta conciliación, así que no puede aprobarla.",
+        "NOT_SUBMITTED": "La conciliación no está enviada.",
+        "ALREADY_FINALIZED": "La conciliación ya está aprobada.",
+        "NOT_EDITABLE": "La conciliación no se puede modificar en su estado actual. Se volvió a cargar.",
+        "WINDOW_ALREADY_RECONCILED": "Hay otra conciliación activa de este estado de cuenta.",
+        "ADJUSTMENT_ALREADY_REVERSED": "Ese ajuste ya está revertido.",
+        "PERIOD_CLOSED": "El período de esa fecha está cerrado. Elija una fecha abierta o indique una justificación.",
+        "PERIOD_HARD_LOCKED": "El período de esa fecha está bloqueado.",
+        "GL_MAPPING_NOT_CONFIGURED": "No hay una asignación contable configurada para este tipo de ajuste.",
+        "AMOUNT_PRECISION_EXCEEDS_CURRENCY": "El importe tiene más decimales de los que permite la moneda.",
+        "OPTIMISTIC_LOCK": "Otra persona modificó esta conciliación. Se volvió a cargar; inténtelo de nuevo."
       }
     }
   },

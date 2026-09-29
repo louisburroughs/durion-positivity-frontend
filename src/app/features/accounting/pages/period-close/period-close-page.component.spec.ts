@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
+import { provideRouter } from '@angular/router';
 import { TranslateModule, TranslateService, TranslationObject } from '@ngx-translate/core';
 import { Subject, of, throwError } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -126,6 +127,7 @@ describe('PeriodClosePageComponent', () => {
     TestBed.configureTestingModule({
       imports: [PeriodClosePageComponent, TranslateModule.forRoot()],
       providers: [
+        provideRouter([]),
         { provide: PeriodCloseService, useValue: serviceStub },
         { provide: AuthService, useValue: authStub },
       ],
@@ -474,6 +476,35 @@ describe('PeriodClosePageComponent', () => {
       expect(clearing.textContent).toContain('ACCOUNTING.PERIOD_CLOSE.READINESS.SEVERITY.WARNING');
       expect(clearing.closest('[data-testid="readiness-account"]')).toBeNull();
       expect(query('clearing-aging-detail')?.textContent).toContain('ACCOUNTING.PERIOD_CLOSE.READINESS.CLEARING_DETAIL');
+    });
+
+    it('links a check that names a reconciliation into its workspace, and the account into bank accounts', () => {
+      authStub.granted = [CLOSE, REOPEN, 'accounting:reconciliation:view'];
+      serviceStub.getCloseReadiness.mockReturnValue(
+        of({
+          ...BLOCKED_JULY,
+          accounts: [
+            {
+              ...OPERATING,
+              checks: [{ code: 'RECONCILIATION_IN_FLIGHT', severity: 'BLOCKING', references: { reconciliationId: 'rec-7' } }],
+            },
+          ],
+        }),
+      );
+      setup();
+      expand('2026-07');
+
+      const link = query('readiness-workspace-link') as HTMLAnchorElement;
+      expect(new URL(link.href).pathname).toBe('/app/accounting/reconciliations/rec-7');
+      expect(new URL((query('readiness-accounts-link') as HTMLAnchorElement).href).pathname).toBe('/app/accounting/bank-accounts');
+    });
+
+    it('offers no reconciliation links without the reconciliation view permission', () => {
+      serviceStub.getCloseReadiness.mockReturnValue(of(BLOCKED_JULY));
+      setup();
+      expand('2026-07');
+
+      expect(query('readiness-accounts-link')).toBeNull();
     });
 
     it('offers a holder of close and override the exception dialog, which sends the justification', async () => {
