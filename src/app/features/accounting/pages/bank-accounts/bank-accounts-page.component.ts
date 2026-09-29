@@ -170,6 +170,11 @@ export class BankAccountsPageComponent {
         error: (error: unknown) => {
           if (seq !== this.readSeq) return;
           this.refreshing.set(false);
+          if (background) {
+            // The refresh after a saved profile failed: the rows on screen stay, the failure is announced.
+            this.announce({ tone: 'error', key: 'ACCOUNTING.BANK_ACCOUNTS.ERROR.REFRESH', account: '' });
+            return;
+          }
           // ADR-0031: state first, then the key.
           this.state.set('error');
           this.errorKey.set(

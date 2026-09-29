@@ -127,13 +127,13 @@
                   <td class="actions-cell">
                     <button type="button" class="btn btn--outline" data-testid="readiness-toggle"
                       [attr.aria-expanded]="expanded().has(period.periodCode)"
-                      [attr.aria-controls]="'readiness-' + period.periodCode"
+                      [attr.aria-controls]="expanded().has(period.periodCode) ? 'readiness-' + period.periodCode : null"
                       (click)="toggleReadiness(period.periodCode)">
                       {{ 'ACCOUNTING.PERIOD_CLOSE.READINESS.TOGGLE' | translate }}<span class="sr-only">&nbsp;{{ monthOf(period.periodCode) | date: 'MMMM y' }}</span>
                     </button>
                     @if (period.status === 'OPEN') {
                       <button type="button" class="btn btn--accent" data-testid="close-button"
-                        [disabled]="!canClose() || pendingCode() !== null || refreshing() || closeRefused(period.periodCode)"
+                        [disabled]="!canClose() || pendingCode() !== null || refreshing() || closePending() !== null || closeRefused(period.periodCode)"
                         [attr.aria-describedby]="closeRefused(period.periodCode) ? 'close-refused-' + period.periodCode : null"
                         (click)="requestClose(period.periodCode)">
                         @if (closeGate(period.periodCode) === 'EXCEPTION') {
@@ -145,8 +145,7 @@
                       @switch (closeGate(period.periodCode)) {
                         @case ('BLOCKED') {
                           <span id="close-refused-{{ period.periodCode }}" class="close-refused" data-testid="close-refused">
-                            {{ (canOverride() ? 'ACCOUNTING.PERIOD_CLOSE.READINESS.REFUSED.BLOCKED' : 'ACCOUNTING.PERIOD_CLOSE.READINESS.REFUSED.BLOCKED_NO_OVERRIDE')
-                              | translate: { period: (monthOf(period.periodCode) | date: 'MMMM y'), override: overridePermission } }}
+                            {{ blockedKey(period.periodCode) | translate: { period: (monthOf(period.periodCode) | date: 'MMMM y'), override: overridePermission } }}
                           </span>
                         }
                         @case ('UNAVAILABLE') {
@@ -200,9 +199,9 @@
                                   <span class="check-detail" data-testid="clearing-aging-detail">
                                     {{ 'ACCOUNTING.PERIOD_CLOSE.READINESS.CLEARING_DETAIL' | translate: {
                                       account: (textRef(check, 'accountCode') ?? ('COMMON.NOT_AVAILABLE' | translate)),
-                                      atEnd: (amountRef(check, 'balanceAtPeriodEnd') | money: policy()?.currency),
+                                      atEnd: (policy()?.currency ? (amountRef(check, 'balanceAtPeriodEnd') | money: policy()?.currency) : (amountRef(check, 'balanceAtPeriodEnd') | number: '1.2-2')),
                                       agingDate: (dateOnly(textRef(check, 'agingDate')) | date: 'mediumDate'),
-                                      atAgingDate: (amountRef(check, 'balanceAtAgingDate') | money: policy()?.currency),
+                                      atAgingDate: (policy()?.currency ? (amountRef(check, 'balanceAtAgingDate') | money: policy()?.currency) : (amountRef(check, 'balanceAtAgingDate') | number: '1.2-2')),
                                       count: (countRef(check, 'adjustmentIds') | number)
                                     } }}
                                   </span>
@@ -232,7 +231,7 @@
                               <tr data-testid="readiness-account" [attr.data-account]="account.glAccountId">
                                 <th scope="row">
                                   @if (account.accountCode || account.accountName) {
-                                    <span class="account-period.periodCode">{{ account.accountCode }}</span>
+                                    <span class="account-code">{{ account.accountCode }}</span>
                                     <span class="account-name">{{ account.accountName }}</span>
                                     @if (canViewReconciliation()) {
                                       <a class="link-button" [routerLink]="bankAccountsLink" data-testid="readiness-accounts-link">{{ 'ACCOUNTING.PERIOD_CLOSE.READINESS.OPEN_BANK_ACCOUNTS' | translate }}</a>
@@ -302,7 +301,7 @@
               [attr.aria-invalid]="monthErrorKey() ? 'true' : null"
               [attr.aria-describedby]="monthErrorKey() ? 'close-month-hint close-month-error' : 'close-month-hint'" />
           </div>
-          <button type="submit" class="btn btn--accent" data-testid="close-month-submit" [disabled]="pendingCode() !== null || refreshing()">
+          <button type="submit" class="btn btn--accent" data-testid="close-month-submit" [disabled]="pendingCode() !== null || refreshing() || closePending() !== null">
             {{ 'ACCOUNTING.PERIOD_CLOSE.CLOSE_MONTH.SUBMIT' | translate }}
           </button>
         </form>

@@ -23,7 +23,7 @@ describe('parseAmountInput', () => {
     expect(parseAmountInput(input)).toBe(expected);
   });
 
-  it.each(['', 'abc', '1,234.56', '1.2.3', '$12'])('refuses %s', input => {
+  it.each(['', 'abc', '1,234.56', '1.2.3', '$12', '9'.repeat(400)])('refuses %s', input => {
     expect(parseAmountInput(input)).toBeNull();
   });
 });

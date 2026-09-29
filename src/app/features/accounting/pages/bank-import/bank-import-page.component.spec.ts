@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
-import { BehaviorSubject, of, throwError } from 'rxjs';
+import { BehaviorSubject, Subject, of, throwError } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuthService } from '../../../../core/services/auth.service';
 import {
@@ -437,6 +437,35 @@ describe('BankImportPageComponent', () => {
       expect(query('segment-off')).not.toBeNull();
     });
 
+    it('keeps writes disabled against the stale version until the re-read lands', () => {
+      serviceStub.getImport.mockReturnValueOnce(of(imp()));
+      setup({ importId: 'imp-1' });
+      const reread = new Subject<BankImport>();
+      serviceStub.getImport.mockReturnValue(reread);
+      serviceStub.setMapping.mockReturnValue(throwError(() => httpError(409, { code: 'OPTIMISTIC_LOCK' })));
+
+      click(query('mapping-submit'));
+      expect(component.busy()).toBe(true);
+      expect((query('mapping-submit') as HTMLButtonElement).disabled).toBe(true);
+
+      reread.next(imp({ version: 4 }));
+      fixture.detectChanges();
+      expect(component.busy()).toBe(false);
+    });
+
+    it('keeps the wizard on screen when a background re-read fails', () => {
+      serviceStub.getImport.mockReturnValueOnce(of(imp()));
+      setup({ importId: 'imp-1' });
+      serviceStub.getImport.mockReturnValue(throwError(() => httpError(500)));
+      serviceStub.setMapping.mockReturnValue(throwError(() => httpError(409, { code: 'OPTIMISTIC_LOCK' })));
+
+      click(query('mapping-submit'));
+
+      expect(component.state()).toBe('ready');
+      expect(query('step-mapping')).not.toBeNull();
+      expect(query('import-failure')?.textContent).toContain('ACCOUNTING.BANK_IMPORT.ERROR.REFRESH');
+    });
+
     it('re-reads the import on 409 OPTIMISTIC_LOCK', () => {
       serviceStub.getImport.mockReturnValue(of(imp()));
       setup({ importId: 'imp-1' });
@@ -557,6 +586,46 @@ describe('BankImportPageComponent', () => {
       expect(query('import-failure-detail')?.textContent).toBe('opening + activity = 9985.00, closing = 10000.00');
       expect(component.flaggedRows().has(12)).toBe(true);
       expect(el.querySelector('[data-row="12"]')?.classList.contains('row--flagged')).toBe(true);
+    });
+
+    it('moves focus to the rows heading after a row write lands', async () => {
+      serviceStub.getImport.mockReturnValue(of(imp({ status: 'VALIDATED' })));
+      setup({ importId: 'imp-1' });
+      serviceStub.skipRow.mockReturnValue(of(row({ rowStatus: 'SKIPPED' })));
+
+      click(query('skip-row'));
+      component.reasonControl.setValue('Reversed the same day');
+      fixture.detectChanges();
+      click(query('confirm-reason'));
+      await fixture.whenStable();
+
+      expect(document.activeElement?.id).toBe('rows-heading');
+    });
+
+    it('moves focus to the read-only outcome after a discard', async () => {
+      serviceStub.getImport.mockReturnValue(of(imp({ status: 'VALIDATED' })));
+      setup({ importId: 'imp-1' });
+      serviceStub.discardImport.mockReturnValue(of(imp({ status: 'DISCARDED', discardReason: 'Wrong account' })));
+
+      click(query('discard'));
+      component.reasonControl.setValue('Wrong account');
+      fixture.detectChanges();
+      click(query('confirm-reason'));
+      await fixture.whenStable();
+
+      expect(document.activeElement?.id).toBe('done-heading');
+    });
+
+    it('starts over when the route key changes', () => {
+      serviceStub.getImport.mockReturnValueOnce(of(imp({ status: 'VALIDATED' })));
+      setup({ importId: 'imp-1' });
+      serviceStub.getImport.mockReturnValue(of(imp({ importId: 'imp-2', status: 'UPLOADED' })));
+
+      params$.next(convertToParamMap({ importId: 'imp-2' }));
+      fixture.detectChanges();
+
+      expect(component.bankImport()?.importId).toBe('imp-2');
+      expect(component.step()).toBe('mapping');
     });
 
     it('discards with a reason and shows the import read-only', () => {

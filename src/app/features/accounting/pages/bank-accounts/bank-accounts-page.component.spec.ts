@@ -204,6 +204,19 @@ describe('BankAccountsPageComponent', () => {
       expect(serviceStub.listBankAccounts).toHaveBeenCalledTimes(2);
     });
 
+    it('keeps the rows and announces the failure when the refresh after a save fails', () => {
+      setup();
+      serviceStub.setBankAccountProfile.mockReturnValue(of(undefined));
+      serviceStub.listBankAccounts.mockReturnValue(throwError(() => httpError(500)));
+
+      click(query('edit-profile'));
+      click(query('save-profile'));
+
+      expect(component.state()).toBe('ready');
+      expect(el.querySelector('[data-account="gl-1010"]')).not.toBeNull();
+      expect(component.outcome()?.key).toBe('ACCOUNTING.BANK_ACCOUNTS.ERROR.REFRESH');
+    });
+
     it('classifies 422 CURRENCY_NOT_SUPPORTED in the dialog', () => {
       setup();
       serviceStub.setBankAccountProfile.mockReturnValue(throwError(() => httpError(422, { code: 'CURRENCY_NOT_SUPPORTED' })));

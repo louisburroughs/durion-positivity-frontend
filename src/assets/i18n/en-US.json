@@ -4551,7 +4551,8 @@
         "WINDOW_ALREADY_RECONCILED": "That statement already has a reconciliation. Finish or cancel it first; the list has been refreshed.",
         "GL_ACCOUNT_NOT_ACTIVE": "The account is not active.",
         "INVALID": "The request was rejected as invalid. Check the values and try again.",
-        "OTHER": "The change couldn't be saved. Try again."
+        "OTHER": "The change couldn't be saved. Try again.",
+        "REFRESH": "The list couldn't be refreshed; it may be out of date. Reload the page to try again."
       }
     },
     "BANK_IMPORT": {
@@ -4759,7 +4760,8 @@
         "SUPERSESSION_NOT_ELIGIBLE": "The chosen statement can't be replaced. The list has been refreshed; choose again.",
         "WINDOW_ALREADY_RECONCILED": "A reconciliation of that statement is in progress or awaiting approval. Finish or cancel it first.",
         "AMOUNT_PRECISION_EXCEEDS_CURRENCY": "An amount has more decimal places than the currency allows.",
-        "OPTIMISTIC_LOCK": "Someone else changed this import. It has been reloaded; try again."
+        "OPTIMISTIC_LOCK": "Someone else changed this import. It has been reloaded; try again.",
+        "REFRESH": "The import couldn't be reloaded; what is shown may be out of date. Reload the page before continuing."
       }
     },
     "BANK_STATEMENT_ENTRY": {
@@ -4781,7 +4783,8 @@
       "ERROR": {
         "HEADER": "Enter the start and end dates and both balances as numbers.",
         "TRANSACTIONS": "Every transaction needs a date, an amount and a description."
-      }
+      },
+      "INTERIM_UNAVAILABLE": "This account has no reconciled date yet, so there is no interim window to reconcile. Enter or import its first statement instead."
     },
     "RECONCILIATION_WORKSPACE": {
       "OVERLINE": "Bank reconciliation",

@@ -554,7 +554,71 @@ describe('PeriodClosePageComponent', () => {
       fixture.detectChanges();
       expect(query('confirm-exception-dialog')).toBeNull();
       expect(query('confirm-close-dialog')).toBeNull();
+      expect(component.outcome()?.key).toBe('ACCOUNTING.PERIOD_CLOSE.READINESS.REFUSED.BLOCKED_NO_OVERRIDE');
+    });
+
+    it('does not name the override under REQUIRED, where no exception exists', () => {
+      serviceStub.getCloseReadiness.mockReturnValue(of({ ...BLOCKED_JULY, policy: 'REQUIRED' }));
+      setup();
+      expand('2026-07');
+
+      expect(row('2026-07').querySelector('[data-testid="close-refused"]')?.textContent).toContain(
+        'ACCOUNTING.PERIOD_CLOSE.READINESS.REFUSED.BLOCKED',
+      );
+      expect(row('2026-07').querySelector('[data-testid="close-refused"]')?.textContent).not.toContain('NO_OVERRIDE');
+      component.requestClose('2026-07');
       expect(component.outcome()?.key).toBe('ACCOUNTING.PERIOD_CLOSE.READINESS.REFUSED.BLOCKED');
+    });
+
+    it('waits for the policy when readiness fails before it, then closes under ADVISORY', () => {
+      const policy = new Subject<BankReconciliationPolicy>();
+      serviceStub.getBankReconciliationPolicy.mockReturnValue(policy);
+      serviceStub.getCloseReadiness.mockReturnValue(throwError(() => httpError(500)));
+      setup();
+
+      click(buttonIn('2026-07', 'close-button'));
+      expect(query('confirm-close-dialog')).toBeNull();
+      expect(component.closePending()).toBe('2026-07');
+      expect(buttonIn('2026-07', 'close-button').disabled).toBe(true);
+      expect((query('close-month-submit') as HTMLButtonElement).disabled).toBe(true);
+
+      policy.next({ closePolicy: 'ADVISORY', currency: 'USD' });
+      fixture.detectChanges();
+
+      expect(component.closePending()).toBeNull();
+      expect(query('confirm-close-dialog')).not.toBeNull();
+    });
+
+    it('drops a readiness read that was in flight before a reload', () => {
+      const stale = new Subject<CloseReadiness>();
+      serviceStub.getCloseReadiness.mockReturnValueOnce(stale);
+      setup();
+      expand('2026-07');
+
+      component.load();
+      stale.next(BLOCKED_JULY);
+
+      expect(component.readinessOf('2026-07')).toBeNull();
+    });
+
+    it('points aria-controls at the panel only while it is open', () => {
+      setup();
+      const toggle = buttonIn('2026-07', 'readiness-toggle');
+      expect(toggle.hasAttribute('aria-controls')).toBe(false);
+
+      expand('2026-07');
+      expect(toggle.getAttribute('aria-controls')).toBe('readiness-2026-07');
+      expect(el.querySelector('#readiness-2026-07')).not.toBeNull();
+    });
+
+    it('prints clearing balances without a currency symbol when the policy currency is unknown', () => {
+      serviceStub.getBankReconciliationPolicy.mockReturnValue(throwError(() => httpError(500)));
+      serviceStub.getCloseReadiness.mockReturnValue(of(BLOCKED_JULY));
+      setup();
+      expand('2026-07');
+
+      expect(component.policyStatus()).toBe('ERROR');
+      expect(query('clearing-aging-detail')?.textContent).not.toContain('$');
     });
 
     it('refuses the exception in its handler, not only at the button, without the override', () => {

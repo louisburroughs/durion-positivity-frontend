@@ -4551,7 +4551,8 @@
         "WINDOW_ALREADY_RECONCILED": "Ce relevé a déjà un rapprochement. Terminez-le ou annulez-le d’abord ; la liste a été actualisée.",
         "GL_ACCOUNT_NOT_ACTIVE": "Le compte n’est pas actif.",
         "INVALID": "La demande a été refusée comme non valide. Vérifiez les valeurs et réessayez.",
-        "OTHER": "Impossible d’enregistrer la modification. Réessayez."
+        "OTHER": "Impossible d’enregistrer la modification. Réessayez.",
+        "REFRESH": "Impossible d’actualiser la liste ; elle peut être obsolète. Rechargez la page pour réessayer."
       }
     },
     "BANK_IMPORT": {
@@ -4759,7 +4760,8 @@
         "SUPERSESSION_NOT_ELIGIBLE": "Le relevé choisi ne peut pas être remplacé. La liste a été actualisée ; choisissez de nouveau.",
         "WINDOW_ALREADY_RECONCILED": "Un rapprochement de ce relevé est en cours ou en attente d’approbation. Terminez-le ou annulez-le d’abord.",
         "AMOUNT_PRECISION_EXCEEDS_CURRENCY": "Un montant a plus de décimales que la devise ne le permet.",
-        "OPTIMISTIC_LOCK": "Quelqu’un d’autre a modifié cette importation. Elle a été rechargée ; réessayez."
+        "OPTIMISTIC_LOCK": "Quelqu’un d’autre a modifié cette importation. Elle a été rechargée ; réessayez.",
+        "REFRESH": "Impossible de recharger l’importation ; l’affichage peut être obsolète. Rechargez la page avant de continuer."
       }
     },
     "BANK_STATEMENT_ENTRY": {
@@ -4781,7 +4783,8 @@
       "ERROR": {
         "HEADER": "Indiquez les dates de début et de fin et les deux soldes sous forme de nombres.",
         "TRANSACTIONS": "Chaque opération doit avoir une date, un montant et une description."
-      }
+      },
+      "INTERIM_UNAVAILABLE": "Ce compte n’a pas encore de date rapprochée : il n’y a donc pas de période intermédiaire à rapprocher. Saisissez ou importez plutôt son premier relevé."
     },
     "RECONCILIATION_WORKSPACE": {
       "OVERLINE": "Rapprochement bancaire",

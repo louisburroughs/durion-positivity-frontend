@@ -38,6 +38,9 @@
   }
 
   @if (state() === 'ready') {
+    @if (interimUnavailable()) {
+      <p class="alert alert-info" data-testid="interim-unavailable">{{ 'ACCOUNTING.BANK_STATEMENT_ENTRY.INTERIM_UNAVAILABLE' | translate }}</p>
+    }
     <form class="stacked-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
       <fieldset class="header-fields">
         <legend>{{ 'ACCOUNTING.BANK_IMPORT.UPLOAD.HEADER_LEGEND' | translate }}</legend>
@@ -141,7 +144,7 @@
       }
       <div class="form-actions">
         <button type="submit" class="btn btn--accent" data-testid="entry-submit"
-          [disabled]="!canAdjust() || submitting() || supersede().state === 'incomplete' || (gapPrompt() !== null && gapLength() < justificationMin)">
+          [disabled]="!canAdjust() || submitting() || interimUnavailable() || supersede().state === 'incomplete' || (gapPrompt() !== null && gapLength() < justificationMin)">
           {{ 'ACCOUNTING.BANK_STATEMENT_ENTRY.SUBMIT' | translate }}
         </button>
       </div>

@@ -147,6 +147,27 @@ describe('BankReconciliationService', () => {
     });
   });
 
+  it('reads every page the server reports, not only the first', () => {
+    const page = (n: number, codes: string[]) =>
+      of({
+        accounts: codes.map(code => sdkAccount({ glAccountId: `gl-${code}`, accountCode: code })),
+        pageNumber: n,
+        pageSize: 200,
+        totalElements: 3,
+        totalPages: 2,
+      });
+    accountsSdk.listBankAccounts.mockImplementation((n: number) => (n === 0 ? page(0, ['1030', '1010']) : page(1, ['1020'])));
+
+    let accounts: BankAccount[] = [];
+    service.listBankAccounts().subscribe(value => (accounts = value));
+
+    expect(accountsSdk.listBankAccounts.mock.calls).toEqual([
+      [0, 200],
+      [1, 200],
+    ]);
+    expect(accounts.map(a => a.accountCode)).toEqual(['1010', '1020', '1030']);
+  });
+
   it('sends the profile with its currency and leaves blank fields out', () => {
     accountsSdk.setBankAccountProfile.mockReturnValueOnce(of({}));
 

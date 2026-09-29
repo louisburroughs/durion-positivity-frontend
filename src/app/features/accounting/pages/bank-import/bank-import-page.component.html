@@ -172,7 +172,7 @@
         @if (bankImport(); as current) {
           <ng-container *ngTemplateOutlet="previewBlock" />
           <section class="page-section" aria-labelledby="rows-heading" data-testid="step-rows">
-            <h2 id="rows-heading">{{ 'ACCOUNTING.BANK_IMPORT.ROWS.HEADING' | translate }}</h2>
+            <h2 id="rows-heading" #rowsHeading tabindex="-1">{{ 'ACCOUNTING.BANK_IMPORT.ROWS.HEADING' | translate }}</h2>
             <p data-testid="row-counts">
               {{ 'ACCOUNTING.BANK_IMPORT.ROWS.COUNTS' | translate: {
                 total: (current.rowCount | number),
@@ -329,7 +329,8 @@
 
       @case ('done') {
         @if (bankImport(); as current) {
-          <section class="page-section" data-testid="step-done">
+          <section class="page-section" aria-labelledby="done-heading" data-testid="step-done">
+            <h2 id="done-heading" #doneHeading tabindex="-1">{{ 'ACCOUNTING.BANK_IMPORT.STEPS.DONE' | translate }}</h2>
             @if (current.status === 'COMMITTED') {
               <p class="alert alert-success">{{ 'ACCOUNTING.BANK_IMPORT.DONE.COMMITTED' | translate }}</p>
             } @else {
