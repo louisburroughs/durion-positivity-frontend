@@ -2,7 +2,7 @@ import { DestroyRef, Directive, inject, OnDestroy, OnInit, signal } from '@angul
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { interval, Subscription, switchMap } from 'rxjs';
 import { BulkImportService } from '../../services/bulk-import.service';
-import { BulkImportCorrectionReloader } from '../../services/bulk-import-correction-reloader';
+import { BulkImportCorrectionReloader, spliceAuditRecord } from '../../services/bulk-import-correction-reloader';
 import {
   ACTIVE_JOB_STATUSES,
   ApproveColumnMappingsRequest,
@@ -291,6 +291,14 @@ export abstract class BulkImportWizardPageBase implements OnInit, OnDestroy {
         onSubmitError: () => {
           // Never surface the server's rejectionReason text directly (ADR-0064 §4-5).
           this.correctionErrorKey.set('BULK_IMPORT.WIZARD.ERROR.CORRECTION');
+        },
+        onSubmitResult: result => {
+          if (!result) { return true; }
+          this.auditRecords.update(records => spliceAuditRecord(records, result));
+          this.auditReadFailed.set(false);
+          this.auditErrorKey.set(null);
+          this.state.set('results');
+          return false;
         },
       },
     ).pipe(takeUntilDestroyed(this.destroyRef)).subscribe();

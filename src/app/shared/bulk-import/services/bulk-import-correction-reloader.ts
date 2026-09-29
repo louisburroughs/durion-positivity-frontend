@@ -1,5 +1,18 @@
 import { WritableSignal } from '@angular/core';
 import { Observable, catchError, finalize, map, of, switchMap, tap } from 'rxjs';
+import { BulkLoadRecordAudit } from '../models/bulk-import.models';
+
+/**
+ * Replaces the row matching `updated.recordId` in place (durion-positivity-backend#2205);
+ * every other row is returned unchanged. Used from `onSubmitResult` once a caller has a
+ * complete replacement row and no longer needs the list re-read.
+ */
+export function spliceAuditRecord(
+  records: BulkLoadRecordAudit[],
+  updated: BulkLoadRecordAudit,
+): BulkLoadRecordAudit[] {
+  return records.map(record => (record.recordId === updated.recordId ? updated : record));
+}
 
 /**
  * Callbacks for one correction's re-read (ADR-0063 §4-5). `onReloadSuccess`/
@@ -7,7 +20,7 @@ import { Observable, catchError, finalize, map, of, switchMap, tap } from 'rxjs'
  * issued one for this coordinator instance; a superseded reload never touches
  * page state, but still releases its own record's pending flag.
  */
-export interface CorrectionReloadOptions<T> {
+export interface CorrectionReloadOptions<T, R = void> {
   /** The re-read observable (e.g. `service.listAuditRecords(jobId, ...)`), issued after `submit$` resolves. */
   readonly reload$: Observable<T>;
   /** Applies a re-read result that is still current. */
@@ -22,6 +35,15 @@ export interface CorrectionReloadOptions<T> {
    * never the server's `rejectionReason` text.
    */
   readonly onSubmitError: (error: unknown) => void;
+  /**
+   * Applied when `submit$` resolves, before deciding whether to issue `reload$`
+   * (durion-positivity-backend#2205: `CorrectionResultDto` now returns the row's
+   * `entityType`/`rowNumber`/`reviewStatus`/`reasonCodes`/`originalValues`/`correctedValues`,
+   * but they are nullable). Return `false` once the caller has spliced a complete row in
+   * place — `reload$` is then skipped entirely. Return `true` (or omit this option) to keep
+   * the existing re-read fallback for a `null` result.
+   */
+  readonly onSubmitResult?: (result: R) => boolean;
 }
 
 /**
@@ -48,16 +70,27 @@ export class BulkImportCorrectionReloader {
   constructor(private readonly pendingIds: WritableSignal<Set<string>>) {}
 
   /**
-   * Submits `submit$` for `recordId`, then — only if it succeeds — issues the
-   * reload described by `options` and waits for it to settle before releasing
-   * `recordId` from `pendingIds`. Subscribe the returned Observable (typically
-   * with `takeUntilDestroyed`); it never errors.
+   * Submits `submit$` for `recordId`, then — only if it succeeds — either applies
+   * `options.onSubmitResult` (when the result already spliced a complete row and
+   * returned `false`) or issues the reload described by `options` and waits for it
+   * to settle before releasing `recordId` from `pendingIds`. Subscribe the returned
+   * Observable (typically with `takeUntilDestroyed`); it never errors.
    */
-  run<T>(recordId: string, submit$: Observable<void>, options: CorrectionReloadOptions<T>): Observable<void> {
+  run<T, R = void>(
+    recordId: string,
+    submit$: Observable<R>,
+    options: CorrectionReloadOptions<T, R>,
+  ): Observable<void> {
     this.addPending(recordId);
 
     return submit$.pipe(
-      switchMap(() => this.reload(recordId, options)),
+      switchMap(result => {
+        if (options.onSubmitResult && !options.onSubmitResult(result)) {
+          this.removePending(recordId);
+          return of(undefined);
+        }
+        return this.reload(recordId, options);
+      }),
       catchError(error => {
         options.onSubmitError(error);
         this.removePending(recordId);
@@ -66,7 +99,7 @@ export class BulkImportCorrectionReloader {
     );
   }
 
-  private reload<T>(recordId: string, options: CorrectionReloadOptions<T>): Observable<void> {
+  private reload<T, R>(recordId: string, options: CorrectionReloadOptions<T, R>): Observable<void> {
     const seq = ++this.reloadSeq;
 
     return options.reload$.pipe(
