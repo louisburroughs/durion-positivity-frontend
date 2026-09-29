@@ -69,8 +69,12 @@ export const PLATFORM_PERMISSIONS: readonly string[] = [
   ...PLATFORM_PAGE.tenantCreate,
 ];
 
-/** `/app/workexec` — estimates, work orders, labor, parts, WIP. */
-export const WORKEXEC_PERMISSIONS = permissionsInDomains('workorder:');
+/**
+ * `/app/workexec` — estimates, work orders, labor, parts, WIP. The trailing code is
+ * what the invoice finalization page it hosts reads (`getInvoiceByWorkorder`); a group
+ * has to admit anyone its pages admit.
+ */
+export const WORKEXEC_PERMISSIONS = permissionsInDomains('workorder:', 'invoice:invoice:view');
 
 /**
  * `/app/accounting` — journal entries, payables, posting rules, credit memos.
@@ -430,6 +434,14 @@ export const WORKEXEC_PAGE = {
   positionAssign: ['workorder:position:assign'],
   partsView: ['workorder:parts:view'],
   changeRequests: ['workorder:change_request:view'],
+  /** `getInvoiceByWorkorder` (pos-invoice). Finalizing is gated by {@link WORKEXEC_SECTION}. */
+  invoiceFinalization: ['invoice:invoice:view'],
+} as const satisfies Record<string, readonly string[]>;
+
+/** Write controls inside a workexec page, as opposed to its route gate (ADR-0040 §6a). */
+export const WORKEXEC_SECTION = {
+  /** `finalizeInvoice` (pos-invoice). */
+  invoiceFinalize: ['invoice:finalize'],
 } as const satisfies Record<string, readonly string[]>;
 
 /** `/app/shopmgmt/*` — dispatch, schedule, appointments, mechanics. */

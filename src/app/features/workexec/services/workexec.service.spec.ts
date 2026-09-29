@@ -25,14 +25,13 @@ import {
 import { of } from 'rxjs';
 import { vi } from 'vitest';
 import { WorkexecService } from './workexec.service';
-import { ApiBaseService } from '../../../core/services/api-base.service';
+import { InvoiceDetailsResponse, InvoiceDetailsResponseStatusEnum, InvoiceService } from '@durion-sdk/invoice';
 import { BASE_PATH, EstimateSearchService, WorkorderPartAdjustmentsService, WorkorderSearchService } from '@durion-sdk/workorder';
 import { Configuration as PeopleConfiguration } from '@durion-sdk/people';
 import { environment } from '../../../../environments/environment';
 import {
   EstimateListItem,
   EstimateResponse,
-  FinalizeInvoiceResponse,
   PartUsageResponse,
   SubstituteLinkResponse,
   WorkorderInvoiceView,
@@ -47,17 +46,19 @@ describe('WorkexecService', () => {
   let estimateSearchStub: { searchEstimates: ReturnType<typeof vi.fn> };
   let workorderSearchStub: { searchWorkorders: ReturnType<typeof vi.fn> };
   let partAdjustmentsStub: { substitutePart: ReturnType<typeof vi.fn> };
+  let invoiceStub: { getInvoiceByWorkorder: ReturnType<typeof vi.fn>; finalizeInvoice: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
     estimateSearchStub = { searchEstimates: vi.fn() };
     workorderSearchStub = { searchWorkorders: vi.fn() };
     partAdjustmentsStub = { substitutePart: vi.fn() };
+    invoiceStub = { getInvoiceByWorkorder: vi.fn(), finalizeInvoice: vi.fn() };
 
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
       providers: [
         WorkexecService,
-        ApiBaseService,
+        { provide: InvoiceService, useValue: invoiceStub },
         { provide: BASE_PATH, useValue: environment.apiBaseUrl },
         { provide: PeopleConfiguration, useValue: new PeopleConfiguration({ basePath: environment.apiBaseUrl }) },
         { provide: EstimateSearchService, useValue: estimateSearchStub },
@@ -449,55 +450,58 @@ describe('WorkexecService', () => {
       req.flush(fixture);
     });
 
-    it('getWorkorderInvoiceView — gets /v1/workorders/{workorderId}/invoice-view', () => {
-      const fixture: WorkorderInvoiceView = {
+    const invoiceDetails: InvoiceDetailsResponse = {
+      invoiceId: 'inv-261-1',
+      invoiceNumber: 'INV-2026-0261',
+      workorderId: 'wo-261-1',
+      workorderNumber: 'WO-261',
+      status: InvoiceDetailsResponseStatusEnum.Draft,
+      items: [{ id: 'line-1', description: 'Labor', quantity: 1, unitPrice: 150, amount: 150, type: 'LABOR' }],
+      adjustmentEntries: [],
+      subtotal: 150,
+      tax: 12,
+      total: 162,
+    };
+
+    it("getWorkorderInvoiceView — reads the workorder's invoice from pos-invoice and maps it as served", () => {
+      invoiceStub.getInvoiceByWorkorder.mockReturnValue(of(invoiceDetails));
+
+      let result: WorkorderInvoiceView | undefined;
+      service.getWorkorderInvoiceView('wo-261-1').subscribe(value => (result = value));
+
+      expect(invoiceStub.getInvoiceByWorkorder).toHaveBeenCalledWith('wo-261-1');
+      expect(result).toEqual({
         workorderId: 'wo-261-1',
+        workorderNumber: 'WO-261',
         invoiceId: 'inv-261-1',
+        invoiceNumber: 'INV-2026-0261',
         lineItems: [
-          {
-            lineItemId: 'line-1',
-            description: 'Labor',
-            quantity: 1,
-            unitPrice: 150,
-            lineTotal: 150,
-            itemType: 'LABOR',
-          },
+          { lineItemId: 'line-1', description: 'Labor', quantity: 1, unitPrice: 150, lineTotal: 150, itemType: 'LABOR' },
         ],
         subtotal: 150,
         taxAmount: 12,
         total: 162,
-        currency: 'USD',
+        currency: null,
         invoiceStatus: 'DRAFT',
-      };
-
-      service.getWorkorderInvoiceView('wo-261-1').subscribe(result => {
-        expect(result).toEqual(fixture);
+        finalizedAt: undefined,
+        createdAt: undefined,
       });
-
-      const req = http.expectOne(`${BASE}/v1/workorders/wo-261-1/invoice-view`);
-      expect(req.request.method).toBe('GET');
-      expect(req.request.url).toContain('/v1/workorders/wo-261-1/invoice-view');
-      req.flush(fixture);
     });
 
-    it('requestInvoiceFinalization — posts /v1/workorders/{workorderId}/invoice/finalize', () => {
-      const responseFixture: FinalizeInvoiceResponse = {
-        workorderId: 'wo-261-2',
-        invoiceId: 'inv-261-2',
-        status: 'FINALIZED',
-        finalizedAt: '2026-03-30T12:20:00Z',
-      };
+    it('finalizeInvoice — finalizes by invoice id, sending the reason and approval code under their contract names', () => {
+      invoiceStub.finalizeInvoice.mockReturnValue(of({ ...invoiceDetails, status: InvoiceDetailsResponseStatusEnum.Finalized }));
 
+      let status: string | undefined;
       service
-        .requestInvoiceFinalization('wo-261-2', { reason: 'Approved by manager' })
-        .subscribe(result => {
-          expect(result).toEqual(responseFixture);
-        });
+        .finalizeInvoice('inv-261-1', { reason: 'Approved by manager', authorityCode: 'elev-1' })
+        .subscribe(value => (status = value.invoiceStatus));
+      service.finalizeInvoice('inv-261-1').subscribe();
 
-      const req = http.expectOne(`${BASE}/v1/workorders/wo-261-2/invoice/finalize`);
-      expect(req.request.method).toBe('POST');
-      expect(req.request.url).toContain('/v1/workorders/wo-261-2/invoice/finalize');
-      req.flush(responseFixture);
+      expect(invoiceStub.finalizeInvoice.mock.calls).toEqual([
+        ['inv-261-1', { overrideReason: 'Approved by manager', managerApprovalCode: 'elev-1' }],
+        ['inv-261-1', {}],
+      ]);
+      expect(status).toBe('FINALIZED');
     });
   });
 

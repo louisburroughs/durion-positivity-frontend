@@ -8,10 +8,5 @@
     "key": "src/app/features/shell/services/chat-blob.service.ts -> src/app/core/services/api-base.service.ts",
     "reason": "permanent exception (fetches arbitrary chat/MCP blob URLs with baseUrlOverride: '', no @durion-sdk package covers mcp-server; PRD-sdk-migration-completion.md §Approved Exceptions).",
     "tracking": "#350"
-  },
-  {
-    "key": "src/app/features/workexec/services/workexec.service.ts -> src/app/core/services/api-base.service.ts",
-    "reason": "getWorkorderInvoiceView/requestInvoiceFinalization only (finalizeWorkorder removed, durion-positivity-backend#2210 ruling, issue #350); blocked on durion-positivity-backend#2232 (see SDK-05).",
-    "tracking": "#350"
   }
 ]

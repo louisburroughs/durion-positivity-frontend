@@ -232,14 +232,22 @@ export interface WorkorderWipView {
   readonly lastUpdatedAt?: string;
 }
 
+/**
+ * A workorder's invoice as pos-invoice serves it (`getInvoiceByWorkorder`), in the shape
+ * the invoice finalization page renders. `currency` is null because the invoice detail
+ * carries none; which currency to fall back on is ADR-0067 PC-14.
+ */
 export interface WorkorderInvoiceView {
   readonly workorderId: string;
-  readonly invoiceId?: string;
+  /** Human-readable workorder number; the page never shows the raw id (ADR-0064). */
+  readonly workorderNumber: string | null;
+  readonly invoiceId: string;
+  readonly invoiceNumber: string | null;
   readonly lineItems: InvoiceLineItem[];
-  readonly subtotal: number;
-  readonly taxAmount: number;
-  readonly total: number;
-  readonly currency: string;
+  readonly subtotal: number | null;
+  readonly taxAmount: number | null;
+  readonly total: number | null;
+  readonly currency: string | null;
   readonly invoiceStatus: string;
   readonly finalizedAt?: string;
   /** @serverGenerated */
@@ -249,22 +257,17 @@ export interface WorkorderInvoiceView {
 export interface InvoiceLineItem {
   readonly lineItemId: string;
   readonly description: string;
-  readonly quantity: number;
-  readonly unitPrice: number;
-  readonly lineTotal: number;
-  readonly itemType: 'PART' | 'LABOR' | 'FEE';
+  readonly quantity: number | null;
+  readonly unitPrice: number | null;
+  readonly lineTotal: number | null;
+  /** The served item type; `PART`, `LABOR` and `FEE` have copy of their own. */
+  readonly itemType: string;
 }
 
+/** The optional body of a finalization: an override reason and a manager approval (elevation) code. */
 export interface FinalizeInvoiceRequest {
   reason?: string;
   authorityCode?: string;
-}
-
-export interface FinalizeInvoiceResponse {
-  readonly workorderId: string;
-  readonly invoiceId: string;
-  readonly status: string;
-  readonly finalizedAt: string;
 }
 
 // ── CAP-003: Approval (Stories 233, 271, 270, 269, 268) ──────────────────────

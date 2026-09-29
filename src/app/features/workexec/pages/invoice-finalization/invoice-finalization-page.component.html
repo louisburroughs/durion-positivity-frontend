@@ -16,8 +16,11 @@
   @if (invoiceView(); as view) {
   <section class="invoice-fin__summary">
     <p class="invoice-fin__meta">
-      <strong>{{ view.workorderId }}</strong>
-      <span>{{ ('WORKEXEC.INVOICE_STATUS.' + view.invoiceStatus) | translate }}</span>
+      <strong data-testid="invoice-workorder-number">{{ view.workorderNumber ?? ('COMMON.NOT_AVAILABLE' | translate) }}</strong>
+      @if (view.invoiceNumber) {
+      <span data-testid="invoice-number">{{ view.invoiceNumber }}</span>
+      }
+      <span>{{ statusKey(view.invoiceStatus) | translate: { status: view.invoiceStatus } }}</span>
     </p>
     <p class="invoice-fin__grand-total">{{ view.total | money:view.currency:'symbol':'1.2-2' }}</p>
   </section>
@@ -40,7 +43,7 @@
         <td>{{ item.quantity }}</td>
         <td>{{ item.unitPrice | money:view.currency:'symbol':'1.2-2' }}</td>
         <td>{{ item.lineTotal | money:view.currency:'symbol':'1.2-2' }}</td>
-        <td>{{ ('WORKEXEC.ITEM_TYPE.' + item.itemType) | translate }}</td>
+        <td>{{ itemTypeKey(item.itemType) | translate: { type: item.itemType } }}</td>
       </tr>
       }
     </tbody>
@@ -60,7 +63,8 @@
     <textarea id="invoice-finalization-reason" #reasonInput class="invoice-fin__reason-input"
       [placeholder]="'WORKEXEC.INVOICE_FINALIZATION.FORM.REASON_PLACEHOLDER' | translate"></textarea>
     <button type="button" class="invoice-fin__submit-btn"
-      (click)="requestFinalization(reasonInput.value.trim() || undefined)" [disabled]="isSubmitting()">
+      (click)="requestFinalization(reasonInput.value.trim() || undefined)" [disabled]="isSubmitting() || !canFinalize()"
+      data-testid="invoice-finalize-submit">
       {{ isSubmitting() ? ('WORKEXEC.INVOICE_FINALIZATION.ACTION.SUBMITTING' | translate) :
       ('WORKEXEC.INVOICE_FINALIZATION.ACTION.REQUEST_FINALIZATION' | translate) }}
     </button>

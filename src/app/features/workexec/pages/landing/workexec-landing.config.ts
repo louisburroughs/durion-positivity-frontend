@@ -233,6 +233,7 @@ export const WORKEXEC_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'WORKEXEC.LANDING.CARD.INVOICE_FINALIZATION.DESCRIPTION',
           ctaKey: 'WORKEXEC.LANDING.ACTION.OPEN_INVOICE_FINALIZATION',
           buildCommands: W('invoice-finalization'),
+          permissions: WORKEXEC_PAGE.invoiceFinalization,
         },
         {
           kind: 'guided',

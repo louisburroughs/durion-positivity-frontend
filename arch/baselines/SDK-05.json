@@ -18,10 +18,5 @@
     "key": "src/app/features/shell/services/chat-api.service.ts :: '/mcp-server/v1/mcp/documents'",
     "reason": "permanent exception (gateway/MCP chat traffic, no @durion-sdk package covers mcp-server; see SDK-03). PRD-sdk-migration-completion.md §Approved Exceptions.",
     "tracking": "#350"
-  },
-  {
-    "key": "src/app/features/workexec/services/workexec.service.ts :: '/v1/workorders/'",
-    "reason": "getWorkorderInvoiceView/requestInvoiceFinalization only (finalizeWorkorder removed, durion-positivity-backend#2210 ruling, issue #350): neither operation has a published contract in @durion-sdk/workorder or @durion-sdk/invoice. Blocked on durion-positivity-backend#2232 (WorkorderResponse needs an invoiceId, or a by-workorder invoice lookup) before these can move onto pos-invoice's getInvoice/finalizeInvoice.",
-    "tracking": "#350"
   }
 ]

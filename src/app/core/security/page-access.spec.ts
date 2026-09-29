@@ -144,11 +144,6 @@ const UNGATED_BY_DESIGN: Readonly<Record<string, string>> = {
   '/app/billing/invoices/:invoiceId/payments/:paymentId/void-refund': 'void/refund are AUTHENTICATED-only',
   '/app/billing/invoices/:invoiceId/receipts': 'receipt generate/reprint are AUTHENTICATED-only',
   '/app/billing/invoices/:invoiceId/receipts/:receiptId': 'receipt generate/reprint are AUTHENTICATED-only',
-
-  // Calls endpoints no module's openapi.yaml publishes, so there is no
-  // `@PreAuthorize` to trace and no code that could be right.
-  '/app/workexec/workorders/:workorderId/invoice-finalization':
-    'getWorkorderInvoiceView has no published contract',
 };
 
 /**
