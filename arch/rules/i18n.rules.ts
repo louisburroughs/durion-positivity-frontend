@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { ASTWithSource, BindingPipe, LiteralPrimitive, RecursiveAstVisitor } from '@angular/compiler';
-import { calls, enclosing, importedNames, insideCallback, stringLiterals, ts, type Source } from '../support/ast';
+import { calls, enclosing, importedNames, insideCallback, nodes, stringLiterals, ts, type Source } from '../support/ast';
 import { file, onDisk, type Project, selectors } from '../support/projects';
 import { type ArchRule, type Finder, combine, contentRule, customRule, templateRule } from '../support/rule';
 import { parseHtml, templateFiles, elements } from '../support/templates';
@@ -341,15 +341,40 @@ const I18N10 = {
 const BARE_CURRENCY_PIPE_RE = /(^|[^|])\|\s*currency\b/;
 const LOCALE_BLIND_MONEY_API = new Set(['CurrencyPipe', 'formatCurrency']);
 
-export const i18n10Findings: Finder = (f) =>
-  uniqSorted([
+/** Local names bound by `import * as x from '@angular/common'`. */
+function commonNamespaces(f: Source): Set<string> {
+  const out = new Set<string>();
+  for (const n of nodes(f, ts.isImportDeclaration)) {
+    const bindings = n.importClause?.namedBindings;
+    if (
+      ts.isStringLiteral(n.moduleSpecifier) &&
+      n.moduleSpecifier.text === '@angular/common' &&
+      bindings &&
+      ts.isNamespaceImport(bindings)
+    ) {
+      out.add(bindings.name.text);
+    }
+  }
+  return out;
+}
+
+export const i18n10Findings: Finder = (f) => {
+  const namespaces = commonNamespaces(f);
+  return uniqSorted([
     ...importedNames(f, '@angular/common')
       .filter((i) => LOCALE_BLIND_MONEY_API.has(i.name))
       .map((i) => `imports ${i.name} from @angular/common`),
+    // `import * as common …` then `common.CurrencyPipe` / `common.formatCurrency(…)` is the same bypass.
+    ...nodes(f, ts.isPropertyAccessExpression)
+      .filter(
+        (n) => ts.isIdentifier(n.expression) && namespaces.has(n.expression.text) && LOCALE_BLIND_MONEY_API.has(n.name.text),
+      )
+      .map((n) => `uses ${n.name.text} from @angular/common through a namespace import`),
     ...stringLiterals(f)
       .filter((l) => BARE_CURRENCY_PIPE_RE.test(l.text))
       .map(() => 'bare `| currency` pipe in an inline template'),
   ]);
+};
 
 export const i18n10 = (p: Project): ArchRule =>
   combine(I18N10, [
