@@ -10,6 +10,19 @@ describe('permission-bits', () => {
       expect(new Set(PERMISSION_BY_BIT).size).toBe(PERMISSION_BY_BIT.length);
       expect(PERMISSION_BY_BIT.every(code => typeof code === 'string' && code.length > 0)).toBe(true);
     });
+
+    it('pins the catalog-94 additions to their backend bit indexes', () => {
+      expect(PERMISSION_CATALOG_VERSION).toBeGreaterThanOrEqual(94);
+      expect(PERMISSION_BY_BIT[542]).toBe('appointments:reschedule:approve');
+      expect(PERMISSION_BY_BIT[543]).toBe('accounting:reconciliation:approve');
+      expect(PERMISSION_BY_BIT.indexOf('accounting:reconciliation:approve')).toBe(543);
+    });
+
+    it('decodes bit 543 to the reconciliation approve permission', () => {
+      expect(decodePermissionBits(encodePermissionBits(['accounting:reconciliation:approve']))).toEqual(
+        new Set(['accounting:reconciliation:approve']),
+      );
+    });
   });
 
   describe('decodePermissionBits', () => {
