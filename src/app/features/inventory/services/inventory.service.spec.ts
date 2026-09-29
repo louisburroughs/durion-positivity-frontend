@@ -20,6 +20,10 @@ import {
   ShortageResolutionResultDto,
   ShortageResolutionResultDtoOptionTypeEnum,
   ShortageResolutionService,
+  InventoryReservationsService,
+  WorkorderReservationResponse,
+  WorkorderReservationResponseStatusEnum,
+  WorkorderReservationAllocationResponseStatusEnum,
 } from '@durion-sdk/inventory';
 import { InventoryDomainService } from './inventory.service';
 import {
@@ -72,6 +76,7 @@ describe('InventoryDomainService', () => {
   const replenishmentStub = {
     listReplenishmentTasks: vi.fn(),
   };
+  const reservationsStub = { listReservationsForWorkorder: vi.fn() };
   const shortageStub = {
     listShortageOptions: vi.fn(),
     resolveShortage: vi.fn(),
@@ -89,6 +94,7 @@ describe('InventoryDomainService', () => {
         { provide: PutawayService, useValue: putawayStub },
         { provide: ReplenishmentService, useValue: replenishmentStub },
         { provide: ShortageResolutionService, useValue: shortageStub },
+        { provide: InventoryReservationsService, useValue: reservationsStub },
       ],
     });
     service = TestBed.inject(InventoryDomainService);
@@ -694,6 +700,55 @@ describe('InventoryDomainService', () => {
         status: 'SUBMITTED',
         createdAt: '2026-09-25T00:00:00Z',
       });
+    });
+  });
+
+  // ── getWorkorderReservations() ────────────────────────────────────────
+
+  describe('getWorkorderReservations()', () => {
+    it("reads a workorder's reservations and maps each allocation, dropping one without an id", () => {
+      const row: WorkorderReservationResponse = {
+        reservationId: 'res-1',
+        workorderLineId: 'line-1',
+        sku: 'BRK-PAD-01',
+        requiredQuantity: 4,
+        allocatedQuantity: 1,
+        shortQuantity: 3,
+        status: WorkorderReservationResponseStatusEnum.PartiallyFulfilled,
+        allocations: [
+          { allocationId: 'alloc-1', locationId: 'loc-main', allocatedQuantity: 1, status: WorkorderReservationAllocationResponseStatusEnum.Allocated },
+          { locationId: 'loc-x', allocatedQuantity: 2 },
+        ],
+      };
+      reservationsStub.listReservationsForWorkorder.mockReturnValue(of([row]));
+
+      let result: unknown;
+      service.getWorkorderReservations('wo-1').subscribe(value => (result = value));
+
+      expect(reservationsStub.listReservationsForWorkorder).toHaveBeenCalledWith('wo-1');
+      expect(result).toEqual([
+        {
+          reservationId: 'res-1',
+          workorderLineId: 'line-1',
+          sku: 'BRK-PAD-01',
+          requiredQuantity: 4,
+          allocatedQuantity: 1,
+          shortQuantity: 3,
+          status: 'PARTIALLY_FULFILLED',
+          allocations: [
+            { allocationId: 'alloc-1', locationId: 'loc-main', allocatedQuantity: 1, allocationState: null, status: 'ALLOCATED' },
+          ],
+        },
+      ]);
+    });
+
+    it('reads an empty answer as no reservations', () => {
+      reservationsStub.listReservationsForWorkorder.mockReturnValue(of([]));
+
+      let result: unknown;
+      service.getWorkorderReservations('wo-unknown').subscribe(value => (result = value));
+
+      expect(result).toEqual([]);
     });
   });
 

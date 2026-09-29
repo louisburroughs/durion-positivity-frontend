@@ -295,7 +295,13 @@ export const INVENTORY_PAGE = {
    * view admission above (ADR-0040 §6a.1).
    */
   returnToStockWrite: ['inventory:return:write'],
+  /** `listReservationsForWorkorder` and `listShortageOptions`, both `inventory:shortage:view`. */
   shortageResolution: ['inventory:shortage:view'],
+  /**
+   * `resolveShortage` enforces `inventory:shortage:resolve`; the confirm control and its
+   * handler gate on it, not on the page's view admission (ADR-0040 §6a.1).
+   */
+  shortageResolve: ['inventory:shortage:resolve'],
   /** Purchase orders live under /app/inventory but are served by pos-order. */
   purchaseOrderView: ['order:purchase_order:view'],
   purchaseOrderEdit: ['order:purchase_order:create'],

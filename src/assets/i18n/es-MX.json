@@ -7562,29 +7562,56 @@
       },
       "SHORTAGE_RESOLUTION": {
         "TITLE": "Resolución de Faltante",
-        "NOT_AVAILABLE": "La resolución de faltantes aún no está disponible; el backend todavía no provee los datos que esta página necesita para calcular opciones de forma segura.",
         "STATE": {
-          "LOADING": "Cargando opciones de faltante..."
-        },
-        "WARNING": {
-          "PARTIAL_OPTIONS": "Algunas opciones pueden ofrecer solo cumplimiento parcial."
+          "LOADING": "Cargando opciones de faltante...",
+          "LOADING_LINES": "Cargando las líneas faltantes de la orden de trabajo…"
         },
         "FIELD": {
-          "OPTIONS": "Opciones de Resolución"
+          "OPTIONS": "Opciones de Resolución",
+          "NOTES": "Notas (opcional)"
         },
-        "LEAD_TIME_DAYS": "Tiempo de entrega: {{days}} día(s)",
         "ACTION": {
           "CONFIRM": "Confirmar resolución"
         },
         "SUCCESS": {
           "TITLE": "Faltante Resuelto",
-          "DECISION": "Decisión seleccionada"
+          "DECISION": "Decisión seleccionada",
+          "STATUS": "Estado: {{status}}"
         },
         "ERROR": {
-          "MISSING_ID": "Se requieren los ID de orden de trabajo y línea de asignación.",
+          "MISSING_ID": "Se requiere un ID de orden de trabajo.",
           "LOAD": "No se pudieron cargar las opciones de faltante.",
-          "SUBMIT": "No se pudo enviar la resolución de faltante."
-        }
+          "SUBMIT": "No se pudo enviar la resolución de faltante.",
+          "FORBIDDEN": "No tiene permiso para ver faltantes.",
+          "LOAD_RESERVATIONS": "No se pudieron cargar las reservas de la orden de trabajo.",
+          "ALLOCATION_NOT_FOUND": "Esa asignación ya no existe. Las líneas cambiaron; vuelva a cargarlas.",
+          "VALIDATION": "La resolución se rechazó por no ser válida.",
+          "FORBIDDEN_RESOLVE": "No tiene permiso para resolver faltantes.",
+          "NOT_RESOLVABLE": "No se puede aplicar esta opción: puede que la línea ya no tenga faltante o que no se cumplan sus condiciones."
+        },
+        "EMPTY": "Ninguna línea de esta orden de trabajo tiene faltante.",
+        "LINES": {
+          "HEADING": "Líneas con faltante",
+          "QUANTITIES": "{{required}} requeridas, {{allocated}} asignadas, {{short}} faltantes",
+          "NO_ALLOCATION": "Ninguna asignación de esta línea está en sus ubicaciones, así que no se puede resolver aquí.",
+          "ALLOCATION": "Resolver la asignación en {{location}} ({{quantity}} asignadas)"
+        },
+        "OPTION": {
+          "BACKORDER": "Pedido pendiente",
+          "SUBSTITUTE": "Pieza sustituta",
+          "TRANSFER_IN": "Traspaso desde otra sucursal",
+          "EMERGENCY_PURCHASE": "Compra de emergencia",
+          "CANCEL_LINE": "Cancelar la línea",
+          "OTHER": "Otra opción ({{type}})"
+        },
+        "DETAIL": {
+          "AVAILABLE": "{{quantity}} disponibles",
+          "COST_DELTA": "Diferencia de costo: {{amount}}",
+          "EXPECTED": "Previsto para el {{date}}",
+          "FROM": "Desde {{location}}"
+        },
+        "NO_OPTIONS": "No hay opciones de resolución para esta asignación.",
+        "RESOLVE_DENIED": "Resolver un faltante requiere el permiso inventory:shortage:resolve."
       }
     },
     "SECURITY": {

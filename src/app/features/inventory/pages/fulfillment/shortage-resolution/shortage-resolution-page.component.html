@@ -1,12 +1,139 @@
 <main class="page" aria-labelledby="shortage-resolution-title">
   <header class="page-header">
-    <h1 id="shortage-resolution-title" class="page-title">{{ 'INVENTORY.FULFILLMENT.SHORTAGE_RESOLUTION.TITLE' |
-      translate }}</h1>
+    <h1 id="shortage-resolution-title" class="page-title">{{ 'INVENTORY.FULFILLMENT.SHORTAGE_RESOLUTION.TITLE' | translate }}</h1>
+    <a class="btn-secondary" routerLink="/app/inventory/fulfillment">{{ 'COMMON.BACK' | translate }}</a>
   </header>
 
-  <section class="card state-card" aria-live="polite">
-    <span class="material-symbols-outlined" aria-hidden="true">info</span>
-    <p>{{ 'INVENTORY.FULFILLMENT.SHORTAGE_RESOLUTION.NOT_AVAILABLE' | translate }}</p>
-    <a class="btn-secondary" routerLink="/app/inventory/fulfillment">{{ 'COMMON.BACK' | translate }}</a>
+  <!-- Stays in the DOM so the outcome is announced when it appears (ADR-0029 §8.8). -->
+  <div role="status" aria-live="polite">
+    @if (result(); as done) {
+    <section #resultRegion class="card result-card" tabindex="-1" data-testid="shortage-result">
+      <h2>{{ 'INVENTORY.FULFILLMENT.SHORTAGE_RESOLUTION.SUCCESS.TITLE' | translate }}</h2>
+      <p>
+        {{ 'INVENTORY.FULFILLMENT.SHORTAGE_RESOLUTION.SUCCESS.DECISION' | translate }}:
+        {{ optionKey(done.optionType) | translate: { type: done.optionType } }}
+      </p>
+      <p>{{ 'INVENTORY.FULFILLMENT.SHORTAGE_RESOLUTION.SUCCESS.STATUS' | translate: { status: done.status } }}</p>
+    </section>
+    }
+  </div>
+
+  @if (state() === 'loading') {
+  <section class="card state-card" aria-live="polite" aria-busy="true" data-testid="shortage-loading">
+    <p>{{ 'INVENTORY.FULFILLMENT.SHORTAGE_RESOLUTION.STATE.LOADING_LINES' | translate }}</p>
   </section>
+  }
+
+  @if (state() === 'error' && errorKey(); as key) {
+  <section class="card state-card" role="alert" data-testid="shortage-error">
+    <p>{{ key | translate }}</p>
+    <button type="button" class="btn-secondary" (click)="load()">{{ 'COMMON.RETRY' | translate }}</button>
+  </section>
+  }
+
+  @if (state() === 'ready') {
+  @if (shortLines().length === 0) {
+  <section class="card state-card" data-testid="shortage-empty">
+    <p>{{ 'INVENTORY.FULFILLMENT.SHORTAGE_RESOLUTION.EMPTY' | translate }}</p>
+  </section>
+  } @else {
+  <section class="card" aria-labelledby="shortage-lines-heading">
+    <h2 id="shortage-lines-heading">{{ 'INVENTORY.FULFILLMENT.SHORTAGE_RESOLUTION.LINES.HEADING' | translate }}</h2>
+    @for (line of shortLines(); track line.reservationId) {
+    <fieldset class="shortage-line" data-testid="shortage-line" [attr.data-reservation]="line.reservationId">
+      <legend>
+        {{ line.sku ?? ('COMMON.NOT_AVAILABLE' | translate) }} —
+        {{ 'INVENTORY.FULFILLMENT.SHORTAGE_RESOLUTION.LINES.QUANTITIES' | translate: {
+          required: (line.requiredQuantity ?? 0 | number),
+          allocated: (line.allocatedQuantity ?? 0 | number),
+          short: (line.shortQuantity ?? 0 | number)
+        } }}
+      </legend>
+      @if (line.allocations.length === 0) {
+      <p class="hint" data-testid="shortage-no-allocation">{{ 'INVENTORY.FULFILLMENT.SHORTAGE_RESOLUTION.LINES.NO_ALLOCATION' | translate }}</p>
+      } @else {
+      @for (allocation of line.allocations; track allocation.allocationId) {
+      <label class="choice">
+        <input type="radio" name="shortage-allocation" [checked]="isSelected(allocation)" [disabled]="resolving()"
+          (change)="selectAllocation(line, allocation)" data-testid="shortage-allocation" />
+        <span>
+          {{ 'INVENTORY.FULFILLMENT.SHORTAGE_RESOLUTION.LINES.ALLOCATION' | translate: {
+            location: (locationName(allocation.locationId) ?? ('COMMON.NOT_AVAILABLE' | translate)),
+            quantity: (allocation.allocatedQuantity ?? 0 | number)
+          } }}
+        </span>
+      </label>
+      }
+      }
+    </fieldset>
+    }
+  </section>
+  }
+
+  @if (selected()) {
+  <section class="card" aria-labelledby="shortage-options-heading" data-testid="shortage-options">
+    <h2 id="shortage-options-heading">{{ 'INVENTORY.FULFILLMENT.SHORTAGE_RESOLUTION.FIELD.OPTIONS' | translate }}</h2>
+    @switch (optionsState()) {
+    @case ('loading') {
+    <p aria-busy="true">{{ 'INVENTORY.FULFILLMENT.SHORTAGE_RESOLUTION.STATE.LOADING' | translate }}</p>
+    }
+    @case ('error') {
+    <p role="alert" class="error-text" data-testid="shortage-options-error">
+      {{ optionsErrorKey() ?? '' | translate }}
+      <button type="button" class="btn-secondary" (click)="retryOptions()">{{ 'COMMON.RETRY' | translate }}</button>
+    </p>
+    }
+    @case ('ready') {
+    <fieldset class="options">
+      <legend class="sr-only">{{ 'INVENTORY.FULFILLMENT.SHORTAGE_RESOLUTION.FIELD.OPTIONS' | translate }}</legend>
+      @for (option of options(); track option.optionType + (option.substituteSku ?? '') + (option.sourceLocationId ?? '')) {
+      <label class="choice option" data-testid="shortage-option">
+        <input type="radio" name="shortage-option" [checked]="selectedOption() === option" [disabled]="resolving()"
+          (change)="selectOption(option)" />
+        <span>
+          <strong>{{ optionKey(option.optionType) | translate: { type: option.optionType } }}</strong>
+          <span class="detail">{{ option.description }}</span>
+          @if (option.availableQuantity !== undefined && option.availableQuantity !== null) {
+          <span class="detail">{{ 'INVENTORY.FULFILLMENT.SHORTAGE_RESOLUTION.DETAIL.AVAILABLE' | translate: { quantity: (option.availableQuantity | number) } }}</span>
+          }
+          @if (option.costDelta !== undefined && option.costDelta !== null) {
+          <span class="detail">{{ 'INVENTORY.FULFILLMENT.SHORTAGE_RESOLUTION.DETAIL.COST_DELTA' | translate: { amount: (option.costDelta | money) } }}</span>
+          }
+          @if (option.expectedResolutionDate) {
+          <span class="detail">{{ 'INVENTORY.FULFILLMENT.SHORTAGE_RESOLUTION.DETAIL.EXPECTED' | translate: { date: (option.expectedResolutionDate | date: 'mediumDate') } }}</span>
+          }
+          @if (option.sourceLocationId) {
+          <span class="detail">{{ 'INVENTORY.FULFILLMENT.SHORTAGE_RESOLUTION.DETAIL.FROM' | translate: { location: (locationName(option.sourceLocationId) ?? ('COMMON.NOT_AVAILABLE' | translate)) } }}</span>
+          }
+        </span>
+      </label>
+      } @empty {
+      <p data-testid="shortage-no-options">{{ 'INVENTORY.FULFILLMENT.SHORTAGE_RESOLUTION.NO_OPTIONS' | translate }}</p>
+      }
+    </fieldset>
+
+    <div class="field-row">
+      <label for="shortage-notes">{{ 'INVENTORY.FULFILLMENT.SHORTAGE_RESOLUTION.FIELD.NOTES' | translate }}</label>
+      <textarea id="shortage-notes" rows="2" [value]="notes()" (input)="notes.set($any($event.target).value)"
+        [disabled]="resolving()" data-testid="shortage-notes"></textarea>
+    </div>
+
+    @if (resolveErrorKey(); as key) {
+    <p role="alert" class="error-text" data-testid="shortage-resolve-error">{{ key | translate }}</p>
+    }
+    @if (!canResolve()) {
+    <p class="hint" id="shortage-resolve-denied">{{ 'INVENTORY.FULFILLMENT.SHORTAGE_RESOLUTION.RESOLVE_DENIED' | translate }}</p>
+    }
+    <div class="action-bar">
+      <button type="button" class="btn-primary" data-testid="shortage-confirm"
+        [disabled]="!selectedOption() || resolving() || !canResolve()"
+        [attr.aria-describedby]="canResolve() ? null : 'shortage-resolve-denied'" (click)="resolve()">
+        {{ 'INVENTORY.FULFILLMENT.SHORTAGE_RESOLUTION.ACTION.CONFIRM' | translate }}
+      </button>
+    </div>
+    }
+    }
+  </section>
+  }
+  }
 </main>
