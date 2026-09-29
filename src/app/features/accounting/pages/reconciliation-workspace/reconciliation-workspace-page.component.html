@@ -379,8 +379,12 @@
           [proposedDate]="proposedDate()"
           [busy]="busy()"
           [errorKey]="adjustmentErrorKey()"
+          [typesStatus]="adjustmentTypesStatus()"
+          [accountsStatus]="bankAccountsStatus()"
           (submitted)="submitAdjustment($event)"
-          (cancelled)="cancelAdjustment()" />
+          (cancelled)="cancelAdjustment()"
+          (retryTypes)="readAdjustmentTypes()"
+          (retryAccounts)="retryBankAccounts()" />
       }
     }
   }

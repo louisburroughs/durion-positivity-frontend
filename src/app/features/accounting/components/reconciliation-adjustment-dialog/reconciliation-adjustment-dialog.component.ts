@@ -64,9 +64,14 @@ export class ReconciliationAdjustmentDialogComponent implements OnInit {
   readonly proposedDate = input<string | null>(null);
   readonly busy = input(false);
   readonly errorKey = input<string | null>(null);
+  /** Whether the adjustment types and the bank accounts could be read; a failure is not an empty list. */
+  readonly typesStatus = input<'idle' | 'loading' | 'OK' | 'ERROR'>('OK');
+  readonly accountsStatus = input<'idle' | 'loading' | 'OK' | 'ERROR'>('OK');
 
   readonly submitted = output<AdjustmentInput>();
   readonly cancelled = output<void>();
+  readonly retryTypes = output<void>();
+  readonly retryAccounts = output<void>();
 
   readonly justificationMin = BANK_REC_JUSTIFICATION_MIN;
 

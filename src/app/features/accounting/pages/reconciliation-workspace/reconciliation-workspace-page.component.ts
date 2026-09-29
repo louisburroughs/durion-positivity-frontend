@@ -224,7 +224,11 @@ export class ReconciliationWorkspacePageComponent {
   readonly auditState = signal<'loading' | 'ready' | 'error'>('loading');
 
   readonly adjustmentTypes = signal<readonly AdjustmentType[]>([]);
+  /** A failed type read is not "no types": the dialog says it could not load them. */
+  readonly adjustmentTypesStatus = signal<'loading' | 'OK' | 'ERROR'>('loading');
   readonly bankAccounts = signal<readonly BankAccount[]>([]);
+  /** A failed bank-account read is not "no other accounts": the TRANSFER picker says so. */
+  readonly bankAccountsStatus = signal<'idle' | 'loading' | 'OK' | 'ERROR'>('idle');
   readonly adjustmentPreset = signal<AdjustmentPreset | null>(null);
   readonly adjustmentOpen = signal(false);
   readonly adjustmentErrorKey = signal<string | null>(null);
@@ -329,13 +333,55 @@ export class ReconciliationWorkspacePageComponent {
     this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
       const id = params.get('reconciliationId');
       if (!id) return;
+      this.resetForRoute();
       this.reconciliationId = id;
       this.load();
     });
+    this.readAdjustmentTypes();
+  }
+
+  /** Re-reads the adjustment types, e.g. after the first read failed. */
+  readAdjustmentTypes(): void {
+    this.adjustmentTypesStatus.set('loading');
     this.workspace
       .listAdjustmentTypes()
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: types => this.adjustmentTypes.set(types), error: () => this.adjustmentTypes.set([]) });
+      .subscribe({
+        next: types => {
+          this.adjustmentTypes.set(types);
+          this.adjustmentTypesStatus.set('OK');
+        },
+        error: () => {
+          this.adjustmentTypes.set([]);
+          this.adjustmentTypesStatus.set('ERROR');
+        },
+      });
+  }
+
+  /**
+   * Angular reuses this page when only `reconciliationId` changes: nothing
+   * read, selected or open for the previous reconciliation carries across,
+   * and its in-flight reads are superseded.
+   */
+  private resetForRoute(): void {
+    this.reviewSeq++;
+    this.auditSeq++;
+    this.candidatesSeq++;
+    this.review.set(null);
+    this.audit.set([]);
+    this.outcome.set(null);
+    this.flaggedIds.set(new Set());
+    this.selectedBank.set(new Set());
+    this.selectedLedger.set(new Set());
+    this.candidatesFor.set(null);
+    this.candidates.set([]);
+    this.prompt.set(null);
+    this.adjustmentOpen.set(false);
+    this.adjustmentPreset.set(null);
+    this.pendingMatch = null;
+    this.dialogOpener = null;
+    this.busy.set(false);
+    this.refreshing.set(false);
   }
 
   load(): void {
@@ -430,10 +476,19 @@ export class ReconciliationWorkspacePageComponent {
       concatMap(match => this.workspace.acceptMatch(this.reconciliationId, match.matchId)),
       last(),
     );
-    this.run(accepts, () => ({
-      key: 'ACCOUNTING.RECONCILIATION_WORKSPACE.OUTCOME.PROPOSALS_ACCEPTED',
-      params: { count: proposals.length },
-    }));
+    this.busy.set(true);
+    accepts.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: () => {
+        this.busy.set(false);
+        this.afterWrite({ key: 'ACCOUNTING.RECONCILIATION_WORKSPACE.OUTCOME.PROPOSALS_ACCEPTED', params: { count: proposals.length } });
+      },
+      error: (error: unknown) => {
+        this.onWriteFailure(toBankRecFailure(error), false);
+        // Earlier acceptances may have committed before the one that failed: the review is re-read either way.
+        this.readReview(true);
+        this.readAudit();
+      },
+    });
   }
 
   // ── Prompts ────────────────────────────────────────────────────────────
@@ -722,12 +777,29 @@ export class ReconciliationWorkspacePageComponent {
     this.readAudit();
   }
 
+  /** Reads the bank accounts for the TRANSFER picker; a failed read stays distinguishable from an empty list. */
+  retryBankAccounts(): void {
+    this.bankAccountsStatus.set('idle');
+    this.ensureBankAccounts();
+  }
+
   private ensureBankAccounts(): void {
-    if (this.bankAccounts().length > 0) return;
+    const status = this.bankAccountsStatus();
+    if (status === 'OK' || status === 'loading') return;
+    this.bankAccountsStatus.set('loading');
     this.bankRec
       .listBankAccounts()
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: accounts => this.bankAccounts.set(accounts), error: () => this.bankAccounts.set([]) });
+      .subscribe({
+        next: accounts => {
+          this.bankAccounts.set(accounts);
+          this.bankAccountsStatus.set('OK');
+        },
+        error: () => {
+          this.bankAccounts.set([]);
+          this.bankAccountsStatus.set('ERROR');
+        },
+      });
   }
 
   /**

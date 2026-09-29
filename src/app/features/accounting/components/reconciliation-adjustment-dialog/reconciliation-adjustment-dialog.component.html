@@ -2,6 +2,12 @@
   aria-labelledby="adjustment-title" data-testid="adjustment-dialog">
   <h2 id="adjustment-title" class="confirm-heading">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ADJUST.TITLE' | translate }}</h2>
   <form class="stacked-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    @if (typesStatus() === 'ERROR') {
+      <p class="field-error" role="alert" data-testid="types-error">
+        {{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ADJUST.TYPES_ERROR' | translate }}
+        <button type="button" class="link-button" (click)="retryTypes.emit()">{{ 'ACCOUNTING.COMMON.RETRY' | translate }}</button>
+      </p>
+    }
     <div class="form-field">
       <label for="adjustment-type">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ADJUST.TYPE' | translate }}</label>
       <select id="adjustment-type" formControlName="type" data-testid="adjustment-type">
@@ -78,6 +84,14 @@
     }
 
     @if (type() === 'TRANSFER') {
+      @if (accountsStatus() === 'ERROR') {
+        <p class="field-error" role="alert" data-testid="accounts-error">
+          {{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ADJUST.ACCOUNTS_ERROR' | translate }}
+          <button type="button" class="link-button" (click)="retryAccounts.emit()">{{ 'ACCOUNTING.COMMON.RETRY' | translate }}</button>
+        </p>
+      } @else if (accountsStatus() === 'loading') {
+        <p aria-busy="true" data-testid="accounts-loading">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ADJUST.ACCOUNTS_LOADING' | translate }}</p>
+      }
       <div class="form-field">
         <label for="adjustment-counter">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ADJUST.COUNTER' | translate }}</label>
         <select id="adjustment-counter" formControlName="counterGlAccountId" data-testid="adjustment-counter">

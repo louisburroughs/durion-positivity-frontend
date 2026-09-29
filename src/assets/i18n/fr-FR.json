@@ -5019,7 +5019,10 @@
         "JUSTIFICATION_REQUIRED": "Justification",
         "OVERRIDE": "Justification de dérogation pour période clôturée (facultatif)",
         "OVERRIDE_HINT": "Seulement pour comptabiliser dans une période clôturée au lieu de la date proposée.",
-        "CONFIRM": "Comptabiliser l’ajustement"
+        "CONFIRM": "Comptabiliser l’ajustement",
+        "TYPES_ERROR": "Impossible de charger les types d’ajustement.",
+        "ACCOUNTS_ERROR": "Impossible de charger les comptes bancaires : aucun compte de virement ne peut être choisi.",
+        "ACCOUNTS_LOADING": "Chargement des comptes bancaires…"
       },
       "OUTCOME": {
         "MATCHED": "Le rapprochement est enregistré.",

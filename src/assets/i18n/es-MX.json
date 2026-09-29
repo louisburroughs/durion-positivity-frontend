@@ -5019,7 +5019,10 @@
         "JUSTIFICATION_REQUIRED": "Justificación",
         "OVERRIDE": "Justificación para registrar en período cerrado (opcional)",
         "OVERRIDE_HINT": "Solo para registrar en un período cerrado en lugar de la fecha propuesta.",
-        "CONFIRM": "Registrar ajuste"
+        "CONFIRM": "Registrar ajuste",
+        "TYPES_ERROR": "No se pudieron cargar los tipos de ajuste.",
+        "ACCOUNTS_ERROR": "No se pudieron cargar las cuentas bancarias, así que no se puede elegir la cuenta de la transferencia.",
+        "ACCOUNTS_LOADING": "Cargando cuentas bancarias…"
       },
       "OUTCOME": {
         "MATCHED": "Se registró la asociación.",

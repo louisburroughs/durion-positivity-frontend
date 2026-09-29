@@ -254,6 +254,19 @@ describe('ReconciliationAdjustmentDialogComponent', () => {
     expect(query('adjustment-override')).not.toBeNull();
   });
 
+  it('says the transfer accounts could not be read, and offers a retry', () => {
+    setup();
+    fixture.componentRef.setInput('bankAccounts', []);
+    fixture.componentRef.setInput('accountsStatus', 'ERROR');
+    let retried = 0;
+    fixture.componentInstance.retryAccounts.subscribe(() => retried++);
+    set('type', 'TRANSFER');
+
+    expect(query('accounts-error')).not.toBeNull();
+    (query('accounts-error')?.querySelector('button') as HTMLButtonElement).click();
+    expect(retried).toBe(1);
+  });
+
   it('shows the error the page classified', () => {
     setup();
     fixture.componentRef.setInput('errorKey', 'ACCOUNTING.RECONCILIATION_WORKSPACE.ERROR.GL_ACCOUNT_NOT_ACTIVE');

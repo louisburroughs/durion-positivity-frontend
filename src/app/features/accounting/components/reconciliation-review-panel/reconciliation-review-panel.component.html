@@ -214,11 +214,11 @@
     @if (review().exclusions.length > 0) {
       <h4>{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.EVIDENCE.EXCLUSIONS' | translate }}</h4>
       <ul class="evidence-list" data-testid="evidence-exclusions">
-        @for (row of review().exclusions; track row.bankTransactionId) {
+        @for (row of review().exclusions; track row.bankTransactionId; let i = $index) {
           <li>
             {{ dateOnly(row.transactionDate) | date: 'mediumDate' }} · {{ row.description ?? ('COMMON.NOT_AVAILABLE' | translate) }} · {{ row.signedAmount | money: currency() }}
             <button type="button" class="btn btn--outline" data-testid="restore" [disabled]="!canRestore() || busy()" (click)="restore.emit(row)">
-              {{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ACTION.RESTORE' | translate }}
+              {{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ACTION.RESTORE' | translate }}<span class="sr-only">&nbsp;{{ i + 1 }}</span>
             </button>
           </li>
         }
@@ -232,7 +232,7 @@
       <p class="hint-text">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ADJUSTMENTS.EMPTY' | translate }}</p>
     } @else {
       <ul class="evidence-list">
-        @for (adjustment of review().adjustments; track adjustment.adjustmentId) {
+        @for (adjustment of review().adjustments; track adjustment.adjustmentId; let i = $index) {
           <li data-testid="adjustment" [attr.data-adjustment]="adjustment.adjustmentId">
             {{ ('ACCOUNTING.RECONCILIATION_WORKSPACE.ADJUSTMENT_TYPE.' + (adjustment.type ?? 'UNKNOWN')) | translate }} ·
             {{ adjustment.amount | money: currency() }} ·
@@ -244,7 +244,7 @@
               <span class="status-badge">{{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ADJUSTMENTS.REVERSED' | translate }}</span>
             } @else {
               <button type="button" class="btn btn--outline" data-testid="reverse" [disabled]="!canReverse() || busy()" (click)="reverse.emit(adjustment)">
-                {{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ACTION.REVERSE' | translate }}
+                {{ 'ACCOUNTING.RECONCILIATION_WORKSPACE.ACTION.REVERSE' | translate }}<span class="sr-only">&nbsp;{{ i + 1 }}</span>
               </button>
             }
           </li>

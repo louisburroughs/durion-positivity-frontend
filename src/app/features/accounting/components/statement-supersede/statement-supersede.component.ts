@@ -113,6 +113,9 @@ export class StatementSupersedeComponent {
   /** Re-reads the COMMITTED statements, e.g. after the server refused the chosen one. */
   reload(): void {
     this.listSub?.unsubscribe();
+    // The chosen statement's read belongs to the previous list: it must not land after this.
+    this.chosenSub?.unsubscribe();
+    this.chosenSub = null;
     this.listState.set('loading');
     this.statementId.setValue('', { emitEvent: false });
     this.chosen.set(null);

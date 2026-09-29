@@ -1,7 +1,7 @@
 import { Component, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TranslateModule } from '@ngx-translate/core';
-import { of, throwError } from 'rxjs';
+import { Subject, of, throwError } from 'rxjs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { BankStatement } from '../../models/bank-reconciliation.models';
 import { BankReconciliationService } from '../../services/bank-reconciliation.service';
@@ -120,6 +120,22 @@ describe('StatementSupersedeComponent', () => {
     expect(query('supersede-invalidates')).toBeNull();
     choose('st-8');
     expect(query('supersede-invalidates')).not.toBeNull();
+  });
+
+  it('drops the chosen statement read when the list is reloaded', () => {
+    serviceStub.listStatements.mockReturnValue(of([statement()]));
+    const chosen = new Subject<BankStatement>();
+    serviceStub.getStatement.mockReturnValue(chosen);
+    setup();
+    (query('supersede-toggle') as HTMLInputElement).click();
+    fixture.detectChanges();
+    choose('st-8');
+
+    (fixture.debugElement.children[0].componentInstance as StatementSupersedeComponent).reload();
+    chosen.next(statement({ reconciliations: [{ reconciliationId: 'rec-8', status: 'FINALIZED' }] }));
+    fixture.detectChanges();
+
+    expect(query('supersede-invalidates')).toBeNull();
   });
 
   it('offers a retry when the statements cannot be read', () => {

@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { TranslateModule, TranslateService, TranslationObject } from '@ngx-translate/core';
-import { Subject, of, throwError } from 'rxjs';
+import { BehaviorSubject, Subject, of, throwError } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import enUS from '../../../../../assets/i18n/en-US.json';
 import esMX from '../../../../../assets/i18n/es-MX.json';
@@ -224,9 +224,11 @@ describe('ReconciliationWorkspacePageComponent', () => {
   let component: ReconciliationWorkspacePageComponent;
   let el: HTMLElement;
   let navigate: ReturnType<typeof vi.spyOn>;
+  let params$: BehaviorSubject<ReturnType<typeof convertToParamMap>>;
 
   const setup = (value: ReconciliationReview = workspaceReview()): void => {
     workspaceStub.getReview.mockReturnValue(of(value));
+    params$ = new BehaviorSubject(convertToParamMap({ reconciliationId: 'rec-1' }));
     TestBed.configureTestingModule({
       imports: [ReconciliationWorkspacePageComponent, TranslateModule.forRoot()],
       providers: [
@@ -235,7 +237,7 @@ describe('ReconciliationWorkspacePageComponent', () => {
         { provide: BankReconciliationService, useValue: bankRecStub },
         { provide: PeriodCloseService, useValue: periodsStub },
         { provide: AuthService, useValue: authStub },
-        { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ reconciliationId: 'rec-1' })) } },
+        { provide: ActivatedRoute, useValue: { paramMap: params$.asObservable() } },
       ],
     });
     navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
@@ -411,6 +413,18 @@ describe('ReconciliationWorkspacePageComponent', () => {
       expect(component.outcome()?.key).toBe('ACCOUNTING.RECONCILIATION_WORKSPACE.OUTCOME.PROPOSALS_ACCEPTED');
     });
 
+    it('re-reads the review when Accept all fails part-way, since earlier acceptances committed', () => {
+      setup();
+      workspaceStub.acceptMatch
+        .mockReturnValueOnce(of(match()))
+        .mockReturnValueOnce(throwError(() => httpError(422, { code: 'MATCH_AMOUNT_MISMATCH' })));
+
+      click(query('accept-all'));
+
+      expect(component.outcome()?.key).toBe('ACCOUNTING.RECONCILIATION_WORKSPACE.ERROR.MATCH_AMOUNT_MISMATCH');
+      expect(workspaceStub.getReview).toHaveBeenCalledTimes(2);
+    });
+
     it('re-reads the review on 409 MATCH_STATE_INVALID', () => {
       setup();
       workspaceStub.acceptMatch.mockReturnValue(throwError(() => httpError(409, { code: 'MATCH_STATE_INVALID' })));
@@ -422,7 +436,57 @@ describe('ReconciliationWorkspacePageComponent', () => {
     });
   });
 
+  describe('route reuse', () => {
+    it('starts over when only the reconciliation id changes', () => {
+      setup();
+      click(all('select-bank')[1]);
+      click(query('reaffirm'));
+      expect(component.prompt()).not.toBeNull();
+      workspaceStub.getReview.mockReturnValue(of(withStatus('SUBMITTED')));
+
+      params$.next(convertToParamMap({ reconciliationId: 'rec-2' }));
+      fixture.detectChanges();
+
+      expect(workspaceStub.getReview).toHaveBeenLastCalledWith('rec-2');
+      expect(component.prompt()).toBeNull();
+      expect(component.selectedBank().size).toBe(0);
+      expect(component.status()).toBe('SUBMITTED');
+    });
+
+    it('drops a review of the previous reconciliation that lands after the switch', () => {
+      setup();
+      const old = new Subject<ReconciliationReview>();
+      workspaceStub.getReview.mockReturnValueOnce(old).mockReturnValue(of(withStatus('FINALIZED')));
+      params$.next(convertToParamMap({ reconciliationId: 'rec-2' }));
+      params$.next(convertToParamMap({ reconciliationId: 'rec-3' }));
+      old.next(withStatus('IN_PROGRESS'));
+
+      expect(component.status()).toBe('FINALIZED');
+    });
+  });
+
   describe('adjustments (§4.6, §4.7, AC7)', () => {
+    it('tells the dialog when the adjustment types could not be read, and retries', () => {
+      workspaceStub.listAdjustmentTypes.mockReturnValueOnce(throwError(() => httpError(500)));
+      setup();
+
+      click(query('add-adjustment'));
+      expect(query('types-error')).not.toBeNull();
+      (query('types-error')?.querySelector('button') as HTMLButtonElement).click();
+      fixture.detectChanges();
+
+      expect(workspaceStub.listAdjustmentTypes).toHaveBeenCalledTimes(2);
+      expect(query('types-error')).toBeNull();
+    });
+
+    it('keeps a failed bank-account read distinguishable from no other accounts', () => {
+      bankRecStub.listBankAccounts.mockReturnValue(throwError(() => httpError(500)));
+      setup();
+
+      click(query('add-adjustment'));
+      expect(component.bankAccountsStatus()).toBe('ERROR');
+    });
+
     it('re-reads the review when a link is no longer eligible', () => {
       setup();
       workspaceStub.addAdjustment.mockReturnValue(throwError(() => httpError(422, { code: 'ADJUSTMENT_LINK_NOT_ELIGIBLE' })));

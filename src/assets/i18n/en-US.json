@@ -5019,7 +5019,10 @@
         "JUSTIFICATION_REQUIRED": "Justification",
         "OVERRIDE": "Closed-period override justification (optional)",
         "OVERRIDE_HINT": "Only to post into a closed period instead of the proposed date.",
-        "CONFIRM": "Post adjustment"
+        "CONFIRM": "Post adjustment",
+        "TYPES_ERROR": "The adjustment types couldn't be loaded.",
+        "ACCOUNTS_ERROR": "The bank accounts couldn't be loaded, so no transfer account can be chosen.",
+        "ACCOUNTS_LOADING": "Loading bank accounts…"
       },
       "OUTCOME": {
         "MATCHED": "The match is recorded.",
