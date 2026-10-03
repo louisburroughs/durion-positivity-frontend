@@ -1,0 +1,124 @@
+import type { Page } from '@playwright/test';
+import { AUDIT_CONFIG } from './config';
+
+/**
+ * Search probes: type a generic term into landing-page record finders.
+ *
+ * Workorder, estimate and invoice lists only load through a typed search, so
+ * the passive harvester (id-harvest.ts) never sees their ids unless some other
+ * page happens to surface them (today's shop dashboard, dispatch board, WIP).
+ * When the tenant has no work scheduled for today, every detail route behind
+ * those ids goes unvisited.
+ *
+ * A probe navigates to a landing page, types each term into every search-mode
+ * finder, and waits for the GET search response. The harvester already attached
+ * to the page records the ids a template accepts; the probe itself parses
+ * nothing. That is workorder (`workorderId@workorder`), invoice
+ * (`invoiceId@invoice`) and customer (`partyId@customer`) ids. The workexec
+ * landing's estimate finder is typed into as well, but estimate rows carry only a
+ * bare `id` and the estimate templates take `estimateId@workorder`, so estimate
+ * detail routes stay uncovered. Searches are
+ * read-only projections (the backend emits a search audit event, nothing else),
+ * and the probe never selects a result, presses Enter, or submits a form.
+ */
+
+/**
+ * Landing pages with at least one finder whose ids a PARAM_TEMPLATES entry
+ * accepts (see above; the estimate finder on workexec is the exception).
+ * `/app/people` is deliberately absent: its finder rows identify people by a bare
+ * `id` from people-contact, which no template takes, so probing it would add
+ * requests and no routes.
+ */
+export const SEARCH_PROBE_PATHS: readonly string[] = ['/app/workexec', '/app/billing', '/app/crm'];
+
+/** Search-mode finder inputs only; id-mode finders do no lookup. */
+const FINDER_INPUT = 'input.landing-finder__input[role="combobox"]';
+
+/** Covers the finder's 250 ms debounce plus a slow search round trip. */
+const SEARCH_RESPONSE_TIMEOUT_MS = 8_000;
+
+/**
+ * True for an API request carrying `term` as a query value. Finders call
+ * different endpoints (`/search?q=`, `/people?search=`), so match on the term
+ * rather than the path.
+ */
+export function isSearchFor(url: string, term: string): boolean {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return false;
+  }
+  if (!parsed.pathname.includes('/api/')) return false;
+  return [...parsed.searchParams.values()].includes(term);
+}
+
+export interface SearchProbeResult {
+  path: string;
+  /** Finder inputs found on the landing page. */
+  finders: number;
+  /** Searches that returned a 2xx response within the timeout. */
+  responses: number;
+}
+
+/**
+ * Probe one landing page. Pages the persona cannot open (redirect to
+ * /forbidden or /login) report zero finders and are otherwise skipped.
+ */
+export async function probeSearch(
+  page: Page,
+  path: string,
+  terms: readonly string[],
+  options: { responseTimeoutMs?: number } = {},
+): Promise<SearchProbeResult> {
+  const responseTimeoutMs = options.responseTimeoutMs ?? SEARCH_RESPONSE_TIMEOUT_MS;
+  const result: SearchProbeResult = { path, finders: 0, responses: 0 };
+  try {
+    await page.goto(AUDIT_CONFIG.baseUrl + path, {
+      waitUntil: 'domcontentloaded',
+      timeout: AUDIT_CONFIG.pageTimeoutMs,
+    });
+  } catch {
+    return result;
+  }
+  await page.waitForLoadState('networkidle', { timeout: 10_000 }).catch(() => undefined);
+
+  const inputs = page.locator(FINDER_INPUT);
+  result.finders = await inputs.count();
+
+  for (let i = 0; i < result.finders; i++) {
+    const input = inputs.nth(i);
+    for (const term of terms) {
+      const response = page
+        .waitForResponse(res => res.request().method() === 'GET' && isSearchFor(res.url(), term), {
+          timeout: responseTimeoutMs,
+        })
+        .catch(() => null);
+      await input.fill(term).catch(() => undefined);
+      const res = await response;
+      // waitForResponse resolves on headers. Wait for the body too, or the next goto
+      // can cancel the harvester's res.text() before it parses the ids — but only as
+      // long as a response is allowed to take, since the crawl has no overall
+      // timeout. finished() answers null on success and an Error on failure.
+      if (res?.ok() && (await bodyCompleted(res, responseTimeoutMs))) {
+        result.responses++;
+      }
+    }
+    await input.fill('').catch(() => undefined);
+  }
+  return result;
+}
+
+/** True when the body finished cleanly within `timeoutMs`; a stalled or failed body is false. */
+async function bodyCompleted(res: { finished(): Promise<Error | null> }, timeoutMs: number): Promise<boolean> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timedOut = new Promise<'timeout'>(resolve => {
+    timer = setTimeout(() => resolve('timeout'), timeoutMs);
+  });
+  try {
+    const outcome = await Promise.race([res.finished().catch((error: unknown) => error), timedOut]);
+    return outcome === null;
+  } finally {
+    clearTimeout(timer);
+  }
+}

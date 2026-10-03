@@ -102,6 +102,7 @@ seven times a single run — scope it with `AUDIT_MAX_PAGES` when iterating.
 | `AUDIT_SETTLE_MS`                   | `1200`                  | Extra wait after network idle for signals/effects to settle                                                                             |
 | `AUDIT_PAGE_TIMEOUT_MS`             | `30000`                 | Per-page navigation timeout                                                                                                             |
 | `AUDIT_OUT_DIR`                     | `artifacts/audit`       | Report output directory                                                                                                                 |
+| `AUDIT_SEARCH_TERMS`                | `an`                    | Comma-separated terms typed into landing record finders to surface search-only ids (§4 step 4); blank disables                          |
 | `AUDIT_CHROMIUM_PATH`               | —                       | Explicit chromium binary (sandboxed/CI images)                                                                                          |
 | `AUDIT_BROWSER_ARGS`                | —                       | Extra chromium flags, whitespace-separated (e.g. `--ssl-version-max=tls1.2` when an egress proxy resets Chromium's TLS 1.3 ClientHello) |
 
@@ -123,13 +124,26 @@ it to Chromium at launch (Chromium does not read it from the environment on its 
    `partyId`, `workorderId`, …), and when the link queue runs dry fills the route templates in
    `route-seeds.ts` (`PARAM_TEMPLATES`) with those real ids — only the field names the
    templates reference are harvested, and bare `id` fields are scoped per API resource
-   (`id@locations`). Still zero extra requests and
-   GET-only. Mutation-flow pages (order cancel, approval submit, offboard, …) are deliberately
+   (`id@locations`). The harvester itself makes zero extra requests and
+   is GET-only. Mutation-flow pages (order cancel, approval submit, offboard, …) are deliberately
    excluded from auto-visitation. Coverage per template is reported in `sitemap.md`.
-4. **Pattern sampling** — id-like path segments (UUIDs, numbers, `WO-123`-style) are collapsed
+4. **Search probes** — workorder, estimate and invoice lists only load through a typed
+   search, so their ids otherwise surface only via today's shop dashboard, dispatch board or
+   WIP, which are empty when nothing is scheduled today. The first time the queue runs dry, the
+   crawler visits the record-finder landing pages (`SEARCH_PROBE_PATHS` in
+   `search-probes.ts`: workexec, billing, crm), types each `AUDIT_SEARCH_TERMS` term
+   into every search-mode finder, and waits for the GET search response; the harvester records
+   the ids a template accepts: workorder, invoice and customer ids. The estimate finder is
+   typed into too, but estimate rows carry only a bare `id` while the estimate templates take
+   `estimateId@workorder`, so estimate detail routes stay uncovered. Terms shorter than the
+   finder's two-character minimum are dropped. It never selects a result, presses Enter or
+   submits. Searches are read-only, but
+   the backend logs each one as a search audit event. Per-page results appear under
+   "Search probes" in `sitemap.md`.
+5. **Pattern sampling** — id-like path segments (UUIDs, numbers, `WO-123`-style) are collapsed
    into a `{id}` pattern; at most `AUDIT_MAX_PER_PATTERN` concrete instances of each pattern are
    visited so long lists don't exhaust the `AUDIT_MAX_PAGES` budget.
-5. **Outcome classification** — each visit is recorded as `audited`, `auth-required`,
+6. **Outcome classification** — each visit is recorded as `audited`, `auth-required`,
    `forbidden` (role-gated), `not-found`, `http-error`, or `load-failed`. Checks only run on
    `audited` pages; the rest still appear in the site map and error report.
 
