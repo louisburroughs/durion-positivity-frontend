@@ -56,8 +56,9 @@ test('crawl site and audit every page', async ({ page, persona }) => {
   while (pages.length < AUDIT_CONFIG.maxPages) {
     if (queue.length === 0) {
       if (!harvester) break;
-      // Workorder, estimate and invoice ids only surface through typed
-      // searches; probe the landing finders once before the first refill.
+      // Workorder and invoice ids only surface through typed searches; probe the
+      // landing finders once before the first refill. (Estimate rows carry a bare
+      // id no template takes, so estimates stay uncovered — see search-probes.ts.)
       if (!probesRun && AUDIT_CONFIG.searchTerms.length > 0) {
         probesRun = true;
         for (const path of SEARCH_PROBE_PATHS) {

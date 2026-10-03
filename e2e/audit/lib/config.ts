@@ -26,6 +26,18 @@ export function listEnv(name: string, fallback: readonly string[]): string[] {
 }
 
 /**
+ * The landing record finder sends nothing below this many characters
+ * (LandingRecordFinderComponent `minChars`, default 2), so a shorter term would
+ * only cost every finder its full response timeout.
+ */
+export const FINDER_MIN_CHARS = 2;
+
+/** AUDIT_SEARCH_TERMS, minus terms too short for a finder to send. */
+export function searchTermsFromEnv(): string[] {
+  return listEnv('AUDIT_SEARCH_TERMS', ['an']).filter(term => term.length >= FINDER_MIN_CHARS);
+}
+
+/**
  * All knobs are environment variables so the same suite runs against
  * durionpos.org, a staging host, or a local dev server without code changes.
  *
@@ -40,7 +52,8 @@ export function listEnv(name: string, fallback: readonly string[]): string[] {
  *   AUDIT_PAGE_TIMEOUT_MS  per-page navigation timeout (default 30000)
  *   AUDIT_OUT_DIR          report output dir    (default artifacts/audit)
  *   AUDIT_SEARCH_TERMS     terms typed into landing record finders to harvest ids
- *                          (comma-separated, default "an"; blank disables)
+ *                          (comma-separated, default "an"; blank disables; terms
+ *                          under FINDER_MIN_CHARS are dropped)
  */
 export const AUDIT_CONFIG = {
   baseUrl: (process.env['AUDIT_BASE_URL'] ?? 'https://durionpos.org').replace(/\/+$/, ''),
@@ -53,7 +66,7 @@ export const AUDIT_CONFIG = {
   settleMs: intEnv('AUDIT_SETTLE_MS', 1200),
   pageTimeoutMs: intEnv('AUDIT_PAGE_TIMEOUT_MS', 30_000),
   outDir: process.env['AUDIT_OUT_DIR'] ?? path.join('artifacts', 'audit'),
-  searchTerms: listEnv('AUDIT_SEARCH_TERMS', ['an']),
+  searchTerms: searchTermsFromEnv(),
 } as const;
 
 /**

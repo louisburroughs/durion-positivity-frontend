@@ -133,7 +133,11 @@ it to Chromium at launch (Chromium does not read it from the environment on its 
    crawler visits the record-finder landing pages (`SEARCH_PROBE_PATHS` in
    `search-probes.ts`: workexec, billing, crm), types each `AUDIT_SEARCH_TERMS` term
    into every search-mode finder, and waits for the GET search response; the harvester records
-   the ids. It never selects a result, presses Enter or submits. Searches are read-only, but
+   the ids a template accepts: workorder, invoice and customer ids. The estimate finder is
+   typed into too, but estimate rows carry only a bare `id` while the estimate templates take
+   `estimateId@workorder`, so estimate detail routes stay uncovered. Terms shorter than the
+   finder's two-character minimum are dropped. It never selects a result, presses Enter or
+   submits. Searches are read-only, but
    the backend logs each one as a search audit event. Per-page results appear under
    "Search probes" in `sitemap.md`.
 5. **Pattern sampling** — id-like path segments (UUIDs, numbers, `WO-123`-style) are collapsed

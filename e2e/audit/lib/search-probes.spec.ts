@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { listEnv } from './config';
+import { listEnv, searchTermsFromEnv } from './config';
 import { APP_SEEDS } from './route-seeds';
 import type { Page } from '@playwright/test';
 import { isSearchFor, probeSearch, SEARCH_PROBE_PATHS } from './search-probes';
@@ -28,6 +28,21 @@ describe('search probes', () => {
   it('ignores non-API and malformed urls', () => {
     expect(isSearchFor('https://durionpos.org/assets/i18n/en-US.json?q=an', 'an')).toBe(false);
     expect(isSearchFor('not a url', 'an')).toBe(false);
+  });
+});
+
+describe('searchTermsFromEnv', () => {
+  afterEach(() => {
+    delete process.env['AUDIT_SEARCH_TERMS'];
+  });
+
+  it('drops terms shorter than the finder minimum, which would never be sent', () => {
+    process.env['AUDIT_SEARCH_TERMS'] = 'a,an,e,er';
+    expect(searchTermsFromEnv()).toEqual(['an', 'er']);
+  });
+
+  it('defaults to a single two-character term', () => {
+    expect(searchTermsFromEnv()).toEqual(['an']);
   });
 });
 

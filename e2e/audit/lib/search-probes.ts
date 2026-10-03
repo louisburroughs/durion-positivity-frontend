@@ -12,13 +12,19 @@ import { AUDIT_CONFIG } from './config';
  *
  * A probe navigates to a landing page, types each term into every search-mode
  * finder, and waits for the GET search response. The harvester already attached
- * to the page records the ids; the probe itself parses nothing. Searches are
+ * to the page records the ids a template accepts; the probe itself parses
+ * nothing. That is workorder (`workorderId@workorder`), invoice
+ * (`invoiceId@invoice`) and customer (`partyId@customer`) ids. The workexec
+ * landing's estimate finder is typed into as well, but estimate rows carry only a
+ * bare `id` and the estimate templates take `estimateId@workorder`, so estimate
+ * detail routes stay uncovered. Searches are
  * read-only projections (the backend emits a search audit event, nothing else),
  * and the probe never selects a result, presses Enter, or submits a form.
  */
 
 /**
- * Landing pages whose record finders return ids a PARAM_TEMPLATES entry accepts.
+ * Landing pages with at least one finder whose ids a PARAM_TEMPLATES entry
+ * accepts (see above; the estimate finder on workexec is the exception).
  * `/app/people` is deliberately absent: its finder rows identify people by a bare
  * `id` from people-contact, which no template takes, so probing it would add
  * requests and no routes.
