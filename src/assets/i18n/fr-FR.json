@@ -3502,7 +3502,6 @@
       "SUBTITLE": "Surveiller l’état de traitement des enveloppes d’ingestion",
       "FILTERS_LABEL": "Filtres d’ingestion",
       "FILTER_EVENT_TYPE": "Type d’événement",
-      "FILTER_EVENT_TYPE_HINT": "Type d’événement exact, par exemple inventory.adjustment.posted",
       "FILTER_STATUS": "Statut",
       "FILTER_STATUS_ALL": "Tous les statuts",
       "APPLY_FILTERS": "Appliquer les filtres",
@@ -3531,7 +3530,9 @@
         "REJECTED": "Rejeté",
         "QUARANTINED": "En quarantaine",
         "SKIPPED": "Ignoré"
-      }
+      },
+      "FILTER_EVENT_TYPE_ALL": "Tous les types d’événement",
+      "FILTER_EVENT_TYPE_UNAVAILABLE": "La liste des types d’événement n’est pas disponible. Saisissez un type d’événement exact, par exemple inventory.adjustment.posted"
     },
     "INGESTION_MONITOR_DETAIL": {
       "OVERLINE": "Moniteur d’ingestion",

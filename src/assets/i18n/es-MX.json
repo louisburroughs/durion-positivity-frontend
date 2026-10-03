@@ -3502,7 +3502,6 @@
       "SUBTITLE": "Supervisar el estado de procesamiento de sobres de ingestión",
       "FILTERS_LABEL": "Filtros de ingestión",
       "FILTER_EVENT_TYPE": "Tipo de evento",
-      "FILTER_EVENT_TYPE_HINT": "Tipo de evento exacto, por ejemplo inventory.adjustment.posted",
       "FILTER_STATUS": "Estado",
       "FILTER_STATUS_ALL": "Todos los estados",
       "APPLY_FILTERS": "Aplicar filtros",
@@ -3531,7 +3530,9 @@
         "REJECTED": "Rechazado",
         "QUARANTINED": "En cuarentena",
         "SKIPPED": "Omitido"
-      }
+      },
+      "FILTER_EVENT_TYPE_ALL": "Todos los tipos de evento",
+      "FILTER_EVENT_TYPE_UNAVAILABLE": "La lista de tipos de evento no está disponible. Escriba un tipo de evento exacto, por ejemplo inventory.adjustment.posted"
     },
     "INGESTION_MONITOR_DETAIL": {
       "OVERLINE": "Monitor de ingestión",

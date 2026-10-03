@@ -14,6 +14,7 @@ import {
   PostingRulesService,
   VendorDirectoryAPIService,
   AccountingEventResponse,
+  AccountingEventTypeResponse,
   InvoiceStatusResponse,
   ReprocessingAttemptHistoryResponse,
   PostingRuleSetListResponse,
@@ -39,6 +40,7 @@ import {
   EVENT_PAYLOAD_REFERENCE_TYPES,
   EventPayloadReferenceType,
   AccountingEventListItem,
+  AccountingEventTypeOption,
   AccountingEventSubmitRequest,
   CreditMemo,
   CreditMemoCreateRequest,
@@ -85,6 +87,20 @@ export class AccountingService {
   private readonly vendorDirectoryService = inject(VendorDirectoryAPIService);
 
   // Events / Ingestion
+
+  /**
+   * The valid values of {@link listEvents}' `eventType` filter, sorted by display name. Read from the
+   * backend registry (`listAccountingEventTypes`) so types with no traffic yet are offered too.
+   */
+  listEventTypes(): Observable<AccountingEventTypeOption[]> {
+    return this.accountingEventsService.listAccountingEventTypes().pipe(
+      map((types: AccountingEventTypeResponse[]) =>
+        types
+          .map(type => ({ code: type.code, displayName: type.displayName, sourceDomain: type.sourceDomain }))
+          .sort((a, b) => a.displayName.localeCompare(b.displayName) || a.code.localeCompare(b.code)),
+      ),
+    );
+  }
 
   listEvents(
     filters: IngestionListFilters,
