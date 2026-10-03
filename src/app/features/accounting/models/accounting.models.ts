@@ -52,6 +52,7 @@ export enum IngestionProcessingStatus {
   Suspended = 'SUSPENDED',
   Rejected = 'REJECTED',
   Quarantined = 'QUARANTINED',
+  Skipped = 'SKIPPED',
 }
 
 export enum IngestionIdempotencyOutcome {

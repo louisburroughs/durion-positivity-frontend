@@ -229,7 +229,7 @@ export class DispatchBoardService {
           const skills = new Map<string, readonly string[]>();
           const shifts = new Map<string, TechnicianShift>();
           for (const entry of page.content ?? []) {
-            const personId = entry.personId ?? entry.mechanicId;
+            const personId = entry.mechanicPersonId;
             if (!personId) {
               continue;
             }

@@ -261,13 +261,13 @@ describe('DispatchBoardService', () => {
         of({
           content: [
             {
-              personId: 'p1',
+              mechanicPersonId: 'p1',
               credentials: [
                 { skillCode: 'BRAKES', status: 'ACTIVE' },
                 { skillCode: 'DOT', status: 'ACTIVE' },
               ],
             },
-            { personId: 'p2', credentials: [] },
+            { mechanicPersonId: 'p2', credentials: [] },
           ],
         }),
       );
@@ -293,7 +293,7 @@ describe('DispatchBoardService', () => {
         of({
           content: [
             {
-              personId: 'p1',
+              mechanicPersonId: 'p1',
               credentials: [
                 { skillCode: 'DOT', status: 'ACTIVE' },
                 { skillCode: 'DOT', status: 'ACTIVE' },
@@ -309,15 +309,17 @@ describe('DispatchBoardService', () => {
       expect(next.mock.calls[0][0].skills.get('p1')).toEqual(['DOT']);
     });
 
-    it('falls back to the mechanic id when the roster row carries no person id', () => {
+    // The record id is shop management's local surrogate key, not a person id
+    // (SDK 0.80), so it must never stand in as the key the board joins on.
+    it('skips a roster row that carries no person id', () => {
       technicianStub.listLocationTechnicians.mockReturnValue(
-        of({ content: [{ mechanicId: 'm1', credentials: [{ skillCode: 'HVAC', status: 'ACTIVE' }] }] }),
+        of({ content: [{ mechanicRecordId: 'm1', credentials: [{ skillCode: 'HVAC', status: 'ACTIVE' }] }] }),
       );
       const next = vi.fn();
 
       service.getTechnicianRoster('loc-1', '2026-04-18').subscribe(next);
 
-      expect(next.mock.calls[0][0].skills.get('m1')).toEqual(['HVAC']);
+      expect(next.mock.calls[0][0].skills.size).toBe(0);
     });
 
     // A lapsed certification is not competence: shown as a chip it mislabels the
@@ -327,7 +329,7 @@ describe('DispatchBoardService', () => {
         of({
           content: [
             {
-              personId: 'p1',
+              mechanicPersonId: 'p1',
               credentials: [
                 { skillCode: 'BRAKES', status: 'ACTIVE' },
                 { skillCode: 'DOT', status: 'EXPIRED' },
@@ -376,7 +378,7 @@ describe('DispatchBoardService', () => {
       technicianStub.listLocationTechnicians.mockReturnValue(
         of({
           content: [
-            { personId: 'p1', shiftStatus: 'DERIVED', shiftSource: 'LOCATION_HOURS', shiftMinutes: 540 },
+            { mechanicPersonId: 'p1', shiftStatus: 'DERIVED', shiftSource: 'LOCATION_HOURS', shiftMinutes: 540 },
           ],
         }),
       );
@@ -398,8 +400,8 @@ describe('DispatchBoardService', () => {
       technicianStub.listLocationTechnicians.mockReturnValue(
         of({
           content: [
-            { personId: 'closed', shiftStatus: 'CLOSED', shiftSource: 'LOCATION_HOURS' },
-            { personId: 'unknown', shiftStatus: 'UNKNOWN', shiftSource: 'LOCATION_HOURS' },
+            { mechanicPersonId: 'closed', shiftStatus: 'CLOSED', shiftSource: 'LOCATION_HOURS' },
+            { mechanicPersonId: 'unknown', shiftStatus: 'UNKNOWN', shiftSource: 'LOCATION_HOURS' },
           ],
         }),
       );
