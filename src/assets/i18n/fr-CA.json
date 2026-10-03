@@ -3518,7 +3518,8 @@
         "FAILED": "Failed",
         "SUSPENDED": "Suspended",
         "REJECTED": "Rejected",
-        "QUARANTINED": "Quarantined"
+        "QUARANTINED": "Quarantined",
+        "SKIPPED": "Skipped"
       }
     },
     "INGESTION_MONITOR_DETAIL": {
@@ -3548,7 +3549,8 @@
         "FAILED": "Failed",
         "SUSPENDED": "Suspended",
         "REJECTED": "Rejected",
-        "QUARANTINED": "Quarantined"
+        "QUARANTINED": "Quarantined",
+        "SKIPPED": "Skipped"
       },
       "OUTCOME": {
         "SUCCESS": "Success",

@@ -492,7 +492,7 @@ export class CapacityCalendarService {
     const overlayUnavailable = schedule?.availabilityOverlayStatus !== 'AVAILABLE';
 
     return roster.map(entry => {
-      const personId = entry.personId ?? entry.mechanicId ?? '';
+      const personId = entry.mechanicPersonId;
       const lane = lanes.find(candidate => candidate.resourceId === personId);
       const events = lane?.events ?? [];
       const shifts = events.filter(event => event.eventType === EVENT_SHIFT);
