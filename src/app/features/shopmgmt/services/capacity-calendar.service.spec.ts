@@ -5,7 +5,13 @@ import { of, throwError } from 'rxjs';
 import { BayAPIService, LocationAPIService } from '@durion-sdk/location';
 import { ProductsAPIService } from '@durion-sdk/catalog';
 import type { ServiceDto } from '@durion-sdk/catalog';
-import { ScheduleAPIService, TechnicianAPIService, TechnicianCredentialResponseStatusEnum } from '@durion-sdk/shop-manager';
+import {
+  LocationTechnicianRosterEntryResponseShiftSourceEnum,
+  LocationTechnicianRosterEntryResponseShiftStatusEnum,
+  ScheduleAPIService,
+  TechnicianAPIService,
+  TechnicianCredentialResponseStatusEnum,
+} from '@durion-sdk/shop-manager';
 import type { LocationTechnicianRosterEntryResponse, ScheduleViewResponse, TechnicianCredentialResponse } from '@durion-sdk/shop-manager';
 import { CapacityCalendarService, heldSkillCodes } from './capacity-calendar.service';
 import type { CapacityCalendarView, JobRequirement } from '../models/capacity-calendar.models';
@@ -154,34 +160,34 @@ describe('CapacityCalendarService', () => {
     };
     // Local wall-clock instants: the service buckets events by local hour.
     const at = (hour: number) => new Date(2026, 8, 29, hour).toISOString();
-    const rosterEntry = {
+    const rosterEntry: LocationTechnicianRosterEntryResponse = {
       mechanicRecordId: 'record-1',
       mechanicPersonId: 'person-1',
       firstName: 'Jo',
       lastName: 'Bell',
       credentials: [],
-      shiftSource: 'ROSTER',
-    } as unknown as LocationTechnicianRosterEntryResponse;
+      shiftSource: LocationTechnicianRosterEntryResponseShiftSourceEnum.LocationHours,
+      shiftStatus: LocationTechnicianRosterEntryResponseShiftStatusEnum.Derived,
+    };
 
-    const scheduleWithLane = (laneId: string) =>
-      ({
-        date: '2026-09-29',
-        dayStartAt: at(8),
-        dayEndAt: at(12),
-        locationId: 'loc-1',
-        availabilityOverlayStatus: 'AVAILABLE',
-        viewGeneratedAt: at(8),
-        resources: [
-          {
-            resourceType: 'MECHANIC',
-            resourceId: laneId,
-            events: [
-              { eventId: 'shift-1', eventType: 'SHIFT', startTime: at(8), endTime: at(11), affected: false, hasConflict: false },
-              { eventId: 'appt-1', eventType: 'APPOINTMENT', startTime: at(9), endTime: at(10), affected: false, hasConflict: false },
-            ],
-          },
-        ],
-      }) as unknown as ScheduleViewResponse;
+    const scheduleWithLane = (laneId: string): ScheduleViewResponse => ({
+      date: '2026-09-29',
+      dayStartAt: at(8),
+      dayEndAt: at(12),
+      locationId: 'loc-1',
+      availabilityOverlayStatus: 'AVAILABLE',
+      viewGeneratedAt: at(8),
+      resources: [
+        {
+          resourceType: 'MECHANIC',
+          resourceId: laneId,
+          events: [
+            { eventId: 'shift-1', eventType: 'SHIFT', startTime: at(8), endTime: at(11), affected: false, hasConflict: false },
+            { eventId: 'appt-1', eventType: 'APPOINTMENT', startTime: at(9), endTime: at(10), affected: false, hasConflict: false },
+          ],
+        },
+      ],
+    });
 
     const calendarFor = async (laneId: string) => {
       const schedule = TestBed.inject(ScheduleAPIService) as unknown as { viewSchedule: ReturnType<typeof vi.fn> };
