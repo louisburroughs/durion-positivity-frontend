@@ -35,7 +35,7 @@ const MAX_PAGE_SIZE = 100;
 /**
  * Ingestion event list. The URL query (`eventType`, `processingStatus`, `page`, `size`) is the
  * source of truth: the filter form and the pager only navigate, and every query change reloads.
- * The pager stays mounted through every read outcome, loading and failure included, so focus on
+ * Once the first read answers, the pager stays mounted for the life of the page, so focus on
  * Previous/Next is never dropped to the page body (ADR-0029 §8.7).
  */
 @Component({
@@ -69,7 +69,13 @@ export class IngestionMonitorListPageComponent implements OnInit {
 
   readonly hasPreviousPage = computed(() => this.page() > 0);
   readonly hasNextPage = computed(() => this.page() + 1 < this.totalPages());
-  readonly showPager = computed(() => this.totalPages() > 1 || (this.page() > 0 && this.totalCount() > 0));
+  /**
+   * Latched by the first answered read and never cleared, so the pager is never unmounted under a
+   * focused Previous/Next — not by loading, a failed read, a result that shrank to one page, or an
+   * out-of-range correction (ADR-0029 §8.7). A single page shows "Page 1 of 1" with both refused.
+   */
+  readonly hasLoaded = signal(false);
+  readonly displayTotalPages = computed(() => Math.max(this.totalPages(), 1));
 
   ngOnInit(): void {
     this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(map => {
@@ -114,6 +120,7 @@ export class IngestionMonitorListPageComponent implements OnInit {
           const totalPages = resp.totalPages ?? Math.ceil(total / size);
           this.totalCount.set(total);
           this.totalPages.set(totalPages);
+          this.hasLoaded.set(true);
           if (page > 0 && page >= totalPages) {
             // A deep link or a shrunken result set put the page past the end: land on the last
             // page that exists (the first when nothing matches) instead of an empty "Page 1000 of 3".

@@ -270,11 +270,58 @@ describe('IngestionMonitorListPageComponent', () => {
       queryParamMap$.next(convertToParamMap({ eventType: 'InvoiceIssued' }));
     });
 
-    it('hides the pager when every event fits on one page', () => {
+    it('shows a single page as page 1 of 1 with both buttons refused', () => {
       accountingServiceStub.listEvents.mockReturnValueOnce(of(pageOf(1, 1)));
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('[data-testid="pagination"]')).toBeTruthy();
+      expect(fixture.nativeElement.querySelector('[data-testid="previous-page"]').getAttribute('aria-disabled')).toBe('true');
+      expect(fixture.nativeElement.querySelector('[data-testid="next-page"]').getAttribute('aria-disabled')).toBe('true');
+    });
+
+    it('shows no pager before the first read answers', () => {
+      accountingServiceStub.listEvents.mockReturnValueOnce(new Subject());
       fixture.detectChanges();
       expect(fixture.nativeElement.querySelector('[data-testid="pagination"]')).toBeNull();
     });
+
+    const shrunkResults: [string, PagedResponse<AccountingEventListItem>][] = [
+      ['an empty result', { items: [], totalCount: 0, totalPages: 0 }],
+      ['a single page', { items: [adjustmentRow], totalCount: 15, totalPages: 1 }],
+    ];
+    for (const [label, shrunk] of shrunkResults) {
+      it(`keeps the pager, and the focus on Next, when the next page comes back as ${label}`, () => {
+        const router = TestBed.inject(Router);
+        const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+        accountingServiceStub.listEvents.mockReturnValueOnce(of(pageOf(45, 3)));
+        fixture.detectChanges();
+        const next: HTMLButtonElement = fixture.nativeElement.querySelector('[data-testid="next-page"]');
+        next.focus();
+
+        const nextPage = new Subject<PagedResponse<AccountingEventListItem>>();
+        accountingServiceStub.listEvents.mockReturnValueOnce(nextPage);
+        queryParamMap$.next(convertToParamMap({ page: '1' }));
+        fixture.detectChanges();
+        nextPage.next(shrunk);
+        fixture.detectChanges();
+
+        expect(navigate).toHaveBeenCalledWith([], expect.objectContaining({ queryParams: { page: null }, replaceUrl: true }));
+        expect(fixture.nativeElement.querySelector('[data-testid="next-page"]')).toBe(next);
+        expect(document.activeElement).toBe(next);
+
+        const corrected = new Subject<PagedResponse<AccountingEventListItem>>();
+        accountingServiceStub.listEvents.mockReturnValueOnce(corrected);
+        queryParamMap$.next(convertToParamMap({}));
+        fixture.detectChanges();
+        expect(document.activeElement).toBe(next);
+        corrected.next(shrunk);
+        fixture.detectChanges();
+
+        expect(component.pageState()).toBe('ready');
+        expect(fixture.nativeElement.querySelector('[data-testid="next-page"]')).toBe(next);
+        expect(document.activeElement).toBe(next);
+        expect(next.getAttribute('aria-disabled')).toBe('true');
+      });
+    }
 
     it('moves to the next page through the URL', () => {
       accountingServiceStub.listEvents.mockReturnValueOnce(of(pageOf(45, 3)));

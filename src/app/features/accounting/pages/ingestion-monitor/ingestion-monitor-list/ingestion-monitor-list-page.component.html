@@ -101,7 +101,7 @@
   }
   }
 
-  @if (showPager()) {
+  @if (hasLoaded()) {
   <nav class="pagination" data-testid="pagination"
     [attr.aria-label]="'ACCOUNTING.INGESTION_MONITOR_LIST.PAGINATION.ARIA' | translate">
     <button type="button" class="btn-secondary" data-testid="previous-page"
@@ -111,7 +111,7 @@
     <span class="pagination-status" data-testid="pagination-status" aria-live="polite">
       {{ 'ACCOUNTING.INGESTION_MONITOR_LIST.PAGINATION.STATUS' | translate:{
         page: (page() + 1 | number),
-        totalPages: (totalPages() | number),
+        totalPages: (displayTotalPages() | number),
         totalElements: (totalCount() | number)
       } }}
     </span>
