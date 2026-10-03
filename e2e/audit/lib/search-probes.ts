@@ -96,7 +96,12 @@ export async function probeSearch(
         .catch(() => null);
       await input.fill(term).catch(() => undefined);
       const res = await response;
-      if (res?.ok()) result.responses++;
+      if (res?.ok()) {
+        // waitForResponse resolves on headers. Wait for the body too, or the next
+        // goto can cancel the harvester's res.text() before it parses the ids.
+        await res.finished().catch(() => undefined);
+        result.responses++;
+      }
     }
     await input.fill('').catch(() => undefined);
   }

@@ -81,12 +81,17 @@ type FinderBehaviour = 'ok' | 'error' | 'silent';
 
 function fakePage(finders: FinderBehaviour[], options: { gotoFails?: boolean } = {}) {
   const calls: string[] = [];
+  const bodiesAwaited: string[] = [];
   const waiters: Array<{ predicate: (res: unknown) => boolean; resolve: (res: unknown) => void }> = [];
   const respond = (term: string, status: number) => {
     const res = {
       request: () => ({ method: () => 'GET' }),
       url: () => `https://durionpos.org/api/workorder/v1/workorders/search?q=${encodeURIComponent(term)}`,
       ok: () => status < 400,
+      finished: async () => {
+        bodiesAwaited.push(term);
+        return null;
+      },
     };
     for (const waiter of [...waiters]) {
       if (waiter.predicate(res)) {
@@ -119,7 +124,7 @@ function fakePage(finders: FinderBehaviour[], options: { gotoFails?: boolean } =
       }),
     }),
   };
-  return { page: page as unknown as Page, calls };
+  return { page: page as unknown as Page, calls, bodiesAwaited };
 }
 
 describe('probeSearch', () => {
@@ -140,6 +145,13 @@ describe('probeSearch', () => {
       'finder1.fill(er)',
       'finder1.fill()',
     ]);
+  });
+
+  it('waits for each answered body before moving on, so navigation cannot cancel the harvest', async () => {
+    const { page, bodiesAwaited } = fakePage(['ok', 'ok']);
+    await probeSearch(page, '/app/workexec', ['an', 'er'], FAST);
+
+    expect(bodiesAwaited).toEqual(['an', 'er', 'an', 'er']);
   });
 
   it('does not count a failed search, nor one that never answers', async () => {
