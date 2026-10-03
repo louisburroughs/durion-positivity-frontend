@@ -77,20 +77,21 @@ describe('listEnv', () => {
  * with a 200, a 500, or nothing at all, and every call the probe makes on a finder
  * is recorded so "types, clears, never selects or submits" is checkable.
  */
-type FinderBehaviour = 'ok' | 'error' | 'silent';
+type FinderBehaviour = 'ok' | 'error' | 'silent' | 'stalled-body' | 'failed-body';
 
 function fakePage(finders: FinderBehaviour[], options: { gotoFails?: boolean } = {}) {
   const calls: string[] = [];
   const bodiesAwaited: string[] = [];
   const waiters: Array<{ predicate: (res: unknown) => boolean; resolve: (res: unknown) => void }> = [];
-  const respond = (term: string, status: number) => {
+  const respond = (term: string, status: number, body: 'ok' | 'stalled' | 'failed' = 'ok') => {
     const res = {
       request: () => ({ method: () => 'GET' }),
       url: () => `https://durionpos.org/api/workorder/v1/workorders/search?q=${encodeURIComponent(term)}`,
       ok: () => status < 400,
-      finished: async () => {
+      finished: () => {
         bodiesAwaited.push(term);
-        return null;
+        if (body === 'stalled') return new Promise(() => undefined);
+        return Promise.resolve(body === 'failed' ? new Error('net::ERR_ABORTED') : null);
       },
     };
     for (const waiter of [...waiters]) {
@@ -120,6 +121,8 @@ function fakePage(finders: FinderBehaviour[], options: { gotoFails?: boolean } =
           const behaviour = finders[index];
           if (behaviour === 'ok') respond(value, 200);
           if (behaviour === 'error') respond(value, 500);
+          if (behaviour === 'stalled-body') respond(value, 200, 'stalled');
+          if (behaviour === 'failed-body') respond(value, 200, 'failed');
         },
       }),
     }),
@@ -152,6 +155,13 @@ describe('probeSearch', () => {
     await probeSearch(page, '/app/workexec', ['an', 'er'], FAST);
 
     expect(bodiesAwaited).toEqual(['an', 'er', 'an', 'er']);
+  });
+
+  it('gives up on a body that stalls, and does not count one that fails, rather than hanging the crawl', async () => {
+    const { page } = fakePage(['stalled-body', 'failed-body', 'ok']);
+    const result = await probeSearch(page, '/app/workexec', ['an'], FAST);
+
+    expect(result).toEqual({ path: '/app/workexec', finders: 3, responses: 1 });
   });
 
   it('does not count a failed search, nor one that never answers', async () => {

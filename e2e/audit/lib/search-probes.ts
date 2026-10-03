@@ -96,14 +96,29 @@ export async function probeSearch(
         .catch(() => null);
       await input.fill(term).catch(() => undefined);
       const res = await response;
-      if (res?.ok()) {
-        // waitForResponse resolves on headers. Wait for the body too, or the next
-        // goto can cancel the harvester's res.text() before it parses the ids.
-        await res.finished().catch(() => undefined);
+      // waitForResponse resolves on headers. Wait for the body too, or the next goto
+      // can cancel the harvester's res.text() before it parses the ids — but only as
+      // long as a response is allowed to take, since the crawl has no overall
+      // timeout. finished() answers null on success and an Error on failure.
+      if (res?.ok() && (await bodyCompleted(res, responseTimeoutMs))) {
         result.responses++;
       }
     }
     await input.fill('').catch(() => undefined);
   }
   return result;
+}
+
+/** True when the body finished cleanly within `timeoutMs`; a stalled or failed body is false. */
+async function bodyCompleted(res: { finished(): Promise<Error | null> }, timeoutMs: number): Promise<boolean> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timedOut = new Promise<'timeout'>(resolve => {
+    timer = setTimeout(() => resolve('timeout'), timeoutMs);
+  });
+  try {
+    const outcome = await Promise.race([res.finished().catch((error: unknown) => error), timedOut]);
+    return outcome === null;
+  } finally {
+    clearTimeout(timer);
+  }
 }
