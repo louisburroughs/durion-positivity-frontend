@@ -109,11 +109,13 @@
       {{ 'ACCOUNTING.INGESTION_MONITOR_LIST.PAGINATION.PREVIOUS' | translate }}
     </button>
     <span class="pagination-status" data-testid="pagination-status" aria-live="polite">
+      @if (showPageStatus()) {
       {{ 'ACCOUNTING.INGESTION_MONITOR_LIST.PAGINATION.STATUS' | translate:{
         page: (page() + 1 | number),
         totalPages: (displayTotalPages() | number),
         totalElements: (totalCount() | number)
       } }}
+      }
     </span>
     <button type="button" class="btn-secondary" data-testid="next-page"
       [attr.aria-disabled]="pageState() === 'loading' || !hasNextPage() ? true : null" (click)="nextPage()">

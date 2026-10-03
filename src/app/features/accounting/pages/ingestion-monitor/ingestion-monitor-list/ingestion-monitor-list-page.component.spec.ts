@@ -7,6 +7,7 @@ import esMX from '../../../../../../assets/i18n/es-MX.json';
 import esUS from '../../../../../../assets/i18n/es-US.json';
 import frCA from '../../../../../../assets/i18n/fr-CA.json';
 import frFR from '../../../../../../assets/i18n/fr-FR.json';
+import qpsPloc from '../../../../../../assets/i18n/qps-ploc.json';
 import {
   AccountingEventListItem,
   IngestionProcessingStatus,
@@ -299,7 +300,7 @@ describe('IngestionMonitorListPageComponent', () => {
 
         const nextPage = new Subject<PagedResponse<AccountingEventListItem>>();
         accountingServiceStub.listEvents.mockReturnValueOnce(nextPage);
-        queryParamMap$.next(convertToParamMap({ page: '1' }));
+        queryParamMap$.next(convertToParamMap({ eventType: 'InvoiceIssued', page: '1' }));
         fixture.detectChanges();
         nextPage.next(shrunk);
         fixture.detectChanges();
@@ -310,7 +311,7 @@ describe('IngestionMonitorListPageComponent', () => {
 
         const corrected = new Subject<PagedResponse<AccountingEventListItem>>();
         accountingServiceStub.listEvents.mockReturnValueOnce(corrected);
-        queryParamMap$.next(convertToParamMap({}));
+        queryParamMap$.next(convertToParamMap({ eventType: 'InvoiceIssued' }));
         fixture.detectChanges();
         expect(document.activeElement).toBe(next);
         corrected.next(shrunk);
@@ -348,7 +349,7 @@ describe('IngestionMonitorListPageComponent', () => {
       expect(spy).not.toHaveBeenCalled();
 
       accountingServiceStub.listEvents.mockReturnValueOnce(of(pageOf(45, 3)));
-      queryParamMap$.next(convertToParamMap({ page: '2' }));
+      queryParamMap$.next(convertToParamMap({ eventType: 'InvoiceIssued', page: '2' }));
       fixture.detectChanges();
       const next: HTMLButtonElement = fixture.nativeElement.querySelector('[data-testid="next-page"]');
       expect(next.getAttribute('aria-disabled')).toBe('true');
@@ -376,7 +377,7 @@ describe('IngestionMonitorListPageComponent', () => {
       const next: HTMLButtonElement = fixture.nativeElement.querySelector('[data-testid="next-page"]');
       next.focus();
 
-      queryParamMap$.next(convertToParamMap({ page: '1' }));
+      queryParamMap$.next(convertToParamMap({ eventType: 'InvoiceIssued', page: '1' }));
       fixture.detectChanges();
 
       expect(component.pageState()).toBe('loading');
@@ -393,7 +394,7 @@ describe('IngestionMonitorListPageComponent', () => {
       const next: HTMLButtonElement = fixture.nativeElement.querySelector('[data-testid="next-page"]');
       next.focus();
 
-      queryParamMap$.next(convertToParamMap({ page: '1' }));
+      queryParamMap$.next(convertToParamMap({ eventType: 'InvoiceIssued', page: '1' }));
       fixture.detectChanges();
       pending.error({ status: 500 });
       fixture.detectChanges();
@@ -419,6 +420,7 @@ describe('IngestionMonitorListPageComponent', () => {
         replaceUrl: true,
       }));
       expect(component.pageState()).toBe('loading');
+      expect(component.page()).toBe(2);
       expect(fixture.nativeElement.querySelector('[data-testid="event-row"]')).toBeNull();
     });
 
@@ -444,12 +446,61 @@ describe('IngestionMonitorListPageComponent', () => {
       expect(component.pageState()).toBe('ready');
     });
 
+    it('claims no totals and refuses Next when a filter change fails, rather than keep the old scope\'s', () => {
+      const router = TestBed.inject(Router);
+      accountingServiceStub.listEvents.mockReturnValueOnce(of(pageOf(45, 3)));
+      fixture.detectChanges();
+      const status: HTMLElement = fixture.nativeElement.querySelector('[data-testid="pagination-status"]');
+      expect(status.textContent?.trim()).not.toBe('');
+
+      const filtered = new Subject<PagedResponse<AccountingEventListItem>>();
+      accountingServiceStub.listEvents.mockReturnValueOnce(filtered);
+      queryParamMap$.next(convertToParamMap({ eventType: 'inventory.adjustment.posted' }));
+      fixture.detectChanges();
+      expect(status.textContent?.trim()).toBe('');
+
+      filtered.error({ status: 500 });
+      fixture.detectChanges();
+      const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+
+      expect(component.pageState()).toBe('error');
+      expect(fixture.nativeElement.querySelector('[data-testid="pagination-status"]')).toBe(status);
+      expect(status.textContent?.trim()).toBe('');
+      const next: HTMLButtonElement = fixture.nativeElement.querySelector('[data-testid="next-page"]');
+      expect(next.getAttribute('aria-disabled')).toBe('true');
+      next.click();
+      expect(navigate).not.toHaveBeenCalled();
+    });
+
+    it('shows the new scope\'s totals once its read answers', () => {
+      accountingServiceStub.listEvents.mockReturnValueOnce(of(pageOf(45, 3)));
+      fixture.detectChanges();
+      accountingServiceStub.listEvents.mockReturnValueOnce(of(pageOf(5, 1)));
+      queryParamMap$.next(convertToParamMap({ processingStatus: 'FAILED' }));
+      fixture.detectChanges();
+
+      expect(component.hasCurrentTotals()).toBe(true);
+      expect(component.totalPages()).toBe(1);
+      expect(fixture.nativeElement.querySelector('[data-testid="next-page"]').getAttribute('aria-disabled')).toBe('true');
+    });
+
+    it('claims no page while a URL page past the known end loads', () => {
+      accountingServiceStub.listEvents.mockReturnValueOnce(of(pageOf(45, 3)));
+      fixture.detectChanges();
+      accountingServiceStub.listEvents.mockReturnValueOnce(new Subject());
+      queryParamMap$.next(convertToParamMap({ eventType: 'InvoiceIssued', page: '9' }));
+      fixture.detectChanges();
+
+      expect(component.pageState()).toBe('loading');
+      expect(fixture.nativeElement.querySelector('[data-testid="pagination-status"]').textContent.trim()).toBe('');
+    });
+
     it('ignores a superseded page that lands after the current one', () => {
       const first = new Subject<PagedResponse<AccountingEventListItem>>();
       const second = new Subject<PagedResponse<AccountingEventListItem>>();
       accountingServiceStub.listEvents.mockReturnValueOnce(first).mockReturnValueOnce(second);
       fixture.detectChanges();
-      queryParamMap$.next(convertToParamMap({ page: '1' }));
+      queryParamMap$.next(convertToParamMap({ eventType: 'InvoiceIssued', page: '1' }));
 
       second.next({ items: [], totalCount: 21, totalPages: 2 });
       first.next(pageOf(45, 3));
@@ -466,6 +517,7 @@ describe('IngestionMonitorListPageComponent', () => {
       ['es-MX', esMX as TranslationObject],
       ['fr-CA', frCA as TranslationObject],
       ['fr-FR', frFR as TranslationObject],
+      ['qps-ploc', qpsPloc as TranslationObject],
     ];
     const statusLabels = (bundle: TranslationObject): Record<string, string> =>
       ((bundle['ACCOUNTING'] as TranslationObject)['INGESTION_MONITOR_LIST'] as TranslationObject)['STATUS'] as Record<
@@ -503,6 +555,15 @@ describe('IngestionMonitorListPageComponent', () => {
       translate.use('en-US');
     });
 
+    const list = (enUS as TranslationObject)['ACCOUNTING'] as TranslationObject;
+    const copy = list['INGESTION_MONITOR_LIST'] as TranslationObject;
+    const statusCopy = copy['STATUS'] as Record<string, string>;
+    const pageStatus = (page: number, totalPages: number, totalElements: number): string =>
+      ((copy['PAGINATION'] as Record<string, string>)['STATUS'])
+        .replace('{{page}}', String(page))
+        .replace('{{totalPages}}', String(totalPages))
+        .replace('{{totalElements}}', String(totalElements));
+
     it('renders every status option and row badge as text, never a raw key', () => {
       accountingServiceStub.listEvents.mockReturnValueOnce(of(pageOf(45, 3)));
       fixture.detectChanges();
@@ -511,11 +572,25 @@ describe('IngestionMonitorListPageComponent', () => {
       const options = Array.from(
         fixture.nativeElement.querySelectorAll('[data-testid="status-filter"] option') as NodeListOf<HTMLOptionElement>,
       ).map(option => option.textContent?.trim());
-      expect(options).toEqual(['All statuses', 'Received', 'Processing', 'Processed', 'Failed', 'Suspended', 'Skipped']);
+      expect(options).toEqual([
+        copy['FILTER_STATUS_ALL'],
+        ...['RECEIVED', 'PROCESSING', 'PROCESSED', 'FAILED', 'SUSPENDED', 'SKIPPED'].map(status => statusCopy[status]),
+      ]);
       expect(fixture.nativeElement.querySelector('[data-testid="event-row"] .status-badge').textContent.trim())
-        .toBe('Skipped');
+        .toBe(statusCopy['SKIPPED']);
       expect(fixture.nativeElement.querySelector('[data-testid="pagination-status"]').textContent.trim())
-        .toBe('Page 1 of 3 (45 total)');
+        .toBe(pageStatus(1, 3, 45));
+    });
+
+    it('announces the corrected page, never the out-of-range one, while a deep link is corrected', () => {
+      vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+      accountingServiceStub.listEvents.mockReturnValueOnce(of({ items: [], totalCount: 45, totalPages: 3 }));
+      queryParamMap$.next(convertToParamMap({ page: '999' }));
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('[data-testid="pagination-status"]').textContent.trim())
+        .toBe(pageStatus(3, 3, 45));
+      queryParamMap$.next(convertToParamMap({ eventType: 'InvoiceIssued' }));
     });
   });
 
