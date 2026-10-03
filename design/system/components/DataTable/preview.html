@@ -1,0 +1,27 @@
+<!-- @dsCard group="Data" height=280 -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../preview.css">
+<script>const theme = new URLSearchParams(location.search).get('theme'); if (theme) document.documentElement.dataset.theme = theme;</script>
+<title>DataTable</title>
+<style>
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+  .stack { display: flex; flex-direction: column; gap: var(--space-3); }
+</style>
+</head>
+<body>
+<div class="table-wrap">
+  <table class="data-table">
+    <caption class="sr-only">Open workorders</caption>
+    <thead><tr><th scope="col">Workorder</th><th scope="col">Customer</th><th scope="col">Status</th><th scope="col" class="num">Total</th></tr></thead>
+    <tbody>
+      <tr><td><code>WO-2026-004812</code></td><td><a href="#" class="row-name">Marisol Vega</a><span class="row-sub">2019 Ford F-150</span></td><td><span class="badge badge--info">Work in progress</span></td><td class="num">$1,284.50</td></tr>
+      <tr><td><code>WO-2026-004809</code></td><td><a href="#" class="row-name">Okafor Logistics</a><span class="row-sub">Fleet · 3 vehicles</span></td><td><span class="badge badge--warning">Awaiting parts</span></td><td class="num">$4,910.00</td></tr>
+      <tr><td><code>WO-2026-004797</code></td><td><a href="#" class="row-name">Martin Lindqvist</a><span class="row-sub">2021 Subaru Outback</span></td><td><span class="badge badge--ready">Ready for pickup</span></td><td class="num">$362.18</td></tr>
+    </tbody>
+  </table>
+</div>
+</body>
+</html>

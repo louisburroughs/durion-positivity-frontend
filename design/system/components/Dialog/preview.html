@@ -1,0 +1,31 @@
+<!-- @dsCard group="Surfaces" height=300 -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../preview.css">
+<script>const theme = new URLSearchParams(location.search).get('theme'); if (theme) document.documentElement.dataset.theme = theme;</script>
+<title>Dialog</title>
+<style>
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+  .stack { display: flex; flex-direction: column; gap: var(--space-3); }
+</style>
+</head>
+<body>
+<div style="background:rgb(28 46 72 / 32%);padding:24px;border-radius:var(--radius-md)">
+  <!-- In the app: <dialog class="dialog" appModalDialog …>, opened as a modal by the directive.
+       Shown here with the open attribute and position: static so it renders in the page. -->
+  <dialog class="dialog" open aria-labelledby="dlg-title" style="position:static;margin:0 auto;width:min(480px,100%)">
+    <div class="dialog-panel">
+      <p class="overline">Privileged action</p>
+      <h2 id="dlg-title">Close pay period?</h2>
+      <p style="margin:0">Closing payroll for Sept 1 to Sept 14 is final. Its time entries can no longer be approved or changed.</p>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn--ghost">Cancel</button>
+        <button type="button" class="btn btn--danger">Close pay period</button>
+      </div>
+    </div>
+  </dialog>
+</div>
+</body>
+</html>

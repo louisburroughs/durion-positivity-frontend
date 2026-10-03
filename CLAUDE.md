@@ -42,7 +42,7 @@ npx ng test --no-watch --browsers=ChromiumHeadless --runner-config vitest.config
 npx ng test --include="src/app/features/<domain>/**/*.spec.ts" --no-watch --browsers=ChromiumHeadless --runner-config vitest.config.ts   # one domain suite
 npx ng test --no-watch --browsers=ChromiumHeadless --runner-config vitest.config.ts --coverage   # coverage → coverage/durion-positivity-frontend/lcov.info; floors in angular.json (nightly Sonar)
 npm run lint                         # ESLint via @angular-eslint
-npm run lint:css                     # stylelint src/**/*.css
+npm run lint:css                     # stylelint src/**/*.css + design/system/**/*.css
 npm run i18n:check                   # missing-keys + pseudo-locale check
 npm run a11y:smoke                   # axe-core route scan (a11y:smoke:strict fails on serious)
 npm run audit:site                   # Playwright crawl+audit of deployed site (docs/testing/frontend-audit-test-plan.md)

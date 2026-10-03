@@ -1,0 +1,482 @@
+/* =============================================================================
+   Durion Positivity — shared component layer
+   The classes the design system adds on top of src/styles.css. styles.css
+   already owns the tokens, the reset, form-element defaults, .alert,
+   .dur-status, .dur-elevation-*, .sr-only and the icon class; the listbox
+   chrome lives in src/app/shared/styles/listbox.css and the shell in its own
+   components. This file is not loaded by the app: it is the target vocabulary
+   that page stylesheets move onto, and what the previews in components/ render
+   with. Every value is a token from src/styles.css; see README.md.
+   ============================================================================= */
+
+/* ── Base typography ──────────────────────────────────────────────────────── */
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-primary);
+}
+
+h1 {
+  font-weight: var(--font-weight-display);
+}
+
+h2,
+h3,
+h4 {
+  font-weight: var(--font-weight-heading);
+}
+
+a {
+  color: var(--link-color);
+}
+
+code {
+  font-family: var(--font-mono);
+}
+
+/* ── Card ─────────────────────────────────────────────────────────────────── */
+.card {
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--cardBackground);
+  color: var(--currentTextColor);
+}
+
+.card--outlined {
+  border: 1px solid var(--border-color);
+}
+
+.card h3 {
+  font-size: 1.125rem;
+}
+
+.inset {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  background: var(--surface-inset);
+}
+
+/* ── Page header ──────────────────────────────────────────────────────────── */
+.page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.page-header h1 {
+  font-size: 1.5rem;
+  color: var(--currentTextColor);
+}
+
+.overline {
+  margin: 0 0 var(--space-1);
+  font-family: var(--font-primary);
+  font-size: 0.75rem;
+  font-weight: var(--font-weight-heading);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.standfirst {
+  max-width: 60ch;
+  margin: var(--space-2) 0 0;
+  color: var(--text-muted);
+}
+
+.header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* ── Button ───────────────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 2.25rem;
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: var(--font-weight-heading);
+  line-height: 1.5;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    opacity var(--transition-fast);
+}
+
+.btn .material-symbols-rounded {
+  font-size: 1.125rem;
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--input-focus-border);
+  outline-offset: 2px;
+}
+
+.btn:disabled,
+.btn[aria-disabled='true'] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn--primary {
+  background: var(--brand-primary);
+  color: var(--contrastTextColor);
+}
+
+.btn--primary:hover:not(:disabled) {
+  background: var(--durion-blue-800);
+}
+
+.btn--accent {
+  background: var(--accent-strong);
+  color: var(--contrastTextColor);
+}
+
+.btn--accent:hover:not(:disabled) {
+  background: var(--accent-strong-deep);
+}
+
+.btn--secondary {
+  background: var(--primary50);
+  color: var(--link-color);
+}
+
+.btn--secondary:hover:not(:disabled) {
+  background: var(--primaryA100);
+}
+
+.btn--outline {
+  border-color: var(--input-border);
+  background: transparent;
+  color: var(--currentTextColor);
+}
+
+.btn--ghost {
+  background: transparent;
+  color: var(--link-color);
+}
+
+.btn--outline:hover:not(:disabled),
+.btn--ghost:hover:not(:disabled) {
+  background: var(--surface-hover);
+}
+
+.btn--danger {
+  background: var(--functional-error-red);
+  color: var(--contrastTextColor);
+}
+
+.btn--sm {
+  min-height: 2rem;
+  padding: var(--space-1) var(--space-3);
+  font-size: 0.8125rem;
+}
+
+.btn--touch {
+  min-height: 2.75rem;
+  font-size: 1rem;
+}
+
+/* ── Status chip icon (the chip itself is .dur-status in styles.css) ──────── */
+.dur-status .material-symbols-rounded {
+  font-size: 0.875rem;
+}
+
+/* ── Badge (square tag on a status pair) ──────────────────────────────────── */
+.badge {
+  display: inline-block;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.6;
+  white-space: nowrap;
+}
+
+.badge--error {
+  background: var(--status-error-bg);
+  color: var(--status-error-fg);
+}
+
+.badge--warning {
+  background: var(--status-warning-bg);
+  color: var(--status-warning-fg);
+}
+
+.badge--success {
+  background: var(--status-success-bg);
+  color: var(--status-success-fg);
+}
+
+.badge--info {
+  background: var(--status-info-bg);
+  color: var(--status-info-fg);
+}
+
+.badge--ready {
+  background: var(--status-ready-bg);
+  color: var(--status-ready-fg);
+}
+
+.badge--neutral {
+  background: var(--status-neutral-bg);
+  color: var(--status-neutral-fg);
+}
+
+/* ── Field (the controls' defaults are in styles.css) ─────────────────────── */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.field > label,
+.field legend {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--currentTextColor);
+}
+
+.required-mark {
+  margin-left: 2px;
+  color: var(--status-error-fg);
+}
+
+.field-hint {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.field-error {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--status-error-fg);
+}
+
+.field input[readonly] {
+  background: var(--surface-inset);
+}
+
+.field input:disabled,
+.field select:disabled,
+.field textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* status-error-fg, not functional-error-red: the red is 1.8:1 on the dark field. */
+.field [aria-invalid='true'] {
+  border-color: var(--status-error-fg);
+}
+
+/* Ledger variant: no box, a 2px rule under the value (CRM search and intake). */
+.field__input--ledger {
+  padding: var(--space-3) var(--space-4);
+  border: none;
+  border-bottom: 2px solid var(--input-border);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+
+.field__input--ledger:focus {
+  border-bottom-color: var(--accentA700);
+  box-shadow: none;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
+  gap: var(--space-4);
+}
+
+/* ── Dialog: <dialog class="dialog" appModalDialog> ───────────────────────── */
+/* Zero padding on the <dialog> itself, chrome on the panel, so the
+   directive's backdrop-click test (target === dialog) stays correct. */
+.dialog {
+  width: min(640px, calc(100vw - 2rem));
+  max-height: calc(100vh - 2rem);
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--cardBackground);
+  color: var(--currentTextColor);
+  box-shadow: 0 12px 40px rgb(0 0 0 / 5%);
+}
+
+.dialog::backdrop {
+  background: rgb(28 46 72 / 32%);
+}
+
+.dialog-panel {
+  padding: var(--space-6);
+}
+
+.dialog-panel h2 {
+  margin-bottom: var(--space-4);
+  font-size: 1.25rem;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.dialog-error {
+  margin: var(--space-3) 0;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--status-error-fg);
+  border-radius: var(--radius-sm);
+  background: var(--status-error-bg);
+  color: var(--status-error-fg);
+}
+
+/* ── State panel (empty / error / loading) ────────────────────────────────── */
+.state-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-8);
+  border-radius: var(--radius-lg);
+  background: var(--cardBackground);
+  text-align: center;
+}
+
+.state-panel h2 {
+  font-size: 1.25rem;
+  color: var(--currentTextColor);
+}
+
+.state-panel p {
+  max-width: 48ch;
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.state-panel .material-symbols-rounded {
+  font-size: 2rem;
+  color: var(--text-muted);
+}
+
+.state-panel--error {
+  border: 1px solid var(--status-error-fg);
+  background: var(--status-error-bg);
+}
+
+.state-panel--error h2,
+.state-panel--error p,
+.state-panel--error .material-symbols-rounded {
+  color: var(--status-error-fg);
+}
+
+.skeleton {
+  display: block;
+  height: 0.875rem;
+  border-radius: var(--radius-sm);
+  background: var(--skeleton-bg);
+}
+
+/* ── Data table ───────────────────────────────────────────────────────────── */
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  background: var(--cardBackground);
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.data-table th,
+.data-table td {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border-color);
+  text-align: left;
+  vertical-align: top;
+}
+
+.data-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--cardBackground);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.data-table tbody tr {
+  transition: background var(--transition-fast);
+}
+
+.data-table tbody tr:hover {
+  background: var(--surface-hover);
+}
+
+.data-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.data-table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.data-table .row-name {
+  display: block;
+  font-weight: 600;
+}
+
+.data-table a.row-name {
+  color: var(--link-color);
+  text-decoration: none;
+}
+
+.data-table a.row-name:hover {
+  text-decoration: underline;
+}
+
+.data-table .row-sub {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.data-table code {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn,
+  .data-table tbody tr {
+    transition: none;
+  }
+}

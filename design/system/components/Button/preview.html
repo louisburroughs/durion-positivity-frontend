@@ -1,0 +1,31 @@
+<!-- @dsCard group="Actions" height=150 -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../preview.css">
+<script>const theme = new URLSearchParams(location.search).get('theme'); if (theme) document.documentElement.dataset.theme = theme;</script>
+<title>Button</title>
+<style>
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+  .stack { display: flex; flex-direction: column; gap: var(--space-3); }
+</style>
+</head>
+<body>
+<div class="stack">
+  <div class="row">
+    <button type="button" class="btn btn--primary"><span class="material-symbols-rounded" aria-hidden="true">add</span>Create estimate</button>
+    <button type="button" class="btn btn--accent">Approve workorder</button>
+    <button type="button" class="btn btn--secondary">Save draft</button>
+    <button type="button" class="btn btn--outline">Export CSV</button>
+    <button type="button" class="btn btn--ghost">Cancel</button>
+  </div>
+  <div class="row">
+    <button type="button" class="btn btn--danger">Remove bay</button>
+    <button type="button" class="btn btn--primary btn--sm">Assign</button>
+    <button type="button" class="btn btn--secondary btn--sm">View</button>
+    <button type="button" class="btn btn--primary" disabled>Post entry</button>
+  </div>
+</div>
+</body>
+</html>

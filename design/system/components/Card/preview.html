@@ -1,0 +1,29 @@
+<!-- @dsCard group="Surfaces" height=200 -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../preview.css">
+<script>const theme = new URLSearchParams(location.search).get('theme'); if (theme) document.documentElement.dataset.theme = theme;</script>
+<title>Card</title>
+<style>
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+  .stack { display: flex; flex-direction: column; gap: var(--space-3); }
+</style>
+</head>
+<body>
+<div class="row" style="align-items:stretch">
+  <article class="card dur-elevation-2" style="flex:1 1 220px">
+    <p class="overline">Bay 3</p>
+    <h3>Alignment rack</h3>
+    <p style="margin:var(--space-2) 0 var(--space-3);color:var(--text-muted);font-size:.875rem">2019 Ford F-150 · WO-2026-004812</p>
+    <span class="badge badge--info">Work in progress</span>
+  </article>
+  <article class="card card--outlined" style="flex:1 1 220px">
+    <p class="overline">Today</p>
+    <h3>Open workorders</h3>
+    <div class="inset" style="margin-top:var(--space-3);display:flex;justify-content:space-between;font-variant-numeric:tabular-nums"><span>Awaiting parts</span><strong>4</strong></div>
+  </article>
+</div>
+</body>
+</html>

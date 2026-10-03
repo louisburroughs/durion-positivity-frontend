@@ -1,0 +1,28 @@
+<!-- @dsCard group="Forms" height=260 -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../preview.css">
+<script>const theme = new URLSearchParams(location.search).get('theme'); if (theme) document.documentElement.dataset.theme = theme;</script>
+<title>Listbox</title>
+<style>
+  .picker-option { display: flex; align-items: baseline; gap: var(--space-3); }
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+  .stack { display: flex; flex-direction: column; gap: var(--space-3); }
+</style>
+</head>
+<body>
+<div class="field" style="max-width:420px">
+  <label for="lb-input">Customer</label>
+  <div class="picker-wrap">
+    <input id="lb-input" type="text" role="combobox" aria-expanded="true" aria-controls="lb-list" aria-activedescendant="lb-opt-2" value="Mar">
+    <ul class="picker-dropdown" id="lb-list" role="listbox" style="position:static;margin-top:4px">
+      <li class="picker-option" role="option" id="lb-opt-1"><span class="suggestion-primary">Marisol Vega</span><span class="suggestion-secondary">(602) 555-0143</span></li>
+      <li class="picker-option picker-option-active" role="option" id="lb-opt-2" aria-selected="true"><span class="suggestion-primary">Mark Okafor</span><span class="suggestion-secondary">Fleet · Okafor Logistics</span></li>
+      <li class="picker-option" role="option" id="lb-opt-3"><span class="suggestion-primary">Martin Lindqvist</span><span class="suggestion-secondary">(480) 555-0199</span></li>
+    </ul>
+  </div>
+</div>
+</body>
+</html>

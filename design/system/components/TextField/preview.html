@@ -1,0 +1,44 @@
+<!-- @dsCard group="Forms" height=300 -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../preview.css">
+<script>const theme = new URLSearchParams(location.search).get('theme'); if (theme) document.documentElement.dataset.theme = theme;</script>
+<title>TextField</title>
+<style>
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+  .stack { display: flex; flex-direction: column; gap: var(--space-3); }
+</style>
+</head>
+<body>
+<form class="stack" onsubmit="return false" style="max-width:560px">
+  <div class="field-row">
+    <div class="field">
+      <label for="tf-first">First name<span class="required-mark" aria-hidden="true">*</span></label>
+      <input id="tf-first" type="text" value="Dana">
+    </div>
+    <div class="field">
+      <label for="tf-last">Last name<span class="required-mark" aria-hidden="true">*</span></label>
+      <input id="tf-last" type="text" aria-invalid="true" aria-describedby="tf-last-err">
+      <p class="field-error" id="tf-last-err">Last name is required.</p>
+    </div>
+  </div>
+  <div class="field-row">
+    <div class="field">
+      <label for="tf-appt">Appointment</label>
+      <input id="tf-appt" type="text" placeholder="e.g. APT-1234" aria-describedby="tf-appt-hint">
+      <p class="field-hint" id="tf-appt-hint">Leave blank to create a walk-in.</p>
+    </div>
+    <div class="field">
+      <label for="tf-bay">Bay</label>
+      <select id="tf-bay"><option>Bay 3 · Alignment rack</option><option>Bay 4 · Lift</option></select>
+    </div>
+  </div>
+  <div class="field">
+    <label for="tf-search">Search customers</label>
+    <input id="tf-search" class="field__input--ledger" type="search" placeholder="Search by customer, invoice #, or workorder #">
+  </div>
+</form>
+</body>
+</html>

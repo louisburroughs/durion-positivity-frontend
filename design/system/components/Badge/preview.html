@@ -1,0 +1,30 @@
+<!-- @dsCard group="Status" height=96 -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../preview.css">
+<script>const theme = new URLSearchParams(location.search).get('theme'); if (theme) document.documentElement.dataset.theme = theme;</script>
+<title>Badge</title>
+<style>
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+  .stack { display: flex; flex-direction: column; gap: var(--space-3); }
+</style>
+</head>
+<body>
+<div class="stack">
+  <div class="row">
+    <span class="badge badge--neutral">Draft</span>
+    <span class="badge badge--info">Work in progress</span>
+    <span class="badge badge--warning">Awaiting parts</span>
+    <span class="badge badge--ready">Ready for pickup</span>
+    <span class="badge badge--success">Completed</span>
+  </div>
+  <div class="row">
+    <span class="badge badge--success">Paid</span>
+    <span class="badge badge--warning">Pending</span>
+    <span class="badge badge--error">Unpaid</span>
+  </div>
+</div>
+</body>
+</html>
