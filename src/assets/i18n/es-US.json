@@ -3502,6 +3502,17 @@
       "SUBTITLE": "Supervisar el estado de procesamiento de sobres de ingestión",
       "FILTERS_LABEL": "Filtros de ingestión",
       "FILTER_EVENT_TYPE": "Tipo de evento",
+      "FILTER_EVENT_TYPE_HINT": "Tipo de evento exacto, por ejemplo inventory.adjustment.posted",
+      "FILTER_STATUS": "Estado",
+      "FILTER_STATUS_ALL": "Todos los estados",
+      "APPLY_FILTERS": "Aplicar filtros",
+      "CLEAR_FILTERS": "Borrar filtros",
+      "PAGINATION": {
+        "ARIA": "Páginas de eventos de ingestión",
+        "PREVIOUS": "Anterior",
+        "NEXT": "Siguiente",
+        "STATUS": "Página {{page}} de {{totalPages}} ({{totalElements}} en total)"
+      },
       "ERROR": "No se pudieron cargar los eventos de ingestión.",
       "EMPTY": "Ningún evento de ingestión coincide con los filtros seleccionados.",
       "TABLE_ARIA": "Tabla de eventos de ingestión",

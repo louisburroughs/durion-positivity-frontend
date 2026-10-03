@@ -3502,6 +3502,17 @@
       "SUBTITLE": "Surveiller l’état de traitement des enveloppes d’ingestion",
       "FILTERS_LABEL": "Filtres d’ingestion",
       "FILTER_EVENT_TYPE": "Type d’événement",
+      "FILTER_EVENT_TYPE_HINT": "Type d’événement exact, par exemple inventory.adjustment.posted",
+      "FILTER_STATUS": "Statut",
+      "FILTER_STATUS_ALL": "Tous les statuts",
+      "APPLY_FILTERS": "Appliquer les filtres",
+      "CLEAR_FILTERS": "Effacer les filtres",
+      "PAGINATION": {
+        "ARIA": "Pages des événements d’ingestion",
+        "PREVIOUS": "Précédent",
+        "NEXT": "Suivant",
+        "STATUS": "Page {{page}} sur {{totalPages}} ({{totalElements}} au total)"
+      },
       "ERROR": "Échec du chargement des événements d’ingestion.",
       "EMPTY": "Aucun événement d’ingestion ne correspond aux filtres sélectionnés.",
       "TABLE_ARIA": "Tableau des événements d’ingestion",

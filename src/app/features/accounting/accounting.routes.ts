@@ -4,13 +4,15 @@ import { ACCOUNTING_PAGE } from '../../core/security/route-permissions';
 import { AccountingComponent } from './accounting.component';
 
 /**
- * `events/failed` is a bookmark onto the event list pre-filtered to the
- * failure statuses. A static `redirectTo` string treats `?` as route text, so
- * the query must be built as a UrlTree (#201).
+ * `events/failed` is a bookmark onto the event list pre-filtered to failed
+ * events. A static `redirectTo` string treats `?` as route text, so the query
+ * must be built as a UrlTree (#201). The list endpoint filters on exactly one
+ * status and ignores a value it cannot parse (a comma list included), so this
+ * names the single `FAILED` status.
  */
 export const redirectFailedEvents: RedirectFunction = () =>
   inject(Router).createUrlTree(['/app/accounting/events'], {
-    queryParams: { processingStatus: 'FAILED,QUARANTINED' },
+    queryParams: { processingStatus: 'FAILED' },
   });
 
 /**
