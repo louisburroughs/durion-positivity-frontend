@@ -48,11 +48,13 @@
       <input id="payment-amount-input" class="payment-capture__input" type="number" min="0" step="0.01"
         [value]="amount() ?? ''" (input)="setAmount($any($event.target).value)"
         [attr.aria-describedby]="limitOverrideRequired() ? 'payment-limit-warning' : null" />
-      @if (limitOverrideRequired()) {
-      <p id="payment-limit-warning" class="payment-capture__warning" role="status">
+      <!-- ADR-0029 §8.8: the live region stays mounted; only its text changes. -->
+      <p id="payment-limit-warning" role="status"
+        [class]="limitOverrideRequired() ? 'payment-capture__warning' : 'sr-only'">
+        @if (limitOverrideRequired()) {
         {{ 'BILLING.PAYMENT.LIMIT_OVERRIDE_REQUIRED' | translate: { limit: (paymentLimit | money: 'USD') } }}
+        }
       </p>
-      }
     </div>
 
     <button type="button" class="payment-capture__submit" [disabled]="!canSubmitCapture()"

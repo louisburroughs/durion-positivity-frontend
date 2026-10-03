@@ -122,8 +122,8 @@ describe('PaymentCapturePageComponent', () => {
   });
 
   describe('payment limit override (#431)', () => {
-    const warning = (): HTMLElement | null =>
-      (fixture.nativeElement as HTMLElement).querySelector('#payment-limit-warning');
+    const warning = (): string =>
+      (fixture.nativeElement as HTMLElement).querySelector('#payment-limit-warning')?.textContent?.trim() ?? '';
     const submit = (): HTMLButtonElement =>
       (fixture.nativeElement as HTMLElement).querySelector('.payment-capture__submit')!;
 
@@ -133,7 +133,7 @@ describe('PaymentCapturePageComponent', () => {
       fixture.detectChanges();
 
       expect(component.limitOverrideRequired()).toBe(true);
-      expect(warning()).not.toBeNull();
+      expect(warning()).not.toBe('');
       expect(submit().disabled).toBe(true);
 
       component.initiateAndCapture('CARD', 500.01);
@@ -147,7 +147,7 @@ describe('PaymentCapturePageComponent', () => {
       component.setAmount('500');
       fixture.detectChanges();
 
-      expect(warning()).toBeNull();
+      expect(warning()).toBe('');
       expect(submit().disabled).toBe(false);
     });
 
@@ -156,7 +156,7 @@ describe('PaymentCapturePageComponent', () => {
       component.setAmount('750');
       fixture.detectChanges();
 
-      expect(warning()).toBeNull();
+      expect(warning()).toBe('');
       expect(submit().disabled).toBe(false);
     });
 
@@ -165,6 +165,53 @@ describe('PaymentCapturePageComponent', () => {
       fixture.detectChanges();
 
       expect(component.limitOverrideRequired()).toBe(false);
+    });
+  });
+
+  it('keeps the limit warning live region mounted while it is empty (ADR-0029 §8.8)', () => {
+    session.permissions = ['invoice:payment:process'];
+    const region = (): HTMLElement | null =>
+      (fixture.nativeElement as HTMLElement).querySelector('#payment-limit-warning[role="status"]');
+    const before = region();
+    expect(before).not.toBeNull();
+    expect(before!.classList.contains('sr-only')).toBe(true);
+
+    component.setAmount('900');
+    fixture.detectChanges();
+    expect(region()).toBe(before);
+    expect(region()!.classList.contains('payment-capture__warning')).toBe(true);
+  });
+
+  describe('invoice:payment:process gate (ADR-0040 §6a)', () => {
+    const submit = (): HTMLButtonElement =>
+      (fixture.nativeElement as HTMLElement).querySelector('.payment-capture__submit')!;
+
+    it('disables the submit control for a caller without invoice:payment:process', () => {
+      session.permissions = ['invoice:invoice:view'];
+      component.setAmount('150');
+      fixture.detectChanges();
+
+      expect(component.canProcessPayment()).toBe(false);
+      expect(submit().disabled).toBe(true);
+    });
+
+    it('refuses a direct call without calling the transport', () => {
+      session.permissions = ['invoice:invoice:view'];
+      component.setAmount('150');
+
+      component.initiateAndCapture('CARD', 150);
+
+      expect(billingTransportStub.initiateAndCapturePayment).not.toHaveBeenCalled();
+      expect(component.state()).toBe('error');
+      expect(component.errorKey()).toBe('BILLING.PAYMENT.ERROR.CAPTURE_PERMISSION_DENIED');
+    });
+
+    it('enables the control for a caller holding the code', () => {
+      session.permissions = ['invoice:payment:process'];
+      component.setAmount('150');
+      fixture.detectChanges();
+
+      expect(submit().disabled).toBe(false);
     });
   });
 

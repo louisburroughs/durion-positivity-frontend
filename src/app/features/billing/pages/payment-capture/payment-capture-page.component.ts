@@ -45,6 +45,15 @@ export class PaymentCapturePageComponent implements OnInit {
    */
   readonly limitOverrideRequired = computed(() => this.needsLimitOverride(this.amount()));
 
+  /**
+   * ADR-0040 §6a: the submit control and {@link initiateAndCapture} re-check
+   * `invoice:payment:process` independently of the route gate, so a direct call or a permission
+   * change after navigation is refused client-side too. Legacy-token fallback as above.
+   */
+  readonly canProcessPayment = computed(
+    () => !this.auth.permissionsKnown() || this.auth.hasAnyPermission(BILLING_SECTION.paymentProcess),
+  );
+
   ngOnInit(): void {
     this.invoiceId.set(this.route.snapshot.paramMap.get('invoiceId') ?? '');
   }
@@ -59,10 +68,19 @@ export class PaymentCapturePageComponent implements OnInit {
   }
 
   canSubmitCapture(): boolean {
-    return this.state() !== 'submitting' && (this.amount() ?? 0) > 0 && !this.limitOverrideRequired();
+    return this.state() !== 'submitting'
+      && (this.amount() ?? 0) > 0
+      && this.canProcessPayment()
+      && !this.limitOverrideRequired();
   }
 
   initiateAndCapture(method: PaymentMethod, amount: number): void {
+    if (!this.canProcessPayment()) {
+      this.state.set('error');
+      this.errorKey.set('BILLING.PAYMENT.ERROR.CAPTURE_PERMISSION_DENIED');
+      return;
+    }
+
     const invoiceId = this.invoiceId();
     if (!invoiceId) {
       this.state.set('error');
