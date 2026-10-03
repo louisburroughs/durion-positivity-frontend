@@ -4,6 +4,7 @@ import { test } from './lib/persona-fixture';
 import { attachMonitors, routePattern, visit } from './lib/crawler';
 import { monitorFindings, runPageChecks } from './lib/checks';
 import { attachIdHarvester, fillTemplates, templateCoverage, templateFields } from './lib/id-harvest';
+import { probeSearch, SEARCH_PROBE_PATHS, type SearchProbeResult } from './lib/search-probes';
 import { APP_SEEDS, PARAM_TEMPLATES, PUBLIC_SEEDS } from './lib/route-seeds';
 import { applyAcceptedFindings } from './lib/accepted-findings';
 import { emptyCounts, tallyFindings, writeReports } from './lib/report';
@@ -35,6 +36,8 @@ test('crawl site and audit every page', async ({ page, persona }) => {
   const pages: PageRecord[] = [];
   const findings: Finding[] = [];
   const startedAt = new Date().toISOString();
+  const searchProbes: SearchProbeResult[] = [];
+  let probesRun = false;
 
   // When anchor-based discovery runs dry, fill parameterized route templates
   // with entity ids harvested from the API responses already observed.
@@ -53,6 +56,18 @@ test('crawl site and audit every page', async ({ page, persona }) => {
   while (pages.length < AUDIT_CONFIG.maxPages) {
     if (queue.length === 0) {
       if (!harvester) break;
+      // Work-order, estimate and invoice ids only surface through typed
+      // searches; probe the landing finders once before the first refill.
+      if (!probesRun && AUDIT_CONFIG.searchTerms.length > 0) {
+        probesRun = true;
+        for (const path of SEARCH_PROBE_PATHS) {
+          const probe = await probeSearch(page, path, AUDIT_CONFIG.searchTerms);
+          searchProbes.push(probe);
+          console.log(
+            `[${persona.id}] search probe ${path}: ${probe.responses} response(s) from ${probe.finders} finder(s)`,
+          );
+        }
+      }
       // Body parsing runs detached; wait for in-flight responses before
       // deciding the harvest has nothing more to offer.
       await harvester.idle();
@@ -136,6 +151,7 @@ test('crawl site and audit every page', async ({ page, persona }) => {
     pages,
     findings: finalFindings,
     unvisitedSeeds: seeds.filter(s => !visited.has(s)),
+    searchProbes,
     templateCoverage: templateCoverage(
       PARAM_TEMPLATES,
       harvester?.harvest ?? new Map(),

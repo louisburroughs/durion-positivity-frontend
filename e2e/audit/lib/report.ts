@@ -47,6 +47,13 @@ function sitemapMarkdown(report: AuditReport): string {
     for (const s of report.unvisitedSeeds) lines.push(`- ${s}`);
   }
 
+  if (report.searchProbes.length > 0) {
+    lines.push('', '## Search probes', '', '| Landing page | Finders | Search responses |', '|---|---|---|');
+    for (const probe of report.searchProbes) {
+      lines.push(`| ${md(probe.path)} | ${probe.finders} | ${probe.responses} |`);
+    }
+  }
+
   if (report.templateCoverage.length > 0) {
     const outcomeByPath = new Map(report.pages.map(p => [p.path, p.outcome]));
     lines.push(

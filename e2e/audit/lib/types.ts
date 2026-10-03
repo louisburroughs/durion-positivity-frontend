@@ -77,6 +77,8 @@ export interface AuditReport {
   findings: Finding[];
   /** Seed routes that were never reached (crawl cap hit, etc.). */
   unvisitedSeeds: string[];
+  /** Landing finders typed into to surface search-only ids (empty when disabled). */
+  searchProbes: import('./search-probes').SearchProbeResult[];
   /** Per-template outcome of api-harvested parameterized route coverage. */
   templateCoverage: import('./id-harvest').TemplateCoverage[];
 }

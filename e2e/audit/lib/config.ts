@@ -6,6 +6,16 @@ function intEnv(name: string, fallback: number): number {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
+/** Comma-separated list; unset → fallback, set but blank → [] (disables the feature). */
+export function listEnv(name: string, fallback: readonly string[]): string[] {
+  const raw = process.env[name];
+  if (raw === undefined) return [...fallback];
+  return raw
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean);
+}
+
 /**
  * All knobs are environment variables so the same suite runs against
  * durionpos.org, a staging host, or a local dev server without code changes.
@@ -20,6 +30,8 @@ function intEnv(name: string, fallback: number): number {
  *   AUDIT_SETTLE_MS        extra wait after network idle for signals/effects (default 1200)
  *   AUDIT_PAGE_TIMEOUT_MS  per-page navigation timeout (default 30000)
  *   AUDIT_OUT_DIR          report output dir    (default artifacts/audit)
+ *   AUDIT_SEARCH_TERMS     terms typed into landing record finders to harvest ids
+ *                          (comma-separated, default "an"; blank disables)
  */
 export const AUDIT_CONFIG = {
   baseUrl: (process.env['AUDIT_BASE_URL'] ?? 'https://durionpos.org').replace(/\/+$/, ''),
@@ -32,6 +44,7 @@ export const AUDIT_CONFIG = {
   settleMs: intEnv('AUDIT_SETTLE_MS', 1200),
   pageTimeoutMs: intEnv('AUDIT_PAGE_TIMEOUT_MS', 30_000),
   outDir: process.env['AUDIT_OUT_DIR'] ?? path.join('artifacts', 'audit'),
+  searchTerms: listEnv('AUDIT_SEARCH_TERMS', ['an']),
 } as const;
 
 /**
