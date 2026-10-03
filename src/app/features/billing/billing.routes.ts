@@ -37,6 +37,7 @@ export const BILLING_ROUTES: Routes = [
       },
       {
         path: 'invoices/:invoiceId/payment-capture',
+        data: { permissions: BILLING_PAGE.paymentCapture },
         loadComponent: () =>
           import('./pages/payment-capture/payment-capture-page.component').then(
             m => m.PaymentCapturePageComponent,

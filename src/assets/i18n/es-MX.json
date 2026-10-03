@@ -8059,8 +8059,11 @@
         "REFUND_CONTEXT_LOAD": "No se pudo cargar el saldo reembolsable.",
         "REFUND_PERMISSION_DENIED": "No tiene permiso para reembolsar este pago.",
         "VOID_PERMISSION_DENIED": "No tiene permiso para anular este pago.",
-        "LOCATION_SCOPE_DENIED": "Esta factura está fuera de su ubicación asignada. Pida a un gerente con acceso a esta ubicación que complete esta acción."
-      }
+        "LOCATION_SCOPE_DENIED": "Esta factura está fuera de su ubicación asignada. Pida a un gerente con acceso a esta ubicación que complete esta acción.",
+        "LIMIT_OVERRIDE_REQUIRED": "Solo un gerente con autorización para exceder el límite puede procesar un pago de este monto.",
+        "CAPTURE_PERMISSION_DENIED": "No tiene permiso para procesar pagos en esta factura."
+      },
+      "LIMIT_OVERRIDE_REQUIRED": "Los pagos superiores a {{limit}} requieren autorización para exceder el límite. Pida a un gerente que procese este pago."
     },
     "RECEIPT": {
       "TITLE": "Recibo",

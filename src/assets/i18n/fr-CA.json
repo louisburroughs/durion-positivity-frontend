@@ -8059,8 +8059,11 @@
         "REFUND_CONTEXT_LOAD": "Impossible de charger le solde remboursable.",
         "REFUND_PERMISSION_DENIED": "Vous n'avez pas la permission de rembourser ce paiement.",
         "VOID_PERMISSION_DENIED": "Vous n'avez pas la permission d'annuler ce paiement.",
-        "LOCATION_SCOPE_DENIED": "Cette facture est en dehors de votre emplacement assigné. Demandez à un gestionnaire ayant accès à cet emplacement d'effectuer cette action."
-      }
+        "LOCATION_SCOPE_DENIED": "Cette facture est en dehors de votre emplacement assigné. Demandez à un gestionnaire ayant accès à cet emplacement d'effectuer cette action.",
+        "LIMIT_OVERRIDE_REQUIRED": "Seul un gestionnaire autorisé à dépasser la limite peut traiter un paiement de ce montant.",
+        "CAPTURE_PERMISSION_DENIED": "Vous n’avez pas la permission de traiter des paiements sur cette facture."
+      },
+      "LIMIT_OVERRIDE_REQUIRED": "Les paiements de plus de {{limit}} exigent une autorisation de dépassement de limite. Demandez à un gestionnaire de traiter ce paiement."
     },
     "RECEIPT": {
       "TITLE": "Recu",

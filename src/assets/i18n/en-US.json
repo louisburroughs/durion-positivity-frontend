@@ -8059,8 +8059,11 @@
         "REFUND_CONTEXT_LOAD": "Unable to load refundable balance.",
         "REFUND_PERMISSION_DENIED": "You do not have permission to refund this payment.",
         "VOID_PERMISSION_DENIED": "You do not have permission to void this payment.",
-        "LOCATION_SCOPE_DENIED": "This invoice is outside your assigned location. Ask a manager with access to this location to complete this action."
-      }
+        "LOCATION_SCOPE_DENIED": "This invoice is outside your assigned location. Ask a manager with access to this location to complete this action.",
+        "LIMIT_OVERRIDE_REQUIRED": "Only a manager with limit-override authority can take a payment this large.",
+        "CAPTURE_PERMISSION_DENIED": "You do not have permission to take payments on this invoice."
+      },
+      "LIMIT_OVERRIDE_REQUIRED": "Payments above {{limit}} need limit-override authority. Ask a manager to take this payment."
     },
     "RECEIPT": {
       "TITLE": "Receipt",

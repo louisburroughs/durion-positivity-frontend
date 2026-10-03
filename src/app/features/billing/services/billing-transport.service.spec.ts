@@ -238,26 +238,17 @@ describe('BillingTransportService', () => {
     expect(result).toEqual(elevationResponse);
   });
 
-  it('initiates and captures payment through the payment SDK clients', () => {
-    vi.spyOn(crypto, 'randomUUID')
-      .mockReturnValueOnce('11111111-1111-1111-1111-111111111111')
-      .mockReturnValueOnce('22222222-2222-2222-2222-222222222222');
+  it('takes a SALE_CAPTURE payment in one initiate call and never captures the already-captured intent (#431)', () => {
+    vi.spyOn(crypto, 'randomUUID').mockReturnValueOnce('11111111-1111-1111-1111-111111111111');
 
     const initiateResponse: InitiatePaymentResponse = {
       paymentIntentId: 'pay-001',
-      status: InitiatePaymentResponseStatusEnum.Pending,
-      authorizedAmount: 150,
-      gatewayProvider: 'stripe',
-    };
-    const capturedResponse: InitiatePaymentResponse = {
-      paymentIntentId: 'pay-001',
       status: InitiatePaymentResponseStatusEnum.Captured,
+      authorizedAmount: 150,
       capturedAmount: 150,
       gatewayProvider: 'stripe',
     };
-
     paymentServiceStub.initiatePayment.mockReturnValueOnce(of(initiateResponse));
-    paymentServiceStub.capturePayment.mockReturnValueOnce(of(capturedResponse));
 
     let result: unknown;
     service.initiateAndCapturePayment('inv-001', 'CARD', 150).subscribe(value => {
@@ -270,10 +261,7 @@ describe('BillingTransportService', () => {
       idempotencyKey: '11111111-1111-1111-1111-111111111111',
       paymentToken: 'UI-CARD',
     });
-    expect(paymentServiceStub.capturePayment).toHaveBeenCalledWith('inv-001', 'pay-001', {
-      amount: 150,
-      captureIdempotencyKey: '22222222-2222-2222-2222-222222222222',
-    });
+    expect(paymentServiceStub.capturePayment).not.toHaveBeenCalled();
     expect(apiStub.post).not.toHaveBeenCalled();
     expect(result).toEqual({
       paymentId: 'pay-001',
@@ -284,6 +272,38 @@ describe('BillingTransportService', () => {
       amount: 150,
       currency: 'USD',
     });
+  });
+
+  it('captures only an intent the backend left AUTHORIZED', () => {
+    vi.spyOn(crypto, 'randomUUID')
+      .mockReturnValueOnce('11111111-1111-1111-1111-111111111111')
+      .mockReturnValueOnce('22222222-2222-2222-2222-222222222222');
+
+    const initiateResponse: InitiatePaymentResponse = {
+      paymentIntentId: 'pay-001',
+      status: InitiatePaymentResponseStatusEnum.Authorized,
+      authorizedAmount: 150,
+      gatewayProvider: 'stripe',
+    };
+    const capturedResponse: InitiatePaymentResponse = {
+      paymentIntentId: 'pay-001',
+      status: InitiatePaymentResponseStatusEnum.Captured,
+      capturedAmount: 150,
+      gatewayProvider: 'stripe',
+    };
+    paymentServiceStub.initiatePayment.mockReturnValueOnce(of(initiateResponse));
+    paymentServiceStub.capturePayment.mockReturnValueOnce(of(capturedResponse));
+
+    let result: { status?: string } | undefined;
+    service.initiateAndCapturePayment('inv-001', 'CARD', 150).subscribe(value => {
+      result = value;
+    });
+
+    expect(paymentServiceStub.capturePayment).toHaveBeenCalledWith('inv-001', 'pay-001', {
+      amount: 150,
+      captureIdempotencyKey: '22222222-2222-2222-2222-222222222222',
+    });
+    expect(result?.status).toBe('CAPTURED');
   });
 
   it('voids payment through the payment reversal SDK with mapped reason and notes', () => {
