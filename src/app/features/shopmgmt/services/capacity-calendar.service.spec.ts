@@ -6,9 +6,9 @@ import { BayAPIService, LocationAPIService } from '@durion-sdk/location';
 import { ProductsAPIService } from '@durion-sdk/catalog';
 import type { ServiceDto } from '@durion-sdk/catalog';
 import { ScheduleAPIService, TechnicianAPIService, TechnicianCredentialResponseStatusEnum } from '@durion-sdk/shop-manager';
-import type { TechnicianCredentialResponse } from '@durion-sdk/shop-manager';
+import type { LocationTechnicianRosterEntryResponse, ScheduleViewResponse, TechnicianCredentialResponse } from '@durion-sdk/shop-manager';
 import { CapacityCalendarService, heldSkillCodes } from './capacity-calendar.service';
-import type { JobRequirement } from '../models/capacity-calendar.models';
+import type { CapacityCalendarView, JobRequirement } from '../models/capacity-calendar.models';
 
 /**
  * The transport mappings the capacity engine depends on (CAP-325, CAP-329): what a catalog
@@ -138,6 +138,84 @@ describe('CapacityCalendarService', () => {
    * is not a shop has no schedule, and reporting it as a load failure sends
    * someone hunting an outage that does not exist.
    */
+  /**
+   * The roster row carries two ids since SDK 0.80: `mechanicRecordId` (the
+   * shop-manager record) and `mechanicPersonId`. The schedule's MECHANIC lanes are
+   * keyed by the person id, so joining on the record id finds no lane — every
+   * shift, PTO and appointment is lost and the technician reads as free all day,
+   * overstating capacity. Distinct ids below make the wrong join observable.
+   */
+  describe('technician lanes join on the person id', () => {
+    const REQUEST = {
+      locationId: 'loc-1',
+      focusDate: '2026-09-29',
+      scope: 'day' as const,
+      job: { label: '', operationCode: '', skillCodes: [], skillRequirementsConfigured: true, durationHours: 1 },
+    };
+    // Local wall-clock instants: the service buckets events by local hour.
+    const at = (hour: number) => new Date(2026, 8, 29, hour).toISOString();
+    const rosterEntry = {
+      mechanicRecordId: 'record-1',
+      mechanicPersonId: 'person-1',
+      firstName: 'Jo',
+      lastName: 'Bell',
+      credentials: [],
+      shiftSource: 'ROSTER',
+    } as unknown as LocationTechnicianRosterEntryResponse;
+
+    const scheduleWithLane = (laneId: string) =>
+      ({
+        date: '2026-09-29',
+        dayStartAt: at(8),
+        dayEndAt: at(12),
+        locationId: 'loc-1',
+        availabilityOverlayStatus: 'AVAILABLE',
+        viewGeneratedAt: at(8),
+        resources: [
+          {
+            resourceType: 'MECHANIC',
+            resourceId: laneId,
+            events: [
+              { eventId: 'shift-1', eventType: 'SHIFT', startTime: at(8), endTime: at(11), affected: false, hasConflict: false },
+              { eventId: 'appt-1', eventType: 'APPOINTMENT', startTime: at(9), endTime: at(10), affected: false, hasConflict: false },
+            ],
+          },
+        ],
+      }) as unknown as ScheduleViewResponse;
+
+    const calendarFor = async (laneId: string) => {
+      const schedule = TestBed.inject(ScheduleAPIService) as unknown as { viewSchedule: ReturnType<typeof vi.fn> };
+      const bays = TestBed.inject(BayAPIService) as unknown as { listBays: ReturnType<typeof vi.fn> };
+      const techs = TestBed.inject(TechnicianAPIService) as unknown as { listLocationTechnicians: ReturnType<typeof vi.fn> };
+      const locations = TestBed.inject(LocationAPIService) as unknown as { getLocationById: ReturnType<typeof vi.fn> };
+      bays.listBays.mockReturnValue(of({ content: [] }));
+      techs.listLocationTechnicians.mockReturnValue(of({ content: [rosterEntry] }));
+      locations.getLocationById.mockReturnValue(of({ id: 'loc-1', name: 'Northgate' }));
+      schedule.viewSchedule.mockReturnValue(of(scheduleWithLane(laneId)));
+      return new Promise<CapacityCalendarView>(resolve => service.getCalendar(REQUEST).subscribe(resolve));
+    };
+
+    it('reads shift and appointment hours from the lane keyed by mechanicPersonId', async () => {
+      const view = await calendarFor('person-1');
+
+      expect(view.technicians).toHaveLength(1);
+      const [tech] = view.technicians;
+      expect(tech.personId).toBe('person-1');
+      // Window 08:00-12:00 is hour indexes 0..3; the shift covers 08-11, the appointment 09-10.
+      expect([...tech.onDutyHours].sort()).toEqual([0, 1, 2]);
+      expect([...tech.assignedHours]).toEqual([1]);
+    });
+
+    it('finds no lane keyed by the record id, which is exactly what the person-id join prevents', async () => {
+      const view = await calendarFor('record-1');
+
+      const [tech] = view.technicians;
+      // No lane matched: no shift data means on duty all window, and the appointment is lost.
+      expect([...tech.onDutyHours].sort()).toEqual([0, 1, 2, 3]);
+      expect([...tech.assignedHours]).toEqual([]);
+    });
+  });
+
   describe('schedule 404s', () => {
     const REQUEST = {
       locationId: 'loc-1',
