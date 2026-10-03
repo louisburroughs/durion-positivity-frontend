@@ -8,6 +8,10 @@ describe('search probes', () => {
     for (const path of SEARCH_PROBE_PATHS) expect(APP_SEEDS).toContain(path);
   });
 
+  it('skips /app/people, whose finder rows carry a bare id no template accepts', () => {
+    expect(SEARCH_PROBE_PATHS).not.toContain('/app/people');
+  });
+
   it('matches a search endpoint carrying the term as q', () => {
     expect(isSearchFor('https://durionpos.org/api/workorder/v1/workorders/search?q=an&page=0&size=10', 'an')).toBe(true);
   });

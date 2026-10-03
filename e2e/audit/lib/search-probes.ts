@@ -4,7 +4,7 @@ import { AUDIT_CONFIG } from './config';
 /**
  * Search probes: type a generic term into landing-page record finders.
  *
- * Work-order, estimate and invoice lists only load through a typed search, so
+ * Workorder, estimate and invoice lists only load through a typed search, so
  * the passive harvester (id-harvest.ts) never sees their ids unless some other
  * page happens to surface them (today's shop dashboard, dispatch board, WIP).
  * When the tenant has no work scheduled for today, every detail route behind
@@ -17,13 +17,13 @@ import { AUDIT_CONFIG } from './config';
  * and the probe never selects a result, presses Enter, or submits a form.
  */
 
-/** Landing pages whose record finders are wired to a search endpoint. */
-export const SEARCH_PROBE_PATHS: readonly string[] = [
-  '/app/workexec',
-  '/app/billing',
-  '/app/crm',
-  '/app/people',
-];
+/**
+ * Landing pages whose record finders return ids a PARAM_TEMPLATES entry accepts.
+ * `/app/people` is deliberately absent: its finder rows identify people by a bare
+ * `id` from people-contact, which no template takes, so probing it would add
+ * requests and no routes.
+ */
+export const SEARCH_PROBE_PATHS: readonly string[] = ['/app/workexec', '/app/billing', '/app/crm'];
 
 /** Search-mode finder inputs only; id-mode finders do no lookup. */
 const FINDER_INPUT = 'input.landing-finder__input[role="combobox"]';

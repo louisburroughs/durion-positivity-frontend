@@ -127,11 +127,11 @@ it to Chromium at launch (Chromium does not read it from the environment on its 
    (`id@locations`). The harvester itself makes zero extra requests and
    is GET-only. Mutation-flow pages (order cancel, approval submit, offboard, …) are deliberately
    excluded from auto-visitation. Coverage per template is reported in `sitemap.md`.
-4. **Search probes** — work-order, estimate and invoice lists only load through a typed
+4. **Search probes** — workorder, estimate and invoice lists only load through a typed
    search, so their ids otherwise surface only via today's shop dashboard, dispatch board or
    WIP, which are empty when nothing is scheduled today. The first time the queue runs dry, the
    crawler visits the record-finder landing pages (`SEARCH_PROBE_PATHS` in
-   `search-probes.ts`: workexec, billing, crm, people), types each `AUDIT_SEARCH_TERMS` term
+   `search-probes.ts`: workexec, billing, crm), types each `AUDIT_SEARCH_TERMS` term
    into every search-mode finder, and waits for the GET search response; the harvester records
    the ids. It never selects a result, presses Enter or submits. Searches are read-only, but
    the backend logs each one as a search audit event. Per-page results appear under
