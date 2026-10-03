@@ -13,8 +13,8 @@ import { ShopmgmtRosterService } from './shopmgmt-roster.service';
 const samplePage: PagedModelMechanicRosterEntryResponse = {
   content: [
     {
-      mechanicId: 'mechanic-1',
-      personId: 'person-1',
+      mechanicRecordId: 'mechanic-1',
+      mechanicPersonId: 'person-1',
       firstName: 'Alex',
       lastName: 'Smith',
       status: MechanicRosterEntryResponseStatusEnum.Inactive,

@@ -15,8 +15,8 @@ import { MechanicRosterPageComponent } from './mechanic-roster-page.component';
 const readyPage: PagedModelMechanicRosterEntryResponse = {
   content: [
     {
-      mechanicId: 'mechanic-1',
-      personId: 'person-1',
+      mechanicRecordId: 'mechanic-1',
+      mechanicPersonId: 'person-1',
       firstName: 'Alex',
       lastName: 'Smith',
       status: MechanicRosterEntryResponseStatusEnum.Active,

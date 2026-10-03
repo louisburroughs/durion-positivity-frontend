@@ -76,7 +76,7 @@
             </tr>
           </thead>
           <tbody>
-            @for (mechanic of mechanics(); track mechanic.mechanicId ?? mechanic.personId ?? $index) {
+            @for (mechanic of mechanics(); track mechanic.mechanicRecordId) {
               <tr data-testid="mechanic-row">
                 <td [attr.data-label]="'SHOPMGMT.MECHANIC_ROSTER.TABLE.NAME' | translate">
                   @if (getDisplayName(mechanic); as displayName) {
