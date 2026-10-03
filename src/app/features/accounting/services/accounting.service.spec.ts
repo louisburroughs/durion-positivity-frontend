@@ -18,6 +18,7 @@ import {
 } from '@durion-sdk/accounting';
 import { AccountingService } from './accounting.service';
 import {
+  AccountingEventTypeOption,
   AccountingEventDetail,
   AccountingEventListItem,
   EventEnvelopeContract,
@@ -49,6 +50,7 @@ describe('AccountingService', () => {
     reprocessSuspendedEvent: vi.fn(),
     getEventReprocessingHistory: vi.fn(),
     listAccountingEvents: vi.fn(),
+    listAccountingEventTypes: vi.fn(),
     getEventProcessingLog: vi.fn(),
     getEventContract: vi.fn(),
   };
@@ -171,6 +173,27 @@ describe('AccountingService', () => {
         triggeredByUserId: 'cashier@example.com',
         reprocessingNotes: 'retry',
       });
+    });
+  });
+
+  describe('listEventTypes()', () => {
+    it('maps the registry to options sorted by display name', () => {
+      accountingEventsStub.listAccountingEventTypes.mockReturnValueOnce(
+        of([
+          { code: 'order.completed', displayName: 'Order completed', sourceDomain: 'order', ingestion: 'KAFKA', postsToGl: true },
+          { code: 'inventory.scrap.posted', displayName: 'Inventory scrap posted', sourceDomain: 'inventory', ingestion: 'KAFKA', postsToGl: true },
+        ]),
+      );
+
+      let result: AccountingEventTypeOption[] | undefined;
+      service.listEventTypes().subscribe(r => {
+        result = r;
+      });
+
+      expect(result).toEqual([
+        { code: 'inventory.scrap.posted', displayName: 'Inventory scrap posted', sourceDomain: 'inventory' },
+        { code: 'order.completed', displayName: 'Order completed', sourceDomain: 'order' },
+      ]);
     });
   });
 

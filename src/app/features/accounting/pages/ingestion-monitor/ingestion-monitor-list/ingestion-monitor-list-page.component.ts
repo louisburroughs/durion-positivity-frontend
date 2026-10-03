@@ -7,6 +7,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
 import {
   AccountingEventListItem,
+  AccountingEventTypeOption,
   IngestionListFilters,
   IngestionProcessingStatus,
 } from '../../../models/accounting.models';
@@ -69,6 +70,27 @@ export class IngestionMonitorListPageComponent implements OnInit {
   private readonly totalsScope = signal<string | null>(null);
   private readonly scope = computed(() => scopeKey(this.filters(), this.size()));
 
+  /**
+   * Valid values of the event type filter (`listAccountingEventTypes`), read once per page. While
+   * PENDING the select is disabled; if the read FAILED the page falls back to the free-text input,
+   * so the filter never becomes unusable. Per-source status, never a bare flag.
+   */
+  readonly eventTypesStatus = signal<'PENDING' | 'OK' | 'FAILED'>('PENDING');
+  private readonly eventTypes = signal<AccountingEventTypeOption[]>([]);
+  /**
+   * The registry plus the type the URL or draft names when the registry does not hold it — the
+   * backend accepts any event type string on submit, so a deep link to an unregistered type must
+   * still show as selected rather than silently reading "All event types".
+   */
+  readonly eventTypeOptions = computed<AccountingEventTypeOption[]>(() => {
+    const types = this.eventTypes();
+    const extra = [this.activeEventType(), this.eventTypeInput().trim()]
+      .filter((code, index, all): code is string => !!code && all.indexOf(code) === index)
+      .filter(code => !types.some(type => type.code === code))
+      .map(code => ({ code, displayName: code, sourceDomain: '' }));
+    return [...extra, ...types];
+  });
+
   /** Form drafts; applied to the URL by {@link applyFilters}. */
   readonly eventTypeInput = signal('');
   readonly statusInput = signal('');
@@ -92,6 +114,7 @@ export class IngestionMonitorListPageComponent implements OnInit {
   readonly showPageStatus = computed(() => this.hasCurrentTotals() && this.page() < this.displayTotalPages());
 
   ngOnInit(): void {
+    this.loadEventTypes();
     this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(map => {
       const rawPage = map.get('page');
       const rawSize = map.get('size');
@@ -160,6 +183,20 @@ export class IngestionMonitorListPageComponent implements OnInit {
           }
           this.pageState.set('error');
         },
+      });
+  }
+
+  loadEventTypes(): void {
+    this.eventTypesStatus.set('PENDING');
+    this.accountingService
+      .listEventTypes()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: types => {
+          this.eventTypes.set(types);
+          this.eventTypesStatus.set('OK');
+        },
+        error: () => this.eventTypesStatus.set('FAILED'),
       });
   }
 

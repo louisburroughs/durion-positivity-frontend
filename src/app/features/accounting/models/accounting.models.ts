@@ -8,6 +8,16 @@ export interface PagedResponse<T> {
   totalElements?: number;
 }
 
+/**
+ * One valid value of the ingestion list's `eventType` filter, from `listAccountingEventTypes`
+ * (`GET /v1/accounting/events/types`). The registry is fixed by the deployed backend code.
+ */
+export interface AccountingEventTypeOption {
+  code: string;
+  displayName: string;
+  sourceDomain: string;
+}
+
 export interface IngestionListFilters {
   eventType?: string;
   processingStatus?: string;

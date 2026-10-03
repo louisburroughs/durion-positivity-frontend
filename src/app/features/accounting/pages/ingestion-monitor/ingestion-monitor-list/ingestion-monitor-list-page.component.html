@@ -9,12 +9,23 @@
     [attr.aria-label]="'ACCOUNTING.INGESTION_MONITOR_LIST.FILTERS_LABEL' | translate" (ngSubmit)="applyFilters()">
     <div class="filter-field">
       <label for="event-type-filter">{{ 'ACCOUNTING.INGESTION_MONITOR_LIST.FILTER_EVENT_TYPE' | translate }}</label>
+      @if (eventTypesStatus() === 'FAILED') {
       <input id="event-type-filter" name="eventType" type="search" data-testid="event-type-filter" autocomplete="off"
         spellcheck="false" aria-describedby="event-type-filter-hint" [ngModel]="eventTypeInput()"
         (ngModelChange)="eventTypeInput.set($event)" />
       <p id="event-type-filter-hint" class="filter-hint">
-        {{ 'ACCOUNTING.INGESTION_MONITOR_LIST.FILTER_EVENT_TYPE_HINT' | translate }}
+        {{ 'ACCOUNTING.INGESTION_MONITOR_LIST.FILTER_EVENT_TYPE_UNAVAILABLE' | translate }}
       </p>
+      } @else {
+      <select id="event-type-filter" name="eventType" data-testid="event-type-filter"
+        [disabled]="eventTypesStatus() === 'PENDING'" [attr.aria-busy]="eventTypesStatus() === 'PENDING'"
+        [ngModel]="eventTypeInput()" (ngModelChange)="eventTypeInput.set($event)">
+        <option value="">{{ 'ACCOUNTING.INGESTION_MONITOR_LIST.FILTER_EVENT_TYPE_ALL' | translate }}</option>
+        @for (type of eventTypeOptions(); track type.code) {
+        <option [value]="type.code">{{ type.displayName === type.code ? type.code : type.displayName + ' (' + type.code + ')' }}</option>
+        }
+      </select>
+      }
     </div>
     <div class="filter-field">
       <label for="status-filter">{{ 'ACCOUNTING.INGESTION_MONITOR_LIST.FILTER_STATUS' | translate }}</label>

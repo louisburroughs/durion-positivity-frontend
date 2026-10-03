@@ -3502,7 +3502,6 @@
       "SUBTITLE": "Monitor ingestion envelope processing status",
       "FILTERS_LABEL": "Ingestion filters",
       "FILTER_EVENT_TYPE": "Event type",
-      "FILTER_EVENT_TYPE_HINT": "Exact event type, for example inventory.adjustment.posted",
       "FILTER_STATUS": "Status",
       "FILTER_STATUS_ALL": "All statuses",
       "APPLY_FILTERS": "Apply filters",
@@ -3531,7 +3530,9 @@
         "REJECTED": "Rejected",
         "QUARANTINED": "Quarantined",
         "SKIPPED": "Skipped"
-      }
+      },
+      "FILTER_EVENT_TYPE_ALL": "All event types",
+      "FILTER_EVENT_TYPE_UNAVAILABLE": "Event type list unavailable. Enter an exact event type, for example inventory.adjustment.posted"
     },
     "INGESTION_MONITOR_DETAIL": {
       "OVERLINE": "Ingestion Monitor",

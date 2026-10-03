@@ -10,6 +10,7 @@ import frFR from '../../../../../../assets/i18n/fr-FR.json';
 import qpsPloc from '../../../../../../assets/i18n/qps-ploc.json';
 import {
   AccountingEventListItem,
+  AccountingEventTypeOption,
   IngestionProcessingStatus,
   PagedResponse,
 } from '../../../models/accounting.models';
@@ -25,6 +26,11 @@ const adjustmentRow: AccountingEventListItem = {
   receivedAt: '2026-09-29T15:13:00Z',
 };
 
+const eventTypes: AccountingEventTypeOption[] = [
+  { code: 'InvoiceIssued', displayName: 'Invoice issued', sourceDomain: 'invoice' },
+  { code: 'inventory.adjustment.posted', displayName: 'Inventory adjustment posted', sourceDomain: 'inventory' },
+];
+
 function pageOf(totalElements: number, totalPages: number): PagedResponse<AccountingEventListItem> {
   return { items: [adjustmentRow], content: [adjustmentRow], totalCount: totalElements, totalPages };
 }
@@ -37,6 +43,7 @@ describe('IngestionMonitorListPageComponent', () => {
   );
 
   const accountingServiceStub = {
+    listEventTypes: vi.fn(),
     listEvents: vi.fn().mockReturnValue(
       of({
         items: [],
@@ -47,6 +54,7 @@ describe('IngestionMonitorListPageComponent', () => {
 
   beforeEach(async () => {
     accountingServiceStub.listEvents.mockClear();
+    accountingServiceStub.listEventTypes.mockReset().mockReturnValue(of(eventTypes));
     await TestBed.configureTestingModule({
       imports: [IngestionMonitorListPageComponent, TranslateModule.forRoot()],
       providers: [
@@ -160,10 +168,60 @@ describe('IngestionMonitorListPageComponent', () => {
       queryParamMap$.next(convertToParamMap({ eventType: 'InvoiceIssued' }));
     });
 
-    it('leaves the event type input editable', () => {
+    const eventTypeControl = (): HTMLSelectElement | HTMLInputElement =>
+      fixture.nativeElement.querySelector('[data-testid="event-type-filter"]');
+    const eventTypeOptionValues = (): string[] =>
+      Array.from((eventTypeControl() as HTMLSelectElement).options).map(option => option.value);
+
+    it('offers the valid event types from the registry as a select', async () => {
       fixture.detectChanges();
-      const input: HTMLInputElement = fixture.nativeElement.querySelector('[data-testid="event-type-filter"]');
-      expect(input.readOnly).toBe(false);
+      await fixture.whenStable();
+      expect(accountingServiceStub.listEventTypes).toHaveBeenCalledTimes(1);
+      expect(eventTypeControl().tagName).toBe('SELECT');
+      expect(eventTypeControl().disabled).toBe(false);
+      expect(eventTypeOptionValues()).toEqual(['', 'InvoiceIssued', 'inventory.adjustment.posted']);
+      expect((eventTypeControl() as HTMLSelectElement).options[1].textContent?.trim())
+        .toBe('Invoice issued (InvoiceIssued)');
+    });
+
+    it('disables the select while the registry read is pending', async () => {
+      accountingServiceStub.listEventTypes.mockReturnValue(new Subject());
+      fixture.detectChanges();
+      // NgModel applies `disabled` in a microtask.
+      await fixture.whenStable();
+      expect(eventTypeControl().tagName).toBe('SELECT');
+      expect(eventTypeControl().disabled).toBe(true);
+      expect(eventTypeControl().getAttribute('aria-busy')).toBe('true');
+    });
+
+    it('keeps a URL event type the registry does not hold selectable', async () => {
+      queryParamMap$.next(convertToParamMap({ eventType: 'custom.unregistered' }));
+      fixture.detectChanges();
+      await fixture.whenStable();
+      expect(eventTypeOptionValues()).toEqual(['', 'custom.unregistered', 'InvoiceIssued', 'inventory.adjustment.posted']);
+      expect(eventTypeControl().value).toBe('custom.unregistered');
+    });
+
+    it('falls back to the free-text input when the registry read fails', () => {
+      accountingServiceStub.listEventTypes.mockReturnValue(throwError(() => ({ status: 500 })));
+      fixture.detectChanges();
+      expect(component.eventTypesStatus()).toBe('FAILED');
+      expect(eventTypeControl().tagName).toBe('INPUT');
+      expect((eventTypeControl() as HTMLInputElement).readOnly).toBe(false);
+    });
+
+    it('applies the selected event type to the URL', async () => {
+      fixture.detectChanges();
+      await fixture.whenStable();
+      const router = TestBed.inject(Router);
+      const spy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+      const select = eventTypeControl() as HTMLSelectElement;
+      select.value = 'inventory.adjustment.posted';
+      select.dispatchEvent(new Event('change'));
+      component.applyFilters();
+      expect(spy).toHaveBeenLastCalledWith([], expect.objectContaining({
+        queryParams: expect.objectContaining({ eventType: 'inventory.adjustment.posted' }),
+      }));
     });
 
     it('sends the URL event type and status to the list read', () => {
