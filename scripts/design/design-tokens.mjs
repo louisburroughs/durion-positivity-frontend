@@ -14,8 +14,8 @@
  * A token new in styles.css is appended with an empty usage note, which
  * --check then reports until someone writes one. A token gone from styles.css
  * is dropped. `var(--x)` becomes the alias "{x}"; a `color-mix(in srgb, …)` is
- * stored as the hex it resolves to in each theme. `--transition-*` is motion,
- * which tokens.json has no family for; it is documented in the README instead.
+ * stored as the hex it resolves to in each theme. `--transition-*` goes in the
+ * `transition` family.
  */
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -104,10 +104,10 @@ function expected(blocks) {
   const color = new Map();
   const shadow = new Map();
   const families = new Map();
-  const scalar = { spacing: new Map(), radius: new Map(), fontWeight: new Map() };
+  const scalar = { spacing: new Map(), radius: new Map(), fontWeight: new Map(), transition: new Map() };
   for (const [name, value] of blocks.base) {
-    if (name.startsWith('transition-')) continue;
-    if (name.startsWith('font-weight-')) scalar.fontWeight.set(name, value);
+    if (name.startsWith('transition-')) scalar.transition.set(name, value);
+    else if (name.startsWith('font-weight-')) scalar.fontWeight.set(name, value);
     else if (name.startsWith('font-')) families.set(name.slice('font-'.length), value);
     else if (name.startsWith('space-')) scalar.spacing.set(name, value);
     else if (name.startsWith('radius-')) scalar.radius.set(name, value);
@@ -167,6 +167,8 @@ doc.shadow.tokens = syncList('shadow', doc.shadow.tokens, want.shadow);
 doc.spacing.tokens = syncList('spacing', doc.spacing.tokens, want.spacing);
 doc.radius.tokens = syncList('radius', doc.radius.tokens, want.radius);
 doc.fontWeight.tokens = syncList('font weight', doc.fontWeight.tokens, want.fontWeight);
+doc.transition ??= { tokens: [] };
+doc.transition.tokens = syncList('transition', doc.transition.tokens, want.transition);
 
 for (const [key, value] of want.families) {
   if (stack(doc.type.families[key] ?? '') !== stack(value)) {

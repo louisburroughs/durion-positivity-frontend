@@ -75,6 +75,7 @@ Stable aliases mapping palette tokens to roles. Shared across light and dark.
 |---|---|---|
 | `--brand-primary` | `--durion-blue-700` | Primary actions, nav |
 | `--brand-primary-soft` | `--durion-blue-50` | Subtle primary tones |
+| `--brand-primary-deep` | `--durion-blue-800` | Hover/pressed shade of a filled `--brand-primary` button — white text 13.7:1. Theme-independent, like the fill it darkens. |
 | `--brand-secondary` | `--durion-graphite-700` | Secondary text/UI |
 | `--brand-accent` | `--durion-teal-400` | **UI accent / highlight** (borders, icons, small fills) |
 | `--accent-strong` | `#006a6a` | **Filled accent button with white text** — teal-400 is only 2.4:1 on white; this is 5.8:1. Never put white text on `--brand-accent`. |

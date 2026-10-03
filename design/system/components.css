@@ -138,7 +138,7 @@ code {
 }
 
 .btn--primary:hover:not(:disabled, [aria-disabled='true']) {
-  background: var(--durion-blue-800);
+  background: var(--brand-primary-deep);
 }
 
 .btn--accent {

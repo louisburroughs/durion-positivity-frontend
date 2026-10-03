@@ -56,7 +56,7 @@ Positivity talks to shop owners, service advisors and technicians. It speaks pla
 - Pages sit on `--themeBackground`; content sits on `--cardBackground`. Body text is `--currentTextColor` (18.7:1 on the light card, 9.3:1 on the dark one).
 - Secondary text, hints and metadata use `--text-muted` (6.2:1 light, 8.0:1 dark). **Never mute text with `opacity`**: it multiplies contrast and fails in dark. `opacity` is for disabled controls and decoration only.
 - Link and interactive text uses `--link-color`, never `--brand-primary` or `--primaryA400` (fill colours that fail as text in dark).
-- Brand fills: `--brand-primary` for primary actions; `--accent-strong` for a teal button with white text (6.4:1), hovering to `--accent-strong-deep`. `--brand-accent` (teal-400) is for borders, icons and small fills and never carries white text (2.4:1); text on it is `--on-accent-fill`.
+- Brand fills: `--brand-primary` for primary actions, hovering to `--brand-primary-deep`; `--accent-strong` for a teal button with white text (6.4:1), hovering to `--accent-strong-deep`. `--brand-accent` (teal-400) is for borders, icons and small fills and never carries white text (2.4:1); text on it is `--on-accent-fill`.
 - Heritage Gold is not the UI accent. Use `--brand-gold` for a fill or border and `--goldA400` for gold text or icons. The logo's gold is locked artwork.
 - Selected and hover fills: `--primaryA100` for a selected option or chip, `--surface-hover` for a row or item hover.
 - Insets inside a card (filter bars, toolbars, zebra rows, notices) use `--surface-inset`; loading placeholders use `--skeleton-bg`. Both follow the theme.

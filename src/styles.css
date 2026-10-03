@@ -63,6 +63,7 @@
   /* Brand Semantic */
   --brand-primary: var(--durion-blue-700);
   --brand-primary-soft: var(--durion-blue-50);
+  --brand-primary-deep: var(--durion-blue-800); /* hover/pressed shade of a --brand-primary fill — white text 13.7:1 */
   --brand-secondary: var(--durion-graphite-700);
   --brand-accent: var(--durion-teal-400);
   --accent-strong: #006a6a; /* AA-safe accent for white text on a filled button (teal-400 is only 2.4:1; this is 5.8:1) */
