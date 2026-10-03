@@ -88,7 +88,7 @@ Positivity talks to shop owners, service advisors and technicians. It speaks pla
 
 ### States and focus
 
-- Keyboard focus is always visible: a 2px solid outline. On surfaces it is `--input-focus-border`; fields also get a 3px halo of the same colour at 20%. On the blue rail and header the outline is `--contrastTextColor` (white), because teal on blue-700 is only 2.2:1.
+- Keyboard focus is always visible: a 2px solid outline. On surfaces it is `--input-focus-border`; fields also get a 3px halo of the same colour at 20%. In the nav rail the outline is `--contrastTextColor` (white), because teal on the blue-700 rail is only 2.2:1. Header controls use `--accentA400`, which holds 3.5:1 on `--navBackground` in light and 10.7:1 in dark.
 - Disabled controls drop to 60% opacity with a not-allowed cursor; they keep `aria-disabled` when they must stay focusable.
 - Invalid fields set `aria-invalid="true"`, switch their border to `--status-error-fg` and show a `.field-error` line in the same colour.
 - Every routed page has four states: idle, loading (skeletons on `--skeleton-bg`), ready, and error (a `.state-panel--error` with the message and a retry).

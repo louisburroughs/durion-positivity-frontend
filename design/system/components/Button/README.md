@@ -12,4 +12,4 @@ Triggers an action; one `.btn` base with a modifier for its weight.
 
 **Don't** put white text on `--brand-accent` (teal-400 is 2.4:1), round buttons into pills, or create page-local button classes.
 
-**Mapping from the app's local vocabularies**: `.btn-primary` → `.btn .btn--primary`; `.btn-secondary` (graphite or `--primary50`) → `.btn .btn--secondary`; `.btn--accent` / `.btn-primary` on `--accent-strong` → `.btn .btn--accent`; `.btn-text`, `.btn-link`, `.btn-ghost` → `.btn .btn--ghost`; `.btn-danger`, `.btn-destructive` → `.btn .btn--danger`.
+**Mapping from the app's local vocabularies** (both classes go on the same element): `.btn-primary` → `class="btn btn--primary"`; `.btn-secondary` (graphite or `--primary50`) → `class="btn btn--secondary"`; `.btn--accent` / `.btn-primary` on `--accent-strong` → `class="btn btn--accent"`; `.btn-text`, `.btn-link`, `.btn-ghost` → `class="btn btn--ghost"`; `.btn-danger`, `.btn-destructive` → `class="btn btn--danger"`.
