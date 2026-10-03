@@ -5,6 +5,9 @@ import { ApiBaseService } from '../../../core/services/api-base.service';
 import { AuthService } from '../../../core/services/auth.service';
 import {
   AccountingEventsService,
+  AccountingEventTypeResponse,
+  AccountingEventTypeResponseIngestionEnum,
+  AccountingEventTypeResponseSourceDomainEnum,
   AccountingExportsService,
   APPaymentsService,
   Configuration as AccountingConfiguration,
@@ -178,18 +181,30 @@ describe('AccountingService', () => {
 
   describe('listEventTypes()', () => {
     it('maps the registry to options sorted by display name', () => {
-      accountingEventsStub.listAccountingEventTypes.mockReturnValueOnce(
-        of([
-          { code: 'order.completed', displayName: 'Order completed', sourceDomain: 'order', ingestion: 'KAFKA', postsToGl: true },
-          { code: 'inventory.scrap.posted', displayName: 'Inventory scrap posted', sourceDomain: 'inventory', ingestion: 'KAFKA', postsToGl: true },
-        ]),
-      );
+      const registry: AccountingEventTypeResponse[] = [
+        {
+          code: 'order.completed',
+          displayName: 'Order completed',
+          sourceDomain: AccountingEventTypeResponseSourceDomainEnum.Order,
+          ingestion: AccountingEventTypeResponseIngestionEnum.Kafka,
+          postsToGl: true,
+        },
+        {
+          code: 'inventory.scrap.posted',
+          displayName: 'Inventory scrap posted',
+          sourceDomain: AccountingEventTypeResponseSourceDomainEnum.Inventory,
+          ingestion: AccountingEventTypeResponseIngestionEnum.Kafka,
+          postsToGl: true,
+        },
+      ];
+      accountingEventsStub.listAccountingEventTypes.mockReturnValueOnce(of(registry));
 
       let result: AccountingEventTypeOption[] | undefined;
       service.listEventTypes().subscribe(r => {
         result = r;
       });
 
+      expect(accountingEventsStub.listAccountingEventTypes).toHaveBeenCalledWith();
       expect(result).toEqual([
         { code: 'inventory.scrap.posted', displayName: 'Inventory scrap posted', sourceDomain: 'inventory' },
         { code: 'order.completed', displayName: 'Order completed', sourceDomain: 'order' },
