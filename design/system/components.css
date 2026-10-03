@@ -272,7 +272,8 @@ code {
   color: var(--status-error-fg);
 }
 
-.field input[readonly] {
+.field input[readonly],
+.field textarea[readonly] {
   background: var(--surface-inset);
 }
 
@@ -297,8 +298,11 @@ code {
 }
 
 .field__input--ledger:focus {
-  border-bottom-color: var(--accentA700);
   box-shadow: none;
+}
+
+.field__input--ledger:focus:not([aria-invalid='true']) {
+  border-bottom-color: var(--accentA700);
 }
 
 .field-row {
