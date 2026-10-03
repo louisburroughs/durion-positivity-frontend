@@ -175,7 +175,9 @@ for (const [key, value] of want.families) {
   }
 }
 for (const key of Object.keys(doc.type.families)) {
-  if (!want.families.has(key)) problems.push(`font family "${key}" has no --font-${key} in src/styles.css`);
+  if (want.families.has(key)) continue;
+  problems.push(`font family "${key}" has no --font-${key} in src/styles.css`);
+  delete doc.type.families[key];
 }
 for (const font of doc.type.fonts) {
   if (!existsSync(resolve(root, font.file))) problems.push(`font file ${font.file} does not exist`);

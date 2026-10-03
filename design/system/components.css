@@ -137,7 +137,7 @@ code {
   color: var(--contrastTextColor);
 }
 
-.btn--primary:hover:not(:disabled) {
+.btn--primary:hover:not(:disabled, [aria-disabled='true']) {
   background: var(--durion-blue-800);
 }
 
@@ -146,7 +146,7 @@ code {
   color: var(--contrastTextColor);
 }
 
-.btn--accent:hover:not(:disabled) {
+.btn--accent:hover:not(:disabled, [aria-disabled='true']) {
   background: var(--accent-strong-deep);
 }
 
@@ -155,7 +155,7 @@ code {
   color: var(--link-color);
 }
 
-.btn--secondary:hover:not(:disabled) {
+.btn--secondary:hover:not(:disabled, [aria-disabled='true']) {
   background: var(--primaryA100);
 }
 
@@ -170,8 +170,8 @@ code {
   color: var(--link-color);
 }
 
-.btn--outline:hover:not(:disabled),
-.btn--ghost:hover:not(:disabled) {
+.btn--outline:hover:not(:disabled, [aria-disabled='true']),
+.btn--ghost:hover:not(:disabled, [aria-disabled='true']) {
   background: var(--surface-hover);
 }
 

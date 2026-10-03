@@ -123,6 +123,7 @@ const SWEPT = [
   'src/app/features/system/**/*.css',
   'src/app/shared/**/*.css',
   'src/app/app.css',
+  'design/system/**/*.css',
 ];
 
 module.exports = {

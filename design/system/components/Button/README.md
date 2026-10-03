@@ -8,7 +8,7 @@ Triggers an action; one `.btn` base with a modifier for its weight.
 
 **The consumer provides** a `<button type="button|submit">` (or an `<a>` for navigation) with a verb-first, sentence-case label: "Create estimate", "Save billing rules". An icon goes before the label as a `material-symbols-rounded` span with `aria-hidden="true"`; an icon-only button needs an `aria-label`.
 
-**States**: hover darkens the fill or adds `--surface-hover`; focus shows a 2px `--input-focus-border` outline offset 2px; disabled is 60% opacity with `aria-disabled` when it must stay focusable.
+**States**: hover darkens the fill or adds `--surface-hover`; focus shows a 2px `--input-focus-border` outline offset 2px; disabled is 60% opacity. Prefer native `disabled`; use `aria-disabled="true"` only when the button must stay focusable (to explain why it is unavailable), and then guard the click handler, because `aria-disabled` does not stop click or keyboard activation. Hover styles skip both.
 
 **Don't** put white text on `--brand-accent` (teal-400 is 2.4:1), round buttons into pills, or create page-local button classes.
 
