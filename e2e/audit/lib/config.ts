@@ -6,14 +6,23 @@ function intEnv(name: string, fallback: number): number {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
-/** Comma-separated list; unset → fallback, set but blank → [] (disables the feature). */
+/**
+ * Comma-separated list, de-duplicated in first-seen order; unset → fallback, set but
+ * blank → [] (disables the feature). Duplicates are dropped because a repeated search
+ * term issues no second request (finders use distinctUntilChanged) and would only
+ * cost a probe its full response timeout.
+ */
 export function listEnv(name: string, fallback: readonly string[]): string[] {
   const raw = process.env[name];
-  if (raw === undefined) return [...fallback];
-  return raw
-    .split(',')
-    .map(s => s.trim())
-    .filter(Boolean);
+  if (raw === undefined) return [...new Set(fallback)];
+  return [
+    ...new Set(
+      raw
+        .split(',')
+        .map(s => s.trim())
+        .filter(Boolean),
+    ),
+  ];
 }
 
 /**

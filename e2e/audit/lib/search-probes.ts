@@ -63,7 +63,9 @@ export async function probeSearch(
   page: Page,
   path: string,
   terms: readonly string[],
+  options: { responseTimeoutMs?: number } = {},
 ): Promise<SearchProbeResult> {
+  const responseTimeoutMs = options.responseTimeoutMs ?? SEARCH_RESPONSE_TIMEOUT_MS;
   const result: SearchProbeResult = { path, finders: 0, responses: 0 };
   try {
     await page.goto(AUDIT_CONFIG.baseUrl + path, {
@@ -83,7 +85,7 @@ export async function probeSearch(
     for (const term of terms) {
       const response = page
         .waitForResponse(res => res.request().method() === 'GET' && isSearchFor(res.url(), term), {
-          timeout: SEARCH_RESPONSE_TIMEOUT_MS,
+          timeout: responseTimeoutMs,
         })
         .catch(() => null);
       await input.fill(term).catch(() => undefined);
