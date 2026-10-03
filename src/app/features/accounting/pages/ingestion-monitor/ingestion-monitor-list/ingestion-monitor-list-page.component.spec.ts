@@ -3,6 +3,10 @@ import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angul
 import { TranslateModule, TranslateService, TranslationObject } from '@ngx-translate/core';
 import { BehaviorSubject, Subject, of, throwError } from 'rxjs';
 import enUS from '../../../../../../assets/i18n/en-US.json';
+import esMX from '../../../../../../assets/i18n/es-MX.json';
+import esUS from '../../../../../../assets/i18n/es-US.json';
+import frCA from '../../../../../../assets/i18n/fr-CA.json';
+import frFR from '../../../../../../assets/i18n/fr-FR.json';
 import {
   AccountingEventListItem,
   IngestionProcessingStatus,
@@ -334,6 +338,65 @@ describe('IngestionMonitorListPageComponent', () => {
       expect(next.getAttribute('aria-disabled')).toBe('true');
     });
 
+    it('keeps the pager, and the focus on it, when the next page fails to load', () => {
+      accountingServiceStub.listEvents.mockReturnValueOnce(of(pageOf(45, 3)));
+      fixture.detectChanges();
+      const pending = new Subject<PagedResponse<AccountingEventListItem>>();
+      accountingServiceStub.listEvents.mockReturnValueOnce(pending);
+      const next: HTMLButtonElement = fixture.nativeElement.querySelector('[data-testid="next-page"]');
+      next.focus();
+
+      queryParamMap$.next(convertToParamMap({ page: '1' }));
+      fixture.detectChanges();
+      pending.error({ status: 500 });
+      fixture.detectChanges();
+
+      expect(component.pageState()).toBe('error');
+      expect(fixture.nativeElement.querySelector('[data-testid="error-state"]')).toBeTruthy();
+      expect(fixture.nativeElement.querySelector('[data-testid="next-page"]')).toBe(next);
+      expect(document.activeElement).toBe(next);
+      expect(next.getAttribute('aria-disabled')).toBeNull();
+    });
+
+    it('redirects a deep link past the last page to the last page, replacing the URL', () => {
+      const router = TestBed.inject(Router);
+      const spy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+      accountingServiceStub.listEvents.mockReturnValueOnce(of({ items: [], totalCount: 45, totalPages: 3 }));
+      queryParamMap$.next(convertToParamMap({ page: '999' }));
+
+      fixture.detectChanges();
+
+      expect(spy).toHaveBeenCalledWith([], expect.objectContaining({
+        queryParams: { page: 2 },
+        queryParamsHandling: 'merge',
+        replaceUrl: true,
+      }));
+      expect(component.pageState()).toBe('loading');
+      expect(fixture.nativeElement.querySelector('[data-testid="event-row"]')).toBeNull();
+    });
+
+    it('redirects a page past the end of an empty result to the first page', () => {
+      const router = TestBed.inject(Router);
+      const spy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+      accountingServiceStub.listEvents.mockReturnValueOnce(of({ items: [], totalCount: 0, totalPages: 0 }));
+      queryParamMap$.next(convertToParamMap({ page: '4' }));
+
+      fixture.detectChanges();
+
+      expect(spy).toHaveBeenCalledWith([], expect.objectContaining({ queryParams: { page: null }, replaceUrl: true }));
+    });
+
+    it('does not redirect the first page of an empty result', () => {
+      const router = TestBed.inject(Router);
+      const spy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+      accountingServiceStub.listEvents.mockReturnValueOnce(of({ items: [], totalCount: 0, totalPages: 0 }));
+
+      fixture.detectChanges();
+
+      expect(spy).not.toHaveBeenCalled();
+      expect(component.pageState()).toBe('ready');
+    });
+
     it('ignores a superseded page that lands after the current one', () => {
       const first = new Subject<PagedResponse<AccountingEventListItem>>();
       const second = new Subject<PagedResponse<AccountingEventListItem>>();
@@ -347,6 +410,43 @@ describe('IngestionMonitorListPageComponent', () => {
       expect(component.events()).toEqual([]);
       expect(component.totalPages()).toBe(2);
     });
+  });
+
+  describe('status option copy (every shipped locale bundle)', () => {
+    const bundles: [string, TranslationObject][] = [
+      ['en-US', enUS as TranslationObject],
+      ['es-US', esUS as TranslationObject],
+      ['es-MX', esMX as TranslationObject],
+      ['fr-CA', frCA as TranslationObject],
+      ['fr-FR', frFR as TranslationObject],
+    ];
+    const statusLabels = (bundle: TranslationObject): Record<string, string> =>
+      ((bundle['ACCOUNTING'] as TranslationObject)['INGESTION_MONITOR_LIST'] as TranslationObject)['STATUS'] as Record<
+        string,
+        string
+      >;
+    const english = statusLabels(enUS as TranslationObject);
+
+    for (const [locale, bundle] of bundles) {
+      it(`renders the ${locale} label for every status option`, () => {
+        const translate = TestBed.inject(TranslateService);
+        translate.setTranslation(locale, bundle);
+        translate.use(locale);
+        fixture.detectChanges();
+
+        const labels = statusLabels(bundle);
+        const options = Array.from(
+          fixture.nativeElement.querySelectorAll('[data-testid="status-filter"] option') as NodeListOf<HTMLOptionElement>,
+        ).slice(1);
+        expect(options.length).toBe(6);
+        for (const option of options) {
+          expect(option.textContent?.trim()).toBe(labels[option.value]);
+          if (locale !== 'en-US') {
+            expect(labels[option.value]).not.toBe(english[option.value]);
+          }
+        }
+      });
+    }
   });
 
   describe('copy (real en-US bundle)', () => {

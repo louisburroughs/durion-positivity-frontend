@@ -101,7 +101,7 @@
   }
   }
 
-  @if (showPager() && (pageState() === 'ready' || pageState() === 'loading')) {
+  @if (showPager()) {
   <nav class="pagination" data-testid="pagination"
     [attr.aria-label]="'ACCOUNTING.INGESTION_MONITOR_LIST.PAGINATION.ARIA' | translate">
     <button type="button" class="btn-secondary" data-testid="previous-page"

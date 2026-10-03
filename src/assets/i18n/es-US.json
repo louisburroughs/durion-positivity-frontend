@@ -3523,14 +3523,14 @@
       "COL_STATUS": "Status",
       "COL_RECEIVED_AT": "Recibido el",
       "STATUS": {
-        "RECEIVED": "Received",
-        "PROCESSING": "Processing",
-        "PROCESSED": "Processed",
-        "FAILED": "Failed",
-        "SUSPENDED": "Suspended",
-        "REJECTED": "Rejected",
-        "QUARANTINED": "Quarantined",
-        "SKIPPED": "Skipped"
+        "RECEIVED": "Recibido",
+        "PROCESSING": "Procesando",
+        "PROCESSED": "Procesado",
+        "FAILED": "Fallido",
+        "SUSPENDED": "Suspendido",
+        "REJECTED": "Rechazado",
+        "QUARANTINED": "En cuarentena",
+        "SKIPPED": "Omitido"
       }
     },
     "INGESTION_MONITOR_DETAIL": {
@@ -3554,14 +3554,14 @@
       "HISTORY_COL_BY": "Activado por",
       "HISTORY_COL_OUTCOME": "Outcome",
       "STATUS": {
-        "RECEIVED": "Received",
-        "PROCESSING": "Processing",
-        "PROCESSED": "Processed",
-        "FAILED": "Failed",
-        "SUSPENDED": "Suspended",
-        "REJECTED": "Rejected",
-        "QUARANTINED": "Quarantined",
-        "SKIPPED": "Skipped"
+        "RECEIVED": "Recibido",
+        "PROCESSING": "Procesando",
+        "PROCESSED": "Procesado",
+        "FAILED": "Fallido",
+        "SUSPENDED": "Suspendido",
+        "REJECTED": "Rechazado",
+        "QUARANTINED": "En cuarentena",
+        "SKIPPED": "Omitido"
       },
       "OUTCOME": {
         "SUCCESS": "Success",
@@ -3908,7 +3908,7 @@
         },
         "EVENTS_FAILED": {
           "TITLE": "Eventos fallidos",
-          "DESCRIPTION": "Consulta todos los eventos de ingesta fallidos y en cuarentena para triaje y reprocesamiento."
+          "DESCRIPTION": "Consulta los eventos de ingesta fallidos para triaje y reprocesamiento."
         },
         "EVENT_DETAIL": {
           "TITLE": "Detalle de evento",

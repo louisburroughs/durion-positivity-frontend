@@ -35,6 +35,8 @@ const MAX_PAGE_SIZE = 100;
 /**
  * Ingestion event list. The URL query (`eventType`, `processingStatus`, `page`, `size`) is the
  * source of truth: the filter form and the pager only navigate, and every query change reloads.
+ * The pager stays mounted through every read outcome, loading and failure included, so focus on
+ * Previous/Next is never dropped to the page body (ADR-0029 §8.7).
  */
 @Component({
   selector: 'app-ingestion-monitor-list-page',
@@ -101,16 +103,24 @@ export class IngestionMonitorListPageComponent implements OnInit {
     // can never land over the one on screen.
     this.loadSubscription?.unsubscribe();
     this.pageState.set('loading');
+    const page = this.page();
     const size = this.size();
     this.loadSubscription = this.accountingService
-      .listEvents(this.filters(), this.page(), size)
+      .listEvents(this.filters(), page, size)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: resp => {
           const total = resp.totalCount ?? resp.totalElements ?? 0;
-          this.events.set(resp.items ?? resp.content ?? []);
+          const totalPages = resp.totalPages ?? Math.ceil(total / size);
           this.totalCount.set(total);
-          this.totalPages.set(resp.totalPages ?? Math.ceil(total / size));
+          this.totalPages.set(totalPages);
+          if (page > 0 && page >= totalPages) {
+            // A deep link or a shrunken result set put the page past the end: land on the last
+            // page that exists (the first when nothing matches) instead of an empty "Page 1000 of 3".
+            this.navigate({ page: totalPages > 1 ? totalPages - 1 : null }, true);
+            return;
+          }
+          this.events.set(resp.items ?? resp.content ?? []);
           this.pageState.set('ready');
         },
         error: err => {
@@ -165,8 +175,8 @@ export class IngestionMonitorListPageComponent implements OnInit {
     this.navigate({ page: page === 0 ? null : page });
   }
 
-  private navigate(queryParams: Params): void {
-    this.router.navigate([], { relativeTo: this.route, queryParams, queryParamsHandling: 'merge' });
+  private navigate(queryParams: Params, replaceUrl = false): void {
+    this.router.navigate([], { relativeTo: this.route, queryParams, queryParamsHandling: 'merge', replaceUrl });
   }
 }
 

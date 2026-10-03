@@ -3908,7 +3908,7 @@
         },
         "EVENTS_FAILED": {
           "TITLE": "Failed Events",
-          "DESCRIPTION": "View all failed and quarantined ingestion events for triage and reprocessing."
+          "DESCRIPTION": "View failed ingestion events for triage and reprocessing."
         },
         "EVENT_DETAIL": {
           "TITLE": "Event Detail",
