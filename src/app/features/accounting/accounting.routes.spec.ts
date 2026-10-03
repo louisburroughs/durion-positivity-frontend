@@ -22,7 +22,7 @@ describe('ACCOUNTING_ROUTES', () => {
 
     const tree = router.parseUrl(router.url);
     expect(router.url.split('?')[0]).toBe('/app/accounting/events');
-    expect(tree.queryParams).toEqual({ processingStatus: 'FAILED,QUARANTINED' });
+    expect(tree.queryParams).toEqual({ processingStatus: 'FAILED' });
   });
 
   it('never resolves the failed-events redirect to a duplicated events segment', async () => {

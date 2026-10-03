@@ -5,11 +5,36 @@
     <p class="page-subtitle">{{ 'ACCOUNTING.INGESTION_MONITOR_LIST.SUBTITLE' | translate }}</p>
   </header>
 
-  <section class="filter-panel" role="search"
-    [attr.aria-label]="'ACCOUNTING.INGESTION_MONITOR_LIST.FILTERS_LABEL' | translate">
-    <label for="event-type-filter">{{ 'ACCOUNTING.INGESTION_MONITOR_LIST.FILTER_EVENT_TYPE' | translate }}</label>
-    <input id="event-type-filter" data-testid="event-type-filter" [value]="filters().eventType ?? ''" readonly />
-  </section>
+  <form class="filter-panel" role="search" data-testid="filter-form"
+    [attr.aria-label]="'ACCOUNTING.INGESTION_MONITOR_LIST.FILTERS_LABEL' | translate" (ngSubmit)="applyFilters()">
+    <div class="filter-field">
+      <label for="event-type-filter">{{ 'ACCOUNTING.INGESTION_MONITOR_LIST.FILTER_EVENT_TYPE' | translate }}</label>
+      <input id="event-type-filter" name="eventType" type="search" data-testid="event-type-filter" autocomplete="off"
+        spellcheck="false" aria-describedby="event-type-filter-hint" [ngModel]="eventTypeInput()"
+        (ngModelChange)="eventTypeInput.set($event)" />
+      <p id="event-type-filter-hint" class="filter-hint">
+        {{ 'ACCOUNTING.INGESTION_MONITOR_LIST.FILTER_EVENT_TYPE_HINT' | translate }}
+      </p>
+    </div>
+    <div class="filter-field">
+      <label for="status-filter">{{ 'ACCOUNTING.INGESTION_MONITOR_LIST.FILTER_STATUS' | translate }}</label>
+      <select id="status-filter" name="processingStatus" data-testid="status-filter" [ngModel]="statusInput()"
+        (ngModelChange)="statusInput.set($event)">
+        <option value="">{{ 'ACCOUNTING.INGESTION_MONITOR_LIST.FILTER_STATUS_ALL' | translate }}</option>
+        @for (status of statuses; track status) {
+        <option [value]="status">{{ ('ACCOUNTING.INGESTION_MONITOR_LIST.STATUS.' + status) | translate }}</option>
+        }
+      </select>
+    </div>
+    <div class="filter-actions">
+      <button type="submit" class="btn-primary" data-testid="apply-filters">
+        {{ 'ACCOUNTING.INGESTION_MONITOR_LIST.APPLY_FILTERS' | translate }}
+      </button>
+      <button type="button" class="btn-secondary" data-testid="clear-filters" (click)="clearFilters()">
+        {{ 'ACCOUNTING.INGESTION_MONITOR_LIST.CLEAR_FILTERS' | translate }}
+      </button>
+    </div>
+  </form>
 
   @if (pageState() === 'loading') {
   <section class="state-panel" data-testid="loading-state" aria-live="polite" aria-busy="true">
@@ -74,5 +99,28 @@
     </table>
   </div>
   }
+  }
+
+  @if (hasLoaded()) {
+  <nav class="pagination" data-testid="pagination"
+    [attr.aria-label]="'ACCOUNTING.INGESTION_MONITOR_LIST.PAGINATION.ARIA' | translate">
+    <button type="button" class="btn-secondary" data-testid="previous-page"
+      [attr.aria-disabled]="pageState() === 'loading' || !hasPreviousPage() ? true : null" (click)="previousPage()">
+      {{ 'ACCOUNTING.INGESTION_MONITOR_LIST.PAGINATION.PREVIOUS' | translate }}
+    </button>
+    <span class="pagination-status" data-testid="pagination-status" aria-live="polite">
+      @if (showPageStatus()) {
+      {{ 'ACCOUNTING.INGESTION_MONITOR_LIST.PAGINATION.STATUS' | translate:{
+        page: (page() + 1 | number),
+        totalPages: (displayTotalPages() | number),
+        totalElements: (totalCount() | number)
+      } }}
+      }
+    </span>
+    <button type="button" class="btn-secondary" data-testid="next-page"
+      [attr.aria-disabled]="pageState() === 'loading' || !hasNextPage() ? true : null" (click)="nextPage()">
+      {{ 'ACCOUNTING.INGESTION_MONITOR_LIST.PAGINATION.NEXT' | translate }}
+    </button>
+  </nav>
   }
 </main>

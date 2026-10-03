@@ -3502,6 +3502,17 @@
       "SUBTITLE": "Monitor ingestion envelope processing status",
       "FILTERS_LABEL": "Ingestion filters",
       "FILTER_EVENT_TYPE": "Event type",
+      "FILTER_EVENT_TYPE_HINT": "Exact event type, for example inventory.adjustment.posted",
+      "FILTER_STATUS": "Status",
+      "FILTER_STATUS_ALL": "All statuses",
+      "APPLY_FILTERS": "Apply filters",
+      "CLEAR_FILTERS": "Clear filters",
+      "PAGINATION": {
+        "ARIA": "Ingestion event pages",
+        "PREVIOUS": "Previous",
+        "NEXT": "Next",
+        "STATUS": "Page {{page}} of {{totalPages}} ({{totalElements}} total)"
+      },
       "ERROR": "Failed to load ingestion events.",
       "EMPTY": "No ingestion events match the selected filters.",
       "TABLE_ARIA": "Ingestion events table",
@@ -3897,7 +3908,7 @@
         },
         "EVENTS_FAILED": {
           "TITLE": "Failed Events",
-          "DESCRIPTION": "View all failed and quarantined ingestion events for triage and reprocessing."
+          "DESCRIPTION": "View failed ingestion events for triage and reprocessing."
         },
         "EVENT_DETAIL": {
           "TITLE": "Event Detail",

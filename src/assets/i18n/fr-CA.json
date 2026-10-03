@@ -3502,6 +3502,17 @@
       "SUBTITLE": "Surveiller l’état de traitement des enveloppes d’ingestion",
       "FILTERS_LABEL": "Filtres d’ingestion",
       "FILTER_EVENT_TYPE": "Type d’événement",
+      "FILTER_EVENT_TYPE_HINT": "Type d’événement exact, par exemple inventory.adjustment.posted",
+      "FILTER_STATUS": "Statut",
+      "FILTER_STATUS_ALL": "Tous les statuts",
+      "APPLY_FILTERS": "Appliquer les filtres",
+      "CLEAR_FILTERS": "Effacer les filtres",
+      "PAGINATION": {
+        "ARIA": "Pages des événements d’ingestion",
+        "PREVIOUS": "Précédent",
+        "NEXT": "Suivant",
+        "STATUS": "Page {{page}} sur {{totalPages}} ({{totalElements}} au total)"
+      },
       "ERROR": "Échec du chargement des événements d’ingestion.",
       "EMPTY": "Aucun événement d’ingestion ne correspond aux filtres sélectionnés.",
       "TABLE_ARIA": "Tableau des événements d’ingestion",
@@ -3512,14 +3523,14 @@
       "COL_STATUS": "Status",
       "COL_RECEIVED_AT": "Reçu le",
       "STATUS": {
-        "RECEIVED": "Received",
-        "PROCESSING": "Processing",
-        "PROCESSED": "Processed",
-        "FAILED": "Failed",
-        "SUSPENDED": "Suspended",
-        "REJECTED": "Rejected",
-        "QUARANTINED": "Quarantined",
-        "SKIPPED": "Skipped"
+        "RECEIVED": "Reçu",
+        "PROCESSING": "En traitement",
+        "PROCESSED": "Traité",
+        "FAILED": "Échoué",
+        "SUSPENDED": "Suspendu",
+        "REJECTED": "Rejeté",
+        "QUARANTINED": "En quarantaine",
+        "SKIPPED": "Ignoré"
       }
     },
     "INGESTION_MONITOR_DETAIL": {
@@ -3543,14 +3554,14 @@
       "HISTORY_COL_BY": "Déclenché par",
       "HISTORY_COL_OUTCOME": "Outcome",
       "STATUS": {
-        "RECEIVED": "Received",
-        "PROCESSING": "Processing",
-        "PROCESSED": "Processed",
-        "FAILED": "Failed",
-        "SUSPENDED": "Suspended",
-        "REJECTED": "Rejected",
-        "QUARANTINED": "Quarantined",
-        "SKIPPED": "Skipped"
+        "RECEIVED": "Reçu",
+        "PROCESSING": "En traitement",
+        "PROCESSED": "Traité",
+        "FAILED": "Échoué",
+        "SUSPENDED": "Suspendu",
+        "REJECTED": "Rejeté",
+        "QUARANTINED": "En quarantaine",
+        "SKIPPED": "Ignoré"
       },
       "OUTCOME": {
         "SUCCESS": "Success",
@@ -3897,7 +3908,7 @@
         },
         "EVENTS_FAILED": {
           "TITLE": "Événements échoués",
-          "DESCRIPTION": "Consultez tous les événements d'ingestion échoués et en quarantaine pour triage et retraitement."
+          "DESCRIPTION": "Consultez les événements d'ingestion échoués pour triage et retraitement."
         },
         "EVENT_DETAIL": {
           "TITLE": "Détail de l'événement",
