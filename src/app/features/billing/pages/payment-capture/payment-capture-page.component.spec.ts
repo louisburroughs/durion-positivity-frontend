@@ -1,9 +1,11 @@
 import { formatCurrency, getCurrencySymbol } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 import { afterEach, describe, it, expect, beforeEach, vi } from 'vitest';
+import { AuthService } from '../../../../core/services/auth.service';
 import { LocaleService } from '../../../../core/services/locale.service';
 import { PaymentTransactionRef } from '../../models/billing.models';
 import { BillingTransportService } from '../../services/billing-transport.service';
@@ -34,6 +36,14 @@ const capturedTxFixture: PaymentTransactionRef = {
   capturedAt: '2026-03-30T10:01:00Z',
 };
 
+/** `null` = token with no permission claim (permissions unknown), as in AuthService. */
+const session: { permissions: string[] | null } = { permissions: null };
+const authStub = {
+  permissionsKnown: () => session.permissions !== null,
+  hasAnyPermission: (permissions: readonly string[]) =>
+    permissions.some(p => session.permissions?.includes(p) ?? false),
+};
+
 describe('PaymentCapturePageComponent', () => {
   let fixture: ComponentFixture<PaymentCapturePageComponent>;
   let component: PaymentCapturePageComponent;
@@ -44,6 +54,7 @@ describe('PaymentCapturePageComponent', () => {
 
   beforeEach(async () => {
     billingTransportStub.initiateAndCapturePayment.mockReset();
+    session.permissions = null;
 
     await TestBed.configureTestingModule({
       imports: [PaymentCapturePageComponent, TranslateModule.forRoot()],
@@ -51,6 +62,7 @@ describe('PaymentCapturePageComponent', () => {
         provideRouter([]),
         { provide: BillingTransportService, useValue: billingTransportStub },
         { provide: ActivatedRoute, useValue: routeStub },
+        { provide: AuthService, useValue: authStub },
       ],
     }).compileComponents();
 
@@ -107,6 +119,114 @@ describe('PaymentCapturePageComponent', () => {
     expect(component.state()).toBe('error');
     expect(component.errorKey()).toBe('BILLING.PAYMENT.ERROR.CAPTURE');
     expect(billingTransportStub.initiateAndCapturePayment).not.toHaveBeenCalled();
+  });
+
+  describe('payment limit override (#431)', () => {
+    const warning = (): string =>
+      (fixture.nativeElement as HTMLElement).querySelector('#payment-limit-warning')?.textContent?.trim() ?? '';
+    const submit = (): HTMLButtonElement =>
+      (fixture.nativeElement as HTMLElement).querySelector('.payment-capture__submit')!;
+
+    it('warns and blocks a payment above 500.00 for a caller without invoice:payment:limit_override', () => {
+      session.permissions = ['invoice:payment:process'];
+      component.setAmount('500.01');
+      fixture.detectChanges();
+
+      expect(component.limitOverrideRequired()).toBe(true);
+      expect(warning()).not.toBe('');
+      expect(submit().disabled).toBe(true);
+
+      component.initiateAndCapture('CARD', 500.01);
+      expect(billingTransportStub.initiateAndCapturePayment).not.toHaveBeenCalled();
+      expect(component.state()).toBe('error');
+      expect(component.errorKey()).toBe('BILLING.PAYMENT.ERROR.LIMIT_OVERRIDE_REQUIRED');
+    });
+
+    it('allows exactly 500.00 without the override', () => {
+      session.permissions = ['invoice:payment:process'];
+      component.setAmount('500');
+      fixture.detectChanges();
+
+      expect(warning()).toBe('');
+      expect(submit().disabled).toBe(false);
+    });
+
+    it('allows a payment above 500.00 for a caller holding the override', () => {
+      session.permissions = ['invoice:payment:process', 'invoice:payment:limit_override'];
+      component.setAmount('750');
+      fixture.detectChanges();
+
+      expect(warning()).toBe('');
+      expect(submit().disabled).toBe(false);
+    });
+
+    it('treats a token without a permission claim as granted', () => {
+      component.setAmount('750');
+      fixture.detectChanges();
+
+      expect(component.limitOverrideRequired()).toBe(false);
+    });
+  });
+
+  it('keeps the limit warning live region mounted while it is empty (ADR-0029 §8.8)', () => {
+    session.permissions = ['invoice:payment:process'];
+    const region = (): HTMLElement | null =>
+      (fixture.nativeElement as HTMLElement).querySelector('#payment-limit-warning[role="status"]');
+    const before = region();
+    expect(before).not.toBeNull();
+    expect(before!.classList.contains('sr-only')).toBe(true);
+
+    component.setAmount('900');
+    fixture.detectChanges();
+    expect(region()).toBe(before);
+    expect(region()!.classList.contains('payment-capture__warning')).toBe(true);
+  });
+
+  describe('invoice:payment:process gate (ADR-0040 §6a)', () => {
+    const submit = (): HTMLButtonElement =>
+      (fixture.nativeElement as HTMLElement).querySelector('.payment-capture__submit')!;
+
+    it('disables the submit control for a caller without invoice:payment:process', () => {
+      session.permissions = ['invoice:invoice:view'];
+      component.setAmount('150');
+      fixture.detectChanges();
+
+      expect(component.canProcessPayment()).toBe(false);
+      expect(submit().disabled).toBe(true);
+    });
+
+    it('refuses a direct call without calling the transport', () => {
+      session.permissions = ['invoice:invoice:view'];
+      component.setAmount('150');
+
+      component.initiateAndCapture('CARD', 150);
+
+      expect(billingTransportStub.initiateAndCapturePayment).not.toHaveBeenCalled();
+      expect(component.state()).toBe('error');
+      expect(component.errorKey()).toBe('BILLING.PAYMENT.ERROR.CAPTURE_PERMISSION_DENIED');
+    });
+
+    it('enables the control for a caller holding the code', () => {
+      session.permissions = ['invoice:payment:process'];
+      component.setAmount('150');
+      fixture.detectChanges();
+
+      expect(submit().disabled).toBe(false);
+    });
+  });
+
+  it('maps a 403 to a localized permission error, and a location-scope 403 to its own', () => {
+    billingTransportStub.initiateAndCapturePayment.mockReturnValueOnce(
+      throwError(() => new HttpErrorResponse({ status: 403 })),
+    );
+    component.initiateAndCapture('CARD', 150);
+    expect(component.errorKey()).toBe('BILLING.PAYMENT.ERROR.CAPTURE_PERMISSION_DENIED');
+
+    billingTransportStub.initiateAndCapturePayment.mockReturnValueOnce(
+      throwError(() => new HttpErrorResponse({ status: 403, error: { code: 'LOCATION_SCOPE_DENIED' } })),
+    );
+    component.initiateAndCapture('CARD', 150);
+    expect(component.errorKey()).toBe('BILLING.PAYMENT.ERROR.LOCATION_SCOPE_DENIED');
   });
 
   describe('captured amount locale (#408)', () => {

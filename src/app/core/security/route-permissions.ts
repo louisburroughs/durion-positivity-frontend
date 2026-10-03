@@ -599,9 +599,14 @@ export const LOCATION_PAGE = {
   bulkImport: ['bulkImport:upload:execute'],
 } as const satisfies Record<string, readonly string[]>;
 
-/** `/app/billing/*` — only the invoice read is permissioned; see the spec's exclusions. */
+/**
+ * `/app/billing/*`. `paymentCapture` gates the payment-capture page on the one code every
+ * `POST /v1/invoices/{id}/payments` needs (`PaymentController.initiatePayment`'s
+ * `@PreAuthorize`, durion-positivity-backend#2393); a session without it could never submit there.
+ */
 export const BILLING_PAGE = {
   invoiceView: ['invoice:invoice:view'],
+  paymentCapture: ['invoice:payment:process'],
 } as const satisfies Record<string, readonly string[]>;
 
 /**
@@ -642,6 +647,13 @@ export const BILLING_PAGE = {
  * neither `PaymentVoidRefundPageComponent` mode reliably has the *authorization* timestamp today
  * (`getInvoicePayment`'s `createdAt` is the payment intent's own creation, not necessarily the
  * capture/authorization instant) — wire a pre-warn once that's confirmed against the entity.
+ *
+ * The four payment-initiation codes (durion-positivity-backend#2393, BILL-DEC-008/010) are
+ * enforced by `PaymentServiceImpl`: `paymentProcess` on every initiate, `paymentLimitOverride` only
+ * when the amount exceeds 500.00, `paymentFlowSelect` only for an `AUTH_ONLY` flow, and
+ * `paymentCapture` on the separate capture of an `AUTHORIZED` intent. The payment-capture page
+ * pre-warns on `paymentLimitOverride` (`PaymentCapturePageComponent.limitOverrideRequired`); it
+ * always sends `SALE_CAPTURE`, so it needs neither `paymentFlowSelect` nor `paymentCapture`.
  */
 export const BILLING_SECTION = {
   refundExecute: ['invoice:payment:refund'],
@@ -649,6 +661,10 @@ export const BILLING_SECTION = {
   receiptGenerate: ['invoice:receipt:generate'],
   receiptReprintOverride: ['invoice:receipt:reprint_override'],
   paymentOverride: ['invoice:payment:override'],
+  paymentProcess: ['invoice:payment:process'],
+  paymentCapture: ['invoice:payment:capture'],
+  paymentFlowSelect: ['invoice:payment:flow_select'],
+  paymentLimitOverride: ['invoice:payment:limit_override'],
 } as const satisfies Record<string, readonly string[]>;
 
 /** `/app/order/*` — carts, lines, price overrides, cancellation. */

@@ -107,6 +107,13 @@
   padding: var(--space-3) var(--space-4);
 }
 
+.payment-capture__warning {
+  margin: var(--space-2) 0 0;
+  background: var(--status-warning-bg); color: var(--status-warning-fg);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+}
+
 .payment-capture__submitting {
   display: inline-flex;
   align-items: center;

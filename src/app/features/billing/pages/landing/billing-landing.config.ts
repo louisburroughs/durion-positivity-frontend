@@ -47,6 +47,7 @@ export const BILLING_LANDING_CONFIG: LandingPageConfig = {
           titleKey: 'BILLING.LANDING.CARD.PAYMENT_CAPTURE.TITLE',
           descriptionKey: 'BILLING.LANDING.CARD.PAYMENT_CAPTURE.DESCRIPTION',
           ctaKey: 'BILLING.LANDING.ACTION.OPEN_PAYMENT_CAPTURE',
+          permissions: BILLING_PAGE.paymentCapture,
           buildCommands: inv('payment-capture'),
         },
         {

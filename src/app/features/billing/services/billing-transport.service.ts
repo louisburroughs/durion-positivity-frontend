@@ -111,6 +111,13 @@ export class BillingTransportService {
       ?? `${this.configuration.basePath}/v1/invoices/${invoiceId}/artifacts/${artifactRefId}/download?token=${token.downloadToken}`;
   }
 
+  /**
+   * Issue #431: a `SALE_CAPTURE` initiate authorizes *and* captures in one step — the intent comes
+   * back `CAPTURED` (`PaymentServiceImpl.createAndProcessPaymentIntent`, durion-positivity-backend#2393),
+   * and `capturePayment` on it answers 409 (not `AUTHORIZED`) or 403 (no `invoice:payment:capture`)
+   * after the card was already charged. So the transaction ref is built from the initiate response,
+   * and `capturePayment` runs only for an intent the backend left `AUTHORIZED` (an `AUTH_ONLY` flow).
+   */
   initiateAndCapturePayment(
     invoiceId: string,
     paymentMethod: PaymentMethod,
@@ -128,6 +135,10 @@ export class BillingTransportService {
         const paymentId = result.paymentIntentId;
         if (!paymentId) {
           return throwError(() => new Error('Missing payment intent identifier from SDK response.'));
+        }
+
+        if (result.status !== InitiatePaymentResponseStatusEnum.Authorized) {
+          return of(this.toPaymentTransactionRef(invoiceId, result, amount));
         }
 
         const captureRequest: CaptureAmountRequest = {

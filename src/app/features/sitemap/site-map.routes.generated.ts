@@ -39,7 +39,7 @@ export const SITE_MAP_ROUTES: readonly SiteMapRouteEntry[] = [
   { route: '/app/admin', label: "", labelKey: "", dynamic: false, roles: ['ROLE_ADMIN'] },
   { route: '/app/billing', label: "", labelKey: "", dynamic: false },
   { route: '/app/billing/invoices/:invoiceId', label: "Invoices", labelKey: "SITEMAP.LABEL.INVOICES", dynamic: true, permissions: ['invoice:invoice:view'] },
-  { route: '/app/billing/invoices/:invoiceId/payment-capture', label: "Payment Capture", labelKey: "SITEMAP.LABEL.PAYMENT_CAPTURE", dynamic: true },
+  { route: '/app/billing/invoices/:invoiceId/payment-capture', label: "Payment Capture", labelKey: "SITEMAP.LABEL.PAYMENT_CAPTURE", dynamic: true, permissions: ['invoice:payment:process'] },
   { route: '/app/billing/invoices/:invoiceId/payments/:paymentId/void-refund', label: "Void Refund", labelKey: "SITEMAP.LABEL.VOID_REFUND", dynamic: true },
   { route: '/app/billing/invoices/:invoiceId/receipts', label: "Receipts", labelKey: "SITEMAP.LABEL.RECEIPTS", dynamic: true },
   { route: '/app/billing/invoices/:invoiceId/receipts/:receiptId', label: "Receipts", labelKey: "SITEMAP.LABEL.RECEIPTS", dynamic: true },

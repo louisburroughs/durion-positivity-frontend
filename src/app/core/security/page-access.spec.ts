@@ -140,7 +140,6 @@ const UNGATED_BY_DESIGN: Readonly<Record<string, string>> = {
   '/app/workexec/workorders/:id/operational-context': 'getOperationalContext is AUTHENTICATED-only',
   '/app/people/timekeeping/work-session': 'work-session start/stop are AUTHENTICATED-only',
   '/app/people/timekeeping/work-session/:sessionId/submit': 'submitWorkSession is AUTHENTICATED-only',
-  '/app/billing/invoices/:invoiceId/payment-capture': 'payment initiate/capture are AUTHENTICATED-only',
   '/app/billing/invoices/:invoiceId/payments/:paymentId/void-refund': 'void/refund are AUTHENTICATED-only',
   '/app/billing/invoices/:invoiceId/receipts': 'receipt generate/reprint are AUTHENTICATED-only',
   '/app/billing/invoices/:invoiceId/receipts/:receiptId': 'receipt generate/reprint are AUTHENTICATED-only',
