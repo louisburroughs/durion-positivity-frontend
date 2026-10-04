@@ -69,8 +69,8 @@
     }
 
     @if (state() === 'ready' && parties().length) {
-      <div class="table-wrap">
-        <table class="party-table" [attr.aria-label]="'CRM.CUSTOMER_LIST.TABLE_ARIA' | translate">
+      <div class="table-wrap table-wrap--scroll">
+        <table class="data-table" [attr.aria-label]="'CRM.CUSTOMER_LIST.TABLE_ARIA' | translate">
           <thead>
             <tr>
               <th scope="col"
@@ -87,10 +87,10 @@
                   <span class="sort-icon" aria-hidden="true">{{ sortField() === 'customerNumber' ? (sortDir() === 'asc' ? '↑' : '↓') : '↕' }}</span>
                 </button>
               </th>
-              <th>{{ 'CRM.CUSTOMER_LIST.COL.PRIMARY_CONTACT' | translate }}</th>
-              <th>{{ 'CRM.CUSTOMER_LIST.COL.PHONE' | translate }}</th>
-              <th>{{ 'CRM.CUSTOMER_LIST.COL.STATUS' | translate }}</th>
-              <th>{{ 'CRM.CUSTOMER_LIST.COL.VEHICLES' | translate }}</th>
+              <th scope="col">{{ 'CRM.CUSTOMER_LIST.COL.PRIMARY_CONTACT' | translate }}</th>
+              <th scope="col">{{ 'CRM.CUSTOMER_LIST.COL.PHONE' | translate }}</th>
+              <th scope="col">{{ 'CRM.CUSTOMER_LIST.COL.STATUS' | translate }}</th>
+              <th scope="col" class="num">{{ 'CRM.CUSTOMER_LIST.COL.VEHICLES' | translate }}</th>
             </tr>
           </thead>
           <tbody>
@@ -99,11 +99,11 @@
                    focusable keyboard path to the same route (issue #392). -->
               <tr class="party-row" (click)="onRowClick($event, party.partyId, party.customerNumber)">
                 <td>
-                  <a class="party-row__name party-row__link"
+                  <a class="row-name"
                     [routerLink]="['/app/crm/party', party.partyId]"
                     [state]="{ customerNumber: party.customerNumber }">{{ party.legalName }}</a>
                   @if (party.dba) {
-                    <span class="party-row__sub">{{ 'CRM.CUSTOMER_LIST.DBA' | translate: { dba: party.dba } }}</span>
+                    <span class="row-sub">{{ 'CRM.CUSTOMER_LIST.DBA' | translate: { dba: party.dba } }}</span>
                   }
                 </td>
                 <td>
@@ -115,9 +115,9 @@
                 </td>
                 <td>
                   @if (primaryContact(party); as contact) {
-                    <span class="party-row__name">{{ contact.name }}</span>
+                    <span class="row-name">{{ contact.name }}</span>
                     @if (contact.email) {
-                      <span class="party-row__sub">{{ contact.email }}</span>
+                      <span class="row-sub">{{ contact.email }}</span>
                     }
                   } @else {
                     <span class="party-row__empty">—</span>
@@ -137,7 +137,7 @@
                     <span class="party-row__empty">—</span>
                   }
                 </td>
-                <td class="party-row__vehicles">{{ party.vehicleCount ?? party.vehicles?.length ?? 0 }}</td>
+                <td class="num party-row__vehicles">{{ party.vehicleCount ?? party.vehicles?.length ?? 0 }}</td>
               </tr>
             }
           </tbody>

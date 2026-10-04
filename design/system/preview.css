@@ -1,9 +1,11 @@
 /* Preview harness for components/<Name>/preview.html and index.html: the app's
-   global stylesheet (tokens, fonts, reset, globals), the shared listbox
-   chrome, then the design-system layer. Serve from the repository root so the
-   relative imports resolve (see README.md, "Viewing the previews"). */
+   global stylesheet (tokens, fonts, reset, globals), the shared listbox and
+   data-table stylesheets, then the design-system layer. Serve from the
+   repository root so the relative imports resolve (see README.md, "Viewing
+   the previews"). */
 @import '../../src/styles.css';
 @import '../../src/app/shared/styles/listbox.css';
+@import '../../src/app/shared/styles/data-table.css';
 @import 'components.css';
 
 /* styles.css locks html/body to the viewport for the app shell; a preview scrolls. */
