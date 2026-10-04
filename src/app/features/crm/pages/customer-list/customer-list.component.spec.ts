@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { By } from '@angular/platform-browser';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import enUS from '../../../../../assets/i18n/en-US.json';
 import { of, throwError } from 'rxjs';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { CustomerListComponent } from './customer-list.component';
@@ -20,15 +21,6 @@ const partyPage = (parties: ReturnType<typeof party>[], totalCount: number) => (
   pageSize: 25,
 });
 
-// Mirrors the CRM.CUSTOMER_LIST keys (en-US) the header and caption assertions read back.
-const TRANSLATIONS = {
-  CRM: {
-    CUSTOMER_LIST: {
-      COL: { CUSTOMER_NUMBER: 'Customer #', PHONE: 'Phone', STATUS: 'Status' },
-      TABLE_ARIA: 'Customer directory',
-    },
-  },
-};
 
 describe('CustomerListComponent', () => {
   let fixture: ComponentFixture<CustomerListComponent>;
@@ -47,7 +39,7 @@ describe('CustomerListComponent', () => {
     }).compileComponents();
 
     const translate = TestBed.inject(TranslateService);
-    translate.setTranslation('en-US', TRANSLATIONS);
+    translate.setTranslation('en-US', enUS);
     translate.use('en-US');
 
     fixture = TestBed.createComponent(CustomerListComponent);
@@ -120,7 +112,7 @@ describe('CustomerListComponent', () => {
 
     // The table is named by a caption, not an aria-label (DataTable contract).
     const table = fixture.debugElement.query(By.css('table.data-table')).nativeElement as HTMLTableElement;
-    expect(table.caption?.textContent?.trim()).toBe('Customer directory');
+    expect(table.caption?.textContent?.trim()).toBe(enUS.CRM.CUSTOMER_LIST.TABLE_ARIA);
     expect(table.hasAttribute('aria-label')).toBe(false);
 
     // shared/styles/data-table.css: the link keeps its underline because colour alone
