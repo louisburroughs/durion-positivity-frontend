@@ -1395,7 +1395,7 @@ app-workorder-detail-page .alert--warn {
 }
 
 app-workorder-detail-page .alert--success {
-  background: var(--status-success-bg); color: var(--status-success-fg); /* functional-success (#2e7d32) is 4.5:1 on the light tint and 2.5:1 on the dark one; the -fg pair is 6.9:1 / 7.6:1 */
+  background: var(--status-success-bg); color: var(--status-success-fg); /* functional-success (#2e7d32) is 4.5:1 on the light tint and 2.4:1 on the dark one; the -fg pair is 6.9:1 / 7.6:1 */
   border: 1px solid var(--functional-success);
   border-radius: var(--radius-sm);
   padding: 0.75rem 1rem;
