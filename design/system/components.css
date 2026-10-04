@@ -3,7 +3,8 @@
    The classes the design system adds on top of src/styles.css. styles.css
    already owns the tokens, the reset, form-element defaults, .alert,
    .dur-status, .dur-elevation-*, .sr-only and the icon class; the listbox
-   chrome lives in src/app/shared/styles/listbox.css and the shell in its own
+   chrome and the data table live in src/app/shared/styles/ (listbox.css,
+   data-table.css), which pages already include, and the shell in its own
    components. This file is not loaded by the app: it is the target vocabulary
    that page stylesheets move onto, and what the previews in components/ render
    with. Every value is a token from src/styles.css; see README.md.
@@ -401,102 +402,8 @@ code {
   background: var(--skeleton-bg);
 }
 
-/* ── Data table ───────────────────────────────────────────────────────────── */
-.table-wrap {
-  overflow-x: auto;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  background: var(--cardBackground);
-}
-
-/* A sticky header needs a scroll container with a bounded height, and the
-   wrapper is that container (overflow makes it one). A plain .table-wrap only
-   scrolls sideways, so its header scrolls away with the page; a long list uses
-   .table-wrap--scroll and scrolls inside its own region. */
-.table-wrap--scroll {
-  max-height: 60vh;
-  overflow: auto;
-}
-
-.table-wrap--scroll .data-table thead th {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  box-shadow: inset 0 -1px 0 var(--border-color); /* collapsed borders don't travel with a sticky cell */
-}
-
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.875rem;
-}
-
-.data-table th,
-.data-table td {
-  padding: var(--space-3) var(--space-4);
-  border-bottom: 1px solid var(--border-color);
-  text-align: left;
-  vertical-align: top;
-}
-
-.data-table thead th {
-  background: var(--cardBackground);
-  font-size: 0.8125rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
-.data-table tbody tr {
-  transition: background var(--transition-fast);
-}
-
-.data-table tbody tr:hover {
-  background: var(--surface-hover);
-}
-
-.data-table tbody tr:last-child td {
-  border-bottom: none;
-}
-
-.data-table .num {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
-
-.data-table .row-name {
-  display: block;
-  font-weight: 600;
-}
-
-/* The underline stays: --link-color is 2.2:1 against body text in light and
-   1.5:1 in dark, too close for colour alone to mark a link (WCAG 1.4.1). */
-.data-table a.row-name {
-  color: var(--link-color);
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
-.data-table a.row-name:hover {
-  text-decoration-thickness: 2px;
-}
-
-.data-table .row-sub {
-  display: block;
-  margin-top: 2px;
-  font-size: 0.8rem;
-  color: var(--text-muted);
-}
-
-.data-table code {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .btn,
-  .data-table tbody tr {
+  .btn {
     transition: none;
   }
 }

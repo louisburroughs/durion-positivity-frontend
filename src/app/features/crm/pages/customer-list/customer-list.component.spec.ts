@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { By } from '@angular/platform-browser';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import enUS from '../../../../../assets/i18n/en-US.json';
 import { of, throwError } from 'rxjs';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { CustomerListComponent } from './customer-list.component';
@@ -20,14 +21,6 @@ const partyPage = (parties: ReturnType<typeof party>[], totalCount: number) => (
   pageSize: 25,
 });
 
-// Mirrors the CRM.CUSTOMER_LIST column keys the header assertion reads back.
-const TRANSLATIONS = {
-  CRM: {
-    CUSTOMER_LIST: {
-      COL: { CUSTOMER_NUMBER: 'Customer #', PHONE: 'Phone', STATUS: 'Status' },
-    },
-  },
-};
 
 describe('CustomerListComponent', () => {
   let fixture: ComponentFixture<CustomerListComponent>;
@@ -46,7 +39,7 @@ describe('CustomerListComponent', () => {
     }).compileComponents();
 
     const translate = TestBed.inject(TranslateService);
-    translate.setTranslation('en-US', TRANSLATIONS);
+    translate.setTranslation('en-US', enUS);
     translate.use('en-US');
 
     fixture = TestBed.createComponent(CustomerListComponent);
@@ -78,11 +71,11 @@ describe('CustomerListComponent', () => {
 
     fixture.detectChanges();
 
-    const text = fixture.debugElement.query(By.css('.party-table tbody')).nativeElement.textContent;
+    const text = fixture.debugElement.query(By.css('.data-table tbody')).nativeElement.textContent;
     expect(text).toContain('CUST-000123');
     expect(text).toContain('+1-555-0142');
     expect(text).toContain('ACTIVE');
-    const headers = fixture.debugElement.queryAll(By.css('.party-table thead th'))
+    const headers = fixture.debugElement.queryAll(By.css('.data-table thead th'))
       .map(h => h.nativeElement.textContent.replace(/[↑↓↕]/g, '').trim());
     expect(headers).toEqual(expect.arrayContaining(['Customer #', 'Phone', 'Status']));
   });
@@ -96,7 +89,7 @@ describe('CustomerListComponent', () => {
     const rowNavigate = vi.spyOn(router, 'navigate');
 
     fixture.detectChanges();
-    const link = fixture.debugElement.query(By.css('.party-table tbody a.party-row__link'));
+    const link = fixture.debugElement.query(By.css('.data-table tbody a.row-name'));
 
     expect(link.nativeElement.getAttribute('href')).toBe('/app/crm/party/p1');
     expect(link.nativeElement.textContent.trim()).toBe('Acme Corp');
@@ -109,6 +102,34 @@ describe('CustomerListComponent', () => {
     expect(rowNavigate).not.toHaveBeenCalled();
     expect(navigate).toHaveBeenCalledTimes(1);
     expect(navigate.mock.calls[0][1]).toEqual(expect.objectContaining({ state: { customerNumber: 'CUST-000123' } }));
+  });
+
+  it('renders the shared data table: a captioned table, underlined row links and a header that stays in view', () => {
+    const many = Array.from({ length: 40 }, (_, i) => party(`p${i}`));
+    crmServiceStub.browseParties.mockReturnValue(of(partyPage(many, many.length)));
+
+    fixture.detectChanges();
+
+    // The table is named by a caption, not an aria-label (DataTable contract).
+    const table = fixture.debugElement.query(By.css('table.data-table')).nativeElement as HTMLTableElement;
+    expect(table.caption?.textContent?.trim()).toBe(enUS.CRM.CUSTOMER_LIST.TABLE_ARIA);
+    expect(table.hasAttribute('aria-label')).toBe(false);
+
+    // shared/styles/data-table.css: the link keeps its underline because colour alone
+    // (--link-color against body text) is under 3:1 (WCAG 1.4.1).
+    const link = fixture.debugElement.query(By.css('.data-table tbody a.row-name')).nativeElement as HTMLElement;
+    expect(getComputedStyle(link).textDecorationLine).toBe('underline');
+
+    // .table-wrap--scroll is bounded, so a long list scrolls inside it rather than
+    // growing with the page; once it scrolls, the header keeps its place at the top.
+    const wrap = fixture.debugElement.query(By.css('.table-wrap--scroll')).nativeElement as HTMLElement;
+    expect(wrap.scrollHeight).toBeGreaterThan(wrap.clientHeight);
+    const header = wrap.querySelector('thead th') as HTMLElement;
+    const headerOffset = () => Math.round(header.getBoundingClientRect().top - wrap.getBoundingClientRect().top);
+    const before = headerOffset();
+    wrap.scrollTop = 300;
+    expect(wrap.scrollTop).toBeGreaterThan(0);
+    expect(headerOffset()).toBe(before);
   });
 
   it('still opens the party when the row is clicked outside the link', () => {
@@ -126,7 +147,7 @@ describe('CustomerListComponent', () => {
 
     fixture.detectChanges();
 
-    const cells = fixture.debugElement.queryAll(By.css('.party-table tbody td'));
+    const cells = fixture.debugElement.queryAll(By.css('.data-table tbody td'));
     const empties = cells.filter(c => c.query(By.css('.party-row__empty')));
     expect(empties.length).toBeGreaterThanOrEqual(3);
   });

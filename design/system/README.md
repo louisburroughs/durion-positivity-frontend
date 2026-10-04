@@ -10,7 +10,7 @@ The look is a cool industrial palette: **Blueprint Blue** for the brand and navi
 | --- | --- |
 | `README.md` | This guide: the rules for building UI in Positivity. |
 | `tokens.json` | Every design token with a usage note per token, the type scale and the font files. Values are copied from `src/styles.css` and checked against it. |
-| `components.css` | The shared component layer: `.btn`, `.badge`, `.field`, `.card`, `.page-header`, `.dialog`, `.state-panel`, `.data-table`. Not loaded by the app yet; page stylesheets move onto it. |
+| `components.css` | The shared component layer: `.btn`, `.badge`, `.field`, `.card`, `.page-header`, `.dialog`, `.state-panel`. Not loaded by the app yet; page stylesheets move onto it. The data table and the listbox already ship to the app as shared stylesheets in `src/app/shared/styles/` (`data-table.css`, `listbox.css`). |
 | `components/<Name>/README.md` | Guidelines per component: when to use it, what the page provides, states, and what not to do. |
 | `components/<Name>/preview.html` | A static rendition of the component, built from the app's real stylesheets. |
 | `preview.css`, `index.html` | The preview harness and a gallery of every preview with a light/dark switch. |
