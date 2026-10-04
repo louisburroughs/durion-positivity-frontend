@@ -67,7 +67,7 @@ const DRIFT_MESSAGE =
  */
 const ROLE = {
   color: [
-    '/--brand-(primary|secondary|accent|gold)([^a-z-]|$)/',
+    '/--brand-(primary|primary-deep|secondary|accent|gold)([^a-z-]|$)/',
     '/--functional-(error-red|warning|info-blue|success)/',
     '/--durion-[a-z]+-[0-9]+/',
   ],
@@ -85,7 +85,7 @@ const ROLE = {
   // border keeps its meaning and takes the matching -fg token; the neutral edge
   // takes --input-border on a control or --border-color when decorative.
   '/^(border|outline)([a-z-]*)$/': [
-    '/--brand-(primary|secondary|accent|gold)([^a-z-]|$)/',
+    '/--brand-(primary|primary-deep|secondary|accent|gold)([^a-z-]|$)/',
     '/--functional-(error-red|warning|info-blue|success)/',
     '/--durion-[a-z]+-[0-9]+/',
   ],
