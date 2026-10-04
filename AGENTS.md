@@ -16,7 +16,7 @@ npm start
 npm run build
 npm test
 npm run lint                          # ESLint via @angular-eslint
-npm run lint:css                      # stylelint src/**/*.css
+npm run lint:css                      # stylelint src/**/*.css + design/system/**/*.css
 npm run i18n:check                    # missing-keys + pseudo-locale check
 npm run test:arch                     # architecture suite (arch/README.md), plain-node Vitest
 npx ng test --no-watch --browsers=ChromiumHeadless --runner-config vitest.config.ts   # single CI pass (Vitest in Chromium; jsdom fails ~22 specs)
@@ -53,6 +53,7 @@ npx ng test --no-watch --browsers=ChromiumHeadless --runner-config vitest.config
 - Domain and architecture knowledge: `../durion/knowledge-catalog/`
 - Frontend ADRs: `../durion/docs/adr/`
 - Precedent catalog (file:line exemplars): `docs/EXEMPLARS.md`
+- Design system (tokens, component guidelines, previews): `design/system/README.md`
 - Copilot review guidance: `.github/copilot-instructions.md`
 - CI gates: `.github/workflows/frontend-checks.yml`, `.github/workflows/accessibility-gate.yml`
 

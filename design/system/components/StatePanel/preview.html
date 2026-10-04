@@ -1,0 +1,34 @@
+<!-- @dsCard group="Feedback" height=236 -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../preview.css">
+<script>const theme = new URLSearchParams(location.search).get('theme'); if (theme) document.documentElement.dataset.theme = theme;</script>
+<title>StatePanel</title>
+<style>
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+  .stack { display: flex; flex-direction: column; gap: var(--space-3); }
+</style>
+</head>
+<body>
+<div class="row" style="align-items:stretch">
+  <section class="state-panel" style="flex:1 1 240px;padding:var(--space-6)">
+    <span class="material-symbols-rounded" aria-hidden="true">assignment</span>
+    <h2>No workorders match your filters</h2>
+    <p>Clear a filter or choose another location.</p>
+    <button type="button" class="btn btn--secondary btn--sm">Clear filters</button>
+  </section>
+  <section class="state-panel state-panel--error" role="alert" style="flex:1 1 240px;padding:var(--space-6)">
+    <span class="material-symbols-rounded" aria-hidden="true">error</span>
+    <h2>Could not load preferences</h2>
+    <p>Check your connection, then try again.</p>
+    <button type="button" class="btn btn--outline btn--sm">Try again</button>
+  </section>
+  <div class="card" style="flex:1 1 200px;display:flex;flex-direction:column;gap:var(--space-3)" aria-busy="true" aria-label="Loading">
+    <span class="skeleton" style="width:60%;height:1.25rem"></span>
+    <span class="skeleton"></span><span class="skeleton" style="width:85%"></span><span class="skeleton" style="width:70%"></span>
+  </div>
+</div>
+</body>
+</html>

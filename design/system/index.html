@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Durion Positivity Design System</title>
+<link rel="stylesheet" href="preview.css">
+<style>
+  main { max-width: 1040px; margin: 0 auto; display: flex; flex-direction: column; gap: var(--space-8); }
+  .gallery-header { margin-bottom: 0; }
+  .gallery-item { display: flex; flex-direction: column; gap: var(--space-3); }
+  .gallery-item h2 { font-size: 1.25rem; }
+  .gallery-item h2 a { text-decoration: none; }
+  .gallery-summary { margin: 0; color: var(--text-muted); font-size: 0.875rem; }
+  .gallery-item iframe { width: 100%; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: var(--themeBackground); }
+</style>
+</head>
+<body>
+<main>
+  <header class="page-header gallery-header">
+    <div>
+      <p class="overline">design/system</p>
+      <h1>Durion Positivity Design System</h1>
+      <p class="standfirst">Every component preview, rendered with src/styles.css and components.css. Rules and tokens are in README.md and tokens.json.</p>
+    </div>
+    <div class="header-actions" role="group" aria-label="Theme">
+      <button type="button" class="btn btn--secondary" data-theme-choice="light" aria-pressed="true">Light</button>
+      <button type="button" class="btn btn--outline" data-theme-choice="dark" aria-pressed="false">Dark</button>
+    </div>
+  </header>
+    <section class="gallery-item" id="AppShell">
+      <header>
+        <p class="overline">Navigation</p>
+        <h2><a href="components/AppShell/preview.html">AppShell</a></h2>
+        <p class="gallery-summary">The authenticated frame: a 56px <code>.shell-header</code> on <code>--navBackground</code> above a 220px <code>.shell-nav</code> rail on <code>--menuBackground</code>, with the page on <code>--themeBackground</code>.</p>
+      </header>
+      <iframe title="AppShell preview" src="components/AppShell/preview.html" data-src="components/AppShell/preview.html" height="354" loading="lazy"></iframe>
+    </section>
+    <section class="gallery-item" id="PageHeader">
+      <header>
+        <p class="overline">Layout</p>
+        <h2><a href="components/PageHeader/preview.html">PageHeader</a></h2>
+        <p class="gallery-summary">The top of every routed page: <code>.page-header</code> with an optional <code>.overline</code>, the h1, an optional <code>.standfirst</code> and the page's <code>.header-actions</code>.</p>
+      </header>
+      <iframe title="PageHeader preview" src="components/PageHeader/preview.html" data-src="components/PageHeader/preview.html" height="174" loading="lazy"></iframe>
+    </section>
+    <section class="gallery-item" id="Button">
+      <header>
+        <p class="overline">Actions</p>
+        <h2><a href="components/Button/preview.html">Button</a></h2>
+        <p class="gallery-summary">Triggers an action; one <code>.btn</code> base with a modifier for its weight.</p>
+      </header>
+      <iframe title="Button preview" src="components/Button/preview.html" data-src="components/Button/preview.html" height="174" loading="lazy"></iframe>
+    </section>
+    <section class="gallery-item" id="Listbox">
+      <header>
+        <p class="overline">Forms</p>
+        <h2><a href="components/Listbox/preview.html">Listbox</a></h2>
+        <p class="gallery-summary">The dropdown panel for a combobox, typeahead or picker: <code>.picker-wrap</code> around the input, <code>.picker-dropdown</code> for the list, <code>.picker-option</code> per row.</p>
+      </header>
+      <iframe title="Listbox preview" src="components/Listbox/preview.html" data-src="components/Listbox/preview.html" height="284" loading="lazy"></iframe>
+    </section>
+    <section class="gallery-item" id="TextField">
+      <header>
+        <p class="overline">Forms</p>
+        <h2><a href="components/TextField/preview.html">TextField</a></h2>
+        <p class="gallery-summary">A labelled input, select or textarea: a <code>.field</code> wrapper with a label, the control, and an optional hint or error.</p>
+      </header>
+      <iframe title="TextField preview" src="components/TextField/preview.html" data-src="components/TextField/preview.html" height="324" loading="lazy"></iframe>
+    </section>
+    <section class="gallery-item" id="Badge">
+      <header>
+        <p class="overline">Status</p>
+        <h2><a href="components/Badge/preview.html">Badge</a></h2>
+        <p class="gallery-summary">A square status tag on one of the six theme-aware status pairs: <code>.badge</code> plus <code>.badge--&lt;kind&gt;</code>.</p>
+      </header>
+      <iframe title="Badge preview" src="components/Badge/preview.html" data-src="components/Badge/preview.html" height="120" loading="lazy"></iframe>
+    </section>
+    <section class="gallery-item" id="StatusChip">
+      <header>
+        <p class="overline">Status</p>
+        <h2><a href="components/StatusChip/preview.html">StatusChip</a></h2>
+        <p class="gallery-summary">A small pill showing a record's state in a list or header: <code>.dur-status</code> plus a tone.</p>
+      </header>
+      <iframe title="StatusChip preview" src="components/StatusChip/preview.html" data-src="components/StatusChip/preview.html" height="88" loading="lazy"></iframe>
+    </section>
+    <section class="gallery-item" id="Alert">
+      <header>
+        <p class="overline">Feedback</p>
+        <h2><a href="components/Alert/preview.html">Alert</a></h2>
+        <p class="gallery-summary">An inline message banner tied to the page or form it sits in: <code>.alert</code> plus one tone.</p>
+      </header>
+      <iframe title="Alert preview" src="components/Alert/preview.html" data-src="components/Alert/preview.html" height="314" loading="lazy"></iframe>
+    </section>
+    <section class="gallery-item" id="StatePanel">
+      <header>
+        <p class="overline">Feedback</p>
+        <h2><a href="components/StatePanel/preview.html">StatePanel</a></h2>
+        <p class="gallery-summary">The empty, error or loading state that replaces a page's content: <code>.state-panel</code>, with skeleton rows while loading.</p>
+      </header>
+      <iframe title="StatePanel preview" src="components/StatePanel/preview.html" data-src="components/StatePanel/preview.html" height="260" loading="lazy"></iframe>
+    </section>
+    <section class="gallery-item" id="Card">
+      <header>
+        <p class="overline">Surfaces</p>
+        <h2><a href="components/Card/preview.html">Card</a></h2>
+        <p class="gallery-summary">A container on <code>--cardBackground</code> that groups one subject: <code>.card</code>, with <code>--radius-md</code> and <code>--space-4</code> padding.</p>
+      </header>
+      <iframe title="Card preview" src="components/Card/preview.html" data-src="components/Card/preview.html" height="224" loading="lazy"></iframe>
+    </section>
+    <section class="gallery-item" id="Dialog">
+      <header>
+        <p class="overline">Surfaces</p>
+        <h2><a href="components/Dialog/preview.html">Dialog</a></h2>
+        <p class="gallery-summary">A modal for a focused task or a confirmation: a native <code>&lt;dialog class="dialog" appModalDialog&gt;</code> with a <code>.dialog-panel</code> inside.</p>
+      </header>
+      <iframe title="Dialog preview" src="components/Dialog/preview.html" data-src="components/Dialog/preview.html" height="324" loading="lazy"></iframe>
+    </section>
+    <section class="gallery-item" id="DataTable">
+      <header>
+        <p class="overline">Data</p>
+        <h2><a href="components/DataTable/preview.html">DataTable</a></h2>
+        <p class="gallery-summary">The list view for records: a <code>.table-wrap</code> (scrolls sideways on its own, <code>--radius-lg</code>, <code>--border-color</code> edge) around a <code>table.data-table</code>.</p>
+      </header>
+      <iframe title="DataTable preview" src="components/DataTable/preview.html" data-src="components/DataTable/preview.html" height="304" loading="lazy"></iframe>
+    </section>
+    <section class="gallery-item" id="Icon">
+      <header>
+        <p class="overline">Iconography</p>
+        <h2><a href="components/Icon/preview.html">Icon</a></h2>
+        <p class="gallery-summary">Material Symbols Rounded, self-hosted, written as a ligature name inside <code>&lt;span class="material-symbols-rounded" aria-hidden="true"&gt;</code>.</p>
+      </header>
+      <iframe title="Icon preview" src="components/Icon/preview.html" data-src="components/Icon/preview.html" height="144" loading="lazy"></iframe>
+    </section>
+</main>
+<script>
+  const buttons = document.querySelectorAll('[data-theme-choice]');
+  for (const button of buttons) {
+    button.addEventListener('click', () => {
+      const theme = button.dataset.themeChoice;
+      document.documentElement.dataset.theme = theme;
+      for (const b of buttons) {
+        const on = b === button;
+        b.setAttribute('aria-pressed', String(on));
+        b.className = on ? 'btn btn--secondary' : 'btn btn--outline';
+      }
+      for (const frame of document.querySelectorAll('iframe[data-src]')) {
+        frame.src = `${frame.dataset.src}?theme=${theme}`;
+      }
+    });
+  }
+</script>
+</body>
+</html>

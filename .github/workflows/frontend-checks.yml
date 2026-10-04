@@ -65,6 +65,9 @@ jobs:
       - name: Check Material Symbols glyph map is current
         run: npm run icons:check
 
+      - name: Check design-system tokens match src/styles.css
+        run: npm run design:tokens:check
+
       - name: Check generated sitemap routes module is current
         run: npm run sitemap:routes:check
 

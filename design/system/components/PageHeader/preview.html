@@ -1,0 +1,27 @@
+<!-- @dsCard group="Layout" height=150 -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../preview.css">
+<script>const theme = new URLSearchParams(location.search).get('theme'); if (theme) document.documentElement.dataset.theme = theme;</script>
+<title>PageHeader</title>
+<style>
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+  .stack { display: flex; flex-direction: column; gap: var(--space-3); }
+</style>
+</head>
+<body>
+<header class="page-header" style="margin:0">
+  <div>
+    <p class="overline">Location setup</p>
+    <h1>Service areas</h1>
+    <p class="standfirst">Set the zip codes each mobile unit covers and the travel buffer added to its appointments.</p>
+  </div>
+  <div class="header-actions">
+    <button type="button" class="btn btn--outline">Import</button>
+    <button type="button" class="btn btn--primary"><span class="material-symbols-rounded" aria-hidden="true">add</span>Create service area</button>
+  </div>
+</header>
+</body>
+</html>

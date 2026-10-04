@@ -1,0 +1,38 @@
+<!-- @dsCard group="Navigation" height=330 -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../preview.css">
+<link rel="stylesheet" href="../../../../src/app/features/shell/components/header/header.component.css">
+<link rel="stylesheet" href="../../../../src/app/features/shell/components/nav/nav.component.css">
+<script>const theme = new URLSearchParams(location.search).get('theme'); if (theme) document.documentElement.dataset.theme = theme;</script>
+<title>AppShell</title>
+<style>
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+  .stack { display: flex; flex-direction: column; gap: var(--space-3); }
+</style>
+</head>
+<body>
+<div style="border-radius:var(--radius-md);overflow:hidden;border:1px solid var(--border-color)">
+  <header class="shell-header">
+    <span class="shell-brand"><img class="shell-brand-mark" src="../../../../src/assets/Durion%20Support%20Services(LO)_AZ_Rev3_Icon_Only-01x3642.jpg" alt=""><span class="shell-brand-name">Positivity</span></span>
+    <span class="material-symbols-rounded" aria-hidden="true" style="font-size:20px">dark_mode</span>
+  </header>
+  <div style="display:flex;height:250px">
+    <nav class="shell-nav" aria-label="Main">
+      <a class="nav-item" href="#"><span class="material-symbols-rounded" aria-hidden="true">dashboard</span>Dashboard</a>
+      <a class="nav-item nav-item--active" href="#" aria-current="page"><span class="material-symbols-rounded" aria-hidden="true">build</span>Workorders</a>
+      <a class="nav-item" href="#"><span class="material-symbols-rounded" aria-hidden="true">group</span>Customers</a>
+      <a class="nav-item" href="#"><span class="material-symbols-rounded" aria-hidden="true">inventory_2</span>Inventory</a>
+      <a class="nav-item" href="#"><span class="material-symbols-rounded" aria-hidden="true">receipt_long</span>Billing</a>
+    </nav>
+    <main style="flex:1;padding:var(--space-4);background:var(--themeBackground)">
+      <p class="overline">Shop floor</p>
+      <h1 style="font-size:1.5rem">Workorders</h1>
+      <div class="card" style="margin-top:var(--space-3)"><span class="skeleton" style="width:70%"></span></div>
+    </main>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,23 @@
+<!-- @dsCard group="Feedback" height=290 -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../preview.css">
+<script>const theme = new URLSearchParams(location.search).get('theme'); if (theme) document.documentElement.dataset.theme = theme;</script>
+<title>Alert</title>
+<style>
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+  .stack { display: flex; flex-direction: column; gap: var(--space-3); }
+</style>
+</head>
+<body>
+<div class="stack">
+  <div class="alert alert-info">Prices shown include shop supplies. Tax is added at invoicing.</div>
+  <output class="alert alert-success">Estimate EST-1042 approved. It is now workorder WO-2026-004812.</output>
+  <div class="alert alert-warning">Two parts on this estimate are below their reorder point.</div>
+  <div class="alert alert-error" role="alert">Enter a number of 0 or more, with at most two decimals.</div>
+  <div class="alert alert-critical">September 2026 is closed. Reopen the period to post entries into it.</div>
+</div>
+</body>
+</html>

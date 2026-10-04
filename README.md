@@ -39,5 +39,6 @@ The session's tenant comes from the access token's `tid` claim only; the gateway
 ## Related Docs
 
 - `AGENTS.md` — repo-specific requirements and commands
+- `design/system/README.md` — the design system: tokens, component guidelines and previews
 - `../durion/AGENTS.md` — cross-repo guidance and shared config
 - `../durion/knowledge-catalog/` — domain and module overview

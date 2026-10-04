@@ -1,0 +1,22 @@
+<!-- @dsCard group="Status" height=64 -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../preview.css">
+<script>const theme = new URLSearchParams(location.search).get('theme'); if (theme) document.documentElement.dataset.theme = theme;</script>
+<title>StatusChip</title>
+<style>
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+  .stack { display: flex; flex-direction: column; gap: var(--space-3); }
+</style>
+</head>
+<body>
+<div class="row">
+  <span class="dur-status valid"><span class="material-symbols-rounded" aria-hidden="true">check_circle</span>Completed</span>
+  <span class="dur-status primary">In progress</span>
+  <span class="dur-status warn"><span class="material-symbols-rounded" aria-hidden="true">schedule</span>Awaiting parts</span>
+  <span class="dur-status error">Payment failed</span>
+</div>
+</body>
+</html>
