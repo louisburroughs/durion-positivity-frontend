@@ -1,0 +1,145 @@
+/* ── Shared data table ─────────────────────────────────────────────────────
+   Single source of truth for record tables (design/system/components/DataTable).
+   Add this file to a component's styleUrls, next to its own stylesheet, as
+   listbox.css is; emulated encapsulation scopes it to that component, so the
+   selectors stay inert where a page has no table. Page-specific cells
+   (status pills, empty markers, column widths) stay in the page stylesheet.
+
+   Markup: div.table-wrap[.table-wrap--scroll] > table.data-table, with
+   scope="col" headers, aria-sort on a sortable <th> and a button.sort-btn
+   inside it, .row-name / .row-sub in a cell, .num on numeric columns. */
+
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  background: var(--cardBackground);
+}
+
+/* A sticky header needs a scroll container with a bounded height, and the
+   wrapper is that container (overflow makes it one). A plain .table-wrap only
+   scrolls sideways, so its header scrolls away with the page; a long list uses
+   .table-wrap--scroll and scrolls inside its own region. */
+.table-wrap--scroll {
+  max-height: 60vh;
+  overflow: auto;
+}
+
+.table-wrap--scroll .data-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  box-shadow: inset 0 -1px 0 var(--border-color); /* collapsed borders don't travel with a sticky cell */
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.data-table th,
+.data-table td {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border-color);
+  text-align: left;
+  vertical-align: top;
+}
+
+.data-table thead th {
+  background: var(--cardBackground);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* Sorting is a real <button> inside the sortable <th>; the cell carries aria-sort. */
+.data-table .sort-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 24px; /* WCAG 2.5.8 / ADR-0029 §8.5 target size */
+  padding: 0;
+  border: none;
+  background: transparent;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.data-table .sort-btn:hover {
+  color: var(--currentTextColor);
+}
+
+.data-table .sort-btn:focus-visible {
+  outline: 2px solid var(--input-focus-border);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.data-table .sort-icon {
+  font-size: 0.75rem;
+}
+
+.data-table tbody tr {
+  transition: background var(--transition-fast);
+}
+
+.data-table tbody tr:hover {
+  background: var(--surface-hover);
+}
+
+.data-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.data-table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.data-table .row-name {
+  display: block;
+  font-weight: 600;
+}
+
+/* The underline stays: --link-color is 2.2:1 against body text in light and
+   1.5:1 in dark, too close for colour alone to mark a link (WCAG 1.4.1). */
+.data-table a.row-name {
+  min-height: 24px; /* WCAG 2.5.8 / ADR-0029 §8.5 target size */
+  color: var(--link-color);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.data-table a.row-name:hover {
+  text-decoration-thickness: 2px;
+}
+
+.data-table a.row-name:focus-visible {
+  outline: 2px solid var(--input-focus-border);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.data-table .row-sub {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.data-table code {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .data-table tbody tr {
+    transition: none;
+  }
+}

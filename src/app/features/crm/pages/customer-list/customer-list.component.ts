@@ -17,7 +17,7 @@ type SortDir = 'asc' | 'desc';
   standalone: true,
   imports: [ReactiveFormsModule, RouterLink, TranslatePipe],
   templateUrl: './customer-list.component.html',
-  styleUrl: './customer-list.component.css',
+  styleUrls: ['./customer-list.component.css', '../../../../shared/styles/data-table.css'],
 })
 export class CustomerListComponent implements OnInit {
   private readonly translate = inject(TranslateService);

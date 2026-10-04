@@ -78,11 +78,11 @@ describe('CustomerListComponent', () => {
 
     fixture.detectChanges();
 
-    const text = fixture.debugElement.query(By.css('.party-table tbody')).nativeElement.textContent;
+    const text = fixture.debugElement.query(By.css('.data-table tbody')).nativeElement.textContent;
     expect(text).toContain('CUST-000123');
     expect(text).toContain('+1-555-0142');
     expect(text).toContain('ACTIVE');
-    const headers = fixture.debugElement.queryAll(By.css('.party-table thead th'))
+    const headers = fixture.debugElement.queryAll(By.css('.data-table thead th'))
       .map(h => h.nativeElement.textContent.replace(/[↑↓↕]/g, '').trim());
     expect(headers).toEqual(expect.arrayContaining(['Customer #', 'Phone', 'Status']));
   });
@@ -96,7 +96,7 @@ describe('CustomerListComponent', () => {
     const rowNavigate = vi.spyOn(router, 'navigate');
 
     fixture.detectChanges();
-    const link = fixture.debugElement.query(By.css('.party-table tbody a.party-row__link'));
+    const link = fixture.debugElement.query(By.css('.data-table tbody a.row-name'));
 
     expect(link.nativeElement.getAttribute('href')).toBe('/app/crm/party/p1');
     expect(link.nativeElement.textContent.trim()).toBe('Acme Corp');
@@ -109,6 +109,20 @@ describe('CustomerListComponent', () => {
     expect(rowNavigate).not.toHaveBeenCalled();
     expect(navigate).toHaveBeenCalledTimes(1);
     expect(navigate.mock.calls[0][1]).toEqual(expect.objectContaining({ state: { customerNumber: 'CUST-000123' } }));
+  });
+
+  it('renders the shared data table: underlined row links and a header that stays in view', () => {
+    crmServiceStub.browseParties.mockReturnValue(of(partyPage([party('p1')], 1)));
+
+    fixture.detectChanges();
+
+    // shared/styles/data-table.css: the link keeps its underline because colour alone
+    // (--link-color against body text) is under 3:1 (WCAG 1.4.1), and the header is
+    // sticky inside the bounded .table-wrap--scroll region.
+    const link = fixture.debugElement.query(By.css('.data-table tbody a.row-name')).nativeElement as HTMLElement;
+    expect(getComputedStyle(link).textDecorationLine).toBe('underline');
+    const header = fixture.debugElement.query(By.css('.table-wrap--scroll .data-table thead th')).nativeElement as HTMLElement;
+    expect(getComputedStyle(header).position).toBe('sticky');
   });
 
   it('still opens the party when the row is clicked outside the link', () => {
@@ -126,7 +140,7 @@ describe('CustomerListComponent', () => {
 
     fixture.detectChanges();
 
-    const cells = fixture.debugElement.queryAll(By.css('.party-table tbody td'));
+    const cells = fixture.debugElement.queryAll(By.css('.data-table tbody td'));
     const empties = cells.filter(c => c.query(By.css('.party-row__empty')));
     expect(empties.length).toBeGreaterThanOrEqual(3);
   });
