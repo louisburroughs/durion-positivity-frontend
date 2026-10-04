@@ -20,11 +20,12 @@ const partyPage = (parties: ReturnType<typeof party>[], totalCount: number) => (
   pageSize: 25,
 });
 
-// Mirrors the CRM.CUSTOMER_LIST column keys the header assertion reads back.
+// Mirrors the CRM.CUSTOMER_LIST keys (en-US) the header and caption assertions read back.
 const TRANSLATIONS = {
   CRM: {
     CUSTOMER_LIST: {
       COL: { CUSTOMER_NUMBER: 'Customer #', PHONE: 'Phone', STATUS: 'Status' },
+      TABLE_ARIA: 'Customer directory',
     },
   },
 };
@@ -111,18 +112,32 @@ describe('CustomerListComponent', () => {
     expect(navigate.mock.calls[0][1]).toEqual(expect.objectContaining({ state: { customerNumber: 'CUST-000123' } }));
   });
 
-  it('renders the shared data table: underlined row links and a header that stays in view', () => {
-    crmServiceStub.browseParties.mockReturnValue(of(partyPage([party('p1')], 1)));
+  it('renders the shared data table: a captioned table, underlined row links and a header that stays in view', () => {
+    const many = Array.from({ length: 40 }, (_, i) => party(`p${i}`));
+    crmServiceStub.browseParties.mockReturnValue(of(partyPage(many, many.length)));
 
     fixture.detectChanges();
 
+    // The table is named by a caption, not an aria-label (DataTable contract).
+    const table = fixture.debugElement.query(By.css('table.data-table')).nativeElement as HTMLTableElement;
+    expect(table.caption?.textContent?.trim()).toBe('Customer directory');
+    expect(table.hasAttribute('aria-label')).toBe(false);
+
     // shared/styles/data-table.css: the link keeps its underline because colour alone
-    // (--link-color against body text) is under 3:1 (WCAG 1.4.1), and the header is
-    // sticky inside the bounded .table-wrap--scroll region.
+    // (--link-color against body text) is under 3:1 (WCAG 1.4.1).
     const link = fixture.debugElement.query(By.css('.data-table tbody a.row-name')).nativeElement as HTMLElement;
     expect(getComputedStyle(link).textDecorationLine).toBe('underline');
-    const header = fixture.debugElement.query(By.css('.table-wrap--scroll .data-table thead th')).nativeElement as HTMLElement;
-    expect(getComputedStyle(header).position).toBe('sticky');
+
+    // .table-wrap--scroll is bounded, so a long list scrolls inside it rather than
+    // growing with the page; once it scrolls, the header keeps its place at the top.
+    const wrap = fixture.debugElement.query(By.css('.table-wrap--scroll')).nativeElement as HTMLElement;
+    expect(wrap.scrollHeight).toBeGreaterThan(wrap.clientHeight);
+    const header = wrap.querySelector('thead th') as HTMLElement;
+    const headerOffset = () => Math.round(header.getBoundingClientRect().top - wrap.getBoundingClientRect().top);
+    const before = headerOffset();
+    wrap.scrollTop = 300;
+    expect(wrap.scrollTop).toBeGreaterThan(0);
+    expect(headerOffset()).toBe(before);
   });
 
   it('still opens the party when the row is clicked outside the link', () => {

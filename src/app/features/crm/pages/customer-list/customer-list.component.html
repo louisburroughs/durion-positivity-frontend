@@ -70,7 +70,8 @@
 
     @if (state() === 'ready' && parties().length) {
       <div class="table-wrap table-wrap--scroll">
-        <table class="data-table" [attr.aria-label]="'CRM.CUSTOMER_LIST.TABLE_ARIA' | translate">
+        <table class="data-table">
+          <caption class="sr-only">{{ 'CRM.CUSTOMER_LIST.TABLE_ARIA' | translate }}</caption>
           <thead>
             <tr>
               <th scope="col"
