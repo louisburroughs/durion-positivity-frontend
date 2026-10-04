@@ -102,4 +102,34 @@ describe('CustomerLookupComponent', () => {
     component.onKeydown(new KeyboardEvent('keydown', { key: 'Enter' }));
     expect(component.value()).toBe(expected);
   }));
+
+  it('Enter does nothing while the list is closed, leaving the key to the form', fakeAsync(() => {
+    component.onInput('cust');
+    tick(250);
+    component.onKeydown(new KeyboardEvent('keydown', { key: 'ArrowDown' }));
+    component.showList.set(false); // as the blur timer leaves it: closed, active option kept
+
+    const enter = new KeyboardEvent('keydown', { key: 'Enter', cancelable: true });
+    component.onKeydown(enter);
+    expect(component.value()).toBe('');
+    expect(enter.defaultPrevented).toBe(false);
+  }));
+
+  it('binds aria-controls only while the listbox is rendered (ADR-0029 §8.9)', fakeAsync(() => {
+    const input = fixture.nativeElement.querySelector('input[role="combobox"]') as HTMLInputElement;
+    expect(fixture.nativeElement.querySelector('[role="listbox"]')).toBeNull();
+    expect(input.hasAttribute('aria-controls')).toBe(false);
+
+    component.onInput('cust');
+    tick(250);
+    fixture.detectChanges();
+    const listbox = fixture.nativeElement.querySelector('[role="listbox"]') as HTMLElement;
+    expect(listbox).not.toBeNull();
+    expect(input.getAttribute('aria-controls')).toBe(listbox.id);
+
+    component.onKeydown(new KeyboardEvent('keydown', { key: 'Escape' }));
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[role="listbox"]')).toBeNull();
+    expect(input.hasAttribute('aria-controls')).toBe(false);
+  }));
 });

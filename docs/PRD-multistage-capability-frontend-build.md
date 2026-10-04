@@ -349,7 +349,7 @@ src/app/features/<domain>/
 
 - Use `/design/DESIGN.md` as the primary design authority.
 - Use the matching domain design folder as the primary visual reference pack.
-- Use `design/source/durion-style-guide.md`, `design/source/theme-tokens.md`, and `design/source/durion-theme.css` to map tokens, fonts, and brand semantics.
+- Use `design/system/README.md`, `design/system/tokens.json`, `design/source/durion-style-guide.md` and `design/source/theme-tokens.md` to map tokens, fonts, and brand semantics; `src/styles.css` holds the values.
 - Use fonts and image assets from `design/source/` rather than inventing replacements.
 - Do not treat `.html` files in `design/` as requirement specifications.
 - Preserve the Architectural Ledger style:

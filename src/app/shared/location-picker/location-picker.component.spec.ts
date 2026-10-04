@@ -141,6 +141,51 @@ describe('LocationPickerComponent', () => {
     expect(spy).toHaveBeenCalledWith('loc-1');
   });
 
+  it('Escape clears the active option, so a following Enter selects nothing and is left to the form', () => {
+    component.onInput(''); // opens the full list (and clears any selection)
+    const spy = vi.fn();
+    component.locationSelected.subscribe(spy);
+    component.onKeydown(new KeyboardEvent('keydown', { key: 'ArrowDown' }));
+    component.onKeydown(new KeyboardEvent('keydown', { key: 'Escape' }));
+
+    expect(component.open()).toBe(false);
+    expect(component.activeIndex()).toBe(-1);
+    const enter = new KeyboardEvent('keydown', { key: 'Enter', cancelable: true });
+    component.onKeydown(enter);
+    expect(spy).not.toHaveBeenCalled();
+    expect(enter.defaultPrevented).toBe(false);
+  });
+
+  it('Enter selects only while the list is open, even with an option still active', () => {
+    component.onInput(''); // opens the full list (and clears any selection)
+    const spy = vi.fn();
+    component.locationSelected.subscribe(spy);
+    component.onKeydown(new KeyboardEvent('keydown', { key: 'ArrowDown' }));
+    component.open.set(false); // as the blur timer leaves it: closed, active option kept
+
+    const enter = new KeyboardEvent('keydown', { key: 'Enter', cancelable: true });
+    component.onKeydown(enter);
+    expect(spy).not.toHaveBeenCalled();
+    expect(enter.defaultPrevented).toBe(false);
+  });
+
+  it('binds aria-controls only while the listbox is rendered (ADR-0029 §8.9)', () => {
+    const input = fixture.nativeElement.querySelector('input[role="combobox"]') as HTMLInputElement;
+    expect(fixture.nativeElement.querySelector('[role="listbox"]')).toBeNull();
+    expect(input.hasAttribute('aria-controls')).toBe(false);
+
+    component.onInput('');
+    fixture.detectChanges();
+    const listbox = fixture.nativeElement.querySelector('[role="listbox"]') as HTMLElement;
+    expect(listbox).not.toBeNull();
+    expect(input.getAttribute('aria-controls')).toBe(listbox.id);
+
+    component.onKeydown(new KeyboardEvent('keydown', { key: 'Escape' }));
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[role="listbox"]')).toBeNull();
+    expect(input.hasAttribute('aria-controls')).toBe(false);
+  });
+
   it('shows an error state when locations fail to load', () => {
     locationServiceStub.getAll.mockReturnValue(throwError(() => ({ status: 500 })));
     const fx = TestBed.createComponent(LocationPickerComponent);

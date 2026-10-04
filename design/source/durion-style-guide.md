@@ -23,7 +23,8 @@ Durion uses a cool industrial palette:
 
 - **Display / headings (`--font-primary`):** `Barlow Semi Condensed` → falls back to `Noto Sans`, `sans-serif`.
 - **Body & UI (`--font-body`):** `Noto Sans` (400, 400i, 500, 600, 700, 700i) → `sans-serif`.
-- **Icon fonts:** `Material Symbols Round`, `Material Icons Two Tone`.
+- **Icons:** `Material Symbols Rounded`, self-hosted under `src/assets/fonts/material-symbols/` (one static
+  instance, used through the `.material-symbols-rounded` class). No other icon font is hosted.
 
 Both text faces are **self-hosted** under `src/assets/fonts/` and loaded via `@font-face`
 (`@import`ed at the top of `styles.css`). Do not rely on system-installed fonts.
@@ -40,7 +41,7 @@ has no matching `@font-face`, so the browser **synthesises** a faux weight — b
 | `--font-weight-heading` | **600** (SemiBold) | `h2`–`h4`, card/section titles, overlines, labels, status chips, buttons |
 | `--font-weight-medium`  | **500** (Medium) | large or lighter display subheads where 600 is too heavy |
 
-Use the tokens (defined in `styles.css` / `durion-theme.css`) rather than raw numbers, and
+Use the tokens (defined in `src/styles.css`) rather than raw numbers, and
 never pair `--font-primary` with a weight outside {500, 600, 700}. Body text keeps the full
 Noto Sans range (400–700).
 
@@ -82,7 +83,7 @@ See `theme-tokens.md` for full ramps. Canonical values (matching `styles.css`):
 - `--brand-accent: var(--durion-teal-400)` — UI accent (borders, icons, small fills)
 - `--accent-strong: #006a6a` — **filled accent button with white text.** `--brand-accent`
   (teal-400) is only 2.4:1 against white and **must not** carry white text; `--accent-strong`
-  is 5.8:1. Use it for any solid teal button/CTA.
+  is 6.4:1. Use it for any solid teal button/CTA.
 - `--brand-gold: var(--durion-gold-500)` — heritage accent (not the UI accent)
 - `--brand-background: var(--durion-grey-100)`
 - `--brand-surface: #ffffff`
@@ -158,7 +159,7 @@ Recurring traps and their fixes:
 
 | Situation | Wrong | Right |
 |---|---|---|
-| White text on a teal button | `background: var(--brand-accent)` (teal-400, 2.4:1) | `background: var(--accent-strong)` (#006a6a, 5.8:1) |
+| White text on a teal button | `background: var(--brand-accent)` (teal-400, 2.4:1) | `background: var(--accent-strong)` (#006a6a, 6.4:1) |
 | Coloured **status text** | `--functional-warning` / `--functional-success` as `color:` | warning `#8a5e0a`, success `#1b5e20`, error `#ba1a1a` |
 | Status **chip / badge / alert / banner** | hardcoded pastel + mid-tone text, or `color-mix(--functional-x N%)` fill + the functional colour as text — both fail in dark | the **theme-aware status pair** below |
 | Form field | hardcoded `background: #fff` | `var(--input-background)` (theme-aware) so dark mode flips to graphite |

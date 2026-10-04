@@ -2,9 +2,32 @@
 
 Implementation token source of truth:
 
+- `design/system/README.md` and `design/system/tokens.json` (the design system, checked against `src/styles.css`)
 - `design/source/theme-tokens.md`
 - `design/source/durion-style-guide.md`
-- `design/source/durion-theme.css`
+
+> **Reconciled with the implemented system (2026-10-04).** The North Star and principles below
+> (blueprint precision, generous white space, tonal layering, typography over boxes, few divider
+> lines) still guide layout. Where this brief names a specific value, the design system wins:
+>
+> - **Type** is Barlow Semi Condensed (display, 500/600/700) and Noto Sans (body), not Public Sans
+>   and Inter; the stylelint guardrail rejects both.
+> - **Colour and token names** are the Durion tokens in `src/styles.css` (`--brand-primary`,
+>   `--cardBackground`, `--status-<kind>-bg/-fg` …), not the Material-3 names below
+>   (`surface-container-*`, `on_surface` …), which the guardrail rejects as custom properties, nor
+>   the hex values beside them (`#00346f` …).
+> - **Borders by role, not "no lines"**: a control's boundary uses `--input-border` (WCAG 1.4.11
+>   needs 3:1), a grouping edge uses the quiet `--border-color`, and tables keep row rules.
+> - **Inputs** are boxed by default; the underlined "ledger" field is the `.field__input--ledger`
+>   variant used by CRM search and intake.
+> - **Gradients and glass** are page-local, not part of the system. Pages carry blue gradient
+>   bands (landing hero and CTA, the workorder, invoice and employee headers), gradient fills on
+>   some page-level primary and accent buttons, loading shimmers, and a backdrop blur on the
+>   landing nav, the role dialogs and the workorder-detail modal. The design system's buttons are
+>   flat (`.btn--primary` on `--brand-primary`, `.btn--accent` on `--accent-strong`); new UI uses
+>   them, and the gradient buttons move onto them as their pages adopt
+>   `design/system/components.css`.
+> - **Radii** are `--radius-sm` 4px, `--radius-md` 8px and `--radius-lg` 16px.
 
 ## 1. Overview & Creative North Star: "The Architectural Ledger"
 

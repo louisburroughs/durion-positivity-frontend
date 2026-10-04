@@ -46,7 +46,7 @@ So heritage accents stay AA in both themes. In the light block (`:root, [data-th
 In the dark block (`[data-theme='dark']`):
 
 ```css
-  --goldA400: var(--durion-gold-300);  /* lighter so it reads on dark surfaces (6.3:1) */
+  --goldA400: var(--durion-gold-300);  /* lighter so it reads on dark surfaces (6.4:1) */
   --goldA100: var(--durion-gold-600);  /* deep gold wash on dark */
 ```
 

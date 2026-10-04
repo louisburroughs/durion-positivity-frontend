@@ -23,7 +23,7 @@ Durion uses a cool industrial palette:
 
 - **Display / headings (`--font-primary`):** `Barlow Semi Condensed` (weights 500 / 600 / 700) → falls back to `Noto Sans`, `sans-serif`.
 - **Body & UI (`--font-body`):** `Noto Sans` (400, 400i, 500, 600, 700, 700i) → `sans-serif`.
-- **Icon fonts:** `Material Symbols Round`, `Material Icons Two Tone`.
+- **Icon font:** `Material Symbols Rounded`, self-hosted under `src/assets/fonts/material-symbols/` and used through the `.material-symbols-rounded` class. No other icon font is hosted.
 
 Both text faces are **self-hosted** under `src/assets/fonts/` and loaded via `@font-face`
 (`@import`ed at the top of `styles.css`). Do not rely on system-installed fonts.

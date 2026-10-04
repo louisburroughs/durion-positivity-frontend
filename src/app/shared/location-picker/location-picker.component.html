@@ -7,7 +7,7 @@
     role="combobox"
     aria-autocomplete="list"
     [attr.aria-expanded]="open() && suggestions().length > 0"
-    [attr.aria-controls]="listId"
+    [attr.aria-controls]="open() && suggestions().length > 0 ? listId : null"
     [attr.aria-activedescendant]="open() && activeIndex() >= 0 ? (inputId + '-opt-' + activeIndex()) : null"
     [value]="displayValue()"
     [placeholder]="placeholder ?? ('LOCATION.PICKER.PLACEHOLDER' | translate)"
