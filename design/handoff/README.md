@@ -43,9 +43,11 @@ mode — fix those first. Use the guardrail (06) as the worklist:
 1. **Reversed / white logo lockup** — none exists. The guide's header currently sits the navy
    mark on a white plaque as a workaround; dark backgrounds need a proper reversed file.
 2. **Retire the badge & banner protos** — both redrew the emblem and dropped the gold border;
-   rebuild from the supplied icon file.
+   rebuild from the supplied icon file. *Done (2026-10-04): both protos removed from
+   `design/source/images/` and `src/assets/`; a rebuild from the icon file is still open.*
 3. **Delete or regenerate `design/source/durion-theme.css`** — it's a stale divergent copy
    (light `menuBackground:#fff` / `subMenuBackground:grey-100`) that contradicts
-   `src/styles.css` (blue-700 / blue-600). Keep one source of truth.
+   `src/styles.css` (blue-700 / blue-600). Keep one source of truth. *Done (2026-10-04):
+   deleted; `design/system/tokens.json` is the checked copy of `src/styles.css`.*
 4. **Ratify `--font-primary` weights** — Barlow 500/600/700 are hosted; confirm the heading
    weight scale in the type spec.

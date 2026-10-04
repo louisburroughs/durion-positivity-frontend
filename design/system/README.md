@@ -109,12 +109,11 @@ Positivity talks to shop owners, service advisors and technicians. It speaks pla
 - Clear space is at least half the shield's height on every side. Minimum sizes: primary 120px wide, emblem 32px tall.
 - There is no reversed (white) lockup yet. On a dark surface (the header, the dark theme) place the mark on a `--logo-plate` white plaque, as the login and landing pages do.
 - The in-app header pairs the 26px emblem with "Positivity" set in `--font-primary` 700 at 1.125rem, 0.03em tracking, in `--contrastTextColor`.
-- `durion_badge_proto.png` and `durion_banner_proto.png` are retired: they redrew the emblem without its gold border.
+- The old badge and banner prototypes were retired and removed: they redrew the emblem without its gold border.
 
 ## Known gaps
 
 - **Buttons.** The app has several local vocabularies (`.btn-primary`, `.btn--accent`, radii from 2px to 0.9rem). `components.css` sets one `.btn` with modifiers; `components/Button/README.md` maps the old names. Pages adopt it as they are touched.
 - **`color-mix()` tokens** (`--accentA100` in dark, `--surface-inset`, `--skeleton-bg`) appear in `tokens.json` as the hex they resolve to; `npm run design:tokens` recomputes them.
-- **Material Icons Two Tone**, named in the old style guide, is not hosted and is not part of the system.
-- **`design/DESIGN.md`**'s "Architectural Ledger" direction (Public Sans, Inter, gradients, glass) conflicts with the token inventory and is not part of this system.
-- **`design/source/durion-theme.css`** is a stale copy that disagrees with `src/styles.css`; ignore it.
+- **Reversed logo.** There is no white lockup for dark surfaces yet; until one is drawn, use the `--logo-plate` plaque.
+- **`design/DESIGN.md`** keeps its "Architectural Ledger" principles; its note at the top lists where this system overrides the brief's specific fonts, token names, borders, inputs and effects.

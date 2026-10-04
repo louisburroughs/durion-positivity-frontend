@@ -137,8 +137,9 @@ export class CustomerLookupComponent implements ControlValueAccessor {
       event.preventDefault();
       this.activeIndex.set(Math.max(this.activeIndex() - 1, 0));
     } else if (event.key === 'Enter') {
+      // Only an option the user can see is selectable; otherwise Enter is left to the form.
       const idx = this.activeIndex();
-      if (idx >= 0 && idx < items.length) {
+      if (this.showList() && idx >= 0 && idx < items.length) {
         event.preventDefault();
         this.select(items[idx]);
       }

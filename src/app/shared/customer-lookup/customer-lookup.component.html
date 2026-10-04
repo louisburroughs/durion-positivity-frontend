@@ -10,7 +10,7 @@
   <input [id]="inputId" type="text" class="field-input"
     role="combobox" aria-autocomplete="list" autocomplete="off"
     [attr.aria-expanded]="showList() && suggestions().length > 0"
-    [attr.aria-controls]="inputId + '-listbox'"
+    [attr.aria-controls]="showList() && suggestions().length > 0 ? (inputId + '-listbox') : null"
     [attr.aria-activedescendant]="showList() && activeIndex() >= 0 ? (inputId + '-opt-' + activeIndex()) : null"
     [attr.aria-required]="required ? 'true' : null"
     [value]="query()"

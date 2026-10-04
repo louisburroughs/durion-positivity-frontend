@@ -14,9 +14,6 @@ The dropdown panel for a combobox, typeahead or picker: `.picker-wrap` around th
 - **Escape** closes the list and clears the active option without changing the value.
 - **Tab** leaves the field normally, and the list closes on blur.
 
-`CustomerLookup` (`src/app/shared/customer-lookup/`) is the closer reference for `onKeydown`, but neither shared component meets this contract in full yet, so don't copy either wholesale:
-
-- `LocationPicker` (`src/app/shared/location-picker/`) closes the list on Escape without clearing `activeIndex`, so ArrowDown, Escape, Enter selects an option that is no longer shown and blocks the form submit. Clear the active option on Escape and check that the list is open before Enter selects.
-- Both templates bind `aria-controls` even while the listbox isn't rendered. Bind it only while the list is in the DOM, as `aria-activedescendant` already is.
+`CustomerLookup` (`src/app/shared/customer-lookup/`) and `LocationPicker` (`src/app/shared/location-picker/`) implement this contract, including the ARIA bindings that appear only while the list is rendered; their specs cover Escape clearing the active option, Enter acting only while the list is open, and `aria-controls` following the list. Copy their `onKeydown` and template bindings.
 
 The same chrome serves `.typeahead-*` and the LocationPicker; the shared rules live in `src/app/shared/styles/listbox.css`.

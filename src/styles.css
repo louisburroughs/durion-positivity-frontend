@@ -66,8 +66,8 @@
   --brand-primary-deep: var(--durion-blue-800); /* hover/pressed shade of a --brand-primary fill — white text 13.7:1 */
   --brand-secondary: var(--durion-graphite-700);
   --brand-accent: var(--durion-teal-400);
-  --accent-strong: #006a6a; /* AA-safe accent for white text on a filled button (teal-400 is only 2.4:1; this is 5.8:1) */
-  --accent-strong-deep: #00504f; /* deep end of the accent gradient / its hover — white text 7.7:1 */
+  --accent-strong: #006a6a; /* AA-safe accent for white text on a filled button (teal-400 is only 2.4:1; this is 6.4:1) */
+  --accent-strong-deep: #00504f; /* deep end of the accent gradient / its hover — white text 9.3:1 */
   /* The logo mark sits on its own white plate in BOTH themes: the plate is part of
      the mark, not a surface, so it must not follow --cardBackground. */
   --logo-plate: #ffffff;
@@ -193,10 +193,10 @@
      straight is a mid-tone, so body text on it was 3.3:1 in dark; blended into the
      card it reads as a teal tint and clears AA (5.9:1). */
   --accentA100: color-mix(in srgb, var(--durion-teal-600) 45%, var(--cardBackground));
-  --goldA400: var(--durion-gold-300);  /* lighter so it reads on dark surfaces (6.3:1) */
+  --goldA400: var(--durion-gold-300);  /* lighter so it reads on dark surfaces (6.4:1) */
   --goldA100: var(--durion-gold-600);  /* deep gold wash on dark */
   --trackColor: var(--durion-grey-700);
-  --handleColor: var(--durion-graphite-200); /* graphite-500 (#727986) fails 4.5:1 on dark card (#3a3a3e); graphite-200 (#d7d9dd) = 7.9:1 */
+  --handleColor: var(--durion-graphite-200); /* graphite-500 (#727986) fails 4.5:1 on dark card (#3a3a3e); graphite-200 (#d7d9dd) = 8.0:1 */
   --border-color: var(--durion-graphite-700);
   --input-background: var(--durion-graphite-800);
   --input-border: var(--durion-graphite-400); /* graphite-600 (#5a616e) is 1.9:1 on the graphite-800 field fill; graphite-400 = 3.7:1 */
@@ -207,7 +207,7 @@
   --chat-bubble-user-bg: var(--durion-blue-700);
   --chat-bubble-system-bg: var(--durion-graphite-700);
   /* Dark variants of the elevated-surface + muted-text tokens. graphite-800
-     popup over grey-700 cards; handleColor (graphite-200) = 7.9:1 muted text. */
+     popup over grey-700 cards; handleColor (graphite-200) = 8.0:1 muted text. */
   --surface-variant: var(--durion-graphite-800);
   --surface-2: var(--cardBackground);
   --surface-hover: rgba(255, 255, 255, 0.08);
@@ -402,7 +402,7 @@ textarea::placeholder {
    option list defaults to a light popup — in dark mode the inherited light
    text then reads white-on-whitish. Pin both to theme tokens: light resolves
    to white bg / grey-900 text (unchanged); dark resolves to graphite-800 bg /
-   #e8e9eb text (~9.9:1, WCAG AAA). */
+   #e8e9eb text (~9.7:1, WCAG AAA). */
 option,
 optgroup {
   background: var(--input-background);
@@ -1395,7 +1395,7 @@ app-workorder-detail-page .alert--warn {
 }
 
 app-workorder-detail-page .alert--success {
-  background: var(--status-success-bg); color: var(--status-success-fg); /* functional-success (#2e7d32) is only 4.36:1 on its own tint; darker green = AA */
+  background: var(--status-success-bg); color: var(--status-success-fg); /* functional-success (#2e7d32) is 4.5:1 on the light tint and 2.5:1 on the dark one; the -fg pair is 6.9:1 / 7.6:1 */
   border: 1px solid var(--functional-success);
   border-radius: var(--radius-sm);
   padding: 0.75rem 1rem;
