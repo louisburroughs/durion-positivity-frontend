@@ -184,6 +184,43 @@ describe('PickListPageComponent', () => {
     });
   });
 
+  describe('no raw UUIDs on screen (#447)', () => {
+    it('shows the product code in the SKU column, never the skuId', async () => {
+      const withCode: PickTaskLine = { ...pickTaskLine, productSku: 'sku-uuid-001', productCode: 'BRK-PAD-22' };
+      mockPickService.getWorkorderPickList.mockReturnValue(of({ ...pickListFixture, tasks: [withCode] }));
+      const fixture = await setupPickListFixture();
+      fixture.detectChanges();
+
+      const text = fixture.nativeElement.textContent as string;
+      expect(text).toContain('BRK-PAD-22');
+      expect(text).not.toContain('sku-uuid-001');
+    });
+
+    it('falls back to COMMON.EMPTY_VALUE, never the skuId, when no product code exists yet', async () => {
+      const withoutCode: PickTaskLine = { ...pickTaskLine, productSku: 'sku-uuid-001' };
+      mockPickService.getWorkorderPickList.mockReturnValue(of({ ...pickListFixture, tasks: [withoutCode] }));
+      const fixture = await setupPickListFixture();
+      const translate = TestBed.inject(TranslateService);
+      translate.setTranslation('en-US', enUS as TranslationObject);
+      translate.use('en-US');
+      fixture.detectChanges();
+
+      const cell = (fixture.nativeElement as HTMLElement).querySelector('tbody td');
+      expect(cell?.textContent?.trim()).toBe(enUS.COMMON.EMPTY_VALUE);
+      expect(fixture.nativeElement.textContent).not.toContain('sku-uuid-001');
+    });
+
+    it('does not render the workorder or pick list ids in the summary', async () => {
+      mockPickService.getWorkorderPickList.mockReturnValue(of(pickListFixture));
+      const fixture = await setupPickListFixture();
+      fixture.detectChanges();
+
+      const text = fixture.nativeElement.textContent as string;
+      expect(text).not.toContain(pickListFixture.workorderId);
+      expect(text).not.toContain(pickListFixture.pickListId);
+    });
+  });
+
   // #2204/#2225: the pick-facade reads are now location-scoped.
   describe('LOCATION_SCOPE_DENIED maps to a localized error (#2204/#2225)', () => {
     it('a 403 with the scope-denied code sets the dedicated error key', async () => {

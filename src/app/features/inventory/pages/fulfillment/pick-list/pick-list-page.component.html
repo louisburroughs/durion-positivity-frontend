@@ -38,12 +38,6 @@
   @if (pickList()) {
   <section class="card pick-summary-card">
     <dl class="summary-grid">
-      <dt>{{ 'INVENTORY.FULFILLMENT.PICK_LIST.FIELD.WORKORDER_ID' | translate }}</dt>
-      <dd>{{ pickList()!.workorderId }}</dd>
-
-      <dt>{{ 'INVENTORY.FULFILLMENT.PICK_LIST.FIELD.PICK_LIST_ID' | translate }}</dt>
-      <dd>{{ pickList()!.pickListId }}</dd>
-
       <dt>{{ 'INVENTORY.FULFILLMENT.PICK_LIST.FIELD.STATUS' | translate }}</dt>
       <dd>{{ ('STATUS.' + pickList()!.status) | translate }}</dd>
 
@@ -73,7 +67,7 @@
         <tbody>
           @for (task of pickList()!.tasks; track task.pickTaskId) {
           <tr [class.needs-review-row]="task.status === 'NEEDS_REVIEW'">
-            <td>{{ task.productSku }}</td>
+            <td>{{ task.productCode || ('COMMON.EMPTY_VALUE' | translate) }}</td>
             <td>{{ task.productDisplayName || ('COMMON.EMPTY_VALUE' | translate) }}</td>
             <td>{{ task.storageLocationCode || ('COMMON.NOT_AVAILABLE' | translate) }}</td>
             <td>{{ task.requestedQty }}</td>

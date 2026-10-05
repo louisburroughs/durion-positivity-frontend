@@ -1002,7 +1002,6 @@
       "SAVED": "Perfil de la persona guardado.",
       "IDENTIFIERS_ARIA": "Identificadores",
       "IDENTIFIERS_TITLE": "Identificadores",
-      "FIELD_PERSON_ID": "ID de persona",
       "FIELD_USERNAME": "Nombre de usuario",
       "NO_USERNAME": "Sin usuario vinculado",
       "PERSON_LEGEND": "Persona",
@@ -7447,8 +7446,6 @@
           "EMPTY": "No hay tareas de surtido disponibles."
         },
         "FIELD": {
-          "WORKORDER_ID": "Orden de trabajo",
-          "PICK_LIST_ID": "Lista de surtido",
           "STATUS": "Estado",
           "CREATED_AT": "Creado el"
         },
