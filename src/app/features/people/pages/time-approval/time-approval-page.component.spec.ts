@@ -312,4 +312,12 @@ describe('TimeApprovalPageComponent', () => {
     const option = fixture.nativeElement.querySelectorAll('[data-testid="person-select"] option')[1] as HTMLOptionElement;
     expect(option.textContent?.trim()).toBe('Cy');
   });
+
+  it('re-derives the selected period status when the selection changes (#455)', () => {
+    expect(component.selectedPeriodStatus()).toBeNull();
+
+    component.selectionForm.patchValue({ personId: 'p1', timePeriodId: 't1' });
+
+    expect(component.selectedPeriodStatus()).toBe('SUBMISSION_CLOSED');
+  });
 });

@@ -3,7 +3,7 @@ import { Component, DestroyRef, computed, effect, inject, signal } from '@angula
 import { ActivatedRoute } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Observable, Subject, Subscription, forkJoin, of } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, map, switchMap } from 'rxjs/operators';
@@ -60,11 +60,21 @@ export class CrmSnapshotPageComponent {
   readonly searchingParty = signal(false);
   private readonly partySearch$ = new Subject<string>();
 
+  // Reactive Forms state is not a signal: computed() reads it through these bridges so it
+  // re-evaluates when the user types or picks a customer.
+  private readonly formValue = toSignal(
+    this.snapshotForm.valueChanges.pipe(map(() => this.snapshotForm.getRawValue())),
+    { initialValue: this.snapshotForm.getRawValue() },
+  );
+  private readonly formStatus = toSignal(this.snapshotForm.statusChanges, {
+    initialValue: this.snapshotForm.status,
+  });
+
   readonly canLoad = computed(() => {
-    const value = this.snapshotForm.getRawValue();
+    const value = this.formValue();
     return Boolean(
       (value.partyId || value.vehicleId) &&
-      this.snapshotForm.valid &&
+      this.formStatus() === 'VALID' &&
       this.state() !== 'loading',
     );
   });
@@ -72,7 +82,7 @@ export class CrmSnapshotPageComponent {
   readonly canRefresh = computed(
     () =>
       this.snapshot() !== null &&
-      !this.snapshotForm.invalid &&
+      this.formStatus() !== 'INVALID' &&
       this.state() !== 'loading',
   );
 

@@ -3,7 +3,7 @@ import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { CrmService } from '../../services/crm.service';
 import {
   MergePartiesRequest,
@@ -47,8 +47,12 @@ export class MergePartiesComponent {
   });
 
   readonly canContinue = computed(() => this.selectedParties().length === 2);
+  // Bridge Reactive Forms status into a signal so canMerge tracks justification/acknowledged.
+  private readonly confirmStatus = toSignal(this.confirmForm.statusChanges, {
+    initialValue: this.confirmForm.status,
+  });
   readonly canMerge = computed(
-    () => !!this.survivorPartyId() && this.confirmForm.valid,
+    () => !!this.survivorPartyId() && this.confirmStatus() === 'VALID',
   );
 
   search(): void {
