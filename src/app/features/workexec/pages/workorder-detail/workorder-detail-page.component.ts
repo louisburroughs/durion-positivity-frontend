@@ -156,9 +156,8 @@ export class WorkorderDetailPageComponent implements OnInit {
 
   /**
    * Id of the assigned technician, if any. This — not the name — is the source
-   * of truth for "is a technician assigned", because the name is resolved
-   * asynchronously from the People domain and the workorder payload does not
-   * carry it.
+   * of truth for "is a technician assigned", because the workorder payload
+   * carries a null name when the backend can't resolve one.
    */
   readonly technicianId = computed(
     () => this.workorder()?.primaryTechnicianId ?? this.workorder()?.technician?.technicianId ?? null,
@@ -167,9 +166,10 @@ export class WorkorderDetailPageComponent implements OnInit {
   readonly hasTechnician = computed(() => !!this.technicianId());
 
   /**
-   * Assigned technician's name and employee number, resolved from the People
-   * domain (neither is carried on the workorder payload). Each field stays null
-   * until/unless the lookup succeeds.
+   * Assigned technician's name and employee number as the People domain holds
+   * them. Only the employee number is People-only; the name is a fallback for a
+   * workorder payload without one. Each field stays null until/unless the
+   * lookup succeeds.
    */
   readonly technicianProfile = signal<{ name: string | null; employeeNumber: string | null }>({
     name: null,
@@ -188,15 +188,22 @@ export class WorkorderDetailPageComponent implements OnInit {
   /** Bumped by every detail load; an older load's answer never writes state or starts a lookup (ADR-0063). */
   private workorderLoadSeq = 0;
 
-  readonly technicianName = computed(() => this.technicianProfile().name);
+  /**
+   * The workorder payload's display name wins: every role that can view the
+   * workorder gets it (#446), so the header reads the same for all of them and
+   * doesn't change when the People lookup answers.
+   */
+  readonly technicianName = computed(
+    () => this.workorder()?.primaryTechnicianName || this.technicianProfile().name,
+  );
 
   readonly technicianEmployeeNumber = computed(() => this.technicianProfile().employeeNumber);
 
   /**
    * Header display for the assigned technician — name plus employee number when
    * available (e.g. "Jane Smith · #EMP-001"), falling back to the name alone
-   * while the number resolves. Null when no technician is assigned or the name
-   * has not yet resolved.
+   * while the number resolves or when the viewer can't read it. Null when no
+   * technician is assigned or no name is available.
    */
   readonly technicianDisplay = computed(() => {
     const name = this.technicianName();
@@ -247,15 +254,15 @@ export class WorkorderDetailPageComponent implements OnInit {
   }
 
   /**
-   * Resolves the assigned technician's name and employee number for the header.
-   * No-op (clearing any prior value) when the work order has no assigned
-   * technician.
+   * Resolves the assigned technician's employee number (and a fallback name)
+   * for the header. No-op (clearing any prior value) when the workorder has no
+   * assigned technician.
    *
    * getEmployee returns the full profile, personal contact detail included, so
    * pos-people guards it with people:employee_pii:view, which technicians and
    * service advisors don't hold (#446). Only callers holding it make the call;
-   * everyone else settles straight to the neutral "Assigned" label rather than
-   * a request that would 403.
+   * everyone else settles straight to the name on the workorder payload, or the
+   * neutral "Assigned" label without one, rather than a request that would 403.
    */
   private loadTechnicianProfile(technicianId: string | undefined): void {
     const seq = ++this.technicianLookupSeq; // any lookup still in flight is now stale

@@ -34,6 +34,7 @@ import {
   EstimateResponse,
   PartUsageResponse,
   SubstituteLinkResponse,
+  WorkorderDetailResponse,
   WorkorderInvoiceView,
   WorkorderWipView,
 } from '../models/workexec.models';
@@ -290,6 +291,31 @@ describe('WorkexecService', () => {
     expect(r.request.method).toBe('GET');
     expect(r.request.headers.has('X-Authorities')).toBeFalsy();
     r.flush({ id: 'wo-1' });
+  });
+
+  it('getWorkorderDetail — carries the assigned technician display name through as primaryTechnicianName (#446)', () => {
+    let result: WorkorderDetailResponse | undefined;
+    service.getWorkorderDetail('wo-1').subscribe(r => (result = r));
+    http.expectOne(`${BASE}/v1/workorders/wo-1/detail`).flush({
+      workorderId: 'wo-1',
+      assignedTechnicianId: 'tech-1',
+      assignedTechnicianName: 'Jane Smith',
+    });
+
+    expect(result?.primaryTechnicianId).toBe('tech-1');
+    expect(result?.primaryTechnicianName).toBe('Jane Smith');
+  });
+
+  it('getWorkorderDetail — leaves primaryTechnicianName unset when the backend sends a null name (#446)', () => {
+    let result: WorkorderDetailResponse | undefined;
+    service.getWorkorderDetail('wo-1').subscribe(r => (result = r));
+    http.expectOne(`${BASE}/v1/workorders/wo-1/detail`).flush({
+      workorderId: 'wo-1',
+      assignedTechnicianId: 'tech-1',
+      assignedTechnicianName: null,
+    });
+
+    expect(result?.primaryTechnicianName).toBeUndefined();
   });
 
   it('[221] suggestSubstitutes — posts partId to /v1/workorders/{workorderId}/suggestSubstitutes (#141)', () => {
