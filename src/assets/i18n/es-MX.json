@@ -6321,6 +6321,7 @@
       "LOADING": "Cargando orden de trabajo…",
       "STATUS_ARIA": "Estado: {{status}}",
       "TECHNICIAN": "Técnico",
+      "TECHNICIAN_ASSIGNED": "Asignado",
       "UNASSIGNED": "Sin asignar",
       "STARTED": "Iniciado",
       "APPROVE_WO": "Aprobar orden de trabajo",

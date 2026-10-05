@@ -5,6 +5,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { vi } from 'vitest';
 import { WorkorderDetailPageComponent } from './workorder-detail-page.component';
+import { AuthService } from '../../../../core/services/auth.service';
 import { BASE_PATH } from '@durion-sdk/workorder';
 import { Configuration as PeopleConfiguration } from '@durion-sdk/people';
 import { environment } from '../../../../../environments/environment';
@@ -29,6 +30,7 @@ const translations = {
       APPROVE_WO: 'Approve Work Order',
       ASSIGN_TECH: 'Assign Technician',
       NOT_SET: 'Not set',
+      TECHNICIAN_ASSIGNED: 'Assigned',
     },
     ERROR: {
       INVOICE_DRAFT_EXISTS: 'An invoice draft already exists for this work order.',
@@ -418,6 +420,32 @@ describe('WorkorderDetailPageComponent [Stories 213–215]', () => {
       expect(component.technicianDisplay()).toBeNull();
       const value = fixture.nativeElement.querySelector('.wo-header__meta-value');
       expect(value?.textContent ?? '').not.toContain(TECH_ID);
+      expect(value?.textContent?.trim()).toBe('Assigned');
+    });
+
+    it('skips the PII-guarded employee lookup without people:employee_pii:view and shows "Assigned" (#446)', () => {
+      const auth = TestBed.inject(AuthService);
+      vi.spyOn(auth, 'permissionsKnown').mockReturnValue(true);
+      vi.spyOn(auth, 'hasPermission').mockImplementation(p => p !== 'people:employee_pii:view');
+      fixture.detectChanges();
+      drainWithTechnician(() => http.expectNone(`${BASE}/v1/people/employees/${TECH_ID}`));
+      fixture.detectChanges();
+
+      expect(component.hasTechnician()).toBe(true);
+      expect(component.technicianLookupSettled()).toBe(true);
+      const value = fixture.nativeElement.querySelector('.wo-header__meta-value');
+      expect(value?.textContent?.trim()).toBe('Assigned');
+    });
+
+    it('shows the resolving placeholder until the employee lookup settles', () => {
+      fixture.detectChanges();
+      http.expectOne(`${BASE}/v1/workorders/${WO_ID}/detail`).flush({ ...STUB_WORKORDER, assignedTechnicianId: TECH_ID });
+      http.expectOne(`${BASE}/v1/workorders/${WO_ID}/changeRequests`).flush([]);
+      fixture.detectChanges();
+
+      const value = fixture.nativeElement.querySelector('.wo-header__meta-value');
+      expect(value?.textContent?.trim()).toBe('…');
+      http.expectOne(`${BASE}/v1/people/employees/${TECH_ID}`).flush({ id: TECH_ID, firstName: 'Jane', lastName: 'Smith' });
     });
 
     it('does not call the employee endpoint when no technician is assigned', () => {
