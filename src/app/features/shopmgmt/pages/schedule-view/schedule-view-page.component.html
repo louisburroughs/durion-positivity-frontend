@@ -202,8 +202,10 @@
                 }
               </div>
 
-              @if (cell.day.kind === 'closed') {
-                <p class="day-closed">{{ 'SHOPMGMT.SCHEDULE_VIEW.CLOSED' | translate }}</p>
+              @if (cell.day.kind === 'closed' || cell.day.kind === 'holiday') {
+                <p class="day-closed">
+                  {{ 'SHOPMGMT.SCHEDULE_VIEW.CLOSED' | translate }}@if (cell.day.closureReason; as reason) { — {{ reason }}}
+                </p>
               } @else if (cell.day.kind !== 'outside') {
                 <button type="button" class="month-cell-body" (click)="openDay(cell.day.date)"
                   [attr.aria-label]="'SHOPMGMT.SCHEDULE_VIEW.OPEN_DAY_ARIA' | translate: { date: cell.day.date }">

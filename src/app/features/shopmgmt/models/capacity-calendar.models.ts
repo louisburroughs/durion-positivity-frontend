@@ -163,11 +163,13 @@ export interface CapacityHour {
   readonly fits: boolean;
 }
 
-/** Work carried into a day because yesterday's job ran past its planned finish. */
+/** Work carried into a day because an earlier day's job is still holding a bay. */
 export interface CarryOver {
+  /** Bay-hours of this day already spoken for, summed across bays. */
   readonly hours: number;
+  /** Earliest local date any of that work began, `YYYY-MM-DD`. */
   readonly fromDate: string;
-  readonly reason: string;
+  readonly reason?: string;
 }
 
 /** One cell of the month grid, and one column header of the week grid. */
@@ -202,6 +204,8 @@ export interface CapacityDay {
   /** Hours with a certified technician rostered but assigned elsewhere. */
   readonly techAssignedHours: number;
   readonly carryOver?: CarryOver;
+  /** Why a `holiday` day is shut, as recorded against the closure. */
+  readonly closureReason?: string;
 }
 
 // ── Day board ───────────────────────────────────────────────────────────────

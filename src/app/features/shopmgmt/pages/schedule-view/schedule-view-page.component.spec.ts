@@ -237,6 +237,29 @@ describe('ScheduleViewPageComponent', () => {
     expect(fill.style.height).toBe('50%');
   });
 
+  it('draws a holiday shut, with the reason recorded against the closure, and offers no day to open', async () => {
+    const holiday: CapacityDay = {
+      ...computeDay({
+        date: '2026-09-16',
+        kind: 'holiday',
+        isToday: false,
+        hours: HOURS,
+        bays: BAYS,
+        technicians: technicians(),
+        job: ALIGNMENT_JOB,
+        grid: BAYS.map(() => HOURS.map(() => 'closed' as BayHourState)),
+      }),
+      closureReason: 'Founders Day',
+    };
+    capacityStub.getCalendar.mockReturnValue(of(view({ weeks: [[holiday]] })));
+    await setup();
+
+    const closed = all('.day-closed');
+    expect(closed.length).toBe(1);
+    expect((closed[0].nativeElement as HTMLElement).textContent).toContain('Founders Day');
+    expect(all('.month-cell-body').length).toBe(0);
+  });
+
   it('marks a day amber when the rack is free but no technician is rostered', async () => {
     capacityStub.getCalendar.mockReturnValue(
       of(view({ weeks: [[day(TODAY, { onDuty: false })]] })),

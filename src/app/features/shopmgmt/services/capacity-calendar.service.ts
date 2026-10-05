@@ -6,8 +6,14 @@ import { BayAPIService, LocationAPIService } from '@durion-sdk/location';
 import type { BayResponse } from '@durion-sdk/location';
 import { ProductsAPIService } from '@durion-sdk/catalog';
 import type { ServiceDto } from '@durion-sdk/catalog';
-import { ScheduleAPIService, TechnicianAPIService, TechnicianCredentialResponseStatusEnum } from '@durion-sdk/shop-manager';
+import {
+  DayCapacityViewStatusEnum,
+  ScheduleAPIService,
+  TechnicianAPIService,
+  TechnicianCredentialResponseStatusEnum,
+} from '@durion-sdk/shop-manager';
 import type {
+  DayCapacityView,
   LocationTechnicianRosterEntryResponse,
   ScheduleEventView,
   ScheduleResourceView,
@@ -22,6 +28,7 @@ import {
   CapacityCalendarView,
   CapacityDay,
   CapacityTechnician,
+  CarryOver,
   DayKind,
   JobRequirement,
   computeDay,
@@ -50,11 +57,14 @@ export interface CapacityCalendarRequest {
 const PAGE_SIZE = 500;
 
 /**
- * The month grid needs one `viewSchedule` call per day (see louisburroughs/durion#474), so the
- * fan-out is concurrency-limited rather than fired as 42 parallel requests.
- * Matches the dashboard's VEHICLE_LOOKUP_CONCURRENCY for the same reason.
+ * The week grid needs one `viewSchedule` call per day, so the fan-out is
+ * concurrency-limited rather than fired as parallel requests. Matches the
+ * dashboard's VEHICLE_LOOKUP_CONCURRENCY for the same reason. The month grid no
+ * longer fans out: it is one `getScheduleCapacity` read.
  */
 const SCHEDULE_FAN_OUT_CONCURRENCY = 6;
+
+const MS_PER_HOUR = 3_600_000;
 
 /** `status` values that take a bay out of the capacity model entirely. */
 const BAY_OUT_OF_SERVICE = 'OUT_OF_SERVICE';
@@ -90,6 +100,19 @@ interface ScheduleLoad {
   readonly total: number;
 }
 
+/**
+ * The month grid's one `getScheduleCapacity` read (backend #2023), keyed by
+ * date. A failed read leaves `byDate` empty with one of the two flags set, in
+ * the same `ABSENT`/`FAILED` split the per-day schedule read uses.
+ */
+interface CapacityLoad {
+  readonly byDate: Map<string, DayCapacityView>;
+  /** The read answered 404. */
+  readonly absent: boolean;
+  /** The read failed for any other reason. */
+  readonly failed: boolean;
+}
+
 /** True for the 404 this endpoint returns when it does not know the location. */
 function isScheduleAbsent(error: unknown): boolean {
   return error instanceof HttpErrorResponse && error.status === 404;
@@ -111,15 +134,25 @@ const LANE_MECHANIC = 'MECHANIC';
  * Backs the Shop Capacity Calendar (`/app/shopmgmt/schedule`), whose primitive
  * is *eligible* capacity — see `capacity-calendar.models.ts` for the model.
  *
- * INTERIM COMPOSITION, in the same shape as {@link ShopDashboardService}: the
- * page wants one capacity read and there is no capacity endpoint, so the view is
- * composed from the endpoints that do exist:
+ * INTERIM COMPOSITION, in the same shape as {@link ShopDashboardService}: no
+ * single read answers eligible capacity for a job, so the view is composed from
+ * the endpoints that do exist:
  *
  *   bays                    → columns, bay type, specialty codes, duty class, OOS
  *   location technicians    → technician roster and the skill codes they hold
- *   schedule view (per day) → bay occupancy, mechanic assignment, shift/PTO
+ *   schedule capacity       → month grid: per-day status, operating window, bay
+ *                             occupancy by hour and carry-over, in one read
+ *   schedule view (per day) → week grid and day board: bay occupancy and the
+ *                             appointments themselves
  *   catalog services        → the job-type filter, its operation code, its
  *                             required skills and its default duration
+ *
+ * Neither schedule read publishes technician duty or assignment (backend
+ * #2527): the capacity read carries bays only, and the schedule view emits
+ * appointments on their own resource lane and nothing else. So the month grid
+ * counts every rostered technician as on duty and unassigned, and the week and
+ * day scopes see a technician as busy only for an appointment booked directly
+ * on a mechanic resource.
  *
  * Eligibility is read, not inferred: a bay's `serviceCapabilityCodes` against the
  * service's `operationCode` (CAP-325 D14) and a technician's held credentials
@@ -128,9 +161,9 @@ const LANE_MECHANIC = 'MECHANIC';
  * is tracked as a backend story and each has a named degradation on screen:
  *
  *   louisburroughs/durion#474 — `viewSchedule` is one location and one date; its
- *     `range` selects LOCATION_HOURS or FULL_DAY, not a week or a month. The
- *     month grid is therefore a capped fan-out of one request per day, which is
- *     why the month scope is loaded only when that grid is actually shown.
+ *     `range` selects LOCATION_HOURS or FULL_DAY, not a week. The week grid is
+ *     therefore a capped fan-out of one request per day. Closed for the month
+ *     grid, which reads `getScheduleCapacity` once.
  *
  *   louisburroughs/durion#475 — nothing answers "the next unbroken 1.5 h in an
  *     eligible bay with a certified technician". That fit is computed in
@@ -216,6 +249,20 @@ export class CapacityCalendarService {
    * so the page can say the numbers may be incomplete.
    */
   getCalendar(request: CapacityCalendarRequest): Observable<CapacityCalendarView> {
+    if (request.scope === 'month') {
+      const weeks = this.monthGrid(request.focusDate);
+      return forkJoin({
+        bays: this.loadBays(request.locationId),
+        technicians: this.loadTechnicians(request.locationId),
+        locationName: this.loadLocationName(request.locationId),
+        capacity: this.loadCapacity(request.locationId, weeks.flat()),
+      }).pipe(
+        map(({ bays, technicians, locationName, capacity }) =>
+          this.assembleMonth(request, weeks, bays, technicians, locationName, capacity),
+        ),
+      );
+    }
+
     const dates = this.datesFor(request.focusDate, request.scope);
 
     return forkJoin({
@@ -278,8 +325,29 @@ export class CapacityCalendarService {
   }
 
   /**
+   * The whole month grid in one read. The grid is at most six weeks, which is
+   * exactly the 42-day span the endpoint allows.
+   *
+   * A failure degrades to an empty load rather than failing the page, like every
+   * other upstream call here: the bays and roster are still worth showing.
+   */
+  private loadCapacity(locationId: string, dates: readonly string[]): Observable<CapacityLoad> {
+    return this.scheduleApi.getScheduleCapacity(locationId, dates[0], dates[dates.length - 1]).pipe(
+      map(response => ({
+        byDate: new Map(response.days.map(day => [day.date, day] as const)),
+        absent: false,
+        failed: false,
+      })),
+      catchError((error: unknown) => {
+        const absent = isScheduleAbsent(error);
+        return of({ byDate: new Map<string, DayCapacityView>(), absent, failed: !absent });
+      }),
+    );
+  }
+
+  /**
    * One `viewSchedule` per date (#474), concurrency-limited, each degrading to
-   * `undefined` so one bad day does not blank the month.
+   * `undefined` so one bad day does not blank the week.
    *
    * `includeAvailabilityOverlay` is what puts SHIFT and PTO events on the
    * mechanic lanes; without it a technician's absence is indistinguishable from
@@ -321,7 +389,7 @@ export class CapacityCalendarService {
     );
   }
 
-  // ── Assembly ──────────────────────────────────────────────────────────────
+  // ── Week and day assembly (per-day schedule view) ─────────────────────────
 
   private assemble(
     request: CapacityCalendarRequest,
@@ -331,15 +399,13 @@ export class CapacityCalendarService {
     load: ScheduleLoad,
   ): CapacityCalendarView {
     const schedules = load.byDate;
-    const hours = this.hourLabels(schedules);
+    const hours = this.hourLabels(schedules.values());
     const today = isoDateLocal(new Date());
     const currentHour = new Date().getHours();
-    const focusMonth = parseIsoDateLocal(request.focusDate).getMonth();
 
     const buildDay = (date: string): CapacityDay => {
       const schedule = schedules.get(date);
-      const inFocusMonth = parseIsoDateLocal(date).getMonth() === focusMonth;
-      const kind: DayKind = this.dayKind(schedule, inFocusMonth, request.scope);
+      const kind: DayKind = this.dayKind(schedule);
       const dayTechnicians = this.technicianHours(technicians.roster, schedule, hours);
       return computeDay({
         date,
@@ -351,16 +417,12 @@ export class CapacityCalendarService {
         job: request.job,
         grid: this.bayGrid(bays.bays, schedule, hours),
         currentHour,
-        // #476: no actual-vs-planned read, so carry-over is left unset rather
-        // than guessed from a duration the backend never confirmed.
+        // The schedule view publishes no actual-vs-planned times (#476), so
+        // carry-over is left unset here; only the month's capacity read has it.
         carryOver: undefined,
       });
     };
 
-    const monthWeeks =
-      request.scope === 'month'
-        ? this.monthGrid(request.focusDate).map(week => week.map(buildDay))
-        : [];
     const weekDays =
       request.scope === 'week' ? this.weekDates(request.focusDate).map(buildDay) : [];
     const focusDay = request.scope === 'day' ? buildDay(request.focusDate) : undefined;
@@ -377,7 +439,7 @@ export class CapacityCalendarService {
         hours,
       ),
       hours,
-      weeks: monthWeeks,
+      weeks: [],
       weekDays,
       focusDay,
       board: request.scope === 'day' ? this.boardFor(schedules.get(request.focusDate)) : [],
@@ -407,16 +469,18 @@ export class CapacityCalendarService {
    * assumption the dispatch board already makes; a shop in another timezone
    * needs `LocationResponseDTO.timezone`, which the read DTO omits.
    */
-  private hourLabels(schedules: Map<string, ScheduleViewResponse | undefined>): number[] {
+  private hourLabels(
+    days: Iterable<{ dayStartAt?: string; dayEndAt?: string } | undefined>,
+  ): number[] {
     let start = Number.POSITIVE_INFINITY;
     let end = Number.NEGATIVE_INFINITY;
-    schedules.forEach(schedule => {
-      if (!schedule?.dayStartAt || !schedule?.dayEndAt) {
-        return;
+    for (const day of days) {
+      if (!day?.dayStartAt || !day?.dayEndAt) {
+        continue;
       }
-      start = Math.min(start, new Date(schedule.dayStartAt).getHours());
-      end = Math.max(end, Math.ceil(hourOfDay(new Date(schedule.dayEndAt))));
-    });
+      start = Math.min(start, new Date(day.dayStartAt).getHours());
+      end = Math.max(end, Math.ceil(hourOfDay(new Date(day.dayEndAt))));
+    }
     if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) {
       return [];
     }
@@ -424,27 +488,119 @@ export class CapacityCalendarService {
   }
 
   /**
-   * How a day relates to the operating calendar.
+   * How a day relates to the operating calendar, for the scopes built on the
+   * per-day schedule view.
    *
-   * With no readable operating hours or holiday closures, only two states can
-   * be told apart honestly: a day outside the focus month, and everything else.
-   * A day the shop is genuinely shut is left as `open` with an empty grid
-   * rather than shaded as `closed`, because shading it would assert a closure
-   * no read confirmed.
+   * The schedule view states no operating hours or holiday closures, so a day
+   * the shop is genuinely shut is left as `open` with an empty grid rather than
+   * shaded as `closed`, because shading it would assert a closure this read did
+   * not confirm. Only a day with no schedule at all is drawn shut.
    */
-  private dayKind(
-    schedule: ScheduleViewResponse | undefined,
-    inFocusMonth: boolean,
-    scope: CapacityScope,
-  ): DayKind {
-    if (scope === 'month' && !inFocusMonth) {
-      return 'outside';
-    }
+  private dayKind(schedule: ScheduleViewResponse | undefined): DayKind {
     return schedule ? 'open' : 'closed';
   }
 
+  // ── Month assembly (capacity read) ────────────────────────────────────────
+
+  private assembleMonth(
+    request: CapacityCalendarRequest,
+    weeks: readonly (readonly string[])[],
+    bays: { bays: CapacityBay[]; ok: boolean },
+    technicians: { roster: LocationTechnicianRosterEntryResponse[]; ok: boolean },
+    locationName: string | undefined,
+    load: CapacityLoad,
+  ): CapacityCalendarView {
+    const hours = this.hourLabels(load.byDate.values());
+    const today = isoDateLocal(new Date());
+    const currentHour = new Date().getHours();
+    const focusMonth = parseIsoDateLocal(request.focusDate).getMonth();
+    // The capacity read carries no technician data (backend #2527), so the
+    // roster is the same for every day: on duty all window, nothing assigned.
+    const rosterHours = this.technicianHours(technicians.roster, undefined, hours);
+
+    const buildDay = (date: string): CapacityDay => {
+      const day = load.byDate.get(date);
+      const inFocusMonth = parseIsoDateLocal(date).getMonth() === focusMonth;
+      return {
+        ...computeDay({
+          date,
+          kind: inFocusMonth ? capacityDayKind(day) : 'outside',
+          isToday: date === today,
+          hours,
+          bays: bays.bays,
+          technicians: rosterHours,
+          job: request.job,
+          grid: this.capacityGrid(bays.bays, day, hours),
+          currentHour,
+          carryOver: carryOverInto(day),
+        }),
+        closureReason: day?.status === DayCapacityViewStatusEnum.Holiday ? day.closureReason : undefined,
+      };
+    };
+
+    // The endpoint promises a day per date and marks one it could not assemble
+    // UNAVAILABLE. Either way the cell is an unknown, not a quiet day, so both
+    // degrade rather than pass as "closed".
+    const unknownDays = weeks
+      .flat()
+      .some(date => (load.byDate.get(date)?.status ?? DayCapacityViewStatusEnum.Unavailable) === DayCapacityViewStatusEnum.Unavailable);
+
+    return {
+      locationId: request.locationId,
+      locationName,
+      focusDate: request.focusDate,
+      job: request.job,
+      bays: bays.bays,
+      technicians: rosterHours,
+      hours,
+      weeks: weeks.map(week => week.map(buildDay)),
+      weekDays: [],
+      focusDay: undefined,
+      board: [],
+      degraded: !bays.ok || !technicians.ok || load.failed || (!load.absent && unknownDays),
+      locationHasNoSchedule: load.absent,
+      skillRequirementsUnknown: !request.job.skillRequirementsConfigured,
+    };
+  }
+
   /**
-   * `grid[bayIndex][hourIndex]` for one day.
+   * `grid[bayIndex][hourIndex]` for one day of the capacity read.
+   *
+   * Each day carries its own operating window, so an hour the grid shows but
+   * this day is not open for is `closed` — a short Saturday does not read as
+   * free until the weekday closing time. A bay the capacity read does not list
+   * is unknown to the schedule service; it is left `closed` rather than `free`,
+   * because free would invent capacity nothing can be booked into.
+   */
+  private capacityGrid(
+    bays: readonly CapacityBay[],
+    day: DayCapacityView | undefined,
+    hours: readonly number[],
+  ): BayHourState[][] {
+    if (day?.status !== DayCapacityViewStatusEnum.Ok) {
+      return bays.map(() => hours.map(() => 'closed' as BayHourState));
+    }
+    const slotByHour = slotIndexByHour(day);
+    return bays.map(bay => {
+      const occupancy = day.bays.find(candidate => candidate.bayId === bay.bayId)?.occupancy;
+      return hours.map((hour): BayHourState => {
+        const slot = slotByHour.get(hour);
+        if (slot === undefined) {
+          return 'closed';
+        }
+        if (bay.outOfService) {
+          return 'down';
+        }
+        if (!occupancy) {
+          return 'closed';
+        }
+        return (occupancy[slot] ?? 0) > 0 ? 'busy' : 'free';
+      });
+    });
+  }
+
+  /**
+   * `grid[bayIndex][hourIndex]` for one day of the schedule view.
    *
    * An hour is busy when any appointment on that bay lane overlaps it at all: a
    * 20-minute job still takes the bay for that hour as far as a job needing the
@@ -567,15 +723,9 @@ export class CapacityCalendarService {
 
   // ── Date windows ──────────────────────────────────────────────────────────
 
-  /** Dates the given scope needs fetched. */
-  private datesFor(focusDate: string, scope: CapacityScope): string[] {
-    if (scope === 'day') {
-      return [focusDate];
-    }
-    if (scope === 'week') {
-      return this.weekDates(focusDate);
-    }
-    return this.monthGrid(focusDate).flat();
+  /** Dates the per-day schedule read needs fetched for the week or day scope. */
+  private datesFor(focusDate: string, scope: Exclude<CapacityScope, 'month'>): string[] {
+    return scope === 'day' ? [focusDate] : this.weekDates(focusDate);
   }
 
   /** Sunday-first week containing `focusDate`. */
@@ -623,6 +773,57 @@ export class CapacityCalendarService {
  */
 function compareBayNames(a: CapacityBay, b: CapacityBay): number {
   return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
+}
+
+/**
+ * How a capacity day relates to the operating calendar. An UNAVAILABLE or
+ * missing day has no confirmed hours, so it is drawn shut; the view's
+ * `degraded` flag is what says the cell is an unknown.
+ */
+function capacityDayKind(day: DayCapacityView | undefined): DayKind {
+  switch (day?.status) {
+    case DayCapacityViewStatusEnum.Ok:
+      return 'open';
+    case DayCapacityViewStatusEnum.Holiday:
+      return 'holiday';
+    default:
+      return 'closed';
+  }
+}
+
+/**
+ * Local hour of day → index into the day's `occupancy` arrays, which hold one
+ * slot per hour of the day's own window starting at `dayStartAt`.
+ */
+function slotIndexByHour(day: DayCapacityView): Map<number, number> {
+  const slots = new Map<number, number>();
+  if (!day.dayStartAt || !day.dayEndAt) {
+    return slots;
+  }
+  const start = new Date(day.dayStartAt).getTime();
+  const count = Math.ceil((new Date(day.dayEndAt).getTime() - start) / MS_PER_HOUR);
+  for (let index = 0; index < count; index += 1) {
+    slots.set(new Date(start + index * MS_PER_HOUR).getHours(), index);
+  }
+  return slots;
+}
+
+/**
+ * The bay-hours of a day already held by work that began on an earlier date.
+ * The capacity read has netted them into occupancy already; this is the detail
+ * behind the number, summed across bays.
+ */
+function carryOverInto(day: DayCapacityView | undefined): CarryOver | undefined {
+  const entries = (day?.bays ?? []).flatMap(bay => bay.carryOverIn ?? []);
+  if (entries.length === 0) {
+    return undefined;
+  }
+  const hours = entries.reduce((total, entry) => total + entry.bayHours, 0);
+  return {
+    // bayHours arrive in tenths of an hour; rounding keeps float drift out of the sum.
+    hours: Math.round(hours * 10) / 10,
+    fromDate: entries.map(entry => entry.fromDate).sort()[0],
+  };
 }
 
 /** Local hour of day as a fraction, e.g. 13.5 for 1:30 PM. */
