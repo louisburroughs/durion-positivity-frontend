@@ -154,26 +154,12 @@ describe('AccountingService', () => {
   });
 
   describe('reprocessSuspendedEvent()', () => {
-    it('sources the required actor from authenticated claims instead of sending an empty string', () => {
-      authServiceStub.currentUserClaims.mockReturnValue({ sub: 'user-123' });
+    it('sends only the notes; the backend records the authenticated caller (#2412)', () => {
       accountingEventsStub.reprocessSuspendedEvent.mockReturnValueOnce(of({ jobId: 'job-1' }));
 
       service.reprocessSuspendedEvent('evt-001', { justification: 'retry' }).subscribe();
 
       expect(accountingEventsStub.reprocessSuspendedEvent).toHaveBeenCalledWith('evt-001', {
-        triggeredByUserId: 'user-123',
-        reprocessingNotes: 'retry',
-      });
-    });
-
-    it('falls back to preferred_username when sub is unavailable', () => {
-      authServiceStub.currentUserClaims.mockReturnValue({ preferred_username: 'cashier@example.com' });
-      accountingEventsStub.reprocessSuspendedEvent.mockReturnValueOnce(of({ jobId: 'job-2' }));
-
-      service.reprocessSuspendedEvent('evt-002', { justification: 'retry' }).subscribe();
-
-      expect(accountingEventsStub.reprocessSuspendedEvent).toHaveBeenCalledWith('evt-002', {
-        triggeredByUserId: 'cashier@example.com',
         reprocessingNotes: 'retry',
       });
     });
