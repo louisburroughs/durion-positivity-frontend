@@ -3,14 +3,13 @@
 # the Angular CLI accepts, so a rebuild could land on an image that cannot run ng.
 FROM node:22.23.2-alpine AS builder
 WORKDIR /app
-RUN apk add --no-cache git
 RUN corepack enable && corepack prepare npm@11.6.4 --activate
 COPY package*.json ./
 COPY scripts/sdk/ ./scripts/sdk/
 RUN corepack npm ci
 COPY . .
-RUN if [ ! -d .sdk-src ]; then git clone --depth 1 https://github.com/louisburroughs/durion-positivity-sdk-angular.git .sdk-src; fi
-ENV DURION_SDK_ANGULAR_PATH=/app/.sdk-src
+# The SDK comes from the committed .sdk-tarballs/ (installed by `npm run build`'s
+# sdk:install), so the image ships the exact version master pins.
 ARG BUILD_CONFIGURATION=production
 RUN npm run build -- --configuration ${BUILD_CONFIGURATION}
 

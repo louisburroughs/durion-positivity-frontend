@@ -10,6 +10,7 @@ on:
       - "angular.json"
       - "tsconfig*.json"
       - "scripts/sdk/**"
+      - ".sdk-tarballs/**"
       - ".nvmrc"
       - "Dockerfile"
       - ".dockerignore"
@@ -47,11 +48,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Checkout Angular SDK repo
-        uses: actions/checkout@v4
-        with:
-          repository: louisburroughs/durion-positivity-sdk-angular
-          path: .sdk-src
 
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4

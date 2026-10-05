@@ -50,10 +50,15 @@ const installStatePath = path.join(
   '.cache',
   'durion-sdk-install-state.json',
 );
+// The committed `.sdk-tarballs/` (imported by the backend's API Artifacts Sync
+// PRs) are the SDK this repo builds, tests and ships. An SDK source checkout is
+// used only when DURION_SDK_ANGULAR_PATH names one explicitly, e.g. to try
+// unreleased SDK changes locally or for the nightly SDK-HEAD canary. A `.sdk-src`
+// directory or a sibling `../durion-positivity-sdk-angular` checkout is no
+// longer picked up on its own: that silently replaced the pinned tarballs with
+// whatever the checkout held, in CI, the image build and local runs alike.
 const sdkRootCandidates = [
   process.env.DURION_SDK_ANGULAR_PATH,
-  path.join(projectRoot, '.sdk-src'),
-  path.join(projectRoot, '../durion-positivity-sdk-angular'),
 ].filter(Boolean).map(candidate => path.resolve(projectRoot, candidate));
 
 function log(message) {
@@ -486,7 +491,7 @@ function main() {
       'Unable to find a usable SDK source checkout or packed tarballs.',
       `Checked SDK repo candidates: ${sdkRootCandidates.join(', ') || '(none)'}`,
       `Checked tarball manifest: ${manifestPath}`,
-      'Provide DURION_SDK_ANGULAR_PATH, populate .sdk-src, or run this build path with prepacked SDK tarballs.',
+      'Restore the committed .sdk-tarballs/ (git restore .sdk-tarballs), or set DURION_SDK_ANGULAR_PATH to an SDK checkout.',
     ].join('\n');
 
     if (failIfUnavailable) {

@@ -2,6 +2,11 @@
 # `security-scan` and `code-quality-full` jobs (durion-positivity-backend
 # .github/workflows/ci.yml). Kept out of the PR path: the Dependency-Check NVD
 # sync and a full coverage run are too slow for every push.
+#
+# Plus the SDK-HEAD canary: every other build installs the SDK from the
+# committed .sdk-tarballs/, so this is the one job that tries the Angular SDK
+# repo's current source, to surface breaking API changes before the next
+# API Artifacts Sync import PR lands them.
 name: Nightly Security & Quality
 
 on:
@@ -114,13 +119,6 @@ jobs:
           fetch-depth: 0 # Sonar needs history for blame / new-code detection
           persist-credentials: false
 
-      - name: Checkout Angular SDK repo
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-        with:
-          repository: louisburroughs/durion-positivity-sdk-angular
-          path: .sdk-src
-          persist-credentials: false
-
       - name: Setup Node
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
@@ -166,3 +164,67 @@ jobs:
         run: |
           echo "::error::Unit tests failed or coverage fell below the angular.json coverageThresholds floors; see the 'Unit tests with coverage' step."
           exit 1
+
+  sdk-head-canary:
+    name: SDK HEAD Canary
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - name: Checkout Angular SDK repo (HEAD)
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          repository: louisburroughs/durion-positivity-sdk-angular
+          path: .sdk-src
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        # --ignore-scripts: the postinstall sdk:install would otherwise install the
+        # committed tarballs first; the next step installs the SDK source instead.
+        run: npm ci --ignore-scripts
+
+      - name: Install Angular SDK packages from SDK HEAD
+        # Only an explicit DURION_SDK_ANGULAR_PATH makes sdk:install build from
+        # source. It also repacks .sdk-tarballs/ in this runner's checkout, which
+        # nothing commits.
+        env:
+          DURION_SDK_ANGULAR_PATH: .sdk-src
+        run: npm run sdk:install
+
+      - name: Report the SDK versions under test
+        # sdk:install just repacked .sdk-tarballs/ from source, so read the pinned
+        # manifest from git rather than the working tree.
+        run: |
+          git show HEAD:.sdk-tarballs/manifest.json > "$RUNNER_TEMP/pinned-manifest.json"
+          pinned=$(node -p "require('$RUNNER_TEMP/pinned-manifest.json').packages['@durion-sdk/transport']")
+          head=$(node -p "require('./node_modules/@durion-sdk/transport/package.json').version")
+          {
+            echo "### SDK HEAD canary"
+            echo ""
+            echo "- Pinned in .sdk-tarballs/: \`${pinned}\`"
+            echo "- Under test (SDK HEAD): \`${head}\` at \`$(git -C .sdk-src log -1 --format='%h %s')\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Install Playwright Chromium (Vitest browser-mode runner)
+        run: npx playwright install --with-deps chromium
+
+      - name: Compile against SDK HEAD
+        run: npx ng build --configuration development
+
+      - name: Contract tests against SDK HEAD
+        run: npm run test:contracts
+
+      - name: Unit tests against SDK HEAD
+        run: npx ng test --no-watch --browsers=ChromiumHeadless --runner-config vitest.config.ts
