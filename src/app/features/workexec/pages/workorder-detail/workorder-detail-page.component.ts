@@ -185,6 +185,9 @@ export class WorkorderDetailPageComponent implements OnInit {
   /** Bumped by every technician lookup, skipped ones too, so a late answer from an older lookup is dropped (ADR-0063). */
   private technicianLookupSeq = 0;
 
+  /** Bumped by every detail load; an older load's answer never writes state or starts a lookup (ADR-0063). */
+  private workorderLoadSeq = 0;
+
   readonly technicianName = computed(() => this.technicianProfile().name);
 
   readonly technicianEmployeeNumber = computed(() => this.technicianProfile().employeeNumber);
@@ -211,6 +214,7 @@ export class WorkorderDetailPageComponent implements OnInit {
   }
 
   loadWorkorder(id: string): void {
+    const seq = ++this.workorderLoadSeq; // any detail read still in flight is now stale
     this.pageState.set('loading');
     this.errorMessage.set(null);
     this.service
@@ -218,6 +222,7 @@ export class WorkorderDetailPageComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (detail) => {
+          if (seq !== this.workorderLoadSeq) return;
           this.workorder.set(detail);
           this.pageState.set('ready');
           this.loadTechnicianProfile(detail.primaryTechnicianId);
@@ -227,6 +232,7 @@ export class WorkorderDetailPageComponent implements OnInit {
           this.loadChangeRequests(id);
         },
         error: (err) => {
+          if (seq !== this.workorderLoadSeq) return;
           const status = err?.status ?? 0;
           this.errorMessage.set(
             status === 404

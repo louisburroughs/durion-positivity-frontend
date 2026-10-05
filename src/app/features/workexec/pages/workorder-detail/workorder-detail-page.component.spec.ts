@@ -468,6 +468,38 @@ describe('WorkorderDetailPageComponent [Stories 213–215]', () => {
       expect(component.technicianLookupSettled()).toBe(true);
     });
 
+    it('ignores an older detail load that answers after a newer one (ADR-0063)', () => {
+      const TECH_A = 'tech-uuid-a';
+      const TECH_B = 'tech-uuid-b';
+      fixture.detectChanges();
+      const detailA = http.expectOne(`${BASE}/v1/workorders/${WO_ID}/detail`);
+
+      component.loadWorkorder(WO_ID);
+      const detailB = http.expectOne(`${BASE}/v1/workorders/${WO_ID}/detail`);
+      detailB.flush({ ...STUB_WORKORDER, workorderNumber: 'WO-B', assignedTechnicianId: TECH_B });
+      http.expectOne(`${BASE}/v1/workorders/${WO_ID}/changeRequests`).flush([]);
+      http.expectOne(`${BASE}/v1/people/employees/${TECH_B}`).flush({ id: TECH_B, firstName: 'Ravi', lastName: 'Shah' });
+      // Load A answers last: it must neither replace the workorder nor start a lookup.
+      detailA.flush({ ...STUB_WORKORDER, workorderNumber: 'WO-A', assignedTechnicianId: TECH_A });
+      http.expectNone(`${BASE}/v1/people/employees/${TECH_A}`);
+      fixture.detectChanges();
+
+      expect(component.workorder()?.workorderNumber).toBe('WO-B');
+      expect(component.technicianDisplay()).toBe('Ravi Shah');
+    });
+
+    it('ignores an older detail load that fails after a newer one succeeded', () => {
+      fixture.detectChanges();
+      const detailA = http.expectOne(`${BASE}/v1/workorders/${WO_ID}/detail`);
+
+      component.loadWorkorder(WO_ID);
+      drainInit(http);
+      detailA.flush({ message: 'boom' }, { status: 500, statusText: 'Server Error' });
+
+      expect(component.pageState()).toBe('ready');
+      expect(component.errorMessage()).toBeNull();
+    });
+
     it('does not call the employee endpoint when no technician is assigned', () => {
       fixture.detectChanges();
       drainInit(http);
