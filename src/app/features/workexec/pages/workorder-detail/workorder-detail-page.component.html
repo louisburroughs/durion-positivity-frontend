@@ -27,7 +27,7 @@
         @if (hasTechnician()) {
         <p class="wo-header__meta-item">
           <span class="wo-header__meta-label">{{ 'WORKEXEC.WORKORDER_DETAIL.TECHNICIAN' | translate }}</span>
-          <span class="wo-header__meta-value">{{ technicianDisplay() ?? '…' }}</span>
+          <span class="wo-header__meta-value">{{ technicianDisplay() ?? (technicianLookupSettled() ? ('WORKEXEC.WORKORDER_DETAIL.TECHNICIAN_ASSIGNED' | translate) : '…') }}</span>
         </p>
         } @else {
         <p class="wo-header__meta-item">

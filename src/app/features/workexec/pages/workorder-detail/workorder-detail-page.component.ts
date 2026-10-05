@@ -17,6 +17,7 @@ import {
   WorkorderStartResponse,
   WorkorderTransition,
 } from '../../models/workexec.models';
+import { AuthService } from '../../../../core/services/auth.service';
 import { WorkexecService } from '../../services/workexec.service';
 import { ModalDialogDirective } from '../../../../shared/modal-dialog.directive';
 import { MoneyPipe } from '../../../../shared/money.pipe';
@@ -48,6 +49,7 @@ export class WorkorderDetailPageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly service = inject(WorkexecService);
+  private readonly auth = inject(AuthService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly workorderId = signal<string>('');
@@ -174,6 +176,18 @@ export class WorkorderDetailPageComponent implements OnInit {
     employeeNumber: null,
   });
 
+  /**
+   * True once the technician lookup has settled (or was skipped), so the header
+   * can tell "still resolving" apart from "no name available" (#446).
+   */
+  readonly technicianLookupSettled = signal(false);
+
+  /** Bumped by every technician lookup, skipped ones too, so a late answer from an older lookup is dropped (ADR-0063). */
+  private technicianLookupSeq = 0;
+
+  /** Bumped by every detail load; an older load's answer never writes state or starts a lookup (ADR-0063). */
+  private workorderLoadSeq = 0;
+
   readonly technicianName = computed(() => this.technicianProfile().name);
 
   readonly technicianEmployeeNumber = computed(() => this.technicianProfile().employeeNumber);
@@ -200,6 +214,7 @@ export class WorkorderDetailPageComponent implements OnInit {
   }
 
   loadWorkorder(id: string): void {
+    const seq = ++this.workorderLoadSeq; // any detail read still in flight is now stale
     this.pageState.set('loading');
     this.errorMessage.set(null);
     this.service
@@ -207,6 +222,7 @@ export class WorkorderDetailPageComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (detail) => {
+          if (seq !== this.workorderLoadSeq) return;
           this.workorder.set(detail);
           this.pageState.set('ready');
           this.loadTechnicianProfile(detail.primaryTechnicianId);
@@ -216,6 +232,7 @@ export class WorkorderDetailPageComponent implements OnInit {
           this.loadChangeRequests(id);
         },
         error: (err) => {
+          if (seq !== this.workorderLoadSeq) return;
           const status = err?.status ?? 0;
           this.errorMessage.set(
             status === 404
@@ -233,10 +250,19 @@ export class WorkorderDetailPageComponent implements OnInit {
    * Resolves the assigned technician's name and employee number for the header.
    * No-op (clearing any prior value) when the work order has no assigned
    * technician.
+   *
+   * getEmployee returns the full profile, personal contact detail included, so
+   * pos-people guards it with people:employee_pii:view, which technicians and
+   * service advisors don't hold (#446). Only callers holding it make the call;
+   * everyone else settles straight to the neutral "Assigned" label rather than
+   * a request that would 403.
    */
   private loadTechnicianProfile(technicianId: string | undefined): void {
+    const seq = ++this.technicianLookupSeq; // any lookup still in flight is now stale
     this.technicianProfile.set({ name: null, employeeNumber: null });
-    if (!technicianId) {
+    this.technicianLookupSettled.set(false);
+    if (!technicianId || !this.canReadEmployeeProfile()) {
+      this.technicianLookupSettled.set(true);
       return;
     }
     // getTechnicianProfile resolves to null fields on failure (no error path), so
@@ -244,7 +270,16 @@ export class WorkorderDetailPageComponent implements OnInit {
     this.service
       .getTechnicianProfile(technicianId)
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((profile) => this.technicianProfile.set(profile));
+      .subscribe((profile) => {
+        if (seq !== this.technicianLookupSeq) return;
+        this.technicianProfile.set(profile);
+        this.technicianLookupSettled.set(true);
+      });
+  }
+
+  /** Legacy tokens without a perm_bits claim stay open, as canAccess() does. */
+  private canReadEmployeeProfile(): boolean {
+    return !this.auth.permissionsKnown() || this.auth.hasPermission('people:employee_pii:view');
   }
 
   private loadChangeRequests(id: string): void {

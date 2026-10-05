@@ -5,9 +5,11 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { vi } from 'vitest';
 import { WorkorderDetailPageComponent } from './workorder-detail-page.component';
+import { AuthService } from '../../../../core/services/auth.service';
 import { BASE_PATH } from '@durion-sdk/workorder';
 import { Configuration as PeopleConfiguration } from '@durion-sdk/people';
 import { environment } from '../../../../../environments/environment';
+import enUS from '../../../../../assets/i18n/en-US.json';
 
 const BASE = environment.apiBaseUrl;
 const WO_ID = 'wo-001';
@@ -29,6 +31,8 @@ const translations = {
       APPROVE_WO: 'Approve Work Order',
       ASSIGN_TECH: 'Assign Technician',
       NOT_SET: 'Not set',
+      // From the shipped bundle (ADR-0035 §8), so the assertions below track the real copy.
+      TECHNICIAN_ASSIGNED: enUS.WORKEXEC.WORKORDER_DETAIL.TECHNICIAN_ASSIGNED,
     },
     ERROR: {
       INVOICE_DRAFT_EXISTS: 'An invoice draft already exists for this work order.',
@@ -418,6 +422,97 @@ describe('WorkorderDetailPageComponent [Stories 213–215]', () => {
       expect(component.technicianDisplay()).toBeNull();
       const value = fixture.nativeElement.querySelector('.wo-header__meta-value');
       expect(value?.textContent ?? '').not.toContain(TECH_ID);
+      expect(value?.textContent?.trim()).toBe(enUS.WORKEXEC.WORKORDER_DETAIL.TECHNICIAN_ASSIGNED);
+    });
+
+    it('skips the PII-guarded employee lookup without people:employee_pii:view and shows "Assigned" (#446)', () => {
+      const auth = TestBed.inject(AuthService);
+      vi.spyOn(auth, 'permissionsKnown').mockReturnValue(true);
+      vi.spyOn(auth, 'hasPermission').mockImplementation(p => p !== 'people:employee_pii:view');
+      fixture.detectChanges();
+      drainWithTechnician(() => http.expectNone(`${BASE}/v1/people/employees/${TECH_ID}`));
+      fixture.detectChanges();
+
+      expect(component.hasTechnician()).toBe(true);
+      expect(component.technicianLookupSettled()).toBe(true);
+      const value = fixture.nativeElement.querySelector('.wo-header__meta-value');
+      expect(value?.textContent?.trim()).toBe(enUS.WORKEXEC.WORKORDER_DETAIL.TECHNICIAN_ASSIGNED);
+    });
+
+    it('makes the employee lookup for a session that holds people:employee_pii:view', () => {
+      const auth = TestBed.inject(AuthService);
+      vi.spyOn(auth, 'permissionsKnown').mockReturnValue(true);
+      vi.spyOn(auth, 'hasPermission').mockImplementation(p => p === 'people:employee_pii:view');
+      fixture.detectChanges();
+      drainWithTechnician(() =>
+        http.expectOne(`${BASE}/v1/people/employees/${TECH_ID}`).flush({
+          id: TECH_ID, firstName: 'Jane', lastName: 'Smith', employeeNumber: 'EMP-007',
+        }),
+      );
+      fixture.detectChanges();
+
+      expect(component.technicianDisplay()).toBe('Jane Smith · #EMP-007');
+    });
+
+    it('shows the resolving placeholder until the employee lookup settles', () => {
+      fixture.detectChanges();
+      http.expectOne(`${BASE}/v1/workorders/${WO_ID}/detail`).flush({ ...STUB_WORKORDER, assignedTechnicianId: TECH_ID });
+      http.expectOne(`${BASE}/v1/workorders/${WO_ID}/changeRequests`).flush([]);
+      fixture.detectChanges();
+
+      const value = fixture.nativeElement.querySelector('.wo-header__meta-value');
+      expect(value?.textContent?.trim()).toBe('…');
+      http.expectOne(`${BASE}/v1/people/employees/${TECH_ID}`).flush({ id: TECH_ID, firstName: 'Jane', lastName: 'Smith' });
+    });
+
+    it('drops a late answer from an older lookup after a reload (ADR-0063)', () => {
+      const TECH_B = 'tech-uuid-2';
+      fixture.detectChanges();
+      drainWithTechnician(() => {});
+      const staleLookup = http.expectOne(`${BASE}/v1/people/employees/${TECH_ID}`);
+
+      component.loadWorkorder(WO_ID);
+      http.expectOne(`${BASE}/v1/workorders/${WO_ID}/detail`).flush({ ...STUB_WORKORDER, assignedTechnicianId: TECH_B });
+      http.expectOne(`${BASE}/v1/workorders/${WO_ID}/changeRequests`).flush([]);
+      http.expectOne(`${BASE}/v1/people/employees/${TECH_B}`).flush({ id: TECH_B, firstName: 'Ravi', lastName: 'Shah' });
+      // The first lookup answers last, and fails: it must not clear Ravi's name.
+      staleLookup.flush({ message: 'boom' }, { status: 500, statusText: 'Server Error' });
+      fixture.detectChanges();
+
+      expect(component.technicianDisplay()).toBe('Ravi Shah');
+      expect(component.technicianLookupSettled()).toBe(true);
+    });
+
+    it('ignores an older detail load that answers after a newer one (ADR-0063)', () => {
+      const TECH_A = 'tech-uuid-a';
+      const TECH_B = 'tech-uuid-b';
+      fixture.detectChanges();
+      const detailA = http.expectOne(`${BASE}/v1/workorders/${WO_ID}/detail`);
+
+      component.loadWorkorder(WO_ID);
+      const detailB = http.expectOne(`${BASE}/v1/workorders/${WO_ID}/detail`);
+      detailB.flush({ ...STUB_WORKORDER, workorderNumber: 'WO-B', assignedTechnicianId: TECH_B });
+      http.expectOne(`${BASE}/v1/workorders/${WO_ID}/changeRequests`).flush([]);
+      http.expectOne(`${BASE}/v1/people/employees/${TECH_B}`).flush({ id: TECH_B, firstName: 'Ravi', lastName: 'Shah' });
+      // Load A answers last: it must neither replace the workorder nor start a lookup.
+      detailA.flush({ ...STUB_WORKORDER, workorderNumber: 'WO-A', assignedTechnicianId: TECH_A });
+      http.expectNone(`${BASE}/v1/people/employees/${TECH_A}`);
+      fixture.detectChanges();
+
+      expect(component.workorder()?.workorderNumber).toBe('WO-B');
+      expect(component.technicianDisplay()).toBe('Ravi Shah');
+    });
+
+    it('ignores an older detail load that fails after a newer one succeeded', () => {
+      fixture.detectChanges();
+      const detailA = http.expectOne(`${BASE}/v1/workorders/${WO_ID}/detail`);
+
+      component.loadWorkorder(WO_ID);
+      drainInit(http);
+      detailA.flush({ message: 'boom' }, { status: 500, statusText: 'Server Error' });
+
+      expect(component.pageState()).toBe('ready');
+      expect(component.errorMessage()).toBeNull();
     });
 
     it('does not call the employee endpoint when no technician is assigned', () => {

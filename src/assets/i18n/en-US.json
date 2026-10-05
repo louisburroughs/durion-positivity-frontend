@@ -6320,6 +6320,7 @@
       "LOADING": "Loading work order…",
       "STATUS_ARIA": "Status: {{status}}",
       "TECHNICIAN": "Technician",
+      "TECHNICIAN_ASSIGNED": "Assigned",
       "UNASSIGNED": "Unassigned",
       "STARTED": "Started",
       "APPROVE_WO": "Approve Work Order",

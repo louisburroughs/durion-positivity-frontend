@@ -6320,6 +6320,7 @@
       "LOADING": "Chargement du bon de travail…",
       "STATUS_ARIA": "Statut : {{status}}",
       "TECHNICIAN": "Technicien",
+      "TECHNICIAN_ASSIGNED": "Assigné",
       "UNASSIGNED": "Non attribué",
       "STARTED": "Début",
       "APPROVE_WO": "Approuver le bon de travail",
