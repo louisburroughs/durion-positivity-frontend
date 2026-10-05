@@ -270,11 +270,11 @@ describe('BulkImportWizardPageBase', () => {
       expect(mockBulkImportService.getJob).not.toHaveBeenCalled();
     });
 
-    it('stops polling and loads audit records when the job reaches a terminal status', () => {
+    it.each(['COMPLETED', 'PARTIAL'] as const)('stops polling and loads audit records when the job reaches terminal status %s', terminal => {
       vi.useFakeTimers();
       const activeJob = buildJob('PROCESSING');
       mockBulkImportService.getActiveJobForDomain.mockReturnValue(of(activeJob));
-      mockBulkImportService.getJob.mockReturnValue(of(buildJob('COMPLETED')));
+      mockBulkImportService.getJob.mockReturnValue(of(buildJob(terminal)));
       mockBulkImportService.listAuditRecords.mockReturnValue(of({ items: [], nextPageToken: null }));
 
       fixture.detectChanges();

@@ -65,6 +65,6 @@ export class BulkImportJobsPageComponent implements OnInit {
 
   readonly jobStatuses: JobStatus[] = [
     'CREATED', 'UPLOADING', 'DETECTING', 'MAPPING_REVIEW', 'DEDUP',
-    'PROCESSING', 'COMPLETED', 'FAILED', 'CANCELLED',
+    'PROCESSING', 'COMPLETED', 'PARTIAL', 'FAILED', 'CANCELLED',
   ];
 }

@@ -1,12 +1,20 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService, TranslationObject } from '@ngx-translate/core';
 import { Observable, Subject, of, throwError } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { BulkImportJobDetailPageComponent } from './bulk-import-job-detail-page.component';
 import { BulkImportService } from '../../../../shared/bulk-import/services/bulk-import.service';
+import { AuthService } from '../../../../core/services/auth.service';
+import enUS from '../../../../../assets/i18n/en-US.json';
+import esUS from '../../../../../assets/i18n/es-US.json';
+import esMX from '../../../../../assets/i18n/es-MX.json';
+import frCA from '../../../../../assets/i18n/fr-CA.json';
+import frFR from '../../../../../assets/i18n/fr-FR.json';
 import { AuditRecordListResponse, BulkLoadJob, BulkLoadRecordAudit, CorrectionRejectedError } from '../../../../shared/bulk-import/models/bulk-import.models';
 import { CorrectionSubmitEvent } from '../../../../shared/bulk-import/components/bulk-import-error-records-table/bulk-import-error-records-table.component';
+
+const BUNDLES = { 'en-US': enUS, 'es-US': esUS, 'es-MX': esMX, 'fr-CA': frCA, 'fr-FR': frFR };
 
 const mockJob: BulkLoadJob = {
   jobId: 'job-001',
@@ -380,6 +388,86 @@ describe('BulkImportJobDetailPageComponent', () => {
       component.downloadErrorReport();
 
       expect(component.downloadErrorKey()).toBeNull();
+    });
+  });
+
+  describe('terminal-status actions (issue #445)', () => {
+    function renderWithStatus(status: BulkLoadJob['status']): HTMLElement {
+      component.job.set({ ...mockJob, status });
+      fixture.detectChanges();
+      return fixture.nativeElement as HTMLElement;
+    }
+
+    it.each(['FAILED', 'PARTIAL'] as const)('offers Retry and Download errors for a %s job', status => {
+      const el = renderWithStatus(status);
+
+      expect(el.querySelector('.job-btn--primary')?.textContent).toContain('BULK_IMPORT.JOB_DETAIL.RETRY');
+      expect(el.querySelector('.job-btn--secondary')?.textContent).toContain('BULK_IMPORT.JOB_DETAIL.DOWNLOAD_ERRORS');
+    });
+
+    it('offers neither Retry nor Download errors for a COMPLETED job', () => {
+      const el = renderWithStatus('COMPLETED');
+
+      expect(el.querySelector('.job-btn--primary')).toBeNull();
+      expect(el.querySelector('.job-btn--secondary')).toBeNull();
+    });
+
+    it.each(['en-US', 'es-US', 'es-MX', 'fr-CA', 'fr-FR'] as const)(
+      'renders the PARTIAL badge from the shipped %s bundle, with its own style', locale => {
+        const bundle = BUNDLES[locale];
+        const translate = TestBed.inject(TranslateService);
+        translate.setTranslation(locale, bundle as TranslationObject);
+        translate.use(locale);
+        const badge = renderWithStatus('PARTIAL').querySelector('.job-status');
+
+        expect(badge?.classList).toContain('job-status--partial');
+        expect(bundle.BULK_IMPORT.STATUS.PARTIAL).toBeTruthy();
+        expect(badge?.textContent?.trim()).toBe(bundle.BULK_IMPORT.STATUS.PARTIAL);
+      },
+    );
+  });
+
+  describe('Retry/Cancel gate on bulkImport:upload:execute (ADR-0040 §6a)', () => {
+    function grant(permissions: readonly string[] | null): void {
+      const auth = TestBed.inject(AuthService);
+      vi.spyOn(auth, 'permissionsKnown').mockReturnValue(permissions !== null);
+      vi.spyOn(auth, 'hasAnyPermission').mockImplementation(codes => (permissions ?? []).some(p => codes.includes(p)));
+      // canExecute is a computed: build a fresh component so it reads the stubbed claims.
+      fixture = TestBed.createComponent(BulkImportJobDetailPageComponent);
+      component = fixture.componentInstance;
+      fixture.detectChanges();
+    }
+
+    function render(status: BulkLoadJob['status']): HTMLElement {
+      component.job.set({ ...mockJob, status });
+      fixture.detectChanges();
+      return fixture.nativeElement as HTMLElement;
+    }
+
+    it('a status-read-only user sees Download errors but neither Retry nor Cancel, and the handlers no-op', () => {
+      grant(['bulkImport:status:read']);
+
+      expect(render('PARTIAL').querySelector('.job-btn--primary')).toBeNull();
+      expect(render('PARTIAL').querySelector('.job-btn--secondary')).not.toBeNull();
+      expect(render('PROCESSING').querySelector('.job-btn--danger')).toBeNull();
+      component.retryJob();
+      component.cancelJob();
+      expect(mockService.retryJob).not.toHaveBeenCalled();
+      expect(mockService.cancelJob).not.toHaveBeenCalled();
+    });
+
+    it('a holder of bulkImport:upload:execute sees Retry and Cancel', () => {
+      grant(['bulkImport:status:read', 'bulkImport:upload:execute']);
+
+      expect(render('FAILED').querySelector('.job-btn--primary')).not.toBeNull();
+      expect(render('PROCESSING').querySelector('.job-btn--danger')).not.toBeNull();
+    });
+
+    it('a legacy token with no permission claim stays open', () => {
+      grant(null);
+
+      expect(render('FAILED').querySelector('.job-btn--primary')).not.toBeNull();
+      expect(render('PROCESSING').querySelector('.job-btn--danger')).not.toBeNull();
     });
   });
 });

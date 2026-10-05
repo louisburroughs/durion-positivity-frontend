@@ -14,7 +14,7 @@ const WIZARD_STEPS: WizardStep[] = [
   { labelKey: 'BULK_IMPORT.PROGRESS.STEP.MAPPING', statuses: ['MAPPING_REVIEW'] },
   { labelKey: 'BULK_IMPORT.PROGRESS.STEP.DEDUP', statuses: ['DEDUP'] },
   { labelKey: 'BULK_IMPORT.PROGRESS.STEP.PROCESS', statuses: ['PROCESSING'] },
-  { labelKey: 'BULK_IMPORT.PROGRESS.STEP.DONE', statuses: ['COMPLETED', 'FAILED', 'CANCELLED'] },
+  { labelKey: 'BULK_IMPORT.PROGRESS.STEP.DONE', statuses: ['COMPLETED', 'PARTIAL', 'FAILED', 'CANCELLED'] },
 ];
 
 @Component({

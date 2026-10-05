@@ -110,6 +110,11 @@
 	background: var(--status-success-bg);
 }
 
+.job-status--partial {
+	color: var(--status-warning-fg);
+	background: var(--status-warning-bg);
+}
+
 .job-status--failed,
 .job-status--cancelled {
 	color: var(--status-error-fg);

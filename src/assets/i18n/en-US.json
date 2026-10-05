@@ -8371,6 +8371,7 @@
       "DEDUP": "Dedup",
       "PROCESSING": "Processing",
       "COMPLETED": "Completed",
+      "PARTIAL": "Partially Completed",
       "FAILED": "Failed",
       "CANCELLED": "Cancelled"
     },

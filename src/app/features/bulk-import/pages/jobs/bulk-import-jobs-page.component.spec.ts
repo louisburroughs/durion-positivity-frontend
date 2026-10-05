@@ -120,6 +120,10 @@ describe('BulkImportJobsPageComponent', () => {
     expect(mockService.listJobs.mock.calls.length).toBeGreaterThan(callCountBefore);
   });
 
+  it('offers PARTIAL as a status filter option (issue #445)', () => {
+    expect(component.jobStatuses).toContain('PARTIAL');
+  });
+
   it('applyFilter with empty strings clears filters', () => {
     mockService.listJobs.mockReturnValue(
       of({ items: [], nextPageToken: null } as JobListResponse),

@@ -16,6 +16,8 @@ export type JobStatus =
   | 'DEDUP'
   | 'PROCESSING'
   | 'COMPLETED'
+  /** The run finished but some rows were rejected; retryable like FAILED. */
+  | 'PARTIAL'
   | 'FAILED'
   | 'CANCELLED';
 
