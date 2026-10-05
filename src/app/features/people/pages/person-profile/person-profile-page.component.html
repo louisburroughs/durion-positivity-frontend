@@ -42,8 +42,6 @@
     <section class="identifiers" data-testid="identifiers" [attr.aria-label]="'PEOPLE.PERSON_PROFILE.IDENTIFIERS_ARIA' | translate">
       <h2>{{ 'PEOPLE.PERSON_PROFILE.IDENTIFIERS_TITLE' | translate }}</h2>
       <dl>
-        <dt>{{ 'PEOPLE.PERSON_PROFILE.FIELD_PERSON_ID' | translate }}</dt>
-        <dd class="mono" data-testid="person-id">{{ p.person.id }}</dd>
         <dt>{{ 'PEOPLE.PERSON_PROFILE.FIELD_USERNAME' | translate }}</dt>
         <dd class="mono" data-testid="person-username">{{ p.person.username || ('PEOPLE.PERSON_PROFILE.NO_USERNAME' | translate) }}</dd>
       </dl>

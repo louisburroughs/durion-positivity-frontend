@@ -1002,7 +1002,6 @@
       "SAVED": "Person profile saved.",
       "IDENTIFIERS_ARIA": "Identifiers",
       "IDENTIFIERS_TITLE": "Identifiers",
-      "FIELD_PERSON_ID": "Person ID",
       "FIELD_USERNAME": "Username",
       "NO_USERNAME": "No linked user",
       "PERSON_LEGEND": "Person",
@@ -7447,8 +7446,6 @@
           "EMPTY": "No pick tasks are available."
         },
         "FIELD": {
-          "WORKORDER_ID": "Workorder",
-          "PICK_LIST_ID": "Pick List",
           "STATUS": "Status",
           "CREATED_AT": "Created At"
         },

@@ -1002,7 +1002,6 @@
       "SAVED": "Profil de la personne enregistré.",
       "IDENTIFIERS_ARIA": "Identifiants",
       "IDENTIFIERS_TITLE": "Identifiants",
-      "FIELD_PERSON_ID": "ID de la personne",
       "FIELD_USERNAME": "Nom d'utilisateur",
       "NO_USERNAME": "Aucun utilisateur lié",
       "PERSON_LEGEND": "Personne",
@@ -7447,8 +7446,6 @@
           "EMPTY": "Aucune tâche de prélèvement disponible."
         },
         "FIELD": {
-          "WORKORDER_ID": "Ordre de travail",
-          "PICK_LIST_ID": "Liste de prélèvement",
           "STATUS": "Statut",
           "CREATED_AT": "Créé le"
         },

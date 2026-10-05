@@ -137,12 +137,17 @@ describe('PersonProfilePageComponent', () => {
   it('renders identifiers read-only, outside the editable form', async () => {
     await setup();
 
-    expect(q('person-id')?.textContent?.trim()).toBe(PERSON_ID);
     expect(q('person-username')?.textContent?.trim()).toBe('dokafor');
     const form = el.querySelector('form');
-    expect(form?.querySelector('[data-testid="person-id"]')).toBeNull();
+    expect(form?.querySelector('[data-testid="person-username"]')).toBeNull();
     expect(Object.keys(component.form.controls)).not.toContain('id');
     expect(Object.keys(component.form.controls)).not.toContain('username');
+  });
+
+  it('never renders the person UUID on screen (#447)', async () => {
+    await setup();
+
+    expect(el.textContent).not.toContain(PERSON_ID);
   });
 
   it('shows the no-linked-user copy from the shipped bundle when username is absent', async () => {
