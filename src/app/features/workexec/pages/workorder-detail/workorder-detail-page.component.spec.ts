@@ -372,17 +372,98 @@ describe('WorkorderDetailPageComponent [Stories 213–215]', () => {
 
     /**
      * Flush detail (with technician), the employee lookup, and changeRequests.
-     * The workorder payload carries no technician name — it is resolved from the
-     * People domain — so assignedTechnicianName is left unset here.
+     * assignedTechnicianName is left unset unless a test passes it, which is
+     * what the backend sends when it can't resolve the display name.
      */
-    function drainWithTechnician(employeeFlush: () => void): void {
+    function drainWithTechnician(employeeFlush: () => void, assignedTechnicianName?: string | null): void {
       http.expectOne(`${BASE}/v1/workorders/${WO_ID}/detail`).flush({
         ...STUB_WORKORDER,
         assignedTechnicianId: TECH_ID,
+        ...(assignedTechnicianName === undefined ? {} : { assignedTechnicianName }),
       });
       employeeFlush();
       http.expectOne(`${BASE}/v1/workorders/${WO_ID}/changeRequests`).flush([]);
     }
+
+    /** A session whose token grants everything except the PII-guarded employee read. */
+    function withoutEmployeePii(): void {
+      const auth = TestBed.inject(AuthService);
+      vi.spyOn(auth, 'permissionsKnown').mockReturnValue(true);
+      vi.spyOn(auth, 'hasPermission').mockImplementation(p => p !== 'people:employee_pii:view');
+    }
+
+    it('shows the name carried on the workorder to a role without people:employee_pii:view, with no employee request (#446)', () => {
+      withoutEmployeePii();
+      fixture.detectChanges();
+      drainWithTechnician(() => http.expectNone(`${BASE}/v1/people/employees/${TECH_ID}`), 'Jane Smith');
+      fixture.detectChanges();
+
+      expect(component.technicianDisplay()).toBe('Jane Smith');
+      const value = fixture.nativeElement.querySelector('.wo-header__meta-value');
+      expect(value?.textContent?.trim()).toBe('Jane Smith');
+    });
+
+    it('falls back to "Assigned" for a role without people:employee_pii:view when the workorder carries a null name (#446)', () => {
+      withoutEmployeePii();
+      fixture.detectChanges();
+      drainWithTechnician(() => http.expectNone(`${BASE}/v1/people/employees/${TECH_ID}`), null);
+      fixture.detectChanges();
+
+      expect(component.technicianDisplay()).toBeNull();
+      const value = fixture.nativeElement.querySelector('.wo-header__meta-value');
+      expect(value?.textContent?.trim()).toBe(enUS.WORKEXEC.WORKORDER_DETAIL.TECHNICIAN_ASSIGNED);
+      expect(value?.textContent ?? '').not.toContain(TECH_ID);
+    });
+
+    it('shows the workorder name while the employee lookup is in flight, then adds the employee number', () => {
+      fixture.detectChanges();
+      http.expectOne(`${BASE}/v1/workorders/${WO_ID}/detail`).flush({
+        ...STUB_WORKORDER,
+        assignedTechnicianId: TECH_ID,
+        assignedTechnicianName: 'Jane Smith',
+      });
+      http.expectOne(`${BASE}/v1/workorders/${WO_ID}/changeRequests`).flush([]);
+      fixture.detectChanges();
+
+      const value = fixture.nativeElement.querySelector('.wo-header__meta-value');
+      expect(value?.textContent?.trim()).toBe('Jane Smith');
+
+      http.expectOne(`${BASE}/v1/people/employees/${TECH_ID}`).flush({
+        id: TECH_ID, firstName: 'Jane', lastName: 'Smith', employeeNumber: 'EMP-007',
+      });
+      fixture.detectChanges();
+
+      expect(value?.textContent?.trim()).toBe('Jane Smith · #EMP-007');
+    });
+
+    it('keeps the workorder name when the employee lookup fails', () => {
+      fixture.detectChanges();
+      drainWithTechnician(
+        () =>
+          http.expectOne(`${BASE}/v1/people/employees/${TECH_ID}`).flush(
+            { message: 'forbidden' },
+            { status: 403, statusText: 'Forbidden' },
+          ),
+        'Jane Smith',
+      );
+      fixture.detectChanges();
+
+      expect(component.technicianDisplay()).toBe('Jane Smith');
+    });
+
+    it('prefers the workorder name over the employee profile name, so every role reads the same header', () => {
+      fixture.detectChanges();
+      drainWithTechnician(
+        () =>
+          http.expectOne(`${BASE}/v1/people/employees/${TECH_ID}`).flush({
+            id: TECH_ID, firstName: 'Jane', lastName: 'Smith', preferredName: 'Janie', employeeNumber: 'EMP-007',
+          }),
+        'Jane Smith',
+      );
+      fixture.detectChanges();
+
+      expect(component.technicianDisplay()).toBe('Jane Smith · #EMP-007');
+    });
 
     it('renders the technician name (from People) with employee number once the lookup resolves', () => {
       fixture.detectChanges();
@@ -426,9 +507,7 @@ describe('WorkorderDetailPageComponent [Stories 213–215]', () => {
     });
 
     it('skips the PII-guarded employee lookup without people:employee_pii:view and shows "Assigned" (#446)', () => {
-      const auth = TestBed.inject(AuthService);
-      vi.spyOn(auth, 'permissionsKnown').mockReturnValue(true);
-      vi.spyOn(auth, 'hasPermission').mockImplementation(p => p !== 'people:employee_pii:view');
+      withoutEmployeePii();
       fixture.detectChanges();
       drainWithTechnician(() => http.expectNone(`${BASE}/v1/people/employees/${TECH_ID}`));
       fixture.detectChanges();

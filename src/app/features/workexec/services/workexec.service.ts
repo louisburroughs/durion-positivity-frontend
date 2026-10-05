@@ -437,6 +437,8 @@ export class WorkexecService {
       crmVehicleId: raw.crmVehicleId,
       crmContactIds: raw.crmContactIds,
       primaryTechnicianId: dto.assignedTechnicianId,
+      // Display name only, resolved server-side; null when the backend can't resolve it.
+      primaryTechnicianName: dto.assignedTechnicianName ?? undefined,
       isStarted: dto.isStarted === 'true',
       startedAt: dto.startedAt,
       isInProgress: dto.isInProgress === 'true',
