@@ -208,7 +208,8 @@ jobs:
         # manifest from git rather than the working tree.
         run: |
           git show HEAD:.sdk-tarballs/manifest.json > "$RUNNER_TEMP/pinned-manifest.json"
-          pinned=$(node -p "require('$RUNNER_TEMP/pinned-manifest.json').packages['@durion-sdk/transport']")
+          # The manifest maps each package to its tarball file name; keep the version.
+          pinned=$(node -p "require('$RUNNER_TEMP/pinned-manifest.json').packages['@durion-sdk/transport'].replace(/^durion-sdk-transport-|\.tgz$/g, '')")
           head=$(node -p "require('./node_modules/@durion-sdk/transport/package.json').version")
           {
             echo "### SDK HEAD canary"

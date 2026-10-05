@@ -39,11 +39,10 @@ The current repo state is materially different from the prior version of this PR
 - `app.config.ts` is already wiring Angular SDK `Configuration` providers for the core
   generated clients.
 - The frontend installs SDK packages through `scripts/sdk/install-sdk-packages.mjs`
-  using either:
-  - `DURION_SDK_ANGULAR_PATH`
-  - `./.sdk-src`
-  - `../durion-positivity-sdk-angular`
-  - packed tarballs in `./.sdk-tarballs`
+  from the committed tarballs in `./.sdk-tarballs`, which the backend's API Artifacts
+  Sync import PRs update. An SDK source checkout is used only when
+  `DURION_SDK_ANGULAR_PATH` names one; `./.sdk-src` and a sibling
+  `../durion-positivity-sdk-angular` are no longer auto-detected (PR #454).
 - The migration is no longer centered on eliminating hundreds of unsafe type casts.
   Current inventory in non-spec TypeScript files:
   - `as never`: `0`

@@ -193,10 +193,23 @@ function hashDirectoryContents(hash, dir, baseDir = dir) {
 }
 
 function detectSdkRoot() {
-  return sdkRootCandidates.find(candidate =>
+  const sdkRoot = sdkRootCandidates.find(candidate =>
     existsSync(path.join(candidate, 'package.json')) &&
     existsSync(path.join(candidate, 'packages')),
   );
+
+  // An explicit override that names no usable checkout must not quietly fall
+  // back to the pinned tarballs: the SDK-HEAD canary would then pass against
+  // the pinned SDK it exists to compare against.
+  if (!sdkRoot && process.env.DURION_SDK_ANGULAR_PATH) {
+    fail(
+      `DURION_SDK_ANGULAR_PATH is set to ${process.env.DURION_SDK_ANGULAR_PATH}, ` +
+      'which is not an SDK checkout (expected package.json and packages/). ' +
+      'Fix the path, or unset it to install the committed .sdk-tarballs/.',
+    );
+  }
+
+  return sdkRoot;
 }
 
 function packageJsonVersion(file) {
