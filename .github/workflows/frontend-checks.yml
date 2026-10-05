@@ -32,12 +32,6 @@ jobs:
           # credentials, so do not leave the token in .git/config for it to read.
           persist-credentials: false
 
-      - name: Checkout Angular SDK repo
-        uses: actions/checkout@v4
-        with:
-          repository: louisburroughs/durion-positivity-sdk-angular
-          path: .sdk-src
-          persist-credentials: false
 
       - name: Setup Node
         uses: actions/setup-node@v4

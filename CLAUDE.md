@@ -56,11 +56,13 @@ Without `--browsers`, `ng test` falls back to jsdom, which lacks `matchMedia`, `
 
 ## SDK dependency (critical)
 
-`@durion-sdk/*` packages are refreshed into `node_modules` from a local checkout on every
-`start`/`build`/`test`/`watch` via `scripts/sdk/install-sdk-packages.mjs` (also runs on `postinstall`).
-Source resolved in order: `DURION_SDK_ANGULAR_PATH` env → `./.sdk-src` → `../durion-positivity-sdk-angular`.
-The sibling SDK repo must exist locally unless CI/Docker supplies `.sdk-src` or prepacked tarballs
-(`.sdk-tarballs/`). If a build fails on missing `@durion-sdk/*`, that source is the cause.
+`@durion-sdk/*` packages are not npm dependencies. `scripts/sdk/install-sdk-packages.mjs` unpacks them
+into `node_modules` on every `start`/`build`/`test`/`watch` (and on `postinstall`) from the committed
+`.sdk-tarballs/`. The backend's API Artifacts Sync workflow updates those through
+"chore(sdk): import Angular SDK" PRs. Local dev, CI, and the Docker/ECR image all build that
+pinned version. Set `DURION_SDK_ANGULAR_PATH` to an SDK checkout only to try unreleased SDK changes;
+that also repacks `.sdk-tarballs/`, so `git restore .sdk-tarballs` before committing. The nightly
+`sdk-head-canary` job builds and tests against the SDK repo's HEAD to flag breaking changes early.
 
 ## Architecture
 
