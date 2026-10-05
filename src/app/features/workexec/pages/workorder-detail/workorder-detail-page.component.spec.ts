@@ -9,6 +9,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { BASE_PATH } from '@durion-sdk/workorder';
 import { Configuration as PeopleConfiguration } from '@durion-sdk/people';
 import { environment } from '../../../../../environments/environment';
+import enUS from '../../../../../assets/i18n/en-US.json';
 
 const BASE = environment.apiBaseUrl;
 const WO_ID = 'wo-001';
@@ -30,7 +31,8 @@ const translations = {
       APPROVE_WO: 'Approve Work Order',
       ASSIGN_TECH: 'Assign Technician',
       NOT_SET: 'Not set',
-      TECHNICIAN_ASSIGNED: 'Assigned',
+      // From the shipped bundle (ADR-0035 §8), so the assertions below track the real copy.
+      TECHNICIAN_ASSIGNED: enUS.WORKEXEC.WORKORDER_DETAIL.TECHNICIAN_ASSIGNED,
     },
     ERROR: {
       INVOICE_DRAFT_EXISTS: 'An invoice draft already exists for this work order.',
@@ -420,7 +422,7 @@ describe('WorkorderDetailPageComponent [Stories 213–215]', () => {
       expect(component.technicianDisplay()).toBeNull();
       const value = fixture.nativeElement.querySelector('.wo-header__meta-value');
       expect(value?.textContent ?? '').not.toContain(TECH_ID);
-      expect(value?.textContent?.trim()).toBe('Assigned');
+      expect(value?.textContent?.trim()).toBe(enUS.WORKEXEC.WORKORDER_DETAIL.TECHNICIAN_ASSIGNED);
     });
 
     it('skips the PII-guarded employee lookup without people:employee_pii:view and shows "Assigned" (#446)', () => {
@@ -434,7 +436,7 @@ describe('WorkorderDetailPageComponent [Stories 213–215]', () => {
       expect(component.hasTechnician()).toBe(true);
       expect(component.technicianLookupSettled()).toBe(true);
       const value = fixture.nativeElement.querySelector('.wo-header__meta-value');
-      expect(value?.textContent?.trim()).toBe('Assigned');
+      expect(value?.textContent?.trim()).toBe(enUS.WORKEXEC.WORKORDER_DETAIL.TECHNICIAN_ASSIGNED);
     });
 
     it('shows the resolving placeholder until the employee lookup settles', () => {
@@ -446,6 +448,24 @@ describe('WorkorderDetailPageComponent [Stories 213–215]', () => {
       const value = fixture.nativeElement.querySelector('.wo-header__meta-value');
       expect(value?.textContent?.trim()).toBe('…');
       http.expectOne(`${BASE}/v1/people/employees/${TECH_ID}`).flush({ id: TECH_ID, firstName: 'Jane', lastName: 'Smith' });
+    });
+
+    it('drops a late answer from an older lookup after a reload (ADR-0063)', () => {
+      const TECH_B = 'tech-uuid-2';
+      fixture.detectChanges();
+      drainWithTechnician(() => {});
+      const staleLookup = http.expectOne(`${BASE}/v1/people/employees/${TECH_ID}`);
+
+      component.loadWorkorder(WO_ID);
+      http.expectOne(`${BASE}/v1/workorders/${WO_ID}/detail`).flush({ ...STUB_WORKORDER, assignedTechnicianId: TECH_B });
+      http.expectOne(`${BASE}/v1/workorders/${WO_ID}/changeRequests`).flush([]);
+      http.expectOne(`${BASE}/v1/people/employees/${TECH_B}`).flush({ id: TECH_B, firstName: 'Ravi', lastName: 'Shah' });
+      // The first lookup answers last, and fails: it must not clear Ravi's name.
+      staleLookup.flush({ message: 'boom' }, { status: 500, statusText: 'Server Error' });
+      fixture.detectChanges();
+
+      expect(component.technicianDisplay()).toBe('Ravi Shah');
+      expect(component.technicianLookupSettled()).toBe(true);
     });
 
     it('does not call the employee endpoint when no technician is assigned', () => {

@@ -182,6 +182,9 @@ export class WorkorderDetailPageComponent implements OnInit {
    */
   readonly technicianLookupSettled = signal(false);
 
+  /** Bumped by every technician lookup, skipped ones too, so a late answer from an older lookup is dropped (ADR-0063). */
+  private technicianLookupSeq = 0;
+
   readonly technicianName = computed(() => this.technicianProfile().name);
 
   readonly technicianEmployeeNumber = computed(() => this.technicianProfile().employeeNumber);
@@ -249,6 +252,7 @@ export class WorkorderDetailPageComponent implements OnInit {
    * a request that would 403.
    */
   private loadTechnicianProfile(technicianId: string | undefined): void {
+    const seq = ++this.technicianLookupSeq; // any lookup still in flight is now stale
     this.technicianProfile.set({ name: null, employeeNumber: null });
     this.technicianLookupSettled.set(false);
     if (!technicianId || !this.canReadEmployeeProfile()) {
@@ -261,6 +265,7 @@ export class WorkorderDetailPageComponent implements OnInit {
       .getTechnicianProfile(technicianId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((profile) => {
+        if (seq !== this.technicianLookupSeq) return;
         this.technicianProfile.set(profile);
         this.technicianLookupSettled.set(true);
       });
