@@ -1,8 +1,10 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { NgClass } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
+import { AuthService } from '../../../../core/services/auth.service';
+import { BULK_IMPORT_PAGE } from '../../../../core/security/route-permissions';
 import { BulkImportService } from '../../../../shared/bulk-import/services/bulk-import.service';
 import { BulkImportCorrectionReloader, spliceAuditRecord } from '../../../../shared/bulk-import/services/bulk-import-correction-reloader';
 import { BulkImportErrorRecordsTableComponent, CorrectionSubmitEvent } from '../../../../shared/bulk-import/components/bulk-import-error-records-table/bulk-import-error-records-table.component';
@@ -24,6 +26,12 @@ export class BulkImportJobDetailPageComponent {
   private readonly service = inject(BulkImportService);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly auth = inject(AuthService);
+
+  /** Retry and Cancel are writes; unknown-claim (legacy) tokens stay open, as elsewhere. */
+  readonly canExecute = computed(
+    () => !this.auth.permissionsKnown() || this.auth.hasAnyPermission(BULK_IMPORT_PAGE.jobExecute),
+  );
 
   readonly state = signal<PageState>('idle');
   readonly errorKey = signal<string | null>(null);
@@ -108,7 +116,7 @@ export class BulkImportJobDetailPageComponent {
   }
 
   cancelJob(): void {
-    if (!this.jobId) { return; }
+    if (!this.jobId || !this.canExecute()) { return; }
     this.service.cancelJob(this.jobId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -121,7 +129,7 @@ export class BulkImportJobDetailPageComponent {
   }
 
   retryJob(): void {
-    if (!this.jobId) { return; }
+    if (!this.jobId || !this.canExecute()) { return; }
     this.service.retryJob(this.jobId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({

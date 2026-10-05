@@ -713,6 +713,12 @@ export const POSITIVITY_PAGE = {
 /** `/app/bulk-import/*` — the job console; both pages are the same status read. */
 export const BULK_IMPORT_PAGE = {
   jobs: ['bulkImport:status:read'],
+  /**
+   * `retryBulkLoadJob` and `cancelBulkLoadJob` enforce `bulkImport:upload:execute`;
+   * the job detail's Retry/Cancel controls and handlers gate on it, not on the
+   * page's status-read admission (ADR-0040 §6a.1).
+   */
+  jobExecute: ['bulkImport:upload:execute'],
 } as const satisfies Record<string, readonly string[]>;
 
 /**

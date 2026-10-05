@@ -28,15 +28,17 @@
 			<div><dt>{{ 'BULK_IMPORT.JOB_DETAIL.META.FAILURES' | translate }}</dt><dd>{{ job()!.failureCount ?? '-' }}</dd></div>
 		</dl>
 		<div class="job-detail__actions">
-			@if (job()!.status === 'PROCESSING' || job()!.status === 'UPLOADING' || job()!.status === 'DETECTING' || job()!.status === 'DEDUP') {
+			@if (canExecute() && (job()!.status === 'PROCESSING' || job()!.status === 'UPLOADING' || job()!.status === 'DETECTING' || job()!.status === 'DEDUP')) {
 			<button class="job-btn job-btn--danger" type="button" (click)="cancelJob()">
 				{{ 'BULK_IMPORT.JOB_DETAIL.CANCEL' | translate }}
 			</button>
 			}
 			@if (job()!.status === 'FAILED' || job()!.status === 'PARTIAL') {
+			@if (canExecute()) {
 			<button class="job-btn job-btn--primary" type="button" (click)="retryJob()">
 				{{ 'BULK_IMPORT.JOB_DETAIL.RETRY' | translate }}
 			</button>
+			}
 			<button class="job-btn job-btn--secondary" type="button" (click)="downloadErrorReport()">
 				{{ 'BULK_IMPORT.JOB_DETAIL.DOWNLOAD_ERRORS' | translate }}
 			</button>

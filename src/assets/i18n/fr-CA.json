@@ -8374,7 +8374,7 @@
       "DEDUP": "Deduplication",
       "PROCESSING": "Traitement",
       "COMPLETED": "Termine",
-      "PARTIAL": "Termine partiellement",
+      "PARTIAL": "Terminé partiellement",
       "FAILED": "Echoue",
       "CANCELLED": "Annule"
     },
