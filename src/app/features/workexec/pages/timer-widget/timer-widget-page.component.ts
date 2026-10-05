@@ -47,14 +47,14 @@ export class TimerWidgetPageComponent implements OnInit {
   });
 
   // Reactive Forms value is not a signal; bridge it so canStart tracks typing.
-  private readonly startWorkOrderId = toSignal(this.startForm.controls.workOrderId.valueChanges, {
+  private readonly startWorkorderId = toSignal(this.startForm.controls.workOrderId.valueChanges, {
     initialValue: this.startForm.controls.workOrderId.value,
   });
 
   readonly hasActiveTimer = computed(() => this.activeTimers().length > 0);
   readonly canStart = computed(
     () =>
-      !!this.startWorkOrderId().trim() &&
+      !!this.startWorkorderId().trim() &&
       !this.hasActiveTimer() &&
       this.timerState() !== 'STARTING' &&
       this.timerState() !== 'STOPPING',
