@@ -439,6 +439,21 @@ describe('WorkorderDetailPageComponent [Stories 213–215]', () => {
       expect(value?.textContent?.trim()).toBe(enUS.WORKEXEC.WORKORDER_DETAIL.TECHNICIAN_ASSIGNED);
     });
 
+    it('makes the employee lookup for a session that holds people:employee_pii:view', () => {
+      const auth = TestBed.inject(AuthService);
+      vi.spyOn(auth, 'permissionsKnown').mockReturnValue(true);
+      vi.spyOn(auth, 'hasPermission').mockImplementation(p => p === 'people:employee_pii:view');
+      fixture.detectChanges();
+      drainWithTechnician(() =>
+        http.expectOne(`${BASE}/v1/people/employees/${TECH_ID}`).flush({
+          id: TECH_ID, firstName: 'Jane', lastName: 'Smith', employeeNumber: 'EMP-007',
+        }),
+      );
+      fixture.detectChanges();
+
+      expect(component.technicianDisplay()).toBe('Jane Smith · #EMP-007');
+    });
+
     it('shows the resolving placeholder until the employee lookup settles', () => {
       fixture.detectChanges();
       http.expectOne(`${BASE}/v1/workorders/${WO_ID}/detail`).flush({ ...STUB_WORKORDER, assignedTechnicianId: TECH_ID });
