@@ -304,4 +304,26 @@ describe('CrmSnapshotComponent', () => {
       vi.useRealTimers();
     });
   });
+
+  describe('form-driven button state (#455)', () => {
+    it('enables Load once a customer is picked after first render', async () => {
+      await setup();
+      expect(component.canLoad()).toBe(false);
+
+      component.selectParty({ partyId: '11111111-1111-4111-8111-111111111111', legalName: 'Acme' } as PartyDetail);
+
+      expect(component.canLoad()).toBe(true);
+    });
+
+    it('tracks form validity for Load and Refresh after first render', async () => {
+      await setup();
+      component.snapshot.set({ partyId: 'p' } as CrmSnapshot);
+      expect(component.canRefresh()).toBe(true);
+
+      component.snapshotForm.controls.vehicleId.setValue('not-a-uuid');
+
+      expect(component.canLoad()).toBe(false);
+      expect(component.canRefresh()).toBe(false);
+    });
+  });
 });

@@ -7,7 +7,8 @@ import {
   computed,
 } from '@angular/core';
 
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { map } from 'rxjs';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -82,14 +83,21 @@ export class TimeApprovalPageComponent {
     comments: new FormControl('', { nonNullable: true }),
   });
 
+  // Reactive Forms value is not a signal; bridge it so the computeds below track selection.
+  private readonly selection = toSignal(
+    this.selectionForm.valueChanges.pipe(map(() => this.selectionForm.getRawValue())),
+    { initialValue: this.selectionForm.getRawValue() },
+  );
+
   readonly selectedPeriodStatus = computed<PeriodStatus | null>(() => {
-    const periodId = this.selectionForm.getRawValue().timePeriodId;
+    const periodId = this.selection().timePeriodId;
     return this.periods().find(p => p.timePeriodId === periodId)?.status ?? null;
   });
 
   readonly canDecide = computed<boolean>(() => {
     const status = this.selectedPeriodStatus();
-    if (!this.selectionForm.getRawValue().personId || !this.selectionForm.getRawValue().timePeriodId) return false;
+    const { personId, timePeriodId } = this.selection();
+    if (!personId || !timePeriodId) return false;
     if (this.detailLoading() || this.actionInFlight()) return false;
     if (this.entries().length === 0) return false;
     if (status === 'OPEN' || status === 'PAYROLL_CLOSED') return false;

@@ -309,4 +309,16 @@ describe('MergePartiesComponent', () => {
       expect(routerStub.navigate).toHaveBeenCalledWith(['/app/crm']);
     });
   });
+
+  it('enables Merge once the confirm form is filled after the survivor is chosen (#455)', async () => {
+    await setup();
+    component.toggleSelect(partyA);
+    component.toggleSelect(partyB);
+    component.continueToConfirm();
+    expect(component.canMerge()).toBe(false);
+
+    component.confirmForm.setValue({ justification: 'duplicate record', acknowledged: true });
+
+    expect(component.canMerge()).toBe(true);
+  });
 });

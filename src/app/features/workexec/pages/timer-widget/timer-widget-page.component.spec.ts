@@ -134,4 +134,14 @@ describe('TimerWidgetPageComponent', () => {
     expect(el).toBeTruthy();
     expect(el.textContent).toContain('Conflict');
   });
+
+  it('tracks the typed work order ID for the Start button (#455)', () => {
+    expect(component.canStart()).toBe(true);
+
+    component.startForm.controls.workOrderId.setValue('  ');
+    expect(component.canStart()).toBe(false);
+
+    component.startForm.controls.workOrderId.setValue('WO-2');
+    expect(component.canStart()).toBe(true);
+  });
 });

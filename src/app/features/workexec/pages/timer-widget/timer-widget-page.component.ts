@@ -7,7 +7,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -40,10 +40,21 @@ export class TimerWidgetPageComponent implements OnInit {
   private readonly startKey = signal<string | null>(null);
   private readonly stopKey = signal<string | null>(null);
 
+  readonly startForm = new FormGroup({
+    workOrderId: new FormControl<string>('', { nonNullable: true, validators: [Validators.required] }),
+    workOrderItemId: new FormControl<string>('', { nonNullable: true }),
+    laborCode: new FormControl<string>('', { nonNullable: true }),
+  });
+
+  // Reactive Forms value is not a signal; bridge it so canStart tracks typing.
+  private readonly startWorkOrderId = toSignal(this.startForm.controls.workOrderId.valueChanges, {
+    initialValue: this.startForm.controls.workOrderId.value,
+  });
+
   readonly hasActiveTimer = computed(() => this.activeTimers().length > 0);
   readonly canStart = computed(
     () =>
-      !!this.startForm.controls.workOrderId.value.trim() &&
+      !!this.startWorkOrderId().trim() &&
       !this.hasActiveTimer() &&
       this.timerState() !== 'STARTING' &&
       this.timerState() !== 'STOPPING',
@@ -51,12 +62,6 @@ export class TimerWidgetPageComponent implements OnInit {
   readonly canStop = computed(
     () => this.hasActiveTimer() && this.timerState() !== 'STARTING' && this.timerState() !== 'STOPPING',
   );
-
-  readonly startForm = new FormGroup({
-    workOrderId: new FormControl<string>('', { nonNullable: true, validators: [Validators.required] }),
-    workOrderItemId: new FormControl<string>('', { nonNullable: true }),
-    laborCode: new FormControl<string>('', { nonNullable: true }),
-  });
 
   constructor() {
     this.route.queryParams
