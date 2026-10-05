@@ -33,7 +33,7 @@
 				{{ 'BULK_IMPORT.JOB_DETAIL.CANCEL' | translate }}
 			</button>
 			}
-			@if (job()!.status === 'FAILED') {
+			@if (job()!.status === 'FAILED' || job()!.status === 'PARTIAL') {
 			<button class="job-btn job-btn--primary" type="button" (click)="retryJob()">
 				{{ 'BULK_IMPORT.JOB_DETAIL.RETRY' | translate }}
 			</button>

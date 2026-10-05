@@ -75,5 +75,11 @@ describe('BulkImportProgressStepperComponent', () => {
       const doneStep = component.steps[5]; // DONE is index 5
       expect(component.getStepState(doneStep)).toBe('active');
     });
+
+    it('returns active for last step when status is PARTIAL', () => {
+      component.status = 'PARTIAL' as JobStatus;
+      const doneStep = component.steps[5]; // DONE is index 5
+      expect(component.getStepState(doneStep)).toBe('active');
+    });
   });
 });

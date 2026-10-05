@@ -382,4 +382,33 @@ describe('BulkImportJobDetailPageComponent', () => {
       expect(component.downloadErrorKey()).toBeNull();
     });
   });
+
+  describe('terminal-status actions (issue #445)', () => {
+    function renderWithStatus(status: BulkLoadJob['status']): HTMLElement {
+      component.job.set({ ...mockJob, status });
+      fixture.detectChanges();
+      return fixture.nativeElement as HTMLElement;
+    }
+
+    it.each(['FAILED', 'PARTIAL'] as const)('offers Retry and Download errors for a %s job', status => {
+      const el = renderWithStatus(status);
+
+      expect(el.querySelector('.job-btn--primary')?.textContent).toContain('BULK_IMPORT.JOB_DETAIL.RETRY');
+      expect(el.querySelector('.job-btn--secondary')?.textContent).toContain('BULK_IMPORT.JOB_DETAIL.DOWNLOAD_ERRORS');
+    });
+
+    it('offers neither Retry nor Download errors for a COMPLETED job', () => {
+      const el = renderWithStatus('COMPLETED');
+
+      expect(el.querySelector('.job-btn--primary')).toBeNull();
+      expect(el.querySelector('.job-btn--secondary')).toBeNull();
+    });
+
+    it('renders the PARTIAL status badge with its own translated label and style', () => {
+      const badge = renderWithStatus('PARTIAL').querySelector('.job-status');
+
+      expect(badge?.classList).toContain('job-status--partial');
+      expect(badge?.textContent?.trim()).toBe('BULK_IMPORT.STATUS.PARTIAL');
+    });
+  });
 });

@@ -95,6 +95,7 @@ export abstract class BulkImportWizardPageBase implements OnInit, OnDestroy {
         this.loadMappings();
         break;
       case 'COMPLETED':
+      case 'PARTIAL':
       case 'FAILED':
       case 'CANCELLED':
         this.loadAuditRecords();
