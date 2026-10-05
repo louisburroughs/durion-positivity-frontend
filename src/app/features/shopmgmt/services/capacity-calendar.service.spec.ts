@@ -6,15 +6,22 @@ import { BayAPIService, LocationAPIService } from '@durion-sdk/location';
 import { ProductsAPIService } from '@durion-sdk/catalog';
 import type { ServiceDto } from '@durion-sdk/catalog';
 import {
+  DayCapacityViewStatusEnum,
   LocationTechnicianRosterEntryResponseShiftSourceEnum,
   LocationTechnicianRosterEntryResponseShiftStatusEnum,
   ScheduleAPIService,
   TechnicianAPIService,
   TechnicianCredentialResponseStatusEnum,
 } from '@durion-sdk/shop-manager';
-import type { LocationTechnicianRosterEntryResponse, ScheduleViewResponse, TechnicianCredentialResponse } from '@durion-sdk/shop-manager';
+import type {
+  BayCapacityView,
+  DayCapacityView,
+  LocationTechnicianRosterEntryResponse,
+  ScheduleViewResponse,
+  TechnicianCredentialResponse,
+} from '@durion-sdk/shop-manager';
 import { CapacityCalendarService, heldSkillCodes } from './capacity-calendar.service';
-import type { CapacityCalendarView, JobRequirement } from '../models/capacity-calendar.models';
+import type { CapacityCalendarView, CapacityDay, JobRequirement } from '../models/capacity-calendar.models';
 
 /**
  * The transport mappings the capacity engine depends on (CAP-325, CAP-329): what a catalog
@@ -29,7 +36,7 @@ describe('CapacityCalendarService', () => {
       providers: [
         { provide: BayAPIService, useValue: { listBays: vi.fn() } },
         { provide: LocationAPIService, useValue: { getLocationById: vi.fn() } },
-        { provide: ScheduleAPIService, useValue: { viewSchedule: vi.fn() } },
+        { provide: ScheduleAPIService, useValue: { viewSchedule: vi.fn(), getScheduleCapacity: vi.fn() } },
         { provide: TechnicianAPIService, useValue: { listLocationTechnicians: vi.fn() } },
         { provide: ProductsAPIService, useValue: { searchCatalogServices: vi.fn() } },
       ],
@@ -305,68 +312,271 @@ describe('CapacityCalendarService', () => {
       expect(view.locationHasNoSchedule).toBe(false);
       expect(view.degraded).toBe(false);
     });
+  });
 
-    /**
-     * A month fans out over the whole grid, so the two counts that decide these
-     * flags only have more than one outcome to weigh here. The mixed case is
-     * the one that matters: the endpoint 404s on a date with no appointments at
-     * a location it holds no shop row for, so a shopless location with any
-     * bookings answers 200 for those dates and 404 for the rest.
-     */
-    describe('across a month', () => {
-      const MONTH = { ...REQUEST, scope: 'month' as const };
+  /**
+   * The month grid is one `getScheduleCapacity` read (backend #2023), not one
+   * `viewSchedule` per day. September 2026 is used throughout: its grid runs
+   * Sunday 30 August to Saturday 3 October, 35 dates.
+   */
+  describe('month scope reads the range capacity endpoint', () => {
+    const MONTH = {
+      locationId: 'loc-1',
+      focusDate: '2026-09-29',
+      scope: 'month' as const,
+      job: { label: '', operationCode: '', skillCodes: [], skillRequirementsConfigured: true, durationHours: 1 },
+    };
+    const GRID_FROM = '2026-08-30';
+    const GRID_TO = '2026-10-03';
 
-      const dayResponse = (date: string) => ({
-        date,
-        dayStartAt: `${date}T14:00:00Z`,
-        dayEndAt: `${date}T22:00:00Z`,
-        locationId: 'loc-1',
-        resources: [],
-        viewGeneratedAt: `${date}T14:00:00Z`,
+    // Local wall-clock instants: the service buckets hour slots by local hour.
+    const local = (date: string, hour: number) => {
+      const [year, month, day] = date.split('-').map(Number);
+      return new Date(year, month - 1, day, hour).toISOString();
+    };
+    const gridDates = Array.from({ length: 35 }, (_, index) => {
+      const date = new Date(2026, 7, 30 + index);
+      const pad = (value: number) => String(value).padStart(2, '0');
+      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+    });
+
+    const bayDay = (overrides: Partial<BayCapacityView> = {}): BayCapacityView => ({
+      bayId: 'bay-1',
+      name: 'Bay 1',
+      occupancy: [0, 0, 0, 0],
+      occupiedMinutes: 0,
+      carryOverIn: [],
+      ...overrides,
+    });
+    /** An open day, 08:00 to 12:00 unless told otherwise: four hour slots. */
+    const okDay = (date: string, bays: BayCapacityView[] = [bayDay()], endHour = 12): DayCapacityView => ({
+      date,
+      status: DayCapacityViewStatusEnum.Ok,
+      dayStartAt: local(date, 8),
+      dayEndAt: local(date, endHour),
+      bays,
+    });
+    const shutDay = (date: string, status: DayCapacityViewStatusEnum, closureReason?: string): DayCapacityView => ({
+      date,
+      status,
+      closureReason,
+      bays: [],
+    });
+
+    const scheduleApi = () =>
+      TestBed.inject(ScheduleAPIService) as unknown as {
+        viewSchedule: ReturnType<typeof vi.fn>;
+        getScheduleCapacity: ReturnType<typeof vi.fn>;
+      };
+
+    const arrange = (
+      days: Record<string, DayCapacityView> = {},
+      bayRows: unknown[] = [{ id: 'bay-1', name: 'Bay 1', status: 'ACTIVE' }],
+    ) => {
+      const bays = TestBed.inject(BayAPIService) as unknown as { listBays: ReturnType<typeof vi.fn> };
+      const techs = TestBed.inject(TechnicianAPIService) as unknown as { listLocationTechnicians: ReturnType<typeof vi.fn> };
+      const locations = TestBed.inject(LocationAPIService) as unknown as { getLocationById: ReturnType<typeof vi.fn> };
+      bays.listBays.mockReturnValue(of({ content: bayRows }));
+      techs.listLocationTechnicians.mockReturnValue(
+        of({ content: [{ mechanicRecordId: 'record-1', mechanicPersonId: 'person-1', firstName: 'Jo', lastName: 'Bell', credentials: [] }] }),
+      );
+      locations.getLocationById.mockReturnValue(of({ id: 'loc-1', name: 'Northgate' }));
+      scheduleApi().getScheduleCapacity.mockReturnValue(
+        of({
+          locationId: 'loc-1',
+          from: GRID_FROM,
+          to: GRID_TO,
+          viewGeneratedAt: local(GRID_FROM, 8),
+          days: gridDates.map(date => days[date] ?? okDay(date)),
+        }),
+      );
+    };
+
+    const calendar = (request: typeof MONTH | (Omit<typeof MONTH, 'scope'> & { scope: 'week' }) = MONTH) =>
+      new Promise<CapacityCalendarView>(resolve => service.getCalendar(request).subscribe(resolve));
+    const dayOf = (view: CapacityCalendarView, date: string): CapacityDay => {
+      const found = view.weeks.flat().find(day => day.date === date);
+      if (!found) {
+        throw new Error(`no ${date} in the month grid`);
+      }
+      return found;
+    };
+
+    it('makes one capacity call spanning the whole grid, and no per-day schedule call', async () => {
+      arrange();
+
+      const view = await calendar();
+
+      expect(scheduleApi().getScheduleCapacity).toHaveBeenCalledTimes(1);
+      expect(scheduleApi().getScheduleCapacity).toHaveBeenCalledWith('loc-1', GRID_FROM, GRID_TO);
+      expect(scheduleApi().viewSchedule).not.toHaveBeenCalled();
+      expect(view.weeks).toHaveLength(5);
+      expect(view.degraded).toBe(false);
+      expect(view.locationHasNoSchedule).toBe(false);
+    });
+
+    it('reads a bay hour as busy when its occupancy slot counts any appointment', async () => {
+      arrange({ '2026-09-29': okDay('2026-09-29', [bayDay({ occupancy: [0, 2, 0, 0], occupiedMinutes: 60 })]) });
+
+      const view = await calendar();
+      const day = dayOf(view, '2026-09-29');
+
+      expect(view.hours).toEqual([8, 9, 10, 11]);
+      expect(day.kind).toBe('open');
+      expect(day.bayStates[0]).toEqual(['free', 'busy', 'free', 'free']);
+      expect(day.shopCapacityBayHours).toBe(4);
+      expect(day.shopFreeBayHours).toBe(3);
+    });
+
+    it('hatches an out-of-service bay, and counts no capacity for a bay the capacity read does not list', async () => {
+      arrange({}, [
+        { id: 'bay-1', name: 'Bay 1', status: 'ACTIVE' },
+        { id: 'bay-2', name: 'Bay 2', status: 'OUT_OF_SERVICE' },
+        { id: 'bay-3', name: 'Bay 3', status: 'ACTIVE' },
+      ]);
+
+      const day = dayOf(await calendar(), '2026-09-29');
+
+      expect(day.bayStates[1]).toEqual(['down', 'down', 'down', 'down']);
+      // Unknown to the schedule service: claiming it free would invent capacity.
+      expect(day.bayStates[2]).toEqual(['closed', 'closed', 'closed', 'closed']);
+      expect(day.shopCapacityBayHours).toBe(4);
+    });
+
+    it('closes the hours outside a short day\'s own window', async () => {
+      arrange({ '2026-09-26': okDay('2026-09-26', [bayDay({ occupancy: [0, 0] })], 10) });
+
+      const view = await calendar();
+      const saturday = dayOf(view, '2026-09-26');
+
+      // The grid still spans the widest window any day reports.
+      expect(view.hours).toEqual([8, 9, 10, 11]);
+      expect(saturday.bayStates[0]).toEqual(['free', 'free', 'closed', 'closed']);
+      expect(saturday.shopCapacityBayHours).toBe(2);
+    });
+
+    it('shows a weekly closure and a holiday as facts, not as failures', async () => {
+      arrange({
+        '2026-09-27': shutDay('2026-09-27', DayCapacityViewStatusEnum.Closed),
+        '2026-09-07': shutDay('2026-09-07', DayCapacityViewStatusEnum.Holiday, 'Labor Day'),
       });
 
-      /** Answers per date, so one fan-out can mix 404s and real days. */
-      const arrangeByDate = (answer: (date: string) => unknown) =>
-        arrange(undefined).viewSchedule.mockImplementation((_loc: string, date: string) => answer(date));
+      const view = await calendar();
 
-      const calendar = () =>
-        new Promise<{ locationHasNoSchedule: boolean; degraded: boolean }>(resolve =>
-          service.getCalendar(MONTH).subscribe(resolve),
-        );
+      expect(dayOf(view, '2026-09-27').kind).toBe('closed');
+      expect(dayOf(view, '2026-09-07').kind).toBe('holiday');
+      expect(dayOf(view, '2026-09-07').closureReason).toBe('Labor Day');
+      expect(view.degraded).toBe(false);
+    });
 
-      it('every day 404 is the location having no shop, across the whole grid', async () => {
-        arrangeByDate(() => throwError(() => new HttpErrorResponse({ status: 404 })));
+    it('marks padding days from the neighbouring months as outside, whatever their status', async () => {
+      arrange();
 
-        const view = await calendar();
+      const view = await calendar();
 
-        expect(view.locationHasNoSchedule).toBe(true);
-        expect(view.degraded).toBe(false);
-      });
+      expect(dayOf(view, '2026-08-30').kind).toBe('outside');
+      expect(dayOf(view, '2026-10-03').kind).toBe('outside');
+    });
 
-      it('some days 404 and some answer: an incomplete picture, not a location without a shop', async () => {
-        // The booked day answers; the rest 404 because the shop row is missing.
-        // Left ungraded, those blanks would read as open and empty rather than
-        // unknown, which is the one reading that gets someone double-booked.
-        arrangeByDate(date =>
-          date === '2026-09-29'
-            ? of(dayResponse(date))
-            : throwError(() => new HttpErrorResponse({ status: 404 })),
-        );
+    it('degrades when a day could not be assembled, so the gap never reads as a quiet day', async () => {
+      arrange({ '2026-09-15': shutDay('2026-09-15', DayCapacityViewStatusEnum.Unavailable) });
 
-        const view = await calendar();
+      const view = await calendar();
 
-        expect(view.degraded).toBe(true);
-        expect(view.locationHasNoSchedule).toBe(false);
-      });
+      expect(view.degraded).toBe(true);
+      expect(view.locationHasNoSchedule).toBe(false);
+      expect(dayOf(view, '2026-09-15').kind).toBe('closed');
+      expect(dayOf(view, '2026-09-15').shopFreeBayHours).toBe(0);
+    });
 
-      it('a whole month that answers is neither degraded nor schedule-less', async () => {
-        arrangeByDate(date => of(dayResponse(date)));
+    it('degrades when the capacity read omits a date it was asked for', async () => {
+      arrange();
+      scheduleApi().getScheduleCapacity.mockReturnValue(
+        of({
+          locationId: 'loc-1',
+          from: GRID_FROM,
+          to: GRID_TO,
+          viewGeneratedAt: local(GRID_FROM, 8),
+          days: gridDates.filter(date => date !== '2026-09-15').map(date => okDay(date)),
+        }),
+      );
 
-        const view = await calendar();
+      const view = await calendar();
 
-        expect(view.degraded).toBe(false);
-        expect(view.locationHasNoSchedule).toBe(false);
-      });
+      expect(view.degraded).toBe(true);
+      expect(dayOf(view, '2026-09-15').kind).toBe('closed');
+    });
+
+    it('sums carry-over across bays and names the earliest day the work began', async () => {
+      arrange(
+        {
+          '2026-09-29': okDay('2026-09-29', [
+            bayDay({ carryOverIn: [{ appointmentId: 'appt-1', bayHours: 1.5, fromDate: '2026-09-28' }] }),
+            bayDay({ bayId: 'bay-2', name: 'Bay 2', carryOverIn: [{ appointmentId: 'appt-2', bayHours: 2, fromDate: '2026-09-25' }] }),
+          ]),
+        },
+        [
+          { id: 'bay-1', name: 'Bay 1', status: 'ACTIVE' },
+          { id: 'bay-2', name: 'Bay 2', status: 'ACTIVE' },
+        ],
+      );
+
+      const view = await calendar();
+
+      expect(dayOf(view, '2026-09-29').carryOver).toEqual({ hours: 3.5, fromDate: '2026-09-25' });
+      expect(dayOf(view, '2026-09-28').carryOver).toBeUndefined();
+    });
+
+    it('counts every rostered technician as on duty and unassigned: the capacity read carries no technician data', async () => {
+      arrange();
+
+      const view = await calendar();
+
+      expect(view.technicians).toHaveLength(1);
+      expect([...view.technicians[0].onDutyHours].sort()).toEqual([0, 1, 2, 3]);
+      expect([...view.technicians[0].assignedHours]).toEqual([]);
+      expect(dayOf(view, '2026-09-29').firstFitHour).toBe(8);
+    });
+
+    it('a failed capacity read degrades and is never mistaken for a location without a shop', async () => {
+      arrange();
+      scheduleApi().getScheduleCapacity.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 503 })));
+
+      const view = await calendar();
+
+      expect(view.degraded).toBe(true);
+      expect(view.locationHasNoSchedule).toBe(false);
+      expect(dayOf(view, '2026-09-29').kind).toBe('closed');
+    });
+
+    it('a 404 from the capacity read is the location having no shop, not a degraded read', async () => {
+      arrange();
+      scheduleApi().getScheduleCapacity.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 404 })));
+
+      const view = await calendar();
+
+      expect(view.locationHasNoSchedule).toBe(true);
+      expect(view.degraded).toBe(false);
+    });
+
+    it('leaves the week scope on the per-day schedule read, which still carries the day detail', async () => {
+      arrange();
+      scheduleApi().viewSchedule.mockImplementation((_loc: string, date: string) =>
+        of({
+          date,
+          dayStartAt: local(date, 8),
+          dayEndAt: local(date, 12),
+          locationId: 'loc-1',
+          resources: [],
+          viewGeneratedAt: local(date, 8),
+        }),
+      );
+
+      const view = await calendar({ ...MONTH, scope: 'week' });
+
+      expect(scheduleApi().viewSchedule).toHaveBeenCalledTimes(7);
+      expect(scheduleApi().getScheduleCapacity).not.toHaveBeenCalled();
+      expect(view.weekDays).toHaveLength(7);
     });
   });
 
