@@ -5218,7 +5218,8 @@
       "STANDFIRST": "See what customers owe you, what the shop owes and where the bank check-up stands, and clear what needs a person.",
       "PERIOD_CHIP": {
         "OPEN": "{{month}} is open",
-        "CLOSED": "{{month}} is closed"
+        "CLOSED": "{{month}} is closed",
+        "UNKNOWN": "{{month}}: status not known"
       },
       "HELP_BUTTON": "Help",
       "REFRESH": "Refresh",
@@ -5379,7 +5380,8 @@
             "OPTIMISTIC_LOCK": "Someone else changed this check-up. It has been reloaded; try again.",
             "FORBIDDEN": "You need the {{permission}} permission to approve a bank check-up.",
             "OTHER": "That couldn't be completed. Try again."
-          }
+          },
+          "DONE": "Approved: this month's bank check-up for {{account}} is done."
         }
       },
       "MORE_TOOLS": {

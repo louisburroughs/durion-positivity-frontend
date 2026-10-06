@@ -5218,7 +5218,8 @@
       "STANDFIRST": "Voyez ce que les clients vous doivent, ce que l’atelier doit et où en est la vérification bancaire, et réglez ce qui demande une personne.",
       "PERIOD_CHIP": {
         "OPEN": "{{month}} est ouvert",
-        "CLOSED": "{{month}} est clôturé"
+        "CLOSED": "{{month}} est clôturé",
+        "UNKNOWN": "{{month}} : statut inconnu"
       },
       "HELP_BUTTON": "Aide",
       "REFRESH": "Actualiser",
@@ -5379,7 +5380,8 @@
             "OPTIMISTIC_LOCK": "Quelqu’un d’autre a modifié cette vérification. Elle a été rechargée; réessayez.",
             "FORBIDDEN": "Il vous faut l’autorisation {{permission}} pour approuver une vérification bancaire.",
             "OTHER": "L’opération n’a pas pu être effectuée. Réessayez."
-          }
+          },
+          "DONE": "Approuvée : la vérification bancaire de ce mois pour {{account}} est terminée."
         }
       },
       "MORE_TOOLS": {
