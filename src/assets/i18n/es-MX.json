@@ -5208,7 +5208,9 @@
         "BANK": "Banco",
         "BANK_TERM": "conciliación bancaria",
         "MONTH_END": "Cierre de mes",
-        "MONTH_END_TERM": "cierre de periodo"
+        "MONTH_END_TERM": "cierre de periodo",
+        "BOOKS": "Sus libros",
+        "BOOKS_TERM": "estados financieros"
       },
       "SHOW_TERMS": "Mostrar términos contables"
     },
@@ -5285,7 +5287,8 @@
       },
       "ACTION": {
         "OPEN_BILLS": "Abrir facturas",
-        "OPEN_BANK_CHECKUP": "Abrir revisión bancaria"
+        "OPEN_BANK_CHECKUP": "Abrir revisión bancaria",
+        "WHO_OWES_WHAT": "Quién debe qué"
       },
       "METHOD": {
         "CASH": "Efectivo",
@@ -5461,6 +5464,260 @@
           "ANSWER": "Abra Pagos a proveedores y elija Nuevo pago. Elija el proveedor y las facturas aprobadas que va a pagar, revise el importe y confirme.",
           "EXAMPLE": "Por ejemplo: pagar en un solo pago dos facturas de refacciones del mismo proveedor.",
           "LINK": "Abrir pagos a proveedores"
+        }
+      }
+    },
+    "BOOKS": {
+      "OVERLINE": "Contabilidad",
+      "TITLE": "Sus libros",
+      "STANDFIRST": "Lo que el taller tiene, debe y ha ganado, quién debe qué y cada asiento, en palabras sencillas.",
+      "EMPTY_ACCESS": "Su rol puede abrir esta página pero no leer ninguna de sus pestañas. Resumen y Quién debe qué necesitan {{summary}}; Todos los asientos necesitan {{entries}}.",
+      "NAME_NOT_AVAILABLE": "Nombre no disponible",
+      "NO_NUMBER": "Asiento sin número",
+      "CORRECTION_DESCRIPTION": "Corrección de un asiento anterior",
+      "ERROR": {
+        "LOAD": "Sus libros no se pudieron cargar. Revise su conexión e inténtelo de nuevo."
+      },
+      "REGION": {
+        "LOADING": "Cargando…",
+        "LOAD_FAILED": "Esto no se pudo cargar.",
+        "REFRESH_FAILED": "Esto no se pudo actualizar; estas son las últimas cifras cargadas.",
+        "DENIED": "Necesita el permiso {{permission}} para ver esto."
+      },
+      "PERIOD": {
+        "LABEL": "Mes",
+        "OPEN": "{{month}} · abierto",
+        "CLOSED": "{{month}} · cerrado",
+        "PLAIN": "{{month}}",
+        "AS_AT": "Importes al {{date}}"
+      },
+      "TABS": {
+        "ARIA": "Partes de sus libros",
+        "SUMMARY": "Resumen",
+        "SUMMARY_TERM": "balance general",
+        "OWED": "Quién debe qué",
+        "OWED_TERM": "cuentas por cobrar y por pagar por antigüedad",
+        "ENTRIES": "Todos los asientos",
+        "ENTRIES_TERM": "libro mayor"
+      },
+      "HOW_TO_READ": {
+        "SUMMARY": "¿Es nuevo en esto? Cómo leer sus libros en un minuto",
+        "TEXT": "Lo que tiene menos lo que debe es lo que es suyo. Cada venta, pago y factura se registra como un asiento, y cada asiento mueve dinero entre dos o más cuentas, así que los dos lados siempre cuadran.",
+        "EXAMPLE": "Ejemplo: un cliente paga una factura de $200. El dinero que le deben los clientes baja $200 y Pendiente de depositar sube $200. Lo que es suyo no cambia: el dinero solo se movió."
+      },
+      "SUMMARY": {
+        "TITLE": "Resumen al {{date}}",
+        "OWN": "Lo que tiene",
+        "OWE": "Lo que debe",
+        "YOURS": "Lo que es suyo",
+        "OTHER": "Otras líneas",
+        "TOTAL_OWN": "Todo lo que tiene",
+        "TOTAL_OWE": "Todo lo que debe",
+        "TOTAL_YOURS": "Todo lo que es suyo",
+        "SO_FAR": "{{month}} hasta ahora",
+        "TOTAL_EARNED": "Ganado",
+        "TOTAL_COSTS": "Costos",
+        "PROFIT_SO_FAR": "Ganancia hasta ahora",
+        "PROFIT_NOTE": "La ganancia hasta ahora no se cierra en sus libros hasta que termina el año.",
+        "INCOME_EMPTY": "Todavía no hay nada que mostrar para {{month}}.",
+        "NOT_SET_UP": "Su resumen aún no está configurado. Pida a la persona que administra su catálogo de cuentas que configure las líneas del resumen.",
+        "UNBALANCED": "Sus libros no cuadran: avise a su contador.",
+        "LINE_HINT": "Elija una línea para ver las cuentas y los asientos que la forman.",
+        "LINE": {
+          "IN_THE_BANK": "En el banco",
+          "WAITING_TO_BE_DEPOSITED": "Pendiente de depositar",
+          "KEPT_IN_DRAWERS": "En las cajas para dar cambio",
+          "CUSTOMERS_OWE_YOU": "Dinero que le deben los clientes",
+          "INVENTORY": "Llantas y piezas en sus estantes",
+          "OTHER_ASSETS": "Otras cosas que tiene",
+          "BILLS_FROM_VENDORS": "Facturas de proveedores",
+          "SALES_TAX_COLLECTED": "Impuesto sobre ventas cobrado, aún no pagado",
+          "CUSTOMER_CREDITS": "Créditos que los clientes aún pueden usar",
+          "OTHER_LIABILITIES": "Otras cosas que debe",
+          "OWNER_EQUITY": "Dinero del propietario en el negocio",
+          "OPENING_BALANCE_EQUITY": "Saldos iniciales",
+          "PROFIT_NOT_YET_CLOSED": "Ganancia aún no cerrada",
+          "OTHER_EQUITY": "Otras cosas que son suyas",
+          "SALES": "Ventas",
+          "COST_OF_PARTS_SOLD": "Costo de llantas y piezas vendidas",
+          "CARD_PROCESSING_FEES": "Comisiones por pagos con tarjeta",
+          "OTHER_INCOME": "Otros ingresos",
+          "OTHER_EXPENSES": "Otros costos",
+          "UNLISTED": "Otra"
+        }
+      },
+      "DRILL": {
+        "TITLE": "Cuentas que forman {{line}}",
+        "CLOSE": "Volver al resumen",
+        "EMPTY": "Ninguna cuenta suma a esta línea.",
+        "ENTRIES_IN": "Asientos en {{account}}"
+      },
+      "LEDGER": {
+        "CAPTION": "Asientos en {{account}}, del más reciente al más antiguo",
+        "ENTRY": "Asiento",
+        "DATE": "Fecha",
+        "WHAT_HAPPENED": "Qué pasó",
+        "WENT_UP": "Subió",
+        "WENT_DOWN": "Bajó",
+        "DEBIT": "Débito",
+        "CREDIT": "Crédito",
+        "TERM_DEBIT": "débito",
+        "TERM_CREDIT": "crédito",
+        "BALANCE_AFTER": "Saldo después",
+        "OPENING": "Al inicio",
+        "CLOSING": "Al final",
+        "EMPTY": "No hay asientos en esta cuenta para el mes.",
+        "LOCKED": "Los asientos quedan bloqueados una vez registrados; un error se corrige con un asiento de corrección.",
+        "WHY_UP_DOWN": "¿Por qué «subió» y «bajó»?",
+        "WHY_UP_DOWN_TEXT": "Cada cuenta tiene un lado habitual. El dinero en el banco sube cuando le pagan; una factura de proveedor sube cuando debe más. Subió y Bajó siguen a cada cuenta, así que nunca necesita saber qué lado es débito o crédito.",
+        "WHY_UP_DOWN_EXAMPLE": "Ejemplo: pagar una factura de proveedor de $500 hace que En el banco baje $500 y que Facturas de proveedores baje $500."
+      },
+      "OWED": {
+        "TITLE": "Quién debe qué al {{date}}",
+        "PAST_NOTE": "Estos son los saldos abiertos de hoy, con su antigüedad al {{date}}. Los pagos recibidos desde entonces ya están descontados.",
+        "CUSTOMERS": "Clientes que le deben",
+        "CUSTOMERS_CAPTION": "Lo que deben los clientes, según su retraso, al {{date}}",
+        "CUSTOMERS_EMPTY": "Ningún cliente le debe nada.",
+        "VENDORS": "Proveedores a los que debe",
+        "VENDORS_CAPTION": "Lo que debe a los proveedores, según su retraso, al {{date}}",
+        "VENDORS_EMPTY": "No debe nada a ningún proveedor en una factura aprobada.",
+        "VENDORS_NOTE": "Aquí solo se cuentan las facturas aprobadas; las que esperan aprobación están en Facturas por pagar.",
+        "CUSTOMER": "Cliente",
+        "VENDOR": "Proveedor",
+        "NOT_YET_DUE": "Aún no vence",
+        "DAYS_1_30": "1–30 días de retraso",
+        "DAYS_31_60": "31–60",
+        "DAYS_61_90": "61–90",
+        "DAYS_90_PLUS": "Más de 90",
+        "TOTAL": "Total",
+        "CALL_FIRST": "A quién llamar primero",
+        "CALL_FIRST_TEXT": "Empiece por los clientes cuyo dinero lleva más días de retraso y luego por los totales más altos. Cuanto más espera una factura, menos probable es que se pague.",
+        "CALL_FIRST_EXAMPLE": "Ejemplo: un cliente con $300 de más de 90 días de retraso va antes que uno con $2,000 que aún no vence."
+      },
+      "ENTRIES": {
+        "TITLE": "Todos los asientos",
+        "SEARCH_LABEL": "Número de asiento",
+        "SEARCH_HINT": "Escriba el número completo, por ejemplo JE-202610-131.",
+        "SEARCH": "Buscar asiento",
+        "CLEAR": "Mostrar todos los asientos",
+        "ACCOUNT_LABEL": "Cuenta",
+        "ALL_ACCOUNTS": "Todas las cuentas",
+        "ACCOUNT_HINT": "Al elegir una cuenta se muestran sus asientos de {{month}}.",
+        "ACCOUNTS_FAILED": "La lista de cuentas no se pudo cargar.",
+        "CAPTION": "Todos los asientos, del más reciente al más antiguo",
+        "AMOUNT": "Importe",
+        "STATUS": "Estado",
+        "EMPTY": "Todavía no se ha registrado ningún asiento.",
+        "NO_MATCH": "Ningún asiento tiene el número {{entry}}.",
+        "PAGING": "Páginas de asientos",
+        "PREVIOUS": "Página anterior",
+        "NEXT": "Página siguiente",
+        "PAGE_OF": "Página {{page}} de {{pages}}",
+        "STATUS_HELP": "¿Qué significan Corrección y Revertido?",
+        "STATUS_HELP_TEXT": "Un asiento nunca se cambia ni se borra una vez registrado. Para corregir un error se registra un asiento que lo anula: el nuevo asiento dice Corrección y el original dice Revertido.",
+        "STATUS_HELP_EXAMPLE": "Ejemplo: JE-202610-131 registró una venta dos veces. Al revertirlo se registra JE-202610-140 (Corrección) y JE-202610-131 pasa a decir Revertido."
+      },
+      "STATUS": {
+        "RECORDED": "Registrado",
+        "CORRECTION": "Corrección",
+        "REVERSED": "Revertido",
+        "NOT_RECORDED": "Aún no registrado",
+        "UNKNOWN": "Desconocido"
+      },
+      "ENTRY": {
+        "OVERLINE": "Asiento contable",
+        "TITLE": "Asiento",
+        "BACK": "Volver a todos los asientos",
+        "FACTS": "Sobre este asiento",
+        "DATE": "Fecha",
+        "SOURCE_LABEL": "Origen",
+        "LINES": "Líneas",
+        "LINES_CAPTION": "Las líneas de {{entry}}",
+        "ACCOUNT": "Cuenta",
+        "LINE_DESCRIPTION": "Descripción",
+        "NO_LINES": "Este asiento no tiene líneas.",
+        "TRACE": "Asientos relacionados",
+        "TRACE_NONE": "Ningún otro asiento está vinculado a este.",
+        "TRACE_FAILED": "Los asientos relacionados no se pudieron cargar.",
+        "REVERSES": "Revierte {{entry}}",
+        "REVERSED_BY": "Revertido por {{entry}}",
+        "RELATED": "Mismo origen: {{entry}}",
+        "NOT_FOUND": "No encontramos este asiento.",
+        "LOAD_FAILED": "Este asiento no se pudo cargar.",
+        "THE_CORRECTION": "el asiento de corrección",
+        "SOURCE": {
+          "MANUAL": "Ingresado a mano",
+          "INVOICE_REVENUE": "Una factura de cliente",
+          "INVOICE_REVENUE_REVERSAL": "Una factura de cliente anulada",
+          "PAYMENT_APPLICATION": "Un pago de cliente aplicado a facturas",
+          "CUSTOMER_CREDIT_ISSUANCE": "Un crédito otorgado a un cliente",
+          "CUSTOMER_CREDIT_RELIEF": "Un crédito de cliente usado o reembolsado",
+          "CREDIT_MEMO_REVERSAL": "Una nota de crédito revertida",
+          "CREDIT_MEMO_VOID": "Una nota de crédito anulada",
+          "INVENTORY_SHRINKAGE": "Inventario perdido o dañado",
+          "INVENTORY_ADJUSTMENT": "Un ajuste por conteo de inventario",
+          "INVENTORY_REVALUATION": "Un cambio en el valor del inventario",
+          "SETTLEMENT": "Un depósito de pagos con tarjeta",
+          "SETTLEMENT_WRITE_OFF": "Una diferencia de un depósito con tarjeta dada de baja",
+          "SETTLEMENT_RECLASS": "Un depósito con tarjeta movido a la cuenta correcta",
+          "REGISTER_OVER_SHORT": "Sobrante o faltante de caja",
+          "LEGACY_REVERSAL": "Una corrección de un asiento antiguo",
+          "UNKNOWN": "Desconocido"
+        },
+        "REVERSE": {
+          "OPEN": "Revertir este asiento",
+          "TITLE": "¿Revertir {{entry}}?",
+          "CONSEQUENCE": "Esto registra un asiento nuevo que anula {{entry}} y lo marca como Revertido. No se puede deshacer.",
+          "REASON": "¿Por qué lo revierte?",
+          "REASON_HINT": "Su motivo se guarda con ambos asientos.",
+          "REASON_REQUIRED": "Indique por qué revierte este asiento.",
+          "OVERRIDE_LABEL": "¿Por qué registrarlo en un mes cerrado?",
+          "OVERRIDE_HINT": "El mes está cerrado. Su motivo se guarda en el registro de auditoría.",
+          "OVERRIDE_REQUIRED": "Indique por qué esto corresponde al mes cerrado.",
+          "CONFIRM": "Revertir asiento",
+          "DONE": "{{entry}} quedó revertido.",
+          "OPEN_CORRECTION": "Abrir {{entry}}",
+          "BLOCKED": {
+            "REVERSED": "Este asiento ya está revertido.",
+            "NOT_RECORDED": "Solo se puede revertir un asiento registrado.",
+            "UNKNOWN": "El estado de este asiento es desconocido, así que no se puede revertir aquí.",
+            "LOADING": "Espere a que se cargue el asiento.",
+            "REFRESH_FAILED": "Este asiento no se pudo actualizar, así que su estado puede estar desactualizado. Vuelva a intentarlo antes de revertirlo."
+          },
+          "ERROR": {
+            "ALREADY_REVERSED": "Alguien ya revirtió este asiento. Ahora muestra su estado actual.",
+            "NOT_POSTED": "Este asiento no está registrado, así que no se puede revertir. Ahora muestra su estado actual.",
+            "HARD_LOCKED": "Ese mes está bloqueado definitivamente, así que ya no se puede registrar nada en él.",
+            "PERIOD_CLOSED": "El asiento de corrección caería en un mes cerrado. Una persona con el permiso {{permission}} puede registrarlo.",
+            "PERIOD_CLOSED_OVERRIDE": "El asiento de corrección caería en un mes cerrado. Indique por qué corresponde ahí y vuelva a revertir.",
+            "PERIOD_CLOSED_REFUSED": "El mes cerrado volvió a rechazar el asiento. Revise su motivo o pida ayuda a una persona con el permiso {{permission}}.",
+            "FORBIDDEN": "Necesita el permiso {{permission}} para revertir asientos.",
+            "NOT_FOUND": "Ya no encontramos este asiento.",
+            "OTHER": "El asiento no se pudo revertir. Inténtelo de nuevo."
+          }
+        }
+      },
+      "EXPORT": {
+        "OPEN": "Exportar para su contador",
+        "TITLE": "Exportar para su contador",
+        "BODY": "Elija qué enviar de {{month}}, al {{date}}.",
+        "WHAT": "Qué exportar",
+        "FORMAT_LEGEND": "Tipo de archivo",
+        "START": "Exportar",
+        "PREPARING": "Preparando su archivo…",
+        "DONE": "Su archivo está listo y se descargó.",
+        "FAILED": "El archivo no se pudo preparar. Inténtelo de nuevo.",
+        "REPORT": {
+          "BALANCE_SHEET": "Resumen (balance general)",
+          "INCOME_STATEMENT": "Ganancia hasta ahora (estado de resultados)",
+          "AGED_RECEIVABLES": "Quién debe qué — clientes",
+          "AGED_PAYABLES": "Quién debe qué — proveedores",
+          "GENERAL_LEDGER": "Todos los asientos (libro mayor)",
+          "TRIAL_BALANCE": "Balanza de comprobación"
+        },
+        "FORMAT": {
+          "PDF": "PDF",
+          "CSV": "CSV (hoja de cálculo)"
         }
       }
     }
@@ -9080,7 +9337,9 @@
       "BANK_ACCOUNTS": "Cuentas bancarias",
       "BANK_IMPORTS": "Importaciones de estados de cuenta",
       "IMPORT": "Importar",
-      "RECONCILIATIONS": "Conciliaciones bancarias"
+      "RECONCILIATIONS": "Conciliaciones bancarias",
+      "BOOKS": "Sus libros",
+      "ENTRIES": "Asientos contables"
     }
   },
   "POSITIVITY": {

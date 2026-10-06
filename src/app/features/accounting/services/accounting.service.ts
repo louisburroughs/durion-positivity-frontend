@@ -469,8 +469,11 @@ export class AccountingService {
    * server-authored text can reach the UI (ADR-0064). The page's existing
    * `PEOPLE.TIME_EXPORT.ERROR.DOWNLOAD` copy covers every download failure
    * regardless of which code was parsed.
+   *
+   * `filename` names the saved file: the time export passes
+   * `time-export-<id>.csv`, Your books its report, period and format (CAP:550 S5).
    */
-  downloadExport(exportId: string): Observable<void> {
+  downloadExport(exportId: string, filename: string): Observable<void> {
     return this.financialReportingService
       .downloadReportExport(exportId, 'body', undefined, {
         httpHeaderAccept: 'application/octet-stream',
@@ -480,7 +483,7 @@ export class AccountingService {
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
-          a.download = `time-export-${exportId}.csv`;
+          a.download = filename;
           document.body.append(a);
           a.click();
           a.remove();

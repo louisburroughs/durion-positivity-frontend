@@ -218,6 +218,19 @@ describe('AccountingHomePageComponent', () => {
       expect(text('[data-testid="payments-waiting"]')).toContain('ACCOUNTING.HOME.LANES.RECEIVABLES.PAYMENTS_WAITING');
     });
 
+    it('offers "Who owes what" on Money owed, landing on that tab of Your books (CAP:550 S5)', () => {
+      render();
+      const link = q('[data-testid="lane-receivables"] [data-testid="who-owes-what"]');
+      expect(link?.getAttribute('href')).toBe('/app/accounting/books?tab=owed');
+      expect(link?.textContent?.trim()).toBe('ACCOUNTING.HOME.ACTION.WHO_OWES_WHAT');
+    });
+
+    it('does not offer "Who owes what" to a session that cannot read that tab (accounting:je:view alone)', () => {
+      mocks.held.set(['accounting:je:view']);
+      render();
+      expect(q('[data-testid="who-owes-what"]')).toBeNull();
+    });
+
     it('renders a served total that is not the sum of its buckets as served (no client addition)', () => {
       // A total the buckets do not add up to: the lane must show the server's figure.
       mocks.home.receivables.mockReturnValue(of<ReceivablesLane>({ ...receivablesLane, totalOutstanding: 99.99 }));

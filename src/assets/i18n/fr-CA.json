@@ -5208,7 +5208,9 @@
         "BANK": "Banque",
         "BANK_TERM": "rapprochement bancaire",
         "MONTH_END": "Fin de mois",
-        "MONTH_END_TERM": "clôture de période"
+        "MONTH_END_TERM": "clôture de période",
+        "BOOKS": "Vos livres",
+        "BOOKS_TERM": "états financiers"
       },
       "SHOW_TERMS": "Afficher les termes comptables"
     },
@@ -5285,7 +5287,8 @@
       },
       "ACTION": {
         "OPEN_BILLS": "Ouvrir les factures",
-        "OPEN_BANK_CHECKUP": "Ouvrir la vérification bancaire"
+        "OPEN_BANK_CHECKUP": "Ouvrir la vérification bancaire",
+        "WHO_OWES_WHAT": "Qui doit quoi"
       },
       "METHOD": {
         "CASH": "Comptant",
@@ -5461,6 +5464,260 @@
           "ANSWER": "Ouvrez Paiements fournisseurs et choisissez Nouveau paiement. Choisissez le fournisseur et les factures approuvées que vous payez, vérifiez le montant, puis confirmez.",
           "EXAMPLE": "Par exemple : payer en un seul paiement deux factures de pièces du même fournisseur.",
           "LINK": "Ouvrir les paiements fournisseurs"
+        }
+      }
+    },
+    "BOOKS": {
+      "OVERLINE": "Comptabilité",
+      "TITLE": "Vos livres",
+      "STANDFIRST": "Ce que l’atelier possède, doit et a gagné, qui doit quoi, et chaque écriture, en mots simples.",
+      "EMPTY_ACCESS": "Votre rôle peut ouvrir cette page mais ne peut lire aucun de ses onglets. Résumé et Qui doit quoi exigent {{summary}}; Toutes les écritures exigent {{entries}}.",
+      "NAME_NOT_AVAILABLE": "Nom non disponible",
+      "NO_NUMBER": "Écriture sans numéro",
+      "CORRECTION_DESCRIPTION": "Correction d’une écriture antérieure",
+      "ERROR": {
+        "LOAD": "Vos livres n’ont pas pu être chargés. Vérifiez votre connexion et réessayez."
+      },
+      "REGION": {
+        "LOADING": "Chargement…",
+        "LOAD_FAILED": "Ceci n’a pas pu être chargé.",
+        "REFRESH_FAILED": "Ceci n’a pas pu être actualisé; voici les derniers chiffres chargés.",
+        "DENIED": "Vous avez besoin de la permission {{permission}} pour voir ceci."
+      },
+      "PERIOD": {
+        "LABEL": "Mois",
+        "OPEN": "{{month}} · ouvert",
+        "CLOSED": "{{month}} · fermé",
+        "PLAIN": "{{month}}",
+        "AS_AT": "Montants au {{date}}"
+      },
+      "TABS": {
+        "ARIA": "Parties de vos livres",
+        "SUMMARY": "Résumé",
+        "SUMMARY_TERM": "bilan",
+        "OWED": "Qui doit quoi",
+        "OWED_TERM": "comptes clients et fournisseurs par ancienneté",
+        "ENTRIES": "Toutes les écritures",
+        "ENTRIES_TERM": "grand livre"
+      },
+      "HOW_TO_READ": {
+        "SUMMARY": "Vous débutez? Comment lire vos livres en une minute",
+        "TEXT": "Ce que vous possédez moins ce que vous devez, c’est ce qui est à vous. Chaque vente, paiement et facture est enregistré comme une écriture, et chaque écriture déplace de l’argent entre deux comptes ou plus, donc les deux côtés concordent toujours.",
+        "EXAMPLE": "Exemple : un client paie une facture de 200 $. L’argent que vous doivent les clients baisse de 200 $ et En attente de dépôt monte de 200 $. Ce qui est à vous ne change pas : l’argent a seulement bougé."
+      },
+      "SUMMARY": {
+        "TITLE": "Résumé au {{date}}",
+        "OWN": "Ce que vous possédez",
+        "OWE": "Ce que vous devez",
+        "YOURS": "Ce qui est à vous",
+        "OTHER": "Autres lignes",
+        "TOTAL_OWN": "Tout ce que vous possédez",
+        "TOTAL_OWE": "Tout ce que vous devez",
+        "TOTAL_YOURS": "Tout ce qui est à vous",
+        "SO_FAR": "{{month}} jusqu’ici",
+        "TOTAL_EARNED": "Gagné",
+        "TOTAL_COSTS": "Coûts",
+        "PROFIT_SO_FAR": "Profit jusqu’ici",
+        "PROFIT_NOTE": "Le profit jusqu’ici n’est pas clôturé dans vos livres avant la fin de l’année.",
+        "INCOME_EMPTY": "Rien à afficher pour {{month}} pour l’instant.",
+        "NOT_SET_UP": "Votre résumé n’est pas encore configuré. Demandez à la personne qui gère votre plan comptable de configurer les lignes du résumé.",
+        "UNBALANCED": "Vos livres ne sont pas équilibrés — prévenez votre comptable.",
+        "LINE_HINT": "Choisissez une ligne pour voir les comptes et les écritures qui la composent.",
+        "LINE": {
+          "IN_THE_BANK": "À la banque",
+          "WAITING_TO_BE_DEPOSITED": "En attente de dépôt",
+          "KEPT_IN_DRAWERS": "Dans les tiroirs pour la monnaie",
+          "CUSTOMERS_OWE_YOU": "Argent que vous doivent les clients",
+          "INVENTORY": "Pneus et pièces sur vos tablettes",
+          "OTHER_ASSETS": "Autres choses que vous possédez",
+          "BILLS_FROM_VENDORS": "Factures des fournisseurs",
+          "SALES_TAX_COLLECTED": "Taxe de vente perçue, pas encore versée",
+          "CUSTOMER_CREDITS": "Crédits que les clients peuvent encore utiliser",
+          "OTHER_LIABILITIES": "Autres choses que vous devez",
+          "OWNER_EQUITY": "Argent du propriétaire dans l’entreprise",
+          "OPENING_BALANCE_EQUITY": "Soldes d’ouverture",
+          "PROFIT_NOT_YET_CLOSED": "Profit pas encore clôturé",
+          "OTHER_EQUITY": "Autres choses qui sont à vous",
+          "SALES": "Ventes",
+          "COST_OF_PARTS_SOLD": "Coût des pneus et pièces vendus",
+          "CARD_PROCESSING_FEES": "Frais de paiement par carte",
+          "OTHER_INCOME": "Autres revenus",
+          "OTHER_EXPENSES": "Autres coûts",
+          "UNLISTED": "Autre"
+        }
+      },
+      "DRILL": {
+        "TITLE": "Comptes qui composent {{line}}",
+        "CLOSE": "Retour au résumé",
+        "EMPTY": "Aucun compte ne s’ajoute à cette ligne.",
+        "ENTRIES_IN": "Écritures dans {{account}}"
+      },
+      "LEDGER": {
+        "CAPTION": "Écritures dans {{account}}, de la plus récente à la plus ancienne",
+        "ENTRY": "Écriture",
+        "DATE": "Date",
+        "WHAT_HAPPENED": "Ce qui s’est passé",
+        "WENT_UP": "A augmenté",
+        "WENT_DOWN": "A diminué",
+        "DEBIT": "Débit",
+        "CREDIT": "Crédit",
+        "TERM_DEBIT": "débit",
+        "TERM_CREDIT": "crédit",
+        "BALANCE_AFTER": "Solde après",
+        "OPENING": "Au début",
+        "CLOSING": "À la fin",
+        "EMPTY": "Aucune écriture dans ce compte pour le mois.",
+        "LOCKED": "Les écritures sont verrouillées une fois enregistrées; une erreur se corrige par une écriture de correction.",
+        "WHY_UP_DOWN": "Pourquoi « a augmenté » et « a diminué »?",
+        "WHY_UP_DOWN_TEXT": "Chaque compte a un côté habituel. L’argent à la banque augmente quand on vous paie; une facture de fournisseur augmente quand vous devez davantage. A augmenté et A diminué suivent chaque compte, donc vous n’avez jamais besoin de savoir quel côté est le débit ou le crédit.",
+        "WHY_UP_DOWN_EXAMPLE": "Exemple : payer une facture de fournisseur de 500 $ fait diminuer À la banque de 500 $ et Factures des fournisseurs de 500 $."
+      },
+      "OWED": {
+        "TITLE": "Qui doit quoi au {{date}}",
+        "PAST_NOTE": "Ce sont les soldes ouverts d’aujourd’hui, classés par ancienneté au {{date}}. Les paiements reçus depuis sont déjà déduits.",
+        "CUSTOMERS": "Clients qui vous doivent",
+        "CUSTOMERS_CAPTION": "Ce que doivent les clients, selon le retard, au {{date}}",
+        "CUSTOMERS_EMPTY": "Aucun client ne vous doit quoi que ce soit.",
+        "VENDORS": "Fournisseurs à qui vous devez",
+        "VENDORS_CAPTION": "Ce que vous devez aux fournisseurs, selon le retard, au {{date}}",
+        "VENDORS_EMPTY": "Vous ne devez rien à aucun fournisseur sur une facture approuvée.",
+        "VENDORS_NOTE": "Seules les factures approuvées sont comptées ici; celles qui attendent une approbation sont dans Factures à payer.",
+        "CUSTOMER": "Client",
+        "VENDOR": "Fournisseur",
+        "NOT_YET_DUE": "Pas encore dû",
+        "DAYS_1_30": "1 à 30 jours de retard",
+        "DAYS_31_60": "31 à 60",
+        "DAYS_61_90": "61 à 90",
+        "DAYS_90_PLUS": "Plus de 90",
+        "TOTAL": "Total",
+        "CALL_FIRST": "Qui appeler en premier",
+        "CALL_FIRST_TEXT": "Commencez par les clients dont l’argent a le plus de jours de retard, puis par les totaux les plus élevés. Plus une facture attend, moins elle risque d’être payée.",
+        "CALL_FIRST_EXAMPLE": "Exemple : un client avec 300 $ en retard de plus de 90 jours passe avant un client avec 2 000 $ pas encore dus."
+      },
+      "ENTRIES": {
+        "TITLE": "Toutes les écritures",
+        "SEARCH_LABEL": "Numéro d’écriture",
+        "SEARCH_HINT": "Tapez le numéro complet, par exemple JE-202610-131.",
+        "SEARCH": "Trouver l’écriture",
+        "CLEAR": "Afficher toutes les écritures",
+        "ACCOUNT_LABEL": "Compte",
+        "ALL_ACCOUNTS": "Tous les comptes",
+        "ACCOUNT_HINT": "Choisir un compte affiche ses écritures de {{month}}.",
+        "ACCOUNTS_FAILED": "La liste des comptes n’a pas pu être chargée.",
+        "CAPTION": "Toutes les écritures, de la plus récente à la plus ancienne",
+        "AMOUNT": "Montant",
+        "STATUS": "Statut",
+        "EMPTY": "Aucune écriture n’a encore été enregistrée.",
+        "NO_MATCH": "Aucune écriture ne porte le numéro {{entry}}.",
+        "PAGING": "Pages d’écritures",
+        "PREVIOUS": "Page précédente",
+        "NEXT": "Page suivante",
+        "PAGE_OF": "Page {{page}} sur {{pages}}",
+        "STATUS_HELP": "Que signifient Correction et Contrepassée?",
+        "STATUS_HELP_TEXT": "Une écriture n’est jamais modifiée ni supprimée une fois enregistrée. Pour corriger une erreur, on enregistre une écriture qui l’annule : la nouvelle écriture indique Correction et l’originale indique Contrepassée.",
+        "STATUS_HELP_EXAMPLE": "Exemple : JE-202610-131 a enregistré une vente deux fois. La contrepasser enregistre JE-202610-140 (Correction), et JE-202610-131 indique maintenant Contrepassée."
+      },
+      "STATUS": {
+        "RECORDED": "Enregistrée",
+        "CORRECTION": "Correction",
+        "REVERSED": "Contrepassée",
+        "NOT_RECORDED": "Pas encore enregistrée",
+        "UNKNOWN": "Inconnu"
+      },
+      "ENTRY": {
+        "OVERLINE": "Écriture de journal",
+        "TITLE": "Écriture",
+        "BACK": "Retour à toutes les écritures",
+        "FACTS": "À propos de cette écriture",
+        "DATE": "Date",
+        "SOURCE_LABEL": "Provenance",
+        "LINES": "Lignes",
+        "LINES_CAPTION": "Les lignes de {{entry}}",
+        "ACCOUNT": "Compte",
+        "LINE_DESCRIPTION": "Description",
+        "NO_LINES": "Cette écriture n’a aucune ligne.",
+        "TRACE": "Écritures liées",
+        "TRACE_NONE": "Aucune autre écriture n’est liée à celle-ci.",
+        "TRACE_FAILED": "Les écritures liées n’ont pas pu être chargées.",
+        "REVERSES": "Contrepasse {{entry}}",
+        "REVERSED_BY": "Contrepassée par {{entry}}",
+        "RELATED": "Même provenance : {{entry}}",
+        "NOT_FOUND": "Nous n’avons pas trouvé cette écriture.",
+        "LOAD_FAILED": "Cette écriture n’a pas pu être chargée.",
+        "THE_CORRECTION": "l’écriture de correction",
+        "SOURCE": {
+          "MANUAL": "Saisie à la main",
+          "INVOICE_REVENUE": "Une facture client",
+          "INVOICE_REVENUE_REVERSAL": "Une facture client annulée",
+          "PAYMENT_APPLICATION": "Un paiement client imputé à des factures",
+          "CUSTOMER_CREDIT_ISSUANCE": "Un crédit accordé à un client",
+          "CUSTOMER_CREDIT_RELIEF": "Un crédit client utilisé ou remboursé",
+          "CREDIT_MEMO_REVERSAL": "Une note de crédit contrepassée",
+          "CREDIT_MEMO_VOID": "Une note de crédit annulée",
+          "INVENTORY_SHRINKAGE": "Stock perdu ou endommagé",
+          "INVENTORY_ADJUSTMENT": "Un ajustement d’inventaire",
+          "INVENTORY_REVALUATION": "Un changement de la valeur du stock",
+          "SETTLEMENT": "Un versement des paiements par carte",
+          "SETTLEMENT_WRITE_OFF": "Un écart de versement par carte radié",
+          "SETTLEMENT_RECLASS": "Un versement par carte déplacé vers le bon compte",
+          "REGISTER_OVER_SHORT": "Un surplus ou un manque de caisse",
+          "LEGACY_REVERSAL": "Une correction d’une ancienne écriture",
+          "UNKNOWN": "Inconnu"
+        },
+        "REVERSE": {
+          "OPEN": "Contrepasser cette écriture",
+          "TITLE": "Contrepasser {{entry}}?",
+          "CONSEQUENCE": "Ceci enregistre une nouvelle écriture qui annule {{entry}} et la marque comme Contrepassée. Cette action est irréversible.",
+          "REASON": "Pourquoi la contrepassez-vous?",
+          "REASON_HINT": "Votre motif est conservé avec les deux écritures.",
+          "REASON_REQUIRED": "Indiquez pourquoi vous contrepassez cette écriture.",
+          "OVERRIDE_LABEL": "Pourquoi l’enregistrer dans un mois fermé?",
+          "OVERRIDE_HINT": "Le mois est fermé. Votre motif est conservé dans le registre d’audit.",
+          "OVERRIDE_REQUIRED": "Indiquez pourquoi ceci appartient au mois fermé.",
+          "CONFIRM": "Contrepasser l’écriture",
+          "DONE": "{{entry}} est contrepassée.",
+          "OPEN_CORRECTION": "Ouvrir {{entry}}",
+          "BLOCKED": {
+            "REVERSED": "Cette écriture est déjà contrepassée.",
+            "NOT_RECORDED": "Seule une écriture enregistrée peut être contrepassée.",
+            "UNKNOWN": "Le statut de cette écriture est inconnu; elle ne peut donc pas être contrepassée ici.",
+            "LOADING": "Attendez que l’écriture soit chargée.",
+            "REFRESH_FAILED": "Cette écriture n’a pas pu être actualisée; son statut n’est peut-être plus à jour. Réessayez avant de la contrepasser."
+          },
+          "ERROR": {
+            "ALREADY_REVERSED": "Quelqu’un a déjà contrepassé cette écriture. Elle affiche maintenant son état actuel.",
+            "NOT_POSTED": "Cette écriture n’est pas enregistrée; elle ne peut donc pas être contrepassée. Elle affiche maintenant son état actuel.",
+            "HARD_LOCKED": "Ce mois est verrouillé définitivement; plus rien ne peut y être enregistré.",
+            "PERIOD_CLOSED": "L’écriture de correction tomberait dans un mois fermé. Une personne ayant la permission {{permission}} peut l’enregistrer.",
+            "PERIOD_CLOSED_OVERRIDE": "L’écriture de correction tomberait dans un mois fermé. Indiquez pourquoi elle y appartient, puis contrepassez de nouveau.",
+            "PERIOD_CLOSED_REFUSED": "Le mois fermé a encore refusé l’écriture. Vérifiez votre motif ou demandez à une personne ayant la permission {{permission}}.",
+            "FORBIDDEN": "Vous avez besoin de la permission {{permission}} pour contrepasser des écritures.",
+            "NOT_FOUND": "Nous ne trouvons plus cette écriture.",
+            "OTHER": "L’écriture n’a pas pu être contrepassée. Réessayez."
+          }
+        }
+      },
+      "EXPORT": {
+        "OPEN": "Exporter pour votre comptable",
+        "TITLE": "Exporter pour votre comptable",
+        "BODY": "Choisissez quoi envoyer pour {{month}}, au {{date}}.",
+        "WHAT": "Quoi exporter",
+        "FORMAT_LEGEND": "Type de fichier",
+        "START": "Exporter",
+        "PREPARING": "Préparation de votre fichier…",
+        "DONE": "Votre fichier est prêt et a été téléchargé.",
+        "FAILED": "Le fichier n’a pas pu être préparé. Réessayez.",
+        "REPORT": {
+          "BALANCE_SHEET": "Résumé (bilan)",
+          "INCOME_STATEMENT": "Profit jusqu’ici (état des résultats)",
+          "AGED_RECEIVABLES": "Qui doit quoi — clients",
+          "AGED_PAYABLES": "Qui doit quoi — fournisseurs",
+          "GENERAL_LEDGER": "Toutes les écritures (grand livre)",
+          "TRIAL_BALANCE": "Balance de vérification"
+        },
+        "FORMAT": {
+          "PDF": "PDF",
+          "CSV": "CSV (tableur)"
         }
       }
     }
@@ -9080,7 +9337,9 @@
       "BANK_ACCOUNTS": "Comptes bancaires",
       "BANK_IMPORTS": "Importations de relevés",
       "IMPORT": "Importer",
-      "RECONCILIATIONS": "Rapprochements bancaires"
+      "RECONCILIATIONS": "Rapprochements bancaires",
+      "BOOKS": "Vos livres",
+      "ENTRIES": "Écritures de journal"
     }
   },
   "POSITIVITY": {

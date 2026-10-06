@@ -341,6 +341,16 @@ export const ACCOUNTING_PAGE = {
   bankStatementEntry: ['accounting:reconciliation:adjust'],
   /** `getReconciliationReview`. Every write inside is gated by {@link ACCOUNTING_SECTION}. */
   reconciliationWorkspace: ['accounting:reconciliation:view'],
+  /**
+   * Your books (CAP:550 S5, SPEC-accounting-workspace §8.1): any of the codes
+   * its tabs and drill-downs read with. Each tab is shown only with its own
+   * code ({@link ACCOUNTING_SECTION} `books*`); a session holding only
+   * `accounting:coa:view` reaches the page and sees its empty-access state
+   * (story Spec discrepancy 6).
+   */
+  books: ['reporting:view:financial-statements', 'accounting:coa:view', 'accounting:je:view'],
+  /** `getJournalEntry` / `getJournalEntryTraceability` — its own gate; the books any-of gate never reaches it. */
+  journalEntry: ['accounting:je:view'],
 } as const satisfies Record<string, readonly string[]>;
 
 /**
@@ -399,6 +409,32 @@ export const ACCOUNTING_SECTION = {
    * `approve`. The button and its handler still gate on `reconciliationApprove` alone.
    */
   homeApprovalItems: ['accounting:reconciliation:view', 'accounting:reconciliation:approve'],
+  /*
+   * Your books (CAP:550 S5, SPEC-accounting-workspace §5.4, §8.1). Each tab,
+   * drill-down and action gates on the code its call enforces
+   * (`FinancialReportingController`, `JournalEntryController`,
+   * `GLAccountController`, `ReportExportController`).
+   */
+  /**
+   * Summary and Who owes what tabs, and every account drill-down: the balance
+   * sheet, income statement, drill-downs, general ledger and aged reports.
+   */
+  booksSummary: ['reporting:view:financial-statements'],
+  /** All entries tab: `listJournalEntries`. */
+  booksEntries: ['accounting:je:view'],
+  /**
+   * The All entries account filter. `allPermissions`: listing accounts needs
+   * `coa:view`, and the lines it switches to come from `generateGeneralLedger`,
+   * which needs `reporting:view:financial-statements`.
+   */
+  chartOfAccounts: ['accounting:coa:view', 'reporting:view:financial-statements'],
+  /** Reverse on the journal-entry page: `reverseJournalEntry`. */
+  journalEntryReverse: ['accounting:je:reverse'],
+  /**
+   * Export for your accountant. `allPermissions`: the request and status need
+   * `accounting:report:export`, the download `reporting:view:financial-statements`.
+   */
+  reportExport: ['accounting:report:export', 'reporting:view:financial-statements'],
 } as const satisfies Record<string, readonly string[]>;
 
 /** `/app/crm/*` — one entry per routed page, keyed by route path. */

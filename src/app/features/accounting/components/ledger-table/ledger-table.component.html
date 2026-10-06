@@ -1,0 +1,97 @@
+@let empty = 'COMMON.EMPTY_VALUE' | translate;
+@let account = section().accountName ?? ('ACCOUNTING.BOOKS.NAME_NOT_AVAILABLE' | translate);
+<div class="ledger">
+  <dl class="ledger__balances">
+    <div>
+      <dt>{{ 'ACCOUNTING.BOOKS.LEDGER.OPENING' | translate }}</dt>
+      <dd class="numeric" data-testid="ledger-opening">{{ opening() === null ? empty : (opening() | money) }}</dd>
+    </div>
+    <div>
+      <dt>{{ 'ACCOUNTING.BOOKS.LEDGER.CLOSING' | translate }}</dt>
+      <dd class="numeric" data-testid="ledger-closing">{{ closing() === null ? empty : (closing() | money) }}</dd>
+    </div>
+  </dl>
+
+  @if (lines().length === 0) {
+    <p class="state-panel state-panel--empty" data-testid="ledger-empty">{{ 'ACCOUNTING.BOOKS.LEDGER.EMPTY' | translate }}</p>
+  } @else {
+    <div class="table-scroll-container" tabindex="0" role="region" aria-labelledby="ledger-caption">
+      <table class="ledger-table" data-testid="ledger-table">
+        <caption id="ledger-caption">
+          {{ 'ACCOUNTING.BOOKS.LEDGER.CAPTION' | translate: { account: account } }}
+          @if (showTerms() && section().accountNumber) {
+            <span class="account-code">{{ section().accountNumber }}</span>
+          }
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">{{ 'ACCOUNTING.BOOKS.LEDGER.ENTRY' | translate }}</th>
+            <th scope="col">{{ 'ACCOUNTING.BOOKS.LEDGER.DATE' | translate }}</th>
+            <th scope="col">{{ 'ACCOUNTING.BOOKS.LEDGER.WHAT_HAPPENED' | translate }}</th>
+            @if (directional()) {
+              <th scope="col" class="numeric" data-testid="heading-up">
+                {{ 'ACCOUNTING.BOOKS.LEDGER.WENT_UP' | translate }}
+                @if (showTerms()) {
+                  <span class="ledger__term">({{ upTermKey() | translate }})</span>
+                }
+              </th>
+              <th scope="col" class="numeric" data-testid="heading-down">
+                {{ 'ACCOUNTING.BOOKS.LEDGER.WENT_DOWN' | translate }}
+                @if (showTerms()) {
+                  <span class="ledger__term">({{ downTermKey() | translate }})</span>
+                }
+              </th>
+            } @else {
+              <th scope="col" class="numeric" data-testid="heading-up">{{ 'ACCOUNTING.BOOKS.LEDGER.DEBIT' | translate }}</th>
+              <th scope="col" class="numeric" data-testid="heading-down">{{ 'ACCOUNTING.BOOKS.LEDGER.CREDIT' | translate }}</th>
+            }
+            <th scope="col" class="numeric">{{ 'ACCOUNTING.BOOKS.LEDGER.BALANCE_AFTER' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (line of lines(); track $index) {
+            @let happened = whatHappened(line);
+            <tr data-testid="ledger-row">
+              <th scope="row">
+                @if (canOpenEntry()) {
+                  <a class="link-button" [routerLink]="['/app/accounting/books/entries', line.journalEntryId]" data-testid="entry-link">
+                    {{ line.entryNumber ?? ('ACCOUNTING.BOOKS.NO_NUMBER' | translate) }}
+                  </a>
+                } @else {
+                  {{ line.entryNumber ?? ('ACCOUNTING.BOOKS.NO_NUMBER' | translate) }}
+                }
+              </th>
+              <td>{{ line.transactionDate ? (toDate(line.transactionDate) | date: 'mediumDate') : empty }}</td>
+              <td data-testid="what-happened">
+                @if (happened === null) {
+                  {{ empty }}
+                } @else if (isKey(happened)) {
+                  {{ happened.key | translate }}
+                } @else {
+                  {{ happened.text }}
+                }
+              </td>
+              @if (directional()) {
+                <td class="numeric" data-testid="cell-up">{{ line.direction === 'INCREASE' ? (amountOf(line) | money) : '' }}</td>
+                <td class="numeric" data-testid="cell-down">{{ line.direction === 'DECREASE' ? (amountOf(line) | money) : '' }}</td>
+              } @else {
+                <td class="numeric" data-testid="cell-up">{{ line.debitAmount === null ? '' : (line.debitAmount | money) }}</td>
+                <td class="numeric" data-testid="cell-down">{{ line.creditAmount === null ? '' : (line.creditAmount | money) }}</td>
+              }
+              <td class="numeric" data-testid="cell-balance">
+                {{ balanceAfter(line) === null ? empty : (balanceAfter(line) | money) }}
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <p class="hint-text">{{ 'ACCOUNTING.BOOKS.LEDGER.LOCKED' | translate }}</p>
+  <app-help-disclosure
+    summaryKey="ACCOUNTING.BOOKS.LEDGER.WHY_UP_DOWN"
+    textKey="ACCOUNTING.BOOKS.LEDGER.WHY_UP_DOWN_TEXT"
+    exampleKey="ACCOUNTING.BOOKS.LEDGER.WHY_UP_DOWN_EXAMPLE"
+  />
+</div>

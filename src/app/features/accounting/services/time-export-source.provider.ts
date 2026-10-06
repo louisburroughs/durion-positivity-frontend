@@ -41,7 +41,7 @@ export function provideAccountingTimeExportSource(): Provider {
         getExportHistory: (params?: { pageIndex?: number; pageSize?: number }) =>
           from(getAccounting()).pipe(switchMap(accounting => accounting.getExportHistory(params))),
         downloadExport: (exportId: string): Observable<void> =>
-          from(getAccounting()).pipe(switchMap(accounting => accounting.downloadExport(exportId))),
+          from(getAccounting()).pipe(switchMap(accounting => accounting.downloadExport(exportId, `time-export-${exportId}.csv`))),
       };
     },
   };

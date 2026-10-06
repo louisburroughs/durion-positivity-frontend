@@ -82,6 +82,7 @@ describe('AccountingComponent (shell, §5.0)', () => {
       '',
       'payables/vendor-invoices',
       'bank-accounts',
+      'books',
       'periods',
     ]);
   });

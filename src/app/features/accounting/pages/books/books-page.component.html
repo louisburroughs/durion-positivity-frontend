@@ -1,0 +1,636 @@
+@let empty = 'COMMON.EMPTY_VALUE' | translate;
+@let month = monthOf(range().periodCode) | date: 'MMMM y';
+@let asAtDate = toDate(range().asAt) | date: 'mediumDate';
+<div class="accounting-page books">
+  <!-- Header (§5.0, story PROPOSED 2) -->
+  <header class="page-header books__header">
+    <div class="books__title-block">
+      <p class="section-overline">{{ 'ACCOUNTING.BOOKS.OVERLINE' | translate }}</p>
+      <h1 id="books-title">{{ 'ACCOUNTING.BOOKS.TITLE' | translate }}</h1>
+      <p class="page-subtitle">{{ 'ACCOUNTING.BOOKS.STANDFIRST' | translate }}</p>
+    </div>
+    @if (!emptyAccess()) {
+      <div class="books__header-actions">
+        <div class="form-field books__period">
+          <label for="books-period">{{ 'ACCOUNTING.BOOKS.PERIOD.LABEL' | translate }}</label>
+          <select
+            id="books-period"
+            data-testid="period-select"
+            aria-describedby="books-period-hint"
+            [ngModel]="selectedPeriodCode()"
+            (ngModelChange)="selectPeriod($event)"
+          >
+            @for (option of periodOptions(); track option.periodCode) {
+              <option [value]="option.periodCode">
+                {{ periodOptionKey(option) | translate: { month: (monthOf(option.periodCode) | date: 'MMMM y') } }}
+              </option>
+            }
+          </select>
+          <p id="books-period-hint" class="hint-text" data-testid="as-at">
+            {{ 'ACCOUNTING.BOOKS.PERIOD.AS_AT' | translate: { date: asAtDate } }}
+          </p>
+        </div>
+        @if (canExport()) {
+          <button type="button" class="btn btn--accent" data-testid="export-open" (click)="openExport()">
+            {{ 'ACCOUNTING.BOOKS.EXPORT.OPEN' | translate }}
+          </button>
+        }
+      </div>
+    }
+  </header>
+
+  <!-- Polite announcements survive every rebuild below (ADR-0029 §8.8). -->
+  <p class="sr-only" role="status" data-testid="announcement">
+    @if (announcement(); as message) {
+      {{ message.key | translate: message.params }}
+    }
+  </p>
+
+  @if (emptyAccess()) {
+    <div class="state-panel state-panel--empty" data-testid="empty-access">
+      <p>{{ 'ACCOUNTING.BOOKS.EMPTY_ACCESS' | translate: { summary: codes.reporting, entries: codes.entries } }}</p>
+    </div>
+  } @else {
+    @if (state() === 'error') {
+      <div class="state-panel state-panel--error" role="alert" data-testid="page-error">
+        <p>{{ (errorKey() ?? '') | translate }}</p>
+        <button type="button" class="btn btn--outline" (click)="retry()">{{ 'COMMON.RETRY' | translate }}</button>
+      </div>
+    }
+
+    <!-- Tabs (§5.4 item 2): buttons with aria-pressed, each only with its own permission. -->
+    <div class="books__tabs" role="group" [attr.aria-label]="'ACCOUNTING.BOOKS.TABS.ARIA' | translate">
+      @for (tab of availableTabs(); track tab) {
+        <button
+          type="button"
+          class="books__tab"
+          [attr.data-testid]="'tab-' + tab"
+          [attr.aria-pressed]="activeTab() === tab"
+          (click)="selectTab(tab)"
+        >
+          {{ tabKeys[tab].label | translate }}
+          @if (showTerms()) {
+            <span class="books__term">({{ tabKeys[tab].term | translate }})</span>
+          }
+        </button>
+      }
+    </div>
+
+    <app-help-disclosure
+      summaryKey="ACCOUNTING.BOOKS.HOW_TO_READ.SUMMARY"
+      textKey="ACCOUNTING.BOOKS.HOW_TO_READ.TEXT"
+      exampleKey="ACCOUNTING.BOOKS.HOW_TO_READ.EXAMPLE"
+    />
+
+    <!-- ── Summary (§5.4 item 4) ─────────────────────────────────────── -->
+    @if (activeTab() === 'summary') {
+      <section class="books__panel" aria-labelledby="summary-heading" data-testid="panel-summary">
+        <h2 id="summary-heading" tabindex="-1" #summaryHeading>
+          {{ 'ACCOUNTING.BOOKS.SUMMARY.TITLE' | translate: { date: asAtDate } }}
+        </h2>
+
+        <div class="books__sections">
+          <!-- What you own / owe / what's yours: only the balance-sheet read decides this part (ADR-0064 §1). -->
+          @if (balance.denied()) {
+            <section class="summary-card" data-testid="balance-state">
+              <p class="field-error" data-testid="region-denied">
+                {{ 'ACCOUNTING.BOOKS.REGION.DENIED' | translate: { permission: codes.reporting } }}
+              </p>
+            </section>
+          } @else {
+            @if (balanceData(); as sheet) {
+              @if (sheet.lines.length === 0) {
+                <div class="state-panel state-panel--empty books__wide" data-testid="summary-not-set-up">
+                  <p>{{ 'ACCOUNTING.BOOKS.SUMMARY.NOT_SET_UP' | translate }}</p>
+                </div>
+              } @else {
+                @if (!sheet.balanced) {
+                  <p class="books__alert books__wide" role="alert" data-testid="summary-unbalanced">
+                    {{ 'ACCOUNTING.BOOKS.SUMMARY.UNBALANCED' | translate }}
+                  </p>
+                }
+            @for (part of [
+              { id: 'own', key: 'ACCOUNTING.BOOKS.SUMMARY.OWN', rows: balanceRows().OWN, totalKey: 'ACCOUNTING.BOOKS.SUMMARY.TOTAL_OWN', total: sheet.totalAssets },
+              { id: 'owe', key: 'ACCOUNTING.BOOKS.SUMMARY.OWE', rows: balanceRows().OWE, totalKey: 'ACCOUNTING.BOOKS.SUMMARY.TOTAL_OWE', total: sheet.totalLiabilities },
+              { id: 'yours', key: 'ACCOUNTING.BOOKS.SUMMARY.YOURS', rows: balanceRows().YOURS, totalKey: 'ACCOUNTING.BOOKS.SUMMARY.TOTAL_YOURS', total: sheet.totalEquity }
+            ]; track part.id) {
+              <section class="summary-card" [attr.aria-labelledby]="'summary-' + part.id" [attr.data-testid]="'section-' + part.id">
+                <h3 [id]="'summary-' + part.id">{{ part.key | translate }}</h3>
+                <ul class="summary-lines">
+                  @for (row of part.rows; track row.code) {
+                    <li>
+                      <button type="button" class="summary-line" data-testid="summary-line" [attr.data-code]="row.code"
+                        aria-describedby="summary-line-hint" (click)="openLine(row)">
+                        <span class="summary-line__label">
+                          {{ row.labelKey | translate }}
+                          @if (showTerms()) {
+                            <span class="account-code">{{ row.code }}</span>
+                          }
+                        </span>
+                        <span class="numeric" data-testid="summary-amount">{{ row.amount | money }}</span>
+                      </button>
+                    </li>
+                  }
+                </ul>
+                <p class="summary-total" [attr.data-testid]="'total-' + part.id">
+                  <span>{{ part.totalKey | translate }}</span>
+                  <strong class="numeric">{{ part.total === null ? empty : (part.total | money) }}</strong>
+                </p>
+              </section>
+            }
+            @if (balanceRows().OTHER.length > 0) {
+              <section class="summary-card" aria-labelledby="summary-other" data-testid="section-other">
+                <h3 id="summary-other">{{ 'ACCOUNTING.BOOKS.SUMMARY.OTHER' | translate }}</h3>
+                <ul class="summary-lines">
+                  @for (row of balanceRows().OTHER; track row.code) {
+                    <li>
+                      <button type="button" class="summary-line" data-testid="summary-line" [attr.data-code]="row.code"
+                        aria-describedby="summary-line-hint" (click)="openLine(row)">
+                        <span class="summary-line__label">
+                          {{ row.labelKey | translate }}
+                          @if (showTerms()) {
+                            <span class="account-code">{{ row.code }}</span>
+                          }
+                        </span>
+                        <span class="numeric" data-testid="summary-amount">{{ row.amount | money }}</span>
+                      </button>
+                    </li>
+                  }
+                </ul>
+              </section>
+            }
+              }
+            }
+            @if (balance.status() === 'PENDING' && !balanceData()) {
+              <section class="summary-card" data-testid="balance-state">
+                <p class="pending-note" role="status">{{ 'ACCOUNTING.BOOKS.REGION.LOADING' | translate }}</p>
+              </section>
+            }
+            @if (balance.status() === 'FAILED') {
+              <section class="summary-card region-error" data-testid="summary-error">
+                <p class="field-error">
+                  {{ (balanceData() ? 'ACCOUNTING.BOOKS.REGION.REFRESH_FAILED' : 'ACCOUNTING.BOOKS.REGION.LOAD_FAILED') | translate }}
+                </p>
+                <button type="button" class="btn btn--outline" (click)="retryRegion('balance')">{{ 'COMMON.RETRY' | translate }}</button>
+              </section>
+            }
+          }
+
+          <!-- {Month} so far: the income statement keeps its own status; a failed or pending balance sheet never hides it. -->
+              <section class="summary-card" aria-labelledby="summary-so-far" data-testid="section-income">
+                <h3 id="summary-so-far">{{ 'ACCOUNTING.BOOKS.SUMMARY.SO_FAR' | translate: { month: month } }}</h3>
+                @if (income.denied()) {
+                  <p class="field-error">{{ 'ACCOUNTING.BOOKS.REGION.DENIED' | translate: { permission: codes.reporting } }}</p>
+                } @else if (incomeData(); as statement) {
+                  @if (incomeRows().length === 0) {
+                    <p class="hint-text" data-testid="income-empty">{{ 'ACCOUNTING.BOOKS.SUMMARY.INCOME_EMPTY' | translate: { month: month } }}</p>
+                  } @else {
+                    <ul class="summary-lines">
+                      @for (row of incomeRows(); track row.code) {
+                        <li>
+                          <button type="button" class="summary-line" data-testid="summary-line" [attr.data-code]="row.code"
+                            aria-describedby="summary-line-hint" (click)="openLine(row)">
+                            <span class="summary-line__label">
+                              {{ row.labelKey | translate }}
+                              @if (showTerms()) {
+                                <span class="account-code">{{ row.code }}</span>
+                              }
+                            </span>
+                            <span class="numeric" data-testid="summary-amount">{{ row.amount | money }}</span>
+                          </button>
+                        </li>
+                      }
+                    </ul>
+                  }
+                  <dl class="summary-totals">
+                    <div><dt>{{ 'ACCOUNTING.BOOKS.SUMMARY.TOTAL_EARNED' | translate }}</dt><dd class="numeric" data-testid="total-revenue">{{ statement.totalRevenue === null ? empty : (statement.totalRevenue | money) }}</dd></div>
+                    <div><dt>{{ 'ACCOUNTING.BOOKS.SUMMARY.TOTAL_COSTS' | translate }}</dt><dd class="numeric" data-testid="total-expenses">{{ statement.totalExpenses === null ? empty : (statement.totalExpenses | money) }}</dd></div>
+                    <div class="summary-totals__profit"><dt>{{ 'ACCOUNTING.BOOKS.SUMMARY.PROFIT_SO_FAR' | translate }}</dt><dd class="numeric" data-testid="net-income">{{ statement.netIncome === null ? empty : (statement.netIncome | money) }}</dd></div>
+                  </dl>
+                  <p class="hint-text">{{ 'ACCOUNTING.BOOKS.SUMMARY.PROFIT_NOTE' | translate }}</p>
+                  @if (income.status() === 'FAILED') {
+                  <div class="region-error" data-testid="income-error">
+                    <p class="field-error">{{ 'ACCOUNTING.BOOKS.REGION.REFRESH_FAILED' | translate }}</p>
+                    <button type="button" class="btn btn--outline" (click)="retryRegion('income')">{{ 'COMMON.RETRY' | translate }}</button>
+                  </div>
+                }
+              } @else if (income.status() === 'FAILED') {
+                  <div class="region-error" data-testid="income-error">
+                    <p class="field-error">{{ 'ACCOUNTING.BOOKS.REGION.LOAD_FAILED' | translate }}</p>
+                    <button type="button" class="btn btn--outline" (click)="retryRegion('income')">{{ 'COMMON.RETRY' | translate }}</button>
+                  </div>
+                } @else {
+                  <p class="pending-note" role="status">{{ 'ACCOUNTING.BOOKS.REGION.LOADING' | translate }}</p>
+                }
+              </section>
+        </div>
+        <p id="summary-line-hint" class="hint-text">{{ 'ACCOUNTING.BOOKS.SUMMARY.LINE_HINT' | translate }}</p>
+
+        <!-- Drill-down: the line's accounts, then an account's entries. -->
+        @if (drillTarget(); as target) {
+          <section class="books__drill" aria-labelledby="drill-heading" data-testid="drill">
+            <div class="books__drill-head">
+              <h3 id="drill-heading" tabindex="-1" #drillHeading>
+                {{ 'ACCOUNTING.BOOKS.DRILL.TITLE' | translate: { line: (target.labelKey | translate) } }}
+                @if (showTerms()) {
+                  <span class="account-code">{{ target.code }}</span>
+                }
+              </h3>
+              <button type="button" class="btn btn--outline" data-testid="drill-close" (click)="closeDrill()">
+                {{ 'ACCOUNTING.BOOKS.DRILL.CLOSE' | translate }}
+              </button>
+            </div>
+            @if (drillAccounts.denied()) {
+              <p class="field-error">{{ 'ACCOUNTING.BOOKS.REGION.DENIED' | translate: { permission: codes.reporting } }}</p>
+            } @else if (drillAccountsData(); as accounts) {
+              @if (accounts.length === 0) {
+                <p class="state-panel state-panel--empty" data-testid="drill-empty">{{ 'ACCOUNTING.BOOKS.DRILL.EMPTY' | translate }}</p>
+              } @else {
+                <ul class="drill-accounts" data-testid="drill-accounts">
+                  @for (account of accounts; track account.accountId) {
+                    <li>
+                      <button type="button" class="summary-line" data-testid="drill-account"
+                        [attr.aria-pressed]="drillAccountId() === account.accountId" (click)="openAccount(account)">
+                        <span class="summary-line__label">
+                          {{ account.accountName ?? ('ACCOUNTING.BOOKS.NAME_NOT_AVAILABLE' | translate) }}
+                          @if (showTerms() && account.accountCode) {
+                            <span class="account-code">{{ account.accountCode }}</span>
+                          }
+                        </span>
+                        <span class="numeric">{{ account.balance === null ? empty : (account.balance | money) }}</span>
+                      </button>
+                    </li>
+                  }
+                </ul>
+              }
+            } @else if (drillAccounts.status() === 'FAILED') {
+              <p class="field-error" data-testid="drill-error">{{ 'ACCOUNTING.BOOKS.REGION.LOAD_FAILED' | translate }}</p>
+            } @else {
+              <p class="pending-note" role="status">{{ 'ACCOUNTING.BOOKS.REGION.LOADING' | translate }}</p>
+            }
+
+            @if (drillAccountId()) {
+              <h4 id="ledger-heading" tabindex="-1" #ledgerHeading data-testid="ledger-heading">
+                {{ 'ACCOUNTING.BOOKS.DRILL.ENTRIES_IN' | translate: { account: (drillAccountName() ?? ('ACCOUNTING.BOOKS.NAME_NOT_AVAILABLE' | translate)) } }}
+              </h4>
+              @if (drillLedgerData(); as section) {
+                <app-ledger-table [section]="section" [showTerms]="showTerms()" [canOpenEntry]="canOpenEntry()" />
+              } @else if (drillLedgerEmpty()) {
+                <p class="state-panel state-panel--empty">{{ 'ACCOUNTING.BOOKS.LEDGER.EMPTY' | translate }}</p>
+              } @else if (drillLedger.denied()) {
+                <p class="field-error" data-testid="ledger-denied">{{ 'ACCOUNTING.BOOKS.REGION.DENIED' | translate: { permission: codes.reporting } }}</p>
+              } @else if (drillLedger.status() === 'FAILED') {
+                <p class="field-error" data-testid="ledger-error">{{ 'ACCOUNTING.BOOKS.REGION.LOAD_FAILED' | translate }}</p>
+              } @else {
+                <p class="pending-note" role="status">{{ 'ACCOUNTING.BOOKS.REGION.LOADING' | translate }}</p>
+              }
+            }
+          </section>
+        }
+      </section>
+    }
+
+    <!-- ── Who owes what (§5.4 item 5) ───────────────────────────────── -->
+    @if (activeTab() === 'owed') {
+      <section class="books__panel" aria-labelledby="owed-heading" data-testid="panel-owed">
+        <h2 id="owed-heading" tabindex="-1" #owedHeading>{{ 'ACCOUNTING.BOOKS.OWED.TITLE' | translate: { date: asAtDate } }}</h2>
+        @if (!range().isCurrent) {
+          <p class="hint-text books__note" data-testid="owed-past-note">
+            {{ 'ACCOUNTING.BOOKS.OWED.PAST_NOTE' | translate: { date: asAtDate } }}
+          </p>
+        }
+
+        <!-- Customers -->
+        <section class="summary-card" aria-labelledby="owed-customers" data-testid="owed-customers">
+          <h3 id="owed-customers">{{ 'ACCOUNTING.BOOKS.OWED.CUSTOMERS' | translate }}</h3>
+          @if (receivables.denied()) {
+            <p class="field-error">{{ 'ACCOUNTING.BOOKS.REGION.DENIED' | translate: { permission: codes.reporting } }}</p>
+          } @else if (receivablesData(); as report) {
+            @if (customerRows().length === 0) {
+              <p class="state-panel state-panel--empty" data-testid="customers-empty">{{ 'ACCOUNTING.BOOKS.OWED.CUSTOMERS_EMPTY' | translate }}</p>
+            } @else {
+              <div class="table-scroll-container" tabindex="0" role="region" aria-labelledby="customers-caption">
+                <table class="ledger-table" data-testid="customers-table">
+                  <caption id="customers-caption">{{ 'ACCOUNTING.BOOKS.OWED.CUSTOMERS_CAPTION' | translate: { date: asAtDate } }}</caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">{{ 'ACCOUNTING.BOOKS.OWED.CUSTOMER' | translate }}</th>
+                      <th scope="col" class="numeric">{{ 'ACCOUNTING.BOOKS.OWED.NOT_YET_DUE' | translate }}</th>
+                      <th scope="col" class="numeric">{{ 'ACCOUNTING.BOOKS.OWED.DAYS_1_30' | translate }}</th>
+                      <th scope="col" class="numeric">{{ 'ACCOUNTING.BOOKS.OWED.DAYS_31_60' | translate }}</th>
+                      <th scope="col" class="numeric">{{ 'ACCOUNTING.BOOKS.OWED.DAYS_61_90' | translate }}</th>
+                      <th scope="col" class="numeric">{{ 'ACCOUNTING.BOOKS.OWED.DAYS_90_PLUS' | translate }}</th>
+                      <th scope="col" class="numeric">{{ 'ACCOUNTING.BOOKS.OWED.TOTAL' | translate }}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (row of customerRows(); track row.customerId) {
+                      <tr data-testid="customer-row">
+                        <th scope="row">
+                          <span data-testid="customer-name">{{ row.customerName ?? ('ACCOUNTING.BOOKS.NAME_NOT_AVAILABLE' | translate) }}</span>
+                          @if (row.customerReference) {
+                            <span class="books__reference">{{ row.customerReference }}</span>
+                          }
+                        </th>
+                        <td class="numeric">{{ row.notYetDue === null ? empty : (row.notYetDue | money) }}</td>
+                        <td class="numeric">{{ row.days1To30 === null ? empty : (row.days1To30 | money) }}</td>
+                        <td class="numeric">{{ row.days31To60 === null ? empty : (row.days31To60 | money) }}</td>
+                        <td class="numeric">{{ row.days61To90 === null ? empty : (row.days61To90 | money) }}</td>
+                        <td class="numeric">{{ row.days90Plus === null ? empty : (row.days90Plus | money) }}</td>
+                        <td class="numeric" data-testid="customer-total">{{ row.totalOutstanding === null ? empty : (row.totalOutstanding | money) }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                  <tfoot>
+                    <tr data-testid="customers-totals">
+                      <th scope="row">{{ 'ACCOUNTING.BOOKS.OWED.TOTAL' | translate }}</th>
+                      <td class="numeric">{{ report.totals.notYetDue === null ? empty : (report.totals.notYetDue | money) }}</td>
+                      <td class="numeric">{{ report.totals.days1To30 === null ? empty : (report.totals.days1To30 | money) }}</td>
+                      <td class="numeric">{{ report.totals.days31To60 === null ? empty : (report.totals.days31To60 | money) }}</td>
+                      <td class="numeric">{{ report.totals.days61To90 === null ? empty : (report.totals.days61To90 | money) }}</td>
+                      <td class="numeric">{{ report.totals.days90Plus === null ? empty : (report.totals.days90Plus | money) }}</td>
+                      <td class="numeric">{{ report.totals.totalOutstanding === null ? empty : (report.totals.totalOutstanding | money) }}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            }
+            <app-help-disclosure
+              summaryKey="ACCOUNTING.BOOKS.OWED.CALL_FIRST"
+              textKey="ACCOUNTING.BOOKS.OWED.CALL_FIRST_TEXT"
+              exampleKey="ACCOUNTING.BOOKS.OWED.CALL_FIRST_EXAMPLE"
+            />
+          } @else if (receivables.status() === 'FAILED') {
+            <div class="region-error" data-testid="customers-error">
+              <p class="field-error">{{ 'ACCOUNTING.BOOKS.REGION.LOAD_FAILED' | translate }}</p>
+              <button type="button" class="btn btn--outline" (click)="retryRegion('receivables')">{{ 'COMMON.RETRY' | translate }}</button>
+            </div>
+          } @else {
+            <p class="pending-note" role="status">{{ 'ACCOUNTING.BOOKS.REGION.LOADING' | translate }}</p>
+          }
+        </section>
+
+        <!-- Vendors -->
+        <section class="summary-card" aria-labelledby="owed-vendors" data-testid="owed-vendors">
+          <h3 id="owed-vendors">{{ 'ACCOUNTING.BOOKS.OWED.VENDORS' | translate }}</h3>
+          @if (payables.denied()) {
+            <p class="field-error">{{ 'ACCOUNTING.BOOKS.REGION.DENIED' | translate: { permission: codes.reporting } }}</p>
+          } @else if (payablesData(); as report) {
+            @if (vendorRows().length === 0) {
+              <p class="state-panel state-panel--empty" data-testid="vendors-empty">{{ 'ACCOUNTING.BOOKS.OWED.VENDORS_EMPTY' | translate }}</p>
+            } @else {
+              <div class="table-scroll-container" tabindex="0" role="region" aria-labelledby="vendors-caption">
+                <table class="ledger-table" data-testid="vendors-table">
+                  <caption id="vendors-caption">{{ 'ACCOUNTING.BOOKS.OWED.VENDORS_CAPTION' | translate: { date: asAtDate } }}</caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">{{ 'ACCOUNTING.BOOKS.OWED.VENDOR' | translate }}</th>
+                      <th scope="col" class="numeric">{{ 'ACCOUNTING.BOOKS.OWED.NOT_YET_DUE' | translate }}</th>
+                      <th scope="col" class="numeric">{{ 'ACCOUNTING.BOOKS.OWED.DAYS_1_30' | translate }}</th>
+                      <th scope="col" class="numeric">{{ 'ACCOUNTING.BOOKS.OWED.DAYS_31_60' | translate }}</th>
+                      <th scope="col" class="numeric">{{ 'ACCOUNTING.BOOKS.OWED.DAYS_61_90' | translate }}</th>
+                      <th scope="col" class="numeric">{{ 'ACCOUNTING.BOOKS.OWED.DAYS_90_PLUS' | translate }}</th>
+                      <th scope="col" class="numeric">{{ 'ACCOUNTING.BOOKS.OWED.TOTAL' | translate }}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (row of vendorRows(); track row.vendorId) {
+                      <tr data-testid="vendor-row">
+                        <th scope="row" data-testid="vendor-name">{{ row.vendorName ?? ('ACCOUNTING.BOOKS.NAME_NOT_AVAILABLE' | translate) }}</th>
+                        <td class="numeric">{{ row.notYetDue === null ? empty : (row.notYetDue | money) }}</td>
+                        <td class="numeric">{{ row.days1To30 === null ? empty : (row.days1To30 | money) }}</td>
+                        <td class="numeric">{{ row.days31To60 === null ? empty : (row.days31To60 | money) }}</td>
+                        <td class="numeric">{{ row.days61To90 === null ? empty : (row.days61To90 | money) }}</td>
+                        <td class="numeric">{{ row.days90Plus === null ? empty : (row.days90Plus | money) }}</td>
+                        <td class="numeric">{{ row.totalOutstanding === null ? empty : (row.totalOutstanding | money) }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                  <tfoot>
+                    <tr data-testid="vendors-totals">
+                      <th scope="row">{{ 'ACCOUNTING.BOOKS.OWED.TOTAL' | translate }}</th>
+                      <td class="numeric">{{ report.totals.notYetDue === null ? empty : (report.totals.notYetDue | money) }}</td>
+                      <td class="numeric">{{ report.totals.days1To30 === null ? empty : (report.totals.days1To30 | money) }}</td>
+                      <td class="numeric">{{ report.totals.days31To60 === null ? empty : (report.totals.days31To60 | money) }}</td>
+                      <td class="numeric">{{ report.totals.days61To90 === null ? empty : (report.totals.days61To90 | money) }}</td>
+                      <td class="numeric">{{ report.totals.days90Plus === null ? empty : (report.totals.days90Plus | money) }}</td>
+                      <td class="numeric">{{ report.totals.totalOutstanding === null ? empty : (report.totals.totalOutstanding | money) }}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            }
+            <p class="hint-text">{{ 'ACCOUNTING.BOOKS.OWED.VENDORS_NOTE' | translate }}</p>
+          } @else if (payables.status() === 'FAILED') {
+            <div class="region-error" data-testid="vendors-error">
+              <p class="field-error">{{ 'ACCOUNTING.BOOKS.REGION.LOAD_FAILED' | translate }}</p>
+              <button type="button" class="btn btn--outline" (click)="retryRegion('payables')">{{ 'COMMON.RETRY' | translate }}</button>
+            </div>
+          } @else {
+            <p class="pending-note" role="status">{{ 'ACCOUNTING.BOOKS.REGION.LOADING' | translate }}</p>
+          }
+        </section>
+      </section>
+    }
+
+    <!-- ── All entries (§5.4 item 6) ─────────────────────────────────── -->
+    @if (activeTab() === 'entries') {
+      <section class="books__panel" aria-labelledby="entries-heading" data-testid="panel-entries">
+        <h2 id="entries-heading" tabindex="-1" #entriesHeading>{{ 'ACCOUNTING.BOOKS.ENTRIES.TITLE' | translate }}</h2>
+        <div class="books__filters">
+          <form class="books__search" role="search" (ngSubmit)="search()">
+            <div class="form-field">
+              <label for="entry-search">{{ 'ACCOUNTING.BOOKS.ENTRIES.SEARCH_LABEL' | translate }}</label>
+              <input id="entry-search" name="entryNumber" type="search" data-testid="entry-search" autocomplete="off" #searchInput
+                aria-describedby="entry-search-hint" [ngModel]="searchText()" (ngModelChange)="searchText.set($event)" />
+              <p id="entry-search-hint" class="hint-text">{{ 'ACCOUNTING.BOOKS.ENTRIES.SEARCH_HINT' | translate }}</p>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn btn--outline" data-testid="entry-search-submit">{{ 'ACCOUNTING.BOOKS.ENTRIES.SEARCH' | translate }}</button>
+              @if (entryNumber()) {
+                <button type="button" class="btn btn--outline" data-testid="entry-search-clear" (click)="clearSearch()">
+                  {{ 'ACCOUNTING.BOOKS.ENTRIES.CLEAR' | translate }}
+                </button>
+              }
+            </div>
+          </form>
+          @if (canFilterAccounts()) {
+            <div class="form-field">
+              <label for="entry-account">{{ 'ACCOUNTING.BOOKS.ENTRIES.ACCOUNT_LABEL' | translate }}</label>
+              <select id="entry-account" data-testid="account-filter" aria-describedby="entry-account-hint"
+                [ngModel]="filterAccountId() ?? ''" (ngModelChange)="selectFilterAccount($event)">
+                <option value="">{{ 'ACCOUNTING.BOOKS.ENTRIES.ALL_ACCOUNTS' | translate }}</option>
+                @for (account of glAccountOptions(); track account.glAccountId) {
+                  <option [value]="account.glAccountId">
+                    {{ account.accountName ?? ('ACCOUNTING.BOOKS.NAME_NOT_AVAILABLE' | translate) }}{{ showTerms() && account.accountCode ? ' · ' + account.accountCode : '' }}
+                  </option>
+                }
+              </select>
+              <p id="entry-account-hint" class="hint-text">
+                @if (glAccounts.status() === 'FAILED') {
+                  {{ (glAccounts.denied() ? 'ACCOUNTING.BOOKS.REGION.DENIED' : 'ACCOUNTING.BOOKS.ENTRIES.ACCOUNTS_FAILED') | translate: { permission: codes.chart } }}
+                } @else {
+                  {{ 'ACCOUNTING.BOOKS.ENTRIES.ACCOUNT_HINT' | translate: { month: month } }}
+                }
+              </p>
+            </div>
+          }
+        </div>
+
+        @if (filterAccountId() && canFilterAccounts()) {
+          @if (accountLedgerData(); as ledger) {
+            @if (ledger.section; as section) {
+              <app-ledger-table [section]="section" [showTerms]="showTerms()" [canOpenEntry]="canOpenEntry()" />
+            } @else {
+              <p class="state-panel state-panel--empty" data-testid="account-ledger-empty">{{ 'ACCOUNTING.BOOKS.LEDGER.EMPTY' | translate }}</p>
+            }
+          } @else if (accountLedger.denied()) {
+            <p class="field-error" data-testid="account-ledger-denied">{{ 'ACCOUNTING.BOOKS.REGION.DENIED' | translate: { permission: codes.reporting } }}</p>
+          } @else if (accountLedger.status() === 'FAILED') {
+            <div class="region-error">
+              <p class="field-error">{{ 'ACCOUNTING.BOOKS.REGION.LOAD_FAILED' | translate }}</p>
+              <button type="button" class="btn btn--outline" (click)="retryRegion('accountLedger')">{{ 'COMMON.RETRY' | translate }}</button>
+            </div>
+          } @else {
+            <p class="pending-note" role="status">{{ 'ACCOUNTING.BOOKS.REGION.LOADING' | translate }}</p>
+          }
+        } @else {
+          @if (entries.denied()) {
+            <p class="field-error">{{ 'ACCOUNTING.BOOKS.REGION.DENIED' | translate: { permission: codes.entries } }}</p>
+          } @else if (entriesData(); as list) {
+            @if (list.items.length === 0) {
+              <p class="state-panel state-panel--empty" data-testid="entries-empty">
+                {{ (entryNumber() ? 'ACCOUNTING.BOOKS.ENTRIES.NO_MATCH' : 'ACCOUNTING.BOOKS.ENTRIES.EMPTY') | translate: { entry: entryNumber() } }}
+              </p>
+            } @else {
+              <div class="table-scroll-container" tabindex="0" role="region" aria-labelledby="entries-caption">
+                <table class="ledger-table" data-testid="entries-table">
+                  <caption id="entries-caption">{{ 'ACCOUNTING.BOOKS.ENTRIES.CAPTION' | translate }}</caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">{{ 'ACCOUNTING.BOOKS.LEDGER.ENTRY' | translate }}</th>
+                      <th scope="col">{{ 'ACCOUNTING.BOOKS.LEDGER.DATE' | translate }}</th>
+                      <th scope="col">{{ 'ACCOUNTING.BOOKS.LEDGER.WHAT_HAPPENED' | translate }}</th>
+                      <th scope="col" class="numeric">{{ 'ACCOUNTING.BOOKS.ENTRIES.AMOUNT' | translate }}</th>
+                      <th scope="col">{{ 'ACCOUNTING.BOOKS.ENTRIES.STATUS' | translate }}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (entry of list.items; track entry.journalEntryId) {
+                      @let happened = whatHappened(entry);
+                      <tr data-testid="entry-row">
+                        <th scope="row">
+                          @if (canOpenEntry()) {
+                            <a class="link-button" [routerLink]="['/app/accounting/books/entries', entry.journalEntryId]" data-testid="entry-link">
+                              {{ entry.entryNumber ?? ('ACCOUNTING.BOOKS.STATUS.NOT_RECORDED' | translate) }}
+                            </a>
+                          } @else {
+                            {{ entry.entryNumber ?? ('ACCOUNTING.BOOKS.STATUS.NOT_RECORDED' | translate) }}
+                          }
+                        </th>
+                        <td>{{ entry.transactionDate ? (toDate(entry.transactionDate) | date: 'mediumDate') : empty }}</td>
+                        <td data-testid="what-happened">
+                          @if (happened === null) {
+                            {{ empty }}
+                          } @else if (isKey(happened)) {
+                            {{ happened.key | translate }}
+                          } @else {
+                            {{ happened.text }}
+                          }
+                        </td>
+                        <td class="numeric">{{ entry.totalDebits === null ? empty : (entry.totalDebits | money) }}</td>
+                        <td>
+                          <span class="status-badge {{ statusTone(entry) }}" data-testid="entry-status">{{ statusKey(entry) | translate }}</span>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+              @if (list.totalPages > 1) {
+                <nav class="books__paging" [attr.aria-label]="'ACCOUNTING.BOOKS.ENTRIES.PAGING' | translate">
+                  <button type="button" class="btn btn--outline" data-testid="page-previous" [attr.aria-disabled]="list.page <= 0 ? 'true' : null" (click)="goToPage(list.page - 1)">
+                    {{ 'ACCOUNTING.BOOKS.ENTRIES.PREVIOUS' | translate }}
+                  </button>
+                  <span data-testid="page-of">{{ 'ACCOUNTING.BOOKS.ENTRIES.PAGE_OF' | translate: { page: list.page + 1, pages: list.totalPages } }}</span>
+                  <button type="button" class="btn btn--outline" data-testid="page-next" [attr.aria-disabled]="list.page + 1 >= list.totalPages ? 'true' : null" (click)="goToPage(list.page + 1)">
+                    {{ 'ACCOUNTING.BOOKS.ENTRIES.NEXT' | translate }}
+                  </button>
+                </nav>
+              }
+            }
+          } @else if (entries.status() === 'FAILED') {
+            <div class="region-error" data-testid="entries-error">
+              <p class="field-error">{{ 'ACCOUNTING.BOOKS.REGION.LOAD_FAILED' | translate }}</p>
+              <button type="button" class="btn btn--outline" (click)="retryRegion('entries')">{{ 'COMMON.RETRY' | translate }}</button>
+            </div>
+          } @else {
+            <p class="pending-note" role="status">{{ 'ACCOUNTING.BOOKS.REGION.LOADING' | translate }}</p>
+          }
+        }
+        <app-help-disclosure
+          summaryKey="ACCOUNTING.BOOKS.ENTRIES.STATUS_HELP"
+          textKey="ACCOUNTING.BOOKS.ENTRIES.STATUS_HELP_TEXT"
+          exampleKey="ACCOUNTING.BOOKS.ENTRIES.STATUS_HELP_EXAMPLE"
+        />
+      </section>
+    }
+  }
+
+  <!-- Export for your accountant (story PROPOSED 9) -->
+  @if (exportOpen()) {
+    <dialog class="confirm-panel" appModalDialog (modalCancel)="closeExport()"
+      aria-labelledby="export-title" aria-describedby="export-body" data-testid="export-dialog">
+      <h2 id="export-title" class="confirm-heading">{{ 'ACCOUNTING.BOOKS.EXPORT.TITLE' | translate }}</h2>
+      <p id="export-body">{{ 'ACCOUNTING.BOOKS.EXPORT.BODY' | translate: { month: month, date: asAtDate } }}</p>
+      <form class="stacked-form" (ngSubmit)="startExport()">
+        <fieldset class="books__choices">
+          <legend>{{ 'ACCOUNTING.BOOKS.EXPORT.WHAT' | translate }}</legend>
+          @for (report of exportReports; track report) {
+            <label class="books__choice">
+              <input type="radio" name="exportReport" data-testid="export-report" [value]="report"
+                [checked]="exportReport() === report" (change)="exportReport.set(report)" />
+              {{ exportReportKeys[report] | translate }}
+            </label>
+          }
+        </fieldset>
+        <fieldset class="books__choices">
+          <legend>{{ 'ACCOUNTING.BOOKS.EXPORT.FORMAT_LEGEND' | translate }}</legend>
+          @for (format of exportFormats; track format) {
+            <label class="books__choice">
+              <input type="radio" name="exportFormat" data-testid="export-format" [value]="format"
+                [checked]="exportFormat() === format" (change)="exportFormat.set(format)" />
+              {{ exportFormatKeys[format] | translate }}
+            </label>
+          }
+        </fieldset>
+        <div aria-live="polite" data-testid="export-progress">
+          @switch (exportPhase()) {
+            @case ('requesting') {
+              <p class="pending-note">{{ 'ACCOUNTING.BOOKS.EXPORT.PREPARING' | translate }}</p>
+            }
+            @case ('waiting') {
+              <p class="pending-note">{{ 'ACCOUNTING.BOOKS.EXPORT.PREPARING' | translate }}</p>
+            }
+            @case ('failed') {
+              <p class="field-error" data-testid="export-failed">{{ 'ACCOUNTING.BOOKS.EXPORT.FAILED' | translate }}</p>
+            }
+          }
+        </div>
+        <!-- Shown, not announced: the page's role="status" region announces it once. -->
+        @if (exportPhase() === 'done') {
+          <p data-testid="export-done">{{ 'ACCOUNTING.BOOKS.EXPORT.DONE' | translate }}</p>
+        }
+        <div class="form-actions">
+          <button type="submit" class="btn btn--accent" data-testid="export-start"
+            [disabled]="exportPhase() === 'requesting' || exportPhase() === 'waiting'">
+            {{ 'ACCOUNTING.BOOKS.EXPORT.START' | translate }}
+          </button>
+          <button type="button" class="btn btn--outline" data-testid="export-close" (click)="closeExport()">
+            {{ 'COMMON.CLOSE' | translate }}
+          </button>
+        </div>
+      </form>
+    </dialog>
+  }
+</div>
