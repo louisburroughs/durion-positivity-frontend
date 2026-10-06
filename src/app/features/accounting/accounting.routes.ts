@@ -27,12 +27,12 @@ export const ACCOUNTING_ROUTES: Routes = [
     component: AccountingComponent,
     children: [
       {
+        // The accounting home (CAP:550 S4, SPEC-accounting-workspace §8.1): open to
+        // anyone the group gate admits; each region gates on its own read.
         path: '',
         pathMatch: 'full',
         loadComponent: () =>
-          import('./pages/landing/accounting-landing-page.component').then(
-            m => m.AccountingLandingPageComponent,
-          ),
+          import('./pages/home/accounting-home-page.component').then(m => m.AccountingHomePageComponent),
       },
       {
         path: 'events',

@@ -1,0 +1,516 @@
+@let empty = 'COMMON.EMPTY_VALUE' | translate;
+<div class="accounting-page home">
+  <!-- Header (§5.0) -->
+  <header class="page-header home__header">
+    <div class="home__title-block">
+      <p class="section-overline">{{ 'ACCOUNTING.HOME.OVERLINE' | translate }}</p>
+      <h1 id="home-title" tabindex="-1" #pageHeading>{{ 'ACCOUNTING.HOME.TITLE' | translate }}</h1>
+      <p class="page-subtitle">{{ 'ACCOUNTING.HOME.STANDFIRST' | translate }}</p>
+      @if (canSeePeriod() && currentPeriod(); as period) {
+        <p class="period-chip" data-testid="period-chip">
+          <span class="material-symbols-rounded" aria-hidden="true">{{ 'event_available' | msIcon }}</span>
+          {{ periodChipKey(period) | translate: { month: (toDate(period.startDate) | date: 'MMMM y') } }}
+        </p>
+      }
+    </div>
+    <div class="home__header-actions">
+      <button
+        type="button"
+        class="btn btn--outline"
+        data-testid="help-toggle"
+        aria-controls="accounting-help-guide"
+        [attr.aria-expanded]="helpOpen()"
+        (click)="toggleHelp()"
+      >
+        <span class="material-symbols-rounded" aria-hidden="true">{{ 'help' | msIcon }}</span>
+        {{ 'ACCOUNTING.HOME.HELP_BUTTON' | translate }}
+      </button>
+      <button type="button" class="btn btn--outline" data-testid="refresh" (click)="refresh()">
+        <span class="material-symbols-rounded" aria-hidden="true">{{ 'refresh' | msIcon }}</span>
+        {{ 'ACCOUNTING.HOME.REFRESH' | translate }}
+      </button>
+    </div>
+  </header>
+
+  @if (state() === 'error') {
+    <div class="state-panel state-panel--error" role="alert" data-testid="page-error">
+      <p>{{ (errorKey() ?? '') | translate }}</p>
+      <button type="button" class="btn btn--outline" (click)="refresh()">{{ 'ACCOUNTING.HOME.RETRY' | translate }}</button>
+    </div>
+  }
+  @if (state() === 'loading') {
+    <p class="pending-note" role="status">{{ 'ACCOUNTING.HOME.LOADING' | translate }}</p>
+  }
+
+  <!-- Start here (§5.1 item 1) -->
+  @if (!startHereDismissed()) {
+    <section class="start-here" aria-labelledby="start-here-heading" data-testid="start-here">
+      <h2 id="start-here-heading">{{ 'ACCOUNTING.HOME.START_HERE.TITLE' | translate }}</h2>
+      <ul class="start-here__habits">
+        <li>{{ 'ACCOUNTING.HOME.START_HERE.HABIT_TODO' | translate }}</li>
+        <li>{{ 'ACCOUNTING.HOME.START_HERE.HABIT_BANK' | translate }}</li>
+      </ul>
+      <div class="form-actions">
+        <button type="button" class="btn btn--outline" (click)="openHelpGuide()">
+          {{ 'ACCOUNTING.HOME.START_HERE.OPEN_GUIDE' | translate }}
+        </button>
+        <button type="button" class="btn btn--outline" data-testid="dismiss-start-here" (click)="dismissStartHere()">
+          {{ 'ACCOUNTING.HOME.START_HERE.DISMISS' | translate }}
+        </button>
+      </div>
+    </section>
+  }
+
+  <!-- Help guide (§5.1 item 2). Always in the DOM so aria-controls names a real element. -->
+  <section
+    id="accounting-help-guide"
+    class="help-guide"
+    aria-labelledby="help-guide-heading"
+    data-testid="help-guide"
+    [hidden]="!helpOpen()"
+  >
+    <h2 id="help-guide-heading" tabindex="-1" #helpGuideHeading>{{ 'ACCOUNTING.HOME.HELP_GUIDE.TITLE' | translate }}</h2>
+    <h3>{{ 'ACCOUNTING.HOME.HELP_GUIDE.WORDS_TITLE' | translate }}</h3>
+    <dl class="glossary">
+      @for (word of glossary; track word) {
+        <div class="glossary__entry">
+          <dt>
+            {{ 'ACCOUNTING.HELP.GLOSSARY.' + word + '.WORD' | translate }}
+            <span class="glossary__term">({{ 'ACCOUNTING.HELP.GLOSSARY.' + word + '.TERM' | translate }})</span>
+          </dt>
+          <dd>{{ 'ACCOUNTING.HELP.GLOSSARY.' + word + '.MEANING' | translate }}</dd>
+        </div>
+      }
+    </dl>
+    <h3>{{ 'ACCOUNTING.HOME.HELP_GUIDE.HOW_TITLE' | translate }}</h3>
+    <app-help-disclosure
+      summaryKey="ACCOUNTING.HELP.HOW.PAY_VENDOR.QUESTION"
+      textKey="ACCOUNTING.HELP.HOW.PAY_VENDOR.ANSWER"
+      exampleKey="ACCOUNTING.HELP.HOW.PAY_VENDOR.EXAMPLE"
+    />
+    @if (canOpenVendorPayments()) {
+      <a class="link-button" routerLink="/app/accounting/vendor-payments">{{ 'ACCOUNTING.HELP.HOW.PAY_VENDOR.LINK' | translate }}</a>
+    }
+  </section>
+
+  <!-- Three money lanes (§5.1 item 5) -->
+  @if (hasMoneyLanes()) {
+    <section class="lanes" aria-labelledby="lanes-heading">
+      <h2 id="lanes-heading" class="sr-only">{{ 'ACCOUNTING.HOME.LANES.HEADING' | translate }}</h2>
+
+      @if (canSeeReceivables()) {
+        <section class="lane" aria-labelledby="lane-receivables-heading" data-testid="lane-receivables">
+          <h3 id="lane-receivables-heading" class="lane__title">
+            {{ 'ACCOUNTING.HOME.LANES.RECEIVABLES.TITLE' | translate }}
+            @if (showTerms()) {
+              <span class="lane__term">({{ 'ACCOUNTING.HOME.LANES.RECEIVABLES.TERM' | translate }})</span>
+            }
+          </h3>
+          @if (receivables.denied()) {
+            <p class="field-error" data-testid="region-denied">
+              {{ 'ACCOUNTING.HOME.REGION.DENIED' | translate: { permission: codes.reporting } }}
+            </p>
+          } @else {
+            @if (receivables.data(); as lane) {
+              <p class="lane__hero" data-testid="receivables-total">{{ lane.totalOutstanding | money }}</p>
+              <div class="meter" aria-hidden="true">
+                <span class="meter__segment meter__segment--alert" [style.width.%]="share(lane.overdue, lane.totalOutstanding)"></span>
+                <span class="meter__segment meter__segment--1" [style.width.%]="share(lane.notYetDue, lane.totalOutstanding)"></span>
+              </div>
+              <ul class="legend">
+                <li data-testid="receivables-overdue">
+                  <span class="legend__swatch legend__swatch--alert" aria-hidden="true"></span>
+                  {{ 'ACCOUNTING.HOME.LANES.OVERDUE' | translate }} <strong>{{ lane.overdue | money }}</strong>
+                </li>
+                <li data-testid="receivables-not-yet-due">
+                  <span class="legend__swatch legend__swatch--1" aria-hidden="true"></span>
+                  {{ 'ACCOUNTING.HOME.LANES.NOT_YET_DUE' | translate }} <strong>{{ lane.notYetDue | money }}</strong>
+                </li>
+              </ul>
+              <p class="status-badge status-badge--warning lane__badge" data-testid="receivables-1-30">
+                {{ 'ACCOUNTING.HOME.LANES.RECEIVABLES.LATE_1_30' | translate: { amount: (lane.days1To30 | money) } }}
+              </p>
+              @if (canSeePayments()) {
+                @if (payments.data(); as page) {
+                  <p data-testid="payments-waiting">
+                    {{ 'ACCOUNTING.HOME.LANES.RECEIVABLES.PAYMENTS_WAITING' | translate: { count: page.waitingCount } }}
+                  </p>
+                } @else if (payments.status() === 'FAILED') {
+                  <p class="hint-text">{{ 'ACCOUNTING.HOME.LANES.RECEIVABLES.PAYMENTS_UNAVAILABLE' | translate }}</p>
+                }
+              }
+              <p class="hint-text">{{ 'ACCOUNTING.HOME.AS_OF' | translate: { time: ((lane.generatedAt ?? toDate(lane.asOfDate)) | date: 'short') } }}</p>
+            }
+            @if (receivables.status() === 'PENDING' && !receivables.data()) {
+              <p class="pending-note" role="status">{{ 'ACCOUNTING.HOME.REGION.LOADING' | translate }}</p>
+            }
+            @if (receivables.status() === 'FAILED') {
+              <div class="lane__error" data-testid="region-error">
+                <p class="field-error">
+                  {{ (receivables.data() ? 'ACCOUNTING.HOME.REGION.REFRESH_FAILED' : 'ACCOUNTING.HOME.REGION.LOAD_FAILED') | translate }}
+                </p>
+                <button type="button" class="btn btn--outline" (click)="retryRegion('receivables')">
+                  {{ 'ACCOUNTING.HOME.RETRY' | translate }}
+                </button>
+              </div>
+            }
+          }
+          <app-help-disclosure
+            contextKey="ACCOUNTING.HOME.LANES.RECEIVABLES.TITLE"
+            textKey="ACCOUNTING.HELP.RECEIVABLES.TEXT"
+            exampleKey="ACCOUNTING.HELP.RECEIVABLES.EXAMPLE"
+          />
+        </section>
+      }
+
+      @if (canSeePayables()) {
+        <section class="lane" aria-labelledby="lane-payables-heading" data-testid="lane-payables">
+          <h3 id="lane-payables-heading" class="lane__title">
+            {{ 'ACCOUNTING.HOME.LANES.PAYABLES.TITLE' | translate }}
+            @if (showTerms()) {
+              <span class="lane__term">({{ 'ACCOUNTING.HOME.LANES.PAYABLES.TERM' | translate }})</span>
+            }
+          </h3>
+          @if (payables.denied()) {
+            <p class="field-error" data-testid="region-denied">
+              {{ 'ACCOUNTING.HOME.REGION.DENIED' | translate: { permission: codes.reporting } }}
+            </p>
+          } @else {
+            @if (payables.data(); as lane) {
+              <p class="lane__hero" data-testid="payables-total">{{ lane.approvedTotal | money }}</p>
+              <p class="hint-text">{{ 'ACCOUNTING.HOME.LANES.PAYABLES.APPROVED_NOTE' | translate }}</p>
+              <div class="meter" aria-hidden="true">
+                <span class="meter__segment meter__segment--alert" [style.width.%]="share(lane.overdue, lane.approvedTotal)"></span>
+                <span class="meter__segment meter__segment--1" [style.width.%]="share(lane.notYetDue, lane.approvedTotal)"></span>
+              </div>
+              <ul class="legend">
+                <li data-testid="payables-overdue">
+                  <span class="legend__swatch legend__swatch--alert" aria-hidden="true"></span>
+                  {{ 'ACCOUNTING.HOME.LANES.OVERDUE' | translate }} <strong>{{ lane.overdue | money }}</strong>
+                </li>
+                <li data-testid="payables-not-yet-due">
+                  <span class="legend__swatch legend__swatch--1" aria-hidden="true"></span>
+                  {{ 'ACCOUNTING.HOME.LANES.NOT_YET_DUE' | translate }} <strong>{{ lane.notYetDue | money }}</strong>
+                </li>
+              </ul>
+              <p class="lane__aside" data-testid="payables-unapproved">
+                {{ 'ACCOUNTING.HOME.LANES.PAYABLES.UNAPPROVED' | translate }}
+                <strong>{{ lane.unapproved | money }}</strong>
+                <span class="hint-text">{{ 'ACCOUNTING.HOME.LANES.PAYABLES.UNAPPROVED_COUNT' | translate: { count: lane.unapprovedBillCount } }}</span>
+              </p>
+              <p class="hint-text">{{ 'ACCOUNTING.HOME.AS_OF' | translate: { time: ((lane.generatedAt ?? toDate(lane.asOfDate)) | date: 'short') } }}</p>
+            }
+            @if (payables.status() === 'PENDING' && !payables.data()) {
+              <p class="pending-note" role="status">{{ 'ACCOUNTING.HOME.REGION.LOADING' | translate }}</p>
+            }
+            @if (payables.status() === 'FAILED') {
+              <div class="lane__error" data-testid="region-error">
+                <p class="field-error">
+                  {{ (payables.data() ? 'ACCOUNTING.HOME.REGION.REFRESH_FAILED' : 'ACCOUNTING.HOME.REGION.LOAD_FAILED') | translate }}
+                </p>
+                <button type="button" class="btn btn--outline" (click)="retryRegion('payables')">
+                  {{ 'ACCOUNTING.HOME.RETRY' | translate }}
+                </button>
+              </div>
+            }
+          }
+          @if (canOpenBills()) {
+            <a class="btn btn--outline lane__action" routerLink="/app/accounting/payables/vendor-invoices">
+              {{ 'ACCOUNTING.HOME.ACTION.OPEN_BILLS' | translate }}
+            </a>
+          }
+          <app-help-disclosure
+            contextKey="ACCOUNTING.HOME.LANES.PAYABLES.TITLE"
+            textKey="ACCOUNTING.HELP.PAYABLES.TEXT"
+            exampleKey="ACCOUNTING.HELP.PAYABLES.EXAMPLE"
+          />
+        </section>
+      }
+
+      @if (canSeeBank()) {
+        <section class="lane lane--wide" aria-labelledby="lane-bank-heading" data-testid="lane-bank">
+          <h3 id="lane-bank-heading" class="lane__title">
+            {{ 'ACCOUNTING.HOME.LANES.BANK.TITLE' | translate }}
+            @if (showTerms()) {
+              <span class="lane__term">({{ 'ACCOUNTING.HOME.LANES.BANK.TERM' | translate }})</span>
+            }
+          </h3>
+          @if (bank.denied()) {
+            <p class="field-error" data-testid="region-denied">
+              {{ 'ACCOUNTING.HOME.REGION.DENIED' | translate: { permission: codes.reconciliationView } }}
+            </p>
+          } @else {
+            @if (bank.data(); as rows) {
+              @if (rows.length === 0) {
+                <p class="hint-text">{{ 'ACCOUNTING.HOME.LANES.BANK.NO_ACCOUNTS' | translate }}</p>
+              } @else {
+                <ul class="bank-rows">
+                  @for (row of rows; track row.glAccountId) {
+                    <li class="bank-row" [attr.data-account]="row.accountCode">
+                      <p class="bank-row__name">
+                        {{ row.accountName ?? empty }}
+                        @if (row.accountMask) {
+                          <span class="reference">{{ 'ACCOUNTING.HOME.LANES.BANK.MASK' | translate: { mask: row.accountMask } }}</span>
+                        }
+                        @if (showTerms() && row.accountCode) {
+                          <span class="reference">{{ row.accountCode }}</span>
+                        }
+                      </p>
+                      <p class="status-badge bank-row__status" [attr.data-status]="row.status">
+                        {{ checkupStatusKey(row.status) | translate }}
+                      </p>
+                      <dl class="bank-row__facts">
+                        <div>
+                          <dt>{{ 'ACCOUNTING.HOME.LANES.BANK.STATEMENT_END' | translate }}</dt>
+                          <dd>{{ (toDate(row.statementEndDate) | date: 'mediumDate') ?? empty }}</dd>
+                        </div>
+                        <div>
+                          <dt>{{ 'ACCOUNTING.HOME.LANES.BANK.CLOSING_BALANCE' | translate }}</dt>
+                          <dd class="numeric">{{ (row.statementClosingBalance | money: row.currency) ?? empty }}</dd>
+                        </div>
+                        <div>
+                          <dt>{{ 'ACCOUNTING.HOME.LANES.BANK.RECONCILED_THROUGH' | translate }}</dt>
+                          <dd>{{ (toDate(row.reconciledThrough) | date: 'mediumDate') ?? empty }}</dd>
+                        </div>
+                        <div>
+                          <dt>{{ 'ACCOUNTING.HOME.LANES.BANK.NOT_IN_BOOKS' | translate }}</dt>
+                          <dd class="numeric">{{ row.unexplainedCount ?? empty }}</dd>
+                        </div>
+                      </dl>
+                    </li>
+                  }
+                </ul>
+              }
+            }
+            @if (bank.status() === 'PENDING' && !bank.data()) {
+              <p class="pending-note" role="status">{{ 'ACCOUNTING.HOME.REGION.LOADING' | translate }}</p>
+            }
+            @if (bank.status() === 'FAILED') {
+              <div class="lane__error" data-testid="region-error">
+                <p class="field-error">
+                  {{ (bank.data() ? 'ACCOUNTING.HOME.REGION.REFRESH_FAILED' : 'ACCOUNTING.HOME.REGION.LOAD_FAILED') | translate }}
+                </p>
+                <button type="button" class="btn btn--outline" (click)="retryRegion('bank')">
+                  {{ 'ACCOUNTING.HOME.RETRY' | translate }}
+                </button>
+              </div>
+            }
+          }
+          <a class="btn btn--outline lane__action" routerLink="/app/accounting/bank-accounts">
+            {{ 'ACCOUNTING.HOME.ACTION.OPEN_BANK_CHECKUP' | translate }}
+          </a>
+          <app-help-disclosure
+            summaryKey="ACCOUNTING.HELP.WHY_TWO_PEOPLE.SUMMARY"
+            textKey="ACCOUNTING.HELP.WHY_TWO_PEOPLE.TEXT"
+            exampleKey="ACCOUNTING.HELP.WHY_TWO_PEOPLE.EXAMPLE"
+          />
+        </section>
+      }
+    </section>
+  }
+
+  <!-- To-do list v1 (§5.1 item 6) -->
+  @if (hasTodoSources()) {
+    <section class="todo" aria-labelledby="todo-heading" data-testid="todo">
+      <div class="todo__header">
+        <h2 id="todo-heading" tabindex="-1" #todoHeading>{{ 'ACCOUNTING.HOME.TODO.TITLE' | translate }}</h2>
+        <app-help-disclosure
+          contextKey="ACCOUNTING.HOME.TODO.TITLE"
+          textKey="ACCOUNTING.HELP.TODO.TEXT"
+          exampleKey="ACCOUNTING.HELP.TODO.EXAMPLE"
+        />
+      </div>
+      <p class="todo__status" role="status" data-testid="approve-done">
+        @if (approvedAccount(); as done) {
+          {{ 'ACCOUNTING.HOME.TODO.APPROVAL.DONE' | translate: { account: done.account ?? empty } }}
+        }
+      </p>
+      <div class="todo__filters" role="group" [attr.aria-label]="'ACCOUNTING.HOME.TODO.FILTER_ARIA' | translate">
+        <button
+          type="button"
+          class="filter-button"
+          data-filter="ALL"
+          [attr.aria-pressed]="filter() === 'ALL'"
+          (click)="setFilter('ALL')"
+        >
+          {{ 'ACCOUNTING.HOME.TODO.FILTER.ALL' | translate: { count: counts().ALL } }}
+        </button>
+        @if (canSeePayments()) {
+          <button
+            type="button"
+            class="filter-button"
+            data-filter="PAYMENTS"
+            [attr.aria-pressed]="filter() === 'PAYMENTS'"
+            (click)="setFilter('PAYMENTS')"
+          >
+            {{ 'ACCOUNTING.HOME.TODO.FILTER.PAYMENTS' | translate: { count: counts().PAYMENTS } }}
+          </button>
+        }
+        @if (canSeeBankLines() || canSeeApprovals()) {
+          <button
+            type="button"
+            class="filter-button"
+            data-filter="BANK"
+            [attr.aria-pressed]="filter() === 'BANK'"
+            (click)="setFilter('BANK')"
+          >
+            {{ 'ACCOUNTING.HOME.TODO.FILTER.BANK' | translate: { count: counts().BANK } }}
+          </button>
+        }
+      </div>
+
+      <div class="todo__body">
+        <div class="todo__list-column">
+          @if (allCaughtUp()) {
+            <p class="state-panel state-panel--empty" data-testid="todo-empty">{{ 'ACCOUNTING.HOME.TODO.EMPTY' | translate }}</p>
+          } @else if (visibleItems().length === 0 && todoItems().length > 0) {
+            <p class="hint-text">{{ 'ACCOUNTING.HOME.TODO.EMPTY_FILTER' | translate }}</p>
+          }
+          @if (visibleItems().length > 0) {
+            <ul class="todo__list">
+              @for (item of visibleItems(); track item.id) {
+                <li>
+                  <button
+                    type="button"
+                    class="todo-item"
+                    [attr.data-kind]="item.kind"
+                    [attr.aria-pressed]="selectedId() === item.id"
+                    (click)="select(item)"
+                  >
+                    @switch (item.kind) {
+                      @case ('PAYMENT') {
+                        <span class="todo-item__icon material-symbols-rounded" aria-hidden="true">{{ 'payments' | msIcon }}</span>
+                        <span class="todo-item__text">
+                          <span class="todo-item__title">{{ 'ACCOUNTING.HOME.TODO.PAYMENT.TITLE' | translate }}</span>
+                          <span class="todo-item__meta">
+                            {{ item.payment.customerName ?? empty }} · {{ item.payment.sourceInvoiceNumber ?? empty }} ·
+                            {{ (item.payment.receivedAt | date: 'mediumDate') ?? empty }}
+                          </span>
+                          <span class="todo-item__reason">{{ 'ACCOUNTING.HOME.TODO.PAYMENT.REASON_LINE' | translate }}</span>
+                        </span>
+                        <span class="todo-item__amount">{{ item.payment.unappliedAmount | money: item.payment.currency }}</span>
+                        <span class="status-badge">{{ 'ACCOUNTING.HOME.TODO.BADGE.PAYMENT' | translate }}</span>
+                      }
+                      @case ('BANK_LINE') {
+                        <span class="todo-item__icon material-symbols-rounded" aria-hidden="true">{{ 'account_balance' | msIcon }}</span>
+                        <span class="todo-item__text">
+                          <span class="todo-item__title">{{ 'ACCOUNTING.HOME.TODO.BANK_LINE.TITLE' | translate }}</span>
+                          <span class="todo-item__meta">
+                            {{ item.line.accountName ?? empty }} · {{ item.line.reference ?? empty }} ·
+                            {{ (toDate(item.line.transactionDate) | date: 'mediumDate') ?? empty }}
+                          </span>
+                          <span class="todo-item__reason">{{ 'ACCOUNTING.HOME.TODO.BANK_LINE.REASON_LINE' | translate }}</span>
+                        </span>
+                        <span class="todo-item__amount">{{ (item.line.signedAmount | money: item.line.currency) ?? empty }}</span>
+                        <span class="status-badge">{{ 'ACCOUNTING.HOME.TODO.BADGE.BANK' | translate }}</span>
+                      }
+                      @case ('APPROVAL') {
+                        <span class="todo-item__icon material-symbols-rounded" aria-hidden="true">{{ 'verified' | msIcon }}</span>
+                        <span class="todo-item__text">
+                          <span class="todo-item__title">{{ 'ACCOUNTING.HOME.TODO.APPROVAL.TITLE' | translate }}</span>
+                          <span class="todo-item__meta">
+                            {{ item.checkup.accountName ?? empty }} · {{ item.checkup.periodCode ?? empty }} ·
+                            {{ (item.checkup.submittedAt | date: 'mediumDate') ?? empty }}
+                          </span>
+                          <span class="todo-item__reason">{{ 'ACCOUNTING.HOME.TODO.APPROVAL.REASON_LINE' | translate }}</span>
+                        </span>
+                        <span class="todo-item__amount">{{ (item.checkup.statementClosingBalance | money: item.checkup.currency) ?? empty }}</span>
+                        <span class="status-badge status-badge--warning">{{ 'ACCOUNTING.HOME.TODO.BADGE.APPROVAL' | translate }}</span>
+                      }
+                    }
+                  </button>
+                </li>
+              }
+            </ul>
+          }
+
+          <!-- Capped sources: how many more the server reports, and where they live. -->
+          @if (canSeePayments() && payments.data(); as page) {
+            @if (page.totalElements > page.items.length) {
+              <p class="hint-text" data-testid="more-payments">
+                {{ 'ACCOUNTING.HOME.TODO.MORE.PAYMENTS' | translate: { count: page.totalElements - page.items.length } }}
+                @if (canOpenPaymentApply()) {
+                  <a class="link-button" routerLink="/app/accounting/payments/apply">{{ 'ACCOUNTING.HOME.TODO.MORE.OPEN_PAYMENTS' | translate }}</a>
+                }
+              </p>
+            }
+          }
+          @if (canSeeBankLines() && bankLines.data(); as page) {
+            @if (page.totalElements > page.items.length) {
+              <p class="hint-text" data-testid="more-bank-lines">
+                {{ 'ACCOUNTING.HOME.TODO.MORE.BANK_LINES' | translate: { count: page.totalElements - page.items.length } }}
+                <a class="link-button" routerLink="/app/accounting/bank-accounts">{{ 'ACCOUNTING.HOME.TODO.MORE.OPEN_BANK' | translate }}</a>
+              </p>
+            }
+          }
+          @if (canSeeApprovals() && approvals.data(); as page) {
+            @if (page.totalElements > page.items.length) {
+              <p class="hint-text" data-testid="more-approvals">
+                {{ 'ACCOUNTING.HOME.TODO.MORE.APPROVALS' | translate: { count: page.totalElements - page.items.length } }}
+                <a class="link-button" routerLink="/app/accounting/bank-accounts">{{ 'ACCOUNTING.HOME.TODO.MORE.OPEN_BANK' | translate }}</a>
+              </p>
+            }
+          }
+
+          <!-- Per-source read problems -->
+          @if (canSeePayments()) {
+            @if (payments.denied()) {
+              <p class="field-error">{{ 'ACCOUNTING.HOME.REGION.DENIED' | translate: { permission: codes.paymentApply } }}</p>
+            } @else if (payments.status() === 'FAILED') {
+              <div class="lane__error" data-testid="todo-source-error">
+                <p class="field-error">{{ 'ACCOUNTING.HOME.TODO.SOURCE_FAILED.PAYMENTS' | translate }}</p>
+                <button type="button" class="btn btn--outline" (click)="retryRegion('payments')">{{ 'ACCOUNTING.HOME.RETRY' | translate }}</button>
+              </div>
+            }
+          }
+          @if (canSeeBankLines()) {
+            @if (bankLines.denied()) {
+              <p class="field-error">{{ 'ACCOUNTING.HOME.REGION.DENIED' | translate: { permission: codes.reconciliationView } }}</p>
+            } @else if (bankLines.status() === 'FAILED') {
+              <div class="lane__error" data-testid="todo-source-error">
+                <p class="field-error">{{ 'ACCOUNTING.HOME.TODO.SOURCE_FAILED.BANK_LINES' | translate }}</p>
+                <button type="button" class="btn btn--outline" (click)="retryRegion('bankLines')">{{ 'ACCOUNTING.HOME.RETRY' | translate }}</button>
+              </div>
+            }
+          }
+          @if (canSeeApprovals()) {
+            @if (approvals.denied()) {
+              <p class="field-error">{{ 'ACCOUNTING.HOME.REGION.DENIED' | translate: { permission: codes.reconciliationView } }}</p>
+            } @else if (approvals.status() === 'FAILED') {
+              <div class="lane__error" data-testid="todo-source-error">
+                <p class="field-error">{{ 'ACCOUNTING.HOME.TODO.SOURCE_FAILED.APPROVALS' | translate }}</p>
+                <button type="button" class="btn btn--outline" (click)="retryRegion('approvals')">{{ 'ACCOUNTING.HOME.RETRY' | translate }}</button>
+              </div>
+            }
+          }
+        </div>
+
+        <div class="todo__panel-column">
+          @if (selectedItem(); as item) {
+            <app-todo-detail-panel
+              [item]="item"
+              [showTerms]="showTerms()"
+              [bankRows]="bank.data() ?? []"
+              [review]="selectedReview()"
+              [reviewStatus]="selectedReviewStatus()"
+              [canApprove]="canApproveReconciliation()"
+              [approving]="approving()"
+              [approveMessageKey]="approveMessage()?.key ?? null"
+              [approveMessageParams]="approveMessage()?.params ?? {}"
+              (approve)="approveMonth()"
+            />
+          } @else if (visibleItems().length > 0) {
+            <p class="hint-text todo__panel-hint">{{ 'ACCOUNTING.HOME.TODO.PICK_ONE' | translate }}</p>
+          }
+        </div>
+      </div>
+    </section>
+  }
+
+  <!-- More accounting tools (story Spec discrepancy 2) -->
+  <details class="more-tools" data-testid="more-tools">
+    <summary class="more-tools__summary">{{ 'ACCOUNTING.HOME.MORE_TOOLS.TITLE' | translate }}</summary>
+    <p class="hint-text">{{ 'ACCOUNTING.HOME.MORE_TOOLS.DESCRIPTION' | translate }}</p>
+    <app-landing-sections [sections]="landingSections" [headingLevel]="3" />
+  </details>
+</div>

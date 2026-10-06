@@ -2,8 +2,11 @@ import { ACCOUNTING_PAGE } from '../../../../core/security/route-permissions';
 import { LandingPageConfig } from '../../../../shared/landing/landing.models';
 
 /**
- * Accounting landing configuration consumed by the shared {@link LandingPageComponent}.
- * Reuses the existing ACCOUNTING.LANDING.* i18n keys. The original "Payments"
+ * Accounting landing configuration. Since CAP:550 S4 the accounting home renders its
+ * `sections` in the "More accounting tools" disclosure through the shared
+ * `LandingSectionsComponent` (the hero fields are unused there), so no page becomes
+ * unreachable when the home replaced the landing. Reuses the existing
+ * ACCOUNTING.LANDING.* i18n keys. The original "Payments"
  * section mixed two id kinds (vendor payment + invoice) and is split here so each
  * section resolves a single record kind.
  */

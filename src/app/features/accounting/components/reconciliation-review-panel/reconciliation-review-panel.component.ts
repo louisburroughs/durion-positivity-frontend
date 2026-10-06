@@ -12,7 +12,7 @@ import {
 import { toDatePipeInput } from '../../utils/date-only.util';
 
 /** Readiness reasons with copy of their own; literal so the i18n check sees them. */
-const REASON_KEYS: Readonly<Record<string, string>> = {
+export const READINESS_REASON_KEYS: Readonly<Record<string, string>> = {
   NOT_BALANCED: 'ACCOUNTING.RECONCILIATION_WORKSPACE.READINESS.REASON.NOT_BALANCED',
   UNEXPLAINED_BANK: 'ACCOUNTING.RECONCILIATION_WORKSPACE.READINESS.REASON.UNEXPLAINED_BANK',
   UNEXPLAINED_LEDGER: 'ACCOUNTING.RECONCILIATION_WORKSPACE.READINESS.REASON.UNEXPLAINED_LEDGER',
@@ -68,7 +68,7 @@ export class ReconciliationReviewPanelComponent {
   readonly blockingReasons = computed(() => this.review().readiness.reasons.filter(reason => reason !== 'PROPOSALS_PENDING'));
 
   reasonKey(reason: string): string {
-    return REASON_KEYS[reason] ?? 'ACCOUNTING.RECONCILIATION_WORKSPACE.READINESS.REASON.OTHER';
+    return READINESS_REASON_KEYS[reason] ?? 'ACCOUNTING.RECONCILIATION_WORKSPACE.READINESS.REASON.OTHER';
   }
 
   /** Settle residual is offered on an ACCEPTED match whose served tolerance is not zero (§4.6). */

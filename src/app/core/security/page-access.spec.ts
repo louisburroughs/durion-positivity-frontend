@@ -121,7 +121,8 @@ const UNGATED_BY_DESIGN: Readonly<Record<string, string>> = {
   // Domain landings render from static config; their cards are filtered
   // individually, so gating the landing would strand a user the group admitted.
   '/app/inventory': 'landing page — static config, cards filtered individually',
-  '/app/accounting': 'landing page — static config, cards filtered individually',
+  '/app/accounting':
+    'accounting home — each region, to-do source and "More accounting tools" card gated individually (CAP:550 S4)',
   '/app/crm': 'landing page — static config, cards filtered individually',
   '/app/workexec': 'landing page — static config, cards filtered individually',
   '/app/shopmgmt': 'landing page — static config, cards filtered individually',
