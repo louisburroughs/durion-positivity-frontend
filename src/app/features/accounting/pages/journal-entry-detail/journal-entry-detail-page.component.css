@@ -1,0 +1,99 @@
+:host {
+  display: block;
+}
+
+.entry-page {
+  max-width: 64rem;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.entry-page h1,
+.entry-page h2 {
+  margin: 0;
+}
+
+.entry-page__back {
+  margin: 0;
+}
+
+.entry-page__header {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.entry-page__outcome {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--status-success-bg);
+  color: var(--status-success-fg);
+}
+
+.entry-card {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--cardBackground);
+  min-width: 0;
+}
+
+.entry-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+  gap: var(--space-3);
+  margin: 0;
+}
+
+.entry-facts dt {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.entry-facts dd {
+  margin: 0;
+}
+
+.entry-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.entry-page .btn {
+  min-height: 2.75rem;
+}
+
+.entry-page .btn[aria-disabled='true'] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.entry-trace {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding-inline-start: var(--space-5);
+}
+
+.entry-page caption {
+  text-align: start;
+  font-weight: 600;
+  padding-block-end: var(--space-2);
+}
+
+.entry-page .numeric {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Scrollable tables take keyboard focus (WCAG 2.1.1); the ring shows where it is. */
+.table-scroll-container:focus-visible {
+  outline: 2px solid var(--input-focus-border);
+  outline-offset: 2px;
+}

@@ -183,6 +183,21 @@ export const ACCOUNTING_ROUTES: Routes = [
           import('./pages/period-close/period-close-page.component').then(m => m.PeriodClosePageComponent),
       },
       {
+        // Your books (CAP:550 S5, §8.1): any-of gate; each tab gates on its own read.
+        path: 'books',
+        data: { permissions: ACCOUNTING_PAGE.books },
+        loadComponent: () => import('./pages/books/books-page.component').then(m => m.BooksPageComponent),
+      },
+      {
+        // Routed by id so a reload or shared link can fetch it; the page shows only `JE-YYYYMM-n` (P8).
+        path: 'books/entries/:journalEntryId',
+        data: { permissions: ACCOUNTING_PAGE.journalEntry },
+        loadComponent: () =>
+          import('./pages/journal-entry-detail/journal-entry-detail-page.component').then(
+            m => m.JournalEntryDetailPageComponent,
+          ),
+      },
+      {
         path: 'bank-accounts',
         data: { permissions: ACCOUNTING_PAGE.bankAccounts },
         loadComponent: () =>

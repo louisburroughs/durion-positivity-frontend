@@ -1,0 +1,248 @@
+@let empty = 'COMMON.EMPTY_VALUE' | translate;
+<div class="accounting-page entry-page">
+  <p class="entry-page__back">
+    <a class="link-button" routerLink="/app/accounting/books" [queryParams]="{ tab: 'entries' }" data-testid="back-to-entries">
+      {{ 'ACCOUNTING.BOOKS.ENTRY.BACK' | translate }}
+    </a>
+  </p>
+
+  <header class="page-header entry-page__header">
+    <p class="section-overline">{{ 'ACCOUNTING.BOOKS.ENTRY.OVERLINE' | translate }}</p>
+    <h1 id="entry-title" tabindex="-1" #pageHeading data-testid="entry-number">
+      @if (entryData(); as current) {
+        {{ current.entryNumber ?? ('ACCOUNTING.BOOKS.STATUS.NOT_RECORDED' | translate) }}
+      } @else {
+        {{ 'ACCOUNTING.BOOKS.ENTRY.TITLE' | translate }}
+      }
+    </h1>
+  </header>
+
+  <!-- Polite outcome region, outside every @if so it survives the re-read (ADR-0029 §8.8). -->
+  <div role="status" data-testid="outcome">
+    @if (outcome(); as message) {
+      <p class="entry-page__outcome">
+        {{ message.key | translate: message.params }}
+        @if (message.correction; as correction) {
+          <a class="link-button" [routerLink]="['/app/accounting/books/entries', correction.journalEntryId]" data-testid="correction-link">
+            {{ 'ACCOUNTING.BOOKS.ENTRY.REVERSE.OPEN_CORRECTION' | translate: { entry: (correction.entryNumber ?? ('ACCOUNTING.BOOKS.ENTRY.THE_CORRECTION' | translate)) } }}
+          </a>
+        }
+      </p>
+    }
+  </div>
+
+  @switch (entryFailure()) {
+    @case ('NOT_FOUND') {
+      <div class="state-panel state-panel--empty" data-testid="entry-not-found">
+        <p>{{ 'ACCOUNTING.BOOKS.ENTRY.NOT_FOUND' | translate }}</p>
+        <a class="link-button" routerLink="/app/accounting/books" [queryParams]="{ tab: 'entries' }">{{ 'ACCOUNTING.BOOKS.ENTRY.BACK' | translate }}</a>
+      </div>
+    }
+    @case ('DENIED') {
+      <p class="field-error" data-testid="entry-denied">{{ 'ACCOUNTING.BOOKS.REGION.DENIED' | translate: { permission: codes.entries } }}</p>
+    }
+    @case ('FAILED') {
+      <div class="state-panel state-panel--error" role="alert" data-testid="entry-error">
+        <p>{{ (entryData() ? 'ACCOUNTING.BOOKS.REGION.REFRESH_FAILED' : 'ACCOUNTING.BOOKS.ENTRY.LOAD_FAILED') | translate }}</p>
+        <button type="button" class="btn btn--outline" (click)="reload()">{{ 'COMMON.RETRY' | translate }}</button>
+      </div>
+    }
+  }
+
+  @if (entryData(); as current) {
+    @let happened = whatHappened(current);
+    <section class="entry-card" aria-labelledby="entry-facts-heading" data-testid="entry-facts">
+      <h2 id="entry-facts-heading" class="sr-only">{{ 'ACCOUNTING.BOOKS.ENTRY.FACTS' | translate }}</h2>
+      <dl class="entry-facts">
+        <div>
+          <dt>{{ 'ACCOUNTING.BOOKS.ENTRY.DATE' | translate }}</dt>
+          <dd>{{ current.transactionDate ? (toDate(current.transactionDate) | date: 'mediumDate') : empty }}</dd>
+        </div>
+        <div>
+          <dt>{{ 'ACCOUNTING.BOOKS.ENTRIES.STATUS' | translate }}</dt>
+          <dd><span class="status-badge {{ statusTone(current) }}" data-testid="entry-status">{{ statusKey(current) | translate }}</span></dd>
+        </div>
+        <div>
+          <dt>{{ 'ACCOUNTING.BOOKS.LEDGER.WHAT_HAPPENED' | translate }}</dt>
+          <dd data-testid="entry-what-happened">
+            @if (happened === null) {
+              {{ empty }}
+            } @else if (isKey(happened)) {
+              {{ happened.key | translate }}
+            } @else {
+              {{ happened.text }}
+            }
+          </dd>
+        </div>
+        <div>
+          <dt>{{ 'ACCOUNTING.BOOKS.ENTRY.SOURCE_LABEL' | translate }}</dt>
+          <dd data-testid="entry-source">
+            {{ sourceKey(current.sourceEventType) | translate }}
+            @if (showTerms() && current.sourceEventType) {
+              <span class="account-code">{{ current.sourceEventType }}</span>
+            }
+          </dd>
+        </div>
+        <div>
+          <dt>{{ 'ACCOUNTING.BOOKS.ENTRIES.AMOUNT' | translate }}</dt>
+          <dd class="numeric">{{ current.totalDebits === null ? empty : (current.totalDebits | money) }}</dd>
+        </div>
+      </dl>
+
+      @if (canReverse()) {
+        <div class="entry-actions">
+          <button
+            type="button"
+            class="btn btn--outline"
+            data-testid="reverse-open"
+            [attr.aria-disabled]="reverseBlockedKey() !== null ? 'true' : null"
+            [attr.aria-describedby]="reverseBlockedKey() !== null ? 'reverse-blocked' : null"
+            (click)="openReverse()"
+          >
+            {{ 'ACCOUNTING.BOOKS.ENTRY.REVERSE.OPEN' | translate }}
+          </button>
+          @if (reverseBlockedKey(); as blocked) {
+            <p id="reverse-blocked" class="hint-text" data-testid="reverse-blocked">{{ blocked | translate }}</p>
+          }
+        </div>
+      }
+    </section>
+
+    <!-- Lines: no direction is served on a journal entry's lines, so they read Debit and Credit (Spec discrepancy 7). -->
+    <section class="entry-card" aria-labelledby="entry-lines-heading">
+      <h2 id="entry-lines-heading">{{ 'ACCOUNTING.BOOKS.ENTRY.LINES' | translate }}</h2>
+      @if (current.lines.length === 0) {
+        <p class="state-panel state-panel--empty">{{ 'ACCOUNTING.BOOKS.ENTRY.NO_LINES' | translate }}</p>
+      } @else {
+        <div class="table-scroll-container" tabindex="0" role="region" aria-labelledby="entry-lines-caption">
+          <table class="ledger-table" data-testid="entry-lines">
+            <caption id="entry-lines-caption">{{ 'ACCOUNTING.BOOKS.ENTRY.LINES_CAPTION' | translate: { entry: (current.entryNumber ?? ('ACCOUNTING.BOOKS.STATUS.NOT_RECORDED' | translate)) } }}</caption>
+            <thead>
+              <tr>
+                <th scope="col">{{ 'ACCOUNTING.BOOKS.ENTRY.ACCOUNT' | translate }}</th>
+                <th scope="col">{{ 'ACCOUNTING.BOOKS.ENTRY.LINE_DESCRIPTION' | translate }}</th>
+                <th scope="col" class="numeric">{{ 'ACCOUNTING.BOOKS.LEDGER.DEBIT' | translate }}</th>
+                <th scope="col" class="numeric">{{ 'ACCOUNTING.BOOKS.LEDGER.CREDIT' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (line of current.lines; track $index) {
+                @let text = lineText(line.description);
+                <tr data-testid="entry-line">
+                  <th scope="row">
+                    {{ line.accountName ?? ('ACCOUNTING.BOOKS.NAME_NOT_AVAILABLE' | translate) }}
+                    @if (showTerms() && line.accountCode) {
+                      <span class="account-code">{{ line.accountCode }}</span>
+                    }
+                  </th>
+                  <td>
+                    @if (text === null) {
+                      {{ empty }}
+                    } @else if (isKey(text)) {
+                      {{ text.key | translate }}
+                    } @else {
+                      {{ text.text }}
+                    }
+                  </td>
+                  <td class="numeric">{{ line.debitAmount === null ? '' : (line.debitAmount | money) }}</td>
+                  <td class="numeric">{{ line.creditAmount === null ? '' : (line.creditAmount | money) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+      <p class="hint-text">{{ 'ACCOUNTING.BOOKS.LEDGER.LOCKED' | translate }}</p>
+    </section>
+
+    <!-- Traceability: related entries by number, never by id (P8). -->
+    <section class="entry-card" aria-labelledby="entry-trace-heading" data-testid="entry-trace">
+      <h2 id="entry-trace-heading">{{ 'ACCOUNTING.BOOKS.ENTRY.TRACE' | translate }}</h2>
+      @if (traceData(); as links) {
+        @if (!links.original && !links.reversal && links.related.length === 0) {
+          <p class="hint-text" data-testid="trace-none">{{ 'ACCOUNTING.BOOKS.ENTRY.TRACE_NONE' | translate }}</p>
+        } @else {
+          <ul class="entry-trace">
+            @if (links.original; as original) {
+              <li data-testid="trace-reverses">
+                <a class="link-button" [routerLink]="['/app/accounting/books/entries', original.journalEntryId]">
+                  {{ 'ACCOUNTING.BOOKS.ENTRY.REVERSES' | translate: { entry: (original.entryNumber ?? ('ACCOUNTING.BOOKS.NO_NUMBER' | translate)) } }}
+                </a>
+              </li>
+            }
+            @if (links.reversal; as reversal) {
+              <li data-testid="trace-reversed-by">
+                <a class="link-button" [routerLink]="['/app/accounting/books/entries', reversal.journalEntryId]">
+                  {{ 'ACCOUNTING.BOOKS.ENTRY.REVERSED_BY' | translate: { entry: (reversal.entryNumber ?? ('ACCOUNTING.BOOKS.NO_NUMBER' | translate)) } }}
+                </a>
+              </li>
+            }
+            @for (related of links.related; track related.journalEntryId) {
+              <li data-testid="trace-related">
+                <a class="link-button" [routerLink]="['/app/accounting/books/entries', related.journalEntryId]">
+                  {{ 'ACCOUNTING.BOOKS.ENTRY.RELATED' | translate: { entry: (related.entryNumber ?? ('ACCOUNTING.BOOKS.NO_NUMBER' | translate)) } }}
+                </a>
+              </li>
+            }
+          </ul>
+        }
+      } @else if (trace.status() === 'FAILED') {
+        <p class="field-error" data-testid="trace-error">{{ 'ACCOUNTING.BOOKS.ENTRY.TRACE_FAILED' | translate }}</p>
+      } @else {
+        <p class="pending-note" role="status">{{ 'ACCOUNTING.BOOKS.REGION.LOADING' | translate }}</p>
+      }
+      <app-help-disclosure
+        summaryKey="ACCOUNTING.BOOKS.ENTRIES.STATUS_HELP"
+        textKey="ACCOUNTING.BOOKS.ENTRIES.STATUS_HELP_TEXT"
+        exampleKey="ACCOUNTING.BOOKS.ENTRIES.STATUS_HELP_EXAMPLE"
+      />
+    </section>
+  } @else if (entry.status() === 'PENDING' && entryFailure() === null) {
+    <p class="pending-note" role="status">{{ 'ACCOUNTING.BOOKS.REGION.LOADING' | translate }}</p>
+  }
+
+  @if (dialogOpen() && entryData(); as current) {
+    <dialog class="confirm-panel" appModalDialog (modalCancel)="cancelReverse()"
+      aria-labelledby="reverse-title" aria-describedby="reverse-consequence" data-testid="reverse-dialog">
+      <h2 id="reverse-title" class="confirm-heading">
+        {{ 'ACCOUNTING.BOOKS.ENTRY.REVERSE.TITLE' | translate: { entry: (current.entryNumber ?? ('ACCOUNTING.BOOKS.NO_NUMBER' | translate)) } }}
+      </h2>
+      <p id="reverse-consequence" data-testid="reverse-consequence">
+        {{ 'ACCOUNTING.BOOKS.ENTRY.REVERSE.CONSEQUENCE' | translate: { entry: (current.entryNumber ?? ('ACCOUNTING.BOOKS.NO_NUMBER' | translate)) } }}
+      </p>
+      <form class="stacked-form" (ngSubmit)="submitReverse()" novalidate>
+        <div class="form-field">
+          <label for="reverse-reason">{{ 'ACCOUNTING.BOOKS.ENTRY.REVERSE.REASON' | translate }}</label>
+          <textarea id="reverse-reason" name="reason" rows="3" required #reasonField data-testid="reverse-reason"
+            [ngModel]="reason()" (ngModelChange)="reason.set($event)"
+            [disabled]="phase() === 'submitting'"
+            aria-describedby="reverse-reason-hint"></textarea>
+          <p id="reverse-reason-hint" class="hint-text">{{ 'ACCOUNTING.BOOKS.ENTRY.REVERSE.REASON_HINT' | translate }}</p>
+        </div>
+        @if (phase() === 'needs-override' || (phase() === 'submitting' && overrideJustification())) {
+          <div class="form-field" data-testid="override-field">
+            <label for="reverse-override">{{ 'ACCOUNTING.BOOKS.ENTRY.REVERSE.OVERRIDE_LABEL' | translate }}</label>
+            <textarea id="reverse-override" name="overrideJustification" rows="3" required #overrideField data-testid="reverse-override"
+              [ngModel]="overrideJustification()" (ngModelChange)="overrideJustification.set($event)"
+              [disabled]="phase() === 'submitting'"
+              aria-describedby="reverse-override-hint"></textarea>
+            <p id="reverse-override-hint" class="hint-text">{{ 'ACCOUNTING.BOOKS.ENTRY.REVERSE.OVERRIDE_HINT' | translate }}</p>
+          </div>
+        }
+        <div role="alert" data-testid="reverse-error">
+          @if (dialogError(); as error) {
+            <p class="field-error">{{ error.key | translate: error.params }}</p>
+          }
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn--accent" data-testid="reverse-submit" [disabled]="phase() === 'submitting'">
+            {{ 'ACCOUNTING.BOOKS.ENTRY.REVERSE.CONFIRM' | translate }}
+          </button>
+          <button type="button" class="btn btn--outline" data-testid="reverse-cancel" [disabled]="phase() === 'submitting'" (click)="cancelReverse()">
+            {{ 'COMMON.CANCEL' | translate }}
+          </button>
+        </div>
+      </form>
+    </dialog>
+  }
+</div>

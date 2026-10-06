@@ -583,7 +583,7 @@ describe('AccountingService', () => {
       vi.useFakeTimers();
 
       let completed = false;
-      service.downloadExport('exp-1').subscribe(() => (completed = true));
+      service.downloadExport('exp-1', 'time-export-exp-1.csv').subscribe(() => (completed = true));
 
       // A plain `<a href>` navigation bypasses HttpClient's auth interceptor and
       // 401s; the download must go through the authenticated, generated SDK
@@ -617,7 +617,7 @@ describe('AccountingService', () => {
       financialReportingStub.downloadReportExport.mockReturnValueOnce(throwError(() => failure));
       const createElementSpy = vi.spyOn(document, 'createElement');
 
-      await expect(firstValueFrom(service.downloadExport('exp-1'))).rejects.toBe(failure);
+      await expect(firstValueFrom(service.downloadExport('exp-1', 'time-export-exp-1.csv'))).rejects.toBe(failure);
       expect(createElementSpy).not.toHaveBeenCalled();
 
       createElementSpy.mockRestore();
@@ -630,7 +630,7 @@ describe('AccountingService', () => {
       const httpError = new HttpErrorResponse({ status: 404, error: apiErrorBlob });
       financialReportingStub.downloadReportExport.mockReturnValueOnce(throwError(() => httpError));
 
-      const error = await firstValueFrom(service.downloadExport('exp-1')).catch((e: unknown) => e as Error);
+      const error = await firstValueFrom(service.downloadExport('exp-1', 'time-export-exp-1.csv')).catch((e: unknown) => e as Error);
 
       expect(error).toBeInstanceOf(Error);
       expect((error as Error).message).toBe('EXPORT_DOWNLOAD_FAILED:EXPORT_JOB_NOT_FOUND');
@@ -643,7 +643,7 @@ describe('AccountingService', () => {
       const httpError = new HttpErrorResponse({ status: 500, error: brokenBlob });
       financialReportingStub.downloadReportExport.mockReturnValueOnce(throwError(() => httpError));
 
-      const error = await firstValueFrom(service.downloadExport('exp-1')).catch((e: unknown) => e as Error);
+      const error = await firstValueFrom(service.downloadExport('exp-1', 'time-export-exp-1.csv')).catch((e: unknown) => e as Error);
 
       expect(error).toBeInstanceOf(Error);
       expect((error as Error).message).toBe('EXPORT_DOWNLOAD_FAILED');

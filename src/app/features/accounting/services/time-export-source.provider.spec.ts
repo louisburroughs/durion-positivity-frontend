@@ -67,7 +67,7 @@ describe('provideAccountingTimeExportSource', () => {
 
     await firstValueFrom(source.downloadExport('exp-1'));
 
-    expect(stubAccounting.downloadExport).toHaveBeenCalledWith('exp-1');
+    expect(stubAccounting.downloadExport).toHaveBeenCalledWith('exp-1', 'time-export-exp-1.csv');
   });
 
   it('surfaces a downloadExport failure through the observable error channel, not an unhandled rejection', async () => {

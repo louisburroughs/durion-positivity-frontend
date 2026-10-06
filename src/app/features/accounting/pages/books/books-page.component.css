@@ -1,0 +1,291 @@
+:host {
+  display: block;
+}
+
+.books {
+  max-width: 80rem;
+  /* One track that may shrink below its content's min-content, so no region widens the page at phone width. */
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.books h2,
+.books h3,
+.books h4 {
+  margin: 0;
+}
+
+/* ── Header ─────────────────────────────────────────────────────────── */
+.books__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.books__title-block {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.books__header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3);
+}
+
+.books__period {
+  margin: 0;
+}
+
+.books .btn {
+  min-height: 2.75rem;
+  gap: var(--space-1);
+  text-decoration: none;
+}
+
+/* ── Tabs: buttons with aria-pressed (§5.4 item 2) ──────────────────── */
+.books__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  border-block-end: 1px solid var(--border-color);
+  padding-block-end: var(--space-2);
+}
+
+.books__tab {
+  min-height: 2.75rem;
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--cardBackground);
+  color: var(--currentTextColor);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.books__tab[aria-pressed='true'] {
+  border-color: var(--link-color);
+  background: var(--surface-inset);
+  box-shadow: inset 0 -3px 0 var(--link-color);
+}
+
+.books__tab:focus-visible,
+.summary-line:focus-visible {
+  outline: 2px solid var(--input-focus-border);
+  outline-offset: 2px;
+}
+
+.books__term {
+  margin-inline-start: var(--space-1);
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+/* ── Panels ─────────────────────────────────────────────────────────── */
+.books__panel {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.books__sections {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  gap: var(--space-4);
+}
+
+.summary-card {
+  display: grid;
+  align-content: start;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--cardBackground);
+  min-width: 0;
+}
+
+.summary-lines,
+.drill-accounts {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.summary-line {
+  display: flex;
+  width: 100%;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--currentTextColor);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.summary-line:hover,
+.summary-line[aria-pressed='true'] {
+  border-color: var(--border-color);
+  background: var(--surface-hover);
+}
+
+.summary-line__label {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.summary-total,
+.summary-totals > div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin: 0;
+  padding-block-start: var(--space-2);
+  border-block-start: 1px solid var(--border-color);
+}
+
+.summary-totals {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+}
+
+.summary-totals dd {
+  margin: 0;
+}
+
+.summary-totals__profit {
+  font-weight: 700;
+}
+
+.books .numeric {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.books__alert {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--status-warning-bg);
+  color: var(--status-warning-fg);
+  font-weight: 600;
+}
+
+.region-error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.books__drill {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--border-color);
+  border-inline-start: 4px solid var(--chart-1);
+  border-radius: var(--radius-md);
+  background: var(--cardBackground);
+  min-width: 0;
+}
+
+.books__drill-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.books__drill-head h3 .account-code {
+  margin-inline-start: var(--space-2);
+}
+
+.books__reference {
+  display: block;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-weight: 400;
+}
+
+.books__note {
+  margin: 0;
+}
+
+.books caption {
+  text-align: start;
+  font-weight: 600;
+  padding-block-end: var(--space-2);
+}
+
+/* ── All entries ────────────────────────────────────────────────────── */
+.books__filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-4);
+}
+
+.books__search {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.books__search .form-actions {
+  margin-block-start: 1.75rem;
+}
+
+.books__paging {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* ── Export dialog ──────────────────────────────────────────────────── */
+.books__choices {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-3);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+}
+
+.books__choice {
+  display: flex;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.books__choice input {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* Scrollable tables take keyboard focus (WCAG 2.1.1); the ring shows where it is. */
+.table-scroll-container:focus-visible {
+  outline: 2px solid var(--input-focus-border);
+  outline-offset: 2px;
+}
+
+.books .btn[aria-disabled='true'] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

@@ -21,6 +21,10 @@ const ROUTES = [
   // Accounting home (CAP:550 S4). Rendered-DOM axe coverage lives in
   // src/app/features/accounting/pages/home/accounting-home-page.a11y.spec.ts.
   '/app/accounting',
+  // Your books and the journal-entry page (CAP:550 S5). Rendered-DOM axe coverage lives in
+  // src/app/features/accounting/pages/books/books-page.a11y.spec.ts.
+  '/app/accounting/books',
+  '/app/accounting/books/entries/JE-SMOKE-1',
   '/app/accounting/events',
   '/app/accounting/vendor-payments',
   // Register cart with the Customer, Payment and Check out panels (CAP:550 S10). Rendered-DOM

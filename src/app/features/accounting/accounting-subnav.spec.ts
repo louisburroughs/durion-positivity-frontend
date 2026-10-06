@@ -27,6 +27,7 @@ describe('ACCOUNTING_SUBNAV', () => {
       '',
       'payables/vendor-invoices',
       'bank-accounts',
+      'books',
       'periods',
     ]);
   });

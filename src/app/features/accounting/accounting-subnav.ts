@@ -17,7 +17,7 @@ export interface AccountingSubnavEntry {
  * the session can open its route (`canAccess`), so it carries the route's own
  * gate — `accounting-subnav.spec.ts` fails when the two disagree.
  *
- * Adding a page (S5 Your books, S6 Customer payments, S14 Bills to pay): add
+ * Adding a page (S6 Customer payments, S14 Bills to pay): add
  * its route to `ACCOUNTING_ROUTES` first, then its entry here at its §5.0
  * position (Home · Bills to pay · Customer payments · Bank · Your books ·
  * Month-end) with the route's permissions, and its label keys to all six
@@ -37,6 +37,12 @@ export const ACCOUNTING_SUBNAV: readonly AccountingSubnavEntry[] = [
     termKey: 'ACCOUNTING.SHELL.NAV.BANK_TERM',
     route: 'bank-accounts',
     permissions: ACCOUNTING_PAGE.bankAccounts,
+  },
+  {
+    labelKey: 'ACCOUNTING.SHELL.NAV.BOOKS',
+    termKey: 'ACCOUNTING.SHELL.NAV.BOOKS_TERM',
+    route: 'books',
+    permissions: ACCOUNTING_PAGE.books,
   },
   {
     labelKey: 'ACCOUNTING.SHELL.NAV.MONTH_END',

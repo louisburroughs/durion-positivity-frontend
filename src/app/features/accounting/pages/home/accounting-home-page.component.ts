@@ -191,6 +191,8 @@ export class AccountingHomePageComponent {
     canAccess(this.auth, { permissions: ACCOUNTING_SECTION.reconciliationApprove }),
   );
   readonly canOpenBills = computed(() => canAccess(this.auth, { permissions: ACCOUNTING_PAGE.vendorInvoices }));
+  /** "Who owes what" on the Money owed lane opens Your books on that tab (CAP:550 S5). */
+  readonly canOpenBooks = computed(() => canAccess(this.auth, { permissions: ACCOUNTING_PAGE.books }));
   readonly canOpenPaymentApply = computed(() => canAccess(this.auth, { permissions: ACCOUNTING_PAGE.paymentApply }));
   readonly canOpenVendorPayments = computed(() =>
     canAccess(this.auth, { permissions: ACCOUNTING_PAGE.vendorPaymentView }),

@@ -155,6 +155,11 @@
               </div>
             }
           }
+          @if (canOpenBooks()) {
+            <a class="btn btn--outline lane__action" routerLink="/app/accounting/books" [queryParams]="{ tab: 'owed' }" data-testid="who-owes-what">
+              {{ 'ACCOUNTING.HOME.ACTION.WHO_OWES_WHAT' | translate }}
+            </a>
+          }
           <app-help-disclosure
             contextKey="ACCOUNTING.HOME.LANES.RECEIVABLES.TITLE"
             textKey="ACCOUNTING.HELP.RECEIVABLES.TEXT"

@@ -5208,7 +5208,9 @@
         "BANK": "Bank",
         "BANK_TERM": "bank reconciliation",
         "MONTH_END": "Month-end",
-        "MONTH_END_TERM": "period close"
+        "MONTH_END_TERM": "period close",
+        "BOOKS": "Your books",
+        "BOOKS_TERM": "financial statements"
       },
       "SHOW_TERMS": "Show accounting terms"
     },
@@ -5285,7 +5287,8 @@
       },
       "ACTION": {
         "OPEN_BILLS": "Open bills",
-        "OPEN_BANK_CHECKUP": "Open bank check-up"
+        "OPEN_BANK_CHECKUP": "Open bank check-up",
+        "WHO_OWES_WHAT": "Who owes what"
       },
       "METHOD": {
         "CASH": "Cash",
@@ -5461,6 +5464,259 @@
           "ANSWER": "Open Vendor payments and choose New payment. Pick the vendor and the approved bills you are paying, check the amount, then confirm.",
           "EXAMPLE": "For example: pay two parts bills from the same supplier in one payment.",
           "LINK": "Open vendor payments"
+        }
+      }
+    },
+    "BOOKS": {
+      "OVERLINE": "Accounting",
+      "TITLE": "Your books",
+      "STANDFIRST": "What the shop owns, owes and has earned, who owes what, and every entry, in plain words.",
+      "EMPTY_ACCESS": "Your role can open this page but not read any of its tabs. Summary and Who owes what need {{summary}}; All entries needs {{entries}}.",
+      "NAME_NOT_AVAILABLE": "Name not available",
+      "NO_NUMBER": "Entry without a number",
+      "CORRECTION_DESCRIPTION": "Correction of an earlier entry",
+      "ERROR": {
+        "LOAD": "Your books couldn't load. Check your connection and try again."
+      },
+      "REGION": {
+        "LOADING": "Loading…",
+        "LOAD_FAILED": "This couldn't load.",
+        "REFRESH_FAILED": "This couldn't refresh; these are the last figures loaded.",
+        "DENIED": "You need the {{permission}} permission to see this."
+      },
+      "PERIOD": {
+        "LABEL": "Month",
+        "OPEN": "{{month}} · open",
+        "CLOSED": "{{month}} · closed",
+        "PLAIN": "{{month}}",
+        "AS_AT": "Amounts as at {{date}}"
+      },
+      "TABS": {
+        "ARIA": "Parts of your books",
+        "SUMMARY": "Summary",
+        "SUMMARY_TERM": "balance sheet",
+        "OWED": "Who owes what",
+        "OWED_TERM": "aged receivables and payables",
+        "ENTRIES": "All entries",
+        "ENTRIES_TERM": "general ledger"
+      },
+      "HOW_TO_READ": {
+        "SUMMARY": "New to this? How to read your books in one minute",
+        "TEXT": "What you own minus what you owe is what's yours. Every sale, payment and bill is recorded as an entry, and each entry moves money between two or more accounts, so the two sides always match.",
+        "EXAMPLE": "Example: a customer pays a $200 invoice. Money customers owe you goes down by $200 and Waiting to be deposited goes up by $200. What's yours doesn't change: the money just moved."
+      },
+      "SUMMARY": {
+        "TITLE": "Summary on {{date}}",
+        "OWN": "What you own",
+        "OWE": "What you owe",
+        "YOURS": "What's yours",
+        "OTHER": "Other lines",
+        "TOTAL_OWN": "Everything you own",
+        "TOTAL_OWE": "Everything you owe",
+        "TOTAL_YOURS": "Everything that's yours",
+        "SO_FAR": "{{month}} so far",
+        "TOTAL_EARNED": "Earned",
+        "TOTAL_COSTS": "Costs",
+        "PROFIT_SO_FAR": "Profit so far",
+        "PROFIT_NOTE": "Profit so far is not closed into your books until the year ends.",
+        "INCOME_EMPTY": "Nothing to show for {{month}} yet.",
+        "NOT_SET_UP": "Your summary isn't set up yet. Ask the person who manages your chart of accounts to set up the summary lines.",
+        "UNBALANCED": "Your books don't balance — tell your accountant.",
+        "LINE_HINT": "Choose a line to see the accounts and entries behind it.",
+        "LINE": {
+          "IN_THE_BANK": "In the bank",
+          "WAITING_TO_BE_DEPOSITED": "Waiting to be deposited",
+          "KEPT_IN_DRAWERS": "Kept in drawers for change",
+          "CUSTOMERS_OWE_YOU": "Money customers owe you",
+          "INVENTORY": "Tires and parts on your shelves",
+          "OTHER_ASSETS": "Other things you own",
+          "BILLS_FROM_VENDORS": "Bills from vendors",
+          "SALES_TAX_COLLECTED": "Sales tax collected, not yet paid",
+          "CUSTOMER_CREDITS": "Credits customers can still use",
+          "OTHER_LIABILITIES": "Other things you owe",
+          "OWNER_EQUITY": "Owner's money in the business",
+          "OPENING_BALANCE_EQUITY": "Opening balances",
+          "PROFIT_NOT_YET_CLOSED": "Profit not yet closed",
+          "OTHER_EQUITY": "Other things that are yours",
+          "SALES": "Sales",
+          "COST_OF_PARTS_SOLD": "Cost of tires and parts sold",
+          "CARD_PROCESSING_FEES": "Card processing fees",
+          "OTHER_INCOME": "Other income",
+          "OTHER_EXPENSES": "Other costs",
+          "UNLISTED": "Other"
+        }
+      },
+      "DRILL": {
+        "TITLE": "Accounts behind {{line}}",
+        "CLOSE": "Back to the summary",
+        "EMPTY": "No account adds to this line.",
+        "ENTRIES_IN": "Entries in {{account}}"
+      },
+      "LEDGER": {
+        "CAPTION": "Entries in {{account}}, newest first",
+        "ENTRY": "Entry",
+        "DATE": "Date",
+        "WHAT_HAPPENED": "What happened",
+        "WENT_UP": "Went up",
+        "WENT_DOWN": "Went down",
+        "DEBIT": "Debit",
+        "CREDIT": "Credit",
+        "TERM_DEBIT": "debit",
+        "TERM_CREDIT": "credit",
+        "BALANCE_AFTER": "Balance after",
+        "OPENING": "At the start",
+        "CLOSING": "At the end",
+        "EMPTY": "No entries in this account for the month.",
+        "LOCKED": "Entries are locked once recorded; a mistake is fixed with a correcting entry.",
+        "WHY_UP_DOWN": "Why 'went up' and 'went down'?",
+        "WHY_UP_DOWN_TEXT": "Each account has a usual side. Money in the bank goes up when you are paid; a bill from a vendor goes up when you owe more. Went up and Went down follow each account, so you never need to know which side is debit or credit.",
+        "WHY_UP_DOWN_EXAMPLE": "Example: paying a $500 vendor bill makes In the bank go down $500 and Bills from vendors go down $500."
+      },
+      "OWED": {
+        "TITLE": "Who owes what on {{date}}",
+        "PAST_NOTE": "These are today's open balances, aged as at {{date}}. Payments made since then are already taken off.",
+        "CUSTOMERS": "Customers who owe you",
+        "CUSTOMERS_CAPTION": "What customers owe, by how late it is, as at {{date}}",
+        "CUSTOMERS_EMPTY": "No customer owes you anything.",
+        "VENDORS": "Vendors you owe",
+        "VENDORS_CAPTION": "What you owe vendors, by how late it is, as at {{date}}",
+        "VENDORS_EMPTY": "You don't owe any vendor on an approved bill.",
+        "VENDORS_NOTE": "Only approved bills are counted here; bills still waiting for approval are on Bills to pay.",
+        "CUSTOMER": "Customer",
+        "VENDOR": "Vendor",
+        "NOT_YET_DUE": "Not yet due",
+        "DAYS_1_30": "1–30 days late",
+        "DAYS_31_60": "31–60",
+        "DAYS_61_90": "61–90",
+        "DAYS_90_PLUS": "More than 90",
+        "TOTAL": "Total",
+        "CALL_FIRST": "Who to call first",
+        "CALL_FIRST_TEXT": "Start with the customers whose money is the most days late, then the largest totals. The longer an invoice waits, the less likely it is to be paid.",
+        "CALL_FIRST_EXAMPLE": "Example: a customer with $300 more than 90 days late comes before one with $2,000 not yet due."
+      },
+      "ENTRIES": {
+        "TITLE": "All entries",
+        "SEARCH_LABEL": "Entry number",
+        "SEARCH_HINT": "Type the whole number, for example JE-202610-131.",
+        "SEARCH": "Find entry",
+        "CLEAR": "Show all entries",
+        "ACCOUNT_LABEL": "Account",
+        "ALL_ACCOUNTS": "All accounts",
+        "ACCOUNT_HINT": "Choosing an account shows its entries for {{month}}.",
+        "ACCOUNTS_FAILED": "The account list couldn't load.",
+        "CAPTION": "Every entry, newest first",
+        "AMOUNT": "Amount",
+        "STATUS": "Status",
+        "EMPTY": "No entries have been recorded yet.",
+        "NO_MATCH": "No entry is numbered {{entry}}.",
+        "PAGING": "Entry pages",
+        "PREVIOUS": "Previous page",
+        "NEXT": "Next page",
+        "PAGE_OF": "Page {{page}} of {{pages}}",
+        "STATUS_HELP": "What do Correction and Reversed mean?",
+        "STATUS_HELP_TEXT": "An entry is never changed or deleted once recorded. To fix a mistake, a correcting entry is recorded that undoes it: the new entry reads Correction and the original reads Reversed.",
+        "STATUS_HELP_EXAMPLE": "Example: JE-202610-131 recorded a sale twice. Reversing it records JE-202610-140 (Correction), and JE-202610-131 now reads Reversed."
+      },
+      "STATUS": {
+        "RECORDED": "Recorded",
+        "CORRECTION": "Correction",
+        "REVERSED": "Reversed",
+        "NOT_RECORDED": "Not recorded yet",
+        "UNKNOWN": "Unknown"
+      },
+      "ENTRY": {
+        "OVERLINE": "Journal entry",
+        "TITLE": "Entry",
+        "BACK": "Back to all entries",
+        "FACTS": "About this entry",
+        "DATE": "Date",
+        "SOURCE_LABEL": "Came from",
+        "LINES": "Lines",
+        "LINES_CAPTION": "The lines of {{entry}}",
+        "ACCOUNT": "Account",
+        "LINE_DESCRIPTION": "Description",
+        "NO_LINES": "This entry has no lines.",
+        "TRACE": "Related entries",
+        "TRACE_NONE": "No other entry is linked to this one.",
+        "TRACE_FAILED": "Related entries couldn't load.",
+        "REVERSES": "Reverses {{entry}}",
+        "REVERSED_BY": "Reversed by {{entry}}",
+        "RELATED": "Same source: {{entry}}",
+        "NOT_FOUND": "We couldn't find this entry.",
+        "LOAD_FAILED": "This entry couldn't load.",
+        "THE_CORRECTION": "the correcting entry",
+        "SOURCE": {
+          "MANUAL": "Entered by hand",
+          "INVOICE_REVENUE": "A customer invoice",
+          "INVOICE_REVENUE_REVERSAL": "A cancelled customer invoice",
+          "PAYMENT_APPLICATION": "A customer payment matched to invoices",
+          "CUSTOMER_CREDIT_ISSUANCE": "A credit given to a customer",
+          "CUSTOMER_CREDIT_RELIEF": "A customer credit used or refunded",
+          "CREDIT_MEMO_REVERSAL": "A credit note undone",
+          "CREDIT_MEMO_VOID": "A credit note cancelled",
+          "INVENTORY_SHRINKAGE": "Stock lost or damaged",
+          "INVENTORY_ADJUSTMENT": "A stock count adjustment",
+          "INVENTORY_REVALUATION": "A change in what stock is worth",
+          "SETTLEMENT": "A card payout",
+          "SETTLEMENT_WRITE_OFF": "A card payout difference written off",
+          "SETTLEMENT_RECLASS": "A card payout moved to the right account",
+          "REGISTER_OVER_SHORT": "A drawer over or short",
+          "LEGACY_REVERSAL": "A correction of an older entry",
+          "UNKNOWN": "Unknown"
+        },
+        "REVERSE": {
+          "OPEN": "Reverse this entry",
+          "TITLE": "Reverse {{entry}}?",
+          "CONSEQUENCE": "This records a new entry that undoes {{entry}} and marks it Reversed. It can't be undone.",
+          "REASON": "Why are you reversing it?",
+          "REASON_HINT": "Your reason is kept with both entries.",
+          "REASON_REQUIRED": "Say why you are reversing this entry.",
+          "OVERRIDE_LABEL": "Why record this in a closed month?",
+          "OVERRIDE_HINT": "The month is closed. Your reason is kept in the audit record.",
+          "OVERRIDE_REQUIRED": "Say why this belongs in the closed month.",
+          "CONFIRM": "Reverse entry",
+          "DONE": "{{entry}} is reversed.",
+          "OPEN_CORRECTION": "Open {{entry}}",
+          "BLOCKED": {
+            "REVERSED": "This entry is already reversed.",
+            "NOT_RECORDED": "Only a recorded entry can be reversed.",
+            "UNKNOWN": "This entry's status is unknown, so it can't be reversed here.",
+            "LOADING": "Wait for the entry to load."
+          },
+          "ERROR": {
+            "ALREADY_REVERSED": "Someone has already reversed this entry. It now shows its current state.",
+            "NOT_POSTED": "This entry is not recorded, so it can't be reversed. It now shows its current state.",
+            "HARD_LOCKED": "That month is locked for good, so nothing more can be recorded in it.",
+            "PERIOD_CLOSED": "The correcting entry would fall in a closed month. A person with the {{permission}} permission can record it.",
+            "PERIOD_CLOSED_OVERRIDE": "The correcting entry would fall in a closed month. Say why it belongs there, then reverse again.",
+            "PERIOD_CLOSED_REFUSED": "The closed month still refused the entry. Check your reason, or ask a person with the {{permission}} permission.",
+            "FORBIDDEN": "You need the {{permission}} permission to reverse entries.",
+            "NOT_FOUND": "We couldn't find this entry any more.",
+            "OTHER": "The entry couldn't be reversed. Try again."
+          }
+        }
+      },
+      "EXPORT": {
+        "OPEN": "Export for your accountant",
+        "TITLE": "Export for your accountant",
+        "BODY": "Choose what to send for {{month}}, as at {{date}}.",
+        "WHAT": "What to export",
+        "FORMAT_LEGEND": "File type",
+        "START": "Export",
+        "PREPARING": "Preparing your file…",
+        "DONE": "Your file is ready and has been downloaded.",
+        "FAILED": "The file couldn't be prepared. Try again.",
+        "REPORT": {
+          "BALANCE_SHEET": "Summary (balance sheet)",
+          "INCOME_STATEMENT": "Profit so far (income statement)",
+          "AGED_RECEIVABLES": "Who owes what — customers",
+          "AGED_PAYABLES": "Who owes what — vendors",
+          "GENERAL_LEDGER": "All entries (general ledger)",
+          "TRIAL_BALANCE": "Trial balance"
+        },
+        "FORMAT": {
+          "PDF": "PDF",
+          "CSV": "CSV (spreadsheet)"
         }
       }
     }
@@ -9080,7 +9336,9 @@
       "BANK_ACCOUNTS": "Bank accounts",
       "BANK_IMPORTS": "Bank statement imports",
       "IMPORT": "Import",
-      "RECONCILIATIONS": "Bank reconciliations"
+      "RECONCILIATIONS": "Bank reconciliations",
+      "BOOKS": "Your books",
+      "ENTRIES": "Journal entries"
     }
   },
   "POSITIVITY": {

@@ -16,6 +16,8 @@ export const SITE_MAP_ROUTES: readonly SiteMapRouteEntry[] = [
   { route: '/app/accounting/bank-accounts/:glAccountId/import', label: "Import", labelKey: "SITEMAP.LABEL.IMPORT", dynamic: true, permissions: ['accounting:reconciliation:adjust'] },
   { route: '/app/accounting/bank-accounts/:glAccountId/statements/new', label: "New", labelKey: "SITEMAP.LABEL.NEW", dynamic: true, permissions: ['accounting:reconciliation:adjust'] },
   { route: '/app/accounting/bank-imports/:importId', label: "Bank Imports", labelKey: "SITEMAP.LABEL.BANK_IMPORTS", dynamic: true, permissions: ['accounting:reconciliation:adjust'] },
+  { route: '/app/accounting/books', label: "Books", labelKey: "SITEMAP.LABEL.BOOKS", dynamic: false, permissions: ['reporting:view:financial-statements', 'accounting:coa:view', 'accounting:je:view'] },
+  { route: '/app/accounting/books/entries/:journalEntryId', label: "Entries", labelKey: "SITEMAP.LABEL.ENTRIES", dynamic: true, permissions: ['accounting:je:view'] },
   { route: '/app/accounting/credit-memos', label: "Credit Memos", labelKey: "SITEMAP.LABEL.CREDIT_MEMOS", dynamic: false, permissions: ['accounting:credit-memo:read'] },
   { route: '/app/accounting/credit-memos/:memoId', label: "Credit Memos", labelKey: "SITEMAP.LABEL.CREDIT_MEMOS", dynamic: true, permissions: ['accounting:credit-memo:read'] },
   { route: '/app/accounting/credit-memos/new', label: "New", labelKey: "SITEMAP.LABEL.NEW", dynamic: false, permissions: ['accounting:credit-memo:create'] },
