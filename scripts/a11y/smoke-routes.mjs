@@ -23,6 +23,9 @@ const ROUTES = [
   '/app/accounting',
   '/app/accounting/events',
   '/app/accounting/vendor-payments',
+  // Register cart with the Customer, Payment and Check out panels (CAP:550 S10). Rendered-DOM
+  // axe coverage lives in src/app/features/order/pages/order-cart/order-cart-page.a11y.spec.ts.
+  '/app/order/cart/ORD-123',
   '/app/people/employees/EMP-123',
   '/app/location/locations',
   // NOTE: this harness builds its JSDOM with `runScripts: 'outside-only'`, so the

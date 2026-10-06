@@ -8394,10 +8394,23 @@
         "LOAD": "Impossible de charger la commande.",
         "CREATE": "Impossible de creer le panier.",
         "ADD_ITEM": "Impossible d'ajouter l'article.",
-        "REMOVE_ITEM": "Impossible de retirer l'article."
+        "REMOVE_ITEM": "Impossible de retirer l'article.",
+        "SET_CUSTOMER": "Impossible de définir le client.",
+        "CHECKOUT": "Impossible de passer à la caisse.",
+        "CUSTOMER_REQUIRED": "Choisissez un client avant de passer à la caisse",
+        "WALK_IN_NOT_ALLOWED": "Le client de passage n'est pas permis pour cette vente; choisissez le client.",
+        "WALK_IN_NOT_ALLOWED_ON_ACCOUNT": "Une vente à un client de passage ne peut pas être portée au compte. Encaissez le paiement maintenant, ou choisissez le client.",
+        "WALK_IN_NOT_ALLOWED_DEPOSIT": "Un client de passage ne peut pas laisser d'acompte; choisissez le client.",
+        "WALK_IN_NOT_ALLOWED_WORKORDER_LINK": "Une vente liée à un bon de travail ne peut pas être à un client de passage; elle garde le client du bon de travail.",
+        "WALK_IN_NOT_PAID_IN_FULL": "Le total est maintenant de {{total}}. Une vente à un client de passage doit être payée en entier maintenant : ajustez le comptant et la carte, puis repassez à la caisse.",
+        "WALK_IN_NOT_PAID_IN_FULL_NO_TOTAL": "Une vente à un client de passage doit être payée en entier maintenant : ajustez le comptant et la carte, puis repassez à la caisse.",
+        "WALK_IN_UNAVAILABLE": "Le client de passage n'est pas encore configuré pour cet atelier; choisissez le client.",
+        "INVALID_CUSTOMER": "Ce client ne peut pas être utilisé pour cette vente; choisissez un autre client.",
+        "NOT_EDITABLE": "Cette commande a changé et ne peut plus être modifiée; elle a été rechargée.",
+        "UNPROCESSABLE": "Ce panier ne peut pas encore passer à la caisse; vérifiez les articles et réessayez.",
+        "FORBIDDEN": "Vous n'avez pas la permission de faire ceci ({{permission}})."
       },
       "FIELD": {
-        "CUSTOMER_ID": "ID client",
         "VEHICLE_ID": "ID vehicule (optionnel)",
         "SKU": "SKU / Code service",
         "QTY": "Qté",
@@ -8414,7 +8427,9 @@
       "SUMMARY": {
         "SUBTOTAL": "Sous-total",
         "TAX": "Taxe",
-        "TOTAL": "Total"
+        "TOTAL": "Total",
+        "DISCOUNT": "Remise",
+        "TAX_STALE": "La taxe peut changer au passage à la caisse."
       },
       "COLUMN": {
         "DESCRIPTION": "Description",
@@ -8423,6 +8438,32 @@
         "UNIT_PRICE": "Prix unitaire",
         "TOTAL": "Total",
         "ACTIONS": "Actions"
+      },
+      "CUSTOMER": {
+        "HEADING": "Client",
+        "NONE": "Aucun client pour l'instant — choisissez-en un avant de passer à la caisse",
+        "SEARCH_LABEL": "Trouver un client",
+        "WALK_IN_ACTION": "Client de passage",
+        "WALK_IN_NAME": "Client de passage",
+        "WALK_IN_HELP": "Pour un client qui paie tout le montant maintenant et ne veut pas de compte.",
+        "WALK_IN_REASON": "Le client de passage est réservé aux ventes payées en entier maintenant. Saisissez l'argent comptant et la carte que vous encaissez, ou choisissez le client."
+      },
+      "PAYMENT": {
+        "LEGEND": "Paiement",
+        "PAY_NOW": "Payer maintenant (comptant ou carte)",
+        "CASH": "Comptant",
+        "CARD": "Carte",
+        "TAKING_NOW": "Encaissé maintenant : {{taken}} sur {{total}}",
+        "ON_ACCOUNT": "Porter au compte du client",
+        "ON_ACCOUNT_WALK_IN_REASON": "Une vente à un client de passage ne peut pas être portée au compte"
+      },
+      "CHECKOUT": {
+        "ACTION": "Passer à la caisse",
+        "CONSEQUENCE": "Passer à la caisse fixe les prix et crée la facture; vous encaissez ensuite le paiement.",
+        "REASON_NO_CUSTOMER": "Choisissez d'abord un client",
+        "READY_FOR_PAYMENT": "La commande {{orderNumber}} est passée à la caisse. La facture {{invoiceNumber}} est prête pour le paiement.",
+        "COMPLETED": "La commande {{orderNumber}} est passée à la caisse et portée au compte du client. Facture {{invoiceNumber}}.",
+        "TAKE_PAYMENT": "Encaisser le paiement"
       }
     },
     "OVERRIDE": {

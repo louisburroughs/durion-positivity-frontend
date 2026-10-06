@@ -56,6 +56,13 @@ export class CustomerLookupComponent implements ControlValueAccessor {
   @Input() label?: string;
   @Input() required = false;
   @Input() placeholder?: string;
+  /**
+   * Opt-in: leave house accounts (the Walk-in CASH customer) out of the suggestions, so a
+   * page that offers Walk-in only through its own explicit control never lets it be picked
+   * from search (CAP:550 S10, §4.4 item 2). Off by default, so every other consumer
+   * (credit memos, estimates) keeps listing every party.
+   */
+  @Input() excludeHouseAccounts = false;
 
   readonly suggestions = signal<CustomerLookupResult[]>([]);
   readonly query        = signal('');
@@ -81,7 +88,8 @@ export class CustomerLookupComponent implements ControlValueAccessor {
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe(res => {
-        this.suggestions.set((res ?? []).slice(0, MAX_SUGGESTIONS));
+        const rows = this.excludeHouseAccounts ? (res ?? []).filter(row => !row.houseAccount) : (res ?? []);
+        this.suggestions.set(rows.slice(0, MAX_SUGGESTIONS));
         this.activeIndex.set(-1);
         this.loading.set(false);
       });

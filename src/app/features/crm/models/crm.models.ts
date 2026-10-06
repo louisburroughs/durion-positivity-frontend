@@ -221,6 +221,11 @@ export interface PartyDetail {
   dba?: string;
   /** Human-readable customer/account number, supplied by browse/search responses. */
   customerNumber?: string;
+  /**
+   * House-account kind (`CASH_SALE` = the business's Walk-in customer) on browse/search rows and
+   * `getParty`; null or absent for every ordinary party. Recognise a house account from this only.
+   */
+  readonly houseAccount?: string | null;
   /** Account status (ACTIVE|PENDING|SUSPENDED|INACTIVE), supplied by browse/search responses. */
   status?: string;
   taxId?: string;

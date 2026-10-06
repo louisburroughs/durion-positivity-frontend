@@ -8394,10 +8394,23 @@
         "LOAD": "Unable to load order.",
         "CREATE": "Unable to create cart.",
         "ADD_ITEM": "Unable to add item.",
-        "REMOVE_ITEM": "Unable to remove item."
+        "REMOVE_ITEM": "Unable to remove item.",
+        "SET_CUSTOMER": "Unable to set the customer.",
+        "CHECKOUT": "Unable to check out.",
+        "CUSTOMER_REQUIRED": "Choose a customer before checking out",
+        "WALK_IN_NOT_ALLOWED": "Walk-in isn't allowed for this sale; choose the customer.",
+        "WALK_IN_NOT_ALLOWED_ON_ACCOUNT": "Walk-in sales can't go on account. Take the payment now, or choose the customer.",
+        "WALK_IN_NOT_ALLOWED_DEPOSIT": "A walk-in customer can't leave a deposit; choose the customer.",
+        "WALK_IN_NOT_ALLOWED_WORKORDER_LINK": "A sale linked to a workorder can't be a walk-in; it keeps the workorder's customer.",
+        "WALK_IN_NOT_PAID_IN_FULL": "The total is now {{total}}. A walk-in sale must be paid in full now: adjust the cash and card, then check out again.",
+        "WALK_IN_NOT_PAID_IN_FULL_NO_TOTAL": "A walk-in sale must be paid in full now: adjust the cash and card, then check out again.",
+        "WALK_IN_UNAVAILABLE": "Walk-in isn't set up for this shop yet; choose the customer.",
+        "INVALID_CUSTOMER": "This customer can't be used for this sale; choose another customer.",
+        "NOT_EDITABLE": "This order has changed and can no longer be edited; it has been reloaded.",
+        "UNPROCESSABLE": "This cart can't be checked out yet; check the items and try again.",
+        "FORBIDDEN": "You don't have permission to do this ({{permission}})."
       },
       "FIELD": {
-        "CUSTOMER_ID": "Customer ID",
         "VEHICLE_ID": "Vehicle ID (optional)",
         "SKU": "SKU / Service Code",
         "QTY": "Qty",
@@ -8414,7 +8427,9 @@
       "SUMMARY": {
         "SUBTOTAL": "Subtotal",
         "TAX": "Tax",
-        "TOTAL": "Total"
+        "TOTAL": "Total",
+        "DISCOUNT": "Discount",
+        "TAX_STALE": "The tax may change at checkout."
       },
       "COLUMN": {
         "DESCRIPTION": "Description",
@@ -8423,6 +8438,32 @@
         "UNIT_PRICE": "Unit Price",
         "TOTAL": "Total",
         "ACTIONS": "Actions"
+      },
+      "CUSTOMER": {
+        "HEADING": "Customer",
+        "NONE": "No customer yet — choose one before checking out",
+        "SEARCH_LABEL": "Find a customer",
+        "WALK_IN_ACTION": "Walk-in customer",
+        "WALK_IN_NAME": "Walk-in customer",
+        "WALK_IN_HELP": "For a customer who pays the whole amount now and doesn't want an account.",
+        "WALK_IN_REASON": "Walk-in is only for sales paid in full now. Enter the cash and card you are taking, or choose the customer."
+      },
+      "PAYMENT": {
+        "LEGEND": "Payment",
+        "PAY_NOW": "Pay now (cash or card)",
+        "CASH": "Cash",
+        "CARD": "Card",
+        "TAKING_NOW": "Taking now: {{taken}} of {{total}}",
+        "ON_ACCOUNT": "Charge to customer account",
+        "ON_ACCOUNT_WALK_IN_REASON": "Walk-in sales can't go on account"
+      },
+      "CHECKOUT": {
+        "ACTION": "Check out",
+        "CONSEQUENCE": "Checking out fixes the prices and creates the invoice; you then take the payment.",
+        "REASON_NO_CUSTOMER": "Choose a customer first",
+        "READY_FOR_PAYMENT": "Order {{orderNumber}} is checked out. Invoice {{invoiceNumber}} is ready for payment.",
+        "COMPLETED": "Order {{orderNumber}} is checked out and charged to the customer's account. Invoice {{invoiceNumber}}.",
+        "TAKE_PAYMENT": "Take payment"
       }
     },
     "OVERRIDE": {

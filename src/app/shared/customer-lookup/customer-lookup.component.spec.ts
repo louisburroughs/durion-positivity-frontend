@@ -132,4 +132,28 @@ describe('CustomerLookupComponent', () => {
     expect(fixture.nativeElement.querySelector('[role="listbox"]')).toBeNull();
     expect(input.hasAttribute('aria-controls')).toBe(false);
   }));
+
+  describe('excludeHouseAccounts (CAP:550 S10)', () => {
+    const WITH_CASH: CustomerLookupResult[] = [
+      ...PARTIES,
+      // Keyed on the flag only: this row's name and number look like any other party.
+      { partyId: 'p-cash', legalName: 'Counter sales', customerNumber: 'CUST-CP-900', houseAccount: 'CASH_SALE' },
+      { partyId: 'p3', legalName: 'Cash & Carry Ltd', customerNumber: 'CASH', houseAccount: null },
+    ];
+
+    it('lists a house account by default, so existing consumers are unchanged', fakeAsync(() => {
+      search.mockReturnValue(of(WITH_CASH));
+      component.onInput('c');
+      tick(250);
+      expect(component.suggestions().map(p => p.partyId)).toEqual(['p1', 'p2', 'p-cash', 'p3']);
+    }));
+
+    it('drops only flagged house accounts when the consumer opts in', fakeAsync(() => {
+      search.mockReturnValue(of(WITH_CASH));
+      fixture.componentRef.setInput('excludeHouseAccounts', true);
+      component.onInput('c');
+      tick(250);
+      expect(component.suggestions().map(p => p.partyId)).toEqual(['p1', 'p2', 'p3']);
+    }));
+  });
 });
