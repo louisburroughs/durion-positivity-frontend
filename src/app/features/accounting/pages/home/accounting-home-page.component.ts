@@ -325,6 +325,7 @@ export class AccountingHomePageComponent {
 
   /** Re-reads every permitted region that has not been refused (ADR-0064 §6). */
   refresh(): void {
+    this.approvedAccount.set(null);
     this.today.set(startOfLocalDay(this.clock()));
     const regions = this.permittedRegions();
     if (this.state() !== 'ready') {
@@ -372,11 +373,17 @@ export class AccountingHomePageComponent {
     }
   }
 
-  /** `ready` once every permitted region has answered; `error` only when all of them failed. */
+  /**
+   * `ready` once every permitted region has answered; `error` only when every one
+   * failed for a reason other than authorization. A 403 is not a connection
+   * problem: the refused region already names its permission, so a page whose
+   * failures include a refusal never shows the connection message (ADR-0064 §4, §6).
+   */
   private settlePage(): void {
     const regions = this.permittedRegions().map(key => this.regions[key]);
     if (regions.some(region => region.status() === 'PENDING')) return;
-    if (regions.length > 0 && regions.every(region => region.status() === 'FAILED')) {
+    const allFailed = regions.length > 0 && regions.every(region => region.status() === 'FAILED');
+    if (allFailed && !regions.some(region => region.denied())) {
       this.state.set('error');
       this.errorKey.set('ACCOUNTING.HOME.ERROR.ALL_FAILED');
       return;
@@ -466,6 +473,7 @@ export class AccountingHomePageComponent {
   }
 
   select(item: TodoItem): void {
+    this.approvedAccount.set(null);
     if (this.selectedId() !== item.id) {
       this.approveMessage.set(null);
       this.focusOwed = false;
@@ -511,7 +519,6 @@ export class AccountingHomePageComponent {
         error: (error: unknown) => {
           this.approving.set(false);
           const failure = toBankRecFailure(error);
-          const readiness = review.readiness;
           const stale = (failure.code && APPROVE_STALE_CODES.has(failure.code)) || failure.status === 409;
           if (!stillSelected()) {
             // The person moved to another item: its panel must not show this outcome or take focus.
@@ -527,7 +534,8 @@ export class AccountingHomePageComponent {
           }
           this.approveMessage.set({
             key: (failure.code && APPROVE_ERROR_KEYS[failure.code]) || 'ACCOUNTING.HOME.TODO.APPROVAL.ERROR.OTHER',
-            params: { bank: readiness.countUnexplainedBank ?? 0, ledger: readiness.countUnexplainedLedger ?? 0 },
+            // No counts: the review on screen predates the refusal, so its counts would be stale.
+            params: {},
           });
           if (stale) {
             this.focusOwed = true;
