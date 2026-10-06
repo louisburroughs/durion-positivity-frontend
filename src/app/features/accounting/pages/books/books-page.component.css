@@ -289,3 +289,7 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+.books__wide {
+  grid-column: 1 / -1;
+}

@@ -32,6 +32,7 @@ import {
   AgedCustomerRow,
   AgedReport,
   AgedVendorRow,
+  AgingBuckets,
   BOOKS_TABS,
   BalanceSheetSummary,
   BooksTab,
@@ -75,6 +76,8 @@ export const BOOKS_CLOCK = new InjectionToken<() => Date>('BOOKS_CLOCK', {
 /** Export polling: the first wait and the cap of a growing interval (story PROPOSED 9). */
 export const EXPORT_POLL_FIRST_MS = 1000;
 export const EXPORT_POLL_MAX_MS = 8000;
+/** Status reads before giving up (1 + 2 + 4 + 8 × 14 s ≈ 2 minutes); the export then reads as failed. */
+export const EXPORT_POLL_MAX_ATTEMPTS = 17;
 
 /** One option of the period select. `status` is null when no period read backs it (story PROPOSED 2). */
 export interface PeriodOption {
@@ -131,6 +134,13 @@ export const EXPORT_FORMAT_KEYS: Readonly<Record<ExportFormat, string>> = {
 
 function startOfLocalDay(date: Date): Date {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+/** Descending by the served total; a missing total sorts last. */
+function byServedTotal(a: AgingBuckets, b: AgingBuckets): number {
+  if (a.totalOutstanding === null) return b.totalOutstanding === null ? 0 : 1;
+  if (b.totalOutstanding === null) return -1;
+  return b.totalOutstanding - a.totalOutstanding;
 }
 
 function monthBounds(periodCode: string): { startDate: string; endDate: string } {
@@ -350,13 +360,9 @@ export class BooksPageComponent {
   readonly payablesData = computed(() =>
     this.payables.dataKey() === this.asAtKey() && !this.payables.denied() ? this.payables.data() : null,
   );
-  /** Largest served total first; sorting is not arithmetic (P7). */
-  readonly customerRows = computed(() =>
-    [...(this.receivablesData()?.rows ?? [])].sort((a, b) => b.totalOutstanding - a.totalOutstanding),
-  );
-  readonly vendorRows = computed(() =>
-    [...(this.payablesData()?.rows ?? [])].sort((a, b) => b.totalOutstanding - a.totalOutstanding),
-  );
+  /** Largest served total first, rows without a served total last; sorting is not arithmetic (P7). */
+  readonly customerRows = computed(() => [...(this.receivablesData()?.rows ?? [])].sort(byServedTotal));
+  readonly vendorRows = computed(() => [...(this.payablesData()?.rows ?? [])].sort(byServedTotal));
 
   // ── All entries ───────────────────────────────────────────────────────
   readonly searchText = signal('');
@@ -721,18 +727,19 @@ export class BooksPageComponent {
       .requestExport(reportType, format, startDate, asAt)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: job => this.onExportJob(token, job, filename, EXPORT_POLL_FIRST_MS),
+        next: job => this.onExportJob(token, job, filename, EXPORT_POLL_FIRST_MS, 0),
         error: () => this.failExport(token),
       });
   }
 
-  private onExportJob(token: number, job: ExportJob, filename: string, wait: number): void {
+  /** `attempts` counts the status reads made so far; an export still not settled after the cap reads as failed. */
+  private onExportJob(token: number, job: ExportJob, filename: string, wait: number, attempts: number): void {
     if (token !== this.exportToken) return;
     if (job.status === 'COMPLETED') {
       this.download(token, job.exportId, filename);
       return;
     }
-    if (job.status === 'FAILED' || !job.exportId) {
+    if (job.status === 'FAILED' || !job.exportId || attempts >= EXPORT_POLL_MAX_ATTEMPTS) {
       this.failExport(token);
       return;
     }
@@ -744,7 +751,8 @@ export class BooksPageComponent {
         .exportStatus(job.exportId)
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
-          next: next => this.onExportJob(token, next, filename, Math.min(wait * 2, EXPORT_POLL_MAX_MS)),
+          next: next =>
+            this.onExportJob(token, next, filename, Math.min(wait * 2, EXPORT_POLL_MAX_MS), attempts + 1),
           error: () => this.failExport(token),
         });
     }, wait);

@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { JwtClaims } from '../../../../core/models/auth.models';
 import { AccountingPreferencesService } from '../../services/accounting-preferences.service';
 import { BalanceSheetSummary, ExportJob, IncomeSummary } from '../../models/books.models';
-import { BooksPageComponent, EXPORT_POLL_FIRST_MS } from './books-page.component';
+import { BooksPageComponent, EXPORT_POLL_FIRST_MS, EXPORT_POLL_MAX_ATTEMPTS } from './books-page.component';
 import {
   ALL_BOOKS_PERMISSIONS,
   BooksMocks,
@@ -127,13 +127,41 @@ describe('BooksPageComponent', () => {
       expect(q('[data-testid="summary-unbalanced"]')?.getAttribute('role')).toBe('alert');
     });
 
-    it('keeps the income section working when the balance sheet fails, and vice versa (a failed read never blanks another)', () => {
+    it('keeps the balance sheet when the income statement fails (a failed read never blanks another)', () => {
       mocks.books.incomeStatement.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 500 })));
       render();
 
-      expect(qa('[data-testid="summary-line"]').length).toBeGreaterThan(0);
+      expect(qa('[data-testid="section-own"] [data-testid="summary-line"]').length).toBeGreaterThan(0);
       expect(q('[data-testid="income-error"]')).not.toBeNull();
       expect(component.state()).toBe('ready');
+    });
+
+    it('keeps the income statement when the balance sheet fails with 500 (ADR-0064 §1)', () => {
+      mocks.books.balanceSheet.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 500 })));
+      render();
+
+      expect(q('[data-testid="summary-error"]')).not.toBeNull();
+      expect(text('[data-testid="net-income"]')).toBe('$5,000.00');
+      expect(qa('[data-testid="section-income"] [data-testid="summary-line"]').length).toBe(2);
+      expect(component.state()).toBe('ready');
+    });
+
+    it('shows the income statement while the balance sheet is still pending', () => {
+      mocks.books.balanceSheet.mockReturnValue(pending<BalanceSheetSummary>());
+      render();
+
+      expect(q('[data-testid="balance-state"] [role="status"]')).not.toBeNull();
+      expect(text('[data-testid="net-income"]')).toBe('$5,000.00');
+    });
+
+    it('renders an em dash, never $0.00, for a total the response omitted (ADR-0064 §4)', () => {
+      mocks.books.balanceSheet.mockReturnValue(of(balanceSheet({ totalAssets: null })));
+      mocks.books.incomeStatement.mockReturnValue(of(incomeSummary({ netIncome: null })));
+      render();
+
+      expect(text('[data-testid="total-own"] strong')).toBe('COMMON.EMPTY_VALUE');
+      expect(text('[data-testid="net-income"]')).toBe('COMMON.EMPTY_VALUE');
+      expect(host.textContent).not.toContain('$0.00');
     });
 
     it('names the permission, not a connection problem, when the summary read is refused (ADR-0064 §6)', () => {
@@ -502,7 +530,8 @@ describe('BooksPageComponent', () => {
       component.selectPeriod(previousPeriod.periodCode);
       fixture.detectChanges();
 
-      expect(qa('[data-testid="summary-line"]')).toEqual([]);
+      // The income statement answered for September and may show; October's balance sheet must not.
+      expect(qa('[data-testid="section-own"], [data-testid="section-owe"], [data-testid="section-yours"]')).toEqual([]);
       expect(host.textContent).not.toContain('$25,400.50');
     });
 
@@ -586,6 +615,36 @@ describe('BooksPageComponent', () => {
       vi.advanceTimersByTime(60_000);
       expect(mocks.books.exportStatus).not.toHaveBeenCalled();
       expect(mocks.books.downloadExport).not.toHaveBeenCalled();
+    });
+
+    it('gives up after about two minutes of an unrecognised status and reads as failed', () => {
+      vi.useFakeTimers();
+      mocks.books.exportStatus.mockReturnValue(of<ExportJob>({ exportId: 'exp-1', status: 'UNKNOWN' }));
+      render();
+      click('[data-testid="export-open"]');
+      click('[data-testid="export-start"]');
+
+      vi.advanceTimersByTime(110_000);
+      fixture.detectChanges();
+      expect(component.exportPhase()).toBe('waiting');
+      vi.advanceTimersByTime(10_000);
+      fixture.detectChanges();
+      expect(mocks.books.exportStatus).toHaveBeenCalledTimes(EXPORT_POLL_MAX_ATTEMPTS);
+      expect(text('[data-testid="export-failed"]')).toBe('ACCOUNTING.BOOKS.EXPORT.FAILED');
+      vi.advanceTimersByTime(600_000);
+      expect(mocks.books.exportStatus).toHaveBeenCalledTimes(EXPORT_POLL_MAX_ATTEMPTS);
+      expect(mocks.books.downloadExport).not.toHaveBeenCalled();
+    });
+
+    it('announces a finished export once: in the page status region, not again inside the dialog', () => {
+      render();
+      click('[data-testid="export-open"]');
+      mocks.books.requestExport.mockReturnValue(of<ExportJob>({ exportId: 'exp-1', status: 'COMPLETED' }));
+      click('[data-testid="export-start"]');
+
+      expect(text('[data-testid="announcement"]')).toBe('ACCOUNTING.BOOKS.EXPORT.DONE');
+      expect(q('[data-testid="export-done"]')).not.toBeNull();
+      expect(q('[data-testid="export-done"]')?.closest('[aria-live], [role="status"], [role="alert"]')).toBeNull();
     });
 
     it('shows a translated failure, never the server text, when the export fails', () => {

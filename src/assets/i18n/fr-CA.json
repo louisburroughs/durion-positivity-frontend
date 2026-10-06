@@ -5681,7 +5681,8 @@
             "REVERSED": "Cette écriture est déjà contrepassée.",
             "NOT_RECORDED": "Seule une écriture enregistrée peut être contrepassée.",
             "UNKNOWN": "Le statut de cette écriture est inconnu; elle ne peut donc pas être contrepassée ici.",
-            "LOADING": "Attendez que l’écriture soit chargée."
+            "LOADING": "Attendez que l’écriture soit chargée.",
+            "REFRESH_FAILED": "Cette écriture n’a pas pu être actualisée; son statut n’est peut-être plus à jour. Réessayez avant de la contrepasser."
           },
           "ERROR": {
             "ALREADY_REVERSED": "Quelqu’un a déjà contrepassé cette écriture. Elle affiche maintenant son état actuel.",

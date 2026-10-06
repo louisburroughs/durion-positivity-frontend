@@ -179,6 +179,17 @@ describe('JournalEntryDetailPageComponent', () => {
       expect(document.activeElement?.id).toBe('entry-title');
     });
 
+    it('says the entry could not be refreshed, not "loading", after a failed re-read that kept it on screen', () => {
+      render();
+      mocks.books.getJournalEntry.mockReturnValue(throwError(() => http(500)));
+      component.reload();
+      fixture.detectChanges();
+
+      expect(text('[data-testid="entry-number"]')).toBe('JE-202610-131');
+      expect(q('[data-testid="reverse-open"]')?.getAttribute('aria-disabled')).toBe('true');
+      expect(text('[data-testid="reverse-blocked"]')).toBe('ACCOUNTING.BOOKS.ENTRY.REVERSE.BLOCKED.REFRESH_FAILED');
+    });
+
     it('refuses an empty reason without calling the server', () => {
       render();
       click('[data-testid="reverse-open"]');

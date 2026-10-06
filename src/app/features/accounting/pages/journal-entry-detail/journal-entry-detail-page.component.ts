@@ -19,7 +19,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { Subscription, catchError, map, throwError } from 'rxjs';
 import { canAccess } from '../../../../core/security/route-access';
-import { ACCOUNTING_SECTION } from '../../../../core/security/route-permissions';
+import { ACCOUNTING_PAGE, ACCOUNTING_SECTION } from '../../../../core/security/route-permissions';
 import { AuthService } from '../../../../core/services/auth.service';
 import { ModalDialogDirective } from '../../../../shared/modal-dialog.directive';
 import { MoneyPipe } from '../../../../shared/money.pipe';
@@ -110,7 +110,7 @@ export class JournalEntryDetailPageComponent {
   readonly canReverse = computed(() => canAccess(this.auth, { permissions: ACCOUNTING_SECTION.journalEntryReverse }));
   readonly canOverride = computed(() => canAccess(this.auth, { permissions: ACCOUNTING_SECTION.periodOverride }));
   readonly codes = {
-    entries: 'accounting:je:view',
+    entries: ACCOUNTING_PAGE.journalEntry[0],
     reverse: ACCOUNTING_SECTION.journalEntryReverse[0],
     override: ACCOUNTING_SECTION.periodOverride[0],
   } as const;
@@ -118,7 +118,10 @@ export class JournalEntryDetailPageComponent {
   /** Why Reverse is blocked for this entry, or null when it may be reversed (story PROPOSED 8). */
   readonly reverseBlockedKey = computed<string | null>(() => {
     const entry = this.entryData();
-    if (!entry || this.entry.status() !== 'OK') return 'ACCOUNTING.BOOKS.ENTRY.REVERSE.BLOCKED.LOADING';
+    if (!entry) return 'ACCOUNTING.BOOKS.ENTRY.REVERSE.BLOCKED.LOADING';
+    // A failed re-read keeps the entry on screen, but its status may be out of date (ADR-0064 §2, §4).
+    if (this.entry.status() === 'FAILED') return 'ACCOUNTING.BOOKS.ENTRY.REVERSE.BLOCKED.REFRESH_FAILED';
+    if (this.entry.status() !== 'OK') return 'ACCOUNTING.BOOKS.ENTRY.REVERSE.BLOCKED.LOADING';
     switch (entry.status) {
       case 'POSTED':
         return null;

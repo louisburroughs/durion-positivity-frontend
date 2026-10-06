@@ -225,6 +225,12 @@ describe('AccountingHomePageComponent', () => {
       expect(link?.textContent?.trim()).toBe('ACCOUNTING.HOME.ACTION.WHO_OWES_WHAT');
     });
 
+    it('does not offer "Who owes what" to a session that cannot read that tab (accounting:je:view alone)', () => {
+      mocks.held.set(['accounting:je:view']);
+      render();
+      expect(q('[data-testid="who-owes-what"]')).toBeNull();
+    });
+
     it('renders a served total that is not the sum of its buckets as served (no client addition)', () => {
       // A total the buckets do not add up to: the lane must show the server's figure.
       mocks.home.receivables.mockReturnValue(of<ReceivablesLane>({ ...receivablesLane, totalOutstanding: 99.99 }));

@@ -282,6 +282,22 @@ describe('BooksService', () => {
     expect(result.lines).toEqual([]);
   });
 
+  it('maps a total or bucket the response omits to null, never to a served-looking 0 (ADR-0064 §4)', async () => {
+    reporting.generateBalanceSheet.mockReturnValue(of({ ...balanceSheet, totalEquity: undefined } as unknown as BalanceSheetReport));
+    const [row] = receivables.rows;
+    reporting.generateAgedReceivables.mockReturnValue(
+      of({ ...receivables, rows: [{ ...row, days90Plus: undefined }] } as unknown as AgedReceivablesReport),
+    );
+
+    const sheet = await firstValueFrom(service.balanceSheet('2026-10-06'));
+    const aged = await firstValueFrom(service.agedReceivables('2026-10-06'));
+
+    expect(sheet.totalEquity).toBeNull();
+    expect(sheet.totalAssets).toBe(43641);
+    expect(aged.rows[0].days90Plus).toBeNull();
+    expect(aged.rows[0].days1To30).toBe(200);
+  });
+
   it('incomeStatement(start, end) passes both dates and the served totals', async () => {
     reporting.generateIncomeStatement.mockReturnValue(of(incomeStatement));
 

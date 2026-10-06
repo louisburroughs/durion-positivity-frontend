@@ -27,9 +27,10 @@ export interface BalanceSheetSummary {
   readonly asOfDate: string;
   readonly balanced: boolean;
   readonly lines: readonly StatementLine[];
-  readonly totalAssets: number;
-  readonly totalLiabilities: number;
-  readonly totalEquity: number;
+  /** Null when the response omits it: rendered as an em dash, never as a served zero (ADR-0064 §4). */
+  readonly totalAssets: number | null;
+  readonly totalLiabilities: number | null;
+  readonly totalEquity: number | null;
 }
 
 /** `generateIncomeStatement` as served. */
@@ -37,9 +38,10 @@ export interface IncomeSummary {
   readonly startDate: string;
   readonly endDate: string;
   readonly lines: readonly StatementLine[];
-  readonly totalRevenue: number;
-  readonly totalExpenses: number;
-  readonly netIncome: number;
+  /** Null when the response omits it (em dash, never $0.00). */
+  readonly totalRevenue: number | null;
+  readonly totalExpenses: number | null;
+  readonly netIncome: number | null;
 }
 
 export type AccountType = 'ASSET' | 'LIABILITY' | 'EQUITY' | 'REVENUE' | 'EXPENSE';
@@ -52,8 +54,8 @@ export interface DrilldownAccount {
   readonly accountCode: string | null;
   readonly accountName: string | null;
   readonly accountType: AccountType | null;
-  /** The account's served contribution to the line. */
-  readonly balance: number;
+  /** The account's served contribution to the line; null when omitted. */
+  readonly balance: number | null;
 }
 
 /** One posted line of an account's general ledger. */
@@ -96,12 +98,13 @@ export interface AccountLedger {
 
 /** The S35 aging buckets, served per row and as totals. */
 export interface AgingBuckets {
-  readonly notYetDue: number;
-  readonly days1To30: number;
-  readonly days31To60: number;
-  readonly days61To90: number;
-  readonly days90Plus: number;
-  readonly totalOutstanding: number;
+  /** Each null when the response omits it: an em dash, never a served zero (ADR-0064 §4). */
+  readonly notYetDue: number | null;
+  readonly days1To30: number | null;
+  readonly days31To60: number | null;
+  readonly days61To90: number | null;
+  readonly days90Plus: number | null;
+  readonly totalOutstanding: number | null;
 }
 
 export interface AgedCustomerRow extends AgingBuckets {

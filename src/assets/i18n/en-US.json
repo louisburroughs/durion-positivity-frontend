@@ -5681,7 +5681,8 @@
             "REVERSED": "This entry is already reversed.",
             "NOT_RECORDED": "Only a recorded entry can be reversed.",
             "UNKNOWN": "This entry's status is unknown, so it can't be reversed here.",
-            "LOADING": "Wait for the entry to load."
+            "LOADING": "Wait for the entry to load.",
+            "REFRESH_FAILED": "This entry couldn't be refreshed, so its status may be out of date. Retry before reversing it."
           },
           "ERROR": {
             "ALREADY_REVERSED": "Someone has already reversed this entry. It now shows its current state.",

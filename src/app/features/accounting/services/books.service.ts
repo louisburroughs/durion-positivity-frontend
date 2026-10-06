@@ -222,7 +222,6 @@ export function toBooksFailure(error: unknown): BooksFailure {
 
 const text = (value: string | null | undefined): string | null => value?.trim() || null;
 const amount = (value: number | null | undefined): number | null => (typeof value === 'number' ? value : null);
-const served = (value: number | null | undefined): number => (typeof value === 'number' ? value : 0);
 
 function accountType(value: string | null | undefined): AccountType | null {
   return value && ACCOUNT_TYPES.has(value) ? (value as AccountType) : null;
@@ -241,9 +240,9 @@ function toBalanceSheet(asOfDate: string, report: BalanceSheetReport): BalanceSh
     // Only an explicit `false` says the books don't balance; a missing flag claims nothing.
     balanced: report?.balanced !== false,
     lines: toLines(report?.lineItems),
-    totalAssets: served(report?.totalAssets),
-    totalLiabilities: served(report?.totalLiabilities),
-    totalEquity: served(report?.totalEquity),
+    totalAssets: amount(report?.totalAssets),
+    totalLiabilities: amount(report?.totalLiabilities),
+    totalEquity: amount(report?.totalEquity),
   };
 }
 
@@ -252,9 +251,9 @@ function toIncome(startDate: string, endDate: string, report: IncomeStatementRep
     startDate: report?.startDate ?? startDate,
     endDate: report?.endDate ?? endDate,
     lines: toLines(report?.lineItems),
-    totalRevenue: served(report?.totalRevenue),
-    totalExpenses: served(report?.totalExpenses),
-    netIncome: served(report?.netIncome),
+    totalRevenue: amount(report?.totalRevenue),
+    totalExpenses: amount(report?.totalExpenses),
+    netIncome: amount(report?.netIncome),
   };
 }
 
@@ -264,7 +263,7 @@ function toDrilldownAccount(row: AccountDrilldownResponse): DrilldownAccount {
     accountCode: text(row.accountCode),
     accountName: text(row.accountName),
     accountType: accountType(row.accountType),
-    balance: served(row.balance),
+    balance: amount(row.balance),
   };
 }
 
@@ -301,12 +300,12 @@ function toLedgerSection(section: GeneralLedgerAccountSection): LedgerSection {
 
 function toBuckets(row: Partial<AgingSummary> | null | undefined): AgingBuckets {
   return {
-    notYetDue: served(row?.notYetDue),
-    days1To30: served(row?.days1To30),
-    days31To60: served(row?.days31To60),
-    days61To90: served(row?.days61To90),
-    days90Plus: served(row?.days90Plus),
-    totalOutstanding: served(row?.totalOutstanding),
+    notYetDue: amount(row?.notYetDue),
+    days1To30: amount(row?.days1To30),
+    days31To60: amount(row?.days31To60),
+    days61To90: amount(row?.days61To90),
+    days90Plus: amount(row?.days90Plus),
+    totalOutstanding: amount(row?.totalOutstanding),
   };
 }
 

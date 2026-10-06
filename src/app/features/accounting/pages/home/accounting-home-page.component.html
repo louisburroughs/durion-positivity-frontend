@@ -155,7 +155,7 @@
               </div>
             }
           }
-          @if (canOpenBooks()) {
+          @if (canOpenWhoOwesWhat()) {
             <a class="btn btn--outline lane__action" routerLink="/app/accounting/books" [queryParams]="{ tab: 'owed' }" data-testid="who-owes-what">
               {{ 'ACCOUNTING.HOME.ACTION.WHO_OWES_WHAT' | translate }}
             </a>

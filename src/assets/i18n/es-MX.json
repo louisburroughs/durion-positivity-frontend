@@ -5681,7 +5681,8 @@
             "REVERSED": "Este asiento ya está revertido.",
             "NOT_RECORDED": "Solo se puede revertir un asiento registrado.",
             "UNKNOWN": "El estado de este asiento es desconocido, así que no se puede revertir aquí.",
-            "LOADING": "Espere a que se cargue el asiento."
+            "LOADING": "Espere a que se cargue el asiento.",
+            "REFRESH_FAILED": "Este asiento no se pudo actualizar, así que su estado puede estar desactualizado. Vuelva a intentarlo antes de revertirlo."
           },
           "ERROR": {
             "ALREADY_REVERSED": "Alguien ya revirtió este asiento. Ahora muestra su estado actual.",
