@@ -201,6 +201,9 @@ export class SupplierProfileDetailPageComponent {
         this.vendorProfileId.set(profileId);
         if (profileId) {
           this.loadProfile(profileId);
+        } else {
+          // No profile to load, so no load will settle and restore focus.
+          this.restoreFocusAfterLoad = false;
         }
         if (this.restoreFocusAfterLoad) {
           afterNextRender(() => this.focusTarget('[data-testid="profile-loading"]'), { injector: this.injector });
@@ -390,6 +393,11 @@ export class SupplierProfileDetailPageComponent {
         },
         error: (err: unknown) => this.handleMutationError(err, 'POSITIVITY.PROFILES.ERROR.DELETE'),
       });
+  }
+
+  /** The signed-in identity changed under the open form: its field feedback is stale. */
+  onVendorIdentityChanged(): void {
+    this.clearFieldFeedback();
   }
 
   private restoreFocusIfPending(): void {

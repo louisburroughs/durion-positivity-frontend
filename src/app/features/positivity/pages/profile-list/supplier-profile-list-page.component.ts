@@ -89,6 +89,12 @@ export class SupplierProfileListPageComponent {
     return this.fieldDetails()[field] ?? null;
   }
 
+  /** Drop field feedback — e.g. when it came from a previous identity's submission. */
+  clearFieldFeedback(): void {
+    this.fieldErrors.set({});
+    this.fieldDetails.set({});
+  }
+
   load(): void {
     this.state.set('loading');
     this.errorKey.set(null);

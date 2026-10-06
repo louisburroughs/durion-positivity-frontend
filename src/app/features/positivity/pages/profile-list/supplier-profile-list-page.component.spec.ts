@@ -329,4 +329,31 @@ describe('SupplierProfileListPageComponent', () => {
     component.create();
     expect(service.createProfile).toHaveBeenCalled();
   });
+
+  it('an identity change clears field feedback left by the previous identity’s submission', async () => {
+    const auth = new AuthStub();
+    await setup(undefined, auth);
+    service.createProfile.mockReturnValue(
+      throwError(
+        () =>
+          new HttpErrorResponse({
+            status: 422,
+            statusText: 'x',
+            error: { code: 'SUPPLIER_VENDOR_NOT_FOUND', message: 'nope' },
+          }),
+      ),
+    );
+    component.openCreate();
+    fixture.detectChanges();
+    component.createForm.patchValue({ vendorId: ACME.vendorId, supplierRef: 'new', displayName: 'New' });
+    component.create();
+    fixture.detectChanges();
+    expect(component.fieldError('vendorId')).toBe('POSITIVITY.ERROR.FIELD.VENDOR_NOT_FOUND');
+
+    auth.tenant.set('tenant-2');
+    fixture.detectChanges();
+
+    expect(component.fieldError('vendorId')).toBeNull();
+    expect(component.createForm.controls.vendorId.value).toBe('');
+  });
 });

@@ -62,6 +62,7 @@
         [control]="createForm.controls.vendorId"
         [errorKey]="fieldError('vendorId')"
         [errorDetail]="fieldDetail('vendorId')"
+        (identityChanged)="clearFieldFeedback()"
       />
 
       <div class="pos-field">

@@ -9,6 +9,7 @@ import {
   effect,
   inject,
   input,
+  output,
   signal,
   viewChild,
 } from '@angular/core';
@@ -16,7 +17,7 @@ import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
 import { Observable, of } from 'rxjs';
-import { catchError, map, startWith, switchMap } from 'rxjs/operators';
+import { catchError, map, startWith, switchMap, tap } from 'rxjs/operators';
 import { AuthService } from '../../../../core/services/auth.service';
 import { SupplierVendorOption } from '../../models/supplier-profile.models';
 import {
@@ -92,6 +93,7 @@ export class SupplierVendorPickerComponent {
   private readonly auth = inject(AuthService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly injector = inject(Injector);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   /** The form's `vendorId` control. Must carry `Validators.required`. */
   readonly control = input.required<FormControl<string>>();
@@ -105,6 +107,11 @@ export class SupplierVendorPickerComponent {
   readonly errorKey = input<string | null>(null);
   /** Backend detail text for that error — server data, rendered beneath the label only. */
   readonly errorDetail = input<string | null>(null);
+  /**
+   * The signed-in identity (tenant or subject) changed. Feedback the host holds
+   * from the previous identity's submission is stale; the host clears it.
+   */
+  readonly identityChanged = output<void>();
 
   private readonly retryButton = viewChild<ElementRef<HTMLButtonElement>>('retryButton');
   private readonly select = viewChild<ElementRef<HTMLSelectElement>>('vendorSelect');
@@ -205,8 +212,15 @@ export class SupplierVendorPickerComponent {
       },
     );
 
+    let previous: LoadKey | null = null;
     toObservable(key)
       .pipe(
+        tap(next => {
+          if (previous) {
+            this.reconcile(previous, next);
+          }
+          previous = next;
+        }),
         switchMap(current => this.load(current).pipe(startWith(LOADING))),
         takeUntilDestroyed(this.destroyRef),
       )
@@ -238,6 +252,27 @@ export class SupplierVendorPickerComponent {
     if (this.currentInactive()) ids.push(this.messageId('inactive'));
     if (this.truncated()) ids.push(this.messageId('truncated'));
     return ids.length > 0 ? ids.join(' ') : null;
+  }
+
+  /**
+   * Every key-driven reload (identity, permission, current vendor, retry)
+   * re-derives the control from what this key may legitimately hold (ADR-0063):
+   * create clears it, edit puts back the profile's own vendor. A choice made
+   * under another identity or permission never survives into a submit.
+   *
+   * If focus is inside the picker, the reload is about to remove the focused
+   * control; focus is parked on the loading message and then moved to the
+   * outcome (ADR-0029 §8.7).
+   */
+  private reconcile(previous: LoadKey, next: LoadKey): void {
+    const active = document.activeElement;
+    if (active && active !== document.body && this.host.nativeElement.contains(active)) {
+      this.focusAfterLoad = true;
+    }
+    this.control().setValue(this.currentVendor()?.vendorId ?? '');
+    if (previous.identity !== next.identity) {
+      this.identityChanged.emit();
+    }
   }
 
   retry(): void {

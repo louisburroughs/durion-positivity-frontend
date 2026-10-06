@@ -27,6 +27,7 @@ import { SupplierVendorRoster } from '../../models/supplier-profile.models';
       [control]="control"
       [currentVendor]="current()"
       [mode]="mode()"
+      (identityChanged)="identityChanges = identityChanges + 1"
       [errorKey]="errorKey()"
       [errorDetail]="errorDetail()"
     />
@@ -36,6 +37,7 @@ class HostComponent {
   readonly control = new FormControl('', { nonNullable: true, validators: [Validators.required] });
   readonly current = signal<SupplierCurrentVendor | null>(null);
   readonly mode = signal<'create' | 'edit'>('create');
+  identityChanges = 0;
   readonly errorKey = signal<string | null>(null);
   readonly errorDetail = signal<string | null>(null);
 }
@@ -355,5 +357,112 @@ describe('SupplierVendorPickerComponent', () => {
     setup({ auth: noAccess, mode: 'edit' });
 
     expect(query('vendor-forbidden')?.textContent).toContain('POSITIVITY.PROFILES.VENDOR.FORBIDDEN_CHOOSE');
+  });
+
+  // ── Key-driven reloads reconcile the control and focus (ADR-0063, ADR-0029 §8.7) ──
+
+  const choose = (vendorId: string): void => {
+    select().value = vendorId;
+    select().dispatchEvent(new Event('change'));
+  };
+  const switchIdentity = (): void => {
+    auth.claims.set({ sub: 'clerk.b' });
+    auth.tenant.set('tenant-2');
+    fixture.detectChanges();
+  };
+  const revokeVendorRead = (): void => {
+    auth.permissions.set(new Set(['supplier:profile:read', 'supplier:profile:write']));
+    fixture.detectChanges();
+  };
+
+  it('create: an identity change clears the previous identity’s vendor and reports it', () => {
+    setup();
+    choose(BOLT.vendorId);
+
+    switchIdentity();
+
+    expect(host.control.value).toBe('');
+    expect(select().value).toBe('');
+    expect(host.identityChanges).toBe(1);
+  });
+
+  it('create: revoking vendor read after a selection clears it', () => {
+    setup();
+    choose(BOLT.vendorId);
+
+    revokeVendorRead();
+
+    expect(query('vendor-forbidden')).not.toBeNull();
+    expect(host.control.value).toBe('');
+    expect(host.identityChanges).toBe(0);
+  });
+
+  it('edit: an identity change resets the selection to the profile’s current vendor', () => {
+    setup({ current: asCurrent(ACME) });
+    choose(BOLT.vendorId);
+
+    switchIdentity();
+
+    expect(host.control.value).toBe(ACME.vendorId);
+    expect(select().value).toBe(ACME.vendorId);
+    expect(host.identityChanges).toBe(1);
+  });
+
+  it('edit: revoking vendor read resets to the current vendor, matching the "kept" message', () => {
+    setup({ current: asCurrent(ACME) });
+    choose(BOLT.vendorId);
+
+    revokeVendorRead();
+
+    expect(query('vendor-forbidden')?.textContent).toContain('POSITIVITY.PROFILES.VENDOR.FORBIDDEN_EDIT');
+    expect(host.control.value).toBe(ACME.vendorId);
+  });
+
+  it('a permission change that removes the focused select moves focus to the outcome, not <body>', async () => {
+    setup();
+    document.body.appendChild(el());
+    select().focus();
+
+    revokeVendorRead();
+    await fixture.whenStable();
+
+    expect(document.activeElement).toBe(query('vendor-forbidden'));
+    el().remove();
+  });
+
+  it('an identity change with the select focused parks focus on loading, then returns it to the select', async () => {
+    const pending = new Subject<SupplierVendorRoster>();
+    const stub = vendorServiceStub();
+    setup({ service: stub });
+    stub.listActiveVendors.mockReturnValueOnce(pending.asObservable());
+    document.body.appendChild(el());
+    select().focus();
+
+    switchIdentity();
+    await fixture.whenStable();
+
+    expect(document.activeElement).toBe(query('vendor-loading'));
+
+    pending.next(roster(BOLT));
+    pending.complete();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(document.activeElement).toBe(select());
+    el().remove();
+  });
+
+  it('a reload with focus elsewhere leaves focus alone', async () => {
+    setup();
+    const outside = document.createElement('button');
+    document.body.append(el(), outside);
+    outside.focus();
+
+    switchIdentity();
+    await fixture.whenStable();
+
+    expect(document.activeElement).toBe(outside);
+    el().remove();
+    outside.remove();
   });
 });
