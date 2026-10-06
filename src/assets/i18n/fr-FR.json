@@ -9382,7 +9382,11 @@
         "UNKNOWN_PROTOCOL_FAMILY": "Le service ne reconnaît pas cette clé de famille de protocole.",
         "PROTOCOL_VERSION": "Cette clé de version a été refusée. Elle doit correspondre exactement à un adaptateur enregistré et compter au plus 64 caractères.",
         "TIMEOUT_INVALID": "Saisissez un délai supérieur à zéro, ou laissez le champ vide pour utiliser la valeur par défaut du déploiement.",
-        "MAX_RETRIES_INVALID": "Saisissez zéro nouvelle tentative ou plus, ou laissez le champ vide pour utiliser la valeur par défaut du déploiement."
+        "MAX_RETRIES_INVALID": "Saisissez zéro nouvelle tentative ou plus, ou laissez le champ vide pour utiliser la valeur par défaut du déploiement.",
+        "VENDOR_REQUIRED": "Choisissez le fournisseur auquel ce profil appartient.",
+        "VENDOR_NOT_FOUND": "Ce fournisseur n’existe plus. Choisissez-en un autre.",
+        "VENDOR_INACTIVE": "Ce fournisseur est inactif. Choisissez un fournisseur actif.",
+        "VENDOR_INVALID": "Le service a refusé ce fournisseur. Choisissez un fournisseur dans la liste."
       },
       "CONFLICT_YAML": "Ce profil est géré par la configuration de déploiement (YAML) ; le service a donc refusé la modification. Mettez-le à jour au moyen de votre pipeline de configuration."
     },
@@ -9467,7 +9471,25 @@
       "BACKOFF": {
         "FIXED": "Fixe",
         "EXPONENTIAL": "Exponentielle"
-      }
+      },
+      "VENDOR": {
+        "LABEL": "Fournisseur",
+        "PLACEHOLDER": "Choisissez un fournisseur",
+        "OPTION": "{{number}} — {{name}}",
+        "OPTION_INACTIVE": "{{number}} — {{name}} (inactif)",
+        "CURRENT_INACTIVE": "Le fournisseur de ce profil est inactif. Vous pouvez le conserver, mais vous ne pouvez passer qu’à un fournisseur actif.",
+        "TRUNCATED": "Seuls les {{count}} premiers fournisseurs actifs sont affichés.",
+        "LOADING": "Chargement des fournisseurs…",
+        "FORBIDDEN_CREATE": "Vous n’avez pas l’autorisation de consulter les fournisseurs; vous ne pouvez donc pas en choisir un pour un nouveau profil. Demandez l’accès aux fournisseurs à un administrateur.",
+        "FORBIDDEN_EDIT": "Vous n’avez pas l’autorisation de consulter les fournisseurs; le fournisseur ne peut donc pas être modifié ici. Le profil conserve son fournisseur actuel.",
+        "LOAD_ERROR": "La liste des fournisseurs n’a pas pu être chargée.",
+        "LOAD_ERROR_EDIT": "La liste des fournisseurs n’a pas pu être chargée. Le profil conserve son fournisseur actuel, sauf si vous rechargez la liste et en choisissez un autre.",
+        "EMPTY": "Aucun fournisseur actif. Un fournisseur doit être ajouté avant de pouvoir créer un profil.",
+        "NOT_REPORTED": "Non indiqué",
+        "EMPTY_EDIT": "Aucun fournisseur actif à choisir.",
+        "FORBIDDEN_CHOOSE": "Vous n’avez pas l’autorisation de consulter les fournisseurs; vous ne pouvez donc pas en choisir un. Demandez l’accès aux fournisseurs à un administrateur."
+      },
+      "WRITE_FORBIDDEN": "Vous pouvez consulter les profils fournisseurs, mais pas les modifier. Demandez à un administrateur l’accès en écriture aux profils fournisseurs."
     },
     "AUTH": {
       "TITLE": "Configurations d’authentification",

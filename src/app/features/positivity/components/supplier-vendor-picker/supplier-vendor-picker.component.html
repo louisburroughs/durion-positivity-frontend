@@ -1,0 +1,105 @@
+<div class="pos-field vendor-picker">
+  @if (state() === 'ready' && !empty()) {
+    <label class="pos-field__label" [for]="inputId()">
+      {{ 'POSITIVITY.PROFILES.VENDOR.LABEL' | translate }}
+    </label>
+    <select
+      #vendorSelect
+      class="pos-field__input"
+      data-testid="vendor-select"
+      required
+      [id]="inputId()"
+      [formControl]="control()"
+      [attr.aria-invalid]="errorKey() || showRequired() ? 'true' : null"
+      [attr.aria-describedby]="describedBy()"
+    >
+      <option value="">{{ 'POSITIVITY.PROFILES.VENDOR.PLACEHOLDER' | translate }}</option>
+      @for (vendor of options(); track vendor.vendorId) {
+        <option [value]="vendor.vendorId">
+          @if (vendor.active || currentStatus() === 'unknown') {
+            {{ 'POSITIVITY.PROFILES.VENDOR.OPTION' | translate: { number: vendor.vendorNumber, name: vendor.displayName } }}
+          } @else {
+            {{
+              'POSITIVITY.PROFILES.VENDOR.OPTION_INACTIVE'
+                | translate: { number: vendor.vendorNumber, name: vendor.displayName }
+            }}
+          }
+        </option>
+      }
+    </select>
+    @if (currentInactive()) {
+      <p class="pos-field__hint vendor-picker__inactive" data-testid="vendor-inactive" [id]="messageId('inactive')">
+        {{ 'POSITIVITY.PROFILES.VENDOR.CURRENT_INACTIVE' | translate }}
+      </p>
+    }
+    @if (truncated()) {
+      <p class="pos-field__hint" data-testid="vendor-truncated" [id]="messageId('truncated')">
+        {{ 'POSITIVITY.PROFILES.VENDOR.TRUNCATED' | translate: { count: maxListed } }}
+      </p>
+    }
+  } @else {
+    <span class="pos-field__label">{{ 'POSITIVITY.PROFILES.VENDOR.LABEL' | translate }}</span>
+    @if (currentVendor(); as current) {
+      <p class="vendor-picker__current" data-testid="vendor-current">
+        {{ 'POSITIVITY.PROFILES.VENDOR.OPTION' | translate: { number: current.vendorNumber, name: current.displayName } }}
+      </p>
+    }
+  }
+
+  <!-- One persistent polite live region: loading, permission, load-error and
+       empty messages are announced as the state changes, including on first load. -->
+  <div class="vendor-picker__status" aria-live="polite" data-testid="vendor-status">
+    @switch (state()) {
+      @case ('loading') {
+        <p #loadingMessage class="pos-field__hint" tabindex="-1" data-testid="vendor-loading">
+          {{ 'POSITIVITY.PROFILES.VENDOR.LOADING' | translate }}
+        </p>
+      }
+      @case ('forbidden') {
+        <p
+          #statusMessage
+          class="pos-banner pos-banner--info"
+          tabindex="-1"
+          data-testid="vendor-forbidden"
+          [id]="messageId('status')"
+        >
+          {{ forbiddenKey() | translate }}
+        </p>
+      }
+      @case ('error') {
+        <div class="pos-banner pos-banner--error vendor-picker__error" data-testid="vendor-load-error">
+          {{ loadErrorKey() | translate }}
+          <button #retryButton class="pos-btn pos-btn--secondary" type="button" data-testid="vendor-retry" (click)="retry()">
+            {{ 'POSITIVITY.COMMON.RETRY' | translate }}
+          </button>
+        </div>
+      }
+      @default {
+        @if (empty()) {
+          <p
+            #statusMessage
+            class="pos-banner pos-banner--warning"
+            tabindex="-1"
+            data-testid="vendor-empty"
+            [id]="messageId('status')"
+          >
+            {{ emptyKey() | translate }}
+          </p>
+        }
+      }
+    }
+  </div>
+
+  @if (errorKey(); as key) {
+    <p class="pos-field__error" role="alert" data-testid="vendor-error" [id]="messageId('error')">
+      {{ key | translate }}
+      @if (errorDetail(); as detail) {
+        <span class="pos-field__detail">{{ detail }}</span>
+      }
+    </p>
+  } @else if (showRequired()) {
+    <p class="pos-field__error" role="alert" data-testid="vendor-required" [id]="messageId('error')">
+      {{ 'POSITIVITY.ERROR.FIELD.VENDOR_REQUIRED' | translate }}
+    </p>
+  }
+</div>

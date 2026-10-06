@@ -1,15 +1,32 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  ElementRef,
+  Injector,
+  afterNextRender,
+  computed,
+  effect,
+  inject,
+  signal,
+  untracked,
+} from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
+import { POSITIVITY_PAGE } from '../../../../core/security/route-permissions';
+import { AuthService } from '../../../../core/services/auth.service';
 import { SupplierStatusChipComponent } from '../../components/supplier-status-chip/supplier-status-chip.component';
+import { SupplierVendorPickerComponent } from '../../components/supplier-vendor-picker/supplier-vendor-picker.component';
 import { SupplierProfileService } from '../../services/supplier-profile.service';
 import {
   VendorProfileRequest,
   VendorProfileSummary,
 } from '../../models/supplier-profile.models';
 import { mapSupplierError } from '../../utils/supplier-error.util';
+import { supplierIdentityKey } from '../../utils/supplier-identity.util';
 
 type PageState = 'idle' | 'loading' | 'ready' | 'empty' | 'error' | 'forbidden';
 
@@ -21,6 +38,10 @@ type PageState = 'idle' | 'loading' | 'ready' | 'empty' | 'error' | 'forbidden';
  * profile happens here; auth configs, accounts, bindings, health, and PRICAT are
  * managed on the detail screen.
  *
+ * Every profile belongs to one pos-supplier vendor (backend S23, #484): the
+ * create form requires one, chosen from the tenant's active vendors, and the
+ * list shows each profile's vendor number and name.
+ *
  * YAML-managed profiles are listed and readable but not editable — the admin API
  * rejects writes to them by design, so the UI states the reason rather than
  * offering a control that will fail (ADR-0050 §6).
@@ -28,7 +49,13 @@ type PageState = 'idle' | 'loading' | 'ready' | 'empty' | 'error' | 'forbidden';
 @Component({
   selector: 'app-supplier-profile-list-page',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, TranslatePipe, SupplierStatusChipComponent],
+  imports: [
+    ReactiveFormsModule,
+    RouterLink,
+    TranslatePipe,
+    SupplierStatusChipComponent,
+    SupplierVendorPickerComponent,
+  ],
   templateUrl: './supplier-profile-list-page.component.html',
   styleUrls: ['../../positivity-shared.css', './supplier-profile-list-page.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -36,6 +63,24 @@ type PageState = 'idle' | 'loading' | 'ready' | 'empty' | 'error' | 'forbidden';
 export class SupplierProfileListPageComponent {
   private readonly service = inject(SupplierProfileService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly auth = inject(AuthService);
+  private readonly document = inject(DOCUMENT);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly injector = inject(Injector);
+
+  /**
+   * Monotonic per-writer sequences (ADR-0063): a list or create callback
+   * applies only while its sequence is still the latest issued. An identity
+   * change moves both on, so nothing the previous identity started can land.
+   */
+  private listSeq = 0;
+  private createSeq = 0;
+
+  /** `tid|sub`, each half percent-encoded. */
+  private readonly identity = computed(() =>
+    supplierIdentityKey(this.auth.tenantId(), this.auth.currentUserClaims()?.sub),
+  );
+  private trackedIdentity = this.identity();
 
   readonly state = signal<PageState>('idle');
   readonly errorKey = signal<string | null>(null);
@@ -45,7 +90,17 @@ export class SupplierProfileListPageComponent {
   readonly createOpen = signal(false);
   readonly saving = signal(false);
 
+  /**
+   * `supplier:profile:write` (ADR-0040 §6a). The page is admitted on the read
+   * permission, which never enables a write. A token without `perm_bits` leaves
+   * permissions unknown and keeps the legacy open behaviour, as `canAccess()` does.
+   */
+  readonly canWrite = computed(
+    () => !this.auth.permissionsKnown() || this.auth.hasAnyPermission(POSITIVITY_PAGE.profileWrite),
+  );
+
   readonly createForm = new FormGroup({
+    vendorId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     supplierRef: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     displayName: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     sandbox: new FormControl(false, { nonNullable: true }),
@@ -53,6 +108,18 @@ export class SupplierProfileListPageComponent {
   });
 
   constructor() {
+    // ADR-0063 §7: a token for another tenant or person while the page stays
+    // mounted drops every read and write in flight and clears what the previous
+    // identity loaded, then reads again — whether or not the form is open.
+    effect(() => {
+      const identity = this.identity();
+      if (identity === this.trackedIdentity) return;
+      this.trackedIdentity = identity;
+      untracked(() => {
+        this.resetForIdentity();
+        this.load();
+      });
+    });
     this.load();
   }
 
@@ -65,7 +132,14 @@ export class SupplierProfileListPageComponent {
     return this.fieldDetails()[field] ?? null;
   }
 
+  /** Drop field feedback — e.g. when it came from a previous identity's submission. */
+  clearFieldFeedback(): void {
+    this.fieldErrors.set({});
+    this.fieldDetails.set({});
+  }
+
   load(): void {
+    const seq = ++this.listSeq;
     this.state.set('loading');
     this.errorKey.set(null);
 
@@ -74,10 +148,12 @@ export class SupplierProfileListPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: profiles => {
+          if (seq !== this.listSeq) return;
           this.profiles.set(profiles);
           this.state.set(profiles.length === 0 ? 'empty' : 'ready');
         },
         error: (err: unknown) => {
+          if (seq !== this.listSeq) return;
           const outcome = mapSupplierError(err, 'POSITIVITY.PROFILES.ERROR.LOAD');
           this.state.set(outcome.kind === 'forbidden' ? 'forbidden' : 'error');
           this.errorKey.set(outcome.errorKey);
@@ -85,10 +161,39 @@ export class SupplierProfileListPageComponent {
       });
   }
 
+  /** Drops every list and create callback in flight and clears all page state. */
+  private resetForIdentity(): void {
+    const active = this.document.activeElement;
+    const focusInside = !!active && active !== this.document.body && this.host.nativeElement.contains(active);
+    this.listSeq += 1;
+    this.createSeq += 1;
+    this.saving.set(false);
+    this.createOpen.set(false);
+    this.createForm.reset({ vendorId: '', supplierRef: '', displayName: '', sandbox: false, enabled: true });
+    this.clearFieldFeedback();
+    this.profiles.set([]);
+    this.errorKey.set(null);
+    this.state.set('idle');
+    if (focusInside) {
+      // The control that held focus may be gone with the form (ADR-0029 §8).
+      afterNextRender(() => this.focusTitleIfLost(), { injector: this.injector });
+    }
+  }
+
+  private focusTitleIfLost(): void {
+    const active = this.document.activeElement;
+    if (!active || active === this.document.body || !this.host.nativeElement.contains(active)) {
+      this.host.nativeElement.querySelector<HTMLElement>('#profiles-page-title')?.focus();
+    }
+  }
+
   openCreate(): void {
+    if (!this.canWrite()) {
+      return;
+    }
     this.fieldErrors.set({});
     this.fieldDetails.set({});
-    this.createForm.reset({ supplierRef: '', displayName: '', sandbox: false, enabled: true });
+    this.createForm.reset({ vendorId: '', supplierRef: '', displayName: '', sandbox: false, enabled: true });
     this.createOpen.set(true);
   }
 
@@ -99,6 +204,9 @@ export class SupplierProfileListPageComponent {
   }
 
   create(): void {
+    if (!this.canWrite()) {
+      return;
+    }
     if (this.createForm.invalid) {
       this.createForm.markAllAsTouched();
       return;
@@ -106,12 +214,14 @@ export class SupplierProfileListPageComponent {
 
     const raw = this.createForm.getRawValue();
     const request: VendorProfileRequest = {
+      vendorId: raw.vendorId,
       supplierRef: raw.supplierRef.trim(),
       displayName: raw.displayName.trim(),
       sandbox: raw.sandbox,
       enabled: raw.enabled,
     };
 
+    const seq = ++this.createSeq;
     this.saving.set(true);
     this.fieldErrors.set({});
     this.fieldDetails.set({});
@@ -121,12 +231,14 @@ export class SupplierProfileListPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
+          if (seq !== this.createSeq) return;
           this.saving.set(false);
           this.createOpen.set(false);
           this.errorKey.set(null);
           this.load();
         },
         error: (err: unknown) => {
+          if (seq !== this.createSeq) return;
           this.saving.set(false);
           const outcome = mapSupplierError(err, 'POSITIVITY.PROFILES.ERROR.CREATE');
           this.state.set('error');

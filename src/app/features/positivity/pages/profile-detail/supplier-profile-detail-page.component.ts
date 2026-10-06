@@ -2,16 +2,23 @@ import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
+  ElementRef,
+  Injector,
+  afterNextRender,
   computed,
   effect,
   inject,
   signal,
+  untracked,
 } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
-import { Subscription, distinctUntilChanged, map } from 'rxjs';
+import { POSITIVITY_PAGE } from '../../../../core/security/route-permissions';
+import { AuthService } from '../../../../core/services/auth.service';
+import { distinctUntilChanged, map } from 'rxjs';
 import { SupplierAccountsPanelComponent } from '../../components/supplier-accounts-panel/supplier-accounts-panel.component';
 import { SupplierAuthPanelComponent } from '../../components/supplier-auth-panel/supplier-auth-panel.component';
 import { SupplierBindingsPanelComponent } from '../../components/supplier-bindings-panel/supplier-bindings-panel.component';
@@ -19,6 +26,10 @@ import { SupplierHealthPanelComponent } from '../../components/supplier-health-p
 import { SupplierPriceCatalogPanelComponent } from '../../components/supplier-pricecat-panel/supplier-pricecat-panel.component';
 import { SupplierStockSnapshotPanelComponent } from '../../components/supplier-stock-snapshot-panel/supplier-stock-snapshot-panel.component';
 import { SupplierStatusChipComponent } from '../../components/supplier-status-chip/supplier-status-chip.component';
+import {
+  SupplierCurrentVendor,
+  SupplierVendorPickerComponent,
+} from '../../components/supplier-vendor-picker/supplier-vendor-picker.component';
 import { SupplierProfileService } from '../../services/supplier-profile.service';
 import {
   SupplierRetryBackoff,
@@ -26,6 +37,7 @@ import {
   VendorProfileRequest,
 } from '../../models/supplier-profile.models';
 import { mapSupplierError } from '../../utils/supplier-error.util';
+import { supplierIdentityKey } from '../../utils/supplier-identity.util';
 import { SUPPLIER_RETRY_BACKOFFS } from '../../utils/supplier-capability-keys';
 
 type PageState = 'idle' | 'loading' | 'ready' | 'error' | 'forbidden';
@@ -55,6 +67,11 @@ export type ProfileTab = (typeof PROFILE_TABS)[number];
  * why the system will not let them proceed, and leaves them looking for a button
  * that is not there.
  *
+ * Every profile belongs to one pos-supplier vendor (backend S23, #484). The
+ * settings list names it, and the edit form carries a required vendor picker that
+ * pre-selects it — an inactive current vendor stays selectable, labelled as
+ * inactive, because the backend lets a profile keep it.
+ *
  * The Health tab is present but reports that connection health is not yet
  * available: there is no health or circuit-breaker endpoint in the supplier
  * contract. See the panel for the reasoning.
@@ -73,6 +90,7 @@ export type ProfileTab = (typeof PROFILE_TABS)[number];
     SupplierHealthPanelComponent,
     SupplierPriceCatalogPanelComponent,
     SupplierStockSnapshotPanelComponent,
+    SupplierVendorPickerComponent,
   ],
   templateUrl: './supplier-profile-detail-page.component.html',
   styleUrls: ['../../positivity-shared.css', './supplier-profile-detail-page.component.css'],
@@ -83,6 +101,27 @@ export class SupplierProfileDetailPageComponent {
   private readonly router = inject(Router);
   private readonly service = inject(SupplierProfileService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly auth = inject(AuthService);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly injector = inject(Injector);
+  private readonly document = inject(DOCUMENT);
+
+  /** `tid|sub`, each half percent-encoded. */
+  private readonly identity = computed(() =>
+    supplierIdentityKey(this.auth.tenantId(), this.auth.currentUserClaims()?.sub),
+  );
+  private trackedIdentity = this.identity();
+
+  /**
+   * Monotonic per-writer sequences (ADR-0063). The route id alone is not an
+   * ownership token: A → B → A with the first A request still pending would let
+   * that stale response overwrite the newer one. A callback applies only when its
+   * sequence is still the latest one issued for that writer.
+   */
+  private loadSeq = 0;
+  private saveSeq = 0;
+  /** Set when a route change removed the focused control; the next settled load restores focus. */
+  private restoreFocusAfterLoad = false;
 
   readonly state = signal<PageState>('idle');
   readonly errorKey = signal<string | null>(null);
@@ -106,7 +145,37 @@ export class SupplierProfileDetailPageComponent {
   /** YAML-sourced profiles are configuration rollouts, not operator data. */
   readonly readOnly = computed(() => this.profile()?.sourceOfTruth === 'YAML');
 
+  /**
+   * `supplier:profile:write` (ADR-0040 §6a): the route admits on the read
+   * permission, which never enables a write. A token without `perm_bits` leaves
+   * permissions unknown and keeps the legacy open behaviour, as `canAccess()` does.
+   */
+  readonly canWrite = computed(
+    () => !this.auth.permissionsKnown() || this.auth.hasAnyPermission(POSITIVITY_PAGE.profileWrite),
+  );
+
+  /** Why the write controls are disabled, if they are. */
+  readonly writeBlockedReasonId = computed(() =>
+    this.readOnly() ? 'profile-readonly-reason' : this.canWrite() ? null : 'profile-write-reason',
+  );
+
+  /** The profile's own vendor, pre-selected (and always offered) by the edit form's picker. */
+  readonly currentVendor = computed<SupplierCurrentVendor | null>(
+    () => {
+      const profile = this.profile();
+      return profile?.vendorId
+        ? {
+            vendorId: profile.vendorId,
+            vendorNumber: profile.vendorNumber,
+            displayName: profile.vendorDisplayName,
+          }
+        : null;
+    },
+    { equal: (a, b) => a?.vendorId === b?.vendorId && a?.vendorNumber === b?.vendorNumber && a?.displayName === b?.displayName },
+  );
+
   readonly editForm = new FormGroup({
+    vendorId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     supplierRef: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     displayName: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     sandbox: new FormControl(false, { nonNullable: true }),
@@ -119,20 +188,29 @@ export class SupplierProfileDetailPageComponent {
   });
 
   constructor() {
-    effect(onCleanup => {
-      const sub: Subscription = this.route.paramMap
-        .pipe(
-          map(params => params.get('vendorProfileId')),
-          distinctUntilChanged(),
-        )
-        .subscribe(profileId => {
-          this.vendorProfileId.set(profileId);
-          if (profileId) {
-            this.loadProfile(profileId);
-          }
-        });
+    // Subscribed once, outside any reactive context: inside an effect, the
+    // signals the load reads would be tracked and every change-detection pass
+    // would resubscribe and reload the profile.
+    this.route.paramMap
+      .pipe(
+        map(params => params.get('vendorProfileId')),
+        distinctUntilChanged(),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(profileId => {
+        // A different profile: whatever the page held belonged to the last one.
+        this.vendorProfileId.set(profileId);
+        this.resetAndLoad();
+      });
 
-      onCleanup(() => sub.unsubscribe());
+    // ADR-0063 §7: a token for another tenant or person while the page stays
+    // mounted drops every load and save in flight, clears what the previous
+    // identity loaded, and reads the routed profile again under the new one.
+    effect(() => {
+      const identity = this.identity();
+      if (identity === this.trackedIdentity) return;
+      this.trackedIdentity = identity;
+      untracked(() => this.resetAndLoad());
     });
   }
 
@@ -159,7 +237,7 @@ export class SupplierProfileDetailPageComponent {
     event.preventDefault();
     const next = this.tabs[nextIndex];
     this.selectTab(next);
-    const element = document.getElementById(this.tabId(next));
+    const element = this.document.getElementById(this.tabId(next));
     element?.focus();
   }
 
@@ -189,6 +267,8 @@ export class SupplierProfileDetailPageComponent {
   }
 
   loadProfile(vendorProfileId: string): void {
+    const seq = ++this.loadSeq;
+    const current = (): boolean => seq === this.loadSeq && this.vendorProfileId() === vendorProfileId;
     this.state.set('loading');
     this.errorKey.set(null);
 
@@ -197,8 +277,13 @@ export class SupplierProfileDetailPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: profile => {
+          // Superseded by a newer load, or the route moved on: not this page's profile any more.
+          if (!current()) {
+            return;
+          }
           this.profile.set(profile);
           this.editForm.reset({
+            vendorId: profile.vendorId,
             supplierRef: profile.supplierRef,
             displayName: profile.displayName,
             sandbox: profile.sandbox,
@@ -210,11 +295,16 @@ export class SupplierProfileDetailPageComponent {
             retryBackoff: profile.retryBackoff ?? '',
           });
           this.state.set('ready');
+          this.restoreFocusIfPending();
         },
         error: (err: unknown) => {
+          if (!current()) {
+            return;
+          }
           const outcome = mapSupplierError(err, 'POSITIVITY.PROFILES.ERROR.LOAD_DETAIL');
           this.state.set(outcome.kind === 'forbidden' ? 'forbidden' : 'error');
           this.errorKey.set(outcome.errorKey);
+          this.restoreFocusIfPending();
         },
       });
   }
@@ -227,6 +317,9 @@ export class SupplierProfileDetailPageComponent {
   }
 
   openEdit(): void {
+    if (!this.canWrite() || this.readOnly()) {
+      return;
+    }
     this.clearFieldFeedback();
     this.editOpen.set(true);
   }
@@ -238,13 +331,17 @@ export class SupplierProfileDetailPageComponent {
 
   saveProfile(): void {
     const profileId = this.vendorProfileId();
-    if (!profileId || this.readOnly() || this.editForm.invalid) {
+    if (!profileId || this.readOnly() || !this.canWrite()) {
+      return;
+    }
+    if (this.editForm.invalid) {
       this.editForm.markAllAsTouched();
       return;
     }
 
     const raw = this.editForm.getRawValue();
     const request: VendorProfileRequest = {
+      vendorId: raw.vendorId,
       supplierRef: raw.supplierRef.trim(),
       displayName: raw.displayName.trim(),
       sandbox: raw.sandbox,
@@ -256,6 +353,8 @@ export class SupplierProfileDetailPageComponent {
       retryBackoff: raw.retryBackoff || undefined,
     };
 
+    const seq = ++this.saveSeq;
+    const current = (): boolean => seq === this.saveSeq && this.vendorProfileId() === profileId;
     this.saving.set(true);
     this.clearFieldFeedback();
 
@@ -264,12 +363,18 @@ export class SupplierProfileDetailPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: profile => {
+          if (!current()) {
+            return;
+          }
           this.saving.set(false);
           this.profile.set(profile);
           this.editOpen.set(false);
           this.errorKey.set(null);
         },
         error: (err: unknown) => {
+          if (!current()) {
+            return;
+          }
           this.saving.set(false);
           this.handleMutationError(err, 'POSITIVITY.PROFILES.ERROR.SAVE');
         },
@@ -278,7 +383,7 @@ export class SupplierProfileDetailPageComponent {
 
   deleteProfile(): void {
     const profileId = this.vendorProfileId();
-    if (!profileId || this.readOnly()) {
+    if (!profileId || this.readOnly() || !this.canWrite()) {
       return;
     }
 
@@ -291,6 +396,61 @@ export class SupplierProfileDetailPageComponent {
         },
         error: (err: unknown) => this.handleMutationError(err, 'POSITIVITY.PROFILES.ERROR.DELETE'),
       });
+  }
+
+  /**
+   * A different profile or a different identity: everything on the page
+   * belonged to the previous one. Every load and save in flight is superseded
+   * (its response is ignored when it arrives; the HTTP request is not aborted),
+   * the form closes, the profile and feedback clear, and the routed profile is
+   * read again. If focus sat inside the page it is about to be removed; it is
+   * held on the loading target, then the heading (ADR-0029 §8).
+   */
+  private resetAndLoad(): void {
+    const active = this.document.activeElement;
+    this.restoreFocusAfterLoad =
+      this.restoreFocusAfterLoad ||
+      (!!active && active !== this.document.body && this.host.nativeElement.contains(active));
+    this.loadSeq += 1;
+    this.saveSeq += 1;
+    this.saving.set(false);
+    this.editOpen.set(false);
+    this.clearFieldFeedback();
+    this.errorKey.set(null);
+    this.state.set('idle');
+    this.profile.set(null);
+    const profileId = this.vendorProfileId();
+    if (!profileId) {
+      // No profile to load, so no load will settle and restore focus.
+      this.restoreFocusAfterLoad = false;
+      return;
+    }
+    this.loadProfile(profileId);
+    if (this.restoreFocusAfterLoad) {
+      afterNextRender(() => this.focusTarget('[data-testid="profile-loading"]'), { injector: this.injector });
+    }
+  }
+
+  private restoreFocusIfPending(): void {
+    if (!this.restoreFocusAfterLoad) {
+      return;
+    }
+    this.restoreFocusAfterLoad = false;
+    afterNextRender(
+      () => this.focusTarget('#profile-detail-title', '[data-testid="profile-error"]', '[data-testid="profile-forbidden"]'),
+      { injector: this.injector },
+    );
+  }
+
+  /** Focus the first of `selectors` present in this page. */
+  private focusTarget(...selectors: string[]): void {
+    for (const selector of selectors) {
+      const element = this.host.nativeElement.querySelector<HTMLElement>(selector);
+      if (element) {
+        element.focus();
+        return;
+      }
+    }
   }
 
   private clearFieldFeedback(): void {

@@ -2,11 +2,18 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
-import { of, throwError } from 'rxjs';
+import { Subject, of, throwError } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SupplierProfileListPageComponent } from './supplier-profile-list-page.component';
 import { SupplierProfileService } from '../../services/supplier-profile.service';
 import { VendorProfileSummary } from '../../models/supplier-profile.models';
+import {
+  ACME,
+  AuthStub,
+  VendorServiceStub,
+  vendorPickerProviders,
+  vendorServiceStub,
+} from '../../components/supplier-vendor-picker/supplier-vendor-picker.spec-helper';
 
 const adminProfile: VendorProfileSummary = {
   vendorProfileId: 'profile-1',
@@ -15,6 +22,9 @@ const adminProfile: VendorProfileSummary = {
   enabled: true,
   sandbox: false,
   sourceOfTruth: 'ADMIN',
+  vendorId: ACME.vendorId,
+  vendorNumber: 'V-000001',
+  vendorDisplayName: 'Acme Tire',
 };
 
 const yamlProfile: VendorProfileSummary = {
@@ -24,6 +34,9 @@ const yamlProfile: VendorProfileSummary = {
   enabled: false,
   sandbox: true,
   sourceOfTruth: 'YAML',
+  vendorId: 'ffc9a4c2-0000-7000-8000-00000000v003',
+  vendorNumber: '',
+  vendorDisplayName: '',
 };
 
 describe('SupplierProfileListPageComponent', () => {
@@ -33,9 +46,11 @@ describe('SupplierProfileListPageComponent', () => {
     listProfiles: ReturnType<typeof vi.fn>;
     createProfile: ReturnType<typeof vi.fn>;
   };
+  let vendors: VendorServiceStub;
 
   async function setup(
     profiles: VendorProfileSummary[] | HttpErrorResponse = [adminProfile, yamlProfile],
+    auth: AuthStub = new AuthStub(),
   ): Promise<void> {
     service = {
       listProfiles: vi
@@ -46,10 +61,15 @@ describe('SupplierProfileListPageComponent', () => {
       createProfile: vi.fn().mockReturnValue(of(adminProfile)),
     };
 
+    vendors = vendorServiceStub();
     TestBed.resetTestingModule();
     await TestBed.configureTestingModule({
       imports: [SupplierProfileListPageComponent, TranslateModule.forRoot()],
-      providers: [provideRouter([]), { provide: SupplierProfileService, useValue: service }],
+      providers: [
+        provideRouter([]),
+        { provide: SupplierProfileService, useValue: service },
+        ...vendorPickerProviders(vendors, auth),
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(SupplierProfileListPageComponent);
@@ -131,6 +151,7 @@ describe('SupplierProfileListPageComponent', () => {
     await setup();
     component.openCreate();
     component.createForm.patchValue({
+      vendorId: ACME.vendorId,
       supplierRef: ' michelin-eu ',
       displayName: ' Michelin EU ',
       sandbox: true,
@@ -139,6 +160,7 @@ describe('SupplierProfileListPageComponent', () => {
     component.create();
 
     expect(service.createProfile).toHaveBeenCalledWith({
+      vendorId: ACME.vendorId,
       supplierRef: 'michelin-eu',
       displayName: 'Michelin EU',
       sandbox: true,
@@ -170,7 +192,7 @@ describe('SupplierProfileListPageComponent', () => {
       ),
     );
     component.openCreate();
-    component.createForm.patchValue({ supplierRef: 'dup', displayName: 'Dup' });
+    component.createForm.patchValue({ vendorId: ACME.vendorId, supplierRef: 'dup', displayName: 'Dup' });
     component.create();
 
     expect(component.state()).toBe('error');
@@ -181,7 +203,7 @@ describe('SupplierProfileListPageComponent', () => {
   it('reloads the list after a successful create', async () => {
     await setup();
     component.openCreate();
-    component.createForm.patchValue({ supplierRef: 'new', displayName: 'New vendor' });
+    component.createForm.patchValue({ vendorId: ACME.vendorId, supplierRef: 'new', displayName: 'New vendor' });
     component.create();
 
     expect(service.listProfiles).toHaveBeenCalledTimes(2);
@@ -199,5 +221,183 @@ describe('SupplierProfileListPageComponent', () => {
       expect(id).toBeTruthy();
       expect(host.querySelector(`label[for="${id}"]`), `no label for #${id}`).not.toBeNull();
     }
+  });
+
+  // ── Vendor (#484) ──────────────────────────────────────────────────────────
+
+  it('blocks a create without a vendor client-side and says why (AC1)', async () => {
+    await setup();
+    component.openCreate();
+    fixture.detectChanges();
+    component.createForm.patchValue({ supplierRef: 'new', displayName: 'New vendor' });
+    component.create();
+    fixture.detectChanges();
+
+    expect(service.createProfile).not.toHaveBeenCalled();
+    const host = fixture.nativeElement as HTMLElement;
+    expect(host.querySelector('[data-testid="vendor-required"]')?.textContent).toContain(
+      'POSITIVITY.ERROR.FIELD.VENDOR_REQUIRED',
+    );
+  });
+
+  it('creates with the vendor chosen in the picker (AC1)', async () => {
+    await setup();
+    component.openCreate();
+    fixture.detectChanges();
+    const host = fixture.nativeElement as HTMLElement;
+    const select = host.querySelector('[data-testid="vendor-select"]') as HTMLSelectElement;
+    select.value = ACME.vendorId;
+    select.dispatchEvent(new Event('change'));
+    component.createForm.patchValue({ supplierRef: 'new', displayName: 'New vendor' });
+    component.create();
+
+    expect(service.createProfile).toHaveBeenCalledWith(expect.objectContaining({ vendorId: ACME.vendorId }));
+    expect(vendors.listActiveVendors).toHaveBeenCalled();
+  });
+
+  it.each([
+    ['SUPPLIER_VENDOR_NOT_FOUND', 'POSITIVITY.ERROR.FIELD.VENDOR_NOT_FOUND'],
+    ['SUPPLIER_VENDOR_INACTIVE', 'POSITIVITY.ERROR.FIELD.VENDOR_INACTIVE'],
+  ])('renders a 422 %s on the vendor picker (AC3)', async (code, key) => {
+    await setup();
+    service.createProfile.mockReturnValue(
+      throwError(() => new HttpErrorResponse({ status: 422, statusText: 'x', error: { code, message: 'nope' } })),
+    );
+    component.openCreate();
+    component.createForm.patchValue({ vendorId: ACME.vendorId, supplierRef: 'new', displayName: 'New' });
+    component.create();
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    expect(host.querySelector('[data-testid="vendor-error"]')?.textContent).toContain(key);
+    expect(host.querySelector('#profile-vendor')?.getAttribute('aria-invalid')).toBe('true');
+  });
+
+  it('shows each profile’s vendor number and name, and says when the view omits it', async () => {
+    await setup();
+    const cells = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('[data-testid="profile-vendor"]')).map(
+      cell => cell.textContent?.trim(),
+    );
+
+    expect(cells).toEqual(['POSITIVITY.PROFILES.VENDOR.OPTION', 'POSITIVITY.PROFILES.VENDOR.NOT_REPORTED']);
+  });
+
+  // ── supplier:profile:write gate (ADR-0040 §6a) ─────────────────────────────
+
+  const readOnlySession = (): AuthStub => {
+    const auth = new AuthStub();
+    auth.permissions.set(new Set(['supplier:profile:read', 'supplier:vendor:read']));
+    return auth;
+  };
+  const createButton = (): HTMLButtonElement =>
+    (fixture.nativeElement as HTMLElement).querySelector('[data-testid="profile-create"]') as HTMLButtonElement;
+
+  it('write granted: the create control is enabled and create() sends', async () => {
+    await setup();
+
+    expect(createButton().disabled).toBe(false);
+    component.openCreate();
+    component.createForm.patchValue({ vendorId: ACME.vendorId, supplierRef: 'new', displayName: 'New' });
+    component.create();
+    expect(service.createProfile).toHaveBeenCalled();
+  });
+
+  it('read-only session: the create control is disabled with the reason, and the methods refuse', async () => {
+    await setup(undefined, readOnlySession());
+    fixture.detectChanges();
+    const host = fixture.nativeElement as HTMLElement;
+
+    expect(createButton().disabled).toBe(true);
+    expect(createButton().getAttribute('aria-describedby')).toBe('profiles-write-reason');
+    expect(host.querySelector('#profiles-write-reason')?.textContent).toContain('POSITIVITY.PROFILES.WRITE_FORBIDDEN');
+
+    component.openCreate();
+    expect(component.createOpen()).toBe(false);
+    component.createForm.patchValue({ vendorId: ACME.vendorId, supplierRef: 'new', displayName: 'New' });
+    component.create();
+    expect(service.createProfile).not.toHaveBeenCalled();
+  });
+
+  it('unknown perm_bits: the create control stays enabled (legacy-token fallback)', async () => {
+    const legacy = new AuthStub();
+    legacy.permissions.set(null);
+    await setup(undefined, legacy);
+
+    expect(createButton().disabled).toBe(false);
+    component.openCreate();
+    component.createForm.patchValue({ vendorId: ACME.vendorId, supplierRef: 'new', displayName: 'New' });
+    component.create();
+    expect(service.createProfile).toHaveBeenCalled();
+  });
+
+  it('an identity change clears field feedback left by the previous identity’s submission', async () => {
+    const auth = new AuthStub();
+    await setup(undefined, auth);
+    service.createProfile.mockReturnValue(
+      throwError(
+        () =>
+          new HttpErrorResponse({
+            status: 422,
+            statusText: 'x',
+            error: { code: 'SUPPLIER_VENDOR_NOT_FOUND', message: 'nope' },
+          }),
+      ),
+    );
+    component.openCreate();
+    fixture.detectChanges();
+    component.createForm.patchValue({ vendorId: ACME.vendorId, supplierRef: 'new', displayName: 'New' });
+    component.create();
+    fixture.detectChanges();
+    expect(component.fieldError('vendorId')).toBe('POSITIVITY.ERROR.FIELD.VENDOR_NOT_FOUND');
+
+    auth.tenant.set('tenant-2');
+    fixture.detectChanges();
+
+    expect(component.fieldError('vendorId')).toBeNull();
+    expect(component.createForm.controls.vendorId.value).toBe('');
+  });
+
+  it('an identity change mid-flight drops the old list, a late create and the banner, then reloads (ADR-0063 §7)', async () => {
+    const auth = new AuthStub();
+    await setup(undefined, auth);
+    const oldList = new Subject<VendorProfileSummary[]>();
+    const lateCreate = new Subject<VendorProfileSummary>();
+    service.listProfiles.mockReturnValueOnce(oldList.asObservable());
+    service.createProfile.mockReturnValueOnce(lateCreate.asObservable());
+    component.load();
+    component.openCreate();
+    component.createForm.patchValue({ vendorId: ACME.vendorId, supplierRef: 'new', displayName: 'New' });
+    component.create();
+    component.errorKey.set('POSITIVITY.ERROR.VALIDATION');
+    component.state.set('error');
+    service.listProfiles.mockReturnValue(of([yamlProfile]));
+
+    auth.tenant.set('tenant-2');
+    fixture.detectChanges();
+
+    expect(component.createOpen()).toBe(false);
+    expect(component.saving()).toBe(false);
+    expect(component.errorKey()).toBeNull();
+    expect(component.profiles()).toEqual([yamlProfile]);
+    const callsAfterReset = service.listProfiles.mock.calls.length;
+
+    oldList.next([adminProfile]);
+    lateCreate.next(adminProfile);
+    fixture.detectChanges();
+
+    expect(component.profiles()).toEqual([yamlProfile]);
+    expect(service.listProfiles).toHaveBeenCalledTimes(callsAfterReset);
+    expect(component.state()).toBe('ready');
+  });
+
+  it('an identity change resets even with the create form closed', async () => {
+    const auth = new AuthStub();
+    await setup(undefined, auth);
+    service.listProfiles.mockReturnValue(of([yamlProfile]));
+
+    auth.claims.set({ sub: 'clerk.b' });
+    fixture.detectChanges();
+
+    expect(component.profiles()).toEqual([yamlProfile]);
   });
 });

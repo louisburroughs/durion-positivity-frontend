@@ -87,6 +87,33 @@ const FIELD_NAME_KEYS: Readonly<Record<string, string>> = {
 };
 
 /**
+ * Fields whose "missing" failure deserves its own message. Any other rejection
+ * of the field (a malformed UUID, say) gets the `invalid` key — telling the
+ * operator to "choose a vendor" when they did choose one would be untrue.
+ */
+const REQUIRED_AWARE_FIELDS: Readonly<Record<string, { required: string; invalid: string }>> = {
+  vendorId: {
+    required: 'POSITIVITY.ERROR.FIELD.VENDOR_REQUIRED',
+    invalid: 'POSITIVITY.ERROR.FIELD.VENDOR_INVALID',
+  },
+};
+
+/** Backend detail text that means the value was absent or blank. */
+const MISSING_VALUE_MESSAGE = /\brequired\b|must not be (null|blank|empty)/i;
+
+/**
+ * Envelope-level codes that are really about one field (#2516).
+ *
+ * The profile admin API answers a `vendorId` it cannot use with a `422` whose
+ * `ApiError.code` names the cause and which carries **no** `fieldErrors`. These
+ * are mapped onto the `vendorId` field so the picker shows them inline.
+ */
+const ENVELOPE_CODE_FIELDS: Readonly<Record<string, { field: string; key: string }>> = {
+  SUPPLIER_VENDOR_NOT_FOUND: { field: 'vendorId', key: 'POSITIVITY.ERROR.FIELD.VENDOR_NOT_FOUND' },
+  SUPPLIER_VENDOR_INACTIVE: { field: 'vendorId', key: 'POSITIVITY.ERROR.FIELD.VENDOR_INACTIVE' },
+};
+
+/**
  * Legacy machine codes, still emitted on the `ApiBaseService` PRICAT path.
  * Consulted before `FIELD_NAME_KEYS` so an explicit code stays authoritative.
  */
@@ -104,6 +131,18 @@ const FIELD_CODE_KEYS: Readonly<Record<string, string>> = {
 };
 
 const GENERIC_FIELD_KEY = 'POSITIVITY.ERROR.FIELD.INVALID';
+
+/**
+ * A 400 whose envelope carries no `fieldErrors`, only a message naming a
+ * required-aware field as missing — the real shape of "vendorId is required".
+ */
+function missingFieldFromMessage(message: string | undefined): { field: string; key: string } | undefined {
+  if (typeof message !== 'string' || !MISSING_VALUE_MESSAGE.test(message)) {
+    return undefined;
+  }
+  const field = Object.keys(REQUIRED_AWARE_FIELDS).find(name => new RegExp(`\\b${name}\\b`).test(message));
+  return field ? { field, key: REQUIRED_AWARE_FIELDS[field].required } : undefined;
+}
 
 function asErrorBody(error: HttpErrorResponse): SupplierApiErrorBody | null {
   const body: unknown = error.error;
@@ -138,6 +177,10 @@ function collectFieldErrors(body: SupplierApiErrorBody | null): SupplierFieldErr
 export function fieldErrorKey(error: SupplierFieldError): string {
   if (error.code && FIELD_CODE_KEYS[error.code]) {
     return FIELD_CODE_KEYS[error.code];
+  }
+  const requiredAware = REQUIRED_AWARE_FIELDS[error.field];
+  if (requiredAware) {
+    return MISSING_VALUE_MESSAGE.test(error.message ?? '') ? requiredAware.required : requiredAware.invalid;
   }
   return FIELD_NAME_KEYS[error.field] ?? GENERIC_FIELD_KEY;
 }
@@ -180,6 +223,22 @@ export function mapSupplierError(error: unknown, fallbackKey: string): SupplierE
   if (error.status === 400 || error.status === 422) {
     const entries = collectFieldErrors(body);
     const { fieldErrors, fieldDetails } = indexFieldErrors(entries);
+    const envelopeField =
+      (body?.code ? ENVELOPE_CODE_FIELDS[body.code] : undefined) ??
+      (error.status === 400 && entries.length === 0 ? missingFieldFromMessage(body?.message) : undefined);
+    if (envelopeField) {
+      fieldErrors[envelopeField.field] = envelopeField.key;
+      if (typeof body?.message === 'string' && body.message !== '') {
+        fieldDetails[envelopeField.field] = body.message;
+      }
+      return {
+        kind: 'validation',
+        errorKey: 'POSITIVITY.ERROR.VALIDATION',
+        fieldErrors,
+        fieldDetails,
+        retryable: false,
+      };
+    }
     return {
       kind: 'validation',
       errorKey: entries.length > 0 ? 'POSITIVITY.ERROR.VALIDATION' : fallbackKey,

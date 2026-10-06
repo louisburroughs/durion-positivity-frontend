@@ -4,7 +4,7 @@
   </nav>
 
   @if (state() === 'error') {
-    <div class="pos-banner pos-banner--error" role="alert">
+    <div class="pos-banner pos-banner--error" role="alert" tabindex="-1" data-testid="profile-error">
       {{ errorKey()! | translate }}
       @if (!conflict()) {
         <button class="pos-btn pos-btn--secondary" type="button" (click)="reload()">
@@ -15,19 +15,21 @@
   }
 
   @if (state() === 'forbidden') {
-    <div class="pos-banner pos-banner--error" role="alert">
+    <div class="pos-banner pos-banner--error" role="alert" tabindex="-1" data-testid="profile-forbidden">
       {{ 'POSITIVITY.ERROR.FORBIDDEN' | translate }}
     </div>
   }
 
   @if (state() === 'loading') {
-    <p class="pos-banner" aria-live="polite">{{ 'POSITIVITY.COMMON.LOADING' | translate }}</p>
+    <p class="pos-banner" aria-live="polite" tabindex="-1" data-testid="profile-loading">
+      {{ 'POSITIVITY.COMMON.LOADING' | translate }}
+    </p>
   }
 
   @if (profile(); as current) {
     <header class="profile-detail__header">
       <div class="profile-detail__identity">
-        <h1 id="profile-detail-title">{{ current.displayName }}</h1>
+        <h1 id="profile-detail-title" tabindex="-1">{{ current.displayName }}</h1>
         <code class="profile-detail__ref">{{ current.supplierRef }}</code>
         <div class="profile-detail__chips">
           <app-supplier-status-chip
@@ -61,8 +63,9 @@
         <button
           class="pos-btn pos-btn--secondary"
           type="button"
-          [disabled]="readOnly()"
-          [attr.aria-describedby]="readOnly() ? 'profile-readonly-reason' : null"
+          data-testid="profile-edit"
+          [disabled]="readOnly() || !canWrite()"
+          [attr.aria-describedby]="writeBlockedReasonId()"
           (click)="openEdit()"
         >
           {{ 'POSITIVITY.PROFILES.EDIT' | translate }}
@@ -70,8 +73,9 @@
         <button
           class="pos-btn pos-btn--danger"
           type="button"
-          [disabled]="readOnly()"
-          [attr.aria-describedby]="readOnly() ? 'profile-readonly-reason' : null"
+          data-testid="profile-delete"
+          [disabled]="readOnly() || !canWrite()"
+          [attr.aria-describedby]="writeBlockedReasonId()"
           (click)="deleteProfile()"
         >
           {{ 'POSITIVITY.PROFILES.DELETE' | translate }}
@@ -81,10 +85,27 @@
         <p class="pos-banner pos-banner--info profile-detail__yaml-note" id="profile-readonly-reason">
           {{ 'POSITIVITY.COMMON.YAML_MANAGED_READONLY' | translate }}
         </p>
+      } @else if (!canWrite()) {
+        <p class="pos-banner pos-banner--info profile-detail__yaml-note" id="profile-write-reason">
+          {{ 'POSITIVITY.PROFILES.WRITE_FORBIDDEN' | translate }}
+        </p>
       }
     </header>
 
     <dl class="profile-detail__settings">
+      <div class="profile-detail__setting">
+        <dt>{{ 'POSITIVITY.PROFILES.VENDOR.LABEL' | translate }}</dt>
+        <dd data-testid="profile-vendor">
+          @if (current.vendorNumber || current.vendorDisplayName) {
+            {{
+              'POSITIVITY.PROFILES.VENDOR.OPTION'
+                | translate: { number: current.vendorNumber, name: current.vendorDisplayName }
+            }}
+          } @else {
+            {{ 'POSITIVITY.PROFILES.VENDOR.NOT_REPORTED' | translate }}
+          }
+        </dd>
+      </div>
       <div class="profile-detail__setting">
         <dt>{{ 'POSITIVITY.PROFILES.FIELD.CONNECT_TIMEOUT' | translate }}</dt>
         <dd>
@@ -142,6 +163,15 @@
     @if (editOpen()) {
       <form class="profile-detail__form" [formGroup]="editForm" (ngSubmit)="saveProfile()">
         <h2 class="profile-detail__form-title">{{ 'POSITIVITY.PROFILES.FORM.EDIT_TITLE' | translate }}</h2>
+
+        <app-supplier-vendor-picker
+          inputId="edit-vendor"
+          mode="edit"
+          [control]="editForm.controls.vendorId"
+          [currentVendor]="currentVendor()"
+          [errorKey]="fieldError('vendorId')"
+          [errorDetail]="fieldDetail('vendorId')"
+        />
 
         <div class="pos-field">
           <label class="pos-field__label" for="edit-supplier-ref">
@@ -314,7 +344,7 @@
         </div>
 
         <div class="profile-detail__form-actions">
-          <button class="pos-btn pos-btn--primary" type="submit" [disabled]="saving() || readOnly()">
+          <button class="pos-btn pos-btn--primary" type="submit" [disabled]="saving() || readOnly() || !canWrite()">
             {{ 'POSITIVITY.COMMON.SAVE' | translate }}
           </button>
           <button class="pos-btn pos-btn--secondary" type="button" (click)="cancelEdit()">

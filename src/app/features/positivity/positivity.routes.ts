@@ -9,10 +9,11 @@ import { POSITIVITY_PAGE } from '../../core/security/route-permissions';
  *
  * Each route also declares the permission its primary read needs
  * (`POSITIVITY_PAGE`), decoded from the JWT `perm_bits` claim. Write boundaries
- * (`supplier:profile:write`, `supplier:transmission:resolve`) stay unmodelled —
- * gating a page on a secondary action would refuse readers who legitimately
- * belong there — so the backend's `403` remains the authority for those and is
- * rendered as a restricted state by the relevant screen.
+ * never gate a route — that would refuse readers who legitimately belong there.
+ * Profile writes (`supplier:profile:write`, `POSITIVITY_PAGE.profileWrite`) gate
+ * the profile pages' create/edit/delete controls and handlers in-page
+ * (ADR-0040 §6a); `supplier:transmission:resolve` stays unmodelled, so the
+ * backend's `403` remains the authority there.
  *
  * Route tree:
  *   /app/positivity                                        profile list

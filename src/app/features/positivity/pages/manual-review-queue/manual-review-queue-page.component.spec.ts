@@ -22,6 +22,9 @@ const profileSummary: VendorProfileSummary = {
   enabled: true,
   sandbox: false,
   sourceOfTruth: 'ADMIN',
+  vendorId: 'ffc9a4c2-0000-7000-8000-00000000v001',
+  vendorNumber: 'V-000001',
+  vendorDisplayName: 'Michelin',
 };
 
 const transmission: SupplierOrderTransmission = {

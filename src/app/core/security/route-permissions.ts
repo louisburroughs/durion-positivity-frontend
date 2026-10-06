@@ -782,6 +782,13 @@ export const SECURITY_SECTION = {
 /** `/app/positivity/*` — supplier profiles, exchange audit, manual review. */
 export const POSITIVITY_PAGE = {
   profiles: ['supplier:profile:read'],
+  /**
+   * Profile create, update and delete enforce `supplier:profile:write`
+   * (`SupplierProfileAdminController`). The profile list's create control and
+   * the detail page's edit/delete controls and handlers gate on it, never on the
+   * page's read admission (ADR-0040 §6a).
+   */
+  profileWrite: ['supplier:profile:write'],
   exchangeAudit: ['supplier:audit:read'],
   manualReview: ['supplier:transmission:read'],
 } as const satisfies Record<string, readonly string[]>;

@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
-import { BehaviorSubject, of, throwError } from 'rxjs';
+import { BehaviorSubject, Subject, of, throwError } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   PROFILE_TABS,
@@ -12,6 +12,15 @@ import { SupplierProfileService } from '../../services/supplier-profile.service'
 import { SupplierPriceCatalogService } from '../../services/supplier-price-catalog.service';
 import { SupplierStockSnapshotService } from '../../services/supplier-stock-snapshot.service';
 import { VendorProfile } from '../../models/supplier-profile.models';
+import {
+  ACME,
+  BOLT,
+  RETIRED,
+  AuthStub,
+  VendorServiceStub,
+  vendorPickerProviders,
+  vendorServiceStub,
+} from '../../components/supplier-vendor-picker/supplier-vendor-picker.spec-helper';
 
 const PROFILE_ID = 'profile-1';
 
@@ -22,6 +31,9 @@ const adminProfile: VendorProfile = {
   enabled: true,
   sandbox: false,
   sourceOfTruth: 'ADMIN',
+  vendorId: ACME.vendorId,
+  vendorNumber: ACME.vendorNumber,
+  vendorDisplayName: ACME.displayName,
 };
 
 const yamlProfile: VendorProfile = { ...adminProfile, sourceOfTruth: 'YAML' };
@@ -38,8 +50,13 @@ describe('SupplierProfileDetailPageComponent', () => {
     listBindings: ReturnType<typeof vi.fn>;
   };
   let router: { navigate: ReturnType<typeof vi.fn> };
+  let vendors: VendorServiceStub;
+  let paramMap$: BehaviorSubject<ReturnType<typeof convertToParamMap>>;
 
-  async function setup(profile: VendorProfile | HttpErrorResponse = adminProfile): Promise<void> {
+  async function setup(
+    profile: VendorProfile | HttpErrorResponse = adminProfile,
+    auth: AuthStub = new AuthStub(),
+  ): Promise<void> {
     service = {
       getProfile: vi
         .fn()
@@ -82,6 +99,8 @@ describe('SupplierProfileDetailPageComponent', () => {
         of({ items: [], page: 0, size: 25, totalCount: 0, totalPages: 0 }),
       ),
     };
+    vendors = vendorServiceStub();
+    paramMap$ = new BehaviorSubject(convertToParamMap({ vendorProfileId: PROFILE_ID }));
     TestBed.resetTestingModule();
     await TestBed.configureTestingModule({
       imports: [SupplierProfileDetailPageComponent, TranslateModule.forRoot()],
@@ -89,13 +108,9 @@ describe('SupplierProfileDetailPageComponent', () => {
         { provide: SupplierProfileService, useValue: service },
         { provide: SupplierPriceCatalogService, useValue: priceCatalogService },
         { provide: SupplierStockSnapshotService, useValue: stockSnapshotService },
+        ...vendorPickerProviders(vendors, auth),
         provideRouter([]),
-        {
-          provide: ActivatedRoute,
-          useValue: {
-            paramMap: new BehaviorSubject(convertToParamMap({ vendorProfileId: PROFILE_ID })),
-          },
-        },
+        { provide: ActivatedRoute, useValue: { paramMap: paramMap$ } },
       ],
     }).compileComponents();
 
@@ -279,6 +294,7 @@ describe('SupplierProfileDetailPageComponent', () => {
     component.saveProfile();
 
     expect(service.updateProfile).toHaveBeenCalledWith(PROFILE_ID, {
+      vendorId: ACME.vendorId,
       supplierRef: 'michelin-eu',
       displayName: 'Michelin EMEA',
       sandbox: false,
@@ -359,5 +375,276 @@ describe('SupplierProfileDetailPageComponent', () => {
     );
 
     expect(crumb?.getAttribute('href')).toBe('/app/positivity');
+  });
+
+  // ── Vendor (#484) ──────────────────────────────────────────────────────────
+
+  it('names the profile’s vendor in the settings', async () => {
+    await setup();
+    const vendor = (fixture.nativeElement as HTMLElement).querySelector('[data-testid="profile-vendor"]');
+
+    expect(vendor?.textContent).toContain('POSITIVITY.PROFILES.VENDOR.OPTION');
+  });
+
+  it('edit pre-selects the profile’s vendor and saves it unchanged (AC2)', async () => {
+    await setup();
+    component.openEdit();
+    fixture.detectChanges();
+    const select = (fixture.nativeElement as HTMLElement).querySelector('#edit-vendor') as HTMLSelectElement;
+
+    expect(select.value).toBe(ACME.vendorId);
+    component.saveProfile();
+    expect(service.updateProfile).toHaveBeenCalledWith(PROFILE_ID, expect.objectContaining({ vendorId: ACME.vendorId }));
+  });
+
+  it('edit can re-point the profile to another active vendor', async () => {
+    await setup();
+    component.openEdit();
+    fixture.detectChanges();
+    const select = (fixture.nativeElement as HTMLElement).querySelector('#edit-vendor') as HTMLSelectElement;
+    select.value = BOLT.vendorId;
+    select.dispatchEvent(new Event('change'));
+    component.saveProfile();
+
+    expect(service.updateProfile).toHaveBeenCalledWith(PROFILE_ID, expect.objectContaining({ vendorId: BOLT.vendorId }));
+  });
+
+  it('edit keeps an inactive current vendor, labelled as inactive, and saves it', async () => {
+    await setup({
+      ...adminProfile,
+      vendorId: RETIRED.vendorId,
+      vendorNumber: RETIRED.vendorNumber,
+      vendorDisplayName: RETIRED.displayName,
+    });
+    component.openEdit();
+    fixture.detectChanges();
+    const host = fixture.nativeElement as HTMLElement;
+
+    expect(host.querySelector('[data-testid="vendor-inactive"]')).not.toBeNull();
+    component.saveProfile();
+    expect(service.updateProfile).toHaveBeenCalledWith(PROFILE_ID, expect.objectContaining({ vendorId: RETIRED.vendorId }));
+  });
+
+  it('renders a 422 SUPPLIER_VENDOR_INACTIVE on the picker (AC3)', async () => {
+    await setup();
+    service.updateProfile.mockReturnValue(
+      throwError(
+        () =>
+          new HttpErrorResponse({
+            status: 422,
+            statusText: 'x',
+            error: { code: 'SUPPLIER_VENDOR_INACTIVE', message: 'Vendor is inactive' },
+          }),
+      ),
+    );
+    component.openEdit();
+    component.saveProfile();
+    fixture.detectChanges();
+
+    const error = (fixture.nativeElement as HTMLElement).querySelector('[data-testid="vendor-error"]');
+    expect(error?.textContent).toContain('POSITIVITY.ERROR.FIELD.VENDOR_INACTIVE');
+    expect(error?.textContent).toContain('Vendor is inactive');
+  });
+
+  it('drops a profile load that resolves after the route moved to another profile (ADR-0063)', async () => {
+    await setup();
+    const late = new Subject<VendorProfile>();
+    service.getProfile.mockReturnValueOnce(late.asObservable()).mockReturnValue(of({ ...adminProfile, vendorProfileId: 'profile-3', displayName: 'Third' }));
+
+    paramMap$.next(convertToParamMap({ vendorProfileId: 'profile-2' }));
+    paramMap$.next(convertToParamMap({ vendorProfileId: 'profile-3' }));
+    late.next({ ...adminProfile, vendorProfileId: 'profile-2', displayName: 'Second' });
+    fixture.detectChanges();
+
+    expect(component.vendorProfileId()).toBe('profile-3');
+    expect(component.profile()?.displayName).toBe('Third');
+  });
+
+  it('closes an open edit form when the route moves to another profile', async () => {
+    await setup();
+    component.openEdit();
+    paramMap$.next(convertToParamMap({ vendorProfileId: 'profile-2' }));
+
+    expect(component.editOpen()).toBe(false);
+  });
+
+  it('edit without supplier:vendor:read explains it and still saves the current vendorId (AC4)', async () => {
+    const noAccess = new AuthStub();
+    noAccess.permissions.set(new Set(['supplier:profile:read', 'supplier:profile:write']));
+    await setup(adminProfile, noAccess);
+    component.openEdit();
+    fixture.detectChanges();
+    const host = fixture.nativeElement as HTMLElement;
+
+    expect(host.querySelector('[data-testid="vendor-forbidden"]')?.textContent).toContain(
+      'POSITIVITY.PROFILES.VENDOR.FORBIDDEN_EDIT',
+    );
+    expect(vendors.listActiveVendors).not.toHaveBeenCalled();
+    component.saveProfile();
+    expect(service.updateProfile).toHaveBeenCalledWith(PROFILE_ID, expect.objectContaining({ vendorId: ACME.vendorId }));
+  });
+
+  // ── supplier:profile:write gate (ADR-0040 §6a) ─────────────────────────────
+
+  const readOnlySession = (): AuthStub => {
+    const auth = new AuthStub();
+    auth.permissions.set(new Set(['supplier:profile:read', 'supplier:vendor:read']));
+    return auth;
+  };
+  const button = (testId: string): HTMLButtonElement =>
+    (fixture.nativeElement as HTMLElement).querySelector(`[data-testid="${testId}"]`) as HTMLButtonElement;
+
+  it('write granted: edit and delete controls are enabled', async () => {
+    await setup();
+
+    expect(button('profile-edit').disabled).toBe(false);
+    expect(button('profile-delete').disabled).toBe(false);
+  });
+
+  it('read-only session: edit and delete are disabled with the reason, and the methods refuse', async () => {
+    await setup(adminProfile, readOnlySession());
+    const host = fixture.nativeElement as HTMLElement;
+
+    expect(button('profile-edit').disabled).toBe(true);
+    expect(button('profile-delete').disabled).toBe(true);
+    expect(button('profile-edit').getAttribute('aria-describedby')).toBe('profile-write-reason');
+    expect(host.querySelector('#profile-write-reason')?.textContent).toContain('POSITIVITY.PROFILES.WRITE_FORBIDDEN');
+
+    component.openEdit();
+    expect(component.editOpen()).toBe(false);
+    component.editOpen.set(true);
+    component.saveProfile();
+    component.deleteProfile();
+    expect(service.updateProfile).not.toHaveBeenCalled();
+    expect(service.deleteProfile).not.toHaveBeenCalled();
+  });
+
+  it('unknown perm_bits: edit stays enabled and saves (legacy-token fallback)', async () => {
+    const legacy = new AuthStub();
+    legacy.permissions.set(null);
+    await setup(adminProfile, legacy);
+
+    expect(button('profile-edit').disabled).toBe(false);
+    component.openEdit();
+    component.saveProfile();
+    expect(service.updateProfile).toHaveBeenCalled();
+  });
+
+  // ── Route changes (ADR-0029 §8, ADR-0063) ──────────────────────────────────
+
+  it('moves focus off the removed edit form to the loading target, then the heading', async () => {
+    await setup();
+    const host = fixture.nativeElement as HTMLElement;
+    document.body.appendChild(host);
+    component.openEdit();
+    fixture.detectChanges();
+    (host.querySelector('#edit-display-name') as HTMLInputElement).focus();
+
+    const next = new Subject<VendorProfile>();
+    service.getProfile.mockReturnValueOnce(next.asObservable());
+    paramMap$.next(convertToParamMap({ vendorProfileId: 'profile-2' }));
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(host.querySelector('#edit-display-name')).toBeNull();
+    expect(document.activeElement).toBe(host.querySelector('[data-testid="profile-loading"]'));
+
+    next.next({ ...adminProfile, vendorProfileId: 'profile-2', displayName: 'Second' });
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(document.activeElement).toBe(host.querySelector('#profile-detail-title'));
+    host.remove();
+  });
+
+  it('A → B → A: a stale first-A load cannot overwrite the newer A load', async () => {
+    await setup();
+    const firstA = new Subject<VendorProfile>();
+    const b = new Subject<VendorProfile>();
+    const secondA = new Subject<VendorProfile>();
+    service.getProfile
+      .mockReturnValueOnce(firstA.asObservable())
+      .mockReturnValueOnce(b.asObservable())
+      .mockReturnValueOnce(secondA.asObservable());
+
+    paramMap$.next(convertToParamMap({ vendorProfileId: 'profile-a' }));
+    paramMap$.next(convertToParamMap({ vendorProfileId: 'profile-b' }));
+    paramMap$.next(convertToParamMap({ vendorProfileId: 'profile-a' }));
+    secondA.next({ ...adminProfile, vendorProfileId: 'profile-a', displayName: 'A (fresh)' });
+    firstA.next({ ...adminProfile, vendorProfileId: 'profile-a', displayName: 'A (stale)' });
+    b.next({ ...adminProfile, vendorProfileId: 'profile-b', displayName: 'B' });
+
+    expect(component.vendorProfileId()).toBe('profile-a');
+    expect(component.profile()?.displayName).toBe('A (fresh)');
+  });
+
+  it('A → B → A: a save issued on the first A cannot land after the route came back to A', async () => {
+    await setup();
+    const save = new Subject<VendorProfile>();
+    service.updateProfile.mockReturnValueOnce(save.asObservable());
+    component.openEdit();
+    component.saveProfile();
+
+    paramMap$.next(convertToParamMap({ vendorProfileId: 'profile-b' }));
+    paramMap$.next(convertToParamMap({ vendorProfileId: PROFILE_ID }));
+    save.next({ ...adminProfile, displayName: 'Stale save' });
+
+    expect(component.profile()?.displayName).toBe('Michelin EU');
+    expect(component.saving()).toBe(false);
+  });
+
+  // ── Identity change (ADR-0063 §7) ──────────────────────────────────────────
+
+  it('an identity change mid-flight: the old load and a late save never render; the new identity’s profile loads', async () => {
+    const auth = new AuthStub();
+    await setup(adminProfile, auth);
+    const oldLoad = new Subject<VendorProfile>();
+    const lateSave = new Subject<VendorProfile>();
+    service.getProfile.mockReturnValueOnce(oldLoad.asObservable());
+    service.updateProfile.mockReturnValueOnce(lateSave.asObservable());
+    component.openEdit();
+    component.saveProfile();
+    component.reload();
+    service.getProfile.mockReturnValue(of({ ...adminProfile, displayName: 'New identity' }));
+
+    auth.tenant.set('tenant-2');
+    fixture.detectChanges();
+
+    expect(component.editOpen()).toBe(false);
+    expect(component.saving()).toBe(false);
+    expect(service.getProfile).toHaveBeenLastCalledWith(PROFILE_ID);
+    expect(component.profile()?.displayName).toBe('New identity');
+
+    oldLoad.next({ ...adminProfile, displayName: 'Old identity load' });
+    lateSave.next({ ...adminProfile, displayName: 'Old identity save' });
+    fixture.detectChanges();
+
+    expect(component.profile()?.displayName).toBe('New identity');
+    expect(component.state()).toBe('ready');
+  });
+
+  it('an identity change clears the banner and field feedback from the previous identity', async () => {
+    const auth = new AuthStub();
+    await setup(adminProfile, auth);
+    service.updateProfile.mockReturnValueOnce(
+      throwError(
+        () =>
+          new HttpErrorResponse({
+            status: 422,
+            statusText: 'x',
+            error: { code: 'SUPPLIER_VENDOR_NOT_FOUND', message: 'nope' },
+          }),
+      ),
+    );
+    component.openEdit();
+    component.saveProfile();
+    expect(component.fieldError('vendorId')).toBe('POSITIVITY.ERROR.FIELD.VENDOR_NOT_FOUND');
+
+    auth.claims.set({ sub: 'clerk.b' });
+    fixture.detectChanges();
+
+    expect(component.fieldError('vendorId')).toBeNull();
+    expect(component.errorKey()).toBeNull();
+    expect(component.state()).toBe('ready');
   });
 });
