@@ -158,6 +158,7 @@ export class AccountingHomePageComponent {
 
   private readonly panel = viewChild(TodoDetailPanelComponent);
   private readonly todoHeading = viewChild<ElementRef<HTMLElement>>('todoHeading');
+  private readonly pageHeading = viewChild<ElementRef<HTMLElement>>('pageHeading');
   private readonly helpGuideHeading = viewChild<ElementRef<HTMLElement>>('helpGuideHeading');
 
   // ── Page state (ADR-0031) ──────────────────────────────────────────────
@@ -307,6 +308,8 @@ export class AccountingHomePageComponent {
 
   // ── Approve month ─────────────────────────────────────────────────────
   readonly approving = signal(false);
+  /** The last approved check-up, for the page-level polite status (null account renders an em dash). */
+  readonly approvedAccount = signal<{ account: string | null } | null>(null);
   readonly approveMessage = signal<{ key: string; params: Readonly<Record<string, unknown>> } | null>(null);
   /** Focus owed after an approve re-read; drained by whichever approvals read lands last (ADR-0063 §4). */
   private focusOwed = false;
@@ -430,11 +433,20 @@ export class AccountingHomePageComponent {
 
   dismissStartHere(): void {
     this.preferences.dismissStartHere();
-    this.focusAfterRender(() => this.todoHeading()?.nativeElement.focus());
+    // The to-do heading exists only with a to-do source; the h1 always does (ADR-0029 §8.7).
+    this.focusAfterRender(() => (this.todoHeading() ?? this.pageHeading())?.nativeElement.focus());
   }
 
+  /** One truthful key per served status; an unset status claims neither open nor closed (ADR-0064 §4). */
   periodChipKey(period: AccountingPeriod): string {
-    return period.status === 'CLOSED' ? 'ACCOUNTING.HOME.PERIOD_CHIP.CLOSED' : 'ACCOUNTING.HOME.PERIOD_CHIP.OPEN';
+    switch (period.status) {
+      case 'OPEN':
+        return 'ACCOUNTING.HOME.PERIOD_CHIP.OPEN';
+      case 'CLOSED':
+        return 'ACCOUNTING.HOME.PERIOD_CHIP.CLOSED';
+      default:
+        return 'ACCOUNTING.HOME.PERIOD_CHIP.UNKNOWN';
+    }
   }
 
   // ── Lanes ─────────────────────────────────────────────────────────────
@@ -474,18 +486,25 @@ export class AccountingHomePageComponent {
     const item = this.selectedItem();
     if (!this.canApproveReconciliation() || item?.kind !== 'APPROVAL' || this.approving()) return;
     const reconciliationId = item.checkup.reconciliationId;
+    const accountName = item.checkup.accountName;
+    // The outcome belongs to the item it was sent for, captured now (ADR-0063 §1).
+    const itemId = item.id;
+    const stillSelected = (): boolean => this.selectedItem()?.id === itemId;
     const review = this.selectedReview();
     if (this.selectedReviewStatus() !== 'OK' || !review?.readiness.canApprove) return;
 
     this.approving.set(true);
     this.approveMessage.set(null);
+    this.approvedAccount.set(null);
     this.workspace
       .approve(reconciliationId, review.header.version)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
           this.approving.set(false);
-          this.focusOwed = true;
+          // Announced outside the panel: the approved item, and its panel, leave the list.
+          this.approvedAccount.set({ account: accountName });
+          if (stillSelected()) this.focusOwed = true;
           this.loadRegion('approvals');
           if (this.canSeeBank() && !this.bank.denied()) this.loadRegion('bank');
         },
@@ -493,6 +512,12 @@ export class AccountingHomePageComponent {
           this.approving.set(false);
           const failure = toBankRecFailure(error);
           const readiness = review.readiness;
+          const stale = (failure.code && APPROVE_STALE_CODES.has(failure.code)) || failure.status === 409;
+          if (!stillSelected()) {
+            // The person moved to another item: its panel must not show this outcome or take focus.
+            if (stale) this.loadRegion('approvals');
+            return;
+          }
           if (failure.status === 403) {
             this.approveMessage.set({
               key: 'ACCOUNTING.HOME.TODO.APPROVAL.ERROR.FORBIDDEN',
@@ -504,7 +529,7 @@ export class AccountingHomePageComponent {
             key: (failure.code && APPROVE_ERROR_KEYS[failure.code]) || 'ACCOUNTING.HOME.TODO.APPROVAL.ERROR.OTHER',
             params: { bank: readiness.countUnexplainedBank ?? 0, ledger: readiness.countUnexplainedLedger ?? 0 },
           });
-          if ((failure.code && APPROVE_STALE_CODES.has(failure.code)) || failure.status === 409) {
+          if (stale) {
             this.focusOwed = true;
             this.review.load(this.workspace.getReview(reconciliationId), reconciliationId);
             this.loadRegion('approvals');

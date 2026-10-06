@@ -4,6 +4,8 @@
 
 .home {
   max-width: 80rem;
+  /* One track that may shrink below its content's min-content, so no region widens the page at phone width. */
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .home h2,
@@ -78,6 +80,7 @@
   display: none;
 }
 
+.home__title-block h1:focus-visible,
 .help-guide h2:focus-visible,
 .todo h2:focus-visible {
   outline: 2px solid var(--input-focus-border);
@@ -284,6 +287,10 @@
   flex-wrap: wrap;
   align-items: baseline;
   gap: var(--space-3);
+}
+
+.todo__status {
+  margin: 0;
 }
 
 .todo__filters {

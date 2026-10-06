@@ -35,7 +35,8 @@ export class AccountingPreferencesService {
 
   /** The storage key for the signed-in person, or null when the token lacks `tid` or `sub`. */
   private readonly storageKey = computed<string | null>(() => {
-    // The tenant is the token's `tid` claim, read through AuthService only (ADR-0062, TEN-05).
+    // `auth.tenantId()` IS the token's `tid` claim (AuthService decodes it; ADR-0062), so this key is
+    // tid + sub. Read through AuthService because only core and named stores may touch `.tid` (TEN-05).
     const tenant = this.auth.tenantId()?.trim();
     const sub = this.auth.currentUserClaims()?.sub?.trim();
     return tenant && sub ? `${ACCOUNTING_PREFS_STORAGE_PREFIX}:${tenant}:${sub}` : null;

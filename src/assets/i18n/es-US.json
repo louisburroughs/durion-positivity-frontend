@@ -5218,7 +5218,8 @@
       "STANDFIRST": "Vea lo que le deben los clientes, lo que debe el taller y cómo va la revisión bancaria, y resuelva lo que necesita a una persona.",
       "PERIOD_CHIP": {
         "OPEN": "{{month}} está abierto",
-        "CLOSED": "{{month}} está cerrado"
+        "CLOSED": "{{month}} está cerrado",
+        "UNKNOWN": "{{month}}: estado desconocido"
       },
       "HELP_BUTTON": "Ayuda",
       "REFRESH": "Actualizar",
@@ -5379,7 +5380,8 @@
             "OPTIMISTIC_LOCK": "Otra persona cambió esta revisión. Se volvió a cargar; inténtelo de nuevo.",
             "FORBIDDEN": "Necesita el permiso {{permission}} para aprobar una revisión bancaria.",
             "OTHER": "No se pudo completar. Inténtelo de nuevo."
-          }
+          },
+          "DONE": "Aprobada: la revisión bancaria de este mes para {{account}} está hecha."
         }
       },
       "MORE_TOOLS": {

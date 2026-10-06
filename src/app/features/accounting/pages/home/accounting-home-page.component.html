@@ -4,7 +4,7 @@
   <header class="page-header home__header">
     <div class="home__title-block">
       <p class="section-overline">{{ 'ACCOUNTING.HOME.OVERLINE' | translate }}</p>
-      <h1>{{ 'ACCOUNTING.HOME.TITLE' | translate }}</h1>
+      <h1 id="home-title" tabindex="-1" #pageHeading>{{ 'ACCOUNTING.HOME.TITLE' | translate }}</h1>
       <p class="page-subtitle">{{ 'ACCOUNTING.HOME.STANDFIRST' | translate }}</p>
       @if (canSeePeriod() && currentPeriod(); as period) {
         <p class="period-chip" data-testid="period-chip">
@@ -320,6 +320,11 @@
           exampleKey="ACCOUNTING.HELP.TODO.EXAMPLE"
         />
       </div>
+      <p class="todo__status" role="status" data-testid="approve-done">
+        @if (approvedAccount(); as done) {
+          {{ 'ACCOUNTING.HOME.TODO.APPROVAL.DONE' | translate: { account: done.account ?? empty } }}
+        }
+      </p>
       <div class="todo__filters" role="group" [attr.aria-label]="'ACCOUNTING.HOME.TODO.FILTER_ARIA' | translate">
         <button
           type="button"

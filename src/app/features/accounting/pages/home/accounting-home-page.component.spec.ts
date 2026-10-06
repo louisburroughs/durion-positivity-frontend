@@ -1,3 +1,4 @@
+import { formatDate } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -15,6 +16,7 @@ import {
   awaitingApproval,
   bankLine,
   configureHome,
+  currentPeriod,
   createHomeMocks,
   page,
   payablesLane,
@@ -103,6 +105,18 @@ describe('AccountingHomePageComponent', () => {
       expect(text('[data-testid="period-chip"]')).toContain('ACCOUNTING.HOME.PERIOD_CHIP.OPEN');
     });
 
+    it('claims neither open nor closed for a period whose status is unknown (ADR-0064 §4)', () => {
+      mocks.periods.listPeriods.mockReturnValue(of([{ ...currentPeriod, status: 'UNKNOWN' }]));
+      render();
+      expect(text('[data-testid="period-chip"]')).toContain('ACCOUNTING.HOME.PERIOD_CHIP.UNKNOWN');
+    });
+
+    it('reads a CLOSED current period as closed', () => {
+      mocks.periods.listPeriods.mockReturnValue(of([{ ...currentPeriod, status: 'CLOSED' }]));
+      render();
+      expect(text('[data-testid="period-chip"]')).toContain('ACCOUNTING.HOME.PERIOD_CHIP.CLOSED');
+    });
+
     it('hides the period chip when the period read failed', () => {
       mocks.periods.listPeriods.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 500 })));
       render();
@@ -164,6 +178,23 @@ describe('AccountingHomePageComponent', () => {
       expect(q('[data-testid="start-here"]')).toBeNull();
     });
 
+    it('moves focus to the to-do heading on dismiss', () => {
+      render();
+      q('[data-testid="dismiss-start-here"]')!.click();
+      fixture.detectChanges();
+      expect(document.activeElement?.id).toBe('todo-heading');
+    });
+
+    it('falls back to the h1 on dismiss when there is no to-do list, never to <body>', () => {
+      mocks.held.set(['reporting:view:financial-statements']);
+      render();
+      expect(q('[data-testid="todo"]')).toBeNull();
+
+      q('[data-testid="dismiss-start-here"]')!.click();
+      fixture.detectChanges();
+      expect(document.activeElement?.id).toBe('home-title');
+    });
+
     it('opens the Help guide from the banner', () => {
       render();
       const open = qa('[data-testid="start-here"] button').find(b => b.textContent?.includes('OPEN_GUIDE'))!;
@@ -216,8 +247,10 @@ describe('AccountingHomePageComponent', () => {
       );
       expect(row.textContent).toContain('$25,400.00');
       expect(row.querySelectorAll('dd')[3].textContent?.trim()).toBe('3');
-      expect(row.querySelectorAll('dd')[0].textContent?.trim()).not.toBe('');
-      expect(row.querySelectorAll('dd')[2].textContent?.trim()).not.toBe('');
+      // The served dates, formatted (a COMMON.EMPTY_VALUE placeholder would not match).
+      const mediumDate = (iso: string | null): string => formatDate(`${iso}T00:00:00`, 'mediumDate', 'en-US');
+      expect(row.querySelectorAll('dd')[0].textContent?.trim()).toBe(mediumDate(submittedRow.statementEndDate));
+      expect(row.querySelectorAll('dd')[2].textContent?.trim()).toBe(mediumDate(submittedRow.reconciledThrough));
     });
 
     it('gives every legend entry text and an amount, not colour alone (AC 15)', () => {
@@ -493,6 +526,58 @@ describe('AccountingHomePageComponent', () => {
       // The approved item left the list: panel cleared, focus on the list heading.
       expect(q('[data-testid="todo-panel"]')).toBeNull();
       expect(document.activeElement?.id).toBe('todo-heading');
+      // The panel and its live region are gone, so success is announced at page level.
+      const done = q('[data-testid="approve-done"]')!;
+      expect(done.getAttribute('role')).toBe('status');
+      expect(done.closest('[data-testid="todo-panel"]')).toBeNull();
+      expect(done.textContent?.trim()).toBe('ACCOUNTING.HOME.TODO.APPROVAL.DONE');
+      expect(component.approvedAccount()).toEqual({ account: 'Operating Checking' });
+    });
+
+    it.each([
+      ['RECONCILIATION_SELF_APPROVAL', 422],
+      ['OPTIMISTIC_LOCK', 409],
+      [null, 403],
+    ] as const)(
+      'drops a %s / %s outcome that lands after the person chose another item (ADR-0063 §1)',
+      (code, status) => {
+        const inFlight = pending<'FINALIZED' | null>();
+        mocks.workspace.approve.mockReturnValue(inFlight);
+        mocks.home.checkupsAwaitingApproval.mockReturnValue(
+          of(page([awaitingApproval(), awaitingApproval({ reconciliationId: 'rec-10', accountName: 'Payroll' })])),
+        );
+        render();
+        chooseApproval();
+        approveButton().click();
+        expect(mocks.workspace.approve).toHaveBeenCalledWith('rec-9', 7);
+
+        // Choose the second approval item while A's write is in flight.
+        qa('.todo-item[data-kind="APPROVAL"]')[1].click();
+        fixture.detectChanges();
+        const itemB = qa('.todo-item[data-kind="APPROVAL"]')[1];
+        itemB.focus();
+
+        inFlight.error(new HttpErrorResponse({ status, error: code ? { code } : {} }));
+        fixture.detectChanges();
+
+        expect(component.selectedId()).toBe('APPROVAL:rec-10');
+        expect(component.approveMessage()).toBeNull();
+        expect(text('[data-testid="approve-outcome"]')).toBe('');
+        expect(document.activeElement).toBe(itemB);
+      },
+    );
+
+    it('still shows the outcome when the same item stays selected (the other half of the split)', () => {
+      const inFlight = pending<'FINALIZED' | null>();
+      mocks.workspace.approve.mockReturnValue(inFlight);
+      render();
+      chooseApproval();
+      approveButton().click();
+
+      inFlight.error(new HttpErrorResponse({ status: 422, error: { code: 'RECONCILIATION_SELF_APPROVAL' } }));
+      fixture.detectChanges();
+
+      expect(text('[data-testid="approve-outcome"]')).toBe('ACCOUNTING.HOME.TODO.APPROVAL.ERROR.SELF_APPROVAL');
     });
 
     it('hides Approve month and refuses the handler once the approve permission is gone', () => {
