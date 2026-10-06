@@ -57,6 +57,7 @@ describe('AccountingHomePageComponent', () => {
     localStorage.clear();
     mocks = createHomeMocks();
     mocks.claims.set(CLAIMS);
+    tenant.set('tenant-a');
   });
 
   afterEach(() => {
@@ -732,6 +733,74 @@ describe('AccountingHomePageComponent', () => {
       const rendered = Array.from(details.querySelectorAll('.landing-card__title')).map(el => el.textContent?.trim());
       expect(rendered).toEqual(eventsCards);
       expect(details.querySelectorAll('h3.landing-section__title').length).toBe(1);
+    });
+  });
+
+  describe('identity change while mounted (ADR-0063 §7)', () => {
+    const switchTo = (sub: string, tenantId: string): void => {
+      mocks.claims.set({ sub, tid: tenantId, exp: 4102444800 });
+      tenant.set(tenantId);
+      fixture.detectChanges();
+    };
+
+    it('drops the old identity’s in-flight reads, clears the home and loads for the new identity', () => {
+      const oldRead = pending<ReceivablesLane>();
+      mocks.home.receivables.mockReturnValueOnce(oldRead);
+      render();
+      q('.todo-item[data-kind="BANK_LINE"]')!.click();
+      fixture.detectChanges();
+      expect(component.selectedId()).not.toBeNull();
+
+      mocks.home.receivables.mockReturnValue(of<ReceivablesLane>({ ...receivablesLane, totalOutstanding: 42 }));
+      mocks.home.unexplainedBankLines.mockReturnValue(of(page([])));
+      switchTo('clerk.other', 'tenant-b');
+
+      // The old identity's answer lands after the switch: it never renders.
+      oldRead.next({ ...receivablesLane, totalOutstanding: 999 });
+      fixture.detectChanges();
+
+      expect(mocks.home.receivables).toHaveBeenCalledTimes(2);
+      expect(text('[data-testid="receivables-total"]')).toBe('$42.00');
+      expect(host.textContent).not.toContain('$999.00');
+      expect(component.selectedId()).toBeNull();
+      expect(q('[data-testid="todo-panel"]')).toBeNull();
+      expect(component.state()).toBe('ready');
+    });
+
+    it('drops an Approve month outcome sent under the old identity', () => {
+      const inFlight = pending<'FINALIZED' | null>();
+      mocks.workspace.approve.mockReturnValue(inFlight);
+      render();
+      q('.todo-item[data-kind="APPROVAL"]')!.click();
+      fixture.detectChanges();
+      (q('[data-testid="approve-month"]') as HTMLButtonElement).click();
+      const approvalsReads = mocks.home.checkupsAwaitingApproval.mock.calls.length;
+
+      switchTo('controller.lee', 'tenant-b');
+      inFlight.next('FINALIZED');
+      fixture.detectChanges();
+
+      expect(component.approving()).toBe(false);
+      expect(component.approvedAccount()).toBeNull();
+      // Only the identity-change load re-read the approvals, not the stale success.
+      expect(mocks.home.checkupsAwaitingApproval).toHaveBeenCalledTimes(approvalsReads + 1);
+    });
+
+    it('reads the new identity’s preferences (Start here dismissed per person)', () => {
+      render();
+      q('[data-testid="dismiss-start-here"]')!.click();
+      fixture.detectChanges();
+      expect(q('[data-testid="start-here"]')).toBeNull();
+
+      switchTo('someone.else', 'tenant-a');
+      expect(q('[data-testid="start-here"]')).not.toBeNull();
+    });
+
+    it('does nothing when a token refresh keeps the same tid and sub', () => {
+      render();
+      mocks.claims.set({ ...CLAIMS, exp: 4102444900 });
+      fixture.detectChanges();
+      expect(mocks.home.receivables).toHaveBeenCalledTimes(1);
     });
   });
 
