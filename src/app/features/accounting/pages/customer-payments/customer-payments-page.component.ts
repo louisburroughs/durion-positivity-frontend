@@ -259,19 +259,35 @@ export class CustomerPaymentsPageComponent {
     this.automatic.load(this.service.automaticApplications(since), since);
   }
 
-  retryPayments(): void {
+  /**
+   * Re-reads "today" (ADR-0038 §6). The aging and the automatic window are
+   * keyed by the date, so once local midnight has passed each permitted one
+   * is read again for the new day; otherwise its held data no longer matches
+   * the current key and the section would render nothing.
+   */
+  private advanceToday(): void {
     this.today.set(startOfLocalDay(this.clock()));
+    if (this.canSeeCards() && !this.receivables.denied() && this.receivables.issuedKey() !== this.asOfKey()) {
+      this.loadReceivables();
+    }
+    if (this.canSeePayments() && !this.automatic.denied() && this.automatic.issuedKey() !== this.since()) {
+      this.loadAutomatic();
+    }
+  }
+
+  retryPayments(): void {
+    this.advanceToday();
     this.loadPayments();
     this.focusAfterRender(() => this.listHeading()?.nativeElement.focus());
   }
 
   retryReceivables(): void {
-    this.today.set(startOfLocalDay(this.clock()));
+    this.advanceToday();
     this.loadReceivables();
   }
 
   retryAutomatic(): void {
-    this.today.set(startOfLocalDay(this.clock()));
+    this.advanceToday();
     this.loadAutomatic();
     this.focusAfterRender(() => this.automaticHeading()?.nativeElement.focus());
   }
@@ -305,6 +321,12 @@ export class CustomerPaymentsPageComponent {
    */
   private onPaymentsSettled(ok: boolean): void {
     this.settlePage();
+    if (this.payments.denied()) {
+      // Refused: nothing read under this permission keeps rendering, the panel included (ADR-0064 §6).
+      this.selected.set(null);
+      this.resultFor = null;
+      return;
+    }
     if (!ok) return;
     const current = this.selected();
     if (!current) return;
@@ -342,6 +364,11 @@ export class CustomerPaymentsPageComponent {
     if (this.isSmallScreen()) this.focusAfterRender(() => this.match()?.focusHeading());
   }
 
+  /** An apply was sent: the payment stays selected until the person picks another, whatever the list says. */
+  onWriteStarted(event: PaymentApplied): void {
+    if (this.selected()?.paymentId === event.paymentId) this.resultFor = event.paymentId;
+  }
+
   onApplied(event: PaymentApplied): void {
     if (this.selected()?.paymentId === event.paymentId) this.resultFor = event.paymentId;
     this.reloadAfterWrite();
@@ -357,9 +384,13 @@ export class CustomerPaymentsPageComponent {
 
   /** After a write, the list and the cards re-read under the same guards as the first load (ADR-0063 §5). */
   private reloadAfterWrite(): void {
-    this.today.set(startOfLocalDay(this.clock()));
+    const agingKey = this.receivables.issuedKey();
+    this.advanceToday();
     if (this.canSeePayments() && !this.payments.denied()) this.loadPayments();
-    if (this.canSeeCards() && !this.receivables.denied()) this.loadReceivables();
+    // advanceToday already re-read the aging when the day changed; otherwise re-read it for the write.
+    if (this.canSeeCards() && !this.receivables.denied() && this.receivables.issuedKey() === agingKey) {
+      this.loadReceivables();
+    }
   }
 
   // ── Matched automatically this week: Undo ─────────────────────────────
@@ -415,13 +446,19 @@ export class CustomerPaymentsPageComponent {
             });
             return;
           }
+          if (failure.status === 0 || failure.status >= 500) {
+            // The reversal may have landed and it carries no request key: retire this attempt so it can
+            // never be sent twice. Only a row that still serves UNDO after the re-read offers it again.
+            this.undoTarget.set(null);
+            this.undoReason.set('');
+            this.announcement.set({ key: 'ACCOUNTING.CUSTOMER_PAYMENTS.AUTOMATIC.ERROR.UNKNOWN', params: {} });
+            this.loadAutomatic();
+            this.reloadAfterWrite();
+            this.focusAfterRender(() => this.automaticHeading()?.nativeElement.focus());
+            return;
+          }
           const known = failure.code ? UNDO_ERROR_KEYS[failure.code] : undefined;
-          this.undoErrorKey.set({
-            key: known ?? (failure.status === 0 || failure.status >= 500
-              ? 'ACCOUNTING.CUSTOMER_PAYMENTS.AUTOMATIC.ERROR.UNKNOWN'
-              : 'ACCOUNTING.CUSTOMER_PAYMENTS.AUTOMATIC.ERROR.OTHER'),
-            params: {},
-          });
+          this.undoErrorKey.set({ key: known ?? 'ACCOUNTING.CUSTOMER_PAYMENTS.AUTOMATIC.ERROR.OTHER', params: {} });
           // Whatever happened, the list says what stands now.
           this.loadAutomatic();
         },

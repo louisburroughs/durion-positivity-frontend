@@ -4,9 +4,15 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { JwtClaims } from '../../../../core/models/auth.models';
-import { WaitingPaymentsList } from '../../models/customer-payments.models';
+import {
+  ApplyResult,
+  AutomaticApplicationsList,
+  ReceivablesTotals,
+  WaitingPaymentsList,
+} from '../../models/customer-payments.models';
 import { CustomerPaymentsPageComponent } from './customer-payments-page.component';
 import {
+  NOW,
   PaymentsMocks,
   TODAY_ISO,
   applyResult,
@@ -30,8 +36,10 @@ describe('CustomerPaymentsPageComponent (CAP:550 S6)', () => {
   const CLAIMS: JwtClaims = { sub: 'clerk.ana', tid: 'tenant-a', exp: 4102444800 };
   const tenant = signal<string | null>('tenant-a');
 
+  let now = new Date(NOW.getTime());
+
   function render(): void {
-    configurePayments(mocks, { tenantId: tenant });
+    configurePayments(mocks, { tenantId: tenant }, () => new Date(now.getTime()));
     fixture = TestBed.createComponent(CustomerPaymentsPageComponent);
     component = fixture.componentInstance;
     host = fixture.nativeElement as HTMLElement;
@@ -51,6 +59,7 @@ describe('CustomerPaymentsPageComponent (CAP:550 S6)', () => {
     mocks = createPaymentsMocks();
     mocks.claims.set(CLAIMS);
     tenant.set('tenant-a');
+    now = new Date(NOW.getTime());
   });
 
   afterEach(() => {
@@ -188,7 +197,153 @@ describe('CustomerPaymentsPageComponent (CAP:550 S6)', () => {
     });
   });
 
+  describe('a refused list re-read (ADR-0064 §6)', () => {
+    it('stops rendering the selected payment’s panel once the list is refused', () => {
+      render();
+      click('[data-testid="payment-item"]');
+      expect(q('app-payment-match')).not.toBeNull();
+
+      mocks.service.waitingPayments.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 403 })));
+      component.retryPayments();
+      fixture.detectChanges();
+
+      expect(component.selected()).toBeNull();
+      expect(q('app-payment-match')).toBeNull();
+      expect(q('[data-testid="payments-denied"]')).not.toBeNull();
+    });
+
+    it('drops even a panel that holds a result', () => {
+      render();
+      click('[data-testid="payment-item"]');
+      click('[data-testid="apply"]');
+      expect(q('[data-testid="match-result"]')).not.toBeNull();
+
+      mocks.service.waitingPayments.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 403 })));
+      component.retryPayments();
+      fixture.detectChanges();
+      expect(q('app-payment-match')).toBeNull();
+    });
+  });
+
+  describe('local midnight (ADR-0038 §6)', () => {
+    it('re-reads the aging and the automatic window for the new day when a retry runs past midnight', () => {
+      render();
+      expect(q('[data-testid="card-owed"]')).not.toBeNull();
+      now = new Date(NOW.getFullYear(), NOW.getMonth(), NOW.getDate() + 1, 0, 5);
+      const tomorrow = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+      component.retryPayments();
+      fixture.detectChanges();
+
+      expect(mocks.service.receivablesTotals).toHaveBeenLastCalledWith(tomorrow);
+      const since = new Date(mocks.service.automaticApplications.mock.lastCall![0]);
+      expect([since.getMonth(), since.getDate(), since.getHours()]).toEqual([8, 30, 0]);
+      expect(q('[data-testid="card-owed"]')).not.toBeNull();
+      expect(q('[data-testid="automatic-row"]')).not.toBeNull();
+    });
+
+    it('re-reads the date-keyed sections after a write past midnight', () => {
+      render();
+      click('[data-testid="payment-item"]');
+      now = new Date(NOW.getFullYear(), NOW.getMonth(), NOW.getDate() + 1, 0, 5);
+      const automaticReads = mocks.service.automaticApplications.mock.calls.length;
+      const agingReads = mocks.service.receivablesTotals.mock.calls.length;
+
+      click('[data-testid="apply"]');
+
+      expect(mocks.service.automaticApplications.mock.calls.length).toBe(automaticReads + 1);
+      expect(mocks.service.receivablesTotals.mock.calls.length).toBe(agingReads + 1);
+      expect(q('[data-testid="card-owed"]')).not.toBeNull();
+    });
+  });
+
+  describe('identity changes (ADR-0063 §7)', () => {
+    it('never paints tenant A’s late list, aging or automatic answers after a switch to B', () => {
+      const list = pending<WaitingPaymentsList>();
+      const aging = pending<ReceivablesTotals>();
+      const automatic = pending<AutomaticApplicationsList>();
+      mocks.service.waitingPayments.mockReturnValueOnce(list);
+      mocks.service.receivablesTotals.mockReturnValueOnce(aging);
+      mocks.service.automaticApplications.mockReturnValueOnce(automatic);
+      render();
+
+      mocks.claims.set({ ...CLAIMS, tid: 'tenant-b' });
+      tenant.set('tenant-b');
+      fixture.detectChanges();
+      list.next(waitingList([payment({ paymentId: 'a-only', customerName: 'Tenant A customer' })]));
+      aging.next({ asOfDate: TODAY_ISO, generatedAt: null, totalOutstanding: 999999, overdue: 1 });
+      automatic.next(automaticList([automaticRow({ customerName: 'Tenant A automatic' })]));
+      fixture.detectChanges();
+
+      expect(host.textContent).not.toContain('Tenant A customer');
+      expect(host.textContent).not.toContain('Tenant A automatic');
+      expect(host.textContent).not.toContain('$999,999.00');
+      expect(qa('[data-testid="payment-item"]').length).toBe(1);
+      expect(text('[data-testid="card-owed"] .stat-card__figure')).toBe('$18,240.50');
+    });
+
+    it('A→B→A: only the read issued last for A paints', () => {
+      const first = pending<WaitingPaymentsList>();
+      const third = pending<WaitingPaymentsList>();
+      mocks.service.waitingPayments.mockReturnValueOnce(first).mockReturnValueOnce(of(waitingList([]))).mockReturnValueOnce(third);
+      render();
+      tenant.set('tenant-b');
+      fixture.detectChanges();
+      tenant.set('tenant-a');
+      fixture.detectChanges();
+
+      first.next(waitingList([payment({ customerName: 'Stale A' })]));
+      fixture.detectChanges();
+      expect(host.textContent).not.toContain('Stale A');
+
+      third.next(waitingList([payment({ customerName: 'Fresh A' })]));
+      fixture.detectChanges();
+      expect(host.textContent).toContain('Fresh A');
+    });
+
+    it('drops an Undo in flight across the switch: no announcement, no re-read for the old tenant', () => {
+      const answer = pending<void>();
+      mocks.service.reverseApplication.mockReturnValue(answer);
+      render();
+      (q('[data-testid="automatic"]') as HTMLDetailsElement).open = true;
+      click('[data-testid="undo"]');
+      const field = q('[data-testid="undo-reason"]') as HTMLTextAreaElement;
+      field.value = 'Customer paid the wrong invoice';
+      field.dispatchEvent(new Event('input'));
+      click('[data-testid="undo-confirm"]');
+
+      tenant.set('tenant-b');
+      fixture.detectChanges();
+      const reads = mocks.service.automaticApplications.mock.calls.length;
+      answer.next();
+      answer.complete();
+      fixture.detectChanges();
+
+      expect(q('[data-testid="undo-dialog"]')).toBeNull();
+      expect(component.announcement()).toBeNull();
+      expect(component.undoing()).toBe(false);
+      expect(mocks.service.automaticApplications.mock.calls.length).toBe(reads);
+    });
+  });
+
   describe('selecting a payment (§5.3 item 4)', () => {
+    it('keeps the payment selected while its apply is in flight, even when a re-read drops it', () => {
+      const answer = pending<ApplyResult>();
+      mocks.service.applyPayment.mockReturnValue(answer);
+      render();
+      click('[data-testid="payment-item"]');
+      click('[data-testid="apply"]');
+
+      mocks.service.waitingPayments.mockReturnValue(of(waitingList([])));
+      component.refresh();
+      fixture.detectChanges();
+      expect(component.selected()?.paymentId).toBe('pay-1');
+
+      answer.next(applyResult());
+      fixture.detectChanges();
+      expect(q('[data-testid="match-result"]')).not.toBeNull();
+    });
+
     it('opens the match panel for the pressed payment', () => {
       render();
       click('[data-testid="payment-item"]');
@@ -308,6 +463,24 @@ describe('CustomerPaymentsPageComponent (CAP:550 S6)', () => {
 
       expect(mocks.service.reverseApplication).toHaveBeenCalledTimes(1);
       expect(q('[data-testid="undo-confirm"]')?.getAttribute('aria-disabled')).toBe('true');
+    });
+
+    it('retires the attempt on an unknown outcome so it can never be sent twice, and re-reads (Copilot)', async () => {
+      mocks.service.reverseApplication.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 504 })));
+      render();
+      openUndo();
+      typeReason('Customer paid the wrong invoice');
+      const reads = mocks.service.automaticApplications.mock.calls.length;
+      click('[data-testid="undo-confirm"]');
+      await fixture.whenStable();
+
+      expect(q('[data-testid="undo-dialog"]')).toBeNull();
+      expect(component.undoTarget()).toBeNull();
+      expect(text('[data-testid="announcement"]')).toBe('ACCOUNTING.CUSTOMER_PAYMENTS.AUTOMATIC.ERROR.UNKNOWN');
+      expect(mocks.service.automaticApplications.mock.calls.length).toBe(reads + 1);
+      component.confirmUndo();
+      expect(mocks.service.reverseApplication).toHaveBeenCalledTimes(1);
+      expect(document.activeElement?.id).toBe('automatic-heading');
     });
 
     it('explains WHOLE_REQUEST_REVERSAL_REQUIRED in the dialog', () => {

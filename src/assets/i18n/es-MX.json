@@ -5299,7 +5299,7 @@
         },
         "MORE": {
           "PAYMENTS": "Hay {{count}} pagos más en espera.",
-          "OPEN_PAYMENTS": "Abrir Aplicar pago",
+          "OPEN_PAYMENTS": "Abrir Pagos de clientes",
           "BANK_LINES": "Hay {{count}} líneas bancarias más que no están en los libros.",
           "APPROVALS": "Hay {{count}} revisiones más en espera de aprobación.",
           "OPEN_BANK": "Abrir revisión bancaria"
@@ -5746,7 +5746,8 @@
         "CREDIT_CHANGED": "El pago se aplicó, pero el importe que le quedaba cambió, así que no se guardó ningún crédito. Queda en el pago para conciliarlo más tarde.",
         "CREDIT_OTHER": "El pago se aplicó, pero el resto no se guardó como crédito. Queda en el pago para conciliarlo más tarde.",
         "REFUND_FAILED": "El pago se aplicó y {{amount}} queda como crédito, pero el reembolso no se realizó.",
-        "REFUND_FORBIDDEN": "El pago se aplicó y {{amount}} queda como crédito. Reembolsarlo requiere el permiso {{permission}}."
+        "REFUND_FORBIDDEN": "El pago se aplicó y {{amount}} queda como crédito. Reembolsarlo requiere el permiso {{permission}}.",
+        "REFUND_AMOUNT_CHANGED": "Quedaron {{amount}} en el pago, no el importe que confirmó, así que se guardó como crédito. Reembólselo solo después de confirmar este importe."
       },
       "LIST": {
         "HEADING": "Pagos en espera",
@@ -5758,8 +5759,8 @@
         "PICK_ONE": "Elija un pago para conciliarlo."
       },
       "DUPLICATE": {
-        "BADGE": "Factura ya pagada — posible pago duplicado",
-        "HINT": "La factura contra la que se cobró este pago ya no necesita pagarse. Consulte con el cliente antes de guardarlo como crédito o reembolsarlo."
+        "BADGE": "La factura contra la que se cobró no está abierta — verifique si hay un pago duplicado",
+        "HINT": "La factura contra la que se cobró este pago ya no está abierta. Consulte con el cliente antes de guardarlo como crédito o reembolsarlo."
       },
       "AUTOMATIC": {
         "SUMMARY": "Conciliados automáticamente esta semana",
@@ -5845,12 +5846,14 @@
         "MATCH_REST": "Conciliar el resto de este pago",
         "ANNOUNCE_APPLIED": "Pago aplicado: {{amount}}.",
         "ANNOUNCE_KEPT": "Pago aplicado; {{amount}} guardado como crédito.",
-        "ANNOUNCE_REFUNDED": "Pago aplicado; {{amount}} reembolsado."
+        "ANNOUNCE_REFUNDED": "Pago aplicado; {{amount}} reembolsado.",
+        "REFUND_KEPT": "Reembolsar {{amount}}"
       },
       "REFUND": {
         "TITLE": "¿Reembolsar el resto?",
         "BODY": "{{customer}} recibe {{amount}} de vuelta. El dinero sale del taller; esto no se puede deshacer aquí.",
-        "CONFIRM": "Aplicar {{applying}} y reembolsar {{leftOver}}"
+        "CONFIRM": "Aplicar {{applying}} y reembolsar {{leftOver}}",
+        "CONFIRM_KEPT": "Reembolsar {{amount}}"
       },
       "REASON": {
         "REMITTANCE_REFERENCE": "Referencia de pago",

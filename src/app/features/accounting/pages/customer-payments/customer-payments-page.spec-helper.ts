@@ -175,7 +175,11 @@ export function createPaymentsMocks(held: readonly string[] | null = ALL_PAYMENT
 }
 
 /** `authExtras` carries the tenant signal: tenant ids stay in spec files (arch rule TEN-02). */
-export function configurePayments(mocks: PaymentsMocks, authExtras: Partial<AuthService>): void {
+export function configurePayments(
+  mocks: PaymentsMocks,
+  authExtras: Partial<AuthService>,
+  clock: () => Date = () => new Date(NOW.getTime()),
+): void {
   const auth: Partial<AuthService> = {
     ...authExtras,
     currentUserClaims: mocks.claims,
@@ -199,7 +203,7 @@ export function configurePayments(mocks: PaymentsMocks, authExtras: Partial<Auth
       { provide: ActivatedRoute, useValue: route },
       { provide: AuthService, useValue: auth },
       { provide: CustomerPaymentsService, useValue: mocks.service },
-      { provide: CUSTOMER_PAYMENTS_CLOCK, useValue: () => new Date(NOW.getTime()) },
+      { provide: CUSTOMER_PAYMENTS_CLOCK, useValue: clock },
     ],
   });
 }

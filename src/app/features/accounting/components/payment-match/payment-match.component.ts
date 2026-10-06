@@ -175,6 +175,12 @@ export class PaymentMatchComponent {
   readonly embedded = input(false);
 
   readonly applied = output<PaymentApplied>();
+  /**
+   * An apply was sent for this payment: the host keeps the payment selected
+   * (even once a re-read drops it from its list) until the person picks
+   * another, so the chain apply → credit → refund is never torn down mid-flight.
+   */
+  readonly writeStarted = output<PaymentApplied>();
   /** The payment changed under the person (a refusal), or its remainder moved: the host re-reads its list. */
   readonly changed = output<void>();
   readonly announce = output<MatchMessage>();
@@ -213,6 +219,12 @@ export class PaymentMatchComponent {
   readonly credit = signal<RemainderCredit | null>(null);
   readonly refunded = signal<number | null>(null);
   readonly refundDialogOpen = signal(false);
+  /**
+   * A credit kept instead of refunded because its amount was not the one the
+   * person confirmed: offered for a fresh confirmation of the served amount.
+   */
+  readonly refundOffer = signal<RemainderCredit | null>(null);
+  readonly keptRefundDialogOpen = signal(false);
 
   readonly locked = computed(() => LOCKED_PHASES.has(this.phase()));
   readonly duplicate = computed(() => isPossibleDuplicate(this.payment()));
@@ -304,6 +316,8 @@ export class PaymentMatchComponent {
   private creditRequestId = uuidV7();
   /** The refund's key, made when its confirmation opens. */
   private refundRequestId: string | null = null;
+  /** The left-over (cents) the person confirmed for refund; a refund of any other amount is never sent. */
+  private confirmedRefundMinor: number | null = null;
   /** The lines of the apply whose outcome is open, for Try again. */
   private lastLines: readonly MatchLine[] = [];
   /** The remainder credit or refund in flight, for its retry. */
@@ -345,6 +359,8 @@ export class PaymentMatchComponent {
     this.refunded.set(null);
     this.message.set(null);
     this.refundDialogOpen.set(false);
+    this.keptRefundDialogOpen.set(false);
+    this.refundOffer.set(null);
     this.conflictCheck = null;
     this.pendingCredit = null;
     this.restoreSuggestions();
@@ -362,6 +378,7 @@ export class PaymentMatchComponent {
     this.applicationRequestId = uuidV7();
     this.creditRequestId = uuidV7();
     this.refundRequestId = null;
+    this.confirmedRefundMinor = null;
     this.lastLines = [];
   }
 
@@ -424,6 +441,8 @@ export class PaymentMatchComponent {
     this.refunded.set(null);
     this.message.set(null);
     this.refundDialogOpen.set(false);
+    this.keptRefundDialogOpen.set(false);
+    this.refundOffer.set(null);
     this.conflictCheck = null;
     this.pendingCredit = null;
     this.restoreSuggestions();
@@ -456,6 +475,7 @@ export class PaymentMatchComponent {
     if (!this.refundDialogOpen()) return;
     this.refundDialogOpen.set(false);
     if (!this.canRefund() || !this.applyEnabled() || !this.offerLeftover()) return;
+    this.confirmedRefundMinor = this.leftOverMinor();
     this.runApply(this.currentLines(), 'REFUND');
   }
 
@@ -486,6 +506,7 @@ export class PaymentMatchComponent {
     this.lastPlan = plan;
     this.phase.set('submitting');
     this.message.set(null);
+    this.writeStarted.emit({ paymentId: payment.paymentId });
     this.writeSubscription = this.service
       .applyPayment(payment.paymentId, key, lines)
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -652,7 +673,29 @@ export class PaymentMatchComponent {
     this.runCredit(plan);
   }
 
+  /**
+   * Refunds a kept credit, but only with the refund permission held now and
+   * only for the amount the person confirmed (cents). Otherwise the credit
+   * stays a credit and the panel says so; a different amount is offered for a
+   * fresh confirmation (story PROPOSED 8, ADR-0040 §6a.4).
+   */
   private runRefund(credit: RemainderCredit): void {
+    const amount = this.format(credit.amount, credit.currency ?? this.payment().currency);
+    if (!this.canRefund()) {
+      this.pendingCredit = null;
+      this.finish({
+        key: 'ACCOUNTING.CUSTOMER_PAYMENTS.ERROR.REFUND_FORBIDDEN',
+        params: { permission: this.codes.refund, amount },
+        tone: 'error',
+      });
+      return;
+    }
+    if (toMinor(credit.amount) !== this.confirmedRefundMinor) {
+      this.pendingCredit = null;
+      this.refundOffer.set(credit);
+      this.finish({ key: 'ACCOUNTING.CUSTOMER_PAYMENTS.ERROR.REFUND_AMOUNT_CHANGED', params: { amount }, tone: 'error' });
+      return;
+    }
     const intent = this.intent;
     const requestId = this.refundRequestId ?? uuidV7();
     this.refundRequestId = requestId;
@@ -690,6 +733,28 @@ export class PaymentMatchComponent {
           this.focusAfterRender(() => (this.retryButton() ?? this.resultHeading())?.nativeElement.focus());
         },
       });
+  }
+
+  /** Opens the confirmation for refunding a credit kept at a different amount; its own new key. */
+  openKeptRefund(): void {
+    if (!this.refundOffer() || !this.canRefund() || this.phase() !== 'done') return;
+    this.refundRequestId = uuidV7();
+    this.keptRefundDialogOpen.set(true);
+  }
+
+  cancelKeptRefund(): void {
+    this.keptRefundDialogOpen.set(false);
+  }
+
+  /** The person confirmed the served amount: refund exactly that. */
+  confirmKeptRefund(): void {
+    const credit = this.refundOffer();
+    if (!this.keptRefundDialogOpen() || !credit) return;
+    this.keptRefundDialogOpen.set(false);
+    if (!this.canRefund()) return;
+    this.refundOffer.set(null);
+    this.confirmedRefundMinor = toMinor(credit.amount);
+    this.runRefund(credit);
   }
 
   /** Try the refund again: the same key, permission re-checked at click time. */

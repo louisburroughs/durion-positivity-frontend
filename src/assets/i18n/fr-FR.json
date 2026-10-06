@@ -5299,7 +5299,7 @@
         },
         "MORE": {
           "PAYMENTS": "{{count}} autres paiements sont en attente.",
-          "OPEN_PAYMENTS": "Ouvrir Appliquer un paiement",
+          "OPEN_PAYMENTS": "Ouvrir Paiements des clients",
           "BANK_LINES": "{{count}} autres lignes bancaires sont absentes des livres.",
           "APPROVALS": "{{count}} autres vérifications attendent une approbation.",
           "OPEN_BANK": "Ouvrir la vérification bancaire"
@@ -5746,7 +5746,8 @@
         "CREDIT_CHANGED": "Le paiement a été appliqué, mais le montant qui y restait a changé ; aucun crédit n'a été gardé. Il demeure sur le paiement pour un lettrage ultérieur.",
         "CREDIT_OTHER": "Le paiement a été appliqué, mais le reste n'a pas été gardé en crédit. Il demeure sur le paiement pour un lettrage ultérieur.",
         "REFUND_FAILED": "Le paiement a été appliqué et {{amount}} est gardé en crédit, mais le remboursement n'est pas passé.",
-        "REFUND_FORBIDDEN": "Le paiement a été appliqué et {{amount}} est gardé en crédit. Le rembourser exige la permission {{permission}}."
+        "REFUND_FORBIDDEN": "Le paiement a été appliqué et {{amount}} est gardé en crédit. Le rembourser exige la permission {{permission}}.",
+        "REFUND_AMOUNT_CHANGED": "Il restait {{amount}} sur le paiement, et non le montant que vous avez confirmé ; il a donc été gardé en crédit. Ne le remboursez qu'après avoir confirmé ce montant."
       },
       "LIST": {
         "HEADING": "Paiements en attente",
@@ -5758,8 +5759,8 @@
         "PICK_ONE": "Choisissez un paiement pour le lettrer."
       },
       "DUPLICATE": {
-        "BADGE": "Facture déjà payée — paiement en double possible",
-        "HINT": "La facture sur laquelle ce paiement a été encaissé n'a plus besoin d'être payée. Vérifiez auprès du client avant de le garder en crédit ou de le rembourser."
+        "BADGE": "La facture sur laquelle il a été encaissé n'est pas ouverte — vérifiez s'il s'agit d'un paiement en double",
+        "HINT": "La facture sur laquelle ce paiement a été encaissé n'est plus ouverte. Vérifiez auprès du client avant de le garder en crédit ou de le rembourser."
       },
       "AUTOMATIC": {
         "SUMMARY": "Lettrés automatiquement cette semaine",
@@ -5845,12 +5846,14 @@
         "MATCH_REST": "Lettrer le reste de ce paiement",
         "ANNOUNCE_APPLIED": "Paiement appliqué : {{amount}}.",
         "ANNOUNCE_KEPT": "Paiement appliqué ; {{amount}} gardé en crédit.",
-        "ANNOUNCE_REFUNDED": "Paiement appliqué ; {{amount}} remboursé."
+        "ANNOUNCE_REFUNDED": "Paiement appliqué ; {{amount}} remboursé.",
+        "REFUND_KEPT": "Rembourser {{amount}}"
       },
       "REFUND": {
         "TITLE": "Rembourser le reste ?",
         "BODY": "{{customer}} récupère {{amount}}. L'argent sort de l'atelier ; ceci ne peut pas être annulé ici.",
-        "CONFIRM": "Appliquer {{applying}} et rembourser {{leftOver}}"
+        "CONFIRM": "Appliquer {{applying}} et rembourser {{leftOver}}",
+        "CONFIRM_KEPT": "Rembourser {{amount}}"
       },
       "REASON": {
         "REMITTANCE_REFERENCE": "Référence de paiement",

@@ -294,7 +294,22 @@ export class AccountingHomePageComponent {
     );
   });
 
-  readonly selectedItem = computed(() => this.todoItems().find(item => item.id === this.selectedId()) ?? null);
+  /**
+   * The payment item whose match panel sent a write (CAP:550 S6). A re-read
+   * that drops the now used-up payment must not tear its panel down while the
+   * apply → credit → refund chain is in flight or its result is on screen, so
+   * the item stays selected until the person picks another (the Customer
+   * payments page's `resultFor`). A refused payments read drops it (ADR-0064 §6).
+   */
+  private readonly heldPayment = signal<TodoItem | null>(null);
+
+  readonly selectedItem = computed(() => {
+    const id = this.selectedId();
+    const listed = this.todoItems().find(item => item.id === id);
+    if (listed) return listed;
+    const held = this.heldPayment();
+    return held && held.id === id && this.canSeePayments() && !this.payments.denied() ? held : null;
+  });
 
   /** True once every permitted to-do source has answered OK at least once with nothing to do. */
   readonly allCaughtUp = computed(
@@ -371,6 +386,7 @@ export class AccountingHomePageComponent {
     this.approveMessage.set(null);
     this.approvedAccount.set(null);
     this.paymentMessage.set(null);
+    this.heldPayment.set(null);
     this.focusOwed = false;
     this.selectedId.set(null);
     this.filter.set('ALL');
@@ -469,7 +485,7 @@ export class AccountingHomePageComponent {
   private onTodoSourceSettled(): void {
     this.settlePage();
     const selected = this.selectedId();
-    const stillThere = !!selected && this.todoItems().some(item => item.id === selected);
+    const stillThere = !!selected && this.selectedItem() !== null;
     if (selected && !stillThere) {
       this.selectedId.set(null);
       this.review.reset();
@@ -530,7 +546,10 @@ export class AccountingHomePageComponent {
 
   select(item: TodoItem): void {
     this.approvedAccount.set(null);
-    if (this.selectedId() !== item.id) this.paymentMessage.set(null);
+    if (this.selectedId() !== item.id) {
+      this.paymentMessage.set(null);
+      this.heldPayment.set(null);
+    }
     if (this.selectedId() !== item.id) {
       this.approveMessage.set(null);
       this.focusOwed = false;
@@ -552,6 +571,11 @@ export class AccountingHomePageComponent {
    * applied leaves the list, which clears the panel and moves focus to the
    * to-do heading (`onTodoSourceSettled`); the outcome stays announced.
    */
+  onPaymentWriteStarted(): void {
+    const item = this.selectedItem();
+    if (item?.kind === 'PAYMENT') this.heldPayment.set(item);
+  }
+
   onPaymentApplied(): void {
     this.today.set(startOfLocalDay(this.clock()));
     if (this.canSeePayments() && !this.payments.denied()) this.loadRegion('payments');

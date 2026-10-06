@@ -511,6 +511,7 @@
               [approveMessageKey]="approveMessage()?.key ?? null"
               [approveMessageParams]="approveMessage()?.params ?? {}"
               (approve)="approveMonth()"
+              (paymentWriteStarted)="onPaymentWriteStarted()"
               (paymentApplied)="onPaymentApplied()"
               (paymentChanged)="onPaymentChanged()"
               (paymentAnnounce)="onPaymentAnnounce($event)"

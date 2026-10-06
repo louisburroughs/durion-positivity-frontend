@@ -107,8 +107,15 @@ describe('Customer payments copy (real bundles)', () => {
     expect(en('ACCOUNTING.CUSTOMER_PAYMENTS.MATCH.START_OVER')).toBe('Start over');
   });
 
-  it('labels case-g payments with the Accounting ruling’s words', () => {
-    expect(en('ACCOUNTING.CUSTOMER_PAYMENTS.DUPLICATE.BADGE')).toBe('Invoice already paid — possible duplicate payment');
+  it('labels case-g payments with words true for every cause', () => {
+    // True in every case the client can see: the invoice is not open (backend #2563 will serve a flag).
+    expect(en('ACCOUNTING.CUSTOMER_PAYMENTS.DUPLICATE.BADGE')).toBe(
+      "The invoice it was taken against isn't open — check for a duplicate payment",
+    );
+    expect(en('ACCOUNTING.HOME.TODO.MORE.OPEN_PAYMENTS')).toBe('Open Customer payments');
+    for (const [, bundle] of LOCALES) {
+      expect(JSON.stringify(bundle)).not.toMatch(/Apply payment\b|Appliquer un paiement|Aplicar pago\b/);
+    }
   });
 
   it('puts the consequence, the over-application and the refund warning as the story words them (P4)', () => {

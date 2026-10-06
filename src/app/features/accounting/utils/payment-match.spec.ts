@@ -39,6 +39,10 @@ describe('payment-match helpers (CAP:550 S6, P7)', () => {
     expect(parseTypedAmount('').error).toBe('INVALID');
     expect(parseTypedAmount('-5').error).toBe('INVALID');
     expect(parseTypedAmount('10.005').error).toBe('PRECISION');
+    // Counted on what was typed: trailing zeros still count as decimals.
+    expect(parseTypedAmount('1.230').error).toBe('PRECISION');
+    expect(parseTypedAmount('10,000').error).toBe('PRECISION');
+    expect(parseTypedAmount('1,50').error).toBeNull();
     expect(parseTypedAmount('0').error).toBe('MINIMUM');
     expect(parseTypedAmount('0.00').error).toBe('MINIMUM');
   });
@@ -57,6 +61,12 @@ describe('payment-match helpers (CAP:550 S6, P7)', () => {
   it('flags a possible duplicate only when the named invoice was not suggested (case g)', () => {
     expect(isPossibleDuplicate(payment())).toBe(false);
     expect(isPossibleDuplicate(payment({ sourceInvoiceNumber: 'INV-1', reasons: ['SAME_CUSTOMER'] }))).toBe(true);
+    // Partly applied: the named invoice most likely was paid by this very payment.
+    expect(
+      isPossibleDuplicate(
+        payment({ sourceInvoiceNumber: 'INV-1', reasons: ['SAME_CUSTOMER'], totalAmount: 600, unappliedAmount: 100 }),
+      ),
+    ).toBe(false);
     expect(
       isPossibleDuplicate(payment({ sourceInvoiceId: 'inv-1', reasons: ['REMITTANCE_REFERENCE', 'SAME_CUSTOMER'] })),
     ).toBe(false);

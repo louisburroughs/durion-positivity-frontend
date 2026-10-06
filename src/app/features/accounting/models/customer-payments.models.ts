@@ -8,8 +8,11 @@ import { PaymentToMatch } from './accounting-home.models';
  * `applyPayment`, S35 `creditPaymentRemainder`, `refundCustomerCredit`). The
  * page only sums what the person typed, in integer minor units, as a preview
  * the server's answer replaces (P7). Ids are request keys and never rendered
- * (P8, ADR-0064 §5). Everything here is read from the server, so every field is
- * read-only and none is ever sent back (ADR-0034).
+ * (P8, ADR-0064 §5).
+ *
+ * Two kinds of shape live here (ADR-0034): response models, read from the
+ * server and never sent back, and the one request-only shape, `MatchLine`,
+ * which the page builds from typed amounts and sends to `applyPayment`.
  */
 
 /** A customer payment waiting to be matched: the home's to-do payment, one shape for both (S4, S6). */
@@ -72,7 +75,7 @@ export interface AutomaticApplicationsList {
   readonly truncated: boolean;
 }
 
-/** One line of an apply request: an invoice and the amount for it. */
+/** Request only (sent, never read back): one line of an apply — an invoice and the amount for it. */
 export interface MatchLine {
   readonly invoiceId: string;
   readonly amount: number;

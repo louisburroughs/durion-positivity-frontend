@@ -5299,7 +5299,7 @@
         },
         "MORE": {
           "PAYMENTS": "{{count}} more payments are waiting.",
-          "OPEN_PAYMENTS": "Open Apply payment",
+          "OPEN_PAYMENTS": "Open Customer payments",
           "BANK_LINES": "{{count}} more bank lines are not in the books.",
           "APPROVALS": "{{count}} more check-ups are waiting for approval.",
           "OPEN_BANK": "Open bank check-up"
@@ -5746,7 +5746,8 @@
         "CREDIT_CHANGED": "The payment was applied, but the amount left on it changed, so nothing was kept as credit. It stays on the payment for later matching.",
         "CREDIT_OTHER": "The payment was applied, but the rest wasn't kept as credit. It stays on the payment for later matching.",
         "REFUND_FAILED": "The payment was applied and {{amount}} is kept as credit, but the refund did not go through.",
-        "REFUND_FORBIDDEN": "The payment was applied and {{amount}} is kept as credit. Refunding it needs the {{permission}} permission."
+        "REFUND_FORBIDDEN": "The payment was applied and {{amount}} is kept as credit. Refunding it needs the {{permission}} permission.",
+        "REFUND_AMOUNT_CHANGED": "{{amount}} was left on the payment, not the amount you confirmed, so it was kept as credit. Refund it only after you confirm this amount."
       },
       "LIST": {
         "HEADING": "Payments waiting",
@@ -5758,8 +5759,8 @@
         "PICK_ONE": "Pick a payment to match it."
       },
       "DUPLICATE": {
-        "BADGE": "Invoice already paid — possible duplicate payment",
-        "HINT": "The invoice this payment was taken against no longer needs paying. Check with the customer before you keep it as credit or refund it."
+        "BADGE": "The invoice it was taken against isn't open — check for a duplicate payment",
+        "HINT": "The invoice this payment was taken against isn't open any more. Check with the customer before you keep it as credit or refund it."
       },
       "AUTOMATIC": {
         "SUMMARY": "Matched automatically this week",
@@ -5845,12 +5846,14 @@
         "MATCH_REST": "Match the rest of this payment",
         "ANNOUNCE_APPLIED": "Payment applied: {{amount}}.",
         "ANNOUNCE_KEPT": "Payment applied; {{amount}} kept as credit.",
-        "ANNOUNCE_REFUNDED": "Payment applied; {{amount}} refunded."
+        "ANNOUNCE_REFUNDED": "Payment applied; {{amount}} refunded.",
+        "REFUND_KEPT": "Refund {{amount}}"
       },
       "REFUND": {
         "TITLE": "Refund the rest?",
         "BODY": "{{customer}} gets {{amount}} back. Money leaves the shop; this can't be undone here.",
-        "CONFIRM": "Apply {{applying}} and refund {{leftOver}}"
+        "CONFIRM": "Apply {{applying}} and refund {{leftOver}}",
+        "CONFIRM_KEPT": "Refund {{amount}}"
       },
       "REASON": {
         "REMITTANCE_REFERENCE": "Remittance reference",

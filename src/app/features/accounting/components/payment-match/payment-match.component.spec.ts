@@ -416,6 +416,78 @@ describe('PaymentMatchComponent (CAP:550 S6 match panel)', () => {
       expect(component.refunded()).toBe(100);
     });
 
+    it('never refunds an amount the person did not confirm: a different served remainder is kept as credit and re-confirmed', () => {
+      mocks.service.applyPayment.mockReturnValue(of(applyResult({ appliedAmount: 450, remainingAmount: 150 })));
+      mocks.service.creditRemainder.mockReturnValue(of({ creditId: 'credit-1', amount: 150, currency: 'USD' }));
+      render();
+      leaveHundred();
+      click('[data-testid="leftover-refund"]');
+      click('[data-testid="apply"]');
+      expect(text('#refund-body')).toBe('ACCOUNTING.CUSTOMER_PAYMENTS.REFUND.BODY');
+      click('[data-testid="refund-confirm"]');
+
+      expect(mocks.service.creditRemainder).toHaveBeenCalledWith('pay-1', 150, expect.stringMatching(UUID_V7));
+      expect(mocks.service.refundCredit).not.toHaveBeenCalled();
+      expect(component.message()?.key).toBe('ACCOUNTING.CUSTOMER_PAYMENTS.ERROR.REFUND_AMOUNT_CHANGED');
+      expect(component.message()?.params['amount']).toBe('$150.00');
+      expect(text('[data-testid="result-credit"]')).toBe('$150.00');
+
+      click('[data-testid="refund-kept"]');
+      const dialog = q('[data-testid="kept-refund-dialog"]') as HTMLDialogElement;
+      expect(dialog.matches(':modal')).toBe(true);
+      expect(mocks.service.refundCredit).not.toHaveBeenCalled();
+      click('[data-testid="kept-refund-confirm"]');
+
+      expect(mocks.service.refundCredit).toHaveBeenCalledTimes(1);
+      expect(mocks.service.refundCredit).toHaveBeenCalledWith('credit-1', 150, expect.stringMatching(UUID_V7));
+      expect(component.refunded()).toBe(150);
+    });
+
+    it('keeps the credit and refunds nothing when the refund permission goes away mid-chain', () => {
+      const credit = pending<RemainderCredit>();
+      mocks.service.applyPayment.mockReturnValue(of(applyResult({ appliedAmount: 500, remainingAmount: 100 })));
+      mocks.service.creditRemainder.mockReturnValue(credit);
+      render();
+      leaveHundred();
+      click('[data-testid="leftover-refund"]');
+      click('[data-testid="apply"]');
+      click('[data-testid="refund-confirm"]');
+      mocks.held.set(['accounting:payment:apply']);
+      credit.next(remainderCredit);
+      fixture.detectChanges();
+
+      expect(mocks.service.refundCredit).not.toHaveBeenCalled();
+      expect(component.credit()).toEqual(remainderCredit);
+      expect(component.message()?.key).toBe('ACCOUNTING.CUSTOMER_PAYMENTS.ERROR.REFUND_FORBIDDEN');
+      expect(component.phase()).toBe('done');
+    });
+
+    it('does not retry a failed refund once the permission is gone', () => {
+      mocks.service.applyPayment.mockReturnValue(of(applyResult({ appliedAmount: 500, remainingAmount: 100 })));
+      mocks.service.refundCredit.mockReturnValueOnce(throwError(() => httpError(503)));
+      render();
+      leaveHundred();
+      click('[data-testid="leftover-refund"]');
+      click('[data-testid="apply"]');
+      click('[data-testid="refund-confirm"]');
+      mocks.held.set(['accounting:payment:apply']);
+      fixture.detectChanges();
+
+      expect(q('[data-testid="retry-refund"]')).toBeNull();
+      component.retryRefund();
+      expect(mocks.service.refundCredit).toHaveBeenCalledTimes(1);
+    });
+
+    it('tells the host a write started before the apply answers', () => {
+      const answer = pending<ApplyResult>();
+      mocks.service.applyPayment.mockReturnValue(answer);
+      const started: string[] = [];
+      render();
+      component.writeStarted.subscribe(event => started.push(event.paymentId));
+      click('[data-testid="apply"]');
+      expect(started).toEqual(['pay-1']);
+    });
+
     it('re-reads and keeps nothing as credit when the remainder changed (422 PAYMENT_REMAINDER_CHANGED)', () => {
       mocks.service.applyPayment.mockReturnValue(of(applyResult({ appliedAmount: 500, remainingAmount: 100 })));
       mocks.service.creditRemainder.mockReturnValue(throwError(() => httpError(422, 'PAYMENT_REMAINDER_CHANGED')));
@@ -623,6 +695,20 @@ describe('PaymentMatchComponent (CAP:550 S6 match panel)', () => {
     it('labels a payment whose invoice is no longer open as a possible duplicate', () => {
       render(payment({ sourceInvoiceNumber: 'INV-2026-01600', sourceInvoiceId: 'inv-old', reasons: ['SAME_CUSTOMER'], suggestedInvoices: [] }));
       expect(text('[data-testid="possible-duplicate"] .status-badge')).toBe('ACCOUNTING.CUSTOMER_PAYMENTS.DUPLICATE.BADGE');
+    });
+
+    it('does not label a partly applied payment whose invoice is no longer open', () => {
+      render(
+        payment({
+          sourceInvoiceNumber: 'INV-2026-01600',
+          sourceInvoiceId: 'inv-old',
+          reasons: ['SAME_CUSTOMER'],
+          suggestedInvoices: [],
+          totalAmount: 600,
+          unappliedAmount: 100,
+        }),
+      );
+      expect(q('[data-testid="possible-duplicate"]')).toBeNull();
     });
 
     it('does not label a payment suggested against its own invoice', () => {

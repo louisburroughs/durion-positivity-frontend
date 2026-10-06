@@ -53,14 +53,21 @@ export function canKeepCredit(payment: WaitingPayment): boolean {
 }
 
 /**
- * "Invoice already paid — possible duplicate payment" (Accounting ruling on
- * backend #2503, case g): the payment names the invoice it was taken against,
- * but S1 did not suggest it, which it always does while that invoice is open
- * (`UnappliedPaymentSuggester` rule A). The payment stays for a person.
+ * "The invoice it was taken against isn't open — check for a duplicate
+ * payment" (Accounting ruling on backend #2503, case g). Derived until S1
+ * serves a flag (backend #2563): the payment names the invoice it was taken
+ * against, S1 did not suggest it — which it always does while that invoice is
+ * open (`UnappliedPaymentSuggester` rule A) — and nothing of the payment has
+ * been applied yet. A partly applied payment most likely paid that invoice
+ * already, so it is not flagged. The copy claims only what is known: the
+ * invoice is not open. The payment stays for a person.
  */
 export function isPossibleDuplicate(payment: WaitingPayment): boolean {
+  const untouched = toMinor(payment.unappliedAmount) === toMinor(payment.totalAmount);
   return (
-    !!(payment.sourceInvoiceId || payment.sourceInvoiceNumber) && !payment.reasons.includes('REMITTANCE_REFERENCE')
+    untouched &&
+    !!(payment.sourceInvoiceId || payment.sourceInvoiceNumber) &&
+    !payment.reasons.includes('REMITTANCE_REFERENCE')
   );
 }
 
@@ -104,8 +111,10 @@ export interface TypedAmount {
 export function parseTypedAmount(value: string): TypedAmount {
   const parsed = parseAmountInput(value);
   if (parsed === null || parsed < 0) return { minor: null, error: 'INVALID' };
+  // Decimals are counted on what was typed: `1.230` has three even though the number reads 1.23.
+  const typed = value.replace(/[\s\u00a0\u202f]/g, '').replace(',', '.');
+  const decimals = typed.includes('.') ? typed.split('.')[1].length : 0;
   const literal = String(parsed);
-  const decimals = literal.includes('.') ? literal.split('.')[1].length : 0;
   if (literal.includes('e') || decimals > 2) return { minor: null, error: 'PRECISION' };
   const minor = decimalTextToMinor(literal);
   if (minor === null) return { minor: null, error: 'INVALID' };

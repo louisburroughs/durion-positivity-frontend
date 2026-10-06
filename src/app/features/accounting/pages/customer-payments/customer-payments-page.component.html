@@ -231,9 +231,10 @@
 
       <!-- The selected payment (§5.3 items 4–5); below the list at phone width. -->
       <div class="payments__panel-column">
-        @if (selected(); as payment) {
+        @if (!payments.denied() && selected(); as payment) {
           <app-payment-match
             [payment]="payment"
+            (writeStarted)="onWriteStarted($event)"
             (applied)="onApplied($event)"
             (changed)="onChanged()"
             (announce)="onAnnounce($event)"

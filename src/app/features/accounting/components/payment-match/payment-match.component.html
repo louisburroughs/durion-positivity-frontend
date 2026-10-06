@@ -141,6 +141,13 @@
             {{ 'ACCOUNTING.CUSTOMER_PAYMENTS.RESULT.RETRY_REFUND' | translate }}
           </button>
         }
+        @if (refundOffer(); as offer) {
+          @if (canRefund() && phase() === 'done') {
+            <button type="button" class="btn btn--outline match__action" data-testid="refund-kept" (click)="openKeptRefund()">
+              {{ 'ACCOUNTING.CUSTOMER_PAYMENTS.RESULT.REFUND_KEPT' | translate: { amount: (offer.amount | money: (offer.currency ?? currency)) } }}
+            </button>
+          }
+        }
         @if (phase() === 'done' && (done.result.remainingAmount ?? 0) > 0 && !credit()) {
           <button type="button" class="btn btn--outline match__action" data-testid="match-rest" (click)="startOver()">
             {{ 'ACCOUNTING.CUSTOMER_PAYMENTS.RESULT.MATCH_REST' | translate }}
@@ -333,6 +340,26 @@
         </button>
       </div>
     }
+  }
+
+  <!-- Refund of a credit kept at an amount the person had not confirmed: a fresh confirmation of the served amount. -->
+  @if (keptRefundDialogOpen() && refundOffer(); as offer) {
+    @let keptAmount = offer.amount | money: (offer.currency ?? currency);
+    <dialog class="confirm-panel" appModalDialog (modalCancel)="cancelKeptRefund()"
+      aria-labelledby="kept-refund-title" aria-describedby="kept-refund-body" data-testid="kept-refund-dialog">
+      <h2 id="kept-refund-title" class="confirm-heading">{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.REFUND.TITLE' | translate }}</h2>
+      <p id="kept-refund-body">
+        {{ 'ACCOUNTING.CUSTOMER_PAYMENTS.REFUND.BODY' | translate: { customer: p.customerName ?? empty, amount: keptAmount } }}
+      </p>
+      <div class="form-actions">
+        <button type="button" class="btn btn--accent match__action" data-testid="kept-refund-confirm" (click)="confirmKeptRefund()">
+          {{ 'ACCOUNTING.CUSTOMER_PAYMENTS.REFUND.CONFIRM_KEPT' | translate: { amount: keptAmount } }}
+        </button>
+        <button type="button" class="btn btn--outline match__action" data-testid="kept-refund-cancel" (click)="cancelKeptRefund()">
+          {{ 'COMMON.CANCEL' | translate }}
+        </button>
+      </div>
+    </dialog>
   }
 
   <!-- Refund confirmation (§5.3 item 5, P4): money leaves the shop. -->

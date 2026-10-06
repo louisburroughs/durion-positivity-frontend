@@ -15,6 +15,7 @@
     <app-payment-match
       [payment]="payment"
       [embedded]="true"
+      (writeStarted)="paymentWriteStarted.emit($event)"
       (applied)="paymentApplied.emit($event)"
       (changed)="paymentChanged.emit()"
       (announce)="paymentAnnounce.emit($event)"

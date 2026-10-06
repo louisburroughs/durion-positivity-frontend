@@ -70,7 +70,7 @@ export class AccountingHomeService {
   paymentsToMatch(size: number): Observable<PaymentsToMatchPage> {
     return this.paymentsSdk.listUnappliedPayments(UNAPPLIED_STATUS, undefined, 0, size).pipe(
       map(response => ({
-        items: (response?.items ?? []).filter(row => !!row.paymentId).map(toWaitingPayment),
+        items: (response?.items ?? []).filter(row => !!row.paymentId && !!row.customerId).map(toWaitingPayment),
         totalElements: response?.totalElements ?? 0,
         waitingCount: response?.summary?.count ?? response?.totalElements ?? 0,
       })),
