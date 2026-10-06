@@ -703,6 +703,19 @@ export const ORDER_PAGE = {
 } as const satisfies Record<string, readonly string[]>;
 
 /**
+ * Write controls *inside* the register cart page (CAP:550 S10), as opposed to the page gate in
+ * {@link ORDER_PAGE}. The cart admits anyone holding `order:order:view`, but `setCartCustomer`
+ * enforces `order:order:edit`, `checkoutOrder` enforces `order:order:checkout`, and an
+ * ON_ACCOUNT checkout additionally needs `order:order:charge_on_account`, so each control and
+ * its handler gate on its own code (ADR-0040 §6a).
+ */
+export const ORDER_SECTION = {
+  setCustomer: ['order:order:edit'],
+  checkout: ['order:order:checkout'],
+  chargeOnAccount: ['order:order:charge_on_account'],
+} as const satisfies Record<string, readonly string[]>;
+
+/**
  * `/app/security/*` — role and permission administration. The group itself is
  * role-gated (`ROLE_ADMIN`); these narrow it to what each page actually reads.
  */

@@ -8390,16 +8390,34 @@
         "ITEMS_TABLE": "Líneas de la orden",
         "SUMMARY": "Resumen de la orden"
       },
-      "IDLE": "Ingresa datos del cliente para iniciar un carrito.",
+      "IDLE": "Inicie un carrito; elegirá el cliente antes de cobrar.",
       "EMPTY": "No hay artículos en el carrito.",
       "ERROR": {
         "LOAD": "No se pudo cargar la orden.",
         "CREATE": "No se pudo crear el carrito.",
         "ADD_ITEM": "No se pudo agregar el artículo.",
-        "REMOVE_ITEM": "No se pudo eliminar el artículo."
+        "REMOVE_ITEM": "No se pudo eliminar el artículo.",
+        "SET_CUSTOMER": "No se pudo asignar el cliente.",
+        "CHECKOUT": "No se pudo cobrar.",
+        "CUSTOMER_REQUIRED": "Elija un cliente antes de cobrar",
+        "WALK_IN_NOT_ALLOWED": "El cliente de mostrador no está permitido para esta venta; elija el cliente.",
+        "WALK_IN_NOT_ALLOWED_ON_ACCOUNT": "Las ventas de mostrador no se pueden cargar a cuenta. Reciba el pago ahora, o elija el cliente.",
+        "WALK_IN_NOT_ALLOWED_DEPOSIT": "Un cliente de mostrador no puede dejar un anticipo; elija el cliente.",
+        "WALK_IN_NOT_ALLOWED_WORKORDER_LINK": "Una venta de mostrador no se puede vincular a una orden de trabajo; elija un cliente registrado.",
+        "WALK_IN_NOT_PAID_IN_FULL": "El total ahora es {{total}}. Una venta de mostrador debe pagarse por completo ahora: ajuste el efectivo y la tarjeta, y vuelva a cobrar.",
+        "WALK_IN_NOT_PAID_IN_FULL_NO_TOTAL": "Una venta de mostrador debe pagarse por completo ahora: ajuste el efectivo y la tarjeta, y vuelva a cobrar.",
+        "WALK_IN_UNAVAILABLE": "El cliente de mostrador aún no está configurado para este taller; elija el cliente.",
+        "INVALID_CUSTOMER": "Este cliente no se puede usar para esta venta; elija otro cliente.",
+        "NOT_EDITABLE": "Este pedido cambió y ya no se puede editar.",
+        "UNPROCESSABLE": "Este carrito aún no se puede cobrar; revise los artículos e intente de nuevo.",
+        "FORBIDDEN": "No tiene permiso para hacer esto ({{permission}}).",
+        "INVALID_STATE": "El estado de este pedido ya no permite cobrarlo.",
+        "RELOADED": "El pedido en pantalla se volvió a cargar.",
+        "CUSTOMER_VALIDATION_PENDING": "Los datos de este cliente aún se están verificando. Espere un momento y vuelva a cobrar, o elija otro cliente.",
+        "TAX_UNAVAILABLE": "No se puede calcular el impuesto en este momento, así que no se cobró nada. Intente de nuevo en un momento.",
+        "INVOICING_UNAVAILABLE": "No se puede crear la factura en este momento, así que no se cobró nada. Intente de nuevo en un momento."
       },
       "FIELD": {
-        "CUSTOMER_ID": "ID del cliente",
         "VEHICLE_ID": "ID del vehículo (opcional)",
         "SKU": "SKU / Código de servicio",
         "QTY": "Cant.",
@@ -8416,7 +8434,9 @@
       "SUMMARY": {
         "SUBTOTAL": "Subtotal",
         "TAX": "Impuesto",
-        "TOTAL": "Total"
+        "TOTAL": "Total",
+        "DISCOUNT": "Descuento",
+        "TAX_STALE": "El impuesto puede cambiar al cobrar."
       },
       "COLUMN": {
         "DESCRIPTION": "Descripción",
@@ -8425,6 +8445,32 @@
         "UNIT_PRICE": "Precio unitario",
         "TOTAL": "Total",
         "ACTIONS": "Acciones"
+      },
+      "CUSTOMER": {
+        "HEADING": "Cliente",
+        "NONE": "Aún no hay cliente — elija uno antes de cobrar",
+        "SEARCH_LABEL": "Buscar un cliente",
+        "WALK_IN_ACTION": "Cliente de mostrador",
+        "WALK_IN_NAME": "Cliente de mostrador",
+        "WALK_IN_HELP": "Para un cliente que paga el importe total ahora y no quiere una cuenta.",
+        "WALK_IN_REASON": "El cliente de mostrador es solo para ventas pagadas por completo ahora. Ingrese el efectivo y la tarjeta que está cobrando, o elija el cliente."
+      },
+      "PAYMENT": {
+        "LEGEND": "Pago",
+        "PAY_NOW": "Pagar ahora (efectivo o tarjeta)",
+        "CASH": "Efectivo",
+        "CARD": "Tarjeta",
+        "TAKING_NOW": "Cobrando ahora: {{taken}} de {{total}}",
+        "ON_ACCOUNT": "Cargar a la cuenta del cliente",
+        "ON_ACCOUNT_WALK_IN_REASON": "Las ventas de mostrador no se pueden cargar a cuenta"
+      },
+      "CHECKOUT": {
+        "ACTION": "Cobrar",
+        "CONSEQUENCE": "Al cobrar se fijan los precios y se crea la factura; después usted recibe el pago.",
+        "REASON_NO_CUSTOMER": "Primero elija un cliente",
+        "READY_FOR_PAYMENT": "El pedido {{orderNumber}} está cobrado. La factura {{invoiceNumber}} está lista para el pago.",
+        "COMPLETED": "El pedido {{orderNumber}} está cobrado y cargado a la cuenta del cliente. Factura {{invoiceNumber}}.",
+        "TAKE_PAYMENT": "Recibir el pago"
       }
     },
     "OVERRIDE": {

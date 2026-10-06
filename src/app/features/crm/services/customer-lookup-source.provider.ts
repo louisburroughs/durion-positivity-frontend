@@ -15,6 +15,7 @@ function toResult(party: PartyDetail): CustomerLookupResult {
     legalName: party.legalName,
     dba: party.dba,
     customerNumber: party.customerNumber,
+    houseAccount: party.houseAccount ?? null,
   };
 }
 

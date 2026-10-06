@@ -10,6 +10,12 @@ export interface CustomerLookupResult {
   readonly legalName: string;
   readonly dba?: string;
   readonly customerNumber?: string;
+  /**
+   * House-account kind when the party is a system house account (`CASH_SALE` is the
+   * business's Walk-in customer); absent or null for every ordinary party. Recognise a
+   * house account from this flag only, never from a name or customer number (CAP:550 S7).
+   */
+  readonly houseAccount?: string | null;
 }
 
 /**

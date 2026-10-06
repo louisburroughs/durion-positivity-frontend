@@ -8,6 +8,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { LocaleService } from '../../../../core/services/locale.service';
 import { OrderCartPageComponent } from './order-cart-page.component';
 import { OrderService } from '../../services/order.service';
+import { CUSTOMER_LOOKUP_SOURCE } from '../../../../shared/customer-lookup/customer-lookup.tokens';
 
 const orderLineFixture: SalesOrderLineResponse = {
   orderLineId: 'line-1',
@@ -19,7 +20,7 @@ const orderLineFixture: SalesOrderLineResponse = {
 
 const orderFixture: SalesOrderResponse = {
   orderId: 'ord-1',
-  status: 'OPEN',
+  status: 'DRAFT',
   subtotal: 100,
   lines: [orderLineFixture],
 };
@@ -38,6 +39,9 @@ describe('OrderCartPageComponent', () => {
 
   const authServiceMock = {
     currentUserClaims: vi.fn().mockReturnValue({ sub: 'test-clerk' }),
+    // A legacy token without perm_bits: every gate falls back open (ADR-0040 §6a.3).
+    permissionsKnown: () => false,
+    hasAnyPermission: () => false,
   };
 
   beforeEach(async () => {
@@ -54,6 +58,7 @@ describe('OrderCartPageComponent', () => {
         provideRouter([]),
         { provide: OrderService, useValue: orderServiceMock },
         { provide: AuthService, useValue: authServiceMock },
+        { provide: CUSTOMER_LOOKUP_SOURCE, useValue: { search: () => of([]), getById: () => of(null) } },
         {
           provide: ActivatedRoute,
           useValue: {
@@ -65,6 +70,23 @@ describe('OrderCartPageComponent', () => {
 
     fixture = TestBed.createComponent(OrderCartPageComponent);
     component = fixture.componentInstance;
+  });
+
+  it('starts a cart without asking for a customer id (P8)', () => {
+    paramMap$.next(convertToParamMap({}));
+    orderServiceMock.createCart.mockReturnValue(of(orderFixture));
+    fixture.detectChanges();
+
+    const root = fixture.nativeElement as HTMLElement;
+    expect(root.querySelector('#order-cart-customer-id')).toBeNull();
+    expect(root.querySelector('#order-cart-vehicle-id')).not.toBeNull();
+
+    component.createNewCart('veh-1');
+    expect(orderServiceMock.createCart).toHaveBeenCalledWith({
+      clerkId: 'test-clerk',
+      terminalId: 'DEFAULT',
+      vehicleId: 'veh-1',
+    });
   });
 
   it('loads order when orderId route param is present', () => {

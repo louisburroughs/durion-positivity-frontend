@@ -3,6 +3,8 @@
   gap: var(--space-6);
   align-items: flex-start;
   width: 100%;
+  background: var(--themeBackground);
+  color: var(--currentTextColor);
 }
 
 .order-cart__items {
@@ -19,6 +21,7 @@
   gap: var(--space-4);
   padding: var(--space-4);
   background: var(--cardBackground);
+  color: var(--currentTextColor);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-card);
 }
@@ -74,9 +77,106 @@
 }
 
 .order-cart__primary-btn:disabled,
-.order-cart__add-btn:disabled {
+.order-cart__add-btn:disabled,
+.order-cart__primary-btn[aria-disabled='true'],
+.order-cart__secondary-btn[aria-disabled='true'] {
   opacity: 0.65;
   cursor: not-allowed;
+}
+
+.order-cart__primary-btn,
+.order-cart__secondary-btn {
+  min-height: 2.75rem;
+}
+
+.order-cart__secondary-btn {
+  border: 1px solid var(--link-color);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-4);
+  font-weight: 600;
+  background: transparent;
+  color: var(--currentTextColor);
+}
+
+.order-cart__primary-btn:focus-visible,
+.order-cart__secondary-btn:focus-visible,
+.order-cart__add-btn:focus-visible,
+.order-cart__remove-btn:focus-visible,
+.order-cart__choice input:focus-visible,
+.order-cart__action-alert:focus-visible,
+.order-cart__outcome:focus-visible {
+  outline: 2px solid var(--input-focus-border);
+  outline-offset: 2px;
+}
+
+.order-cart__link-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.order-cart__panel {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.order-cart__panel h2,
+.order-cart__panel legend {
+  font-family: var(--font-primary);
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 0;
+  margin-bottom: var(--space-2);
+}
+
+.order-cart__chosen {
+  font-weight: 600;
+  color: var(--currentTextColor);
+  overflow-wrap: anywhere;
+}
+
+.order-cart__walk-in,
+.order-cart__amounts,
+.order-cart__checkout,
+.order-cart__outcome {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.order-cart__choice {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 2.75rem;
+}
+
+.order-cart__choice input {
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+  margin: 0;
+}
+
+.order-cart__choice input[aria-disabled='true'] + label {
+  opacity: 0.65;
+}
+
+.order-cart__hint,
+.order-cart__reason,
+.order-cart__taking-now {
+  font-size: 0.875rem;
+  color: var(--currentTextColor);
+}
+
+.order-cart__reason {
+  font-style: italic;
+}
+
+.order-cart__taking-now {
+  font-weight: 600;
 }
 
 .order-cart__table {

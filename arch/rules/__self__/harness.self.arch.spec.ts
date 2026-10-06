@@ -37,8 +37,11 @@ describe('[harness] ArchUnitTS file set and selectors (plan §11.1, §11.3)', ()
     expect(expected.length).toBeGreaterThan(100);
   });
 
+  // Mirrors tsconfig.app.json's exclude: specs and their `*.spec-helper.ts` fixtures are test code.
   const fsCount = (dir: string, re: RegExp) =>
-    listFiles(dir, '.ts').filter((f) => f.endsWith('.ts') && !f.endsWith('.spec.ts') && !f.endsWith('.d.ts') && re.test(f)).length;
+    listFiles(dir, '.ts').filter(
+      (f) => f.endsWith('.ts') && !f.endsWith('.spec.ts') && !f.endsWith('.spec-helper.ts') && !f.endsWith('.d.ts') && re.test(f),
+    ).length;
 
   it.each([
     ['core', selectors.core(APP), 'src/app/core'],
