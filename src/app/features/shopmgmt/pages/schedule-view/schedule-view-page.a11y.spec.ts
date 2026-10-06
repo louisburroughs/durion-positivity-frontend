@@ -112,6 +112,7 @@ const VIEW: CapacityCalendarView = {
   degraded: true,
   locationHasNoSchedule: false,
   skillRequirementsUnknown: false,
+  technicianAvailabilityUnknown: false,
 };
 
 const capacityStub = {

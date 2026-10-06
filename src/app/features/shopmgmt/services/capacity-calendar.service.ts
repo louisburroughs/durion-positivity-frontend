@@ -9,6 +9,7 @@ import type { ServiceDto } from '@durion-sdk/catalog';
 import {
   DayCapacityViewStatusEnum,
   ScheduleAPIService,
+  ScheduleCapacityResponseStaffingStatusEnum,
   TechnicianAPIService,
   TechnicianCredentialResponseStatusEnum,
 } from '@durion-sdk/shop-manager';
@@ -57,10 +58,10 @@ export interface CapacityCalendarRequest {
 const PAGE_SIZE = 500;
 
 /**
- * The week grid needs one `viewSchedule` call per day, so the fan-out is
- * concurrency-limited rather than fired as parallel requests. Matches the
- * dashboard's VEHICLE_LOOKUP_CONCURRENCY for the same reason. The month grid no
- * longer fans out: it is one `getScheduleCapacity` read.
+ * The day board's per-day schedule read is a single call today, but the load is
+ * still concurrency-limited in case it is asked for more than one date. Matches
+ * the dashboard's VEHICLE_LOOKUP_CONCURRENCY. The month and week grids do not
+ * fan out: each is one `getScheduleCapacity` read (frontend #488).
  */
 const SCHEDULE_FAN_OUT_CONCURRENCY = 6;
 
@@ -101,12 +102,19 @@ interface ScheduleLoad {
 }
 
 /**
- * The month grid's one `getScheduleCapacity` read (backend #2023), keyed by
- * date. A failed read leaves `byDate` empty with one of the two flags set, in
- * the same `ABSENT`/`FAILED` split the per-day schedule read uses.
+ * The month or week grid's one `getScheduleCapacity` read (backend #2023),
+ * keyed by date. A failed read leaves `byDate` empty with one of the two flags
+ * set, in the same `ABSENT`/`FAILED` split the per-day schedule read uses.
  */
 interface CapacityLoad {
   readonly byDate: Map<string, DayCapacityView>;
+  /**
+   * The read's `staffingStatus` was AVAILABLE (backend #2527), so each OK day's
+   * `technicians` is that date's real roster. False when the staffing replica
+   * holds nothing for the location, when an older backend omits the field, and
+   * when the read failed — in each case who is on duty is unknown.
+   */
+  readonly staffingKnown: boolean;
   /** The read answered 404. */
   readonly absent: boolean;
   /** The read failed for any other reason. */
@@ -140,19 +148,21 @@ const LANE_MECHANIC = 'MECHANIC';
  *
  *   bays                    → columns, bay type, specialty codes, duty class, OOS
  *   location technicians    → technician roster and the skill codes they hold
- *   schedule capacity       → month grid: per-day status, operating window, bay
- *                             occupancy by hour and carry-over, in one read
- *   schedule view (per day) → week grid and day board: bay occupancy and the
- *                             appointments themselves
+ *   schedule capacity       → month and week grids: per-day status, operating
+ *                             window, bay occupancy by hour, carry-over, and each
+ *                             rostered technician's on-duty and assigned hours,
+ *                             in one read (backend #2023, #2527)
+ *   schedule view (per day) → day board: bay occupancy and the appointments
+ *                             themselves
  *   catalog services        → the job-type filter, its operation code, its
  *                             required skills and its default duration
  *
- * Neither schedule read publishes technician duty or assignment (backend
- * #2527): the capacity read carries bays only, and the schedule view emits
- * appointments on their own resource lane and nothing else. So the month grid
- * counts every rostered technician as on duty and unassigned, and the week and
- * day scopes see a technician as busy only for an appointment booked directly
- * on a mechanic resource.
+ * Technician duty and assignment come from the capacity read (backend #2527).
+ * When it reports `staffingStatus` UNAVAILABLE (or an older backend omits it)
+ * the roster is counted on duty and unassigned, and the view says technician
+ * availability is unknown rather than presenting that as measured. The day
+ * board still reads the schedule view, which sees a technician as busy only
+ * for an appointment booked directly on a mechanic resource.
  *
  * Eligibility is read, not inferred: a bay's `serviceCapabilityCodes` against the
  * service's `operationCode` (CAP-325 D14) and a technician's held credentials
@@ -161,9 +171,8 @@ const LANE_MECHANIC = 'MECHANIC';
  * is tracked as a backend story and each has a named degradation on screen:
  *
  *   louisburroughs/durion#474 — `viewSchedule` is one location and one date; its
- *     `range` selects LOCATION_HOURS or FULL_DAY, not a week. The week grid is
- *     therefore a capped fan-out of one request per day. Closed for the month
- *     grid, which reads `getScheduleCapacity` once.
+ *     `range` selects LOCATION_HOURS or FULL_DAY, not a week. Closed for the
+ *     month and week grids, which each read `getScheduleCapacity` once.
  *
  *   louisburroughs/durion#475 — nothing answers "the next unbroken 1.5 h in an
  *     eligible bay with a certified technician". That fit is computed in
@@ -249,8 +258,11 @@ export class CapacityCalendarService {
    * so the page can say the numbers may be incomplete.
    */
   getCalendar(request: CapacityCalendarRequest): Observable<CapacityCalendarView> {
-    if (request.scope === 'month') {
-      const weeks = this.monthGrid(request.focusDate);
+    if (request.scope !== 'day') {
+      // Month and week are both one capacity read (#488): the month's grid is at
+      // most six weeks, the week's is seven days, both inside the 42-day limit.
+      const weeks =
+        request.scope === 'month' ? this.monthGrid(request.focusDate) : [this.weekDates(request.focusDate)];
       return forkJoin({
         bays: this.loadBays(request.locationId),
         technicians: this.loadTechnicians(request.locationId),
@@ -258,12 +270,12 @@ export class CapacityCalendarService {
         capacity: this.loadCapacity(request.locationId, weeks.flat()),
       }).pipe(
         map(({ bays, technicians, locationName, capacity }) =>
-          this.assembleMonth(request, weeks, bays, technicians, locationName, capacity),
+          this.assembleCapacity(request, weeks, bays, technicians, locationName, capacity),
         ),
       );
     }
 
-    const dates = this.datesFor(request.focusDate, request.scope);
+    const dates = [request.focusDate];
 
     return forkJoin({
       bays: this.loadBays(request.locationId),
@@ -335,12 +347,18 @@ export class CapacityCalendarService {
     return this.scheduleApi.getScheduleCapacity(locationId, dates[0], dates[dates.length - 1]).pipe(
       map(response => ({
         byDate: new Map(response.days.map(day => [day.date, day] as const)),
+        staffingKnown: response.staffingStatus === ScheduleCapacityResponseStaffingStatusEnum.Available,
         absent: false,
         failed: false,
       })),
       catchError((error: unknown) => {
         const absent = isScheduleAbsent(error);
-        return of({ byDate: new Map<string, DayCapacityView>(), absent, failed: !absent });
+        return of({
+          byDate: new Map<string, DayCapacityView>(),
+          staffingKnown: false,
+          absent,
+          failed: !absent,
+        });
       }),
     );
   }
@@ -389,7 +407,7 @@ export class CapacityCalendarService {
     );
   }
 
-  // ── Week and day assembly (per-day schedule view) ─────────────────────────
+  // ── Day assembly (per-day schedule view) ──────────────────────────────────
 
   private assemble(
     request: CapacityCalendarRequest,
@@ -423,9 +441,7 @@ export class CapacityCalendarService {
       });
     };
 
-    const weekDays =
-      request.scope === 'week' ? this.weekDates(request.focusDate).map(buildDay) : [];
-    const focusDay = request.scope === 'day' ? buildDay(request.focusDate) : undefined;
+    const focusDay = buildDay(request.focusDate);
 
     return {
       locationId: request.locationId,
@@ -440,9 +456,9 @@ export class CapacityCalendarService {
       ),
       hours,
       weeks: [],
-      weekDays,
+      weekDays: [],
       focusDay,
-      board: request.scope === 'day' ? this.boardFor(schedules.get(request.focusDate)) : [],
+      board: this.boardFor(schedules.get(request.focusDate)),
       // A 404 day is absence, not breakage, so only a real fault degrades —
       // except when the 404s are partial. The endpoint 404s on a date with no
       // appointments at a location it holds no shop row for, so a shopless
@@ -456,6 +472,9 @@ export class CapacityCalendarService {
       // once and plainly, rather than as a month of empty cells.
       locationHasNoSchedule: load.total > 0 && load.absent === load.total,
       skillRequirementsUnknown: !request.job.skillRequirementsConfigured,
+      // The day board's duty comes from the schedule view's own overlay, which
+      // says "unknown" through its own status; the notice belongs to the grids.
+      technicianAvailabilityUnknown: false,
     };
   }
 
@@ -500,9 +519,13 @@ export class CapacityCalendarService {
     return schedule ? 'open' : 'closed';
   }
 
-  // ── Month assembly (capacity read) ────────────────────────────────────────
+  // ── Month and week assembly (capacity read) ───────────────────────────────
 
-  private assembleMonth(
+  /**
+   * Builds the month grid (`weeks` is the padded month) or the week grid
+   * (`weeks` is the one week) from a single capacity read.
+   */
+  private assembleCapacity(
     request: CapacityCalendarRequest,
     weeks: readonly (readonly string[])[],
     bays: { bays: CapacityBay[]; ok: boolean },
@@ -514,21 +537,22 @@ export class CapacityCalendarService {
     const today = isoDateLocal(new Date());
     const currentHour = new Date().getHours();
     const focusMonth = parseIsoDateLocal(request.focusDate).getMonth();
-    // The capacity read carries no technician data (backend #2527), so the
-    // roster is the same for every day: on duty all window, nothing assigned.
-    const rosterHours = this.technicianHours(technicians.roster, undefined, hours);
+    const isMonth = request.scope === 'month';
+    const dayTechnicians = (date: string): CapacityTechnician[] =>
+      this.capacityTechnicianHours(technicians.roster, load.byDate.get(date), load.staffingKnown, hours);
 
     const buildDay = (date: string): CapacityDay => {
       const day = load.byDate.get(date);
-      const inFocusMonth = parseIsoDateLocal(date).getMonth() === focusMonth;
+      // Padding days outside the focus month are only a month-grid notion.
+      const inScope = !isMonth || parseIsoDateLocal(date).getMonth() === focusMonth;
       return {
         ...computeDay({
           date,
-          kind: inFocusMonth ? capacityDayKind(day) : 'outside',
+          kind: inScope ? capacityDayKind(day) : 'outside',
           isToday: date === today,
           hours,
           bays: bays.bays,
-          technicians: rosterHours,
+          technicians: dayTechnicians(date),
           job: request.job,
           grid: this.capacityGrid(bays.bays, day, hours),
           currentHour,
@@ -551,16 +575,68 @@ export class CapacityCalendarService {
       focusDate: request.focusDate,
       job: request.job,
       bays: bays.bays,
-      technicians: rosterHours,
+      technicians: dayTechnicians(request.focusDate),
       hours,
-      weeks: weeks.map(week => week.map(buildDay)),
-      weekDays: [],
+      weeks: isMonth ? weeks.map(week => week.map(buildDay)) : [],
+      weekDays: isMonth ? [] : weeks[0].map(buildDay),
       focusDay: undefined,
       board: [],
       degraded: !bays.ok || !technicians.ok || load.failed || (!load.absent && unknownDays),
       locationHasNoSchedule: load.absent,
       skillRequirementsUnknown: !request.job.skillRequirementsConfigured,
+      // Only an answered read can say rostering is unknown; a failed or 404 read
+      // is already reported as degraded or as no schedule.
+      technicianAvailabilityUnknown: !load.failed && !load.absent && !load.staffingKnown,
     };
+  }
+
+  /**
+   * The roster's per-hour duty and assignment on one capacity-read day
+   * (backend #2527), joined by `mechanicPersonId` so credentials come along.
+   *
+   * A rostered technician the day does not list has no staffing assignment
+   * covering that date, so is off duty all day. When rostering is unknown
+   * (`staffingKnown` false) the roster is counted on duty and unassigned, as
+   * before #2527 — reporting everyone absent would understate capacity
+   * everywhere — and the view flags it as unknown.
+   */
+  private capacityTechnicianHours(
+    roster: readonly LocationTechnicianRosterEntryResponse[],
+    day: DayCapacityView | undefined,
+    staffingKnown: boolean,
+    hours: readonly number[],
+  ): CapacityTechnician[] {
+    if (!staffingKnown || day?.status !== DayCapacityViewStatusEnum.Ok || !day.technicians) {
+      return this.technicianHours(roster, undefined, hours);
+    }
+    const slotByHour = slotIndexByHour(day);
+    const byPerson = new Map(day.technicians.map(entry => [entry.mechanicPersonId, entry] as const));
+    return roster.map(entry => {
+      const capacity = byPerson.get(entry.mechanicPersonId);
+      const onDutyHours = new Set<number>();
+      const assignedHours = new Set<number>();
+      if (capacity) {
+        hours.forEach((hour, index) => {
+          const slot = slotByHour.get(hour);
+          if (slot === undefined) {
+            return;
+          }
+          if ((capacity.onDuty[slot] ?? 0) > 0) {
+            onDutyHours.add(index);
+          }
+          if ((capacity.assigned[slot] ?? 0) > 0) {
+            assignedHours.add(index);
+          }
+        });
+      }
+      return {
+        personId: entry.mechanicPersonId,
+        displayName: displayName(entry),
+        skills: heldSkillCodes(entry.credentials),
+        assignedHours,
+        onDutyHours,
+      };
+    });
   }
 
   /**
@@ -722,11 +798,6 @@ export class CapacityCalendarService {
   }
 
   // ── Date windows ──────────────────────────────────────────────────────────
-
-  /** Dates the per-day schedule read needs fetched for the week or day scope. */
-  private datesFor(focusDate: string, scope: Exclude<CapacityScope, 'month'>): string[] {
-    return scope === 'day' ? [focusDate] : this.weekDates(focusDate);
-  }
 
   /** Sunday-first week containing `focusDate`. */
   private weekDates(focusDate: string): string[] {

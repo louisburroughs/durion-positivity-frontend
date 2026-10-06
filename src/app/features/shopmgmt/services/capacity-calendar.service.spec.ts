@@ -10,6 +10,7 @@ import {
   LocationTechnicianRosterEntryResponseShiftSourceEnum,
   LocationTechnicianRosterEntryResponseShiftStatusEnum,
   ScheduleAPIService,
+  ScheduleCapacityResponseStaffingStatusEnum,
   TechnicianAPIService,
   TechnicianCredentialResponseStatusEnum,
 } from '@durion-sdk/shop-manager';
@@ -18,6 +19,7 @@ import type {
   DayCapacityView,
   LocationTechnicianRosterEntryResponse,
   ScheduleViewResponse,
+  TechnicianCapacityView,
   TechnicianCredentialResponse,
 } from '@durion-sdk/shop-manager';
 import { CapacityCalendarService, heldSkillCodes } from './capacity-calendar.service';
@@ -372,6 +374,7 @@ describe('CapacityCalendarService', () => {
     const arrange = (
       days: Record<string, DayCapacityView> = {},
       bayRows: unknown[] = [{ id: 'bay-1', name: 'Bay 1', status: 'ACTIVE' }],
+      staffingStatus?: ScheduleCapacityResponseStaffingStatusEnum,
     ) => {
       const bays = TestBed.inject(BayAPIService) as unknown as { listBays: ReturnType<typeof vi.fn> };
       const techs = TestBed.inject(TechnicianAPIService) as unknown as { listLocationTechnicians: ReturnType<typeof vi.fn> };
@@ -387,6 +390,7 @@ describe('CapacityCalendarService', () => {
           from: GRID_FROM,
           to: GRID_TO,
           viewGeneratedAt: local(GRID_FROM, 8),
+          staffingStatus,
           days: gridDates.map(date => days[date] ?? okDay(date)),
         }),
       );
@@ -527,14 +531,82 @@ describe('CapacityCalendarService', () => {
       expect(dayOf(view, '2026-09-28').carryOver).toBeUndefined();
     });
 
-    it('counts every rostered technician as on duty and unassigned: the capacity read carries no technician data', async () => {
+    /** person-1's slice of an open day; four slots for the default 08:00-12:00 window. */
+    const technicianDay = (overrides: Partial<TechnicianCapacityView> = {}): TechnicianCapacityView => ({
+      mechanicPersonId: 'person-1',
+      onDuty: [1, 1, 1, 1],
+      assigned: [0, 0, 0, 0],
+      assignedMinutes: 0,
+      ...overrides,
+    });
+    const withTechnicians = (date: string, technicians: TechnicianCapacityView[]): DayCapacityView => ({
+      ...okDay(date),
+      technicians,
+    });
+    const AVAILABLE = ScheduleCapacityResponseStaffingStatusEnum.Available;
+
+    it('reads each day\'s duty and assignment from the capacity read, joined on mechanicPersonId (#488 AC2)', async () => {
+      arrange(
+        {
+          '2026-09-29': withTechnicians('2026-09-29', [technicianDay({ assigned: [1, 2, 0, 0], assignedMinutes: 120 })]),
+          '2026-09-30': withTechnicians('2026-09-30', [technicianDay()]),
+        },
+        undefined,
+        AVAILABLE,
+      );
+
+      const view = await calendar();
+      const busy = dayOf(view, '2026-09-29');
+      const free = dayOf(view, '2026-09-30');
+
+      expect(view.technicianAvailabilityUnknown).toBe(false);
+      // The only technician is assigned 08:00-10:00, so the bay is free but nobody can take the job.
+      expect(busy.bayStates[0]).toEqual(['free', 'free', 'free', 'free']);
+      expect(busy.firstFitHour).toBe(10);
+      expect(free.firstFitHour).toBe(8);
+    });
+
+    it('counts a rostered technician the day does not list as off duty that day (#488 AC3)', async () => {
+      arrange({ '2026-09-29': withTechnicians('2026-09-29', []) }, undefined, AVAILABLE);
+
+      const view = await calendar();
+
+      expect(dayOf(view, '2026-09-29').firstFitHour).toBeUndefined();
+      expect(view.technicianAvailabilityUnknown).toBe(false);
+    });
+
+    it('reads on-duty slots, so an off-duty hour leaves no technician for it', async () => {
+      arrange(
+        { '2026-09-29': withTechnicians('2026-09-29', [technicianDay({ onDuty: [0, 0, 1, 1] })]) },
+        undefined,
+        AVAILABLE,
+      );
+
+      expect(dayOf(await calendar(), '2026-09-29').firstFitHour).toBe(10);
+    });
+
+    it('UNAVAILABLE staffing counts the roster on duty and unassigned, and says availability is unknown (#488 AC4)', async () => {
+      arrange(
+        { '2026-09-29': withTechnicians('2026-09-29', []) },
+        undefined,
+        ScheduleCapacityResponseStaffingStatusEnum.Unavailable,
+      );
+
+      const view = await calendar();
+
+      expect(view.technicianAvailabilityUnknown).toBe(true);
+      expect(view.degraded).toBe(false);
+      expect([...view.technicians[0].onDutyHours].sort()).toEqual([0, 1, 2, 3]);
+      expect([...view.technicians[0].assignedHours]).toEqual([]);
+      expect(dayOf(view, '2026-09-29').firstFitHour).toBe(8);
+    });
+
+    it('an older backend that omits staffingStatus is treated as unknown, not as nobody rostered (#488 AC4)', async () => {
       arrange();
 
       const view = await calendar();
 
-      expect(view.technicians).toHaveLength(1);
-      expect([...view.technicians[0].onDutyHours].sort()).toEqual([0, 1, 2, 3]);
-      expect([...view.technicians[0].assignedHours]).toEqual([]);
+      expect(view.technicianAvailabilityUnknown).toBe(true);
       expect(dayOf(view, '2026-09-29').firstFitHour).toBe(8);
     });
 
@@ -546,6 +618,7 @@ describe('CapacityCalendarService', () => {
 
       expect(view.degraded).toBe(true);
       expect(view.locationHasNoSchedule).toBe(false);
+      expect(view.technicianAvailabilityUnknown).toBe(false);
       expect(dayOf(view, '2026-09-29').kind).toBe('closed');
     });
 
@@ -559,7 +632,30 @@ describe('CapacityCalendarService', () => {
       expect(view.degraded).toBe(false);
     });
 
-    it('leaves the week scope on the per-day schedule read, which still carries the day detail', async () => {
+    it('reads the week from one capacity call and no per-day schedule call (#488 AC1)', async () => {
+      arrange(
+        { '2026-09-29': withTechnicians('2026-09-29', [technicianDay({ assigned: [1, 0, 0, 0] })]) },
+        undefined,
+        AVAILABLE,
+      );
+
+      const view = await calendar({ ...MONTH, scope: 'week' });
+
+      expect(scheduleApi().getScheduleCapacity).toHaveBeenCalledTimes(1);
+      expect(scheduleApi().getScheduleCapacity).toHaveBeenCalledWith('loc-1', '2026-09-27', '2026-10-03');
+      expect(scheduleApi().viewSchedule).not.toHaveBeenCalled();
+      expect(view.weeks).toEqual([]);
+      expect(view.weekDays.map(day => day.date)).toEqual([
+        '2026-09-27', '2026-09-28', '2026-09-29', '2026-09-30', '2026-10-01', '2026-10-02', '2026-10-03',
+      ]);
+      // A week has no padding: October 3rd is in scope, not outside.
+      expect(view.weekDays[6].kind).toBe('open');
+      expect(view.weekDays[2].firstFitHour).toBe(9);
+      // The page-level technicians are the focus day's.
+      expect([...view.technicians[0].assignedHours]).toEqual([0]);
+    });
+
+    it('leaves the day scope on the per-day schedule read, which carries the board (#488 AC5)', async () => {
       arrange();
       scheduleApi().viewSchedule.mockImplementation((_loc: string, date: string) =>
         of({
@@ -572,11 +668,12 @@ describe('CapacityCalendarService', () => {
         }),
       );
 
-      const view = await calendar({ ...MONTH, scope: 'week' });
+      const view = await calendar({ ...MONTH, scope: 'day' } as unknown as typeof MONTH);
 
-      expect(scheduleApi().viewSchedule).toHaveBeenCalledTimes(7);
+      expect(scheduleApi().viewSchedule).toHaveBeenCalledTimes(1);
       expect(scheduleApi().getScheduleCapacity).not.toHaveBeenCalled();
-      expect(view.weekDays).toHaveLength(7);
+      expect(view.focusDay?.date).toBe('2026-09-29');
+      expect(view.technicianAvailabilityUnknown).toBe(false);
     });
   });
 

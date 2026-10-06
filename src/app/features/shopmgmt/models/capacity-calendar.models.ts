@@ -279,6 +279,13 @@ export interface CapacityCalendarView {
    * reading (spec D4). Shown on screen rather than presented as measured.
    */
   readonly skillRequirementsUnknown: boolean;
+  /**
+   * True when the capacity read answered but could not say who is rostered
+   * (`staffingStatus` UNAVAILABLE, or absent from an older backend), so every
+   * rostered technician is counted on duty and unassigned by default, not by
+   * reading (backend #2527). Shown on screen rather than presented as measured.
+   */
+  readonly technicianAvailabilityUnknown: boolean;
 }
 
 // ── Pure helpers ────────────────────────────────────────────────────────────
