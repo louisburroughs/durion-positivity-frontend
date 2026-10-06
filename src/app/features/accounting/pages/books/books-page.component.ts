@@ -334,21 +334,28 @@ export class BooksPageComponent {
   // ── Drill-down ────────────────────────────────────────────────────────
   readonly drillTarget = signal<DrillTarget | null>(null);
   readonly drillAccountId = signal<string | null>(null);
+  // Every HomeRegion-backed view below requires `!denied()`: a region keeps its prior data on a
+  // failed re-read, but data refused with 403 stops rendering (ADR-0064 §6).
   readonly drillAccountsData = computed(() => {
     const target = this.drillTarget();
-    return target && this.drillAccounts.dataKey() === `${target.code}|${this.rangeKey()}`
+    return target &&
+      !this.drillAccounts.denied() &&
+      this.drillAccounts.dataKey() === `${target.code}|${this.rangeKey()}`
       ? this.drillAccounts.data()
       : null;
   });
   readonly drillLedgerData = computed(() => {
     const accountId = this.drillAccountId();
     const held = this.drillLedger.data();
-    return accountId && this.drillLedger.dataKey() === `${accountId}|${this.rangeKey()}` ? held?.section ?? null : null;
+    return accountId && !this.drillLedger.denied() && this.drillLedger.dataKey() === `${accountId}|${this.rangeKey()}`
+      ? held?.section ?? null
+      : null;
   });
   readonly drillLedgerEmpty = computed(() => {
     const accountId = this.drillAccountId();
     return (
       !!accountId &&
+      !this.drillLedger.denied() &&
       this.drillLedger.dataKey() === `${accountId}|${this.rangeKey()}` &&
       this.drillLedger.status() === 'OK' &&
       !this.drillLedger.data()?.section
@@ -372,12 +379,14 @@ export class BooksPageComponent {
   readonly entryPage = signal(0);
   readonly filterAccountId = signal<string | null>(null);
   private readonly entriesKey = computed(() => `${this.entryNumber() ?? ''}|${this.entryPage()}`);
+  /** The chart of accounts for the filter; empty once refused (ADR-0064 §6). */
+  readonly glAccountOptions = computed(() => (this.glAccounts.denied() ? [] : (this.glAccounts.data() ?? [])));
   readonly entriesData = computed(() =>
     this.entries.dataKey() === this.entriesKey() && !this.entries.denied() ? this.entries.data() : null,
   );
   readonly accountLedgerData = computed(() => {
     const accountId = this.filterAccountId();
-    return accountId && this.accountLedger.dataKey() === `${accountId}|${this.rangeKey()}`
+    return accountId && !this.accountLedger.denied() && this.accountLedger.dataKey() === `${accountId}|${this.rangeKey()}`
       ? this.accountLedger.data()
       : null;
   });

@@ -279,6 +279,23 @@ describe('BooksPageComponent', () => {
       expect(text('[data-testid="cell-balance"]')).toBe('-$9,300.00');
     });
 
+    it('stops showing an account\'s entries once a re-read is refused with 403 (ADR-0064 §6)', () => {
+      mocks.books.drilldown.mockReturnValue(
+        of([drillAccount(), drillAccount({ accountId: 'acc-2010', accountCode: '2010', accountName: 'Accrued bills' })]),
+      );
+      render();
+      click('[data-code="BS_BILLS_FROM_VENDORS"]');
+      click('[data-testid="drill-account"]');
+      expect(text('[data-testid="ledger-row"] [data-testid="entry-link"]')).toBe('JE-202610-7');
+
+      mocks.books.accountLedger.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 403 })));
+      click('[data-testid="drill-account"]');
+
+      expect(qa('[data-testid="ledger-row"]')).toEqual([]);
+      expect(host.textContent).not.toContain('JE-202610-7');
+      expect(text('[data-testid="ledger-denied"]')).toBe('ACCOUNTING.BOOKS.REGION.DENIED');
+    });
+
     it('moves focus to the drill-down heading when a line is chosen, and back to the summary when it closes', async () => {
       render();
       click('[data-code="BS_BILLS_FROM_VENDORS"]');
@@ -425,6 +442,34 @@ describe('BooksPageComponent', () => {
 
       expect(mocks.books.accountLedger).toHaveBeenCalledWith(MONTH_START_ISO, TODAY_ISO, 'acc-2000');
       expect(q('app-ledger-table')).not.toBeNull();
+    });
+
+    it('stops showing the filtered account\'s lines once a re-read is refused with 403 (ADR-0064 §6)', () => {
+      render();
+      const select = q('[data-testid="account-filter"]') as HTMLSelectElement;
+      select.value = 'acc-2000';
+      select.dispatchEvent(new Event('change'));
+      fixture.detectChanges();
+      expect(qa('[data-testid="ledger-row"]').length).toBe(1);
+
+      mocks.books.accountLedger.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 403 })));
+      component.retryRegion('accountLedger');
+      fixture.detectChanges();
+
+      expect(qa('[data-testid="ledger-row"]')).toEqual([]);
+      expect(host.textContent).not.toContain('JE-202610-7');
+      expect(text('[data-testid="account-ledger-denied"]')).toBe('ACCOUNTING.BOOKS.REGION.DENIED');
+    });
+
+    it('empties the account filter once the chart of accounts is refused on a re-read', () => {
+      render();
+      expect(qa('[data-testid="account-filter"] option').length).toBe(3);
+
+      mocks.books.listGlAccounts.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 403 })));
+      component.retryRegion('glAccounts');
+      fixture.detectChanges();
+
+      expect(qa('[data-testid="account-filter"] option').length).toBe(1);
     });
 
     it('offers the account filter only with both accounting:coa:view and reporting:view:financial-statements', () => {

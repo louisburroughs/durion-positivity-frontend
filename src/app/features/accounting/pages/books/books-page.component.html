@@ -278,7 +278,7 @@
               } @else if (drillLedgerEmpty()) {
                 <p class="state-panel state-panel--empty">{{ 'ACCOUNTING.BOOKS.LEDGER.EMPTY' | translate }}</p>
               } @else if (drillLedger.denied()) {
-                <p class="field-error">{{ 'ACCOUNTING.BOOKS.REGION.DENIED' | translate: { permission: codes.reporting } }}</p>
+                <p class="field-error" data-testid="ledger-denied">{{ 'ACCOUNTING.BOOKS.REGION.DENIED' | translate: { permission: codes.reporting } }}</p>
               } @else if (drillLedger.status() === 'FAILED') {
                 <p class="field-error" data-testid="ledger-error">{{ 'ACCOUNTING.BOOKS.REGION.LOAD_FAILED' | translate }}</p>
               } @else {
@@ -460,7 +460,7 @@
               <select id="entry-account" data-testid="account-filter" aria-describedby="entry-account-hint"
                 [ngModel]="filterAccountId() ?? ''" (ngModelChange)="selectFilterAccount($event)">
                 <option value="">{{ 'ACCOUNTING.BOOKS.ENTRIES.ALL_ACCOUNTS' | translate }}</option>
-                @for (account of glAccounts.data() ?? []; track account.glAccountId) {
+                @for (account of glAccountOptions(); track account.glAccountId) {
                   <option [value]="account.glAccountId">
                     {{ account.accountName ?? ('ACCOUNTING.BOOKS.NAME_NOT_AVAILABLE' | translate) }}{{ showTerms() && account.accountCode ? ' · ' + account.accountCode : '' }}
                   </option>
@@ -485,7 +485,7 @@
               <p class="state-panel state-panel--empty" data-testid="account-ledger-empty">{{ 'ACCOUNTING.BOOKS.LEDGER.EMPTY' | translate }}</p>
             }
           } @else if (accountLedger.denied()) {
-            <p class="field-error">{{ 'ACCOUNTING.BOOKS.REGION.DENIED' | translate: { permission: codes.reporting } }}</p>
+            <p class="field-error" data-testid="account-ledger-denied">{{ 'ACCOUNTING.BOOKS.REGION.DENIED' | translate: { permission: codes.reporting } }}</p>
           } @else if (accountLedger.status() === 'FAILED') {
             <div class="region-error">
               <p class="field-error">{{ 'ACCOUNTING.BOOKS.REGION.LOAD_FAILED' | translate }}</p>
