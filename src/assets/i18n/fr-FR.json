@@ -5471,7 +5471,7 @@
       "OVERLINE": "Comptabilité",
       "TITLE": "Vos livres",
       "STANDFIRST": "Ce que l’atelier possède, doit et a gagné, qui doit quoi, et chaque écriture, en mots simples.",
-      "EMPTY_ACCESS": "Votre rôle peut ouvrir cette page mais ne peut lire aucun de ses onglets. Résumé et Qui doit quoi exigent {{summary}}; Toutes les écritures exige {{entries}}.",
+      "EMPTY_ACCESS": "Votre rôle peut ouvrir cette page mais ne peut lire aucun de ses onglets. Résumé et Qui doit quoi exigent {{summary}}; Toutes les écritures exigent {{entries}}.",
       "NAME_NOT_AVAILABLE": "Nom non disponible",
       "NO_NUMBER": "Écriture sans numéro",
       "CORRECTION_DESCRIPTION": "Correction d’une écriture antérieure",

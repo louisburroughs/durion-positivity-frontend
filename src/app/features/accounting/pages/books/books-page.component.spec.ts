@@ -6,11 +6,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { JwtClaims } from '../../../../core/models/auth.models';
 import { AccountingPreferencesService } from '../../services/accounting-preferences.service';
 import { BalanceSheetSummary, ExportJob, IncomeSummary } from '../../models/books.models';
-import { BooksPageComponent, EXPORT_POLL_FIRST_MS, EXPORT_POLL_MAX_ATTEMPTS } from './books-page.component';
+import { BOOKS_CLOCK, BooksPageComponent, EXPORT_POLL_FIRST_MS, EXPORT_POLL_MAX_ATTEMPTS } from './books-page.component';
+import { toIsoDate } from '../../utils/date-window.util';
 import {
   ALL_BOOKS_PERMISSIONS,
   BooksMocks,
   MONTH_START_ISO,
+  NOW,
   PREVIOUS_END_ISO,
   PREVIOUS_START_ISO,
   TODAY_ISO,
@@ -533,6 +535,27 @@ describe('BooksPageComponent', () => {
       // The income statement answered for September and may show; October's balance sheet must not.
       expect(qa('[data-testid="section-own"], [data-testid="section-owe"], [data-testid="section-yours"]')).toEqual([]);
       expect(host.textContent).not.toContain('$25,400.50');
+    });
+
+    it('rolls "today" over at local midnight without any interaction and re-reads as at the new day (ADR-0038 §6)', () => {
+      vi.useFakeTimers();
+      let now = new Date(NOW.getTime());
+      configureBooks(mocks, { tenantId: tenant });
+      TestBed.overrideProvider(BOOKS_CLOCK, { useValue: () => new Date(now.getTime()) });
+      fixture = TestBed.createComponent(BooksPageComponent);
+      component = fixture.componentInstance;
+      host = fixture.nativeElement as HTMLElement;
+      document.body.appendChild(host);
+      fixture.detectChanges();
+      expect(mocks.books.balanceSheet).toHaveBeenLastCalledWith(TODAY_ISO);
+
+      const tomorrow = new Date(NOW.getFullYear(), NOW.getMonth(), NOW.getDate() + 1, 0, 0, 2);
+      now = tomorrow;
+      vi.advanceTimersByTime(tomorrow.getTime() - NOW.getTime());
+      fixture.detectChanges();
+
+      expect(component.range().asAt).toBe(toIsoDate(tomorrow));
+      expect(mocks.books.balanceSheet).toHaveBeenLastCalledWith(toIsoDate(tomorrow));
     });
 
     it('clears everything and re-reads on a tid|sub change (ADR-0063 §7)', () => {

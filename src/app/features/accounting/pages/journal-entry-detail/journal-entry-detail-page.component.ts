@@ -24,6 +24,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { ModalDialogDirective } from '../../../../shared/modal-dialog.directive';
 import { MoneyPipe } from '../../../../shared/money.pipe';
 import { HelpDisclosureComponent } from '../../components/help-disclosure/help-disclosure.component';
+import { HomePageState } from '../../models/accounting-home.models';
 import { JournalEntry, JournalEntryTraceability } from '../../models/books.models';
 import { AccountingPreferencesService } from '../../services/accounting-preferences.service';
 import { BooksService, toBooksFailure } from '../../services/books.service';
@@ -92,15 +93,23 @@ export class JournalEntryDetailPageComponent {
     initialValue: this.route.snapshot?.paramMap?.get('journalEntryId') ?? null,
   });
 
-  readonly entry = new HomeRegion<JournalEntry>();
+  // ── Page state (ADR-0031): follows the primary read, the entry ─────────────
+  readonly state = signal<HomePageState>('idle');
+  readonly errorKey = signal<string | null>(null);
+
+  readonly entry = new HomeRegion<JournalEntry>(ok => this.settleEntry(ok));
+  /** Traceability is an independent region: its failure never fails the page (ADR-0064 §1). */
   readonly trace = new HomeRegion<JournalEntryTraceability>();
 
-  /** The entry answering the route's id, never a previous one (ADR-0063 §1). */
+  /**
+   * The entry answering the route's id, never a previous one (ADR-0063 §1),
+   * and never after a 403: refused data stops rendering (ADR-0064 §6).
+   */
   readonly entryData = computed(() =>
-    this.entry.dataKey() === this.journalEntryId() ? this.entry.data() : null,
+    this.entry.dataKey() === this.journalEntryId() && !this.entry.denied() ? this.entry.data() : null,
   );
   readonly traceData = computed(() =>
-    this.trace.dataKey() === this.journalEntryId() ? this.trace.data() : null,
+    this.trace.dataKey() === this.journalEntryId() && !this.trace.denied() ? this.trace.data() : null,
   );
 
   /** The HTTP status of the entry read's failure, keyed by the id it was issued for. */
@@ -173,6 +182,8 @@ export class JournalEntryDetailPageComponent {
         this.trace.reset();
         this.abandonReverse();
         this.outcome.set(null);
+        this.state.set('idle');
+        this.errorKey.set(null);
         this.identityTick.update(tick => tick + 1);
       });
     });
@@ -198,7 +209,13 @@ export class JournalEntryDetailPageComponent {
     if (!id) {
       this.entry.reset();
       this.trace.reset();
+      this.state.set('error');
+      this.errorKey.set('ACCOUNTING.BOOKS.ENTRY.NOT_FOUND');
       return;
+    }
+    if (this.state() !== 'ready' || !this.entryData()) {
+      this.state.set('loading');
+      this.errorKey.set(null);
     }
     const read = this.books.getJournalEntry(id).pipe(
       catchError((error: unknown) => {
@@ -228,6 +245,26 @@ export class JournalEntryDetailPageComponent {
     const failure = this.entryFailureStatus();
     return failure?.id === id && failure.status === 404 ? 'NOT_FOUND' : 'FAILED';
   });
+
+  /** The entry read answered: `state` moves before `errorKey`, into error and back out (ADR-0031 §1, §5). */
+  private settleEntry(ok: boolean): void {
+    if (ok) {
+      this.state.set('ready');
+      this.errorKey.set(null);
+      return;
+    }
+    const failure = this.entryFailure();
+    this.state.set('error');
+    this.errorKey.set(
+      failure === 'NOT_FOUND'
+        ? 'ACCOUNTING.BOOKS.ENTRY.NOT_FOUND'
+        : failure === 'DENIED'
+          ? 'ACCOUNTING.BOOKS.REGION.DENIED'
+          : this.entryData()
+            ? 'ACCOUNTING.BOOKS.REGION.REFRESH_FAILED'
+            : 'ACCOUNTING.BOOKS.ENTRY.LOAD_FAILED',
+    );
+  }
 
   whatHappened(entry: JournalEntry): WhatHappened {
     return describeEntry(entry);

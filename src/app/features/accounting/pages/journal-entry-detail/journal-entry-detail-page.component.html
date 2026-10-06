@@ -39,11 +39,11 @@
       </div>
     }
     @case ('DENIED') {
-      <p class="field-error" data-testid="entry-denied">{{ 'ACCOUNTING.BOOKS.REGION.DENIED' | translate: { permission: codes.entries } }}</p>
+      <p class="field-error" data-testid="entry-denied">{{ (errorKey() ?? '') | translate: { permission: codes.entries } }}</p>
     }
     @case ('FAILED') {
       <div class="state-panel state-panel--error" role="alert" data-testid="entry-error">
-        <p>{{ (entryData() ? 'ACCOUNTING.BOOKS.REGION.REFRESH_FAILED' : 'ACCOUNTING.BOOKS.ENTRY.LOAD_FAILED') | translate }}</p>
+        <p>{{ (errorKey() ?? '') | translate }}</p>
         <button type="button" class="btn btn--outline" (click)="reload()">{{ 'COMMON.RETRY' | translate }}</button>
       </div>
     }
@@ -159,6 +159,10 @@
     <section class="entry-card" aria-labelledby="entry-trace-heading" data-testid="entry-trace">
       <h2 id="entry-trace-heading">{{ 'ACCOUNTING.BOOKS.ENTRY.TRACE' | translate }}</h2>
       @if (traceData(); as links) {
+        @if (trace.status() === 'FAILED') {
+          <!-- Retained links come with their failed re-read (ADR-0064 §2). -->
+          <p class="field-error" data-testid="trace-refresh-failed">{{ 'ACCOUNTING.BOOKS.REGION.REFRESH_FAILED' | translate }}</p>
+        }
         @if (!links.original && !links.reversal && links.related.length === 0) {
           <p class="hint-text" data-testid="trace-none">{{ 'ACCOUNTING.BOOKS.ENTRY.TRACE_NONE' | translate }}</p>
         } @else {

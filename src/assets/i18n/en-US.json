@@ -5471,7 +5471,7 @@
       "OVERLINE": "Accounting",
       "TITLE": "Your books",
       "STANDFIRST": "What the shop owns, owes and has earned, who owes what, and every entry, in plain words.",
-      "EMPTY_ACCESS": "Your role can open this page but not read any of its tabs. Summary and Who owes what need {{summary}}; All entries needs {{entries}}.",
+      "EMPTY_ACCESS": "Your role can open this page but not read any of its tabs. Summary and Who owes what need {{summary}}; All entries need {{entries}}.",
       "NAME_NOT_AVAILABLE": "Name not available",
       "NO_NUMBER": "Entry without a number",
       "CORRECTION_DESCRIPTION": "Correction of an earlier entry",

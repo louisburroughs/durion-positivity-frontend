@@ -5471,7 +5471,7 @@
       "OVERLINE": "Contabilidad",
       "TITLE": "Sus libros",
       "STANDFIRST": "Lo que el taller tiene, debe y ha ganado, quién debe qué y cada asiento, en palabras sencillas.",
-      "EMPTY_ACCESS": "Su rol puede abrir esta página pero no leer ninguna de sus pestañas. Resumen y Quién debe qué necesitan {{summary}}; Todos los asientos necesita {{entries}}.",
+      "EMPTY_ACCESS": "Su rol puede abrir esta página pero no leer ninguna de sus pestañas. Resumen y Quién debe qué necesitan {{summary}}; Todos los asientos necesitan {{entries}}.",
       "NAME_NOT_AVAILABLE": "Nombre no disponible",
       "NO_NUMBER": "Asiento sin número",
       "CORRECTION_DESCRIPTION": "Corrección de un asiento anterior",

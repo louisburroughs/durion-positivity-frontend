@@ -144,6 +144,50 @@ describe('JournalEntryDetailPageComponent', () => {
       expect(q('[data-testid="entry-error"]')).toBeNull();
     });
 
+    it('moves page state before errorKey: ready on a read, error with the cause on a failure (ADR-0031)', () => {
+      render();
+      expect(component.state()).toBe('ready');
+      expect(component.errorKey()).toBeNull();
+
+      mocks.books.getJournalEntry.mockReturnValue(throwError(() => http(500)));
+      component.reload();
+      fixture.detectChanges();
+      expect(component.state()).toBe('error');
+      expect(component.errorKey()).toBe('ACCOUNTING.BOOKS.REGION.REFRESH_FAILED');
+    });
+
+    it('stops rendering the entry and its related entries after a 403 on reload (ADR-0064 §6)', () => {
+      mocks.books.getTraceability.mockReturnValue(
+        of(traceability({ reversal: journalEntry({ journalEntryId: 'je-140', entryNumber: 'JE-202610-140' }) })),
+      );
+      render();
+      expect(text('[data-testid="entry-number"]')).toBe('JE-202610-131');
+
+      mocks.books.getJournalEntry.mockReturnValue(throwError(() => http(403)));
+      mocks.books.getTraceability.mockReturnValue(throwError(() => http(403)));
+      component.reload();
+      fixture.detectChanges();
+
+      expect(q('[data-testid="entry-denied"]')).not.toBeNull();
+      expect(q('[data-testid="entry-facts"]')).toBeNull();
+      expect(host.textContent).not.toContain('JE-202610-140');
+      expect(text('[data-testid="entry-number"]')).toBe('ACCOUNTING.BOOKS.ENTRY.TITLE');
+    });
+
+    it('says related entries could not refresh when the post-reversal re-read of traceability fails (ADR-0064 §2)', async () => {
+      mocks.books.getTraceability.mockReturnValue(
+        of(traceability({ related: [journalEntry({ journalEntryId: 'je-132', entryNumber: 'JE-202610-132' })] })),
+      );
+      render();
+      mocks.books.getTraceability.mockReturnValue(throwError(() => http(500)));
+      click('[data-testid="reverse-open"]');
+      await type('[data-testid="reverse-reason"]', 'Recorded twice');
+      click('[data-testid="reverse-submit"]');
+
+      expect(q('[data-testid="trace-related"]')).not.toBeNull();
+      expect(text('[data-testid="trace-refresh-failed"]')).toBe('ACCOUNTING.BOOKS.REGION.REFRESH_FAILED');
+    });
+
     it('never shows the previous entry while a new route id is loading (ADR-0063 §1)', () => {
       const next = pending<JournalEntry>();
       render();
@@ -256,6 +300,17 @@ describe('JournalEntryDetailPageComponent', () => {
       click('[data-testid="reverse-submit"]');
       expect(text('[data-testid="reverse-error"]')).toBe('ACCOUNTING.BOOKS.ENTRY.REVERSE.ERROR.FORBIDDEN');
     });
+  });
+
+  it('explains a 404 from the reversal in its own words, never the server text', async () => {
+    mocks.books.reverseJournalEntry.mockReturnValue(throwError(() => http(404, 'JOURNAL_ENTRY_NOT_FOUND')));
+    render();
+    click('[data-testid="reverse-open"]');
+    await type('[data-testid="reverse-reason"]', 'Recorded twice');
+    click('[data-testid="reverse-submit"]');
+
+    expect(text('[data-testid="reverse-error"]')).toBe('ACCOUNTING.BOOKS.ENTRY.REVERSE.ERROR.NOT_FOUND');
+    expect(host.textContent).not.toContain('server text');
   });
 
   describe('Closed month override (AC 9)', () => {

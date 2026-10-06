@@ -6,6 +6,7 @@ import {
   ElementRef,
   InjectionToken,
   Injector,
+  NgZone,
   afterNextRender,
   computed,
   effect,
@@ -196,6 +197,7 @@ export class BooksPageComponent {
   private readonly clock = inject(BOOKS_CLOCK);
   private readonly destroyRef = inject(DestroyRef);
   private readonly injector = inject(Injector);
+  private readonly zone = inject(NgZone);
 
   private readonly drillHeading = viewChild<ElementRef<HTMLElement>>('drillHeading');
   private readonly ledgerHeading = viewChild<ElementRef<HTMLElement>>('ledgerHeading');
@@ -411,7 +413,10 @@ export class BooksPageComponent {
     this.destroyRef.onDestroy(() => {
       for (const region of this.allRegions) region.dispose();
       this.stopExport();
+      if (this.rolloverTimer !== null) clearTimeout(this.rolloverTimer);
+      this.rolloverTimer = null;
     });
+    this.scheduleRollover();
     // ADR-0063 §7: another tenant or person invalidates every read in flight and clears the page.
     effect(() => {
       const identity = this.identity();
@@ -438,6 +443,31 @@ export class BooksPageComponent {
       this.filterAccountId();
       this.identityTick();
       untracked(() => this.loadTab(tab));
+    });
+  }
+
+  /**
+   * ADR-0038 §6: the page does not poll, so a timer refreshes "today" just after
+   * the next local midnight. The as-at date, the current-month option and the
+   * past-month note then follow the new day, and the active tab re-reads.
+   */
+  private rolloverTimer: ReturnType<typeof setTimeout> | null = null;
+
+  private scheduleRollover(): void {
+    const now = this.clock();
+    const nextMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    // Outside the zone: a day-long pending timer would otherwise keep the app from ever becoming stable.
+    this.zone.runOutsideAngular(() => {
+      this.rolloverTimer = setTimeout(
+        () =>
+          this.zone.run(() => {
+            this.rolloverTimer = null;
+            this.today.set(startOfLocalDay(this.clock()));
+            this.loadTab(this.activeTab());
+            this.scheduleRollover();
+          }),
+        Math.max(1000, nextMidnight.getTime() - now.getTime() + 1000),
+      );
     });
   }
 
