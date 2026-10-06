@@ -56,25 +56,6 @@
   display: block;
 }
 
-.chip-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.todo-panel__table {
-  min-width: 0;
-}
-
-.todo-panel__table caption {
-  text-align: start;
-  font-weight: 600;
-  padding-bottom: var(--space-2);
-}
-
 .todo-panel__consequence {
   font-weight: 600;
 }

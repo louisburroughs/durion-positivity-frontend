@@ -117,11 +117,11 @@ export const ACCOUNTING_LANDING_CONFIG: LandingPageConfig = {
         {
           kind: 'direct',
           icon: 'payments',
-          titleKey: 'ACCOUNTING.LANDING.CARD.PAYMENT_APPLY.TITLE',
-          descriptionKey: 'ACCOUNTING.LANDING.CARD.PAYMENT_APPLY.DESCRIPTION',
+          titleKey: 'ACCOUNTING.LANDING.CARD.CUSTOMER_PAYMENTS.TITLE',
+          descriptionKey: 'ACCOUNTING.LANDING.CARD.CUSTOMER_PAYMENTS.DESCRIPTION',
           ctaKey: 'ACCOUNTING.LANDING.ACTION.OPEN_PAGE',
-          route: '/app/accounting/payments/apply',
-          permissions: ACCOUNTING_PAGE.paymentApply,
+          route: '/app/accounting/payments',
+          permissions: ACCOUNTING_PAGE.customerPayments,
         },
         {
           kind: 'direct',

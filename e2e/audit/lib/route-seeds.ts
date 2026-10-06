@@ -47,7 +47,7 @@ export const APP_SEEDS: readonly string[] = [
   '/app/accounting/events/submit',
   '/app/accounting/events/failed',
   '/app/accounting/posting-rules',
-  '/app/accounting/payments/apply',
+  '/app/accounting/payments',
   '/app/accounting/credit-memos',
   '/app/accounting/credit-memos/new',
   '/app/accounting/vendor-payments',

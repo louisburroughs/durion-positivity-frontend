@@ -4,90 +4,20 @@
     <h3 id="todo-panel-heading" class="todo-panel__heading" tabindex="-1" #panelHeading>
       {{ 'ACCOUNTING.HOME.TODO.PAYMENT.PANEL_TITLE' | translate }}
     </h3>
-    <dl class="todo-panel__facts">
-      <div>
-        <dt>{{ 'ACCOUNTING.HOME.TODO.PAYMENT.CUSTOMER' | translate }}</dt>
-        <dd>
-          {{ payment.customerName ?? empty }}
-          @if (payment.customerReference) {
-            <span class="reference">{{ payment.customerReference }}</span>
-          }
-        </dd>
-      </div>
-      <div>
-        <dt>{{ 'ACCOUNTING.HOME.TODO.PAYMENT.TAKEN_AGAINST' | translate }}</dt>
-        <dd class="reference">{{ payment.sourceInvoiceNumber ?? empty }}</dd>
-      </div>
-      <div>
-        <dt>{{ 'ACCOUNTING.HOME.TODO.PAYMENT.METHOD' | translate }}</dt>
-        <dd>
-          @if (methodKey(payment.method); as key) {
-            {{ key | translate }}
-          } @else {
-            {{ empty }}
-          }
-        </dd>
-      </div>
-      <div>
-        <dt>{{ 'ACCOUNTING.HOME.TODO.PAYMENT.RECEIVED' | translate }}</dt>
-        <dd>{{ (payment.receivedAt | date: 'mediumDate') ?? empty }}</dd>
-      </div>
-      <div>
-        <dt>{{ 'ACCOUNTING.HOME.TODO.PAYMENT.UNAPPLIED' | translate }}</dt>
-        <dd class="numeric">{{ payment.unappliedAmount | money: payment.currency }}</dd>
-      </div>
-    </dl>
-
-    @if (payment.reasons.length > 0) {
-      <ul class="chip-list" [attr.aria-label]="'ACCOUNTING.HOME.TODO.PAYMENT.REASONS_ARIA' | translate">
-        @for (reason of payment.reasons; track reason) {
-          <li class="status-badge" [attr.data-reason]="reason">{{ reasonKey(reason) | translate }}</li>
-        }
-      </ul>
-    }
-
-    @if (payment.suggestedInvoices.length > 0) {
-      <div class="table-scroll-container">
-        <table class="ledger-table todo-panel__table">
-          <caption>{{ 'ACCOUNTING.HOME.TODO.PAYMENT.SUGGESTED_CAPTION' | translate }}</caption>
-          <thead>
-            <tr>
-              <th scope="col">{{ 'ACCOUNTING.HOME.TODO.PAYMENT.COL_INVOICE' | translate }}</th>
-              <th scope="col" class="numeric">{{ 'ACCOUNTING.HOME.TODO.PAYMENT.COL_BALANCE' | translate }}</th>
-              <th scope="col" class="numeric">{{ 'ACCOUNTING.HOME.TODO.PAYMENT.COL_APPLYING' | translate }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (invoice of payment.suggestedInvoices; track $index) {
-              <tr>
-                <td class="reference">{{ invoice.invoiceNumber ?? empty }}</td>
-                <td class="numeric">{{ invoice.balanceDue | money: payment.currency }}</td>
-                <td class="numeric">{{ invoice.suggestedAmount | money: payment.currency }}</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-      <dl class="todo-panel__facts">
-        <div>
-          <dt>{{ 'ACCOUNTING.HOME.TODO.PAYMENT.APPLYING' | translate }}</dt>
-          <dd class="numeric">{{ payment.suggestedTotal | money: payment.currency }}</dd>
-        </div>
-        <div>
-          <dt>{{ 'ACCOUNTING.HOME.TODO.PAYMENT.LEFT_OVER' | translate }}</dt>
-          <dd class="numeric" data-testid="left-over">{{ (payment.leftOver | money: payment.currency) ?? empty }}</dd>
-        </div>
-      </dl>
-    } @else {
-      <p class="hint-text">{{ 'ACCOUNTING.HOME.TODO.PAYMENT.NO_SUGGESTION' | translate }}</p>
-    }
-
     <h4 class="todo-panel__subheading">{{ 'ACCOUNTING.HOME.TODO.WHAT_TO_DO' | translate }}</h4>
     <p>{{ 'ACCOUNTING.HOME.TODO.PAYMENT.WHAT_TO_DO' | translate }}</p>
     <app-help-disclosure
       summaryKey="ACCOUNTING.HELP.WHY_MATCH.SUMMARY"
       textKey="ACCOUNTING.HELP.WHY_MATCH.TEXT"
       exampleKey="ACCOUNTING.HELP.WHY_MATCH.EXAMPLE"
+    />
+    <!-- The same match component as Customer payments (§5.1, story S6 AC 11). -->
+    <app-payment-match
+      [payment]="payment"
+      [embedded]="true"
+      (applied)="paymentApplied.emit($event)"
+      (changed)="paymentChanged.emit()"
+      (announce)="paymentAnnounce.emit($event)"
     />
   }
 

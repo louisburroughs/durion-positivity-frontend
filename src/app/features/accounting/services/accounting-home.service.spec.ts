@@ -240,8 +240,10 @@ describe('AccountingHomeService', () => {
     expect(page?.waitingCount).toBe(31);
     expect(page?.items[0]).toEqual({
       paymentId: 'pay-1',
+      customerId: 'cust-1',
       customerName: 'Harbor Fleet Services',
       customerReference: 'C-1042',
+      sourceInvoiceId: 'inv-9',
       sourceInvoiceNumber: 'INV-2026-01702',
       method: 'CARD',
       receivedAt: '2026-10-05T16:20:00Z',
@@ -249,7 +251,7 @@ describe('AccountingHomeService', () => {
       unappliedAmount: 4615,
       currency: 'USD',
       reasons: ['REMITTANCE_REFERENCE', 'EXACT_TOTAL'],
-      suggestedInvoices: [{ invoiceNumber: 'INV-2026-01702', balanceDue: 4615, suggestedAmount: 4615 }],
+      suggestedInvoices: [{ invoiceId: 'inv-9', invoiceNumber: 'INV-2026-01702', balanceDue: 4615, suggestedAmount: 4615 }],
       suggestedTotal: 4615,
       leftOver: 0,
     });

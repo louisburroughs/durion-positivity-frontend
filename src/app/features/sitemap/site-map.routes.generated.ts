@@ -29,7 +29,7 @@ export const SITE_MAP_ROUTES: readonly SiteMapRouteEntry[] = [
   { route: '/app/accounting/payables/vendor-invoices', label: "Vendor Invoices", labelKey: "SITEMAP.LABEL.VENDOR_INVOICES", dynamic: false, permissions: ['accounting:analytics:view'] },
   { route: '/app/accounting/payables/vendor-invoices/:billId', label: "Vendor Invoices", labelKey: "SITEMAP.LABEL.VENDOR_INVOICES", dynamic: true, permissions: ['accounting:ap:view'] },
   { route: '/app/accounting/payables/vendor-invoices/exceptions', label: "Exceptions", labelKey: "SITEMAP.LABEL.EXCEPTIONS", dynamic: false, permissions: ['accounting:analytics:view'] },
-  { route: '/app/accounting/payments/apply', label: "Apply", labelKey: "SITEMAP.LABEL.APPLY", dynamic: false, permissions: ['accounting:payment:apply'] },
+  { route: '/app/accounting/payments', label: "Payments", labelKey: "SITEMAP.LABEL.PAYMENTS", dynamic: false, permissions: ['accounting:payment:apply'] },
   { route: '/app/accounting/periods', label: "Accounting Periods", labelKey: "SITEMAP.LABEL.ACCOUNTING_PERIODS", dynamic: false, permissions: ['accounting:period:view'] },
   { route: '/app/accounting/posting-rules', label: "Posting Rules", labelKey: "SITEMAP.LABEL.POSTING_RULES", dynamic: false, permissions: ['accounting:posting_rules:view'] },
   { route: '/app/accounting/posting-rules/:ruleSetId', label: "Posting Rules", labelKey: "SITEMAP.LABEL.POSTING_RULES", dynamic: true, permissions: ['accounting:posting_rules:view'] },

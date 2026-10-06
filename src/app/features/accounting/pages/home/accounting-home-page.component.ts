@@ -196,7 +196,10 @@ export class AccountingHomePageComponent {
    * tab's own read (`generateAgedReceivables`), not the page's any-of gate, which `accounting:je:view` alone passes.
    */
   readonly canOpenWhoOwesWhat = computed(() => canAccess(this.auth, { permissions: ACCOUNTING_SECTION.booksSummary }));
-  readonly canOpenPaymentApply = computed(() => canAccess(this.auth, { permissions: ACCOUNTING_PAGE.paymentApply }));
+  /** "Match customer payments" and the to-do's "more payments" link open Customer payments (CAP:550 S6). */
+  readonly canOpenCustomerPayments = computed(() =>
+    canAccess(this.auth, { permissions: ACCOUNTING_PAGE.customerPayments }),
+  );
   readonly canOpenVendorPayments = computed(() =>
     canAccess(this.auth, { permissions: ACCOUNTING_PAGE.vendorPaymentView }),
   );
@@ -318,6 +321,8 @@ export class AccountingHomePageComponent {
   /** The last approved check-up, for the page-level polite status (null account renders an em dash). */
   readonly approvedAccount = signal<{ account: string | null } | null>(null);
   readonly approveMessage = signal<{ key: string; params: Readonly<Record<string, unknown>> } | null>(null);
+  /** The match panel's last outcome (CAP:550 S6), announced once in the to-do's status region. */
+  readonly paymentMessage = signal<{ key: string; params: Readonly<Record<string, unknown>> } | null>(null);
   /** Focus owed after an approve re-read; drained by whichever approvals read lands last (ADR-0063 §4). */
   private focusOwed = false;
 
@@ -365,6 +370,7 @@ export class AccountingHomePageComponent {
     this.approving.set(false);
     this.approveMessage.set(null);
     this.approvedAccount.set(null);
+    this.paymentMessage.set(null);
     this.focusOwed = false;
     this.selectedId.set(null);
     this.filter.set('ALL');
@@ -524,6 +530,7 @@ export class AccountingHomePageComponent {
 
   select(item: TodoItem): void {
     this.approvedAccount.set(null);
+    if (this.selectedId() !== item.id) this.paymentMessage.set(null);
     if (this.selectedId() !== item.id) {
       this.approveMessage.set(null);
       this.focusOwed = false;
@@ -537,6 +544,28 @@ export class AccountingHomePageComponent {
     if (this.isSmallScreen()) {
       this.focusAfterRender(() => this.panel()?.focusHeading());
     }
+  }
+
+  /**
+   * The match panel applied a payment (CAP:550 S6): the payments and the Money
+   * owed lane re-read under their own guards. A payment that is now fully
+   * applied leaves the list, which clears the panel and moves focus to the
+   * to-do heading (`onTodoSourceSettled`); the outcome stays announced.
+   */
+  onPaymentApplied(): void {
+    this.today.set(startOfLocalDay(this.clock()));
+    if (this.canSeePayments() && !this.payments.denied()) this.loadRegion('payments');
+    if (this.canSeeReceivables() && !this.receivables.denied()) this.loadRegion('receivables');
+  }
+
+  /** The payment changed under the person, or its remainder moved: the payments re-read. */
+  onPaymentChanged(): void {
+    if (this.canSeePayments() && !this.payments.denied()) this.loadRegion('payments');
+  }
+
+  onPaymentAnnounce(message: { key: string; params: Readonly<Record<string, unknown>> }): void {
+    this.approvedAccount.set(null);
+    this.paymentMessage.set({ key: message.key, params: message.params });
   }
 
   /** Approve month (§5.1, §9.1): permission, the served `canApprove` and no write in flight, re-checked here. */

@@ -26,6 +26,7 @@ describe('ACCOUNTING_SUBNAV', () => {
     expect(ACCOUNTING_SUBNAV.map(entry => entry.route)).toEqual([
       '',
       'payables/vendor-invoices',
+      'payments',
       'bank-accounts',
       'books',
       'periods',

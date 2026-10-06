@@ -1,0 +1,256 @@
+:host {
+  display: block;
+}
+
+.payments {
+  max-width: 80rem;
+  /* One track that may shrink below its content's min-content, so nothing widens the page at phone width. */
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.payments h2 {
+  margin: 0;
+}
+
+/* ── Header ─────────────────────────────────────────────────────────── */
+.payments__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.payments__title-block {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.payments .btn {
+  min-height: 2.75rem;
+  gap: var(--space-1);
+  text-decoration: none;
+}
+
+.payments .btn[aria-disabled='true'] {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+/* The four numbered steps (§5.3 item 1). */
+.payments__steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+  margin: 0;
+  padding-inline-start: 1.25rem;
+  color: var(--text-muted);
+}
+
+/* ── Stat cards ─────────────────────────────────────────────────────── */
+.payments__cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: var(--space-3);
+}
+
+.payments__cards:empty {
+  display: none;
+}
+
+.stat-card {
+  display: grid;
+  gap: var(--space-1);
+  align-content: start;
+  padding: var(--space-4);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--cardBackground);
+}
+
+.stat-card p {
+  margin: 0;
+}
+
+.stat-card__title {
+  font-size: 0.9375rem;
+  color: var(--text-muted);
+}
+
+.stat-card__figure {
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── List and panel ─────────────────────────────────────────────────── */
+.payments__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.payments__list-column,
+.payments__panel-column {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.payments__panel-column {
+  padding: var(--space-4);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--cardBackground);
+}
+
+.payments__section-heading {
+  font-size: 1.125rem;
+}
+
+.payments__section-heading:focus-visible,
+.payments__automatic-summary:focus-visible,
+.payment-item:focus-visible {
+  outline: 2px solid var(--input-focus-border);
+  outline-offset: 2px;
+}
+
+.payments__list,
+.payments__automatic-list {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* A selection button per payment (aria-pressed); ≥ 44px (§5.7). */
+.payment-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-1) var(--space-3);
+  align-items: start;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: var(--space-3);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--cardBackground);
+  color: var(--currentTextColor);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.payment-item:hover {
+  background: var(--surface-hover);
+}
+
+/* Pressed: border weight and fill, never colour alone (ADR-0039). */
+.payment-item[aria-pressed='true'] {
+  border: 2px solid var(--link-color);
+  background: var(--surface-inset);
+}
+
+.payment-item__text {
+  display: grid;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.payment-item__name {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.payment-item__meta {
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+}
+
+.payment-item__amount,
+.automatic-row__amount {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}
+
+.payment-item .status-badge {
+  grid-column: 1 / -1;
+  justify-self: start;
+}
+
+.payments__error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* ── Matched automatically this week ────────────────────────────────── */
+.payments__automatic {
+  display: grid;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-color);
+}
+
+.payments__automatic[open] {
+  display: grid;
+}
+
+.payments__automatic-summary {
+  min-height: 2.75rem;
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+  color: var(--link-color);
+  cursor: pointer;
+}
+
+.payments__automatic > * + * {
+  margin-top: var(--space-2);
+}
+
+.automatic-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: var(--space-2) var(--space-3);
+  align-items: center;
+  min-height: 2.75rem;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+}
+
+.automatic-row__text {
+  display: grid;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.automatic-row__name {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.reference {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+}
+
+@media (width <= 767px) {
+  .payments__layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .automatic-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .automatic-row__undo {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}

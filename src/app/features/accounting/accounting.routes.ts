@@ -89,12 +89,20 @@ export const ACCOUNTING_ROUTES: Routes = [
           ),
       },
       {
-        path: 'payments/apply',
-        data: { permissions: ACCOUNTING_PAGE.paymentApply },
+        // Customer payments (CAP:550 S6, §8.1). `?paymentId=` preselects a payment; the id is never shown.
+        path: 'payments',
+        data: { permissions: ACCOUNTING_PAGE.customerPayments },
         loadComponent: () =>
-          import('./pages/payment-apply/payment-apply-page.component').then(
-            m => m.PaymentApplyPageComponent,
+          import('./pages/customer-payments/customer-payments-page.component').then(
+            m => m.CustomerPaymentsPageComponent,
           ),
+      },
+      {
+        // The old Apply payment page (payment id + JSON) is gone; bookmarks land on Customer payments.
+        path: 'payments/apply',
+        data: { permissions: ACCOUNTING_PAGE.customerPayments },
+        redirectTo: 'payments',
+        pathMatch: 'full',
       },
       {
         path: 'credit-memos',

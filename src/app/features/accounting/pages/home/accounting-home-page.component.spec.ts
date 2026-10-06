@@ -225,6 +225,19 @@ describe('AccountingHomePageComponent', () => {
       expect(link?.textContent?.trim()).toBe('ACCOUNTING.HOME.ACTION.WHO_OWES_WHAT');
     });
 
+    it('offers "Match customer payments" on Money owed with accounting:payment:apply, and not without (CAP:550 S6)', () => {
+      render();
+      const link = q('[data-testid="lane-receivables"] [data-testid="match-customer-payments"]');
+      expect(link?.getAttribute('href')).toBe('/app/accounting/payments');
+      expect(link?.textContent?.trim()).toBe('ACCOUNTING.HOME.ACTION.MATCH_CUSTOMER_PAYMENTS');
+
+      host.remove();
+      TestBed.resetTestingModule();
+      mocks.held.set(ALL_HOME_PERMISSIONS.filter(code => code !== 'accounting:payment:apply'));
+      render();
+      expect(q('[data-testid="match-customer-payments"]')).toBeNull();
+    });
+
     it('does not offer "Who owes what" to a session that cannot read that tab (accounting:je:view alone)', () => {
       mocks.held.set(['accounting:je:view']);
       render();
@@ -483,6 +496,45 @@ describe('AccountingHomePageComponent', () => {
       fixture.detectChanges();
 
       expect(document.activeElement?.id).toBe('todo-panel-heading');
+    });
+
+    it('matches a payment in place: the detail panel embeds the match component and an apply re-reads the lanes (CAP:550 S6 AC 11)', () => {
+      mocks.customerPayments.openInvoices.mockReturnValue(
+        of({
+          items: [
+            {
+              invoiceId: 'inv-9',
+              invoiceNumber: 'INV-2026-01702',
+              documentDate: TODAY_ISO,
+              dueDate: TODAY_ISO,
+              overdue: false,
+              balanceDue: 4615,
+              currency: 'USD',
+            },
+          ],
+          truncated: false,
+        }),
+      );
+      render();
+      q('.todo-item[data-kind="PAYMENT"]')!.click();
+      fixture.detectChanges();
+
+      expect(q('app-todo-detail-panel app-payment-match')).not.toBeNull();
+      expect(mocks.customerPayments.openInvoices).toHaveBeenCalledWith('cust-1');
+      const paymentsReads = mocks.home.paymentsToMatch.mock.calls.length;
+      const receivablesReads = mocks.home.receivables.mock.calls.length;
+
+      q('[data-testid="apply"]')!.click();
+      fixture.detectChanges();
+
+      expect(mocks.customerPayments.applyPayment).toHaveBeenCalledWith(
+        'pay-1',
+        expect.any(String),
+        [{ invoiceId: 'inv-9', amount: 4615 }],
+      );
+      expect(mocks.home.paymentsToMatch.mock.calls.length).toBe(paymentsReads + 1);
+      expect(mocks.home.receivables.mock.calls.length).toBe(receivablesReads + 1);
+      expect(text('[data-testid="approve-done"]')).toBe('ACCOUNTING.CUSTOMER_PAYMENTS.RESULT.ANNOUNCE_APPLIED');
     });
 
     it('keeps focus on the item on a wide screen', () => {

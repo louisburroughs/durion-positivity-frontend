@@ -31,4 +31,20 @@ describe('ACCOUNTING_ROUTES', () => {
     expect(router.url).not.toContain('/events/events');
     expect(router.url).not.toContain('events%3F');
   });
+
+  it('redirects the retired payments/apply page to Customer payments (CAP:550 S6, §8.1)', async () => {
+    await router.navigateByUrl('/app/accounting/payments/apply');
+
+    expect(router.url).toBe('/app/accounting/payments');
+  });
+
+  it('no longer routes any page component at payments/apply (the old page is deleted)', () => {
+    const children = ACCOUNTING_ROUTES[0].children ?? [];
+    const old = children.find(child => child.path === 'payments/apply');
+    expect(old?.redirectTo).toBe('payments');
+    expect(old?.loadComponent).toBeUndefined();
+    expect(children.find(child => child.path === 'payments')?.data?.['permissions']).toEqual([
+      'accounting:payment:apply',
+    ]);
+  });
 });

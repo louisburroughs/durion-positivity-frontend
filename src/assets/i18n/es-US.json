@@ -3677,19 +3677,6 @@
       "COL_PUBLISHED_AT": "Publicado el",
       "COL_PUBLISHED_BY": "Publicado por"
     },
-    "PAYMENT_APPLY": {
-      "OVERLINE": "Cuentas por cobrar",
-      "TITLE": "Aplicar pago",
-      "FIELD_PAYMENT_ID": "ID de pago",
-      "FIELD_APPLICATIONS": "JSON de aplicaciones",
-      "SUBMIT": "Aplicar pago",
-      "ERROR": "No se pudo aplicar el pago.",
-      "EMPTY": "Proporcione datos de asignación para aplicar el pago.",
-      "RESULT_TITLE": "Resultado de la aplicación",
-      "RESULT_PAYMENT_ID": "ID de pago",
-      "RESULT_TOTAL": "Total del pago",
-      "RESULT_APPLIED": "Total aplicado"
-    },
     "CREDIT_MEMO_CREATE": {
       "OVERLINE": "Cuentas por cobrar",
       "TITLE": "Crear nota de crédito",
@@ -3922,10 +3909,6 @@
           "TITLE": "Detalle del conjunto de reglas",
           "DESCRIPTION": "Abre un conjunto de reglas de registro específico por su ID."
         },
-        "PAYMENT_APPLY": {
-          "TITLE": "Aplicar pago",
-          "DESCRIPTION": "Aplica un pago a una o más facturas pendientes."
-        },
         "VENDOR_PAYMENTS": {
           "TITLE": "Pagos a proveedores",
           "DESCRIPTION": "Consulta todas las ejecuciones de pagos a proveedores y su estado de desembolso."
@@ -3977,6 +3960,10 @@
         "BANK_RECONCILIATION": {
           "TITLE": "Cuentas bancarias",
           "DESCRIPTION": "Vea el estado de conciliación de cada cuenta bancaria, importe un estado de cuenta o inicie una conciliación."
+        },
+        "CUSTOMER_PAYMENTS": {
+          "TITLE": "Pagos de clientes",
+          "DESCRIPTION": "Concilie los pagos de los clientes con las facturas que pagan."
         }
       },
       "FIELD": {
@@ -5205,6 +5192,8 @@
         "HOME": "Inicio",
         "BILLS": "Facturas por pagar",
         "BILLS_TERM": "cuentas por pagar",
+        "CUSTOMER_PAYMENTS": "Pagos de clientes",
+        "CUSTOMER_PAYMENTS_TERM": "cuentas por cobrar",
         "BANK": "Banco",
         "BANK_TERM": "conciliación bancaria",
         "MONTH_END": "Cierre de mes",
@@ -5288,14 +5277,8 @@
       "ACTION": {
         "OPEN_BILLS": "Abrir facturas",
         "OPEN_BANK_CHECKUP": "Abrir revisión bancaria",
-        "WHO_OWES_WHAT": "Quién debe qué"
-      },
-      "METHOD": {
-        "CASH": "Efectivo",
-        "CARD": "Tarjeta",
-        "ON_ACCOUNT": "A cuenta",
-        "OTHER": "Otro",
-        "UNKNOWN": "Desconocido"
+        "WHO_OWES_WHAT": "Quién debe qué",
+        "MATCH_CUSTOMER_PAYMENTS": "Conciliar pagos de clientes"
       },
       "TODO": {
         "TITLE": "Su lista de pendientes",
@@ -5330,26 +5313,7 @@
           "TITLE": "Pago listo para conciliar",
           "PANEL_TITLE": "Pago listo para conciliar",
           "REASON_LINE": "Aún no se concilia con las facturas que paga.",
-          "CUSTOMER": "Cliente",
-          "TAKEN_AGAINST": "Recibido para la factura",
-          "METHOD": "Método",
-          "RECEIVED": "Recibido",
-          "UNAPPLIED": "Por conciliar",
-          "REASONS_ARIA": "Por qué estas facturas",
-          "REASON": {
-            "REMITTANCE_REFERENCE": "Recibido para esta factura",
-            "SAME_CUSTOMER": "Mismo cliente",
-            "EXACT_TOTAL": "El total cuadra exactamente",
-            "UNKNOWN": "Desconocido"
-          },
-          "SUGGESTED_CAPTION": "Facturas que este pago probablemente paga",
-          "COL_INVOICE": "Factura",
-          "COL_BALANCE": "Saldo pendiente",
-          "COL_APPLYING": "Se aplica",
-          "APPLYING": "Se aplica",
-          "LEFT_OVER": "Sobrante",
-          "NO_SUGGESTION": "Este cliente no tiene facturas abiertas que sugerir.",
-          "WHAT_TO_DO": "Compare las facturas sugeridas con lo que le indicó el cliente. La conciliación desde este panel llegará con la página Pagos de clientes; mientras tanto, concílielo en Aplicar pago."
+          "WHAT_TO_DO": "Compare las facturas sugeridas con lo que le dijo el cliente, marque las facturas que paga este pago y luego aplíquelo."
         },
         "BANK_LINE": {
           "TITLE": "Línea bancaria que no está en los libros",
@@ -5719,6 +5683,187 @@
           "PDF": "PDF",
           "CSV": "CSV (hoja de cálculo)"
         }
+      }
+    },
+    "CUSTOMER_PAYMENTS": {
+      "OVERLINE": "Contabilidad · Dinero que le deben",
+      "TITLE": "Pagos de clientes",
+      "STANDFIRST": "Los pagos cobrados en el mostrador no aparecen en esta lista: se concilian en cuanto se cobran y se muestran en Conciliados automáticamente.",
+      "WHO_OWES_WHAT": "Quién debe qué",
+      "STEPS": {
+        "ARIA": "Cómo conciliar un pago",
+        "PICK": "Elija un pago",
+        "TICK": "Marque las facturas que paga",
+        "CHECK": "Revise lo que sobra",
+        "APPLY": "Aplíquelo"
+      },
+      "CARDS": {
+        "ARIA": "De un vistazo",
+        "OWED": "Lo que le deben los clientes",
+        "OVERDUE": "Vencido",
+        "WAITING": "Pagos en espera",
+        "WAITING_COUNT": "{{count}} en espera de conciliar",
+        "AS_OF": "Al {{time}}",
+        "FAILED": "Estas cifras no se pudieron cargar."
+      },
+      "HELP": {
+        "OWED": {
+          "TEXT": "Lo que los clientes aún le deben en facturas abiertas, tomado directamente de los libros.",
+          "EXAMPLE": "Por ejemplo: una factura de $480.00 pagada a medias cuenta $240.00 aquí."
+        },
+        "OVERDUE": {
+          "TEXT": "La parte de lo que deben los clientes que ya pasó su fecha de vencimiento.",
+          "EXAMPLE": "Por ejemplo: una factura que vencía el viernes pasado y sigue sin pagar cuenta hoy como vencida."
+        },
+        "WAITING": {
+          "TEXT": "Dinero que pagaron los clientes y que aún no se concilia con las facturas que paga. Hasta conciliarlo, esas facturas siguen pareciendo impagas.",
+          "EXAMPLE": "Por ejemplo: una transferencia de $4,615.00 de un cliente de flotilla espera aquí hasta que la concilie."
+        },
+        "WHY_THESE": {
+          "SUMMARY": "¿Por qué estas facturas?",
+          "TEXT": "Sugerimos facturas del mismo cliente: la factura contra la que se cobró el pago, o facturas cuyos importes suman exactamente el pago. Compárelas con lo que le dijo el cliente.",
+          "EXAMPLE": "Por ejemplo: un pago de $600.00 y dos facturas abiertas de $250.00 y $350.00 suman exactamente."
+        }
+      },
+      "REGION": {
+        "LOADING": "Cargando…",
+        "REFRESH_FAILED": "No se pudo actualizar; estas son las últimas cifras cargadas.",
+        "DENIED": "Necesita el permiso {{permission}} para ver esto."
+      },
+      "ERROR": {
+        "LOAD": "No se pudieron cargar los pagos en espera de conciliar. Revise su conexión e inténtelo de nuevo.",
+        "APPLY_UNKNOWN": "No pudimos confirmar que el pago se aplicó. Inténtelo de nuevo: si ya se aplicó, no se aplica dos veces.",
+        "APPLY_FORBIDDEN": "Necesita el permiso {{permission}} para aplicar pagos.",
+        "APPLY_CONFLICT": "Una de estas facturas ya no puede recibir un pago.",
+        "APPLY_CONFLICT_NAMED": "Una de estas facturas ya no puede recibir un pago: {{invoices}}. Se desmarcó.",
+        "CURRENCY": "La moneda de este pago no se admite aquí. No se aplicó nada.",
+        "APPLY_CHANGED": "Este pago cambió desde que lo abrió. Revise los importes y vuelva a aplicarlo.",
+        "APPLY_OTHER": "El pago no se aplicó. Revise los importes e inténtelo de nuevo.",
+        "CREDIT_UNKNOWN": "El pago se aplicó, pero no pudimos confirmar que el resto se guardó como crédito. Inténtelo de nuevo: nunca se guarda dos veces.",
+        "CREDIT_FORBIDDEN": "El pago se aplicó. Guardar el resto como crédito requiere el permiso {{permission}}, así que queda en el pago.",
+        "CREDIT_WALK_IN": "El pago se aplicó. Las ventas de mostrador sin cliente nunca guardan crédito, así que el resto queda en el pago.",
+        "CREDIT_CURRENCY": "El pago se aplicó. El resto no se puede guardar como crédito en esta moneda, así que queda en el pago.",
+        "CREDIT_CHANGED": "El pago se aplicó, pero el importe que le quedaba cambió, así que no se guardó ningún crédito. Queda en el pago para conciliarlo más tarde.",
+        "CREDIT_OTHER": "El pago se aplicó, pero el resto no se guardó como crédito. Queda en el pago para conciliarlo más tarde.",
+        "REFUND_FAILED": "El pago se aplicó y {{amount}} queda como crédito, pero el reembolso no se realizó.",
+        "REFUND_FORBIDDEN": "El pago se aplicó y {{amount}} queda como crédito. Reembolsarlo requiere el permiso {{permission}}."
+      },
+      "LIST": {
+        "HEADING": "Pagos en espera",
+        "NOT_WAITING": "Ese pago ya no está en espera de conciliar.",
+        "EMPTY": "No hay pagos en espera de conciliar",
+        "NO_NAME": "Nombre no disponible",
+        "SUGGESTED": "Conciliación sugerida",
+        "TRUNCATED": "Se muestran {{shown}} de {{count}} pagos en espera.",
+        "PICK_ONE": "Elija un pago para conciliarlo."
+      },
+      "DUPLICATE": {
+        "BADGE": "Factura ya pagada — posible pago duplicado",
+        "HINT": "La factura contra la que se cobró este pago ya no necesita pagarse. Consulte con el cliente antes de guardarlo como crédito o reembolsarlo."
+      },
+      "AUTOMATIC": {
+        "SUMMARY": "Conciliados automáticamente esta semana",
+        "HEADING": "Conciliados en los últimos siete días",
+        "HINT": "Un pago cobrado contra una factura se concilia con ella en cuanto se liquida.",
+        "FAILED": "No se pudieron cargar los pagos conciliados automáticamente.",
+        "EMPTY": "Esta semana no se concilió nada automáticamente.",
+        "UNDONE_BADGE": "Deshecho",
+        "UNDO": "Deshacer",
+        "UNDO_CONTEXT": "de {{invoice}}, {{customer}}",
+        "TRUNCATED": "Solo se muestran las conciliaciones más recientes.",
+        "UNDO_TITLE": "¿Deshacer esta conciliación?",
+        "UNDO_BODY": "Esto quita {{amount}} de {{invoice}} y lo devuelve al pago, registrado como un nuevo asiento. El pago vuelve a esperar ser conciliado.",
+        "REASON_LABEL": "¿Por qué?",
+        "REASON_HINT": "Entre {{min}} y {{max}} caracteres.",
+        "UNDO_CONFIRM": "Deshacer conciliación",
+        "UNDONE": "Conciliación deshecha para {{invoice}}. El pago vuelve a Pagos en espera.",
+        "ERROR": {
+          "WHOLE_REQUEST": "Esta conciliación se hizo junto con otras; revírtala desde el pago.",
+          "FORBIDDEN": "Necesita el permiso {{permission}} para deshacer una conciliación.",
+          "UNKNOWN": "No pudimos confirmar que la conciliación se deshizo. La lista muestra lo que hay ahora.",
+          "OTHER": "La conciliación no se deshizo. La lista muestra lo que hay ahora."
+        }
+      },
+      "MATCH": {
+        "HEADING": "Pago de {{customer}}",
+        "CUSTOMER": "Cliente",
+        "METHOD": "Método · recibido",
+        "TAKEN_AGAINST": "Cobrado contra la factura",
+        "WAITING": "En espera de conciliar",
+        "REASONS_ARIA": "Por qué estas facturas",
+        "INVOICES_HEADING": "Facturas abiertas de este cliente",
+        "INVOICES_FAILED": "No se pudieron cargar las facturas abiertas de este cliente.",
+        "NO_INVOICES": "Este cliente no tiene facturas abiertas.",
+        "FILTER_LABEL": "Buscar otras facturas",
+        "FILTER_HINT": "Por número de factura.",
+        "FILTER_EMPTY": "Ninguna factura coincide con su búsqueda.",
+        "INVOICES_TRUNCATED": "Solo se muestran las facturas abiertas más antiguas.",
+        "NO_NUMBER": "Factura sin número",
+        "SUGGESTED": "Sugerida",
+        "OVERDUE": "Vencida",
+        "DUE": "Vence el {{date}}",
+        "STILL_OWED": "Aún adeudado",
+        "AMOUNT_LABEL": "Importe a aplicar a {{invoice}}",
+        "ERROR_AMOUNT_INVALID": "Escriba un importe, como 120.50.",
+        "ERROR_AMOUNT_PRECISION": "Use como máximo dos decimales.",
+        "ERROR_AMOUNT_MINIMUM": "Escriba al menos 0.01.",
+        "ERROR_AMOUNT_OVER_BALANCE": "Esto es más que los {{owed}} que aún se deben en esta factura.",
+        "CONSEQUENCE": "Esto reduce lo que {{customer}} debe en {{count}} facturas. Un error se corrige con una reversión, registrada como un nuevo asiento.",
+        "APPLY": "Aplicar {{applying}}",
+        "APPLY_AND_KEEP": "Aplicar {{applying}} y guardar {{leftOver}} como crédito",
+        "APPLY_AND_REFUND": "Aplicar {{applying}} y reembolsar {{leftOver}}",
+        "APPLYING_NOW": "Aplicando…",
+        "TRY_AGAIN": "Intentar de nuevo",
+        "START_OVER": "Empezar de nuevo"
+      },
+      "PREVIEW": {
+        "PAYMENT": "Pago",
+        "APPLYING": "Aplicando a {{count}} facturas",
+        "LEFT_OVER": "Sobrante",
+        "OVER_APPLIED": "Está aplicando {{amount}} más que este pago. Desmarque una factura o reduzca un importe."
+      },
+      "LEFTOVER": {
+        "LEGEND": "¿Qué pasa con los {{amount}} sobrantes?",
+        "CREDIT": "Guardarlo como crédito que el cliente puede usar más tarde",
+        "REFUND": "Reembolsarlo al cliente",
+        "STAYS": "El resto, {{amount}}, queda en el pago para conciliarlo más tarde."
+      },
+      "RESULT": {
+        "HEADING": "Pago aplicado",
+        "CAPTION": "Lo que pagó el pago",
+        "COL_INVOICE": "Factura",
+        "COL_APPLIED": "Aplicado",
+        "COL_BALANCE_AFTER": "Adeudado ahora",
+        "APPLIED": "Aplicado",
+        "REMAINING": "Queda en el pago",
+        "KEPT_AS_CREDIT": "Guardado como crédito",
+        "REFUNDED": "Reembolsado",
+        "CREDITING": "Guardando el resto como crédito…",
+        "REFUNDING": "Reembolsando…",
+        "RETRY_CREDIT": "Intentar de nuevo",
+        "RETRY_REFUND": "Intentar el reembolso de nuevo",
+        "MATCH_REST": "Conciliar el resto de este pago",
+        "ANNOUNCE_APPLIED": "Pago aplicado: {{amount}}.",
+        "ANNOUNCE_KEPT": "Pago aplicado; {{amount}} guardado como crédito.",
+        "ANNOUNCE_REFUNDED": "Pago aplicado; {{amount}} reembolsado."
+      },
+      "REFUND": {
+        "TITLE": "¿Reembolsar el resto?",
+        "BODY": "{{customer}} recibe {{amount}} de vuelta. El dinero sale del taller; esto no se puede deshacer aquí.",
+        "CONFIRM": "Aplicar {{applying}} y reembolsar {{leftOver}}"
+      },
+      "REASON": {
+        "REMITTANCE_REFERENCE": "Referencia de pago",
+        "SAME_CUSTOMER": "Mismo cliente",
+        "EXACT_TOTAL": "Suma exacta",
+        "UNKNOWN": "Desconocido"
+      },
+      "METHOD": {
+        "CASH": "Efectivo",
+        "CARD": "Tarjeta",
+        "ON_ACCOUNT": "A cuenta",
+        "OTHER": "Otro",
+        "UNKNOWN": "Desconocido"
       }
     }
   },
@@ -9216,7 +9361,6 @@
     "LABEL": {
       "ADD_VEHICLE": "Agregar vehículo",
       "ADJUSTMENTS": "Ajustes",
-      "APPLY": "Aplicar",
       "APPROVAL": "Aprobación",
       "ASSIGN": "Asignar",
       "ASSIGNMENTS": "Asignaciones",
@@ -9339,7 +9483,8 @@
       "IMPORT": "Importar",
       "RECONCILIATIONS": "Conciliaciones bancarias",
       "BOOKS": "Sus libros",
-      "ENTRIES": "Asientos contables"
+      "ENTRIES": "Asientos contables",
+      "PAYMENTS": "Pagos"
     }
   },
   "POSITIVITY": {

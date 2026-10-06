@@ -3677,19 +3677,6 @@
       "COL_PUBLISHED_AT": "Publié le",
       "COL_PUBLISHED_BY": "Publié par"
     },
-    "PAYMENT_APPLY": {
-      "OVERLINE": "Comptes clients",
-      "TITLE": "Appliquer le paiement",
-      "FIELD_PAYMENT_ID": "ID de paiement",
-      "FIELD_APPLICATIONS": "JSON des applications",
-      "SUBMIT": "Appliquer le paiement",
-      "ERROR": "Impossible d’appliquer le paiement.",
-      "EMPTY": "Fournissez les données d’allocation pour appliquer le paiement.",
-      "RESULT_TITLE": "Résultat de l’application",
-      "RESULT_PAYMENT_ID": "ID de paiement",
-      "RESULT_TOTAL": "Total du paiement",
-      "RESULT_APPLIED": "Total appliqué"
-    },
     "CREDIT_MEMO_CREATE": {
       "OVERLINE": "Comptes clients",
       "TITLE": "Créer une note de crédit",
@@ -3922,10 +3909,6 @@
           "TITLE": "Détail de l'ensemble de règles",
           "DESCRIPTION": "Ouvrez un ensemble de règles de comptabilisation spécifique par son ID."
         },
-        "PAYMENT_APPLY": {
-          "TITLE": "Appliquer un paiement",
-          "DESCRIPTION": "Appliquez un paiement à une ou plusieurs factures en attente."
-        },
         "VENDOR_PAYMENTS": {
           "TITLE": "Paiements fournisseurs",
           "DESCRIPTION": "Consultez tous les virements fournisseurs et leur état de décaissement."
@@ -3977,6 +3960,10 @@
         "BANK_RECONCILIATION": {
           "TITLE": "Comptes bancaires",
           "DESCRIPTION": "Consultez l’état de rapprochement de chaque compte bancaire, importez un relevé ou démarrez un rapprochement."
+        },
+        "CUSTOMER_PAYMENTS": {
+          "TITLE": "Paiements des clients",
+          "DESCRIPTION": "Lettrez les paiements des clients avec les factures qu'ils paient."
         }
       },
       "FIELD": {
@@ -5205,6 +5192,8 @@
         "HOME": "Accueil",
         "BILLS": "Factures à payer",
         "BILLS_TERM": "comptes fournisseurs",
+        "CUSTOMER_PAYMENTS": "Paiements des clients",
+        "CUSTOMER_PAYMENTS_TERM": "comptes clients",
         "BANK": "Banque",
         "BANK_TERM": "rapprochement bancaire",
         "MONTH_END": "Fin de mois",
@@ -5288,14 +5277,8 @@
       "ACTION": {
         "OPEN_BILLS": "Ouvrir les factures",
         "OPEN_BANK_CHECKUP": "Ouvrir la vérification bancaire",
-        "WHO_OWES_WHAT": "Qui doit quoi"
-      },
-      "METHOD": {
-        "CASH": "Comptant",
-        "CARD": "Carte",
-        "ON_ACCOUNT": "Porté au compte",
-        "OTHER": "Autre",
-        "UNKNOWN": "Inconnu"
+        "WHO_OWES_WHAT": "Qui doit quoi",
+        "MATCH_CUSTOMER_PAYMENTS": "Lettrer les paiements des clients"
       },
       "TODO": {
         "TITLE": "Votre liste de tâches",
@@ -5330,26 +5313,7 @@
           "TITLE": "Paiement prêt à rapprocher",
           "PANEL_TITLE": "Paiement prêt à rapprocher",
           "REASON_LINE": "Pas encore rapproché des factures qu’il paie.",
-          "CUSTOMER": "Client",
-          "TAKEN_AGAINST": "Reçu pour la facture",
-          "METHOD": "Mode",
-          "RECEIVED": "Reçu le",
-          "UNAPPLIED": "En attente de rapprochement",
-          "REASONS_ARIA": "Pourquoi ces factures",
-          "REASON": {
-            "REMITTANCE_REFERENCE": "Reçu pour cette facture",
-            "SAME_CUSTOMER": "Même client",
-            "EXACT_TOTAL": "Le total correspond exactement",
-            "UNKNOWN": "Inconnu"
-          },
-          "SUGGESTED_CAPTION": "Factures que ce paiement paie probablement",
-          "COL_INVOICE": "Facture",
-          "COL_BALANCE": "Reste dû",
-          "COL_APPLYING": "Appliqué",
-          "APPLYING": "Appliqué",
-          "LEFT_OVER": "Reste",
-          "NO_SUGGESTION": "Ce client n’a aucune facture ouverte à suggérer.",
-          "WHAT_TO_DO": "Comparez les factures suggérées avec ce que le client vous a indiqué. Le rapprochement depuis ce panneau arrivera avec la page Paiements clients; d’ici là, rapprochez-le dans Appliquer un paiement."
+          "WHAT_TO_DO": "Comparez les factures suggérées avec ce que le client vous a dit, cochez les factures que ce paiement paie, puis appliquez-le."
         },
         "BANK_LINE": {
           "TITLE": "Ligne bancaire absente des livres",
@@ -5719,6 +5683,187 @@
           "PDF": "PDF",
           "CSV": "CSV (tableur)"
         }
+      }
+    },
+    "CUSTOMER_PAYMENTS": {
+      "OVERLINE": "Comptabilité · Argent qu'on vous doit",
+      "TITLE": "Paiements des clients",
+      "STANDFIRST": "Les paiements reçus au comptoir ne figurent pas dans cette liste : ils sont lettrés dès leur encaissement et apparaissent sous Lettrés automatiquement.",
+      "WHO_OWES_WHAT": "Qui doit quoi",
+      "STEPS": {
+        "ARIA": "Comment lettrer un paiement",
+        "PICK": "Choisissez un paiement",
+        "TICK": "Cochez les factures qu'il paie",
+        "CHECK": "Vérifiez le reste",
+        "APPLY": "Appliquez-le"
+      },
+      "CARDS": {
+        "ARIA": "En un coup d'œil",
+        "OWED": "Ce que les clients vous doivent",
+        "OVERDUE": "En retard",
+        "WAITING": "Paiements en attente",
+        "WAITING_COUNT": "{{count}} en attente de lettrage",
+        "AS_OF": "Au {{time}}",
+        "FAILED": "Ces chiffres n'ont pas pu être chargés."
+      },
+      "HELP": {
+        "OWED": {
+          "TEXT": "Ce que les clients vous doivent encore sur les factures ouvertes, tiré directement des livres.",
+          "EXAMPLE": "Par exemple : une facture de 480,00 $ à moitié payée compte pour 240,00 $ ici."
+        },
+        "OVERDUE": {
+          "TEXT": "La partie de ce que doivent les clients qui a dépassé sa date d'échéance.",
+          "EXAMPLE": "Par exemple : une facture échue vendredi dernier et toujours impayée compte comme en retard aujourd'hui."
+        },
+        "WAITING": {
+          "TEXT": "L'argent versé par les clients qui n'est pas encore lettré avec les factures qu'il paie. Tant qu'il ne l'est pas, ces factures semblent toujours impayées.",
+          "EXAMPLE": "Par exemple : un virement de 4 615,00 $ d'un client de parc attend ici jusqu'à ce que vous le lettriez."
+        },
+        "WHY_THESE": {
+          "SUMMARY": "Pourquoi ces factures ?",
+          "TEXT": "Nous suggérons des factures du même client : la facture sur laquelle le paiement a été encaissé, ou des factures dont les montants totalisent exactement le paiement. Comparez-les avec ce que le client vous a dit.",
+          "EXAMPLE": "Par exemple : un paiement de 600,00 $ et deux factures ouvertes de 250,00 $ et 350,00 $ totalisent exactement."
+        }
+      },
+      "REGION": {
+        "LOADING": "Chargement…",
+        "REFRESH_FAILED": "L'actualisation a échoué ; voici les derniers chiffres chargés.",
+        "DENIED": "Il vous faut la permission {{permission}} pour voir ceci."
+      },
+      "ERROR": {
+        "LOAD": "Les paiements en attente de lettrage n'ont pas pu être chargés. Vérifiez votre connexion et réessayez.",
+        "APPLY_UNKNOWN": "Nous n'avons pas pu confirmer que le paiement a été appliqué. Réessayez : s'il est déjà passé, rien n'est appliqué deux fois.",
+        "APPLY_FORBIDDEN": "Il vous faut la permission {{permission}} pour appliquer des paiements.",
+        "APPLY_CONFLICT": "Une de ces factures ne peut plus recevoir de paiement.",
+        "APPLY_CONFLICT_NAMED": "Une de ces factures ne peut plus recevoir de paiement : {{invoices}}. Elle a été décochée.",
+        "CURRENCY": "La devise de ce paiement n'est pas prise en charge ici. Rien n'a été appliqué.",
+        "APPLY_CHANGED": "Ce paiement a changé depuis que vous l'avez ouvert. Vérifiez les montants et appliquez-le de nouveau.",
+        "APPLY_OTHER": "Le paiement n'a pas été appliqué. Vérifiez les montants et réessayez.",
+        "CREDIT_UNKNOWN": "Le paiement a été appliqué, mais nous n'avons pas pu confirmer que le reste a été gardé en crédit. Réessayez : il n'est jamais gardé deux fois.",
+        "CREDIT_FORBIDDEN": "Le paiement a été appliqué. Garder le reste en crédit exige la permission {{permission}} ; il reste donc sur le paiement.",
+        "CREDIT_WALK_IN": "Le paiement a été appliqué. Les ventes au comptoir sans client ne gardent jamais de crédit ; le reste demeure sur le paiement.",
+        "CREDIT_CURRENCY": "Le paiement a été appliqué. Le reste ne peut pas être gardé en crédit dans cette devise ; il demeure sur le paiement.",
+        "CREDIT_CHANGED": "Le paiement a été appliqué, mais le montant qui y restait a changé ; aucun crédit n'a été gardé. Il demeure sur le paiement pour un lettrage ultérieur.",
+        "CREDIT_OTHER": "Le paiement a été appliqué, mais le reste n'a pas été gardé en crédit. Il demeure sur le paiement pour un lettrage ultérieur.",
+        "REFUND_FAILED": "Le paiement a été appliqué et {{amount}} est gardé en crédit, mais le remboursement n'est pas passé.",
+        "REFUND_FORBIDDEN": "Le paiement a été appliqué et {{amount}} est gardé en crédit. Le rembourser exige la permission {{permission}}."
+      },
+      "LIST": {
+        "HEADING": "Paiements en attente",
+        "NOT_WAITING": "Ce paiement n'est plus en attente de lettrage.",
+        "EMPTY": "Aucun paiement n'attend d'être lettré",
+        "NO_NAME": "Nom non disponible",
+        "SUGGESTED": "Lettrage suggéré",
+        "TRUNCATED": "{{shown}} paiements en attente affichés sur {{count}}.",
+        "PICK_ONE": "Choisissez un paiement pour le lettrer."
+      },
+      "DUPLICATE": {
+        "BADGE": "Facture déjà payée — paiement en double possible",
+        "HINT": "La facture sur laquelle ce paiement a été encaissé n'a plus besoin d'être payée. Vérifiez auprès du client avant de le garder en crédit ou de le rembourser."
+      },
+      "AUTOMATIC": {
+        "SUMMARY": "Lettrés automatiquement cette semaine",
+        "HEADING": "Lettrés ces sept derniers jours",
+        "HINT": "Un paiement encaissé sur une facture est lettré avec elle dès qu'il est réglé.",
+        "FAILED": "Les paiements lettrés automatiquement n'ont pas pu être chargés.",
+        "EMPTY": "Rien n'a été lettré automatiquement cette semaine.",
+        "UNDONE_BADGE": "Défait",
+        "UNDO": "Défaire",
+        "UNDO_CONTEXT": "de {{invoice}}, {{customer}}",
+        "TRUNCATED": "Seuls les lettrages les plus récents sont affichés.",
+        "UNDO_TITLE": "Défaire ce lettrage ?",
+        "UNDO_BODY": "Ceci retire {{amount}} de {{invoice}} et le remet sur le paiement, enregistré comme une nouvelle écriture. Le paiement attend alors d'être lettré de nouveau.",
+        "REASON_LABEL": "Pourquoi ?",
+        "REASON_HINT": "Entre {{min}} et {{max}} caractères.",
+        "UNDO_CONFIRM": "Défaire le lettrage",
+        "UNDONE": "Lettrage défait pour {{invoice}}. Le paiement est de retour dans Paiements en attente.",
+        "ERROR": {
+          "WHOLE_REQUEST": "Ce lettrage a été fait avec d'autres ; contrepassez-le à partir du paiement.",
+          "FORBIDDEN": "Il vous faut la permission {{permission}} pour défaire un lettrage.",
+          "UNKNOWN": "Nous n'avons pas pu confirmer que le lettrage a été défait. La liste montre la situation actuelle.",
+          "OTHER": "Le lettrage n'a pas été défait. La liste montre la situation actuelle."
+        }
+      },
+      "MATCH": {
+        "HEADING": "Paiement de {{customer}}",
+        "CUSTOMER": "Client",
+        "METHOD": "Mode · reçu",
+        "TAKEN_AGAINST": "Encaissé sur la facture",
+        "WAITING": "En attente de lettrage",
+        "REASONS_ARIA": "Pourquoi ces factures",
+        "INVOICES_HEADING": "Factures ouvertes de ce client",
+        "INVOICES_FAILED": "Les factures ouvertes de ce client n'ont pas pu être chargées.",
+        "NO_INVOICES": "Ce client n'a aucune facture ouverte.",
+        "FILTER_LABEL": "Rechercher d'autres factures",
+        "FILTER_HINT": "Par numéro de facture.",
+        "FILTER_EMPTY": "Aucune facture ne correspond à votre recherche.",
+        "INVOICES_TRUNCATED": "Seules les factures ouvertes les plus anciennes sont affichées.",
+        "NO_NUMBER": "Facture sans numéro",
+        "SUGGESTED": "Suggérée",
+        "OVERDUE": "En retard",
+        "DUE": "Échéance le {{date}}",
+        "STILL_OWED": "Encore dû",
+        "AMOUNT_LABEL": "Montant à appliquer à {{invoice}}",
+        "ERROR_AMOUNT_INVALID": "Saisissez un montant, comme 120,50.",
+        "ERROR_AMOUNT_PRECISION": "Utilisez au plus deux décimales.",
+        "ERROR_AMOUNT_MINIMUM": "Saisissez au moins 0,01.",
+        "ERROR_AMOUNT_OVER_BALANCE": "C'est plus que les {{owed}} encore dus sur cette facture.",
+        "CONSEQUENCE": "Ceci réduit ce que {{customer}} doit sur {{count}} factures. Une erreur se corrige par une contrepassation, enregistrée comme une nouvelle écriture.",
+        "APPLY": "Appliquer {{applying}}",
+        "APPLY_AND_KEEP": "Appliquer {{applying}} et garder {{leftOver}} en crédit",
+        "APPLY_AND_REFUND": "Appliquer {{applying}} et rembourser {{leftOver}}",
+        "APPLYING_NOW": "Application en cours…",
+        "TRY_AGAIN": "Réessayer",
+        "START_OVER": "Recommencer"
+      },
+      "PREVIEW": {
+        "PAYMENT": "Paiement",
+        "APPLYING": "Appliqué à {{count}} factures",
+        "LEFT_OVER": "Reste",
+        "OVER_APPLIED": "Vous appliquez {{amount}} de plus que ce paiement. Décochez une facture ou réduisez un montant."
+      },
+      "LEFTOVER": {
+        "LEGEND": "Que faire des {{amount}} restants ?",
+        "CREDIT": "Le garder en crédit que le client pourra utiliser plus tard",
+        "REFUND": "Le rembourser au client",
+        "STAYS": "Le reste, {{amount}}, demeure sur le paiement pour un lettrage ultérieur."
+      },
+      "RESULT": {
+        "HEADING": "Paiement appliqué",
+        "CAPTION": "Ce que le paiement a payé",
+        "COL_INVOICE": "Facture",
+        "COL_APPLIED": "Appliqué",
+        "COL_BALANCE_AFTER": "Encore dû maintenant",
+        "APPLIED": "Appliqué",
+        "REMAINING": "Reste sur le paiement",
+        "KEPT_AS_CREDIT": "Gardé en crédit",
+        "REFUNDED": "Remboursé",
+        "CREDITING": "Le reste est gardé en crédit…",
+        "REFUNDING": "Remboursement en cours…",
+        "RETRY_CREDIT": "Réessayer",
+        "RETRY_REFUND": "Réessayer le remboursement",
+        "MATCH_REST": "Lettrer le reste de ce paiement",
+        "ANNOUNCE_APPLIED": "Paiement appliqué : {{amount}}.",
+        "ANNOUNCE_KEPT": "Paiement appliqué ; {{amount}} gardé en crédit.",
+        "ANNOUNCE_REFUNDED": "Paiement appliqué ; {{amount}} remboursé."
+      },
+      "REFUND": {
+        "TITLE": "Rembourser le reste ?",
+        "BODY": "{{customer}} récupère {{amount}}. L'argent sort de l'atelier ; ceci ne peut pas être annulé ici.",
+        "CONFIRM": "Appliquer {{applying}} et rembourser {{leftOver}}"
+      },
+      "REASON": {
+        "REMITTANCE_REFERENCE": "Référence de paiement",
+        "SAME_CUSTOMER": "Même client",
+        "EXACT_TOTAL": "Total exact",
+        "UNKNOWN": "Inconnu"
+      },
+      "METHOD": {
+        "CASH": "Comptant",
+        "CARD": "Carte",
+        "ON_ACCOUNT": "Sur compte",
+        "OTHER": "Autre",
+        "UNKNOWN": "Inconnu"
       }
     }
   },
@@ -9216,7 +9361,6 @@
     "LABEL": {
       "ADD_VEHICLE": "Ajouter un véhicule",
       "ADJUSTMENTS": "Ajustements",
-      "APPLY": "Appliquer",
       "APPROVAL": "Approbation",
       "ASSIGN": "Assigner",
       "ASSIGNMENTS": "Assignations",
@@ -9339,7 +9483,8 @@
       "IMPORT": "Importer",
       "RECONCILIATIONS": "Rapprochements bancaires",
       "BOOKS": "Vos livres",
-      "ENTRIES": "Écritures de journal"
+      "ENTRIES": "Écritures de journal",
+      "PAYMENTS": "Paiements"
     }
   },
   "POSITIVITY": {

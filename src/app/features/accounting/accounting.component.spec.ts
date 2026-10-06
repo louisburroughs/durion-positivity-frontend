@@ -38,6 +38,7 @@ async function render(held: readonly string[] | null, url = '/app/accounting'): 
             { path: 'bank-accounts', component: StubPageComponent },
             { path: 'periods', component: StubPageComponent },
             { path: 'payables/vendor-invoices', component: StubPageComponent },
+            { path: 'payments', component: StubPageComponent },
           ],
         },
       ]),
@@ -81,6 +82,7 @@ describe('AccountingComponent (shell, §5.0)', () => {
     expect(links(harness).map(link => link.dataset['route'])).toEqual([
       '',
       'payables/vendor-invoices',
+      'payments',
       'bank-accounts',
       'books',
       'periods',

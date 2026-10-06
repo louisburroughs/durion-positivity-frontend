@@ -1,0 +1,287 @@
+@let empty = 'COMMON.EMPTY_VALUE' | translate;
+<div class="accounting-page payments">
+  <!-- Header (§5.3 item 1) -->
+  <header class="page-header payments__header">
+    <div class="payments__title-block">
+      <p class="section-overline">{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.OVERLINE' | translate }}</p>
+      <h1 id="payments-title">{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.TITLE' | translate }}</h1>
+      <p class="page-subtitle">{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.STANDFIRST' | translate }}</p>
+    </div>
+    @if (canOpenWhoOwesWhat()) {
+      <div class="payments__header-actions">
+        <a class="btn btn--outline" routerLink="/app/accounting/books" [queryParams]="{ tab: 'owed' }" data-testid="who-owes-what">
+          {{ 'ACCOUNTING.CUSTOMER_PAYMENTS.WHO_OWES_WHAT' | translate }}
+        </a>
+      </div>
+    }
+  </header>
+
+  <ol class="payments__steps" [attr.aria-label]="'ACCOUNTING.CUSTOMER_PAYMENTS.STEPS.ARIA' | translate">
+    <li>{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.STEPS.PICK' | translate }}</li>
+    <li>{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.STEPS.TICK' | translate }}</li>
+    <li>{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.STEPS.CHECK' | translate }}</li>
+    <li>{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.STEPS.APPLY' | translate }}</li>
+  </ol>
+
+  <!-- Polite announcements survive every rebuild below (ADR-0029 §8.8). -->
+  <p class="sr-only" role="status" data-testid="announcement">
+    @if (announcement(); as message) {
+      {{ message.key | translate: message.params }}
+    }
+  </p>
+
+  @if (state() === 'error') {
+    <div class="state-panel state-panel--error" role="alert" data-testid="page-error">
+      <p>{{ (errorKey() ?? '') | translate }}</p>
+      <button type="button" class="btn btn--outline" (click)="retryPayments()">{{ 'COMMON.RETRY' | translate }}</button>
+    </div>
+  }
+
+  <!-- Stat cards: served figures only (story Spec discrepancy 2) -->
+  <section class="payments__cards" [attr.aria-label]="'ACCOUNTING.CUSTOMER_PAYMENTS.CARDS.ARIA' | translate" data-testid="stat-cards">
+    @if (canSeeCards()) {
+      @if (receivables.denied()) {
+        <p class="field-error" data-testid="cards-denied">
+          {{ 'ACCOUNTING.CUSTOMER_PAYMENTS.REGION.DENIED' | translate: { permission: codes.reporting } }}
+        </p>
+      } @else {
+        @if (receivablesData(); as totals) {
+          @if (totals.totalOutstanding !== null) {
+            <article class="stat-card" data-testid="card-owed">
+              <h2 class="stat-card__title">{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.CARDS.OWED' | translate }}</h2>
+              <p class="stat-card__figure">{{ totals.totalOutstanding | money }}</p>
+              <p class="hint-text">{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.CARDS.AS_OF' | translate: { time: ((totals.generatedAt ?? toDate(totals.asOfDate)) | date: 'short') } }}</p>
+              <app-help-disclosure
+                contextKey="ACCOUNTING.CUSTOMER_PAYMENTS.CARDS.OWED"
+                textKey="ACCOUNTING.CUSTOMER_PAYMENTS.HELP.OWED.TEXT"
+                exampleKey="ACCOUNTING.CUSTOMER_PAYMENTS.HELP.OWED.EXAMPLE"
+              />
+            </article>
+          }
+          @if (totals.overdue !== null) {
+            <article class="stat-card" data-testid="card-overdue">
+              <h2 class="stat-card__title">{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.CARDS.OVERDUE' | translate }}</h2>
+              <p class="stat-card__figure">{{ totals.overdue | money }}</p>
+              <p class="hint-text">{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.CARDS.AS_OF' | translate: { time: ((totals.generatedAt ?? toDate(totals.asOfDate)) | date: 'short') } }}</p>
+              <app-help-disclosure
+                contextKey="ACCOUNTING.CUSTOMER_PAYMENTS.CARDS.OVERDUE"
+                textKey="ACCOUNTING.CUSTOMER_PAYMENTS.HELP.OVERDUE.TEXT"
+                exampleKey="ACCOUNTING.CUSTOMER_PAYMENTS.HELP.OVERDUE.EXAMPLE"
+              />
+            </article>
+          }
+        }
+        @if (receivables.status() === 'FAILED') {
+          <div class="payments__error" data-testid="cards-error">
+            <p class="field-error">
+              {{ (receivablesData() ? 'ACCOUNTING.CUSTOMER_PAYMENTS.REGION.REFRESH_FAILED' : 'ACCOUNTING.CUSTOMER_PAYMENTS.CARDS.FAILED') | translate }}
+            </p>
+            <button type="button" class="btn btn--outline" (click)="retryReceivables()">{{ 'COMMON.RETRY' | translate }}</button>
+          </div>
+        }
+      }
+    }
+    @if (paymentsData(); as list) {
+      @if (list.totalUnapplied !== null) {
+        <article class="stat-card" data-testid="card-waiting">
+          <h2 class="stat-card__title">{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.CARDS.WAITING' | translate }}</h2>
+          <p class="stat-card__figure">{{ list.totalUnapplied | money: list.currency }}</p>
+          <p>{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.CARDS.WAITING_COUNT' | translate: { count: list.waitingCount } }}</p>
+          @if (list.asOf) {
+            <p class="hint-text">{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.CARDS.AS_OF' | translate: { time: (list.asOf | date: 'short') } }}</p>
+          }
+          <app-help-disclosure
+            contextKey="ACCOUNTING.CUSTOMER_PAYMENTS.CARDS.WAITING"
+            textKey="ACCOUNTING.CUSTOMER_PAYMENTS.HELP.WAITING.TEXT"
+            exampleKey="ACCOUNTING.CUSTOMER_PAYMENTS.HELP.WAITING.EXAMPLE"
+          />
+        </article>
+      }
+    }
+  </section>
+
+  @if (canSeePayments()) {
+    <div class="payments__layout">
+      <!-- Payments waiting (§5.3 item 3) -->
+      <section class="payments__list-column" aria-labelledby="payments-list-heading" data-testid="payments-list">
+        <h2 id="payments-list-heading" class="payments__section-heading" tabindex="-1" #listHeading>
+          {{ 'ACCOUNTING.CUSTOMER_PAYMENTS.LIST.HEADING' | translate }}
+        </h2>
+        @if (queryNotWaiting()) {
+          <p class="hint-text" data-testid="query-not-waiting">{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.LIST.NOT_WAITING' | translate }}</p>
+        }
+        @if (payments.denied()) {
+          <p class="field-error" data-testid="payments-denied">
+            {{ 'ACCOUNTING.CUSTOMER_PAYMENTS.REGION.DENIED' | translate: { permission: codes.apply } }}
+          </p>
+        } @else {
+          @if (payments.status() === 'PENDING' && !paymentsData()) {
+            <p class="pending-note" data-testid="payments-loading">{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.REGION.LOADING' | translate }}</p>
+          }
+          @if (payments.status() === 'FAILED' && paymentsData()) {
+            <div class="payments__error" data-testid="payments-refresh-failed">
+              <p class="field-error">{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.REGION.REFRESH_FAILED' | translate }}</p>
+              <button type="button" class="btn btn--outline" (click)="retryPayments()">{{ 'COMMON.RETRY' | translate }}</button>
+            </div>
+          }
+          @if (paymentsData(); as list) {
+            @if (list.items.length === 0) {
+              <p class="state-panel state-panel--empty" data-testid="payments-empty">{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.LIST.EMPTY' | translate }}</p>
+            } @else {
+              <ul class="payments__list">
+                @for (item of list.items; track item.paymentId) {
+                  <li>
+                    <button
+                      type="button"
+                      class="payment-item"
+                      data-testid="payment-item"
+                      [attr.aria-pressed]="selected()?.paymentId === item.paymentId"
+                      (click)="select(item)"
+                    >
+                      <span class="payment-item__text">
+                        <span class="payment-item__name">{{ item.customerName ?? ('ACCOUNTING.CUSTOMER_PAYMENTS.LIST.NO_NAME' | translate) }}</span>
+                        <span class="payment-item__meta">
+                          @if (methodKey(item.method); as key) {
+                            {{ key | translate }}
+                          } @else {
+                            {{ empty }}
+                          }
+                          · {{ (item.receivedAt | date: 'mediumDate') ?? empty }}
+                        </span>
+                      </span>
+                      <span class="payment-item__amount">{{ item.unappliedAmount | money: item.currency }}</span>
+                      @if (possibleDuplicate(item)) {
+                        <span class="status-badge status-badge--warning" data-testid="badge-duplicate">{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.DUPLICATE.BADGE' | translate }}</span>
+                      } @else if (item.suggestedInvoices.length > 0) {
+                        <span class="status-badge status-badge--open" data-testid="badge-suggested">{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.LIST.SUGGESTED' | translate }}</span>
+                      }
+                    </button>
+                  </li>
+                }
+              </ul>
+              @if (list.truncated) {
+                <p class="hint-text" data-testid="payments-truncated">
+                  {{ 'ACCOUNTING.CUSTOMER_PAYMENTS.LIST.TRUNCATED' | translate: { shown: list.items.length, count: list.waitingCount } }}
+                </p>
+              }
+            }
+          }
+        }
+
+        <!-- Matched automatically this week (§5.3, AW14; S2) -->
+        <details class="payments__automatic" data-testid="automatic">
+          <summary class="payments__automatic-summary">{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.AUTOMATIC.SUMMARY' | translate }}</summary>
+          <h2 id="automatic-heading" class="payments__section-heading" tabindex="-1" #automaticHeading>
+            {{ 'ACCOUNTING.CUSTOMER_PAYMENTS.AUTOMATIC.HEADING' | translate }}
+          </h2>
+          <p class="hint-text">{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.AUTOMATIC.HINT' | translate }}</p>
+          @if (automatic.denied()) {
+            <p class="field-error" data-testid="automatic-denied">
+              {{ 'ACCOUNTING.CUSTOMER_PAYMENTS.REGION.DENIED' | translate: { permission: codes.apply } }}
+            </p>
+          } @else {
+            @if (automatic.status() === 'PENDING' && !automaticData()) {
+              <p class="pending-note">{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.REGION.LOADING' | translate }}</p>
+            }
+            @if (automatic.status() === 'FAILED') {
+              <div class="payments__error" data-testid="automatic-error">
+                <p class="field-error">
+                  {{ (automaticData() ? 'ACCOUNTING.CUSTOMER_PAYMENTS.REGION.REFRESH_FAILED' : 'ACCOUNTING.CUSTOMER_PAYMENTS.AUTOMATIC.FAILED') | translate }}
+                </p>
+                <button type="button" class="btn btn--outline" (click)="retryAutomatic()">{{ 'COMMON.RETRY' | translate }}</button>
+              </div>
+            }
+            @if (automaticData(); as list) {
+              @if (list.items.length === 0) {
+                <p class="hint-text" data-testid="automatic-empty">{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.AUTOMATIC.EMPTY' | translate }}</p>
+              } @else {
+                <ul class="payments__automatic-list">
+                  @for (row of list.items; track row.applicationId) {
+                    <li class="automatic-row" data-testid="automatic-row">
+                      <span class="automatic-row__text">
+                        <span class="automatic-row__name">{{ row.customerName ?? ('ACCOUNTING.CUSTOMER_PAYMENTS.LIST.NO_NAME' | translate) }}</span>
+                        <span class="hint-text">
+                          <span class="reference">{{ row.invoiceNumber ?? empty }}</span>
+                          · {{ (row.appliedAt | date: 'medium') ?? empty }}
+                        </span>
+                      </span>
+                      <span class="automatic-row__amount">{{ row.appliedAmount | money: row.currency }}</span>
+                      @if (row.reversed) {
+                        <span class="status-badge" data-testid="automatic-undone">{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.AUTOMATIC.UNDONE_BADGE' | translate }}</span>
+                      } @else if (canUndo() && row.undoOffered) {
+                        <!-- Visible text first, then whose match, for assistive technology only (Label in Name). -->
+                        <button type="button" class="btn btn--outline automatic-row__undo" data-testid="undo" (click)="openUndo(row)">
+                          <span>{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.AUTOMATIC.UNDO' | translate }}</span>
+                          <span class="sr-only">
+                            {{ 'ACCOUNTING.CUSTOMER_PAYMENTS.AUTOMATIC.UNDO_CONTEXT' | translate: { invoice: row.invoiceNumber ?? empty, customer: row.customerName ?? empty } }}
+                          </span>
+                        </button>
+                      }
+                    </li>
+                  }
+                </ul>
+                @if (list.truncated) {
+                  <p class="hint-text">{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.AUTOMATIC.TRUNCATED' | translate }}</p>
+                }
+              }
+            }
+          }
+        </details>
+      </section>
+
+      <!-- The selected payment (§5.3 items 4–5); below the list at phone width. -->
+      <div class="payments__panel-column">
+        @if (selected(); as payment) {
+          <app-payment-match
+            [payment]="payment"
+            (applied)="onApplied($event)"
+            (changed)="onChanged()"
+            (announce)="onAnnounce($event)"
+          />
+        } @else if ((paymentsData()?.items?.length ?? 0) > 0) {
+          <p class="hint-text payments__panel-hint">{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.LIST.PICK_ONE' | translate }}</p>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Undo: why? (10–1000 characters, `reversePaymentApplication`) -->
+  @if (undoTarget(); as row) {
+    <dialog class="confirm-panel" appModalDialog (modalCancel)="closeUndo()"
+      aria-labelledby="undo-title" aria-describedby="undo-body" data-testid="undo-dialog">
+      <h2 id="undo-title" class="confirm-heading">{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.AUTOMATIC.UNDO_TITLE' | translate }}</h2>
+      <p id="undo-body">
+        {{ 'ACCOUNTING.CUSTOMER_PAYMENTS.AUTOMATIC.UNDO_BODY' | translate: { invoice: row.invoiceNumber ?? empty, amount: (row.appliedAmount | money: row.currency) } }}
+      </p>
+      <div class="stacked-form">
+        <div class="form-field">
+          <label for="undo-reason">{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.AUTOMATIC.REASON_LABEL' | translate }}</label>
+          <textarea
+            id="undo-reason"
+            rows="3"
+            data-testid="undo-reason"
+            aria-describedby="undo-reason-hint"
+            [attr.maxlength]="undoMax"
+            [value]="undoReason()"
+            (input)="undoReason.set($any($event.target).value)"
+          ></textarea>
+          <p id="undo-reason-hint" class="hint-text">
+            {{ 'ACCOUNTING.CUSTOMER_PAYMENTS.AUTOMATIC.REASON_HINT' | translate: { min: undoMin, max: undoMax } }}
+          </p>
+        </div>
+        @if (undoErrorKey(); as error) {
+          <p class="field-error" role="alert" data-testid="undo-error">{{ error.key | translate: error.params }}</p>
+        }
+        <div class="form-actions">
+          <button type="button" class="btn btn--accent" data-testid="undo-confirm"
+            [attr.aria-disabled]="undoReasonValid() && !undoing() ? null : 'true'" (click)="confirmUndo()">
+            {{ 'ACCOUNTING.CUSTOMER_PAYMENTS.AUTOMATIC.UNDO_CONFIRM' | translate }}
+          </button>
+          <button type="button" class="btn btn--outline" data-testid="undo-cancel" (click)="closeUndo()">
+            {{ 'COMMON.CANCEL' | translate }}
+          </button>
+        </div>
+      </div>
+    </dialog>
+  }
+</div>

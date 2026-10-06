@@ -1,0 +1,206 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.match {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.match p,
+.match h2,
+.match h3,
+.match h4 {
+  margin: 0;
+}
+
+.match__heading {
+  font-size: 1.125rem;
+}
+
+.match__subheading {
+  font-size: 0.9375rem;
+}
+
+.match__heading:focus-visible,
+.match__subheading:focus-visible,
+.match__tick:focus-visible {
+  outline: 2px solid var(--input-focus-border);
+  outline-offset: 2px;
+}
+
+.match__facts,
+.match__preview {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+  gap: var(--space-2) var(--space-4);
+  margin: 0;
+}
+
+.match__facts dt,
+.match__preview dt {
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+}
+
+.match__facts dd,
+.match__preview dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.match__preview {
+  padding: var(--space-3);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--surface-inset);
+}
+
+.match__preview dd {
+  font-weight: 600;
+  text-align: start;
+}
+
+.reference {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+}
+
+.match__facts .reference {
+  display: block;
+}
+
+.chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.match__duplicate {
+  display: grid;
+  gap: var(--space-1);
+  justify-items: start;
+}
+
+.match__filter input {
+  max-width: 24rem;
+}
+
+/* The invoices as a list, not a table (story PROPOSED 6); every row ≥ 44px (§5.7). */
+.match__invoices {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.match__invoice {
+  display: grid;
+  gap: var(--space-2);
+  min-height: 2.75rem;
+  padding: var(--space-3);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--cardBackground);
+}
+
+.match__invoice--ticked {
+  border-color: var(--link-color);
+  box-shadow: inset 3px 0 0 var(--link-color);
+}
+
+.match__invoice-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.match__tick {
+  width: 1.5rem;
+  height: 1.5rem;
+  margin: 0;
+}
+
+.match__invoice-number {
+  font-weight: 600;
+  font-size: 0.9375rem;
+  cursor: pointer;
+}
+
+.match__amount {
+  max-width: 14rem;
+}
+
+.match__amount input {
+  min-height: 2.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.match__choices {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-3);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+}
+
+.match__choices legend {
+  padding: 0 var(--space-1);
+  font-weight: 600;
+}
+
+.match__choice {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 2.75rem;
+}
+
+.match__consequence {
+  font-weight: 600;
+}
+
+.match__success {
+  color: var(--status-success-fg);
+}
+
+.match__error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.match__alert:empty {
+  display: none;
+}
+
+.match .btn,
+.match__action {
+  min-height: 2.75rem;
+  text-decoration: none;
+}
+
+.match .btn[aria-disabled='true'] {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.match__result {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.match__result-table caption {
+  text-align: start;
+  font-weight: 600;
+  padding-bottom: var(--space-2);
+}

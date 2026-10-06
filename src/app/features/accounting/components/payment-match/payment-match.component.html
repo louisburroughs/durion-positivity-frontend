@@ -1,0 +1,356 @@
+@let empty = 'COMMON.EMPTY_VALUE' | translate;
+@let p = payment();
+@let currency = p.currency;
+@let leftOverText = leftOver() | money: currency;
+<section class="match" data-testid="payment-match" [attr.aria-labelledby]="embedded() ? null : 'match-heading'">
+  @if (!embedded()) {
+    <h2 id="match-heading" class="match__heading" tabindex="-1" #matchHeading>
+      {{ 'ACCOUNTING.CUSTOMER_PAYMENTS.MATCH.HEADING' | translate: { customer: p.customerName ?? empty } }}
+    </h2>
+  }
+
+  <dl class="match__facts">
+    <div>
+      <dt>{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.MATCH.CUSTOMER' | translate }}</dt>
+      <dd>
+        {{ p.customerName ?? empty }}
+        @if (p.customerReference) {
+          <span class="reference">{{ p.customerReference }}</span>
+        }
+      </dd>
+    </div>
+    <div>
+      <dt>{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.MATCH.METHOD' | translate }}</dt>
+      <dd>
+        @if (methodKey(p.method); as key) {
+          {{ key | translate }}
+        } @else {
+          {{ empty }}
+        }
+        · {{ (p.receivedAt | date: 'mediumDate') ?? empty }}
+      </dd>
+    </div>
+    <div>
+      <dt>{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.MATCH.TAKEN_AGAINST' | translate }}</dt>
+      <dd class="reference">{{ p.sourceInvoiceNumber ?? empty }}</dd>
+    </div>
+    <div>
+      <dt>{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.MATCH.WAITING' | translate }}</dt>
+      <dd class="numeric" data-testid="match-unapplied">{{ p.unappliedAmount | money: currency }}</dd>
+    </div>
+  </dl>
+
+  @if (duplicate()) {
+    <div class="match__duplicate" data-testid="possible-duplicate">
+      <p class="status-badge status-badge--warning">{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.DUPLICATE.BADGE' | translate }}</p>
+      <p class="hint-text">{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.DUPLICATE.HINT' | translate }}</p>
+    </div>
+  }
+
+  @if (p.reasons.length > 0) {
+    <ul class="chip-list" data-testid="reason-chips" [attr.aria-label]="'ACCOUNTING.CUSTOMER_PAYMENTS.MATCH.REASONS_ARIA' | translate">
+      @for (reason of p.reasons; track reason) {
+        <li class="status-badge" [attr.data-reason]="reason">{{ reasonKey(reason) | translate }}</li>
+      }
+    </ul>
+  }
+  <app-help-disclosure
+    summaryKey="ACCOUNTING.CUSTOMER_PAYMENTS.HELP.WHY_THESE.SUMMARY"
+    textKey="ACCOUNTING.CUSTOMER_PAYMENTS.HELP.WHY_THESE.TEXT"
+    exampleKey="ACCOUNTING.CUSTOMER_PAYMENTS.HELP.WHY_THESE.EXAMPLE"
+  />
+
+  @if (result(); as done) {
+    <!-- The server's answer replaces the preview (P7). -->
+    <div class="match__result" data-testid="match-result">
+      @if (embedded()) {
+        <h4 class="match__subheading" tabindex="-1" #resultHeading>{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.RESULT.HEADING' | translate }}</h4>
+      } @else {
+        <h3 class="match__subheading" tabindex="-1" #resultHeading>{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.RESULT.HEADING' | translate }}</h3>
+      }
+      <div class="table-scroll-container" tabindex="0" role="region" aria-labelledby="match-result-caption">
+        <table class="ledger-table match__result-table">
+          <caption id="match-result-caption">{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.RESULT.CAPTION' | translate }}</caption>
+          <thead>
+            <tr>
+              <th scope="col">{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.RESULT.COL_INVOICE' | translate }}</th>
+              <th scope="col" class="numeric">{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.RESULT.COL_APPLIED' | translate }}</th>
+              <th scope="col" class="numeric">{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.RESULT.COL_BALANCE_AFTER' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (line of done.lines; track $index) {
+              <tr data-testid="result-line">
+                <td class="reference">{{ line.invoiceNumber ?? empty }}</td>
+                <td class="numeric">{{ (line.appliedAmount | money: (done.result.currency ?? currency)) ?? empty }}</td>
+                <td class="numeric">{{ (line.balanceAfter | money: (done.result.currency ?? currency)) ?? empty }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <dl class="match__facts">
+        <div>
+          <dt>{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.RESULT.APPLIED' | translate }}</dt>
+          <dd class="numeric" data-testid="result-applied">{{ (done.result.appliedAmount | money: (done.result.currency ?? currency)) ?? empty }}</dd>
+        </div>
+        <div>
+          <dt>{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.RESULT.REMAINING' | translate }}</dt>
+          <dd class="numeric" data-testid="result-remaining">{{ (done.result.remainingAmount | money: (done.result.currency ?? currency)) ?? empty }}</dd>
+        </div>
+        @if (credit(); as kept) {
+          <div>
+            <dt>{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.RESULT.KEPT_AS_CREDIT' | translate }}</dt>
+            <dd class="numeric" data-testid="result-credit">{{ kept.amount | money: (kept.currency ?? currency) }}</dd>
+          </div>
+        } @else if (done.result.creditAmount !== null) {
+          <div>
+            <dt>{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.RESULT.KEPT_AS_CREDIT' | translate }}</dt>
+            <dd class="numeric" data-testid="result-credit">{{ done.result.creditAmount | money: (done.result.currency ?? currency) }}</dd>
+          </div>
+        }
+        @if (refunded() !== null) {
+          <div>
+            <dt>{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.RESULT.REFUNDED' | translate }}</dt>
+            <dd class="numeric" data-testid="result-refunded">{{ refunded() | money: (credit()?.currency ?? currency) }}</dd>
+          </div>
+        }
+      </dl>
+
+      @switch (phase()) {
+        @case ('crediting') {
+          <p class="pending-note" data-testid="match-pending">{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.RESULT.CREDITING' | translate }}</p>
+        }
+        @case ('refunding') {
+          <p class="pending-note" data-testid="match-pending">{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.RESULT.REFUNDING' | translate }}</p>
+        }
+      }
+      @if (message(); as note) {
+        <p [class]="note.tone === 'error' ? 'field-error' : 'match__success'" data-testid="match-message">
+          {{ note.key | translate: note.params }}
+        </p>
+      }
+      <div class="form-actions">
+        @if (phase() === 'credit-unknown') {
+          <button type="button" class="btn btn--accent match__action" data-testid="retry-credit" #retryButton (click)="retryCredit()">
+            {{ 'ACCOUNTING.CUSTOMER_PAYMENTS.RESULT.RETRY_CREDIT' | translate }}
+          </button>
+        }
+        @if (refundRetryOffered()) {
+          <button type="button" class="btn btn--accent match__action" data-testid="retry-refund" #retryButton (click)="retryRefund()">
+            {{ 'ACCOUNTING.CUSTOMER_PAYMENTS.RESULT.RETRY_REFUND' | translate }}
+          </button>
+        }
+        @if (phase() === 'done' && (done.result.remainingAmount ?? 0) > 0 && !credit()) {
+          <button type="button" class="btn btn--outline match__action" data-testid="match-rest" (click)="startOver()">
+            {{ 'ACCOUNTING.CUSTOMER_PAYMENTS.RESULT.MATCH_REST' | translate }}
+          </button>
+        }
+      </div>
+    </div>
+  } @else {
+    @if (embedded()) {
+      <h4 class="match__subheading">{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.MATCH.INVOICES_HEADING' | translate }}</h4>
+    } @else {
+      <h3 class="match__subheading">{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.MATCH.INVOICES_HEADING' | translate }}</h3>
+    }
+
+    @if (invoices.denied()) {
+      <p class="field-error" data-testid="invoices-denied">
+        {{ 'ACCOUNTING.CUSTOMER_PAYMENTS.REGION.DENIED' | translate: { permission: codes.apply } }}
+      </p>
+    } @else {
+      @if (invoices.status() === 'PENDING' && !invoicesData()) {
+        <p class="pending-note" data-testid="invoices-loading">{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.REGION.LOADING' | translate }}</p>
+      }
+      @if (invoices.status() === 'FAILED') {
+        <div class="match__error" data-testid="invoices-error">
+          <p class="field-error">
+            {{ (invoicesData() ? 'ACCOUNTING.CUSTOMER_PAYMENTS.REGION.REFRESH_FAILED' : 'ACCOUNTING.CUSTOMER_PAYMENTS.MATCH.INVOICES_FAILED') | translate }}
+          </p>
+          <button type="button" class="btn btn--outline" data-testid="invoices-retry" (click)="retryInvoices()">
+            {{ 'COMMON.RETRY' | translate }}
+          </button>
+        </div>
+      }
+      @if (invoicesData(); as list) {
+        @if (list.items.length === 0) {
+          <p class="state-panel state-panel--empty" data-testid="invoices-empty">{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.MATCH.NO_INVOICES' | translate }}</p>
+        } @else {
+          <div class="form-field match__filter">
+            <label for="match-filter">{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.MATCH.FILTER_LABEL' | translate }}</label>
+            <input
+              id="match-filter"
+              type="search"
+              data-testid="invoice-filter"
+              aria-describedby="match-filter-hint"
+              [value]="filterText()"
+              (input)="filterText.set($any($event.target).value)"
+            />
+            <p id="match-filter-hint" class="hint-text">{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.MATCH.FILTER_HINT' | translate }}</p>
+          </div>
+          <ul class="match__invoices" data-testid="invoice-list">
+            @for (row of visibleRows(); track row.invoice.invoiceId) {
+              @let number = row.invoice.invoiceNumber ?? ('ACCOUNTING.CUSTOMER_PAYMENTS.MATCH.NO_NUMBER' | translate);
+              <li class="match__invoice" [class.match__invoice--ticked]="row.ticked" [attr.data-invoice]="row.invoice.invoiceNumber">
+                <div class="match__invoice-head">
+                  <input
+                    type="checkbox"
+                    class="match__tick"
+                    data-testid="invoice-tick"
+                    [id]="rowId(row, 'tick')"
+                    [checked]="row.ticked"
+                    [disabled]="locked() || !canApply()"
+                    (change)="toggle(row, $any($event.target).checked)"
+                  />
+                  <label class="match__invoice-number reference" [for]="rowId(row, 'tick')">{{ number }}</label>
+                  @if (row.suggested) {
+                    <span class="status-badge status-badge--open" data-testid="badge-suggested">{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.MATCH.SUGGESTED' | translate }}</span>
+                  }
+                  @if (row.invoice.overdue) {
+                    <span class="status-badge status-badge--warning" data-testid="badge-overdue">{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.MATCH.OVERDUE' | translate }}</span>
+                  }
+                </div>
+                <p class="hint-text">
+                  {{ 'ACCOUNTING.CUSTOMER_PAYMENTS.MATCH.DUE' | translate: { date: ((toDate(row.invoice.dueDate) | date: 'mediumDate') ?? empty) } }}
+                  · {{ 'ACCOUNTING.CUSTOMER_PAYMENTS.MATCH.STILL_OWED' | translate }}
+                  <strong data-testid="still-owed">{{ row.invoice.balanceDue | money: (row.invoice.currency ?? currency) }}</strong>
+                </p>
+                <div class="form-field match__amount">
+                  <label [for]="rowId(row, 'amount')">{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.MATCH.AMOUNT_LABEL' | translate: { invoice: number } }}</label>
+                  <input
+                    type="text"
+                    inputmode="decimal"
+                    autocomplete="off"
+                    data-testid="invoice-amount"
+                    [id]="rowId(row, 'amount')"
+                    [value]="row.text"
+                    [disabled]="!row.ticked || locked() || !canApply()"
+                    [attr.aria-invalid]="row.errorKey ? 'true' : null"
+                    [attr.aria-describedby]="row.errorKey ? rowId(row, 'error') : null"
+                    (input)="setAmount(row, $any($event.target).value)"
+                  />
+                  @if (row.errorKey) {
+                    <p class="field-error" data-testid="amount-error" [id]="rowId(row, 'error')">
+                      {{ row.errorKey | translate: { owed: (row.invoice.balanceDue | money: (row.invoice.currency ?? currency)) } }}
+                    </p>
+                  }
+                </div>
+              </li>
+            }
+          </ul>
+          @if (visibleRows().length === 0) {
+            <p class="hint-text" data-testid="filter-empty">{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.MATCH.FILTER_EMPTY' | translate }}</p>
+          }
+          @if (list.truncated) {
+            <p class="hint-text" data-testid="invoices-truncated">{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.MATCH.INVOICES_TRUNCATED' | translate }}</p>
+          }
+        }
+      }
+    }
+
+    <!-- Preview (P7 input preview): typed amounts only; the server's answer replaces it. -->
+    <dl class="match__preview" data-testid="preview">
+      <div>
+        <dt>{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.PREVIEW.PAYMENT' | translate }}</dt>
+        <dd class="numeric" data-testid="preview-payment">{{ p.unappliedAmount | money: currency }}</dd>
+      </div>
+      <div>
+        <dt>{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.PREVIEW.APPLYING' | translate: { count: tickedCount() } }}</dt>
+        <dd class="numeric" data-testid="preview-applying">{{ applying() | money: currency }}</dd>
+      </div>
+      <div>
+        <dt>{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.PREVIEW.LEFT_OVER' | translate }}</dt>
+        <dd class="numeric" data-testid="preview-left-over">{{ leftOverText }}</dd>
+      </div>
+    </dl>
+    <div class="match__alert" role="alert" data-testid="over-alert">
+      @if (overMinor() > 0) {
+        <p class="field-error">{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.PREVIEW.OVER_APPLIED' | translate: { amount: (excess() | money: currency) } }}</p>
+      }
+    </div>
+
+    @if (offerLeftover()) {
+      <fieldset class="match__choices" data-testid="leftover-choice" [disabled]="locked()">
+        <legend>{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.LEFTOVER.LEGEND' | translate: { amount: leftOverText } }}</legend>
+        <label class="match__choice">
+          <input type="radio" name="leftover" value="CREDIT" data-testid="leftover-credit"
+            [checked]="effectiveChoice() === 'CREDIT'" (change)="chooseLeftover('CREDIT')" />
+          {{ 'ACCOUNTING.CUSTOMER_PAYMENTS.LEFTOVER.CREDIT' | translate }}
+        </label>
+        @if (canRefund()) {
+          <label class="match__choice">
+            <input type="radio" name="leftover" value="REFUND" data-testid="leftover-refund"
+              [checked]="effectiveChoice() === 'REFUND'" (change)="chooseLeftover('REFUND')" />
+            {{ 'ACCOUNTING.CUSTOMER_PAYMENTS.LEFTOVER.REFUND' | translate }}
+          </label>
+        }
+      </fieldset>
+    } @else if (leftOverMinor() > 0) {
+      <p class="hint-text" data-testid="leftover-stays">{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.LEFTOVER.STAYS' | translate: { amount: leftOverText } }}</p>
+    }
+
+    <!-- Consequence and reversal sentences before the action (P4). -->
+    <p class="match__consequence" id="match-consequence" data-testid="consequence">
+      {{ 'ACCOUNTING.CUSTOMER_PAYMENTS.MATCH.CONSEQUENCE' | translate: { customer: p.customerName ?? empty, count: tickedCount() } }}
+    </p>
+
+    @if (message(); as note) {
+      <p [class]="note.tone === 'error' ? 'field-error' : 'match__success'" data-testid="match-message">
+        {{ note.key | translate: note.params }}
+      </p>
+    }
+    @if (phase() === 'submitting') {
+      <p class="pending-note" data-testid="match-pending">{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.MATCH.APPLYING_NOW' | translate }}</p>
+    }
+
+    @if (canApply()) {
+      <div class="form-actions">
+        @if (phase() === 'unknown') {
+          <button type="button" class="btn btn--accent match__action" data-testid="retry-apply" #retryButton (click)="retryApply()">
+            {{ 'ACCOUNTING.CUSTOMER_PAYMENTS.MATCH.TRY_AGAIN' | translate }}
+          </button>
+        } @else {
+          <button
+            type="button"
+            class="btn btn--accent match__action"
+            data-testid="apply"
+            aria-describedby="match-consequence"
+            [attr.aria-disabled]="applyEnabled() ? null : 'true'"
+            (click)="submit()"
+          >
+            {{ applyLabelKey() | translate: { applying: (applying() | money: currency), leftOver: leftOverText } }}
+          </button>
+        }
+        <button
+          type="button"
+          class="btn btn--outline match__action"
+          data-testid="start-over"
+          [attr.aria-disabled]="phase() === 'submitting' ? 'true' : null"
+          (click)="startOver()"
+        >
+          {{ 'ACCOUNTING.CUSTOMER_PAYMENTS.MATCH.START_OVER' | translate }}
+        </button>
+      </div>
+    }
+  }
+
+  <!-- Refund confirmation (§5.3 item 5, P4): money leaves the shop. -->
+  @if (refundDialogOpen()) {
+    <dialog class="confirm-panel" appModalDialog (modalCancel)="cancelRefund()"
+      aria-labelledby="refund-title" aria-describedby="refund-body" data-testid="refund-dialog">
+      <h2 id="refund-title" class="confirm-heading">{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.REFUND.TITLE' | translate }}</h2>
+      <p id="refund-body">
+        {{ 'ACCOUNTING.CUSTOMER_PAYMENTS.REFUND.BODY' | translate: { customer: p.customerName ?? empty, amount: leftOverText } }}
+      </p>
+      <div class="form-actions">
+        <button type="button" class="btn btn--accent match__action" data-testid="refund-confirm" (click)="confirmRefund()">
+          {{ 'ACCOUNTING.CUSTOMER_PAYMENTS.REFUND.CONFIRM' | translate: { applying: (applying() | money: currency), leftOver: leftOverText } }}
+        </button>
+        <button type="button" class="btn btn--outline match__action" data-testid="refund-cancel" (click)="cancelRefund()">
+          {{ 'COMMON.CANCEL' | translate }}
+        </button>
+      </div>
+    </dialog>
+  }
+</section>
