@@ -340,6 +340,28 @@ describe('AccountingHomePageComponent', () => {
       expect(q('[data-testid="page-error"]')).not.toBeNull();
     });
 
+    it('does not blame the connection when every permitted read was refused with 403 (ADR-0064 §4, §6)', () => {
+      mocks.held.set(['reporting:view:financial-statements']);
+      mocks.home.receivables.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 403 })));
+      mocks.home.payables.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 403 })));
+      render();
+
+      expect(component.state()).toBe('ready');
+      expect(component.errorKey()).toBeNull();
+      expect(q('[data-testid="page-error"]')).toBeNull();
+      expect(qa('[data-testid="region-denied"]').length).toBe(2);
+    });
+
+    it('does not blame the connection when the failures mix a 403 with an outage', () => {
+      mocks.held.set(['reporting:view:financial-statements']);
+      mocks.home.receivables.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 403 })));
+      mocks.home.payables.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 503 })));
+      render();
+
+      expect(component.state()).toBe('ready');
+      expect(q('[data-testid="lane-payables"] [data-testid="region-error"]')).not.toBeNull();
+    });
+
     it('states the missing permission on a 403 and stops re-reading that region (ADR-0064 §6)', () => {
       mocks.home.payables.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 403 })));
       render();
@@ -638,6 +660,39 @@ describe('AccountingHomePageComponent', () => {
 
       expect(text('[data-testid="approve-outcome"]')).toBe('ACCOUNTING.HOME.TODO.APPROVAL.ERROR.SELF_APPROVAL');
       expect(mocks.home.checkupsAwaitingApproval).toHaveBeenCalledTimes(1);
+    });
+
+    it('words an unexplained-items refusal without the stale pre-write counts', () => {
+      mocks.workspace.approve.mockReturnValue(
+        throwError(
+          () => new HttpErrorResponse({ status: 422, error: { code: 'RECONCILIATION_HAS_UNEXPLAINED_ITEMS' } }),
+        ),
+      );
+      render();
+      chooseApproval();
+      approveButton().click();
+      fixture.detectChanges();
+
+      expect(component.approveMessage()).toEqual({
+        key: 'ACCOUNTING.HOME.TODO.APPROVAL.ERROR.HAS_UNEXPLAINED_ITEMS',
+        params: {},
+      });
+      expect(mocks.workspace.getReview).toHaveBeenCalledTimes(2);
+    });
+
+    it('clears the "approved" status when another item is chosen or the home refreshes', () => {
+      render();
+      chooseApproval();
+      approveButton().click();
+      fixture.detectChanges();
+      expect(component.approvedAccount()).not.toBeNull();
+
+      q('.todo-item[data-kind="PAYMENT"]')!.click();
+      expect(component.approvedAccount()).toBeNull();
+
+      component.approvedAccount.set({ account: 'Operating Checking' });
+      component.refresh();
+      expect(component.approvedAccount()).toBeNull();
     });
 
     it('names accounting:reconciliation:approve on a write 403', () => {

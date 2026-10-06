@@ -5375,7 +5375,7 @@
             "SELF_APPROVAL": "You can't approve a check-up you prepared.",
             "NOT_SUBMITTED": "This check-up is no longer waiting for approval. The list has been reloaded.",
             "NOT_BALANCED": "This check-up no longer balances. It has been reloaded.",
-            "HAS_UNEXPLAINED_ITEMS": "{{bank}} bank lines and {{ledger}} book entries are still unexplained. It has been reloaded.",
+            "HAS_UNEXPLAINED_ITEMS": "Some bank lines or book entries are still unexplained. It has been reloaded.",
             "ALREADY_FINALIZED": "Someone already approved this check-up. The list has been reloaded.",
             "OPTIMISTIC_LOCK": "Someone else changed this check-up. It has been reloaded; try again.",
             "FORBIDDEN": "You need the {{permission}} permission to approve a bank check-up.",

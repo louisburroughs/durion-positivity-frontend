@@ -5375,7 +5375,7 @@
             "SELF_APPROVAL": "Vous ne pouvez pas approuver une vérification que vous avez préparée.",
             "NOT_SUBMITTED": "Cette vérification n’attend plus d’approbation. La liste a été rechargée.",
             "NOT_BALANCED": "Cette vérification n’est plus équilibrée. Elle a été rechargée.",
-            "HAS_UNEXPLAINED_ITEMS": "{{bank}} lignes bancaires et {{ledger}} écritures restent inexpliquées. Elle a été rechargée.",
+            "HAS_UNEXPLAINED_ITEMS": "Des lignes bancaires ou des écritures restent inexpliquées. Elle a été rechargée.",
             "ALREADY_FINALIZED": "Quelqu’un a déjà approuvé cette vérification. La liste a été rechargée.",
             "OPTIMISTIC_LOCK": "Quelqu’un d’autre a modifié cette vérification. Elle a été rechargée; réessayez.",
             "FORBIDDEN": "Il vous faut l’autorisation {{permission}} pour approuver une vérification bancaire.",

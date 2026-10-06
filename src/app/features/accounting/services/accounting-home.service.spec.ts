@@ -415,6 +415,48 @@ describe('AccountingHomeService', () => {
       expect(rows?.[0].reconciliationId).toBe('new');
     });
 
+    it('reads every page of the month’s reconciliations, so a later page’s status is not lost', () => {
+      bankReconciliation.listBankAccounts.mockReturnValue(of([account()]));
+      bankReconciliation.listStatements.mockReturnValue(of([statement()]));
+      const first = { ...periodRows([{ ...submitted, glAccountId: 'gl-other' }]), totalPages: 2 };
+      const second = { ...periodRows([submitted]), pageNumber: 1, totalPages: 2 };
+      reconciliations.listReconciliations.mockImplementation(
+        (_gl: unknown, _status: unknown, _period: unknown, _from: unknown, _to: unknown, page: number) =>
+          of(page === 0 ? first : second),
+      );
+      let rows: BankCheckupRow[] | undefined;
+
+      service.bankCheckup('2026-10').subscribe(value => (rows = value));
+
+      expect(reconciliations.listReconciliations).toHaveBeenCalledTimes(2);
+      expect(reconciliations.listReconciliations).toHaveBeenNthCalledWith(2, undefined, undefined, '2026-10', undefined, undefined, 1, 200);
+      expect(rows?.[0].status).toBe('SUBMITTED');
+    });
+
+    it('stops at a bounded number of pages', () => {
+      bankReconciliation.listBankAccounts.mockReturnValue(of([account()]));
+      bankReconciliation.listStatements.mockReturnValue(of([statement()]));
+      reconciliations.listReconciliations.mockReturnValue(of({ ...periodRows([]), totalPages: 10_000 }));
+
+      service.bankCheckup('2026-10').subscribe();
+
+      expect(reconciliations.listReconciliations.mock.calls.length).toBeLessThanOrEqual(20);
+    });
+
+    it('takes only a COMMITTED statement as the latest, never one with an unknown status', () => {
+      bankReconciliation.listBankAccounts.mockReturnValue(of([account()]));
+      bankReconciliation.listStatements.mockReturnValue(
+        of([statement({ statementId: 'st-odd', status: null, endDate: '2026-10-31', closingBalance: 1 }), statement()]),
+      );
+      reconciliations.listReconciliations.mockReturnValue(of(periodRows([])));
+      let rows: BankCheckupRow[] | undefined;
+
+      service.bankCheckup('2026-10').subscribe(value => (rows = value));
+
+      expect(rows?.[0].statementEndDate).toBe('2026-09-30');
+      expect(rows?.[0].statementClosingBalance).toBe(25400);
+    });
+
     it('answers no rows without reading statements when there is no bank account', () => {
       bankReconciliation.listBankAccounts.mockReturnValue(of([]));
       reconciliations.listReconciliations.mockReturnValue(of(periodRows([])));

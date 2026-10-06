@@ -5375,7 +5375,7 @@
             "SELF_APPROVAL": "No puede aprobar una revisión que usted preparó.",
             "NOT_SUBMITTED": "Esta revisión ya no está en espera de aprobación. La lista se volvió a cargar.",
             "NOT_BALANCED": "Esta revisión ya no cuadra. Se volvió a cargar.",
-            "HAS_UNEXPLAINED_ITEMS": "Aún quedan sin explicar {{bank}} líneas bancarias y {{ledger}} asientos. Se volvió a cargar.",
+            "HAS_UNEXPLAINED_ITEMS": "Aún quedan líneas bancarias o asientos sin explicar. Se volvió a cargar.",
             "ALREADY_FINALIZED": "Alguien ya aprobó esta revisión. La lista se volvió a cargar.",
             "OPTIMISTIC_LOCK": "Otra persona cambió esta revisión. Se volvió a cargar; inténtelo de nuevo.",
             "FORBIDDEN": "Necesita el permiso {{permission}} para aprobar una revisión bancaria.",

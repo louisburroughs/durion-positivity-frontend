@@ -29,6 +29,9 @@ import { BankReconciliationService } from './bank-reconciliation.service';
 /** Enough for every reconciliation of one month across a tenant's bank accounts. */
 const PERIOD_RECONCILIATIONS_PAGE_SIZE = 200;
 
+/** Upper bound on pages read for one month, so a runaway `totalPages` cannot fan out without limit. */
+const MAX_RECONCILIATION_PAGES = 20;
+
 /** The only status `listUnappliedPayments` accepts. */
 const UNAPPLIED_STATUS = 'AVAILABLE';
 
@@ -100,6 +103,28 @@ export class AccountingHomeService {
   }
 
   /**
+   * Every reconciliation of the month: page 0, then each further page its
+   * `totalPages` names (capped at {@link MAX_RECONCILIATION_PAGES}), in parallel,
+   * like `BankReconciliationService`'s account and statement lists. A tenant with
+   * more attempts than one page would otherwise show an older or "Not started"
+   * status for an account whose latest attempt sits on a later page.
+   */
+  private periodReconciliations(periodCode: string): Observable<BankReconciliationResponse[]> {
+    const readPage = (page: number) =>
+      this.reconciliationSdk
+        .listReconciliations(undefined, undefined, periodCode, undefined, undefined, page, PERIOD_RECONCILIATIONS_PAGE_SIZE)
+        .pipe(map(response => ({ rows: response?.reconciliations ?? [], totalPages: response?.totalPages ?? 1 })));
+    return readPage(0).pipe(
+      switchMap(first => {
+        const pages = Math.min(MAX_RECONCILIATION_PAGES, Math.max(1, first.totalPages));
+        if (pages === 1) return of(first.rows);
+        const rest = Array.from({ length: pages - 1 }, (_, i) => readPage(i + 1).pipe(map(result => result.rows)));
+        return forkJoin(rest).pipe(map(later => [...first.rows, ...later.flat()]));
+      }),
+    );
+  }
+
+  /**
    * *Bank check-up* lane: every bank account with its latest committed
    * statement, reconciled-through date, unexplained-line count and the status
    * of this month's reconciliation (`periodCode`, local `YYYY-MM`).
@@ -107,9 +132,7 @@ export class AccountingHomeService {
   bankCheckup(periodCode: string): Observable<BankCheckupRow[]> {
     return forkJoin({
       accounts: this.bankReconciliation.listBankAccounts(),
-      reconciliations: this.reconciliationSdk
-        .listReconciliations(undefined, undefined, periodCode, undefined, undefined, 0, PERIOD_RECONCILIATIONS_PAGE_SIZE)
-        .pipe(map(response => response?.reconciliations ?? [])),
+      reconciliations: this.periodReconciliations(periodCode),
     }).pipe(
       switchMap(({ accounts, reconciliations }) =>
         accounts.length === 0
@@ -216,7 +239,8 @@ function toCheckupRow(
   statements: readonly BankStatement[],
   reconciliations: readonly BankReconciliationResponse[],
 ): BankCheckupRow {
-  const latest = statements.find(statement => statement.status !== 'SUPERSEDED') ?? null;
+  // Only a statement served as COMMITTED is "the latest statement"; an unset or new status is not.
+  const latest = statements.find(statement => statement.status === 'COMMITTED') ?? null;
   const current = reconciliations
     .filter(row => row.glAccountId === account.glAccountId)
     .sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? ''))[0];
