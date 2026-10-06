@@ -1,0 +1,15 @@
+<details class="help-disclosure">
+  <summary class="help-disclosure__summary">
+    <span class="help-disclosure__icon material-symbols-rounded" aria-hidden="true">{{ 'help' | msIcon }}</span>
+    <span>{{ summaryKey() | translate }}</span>
+    @if (contextKey(); as context) {
+      <span class="sr-only">: {{ context | translate }}</span>
+    }
+  </summary>
+  <div class="help-disclosure__body">
+    <p>{{ textKey() | translate }}</p>
+    @if (exampleKey(); as example) {
+      <p class="help-disclosure__example">{{ example | translate }}</p>
+    }
+  </div>
+</details>

@@ -142,6 +142,15 @@ These flip when `data-theme` changes on `<html>`. **Consume these in all compone
 | `--status-info-bg` / `-fg` | `#e8eef6` / `#355d92` | `#233246` / `#aac4e4` | Info chip/alert fill + text |
 | `--status-ready-bg` / `-fg` | `#e4f2f1` / `#17605c` | `#1e3937` / `#7fd8d1` | Ready chip/alert fill + text |
 | `--status-neutral-bg` / `-fg` | `#eceff1` / `#37474f` | `#2c3236` / `#c3ccd1` | Neutral chip/alert fill + text |
+| `--chart-1` | `#2b4c78` | `#668fc2` | First data series: bar and meter segments, legend swatch (SPEC-accounting-workspace §8.3) |
+| `--chart-2` | `#7fa4d1` | `#d3e3f6` | Second data series |
+| `--chart-3` | gold-500 (`#cc9030`) | gold-300 (`#e3bd78`) | Third data series; the gold ramp, never a raw `#cc9030` |
+| `--chart-alert` | `#ba1a1a` | `#ffb4ab` | Overdue / alert series |
+| `--meter-track` | `color-mix(border-color 80%, cardBackground)` | same formula | Unfilled track of a meter or segmented bar |
+| `--chart-wash` | `color-mix(chart-1 14%, cardBackground)` | same formula | Area fill under a line chart, on the card surface |
+
+> **Chart marks are never the only channel** (ADR-0039): every bar, segment and line has a
+> legend entry with text and its served amount, and a chart has an equivalent table.
 
 > **Status surfaces use the `--status-<kind>-bg` + `-fg` pair** (see `durion-style-guide.md` §8),
 > never `color-mix(--functional-x …)` + a functional text colour — that fails AA in dark.

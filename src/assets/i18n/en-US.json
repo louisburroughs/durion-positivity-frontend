@@ -5198,6 +5198,269 @@
         "AMOUNT_PRECISION_EXCEEDS_CURRENCY": "The amount has more decimal places than the currency allows.",
         "OPTIMISTIC_LOCK": "Someone else changed this reconciliation. It has been reloaded; try again."
       }
+    },
+    "SHELL": {
+      "NAV": {
+        "ARIA": "Accounting sections",
+        "HOME": "Home",
+        "BILLS": "Bills to pay",
+        "BILLS_TERM": "accounts payable",
+        "BANK": "Bank",
+        "BANK_TERM": "bank reconciliation",
+        "MONTH_END": "Month-end",
+        "MONTH_END_TERM": "period close"
+      },
+      "SHOW_TERMS": "Show accounting terms"
+    },
+    "HOME": {
+      "OVERLINE": "Accounting",
+      "TITLE": "Accounting home",
+      "STANDFIRST": "See what customers owe you, what the shop owes and where the bank check-up stands, and clear what needs a person.",
+      "PERIOD_CHIP": {
+        "OPEN": "{{month}} is open",
+        "CLOSED": "{{month}} is closed"
+      },
+      "HELP_BUTTON": "Help",
+      "REFRESH": "Refresh",
+      "RETRY": "Retry",
+      "LOADING": "Loading your accounting home…",
+      "ERROR": {
+        "ALL_FAILED": "Nothing on the accounting home could load. Check your connection and try again."
+      },
+      "AS_OF": "As of {{time}}",
+      "START_HERE": {
+        "TITLE": "Start here",
+        "HABIT_TODO": "Every day, clear your to-do list.",
+        "HABIT_BANK": "Once a month, do the bank check-up.",
+        "OPEN_GUIDE": "Open the help guide",
+        "DISMISS": "Hide Start here"
+      },
+      "HELP_GUIDE": {
+        "TITLE": "Help guide",
+        "WORDS_TITLE": "Words you'll see",
+        "HOW_TITLE": "How do I…"
+      },
+      "LANES": {
+        "HEADING": "Money at a glance",
+        "OVERDUE": "Overdue",
+        "NOT_YET_DUE": "Not due yet",
+        "RECEIVABLES": {
+          "TITLE": "Money owed to you",
+          "TERM": "accounts receivable",
+          "LATE_1_30": "1–30 days late: {{amount}}",
+          "PAYMENTS_WAITING": "Payments waiting to be matched: {{count}}",
+          "PAYMENTS_UNAVAILABLE": "Payments waiting to be matched couldn't load."
+        },
+        "PAYABLES": {
+          "TITLE": "Bills to pay",
+          "TERM": "accounts payable",
+          "APPROVED_NOTE": "Owed on approved bills.",
+          "UNAPPROVED": "Waiting for approval or still being checked",
+          "UNAPPROVED_COUNT": "({{count}} bills)"
+        },
+        "BANK": {
+          "TITLE": "Bank check-up",
+          "TERM": "bank reconciliation",
+          "NO_ACCOUNTS": "No bank account is set up for the check-up yet.",
+          "MASK": "ending {{mask}}",
+          "STATEMENT_END": "Latest statement ends",
+          "CLOSING_BALANCE": "Statement balance",
+          "RECONCILED_THROUGH": "Checked through",
+          "NOT_IN_BOOKS": "Bank lines not in the books",
+          "STATUS": {
+            "NOT_STARTED": "Not started",
+            "IN_PROGRESS": "In progress",
+            "SUBMITTED": "Waiting for a second person to approve",
+            "FINALIZED": "Done",
+            "UNKNOWN": "Unknown"
+          }
+        }
+      },
+      "REGION": {
+        "LOADING": "Loading…",
+        "LOAD_FAILED": "This couldn't load.",
+        "REFRESH_FAILED": "This couldn't refresh; these are the last figures loaded.",
+        "DENIED": "You need the {{permission}} permission to see this."
+      },
+      "ACTION": {
+        "OPEN_BILLS": "Open bills",
+        "OPEN_BANK_CHECKUP": "Open bank check-up"
+      },
+      "METHOD": {
+        "CASH": "Cash",
+        "CARD": "Card",
+        "ON_ACCOUNT": "On account",
+        "OTHER": "Other",
+        "UNKNOWN": "Unknown"
+      },
+      "TODO": {
+        "TITLE": "Your to-do list",
+        "FILTER_ARIA": "Show to-do items",
+        "FILTER": {
+          "ALL": "All ({{count}})",
+          "PAYMENTS": "Customer payments ({{count}})",
+          "BANK": "Bank ({{count}})"
+        },
+        "EMPTY": "You're all caught up",
+        "EMPTY_FILTER": "Nothing to do under this filter.",
+        "PICK_ONE": "Choose an item to see what to do.",
+        "WHAT_TO_DO": "What to do",
+        "BADGE": {
+          "PAYMENT": "Customer payment",
+          "BANK": "Bank",
+          "APPROVAL": "Needs approval"
+        },
+        "MORE": {
+          "PAYMENTS": "{{count}} more payments are waiting.",
+          "OPEN_PAYMENTS": "Open Apply payment",
+          "BANK_LINES": "{{count}} more bank lines are not in the books.",
+          "APPROVALS": "{{count}} more check-ups are waiting for approval.",
+          "OPEN_BANK": "Open bank check-up"
+        },
+        "SOURCE_FAILED": {
+          "PAYMENTS": "Payments waiting to be matched couldn't load.",
+          "BANK_LINES": "Bank lines not in the books couldn't load.",
+          "APPROVALS": "Bank check-ups waiting for approval couldn't load."
+        },
+        "PAYMENT": {
+          "TITLE": "Payment ready to match",
+          "PANEL_TITLE": "Payment ready to match",
+          "REASON_LINE": "Not yet matched to the invoices it pays.",
+          "CUSTOMER": "Customer",
+          "TAKEN_AGAINST": "Taken against invoice",
+          "METHOD": "Method",
+          "RECEIVED": "Received",
+          "UNAPPLIED": "Waiting to be matched",
+          "REASONS_ARIA": "Why these invoices",
+          "REASON": {
+            "REMITTANCE_REFERENCE": "Taken against this invoice",
+            "SAME_CUSTOMER": "Same customer",
+            "EXACT_TOTAL": "Adds up exactly",
+            "UNKNOWN": "Unknown"
+          },
+          "SUGGESTED_CAPTION": "Invoices this payment most likely pays",
+          "COL_INVOICE": "Invoice",
+          "COL_BALANCE": "Still owed",
+          "COL_APPLYING": "Applying",
+          "APPLYING": "Applying",
+          "LEFT_OVER": "Left over",
+          "NO_SUGGESTION": "This customer has no open invoice to suggest.",
+          "WHAT_TO_DO": "Check the suggested invoices against what the customer told you. Matching from this panel comes with the Customer payments page; until then, match it on Apply payment."
+        },
+        "BANK_LINE": {
+          "TITLE": "Bank line not in the books",
+          "PANEL_TITLE": "Bank line not in the books",
+          "REASON_LINE": "The bank shows it; the books don't yet.",
+          "ACCOUNT": "Account",
+          "DATE": "Date",
+          "AMOUNT": "Amount",
+          "DESCRIPTION": "The bank's description",
+          "WHAT_TO_DO": "Open the bank check-up for this account, then match the line to an entry, record it as a bank fee, or exclude it."
+        },
+        "APPROVAL": {
+          "TITLE": "Bank check-up needs approval",
+          "PANEL_TITLE": "Bank check-up needs approval",
+          "REASON_LINE": "Submitted and waiting for a second person.",
+          "ACCOUNT": "Account",
+          "PERIOD": "Statement period",
+          "SUBMITTED_BY": "Submitted by",
+          "SUBMITTED_AT": "Submitted",
+          "WHAT_TO_DO": "Check the figures, then approve the month. Someone other than the person who prepared it has to approve it.",
+          "REVIEW_LOADING": "Checking whether you can approve it…",
+          "REVIEW_FAILED": "We couldn't check whether you can approve it. Choose the item again to retry.",
+          "CONSEQUENCE": "Approving finishes this month's bank check-up for {{account}}. If an entry in this month changes later, it must be approved again.",
+          "APPROVE": "Approve month",
+          "ERROR": {
+            "SELF_APPROVAL": "You can't approve a check-up you prepared.",
+            "NOT_SUBMITTED": "This check-up is no longer waiting for approval. The list has been reloaded.",
+            "NOT_BALANCED": "This check-up no longer balances. It has been reloaded.",
+            "HAS_UNEXPLAINED_ITEMS": "{{bank}} bank lines and {{ledger}} book entries are still unexplained. It has been reloaded.",
+            "ALREADY_FINALIZED": "Someone already approved this check-up. The list has been reloaded.",
+            "OPTIMISTIC_LOCK": "Someone else changed this check-up. It has been reloaded; try again.",
+            "FORBIDDEN": "You need the {{permission}} permission to approve a bank check-up.",
+            "OTHER": "That couldn't be completed. Try again."
+          }
+        }
+      },
+      "MORE_TOOLS": {
+        "TITLE": "More accounting tools",
+        "DESCRIPTION": "Every other accounting page you can open: events, posting rules, credit memos, vendor payments, reports and more."
+      }
+    },
+    "HELP": {
+      "WHATS_THIS": "What's this?",
+      "RECEIVABLES": {
+        "TEXT": "What customers still owe you on open invoices, split into overdue and not due yet. The figures come straight from the books.",
+        "EXAMPLE": "For example: an invoice due last week that is still unpaid counts as overdue, and shows in the 1–30 days late badge."
+      },
+      "PAYABLES": {
+        "TEXT": "What the shop owes vendors on approved bills, split into overdue and not due yet. Bills still waiting for approval or being checked are shown on their own line and not added in.",
+        "EXAMPLE": "For example: a parts bill approved yesterday and due in two weeks counts as not due yet."
+      },
+      "TODO": {
+        "TEXT": "Only what needs a person, and only what you can act on. Choose an item to see the details and what to do.",
+        "EXAMPLE": "For example: a customer's card payment that has not been matched to its invoice yet."
+      },
+      "WHY_MATCH": {
+        "SUMMARY": "Why match a payment?",
+        "TEXT": "Matching tells the books which invoices a payment pays. Until it is matched, the invoice still looks unpaid and the customer looks like they owe money.",
+        "EXAMPLE": "For example: a $4,615.00 card payment taken against INV-2026-01702 pays that invoice once it is matched."
+      },
+      "WHY_TWO_PEOPLE": {
+        "SUMMARY": "Why two people?",
+        "TEXT": "One person prepares the bank check-up and a second person approves it. A second pair of eyes catches mistakes and keeps the books honest.",
+        "EXAMPLE": "For example: a clerk matches the month's bank lines and submits; a controller reviews the figures and approves the month."
+      },
+      "GLOSSARY": {
+        "BILL": {
+          "WORD": "Bill",
+          "TERM": "vendor invoice",
+          "MEANING": "What a vendor sends you to be paid."
+        },
+        "INVOICE": {
+          "WORD": "Invoice",
+          "TERM": "customer invoice",
+          "MEANING": "What you send a customer to be paid."
+        },
+        "MATCHING": {
+          "WORD": "Matching",
+          "TERM": "applying a payment",
+          "MEANING": "Saying which invoices or bills a payment pays."
+        },
+        "WAITING_DEPOSIT": {
+          "WORD": "Waiting to be deposited",
+          "TERM": "undeposited funds",
+          "MEANING": "Cash and checks taken in but not yet in the bank."
+        },
+        "CREDIT": {
+          "WORD": "Credit",
+          "TERM": "customer credit",
+          "MEANING": "Money a customer can use against a later invoice."
+        },
+        "BANK_CHECKUP": {
+          "WORD": "Bank check-up",
+          "TERM": "bank reconciliation",
+          "MEANING": "Checking that the bank's statement and the books agree."
+        },
+        "REVERSE": {
+          "WORD": "Reverse",
+          "TERM": "reversing entry",
+          "MEANING": "Undo an entry with an equal and opposite one, keeping both on record."
+        },
+        "MONTH_CLOSED": {
+          "WORD": "Month closed",
+          "TERM": "closed period",
+          "MEANING": "A month whose entries can no longer change."
+        }
+      },
+      "HOW": {
+        "PAY_VENDOR": {
+          "QUESTION": "How do I pay a vendor?",
+          "ANSWER": "Open Vendor payments and choose New payment. Pick the vendor and the approved bills you are paying, check the amount, then confirm.",
+          "EXAMPLE": "For example: pay two parts bills from the same supplier in one payment.",
+          "LINK": "Open vendor payments"
+        }
+      }
     }
   },
   "PRODUCT": {

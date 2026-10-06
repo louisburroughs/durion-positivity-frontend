@@ -372,6 +372,33 @@ export const ACCOUNTING_SECTION = {
    * (SPEC-manual-bank-reconciliation §6.2).
    */
   reconciliationApprove: ['accounting:reconciliation:approve'],
+  /*
+   * Accounting home (CAP:550 S4, SPEC-accounting-workspace §5.1, §9.1). The
+   * home itself is open to anyone the group gate admits; each region and
+   * to-do source is shown, and read, only with the code its read enforces.
+   */
+  /** Period chip: `listAccountingPeriods`. */
+  homePeriodChip: ['accounting:period:view'],
+  /** Money owed to you: `generateAgedReceivables` (`FinancialReportingController`). */
+  homeReceivablesLane: ['reporting:view:financial-statements'],
+  /** Bills to pay: `generateAgedPayables` (`FinancialReportingController`). */
+  homePayablesLane: ['reporting:view:financial-statements'],
+  /** Bank check-up: `listBankAccounts`, `listBankStatements`, `listReconciliations`. */
+  homeBankLane: ['accounting:reconciliation:view'],
+  /** Payments waiting to be matched (lane count and to-do items): `listUnappliedPayments`. */
+  homePaymentsToMatch: ['accounting:payment:apply'],
+  /**
+   * Bank lines not in the books, as to-do items. Declared as `allPermissions`:
+   * the read needs `view`, and acting on a line (match, fee, exclude) needs
+   * `adjust`, so the item is shown only to someone who can act on it (§5.1 "View by role").
+   */
+  homeBankLineItems: ['accounting:reconciliation:view', 'accounting:reconciliation:adjust'],
+  /**
+   * Bank check-ups waiting for approval, as to-do items. `allPermissions`: the
+   * read needs `view` and Approve month (`finalizeReconciliation`) needs
+   * `approve`. The button and its handler still gate on `reconciliationApprove` alone.
+   */
+  homeApprovalItems: ['accounting:reconciliation:view', 'accounting:reconciliation:approve'],
 } as const satisfies Record<string, readonly string[]>;
 
 /** `/app/crm/*` — one entry per routed page, keyed by route path. */

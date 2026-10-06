@@ -172,6 +172,16 @@
   --status-ready-fg: #17605c;
   --status-neutral-bg: #eceff1;
   --status-neutral-fg: #37474f;
+  /* Chart tokens (SPEC-accounting-workspace §8.3): bars, meters, legends.
+     Validated for colour-vision deficiency in both themes; a mark is never the
+     only channel — every legend entry carries text and its amount (ADR-0039).
+     --chart-3 goes through the gold ramp, which owns the raw gold value. */
+  --chart-1: #2b4c78;
+  --chart-2: #7fa4d1;
+  --chart-3: var(--durion-gold-500);
+  --chart-alert: #ba1a1a;
+  --meter-track: color-mix(in srgb, var(--border-color) 80%, var(--cardBackground));
+  --chart-wash: color-mix(in srgb, var(--chart-1) 14%, var(--cardBackground));
 }
 
 /* ── DARK THEME ──────────────────────────────────────────────────────────── */
@@ -229,6 +239,12 @@
   --status-ready-fg: #7fd8d1;
   --status-neutral-bg: #2c3236;
   --status-neutral-fg: #c3ccd1;
+  --chart-1: #668fc2;
+  --chart-2: #d3e3f6;
+  --chart-3: var(--durion-gold-300);
+  --chart-alert: #ffb4ab;
+  --meter-track: color-mix(in srgb, var(--border-color) 80%, var(--cardBackground));
+  --chart-wash: color-mix(in srgb, var(--chart-1) 14%, var(--cardBackground));
 }
 
 /* ── Box-sizing & Reset ──────────────────────────────────────────────────── */

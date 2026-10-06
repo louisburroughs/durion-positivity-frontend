@@ -5198,6 +5198,269 @@
         "AMOUNT_PRECISION_EXCEEDS_CURRENCY": "El importe tiene más decimales de los que permite la moneda.",
         "OPTIMISTIC_LOCK": "Otra persona modificó esta conciliación. Se volvió a cargar; inténtelo de nuevo."
       }
+    },
+    "SHELL": {
+      "NAV": {
+        "ARIA": "Secciones de contabilidad",
+        "HOME": "Inicio",
+        "BILLS": "Facturas por pagar",
+        "BILLS_TERM": "cuentas por pagar",
+        "BANK": "Banco",
+        "BANK_TERM": "conciliación bancaria",
+        "MONTH_END": "Cierre de mes",
+        "MONTH_END_TERM": "cierre de periodo"
+      },
+      "SHOW_TERMS": "Mostrar términos contables"
+    },
+    "HOME": {
+      "OVERLINE": "Contabilidad",
+      "TITLE": "Inicio de contabilidad",
+      "STANDFIRST": "Vea lo que le deben los clientes, lo que debe el taller y cómo va la revisión bancaria, y resuelva lo que necesita a una persona.",
+      "PERIOD_CHIP": {
+        "OPEN": "{{month}} está abierto",
+        "CLOSED": "{{month}} está cerrado"
+      },
+      "HELP_BUTTON": "Ayuda",
+      "REFRESH": "Actualizar",
+      "RETRY": "Reintentar",
+      "LOADING": "Cargando el inicio de contabilidad…",
+      "ERROR": {
+        "ALL_FAILED": "No se pudo cargar nada del inicio de contabilidad. Revise su conexión e inténtelo de nuevo."
+      },
+      "AS_OF": "Al {{time}}",
+      "START_HERE": {
+        "TITLE": "Empiece aquí",
+        "HABIT_TODO": "Cada día, vacíe su lista de pendientes.",
+        "HABIT_BANK": "Una vez al mes, haga la revisión bancaria.",
+        "OPEN_GUIDE": "Abrir la guía de ayuda",
+        "DISMISS": "Ocultar Empiece aquí"
+      },
+      "HELP_GUIDE": {
+        "TITLE": "Guía de ayuda",
+        "WORDS_TITLE": "Palabras que verá",
+        "HOW_TITLE": "¿Cómo…?"
+      },
+      "LANES": {
+        "HEADING": "El dinero de un vistazo",
+        "OVERDUE": "Vencido",
+        "NOT_YET_DUE": "Aún no vence",
+        "RECEIVABLES": {
+          "TITLE": "Dinero que le deben",
+          "TERM": "cuentas por cobrar",
+          "LATE_1_30": "1 a 30 días de atraso: {{amount}}",
+          "PAYMENTS_WAITING": "Pagos por conciliar: {{count}}",
+          "PAYMENTS_UNAVAILABLE": "No se pudieron cargar los pagos por conciliar."
+        },
+        "PAYABLES": {
+          "TITLE": "Facturas por pagar",
+          "TERM": "cuentas por pagar",
+          "APPROVED_NOTE": "Adeudado en facturas aprobadas.",
+          "UNAPPROVED": "En espera de aprobación o aún en revisión",
+          "UNAPPROVED_COUNT": "({{count}} facturas)"
+        },
+        "BANK": {
+          "TITLE": "Revisión bancaria",
+          "TERM": "conciliación bancaria",
+          "NO_ACCOUNTS": "Aún no hay ninguna cuenta bancaria configurada para la revisión.",
+          "MASK": "terminada en {{mask}}",
+          "STATEMENT_END": "Fin del último estado de cuenta",
+          "CLOSING_BALANCE": "Saldo del estado de cuenta",
+          "RECONCILED_THROUGH": "Revisado hasta",
+          "NOT_IN_BOOKS": "Líneas bancarias que no están en los libros",
+          "STATUS": {
+            "NOT_STARTED": "Sin empezar",
+            "IN_PROGRESS": "En curso",
+            "SUBMITTED": "En espera de que una segunda persona la apruebe",
+            "FINALIZED": "Hecha",
+            "UNKNOWN": "Desconocido"
+          }
+        }
+      },
+      "REGION": {
+        "LOADING": "Cargando…",
+        "LOAD_FAILED": "Esto no se pudo cargar.",
+        "REFRESH_FAILED": "Esto no se pudo actualizar; son las últimas cifras cargadas.",
+        "DENIED": "Necesita el permiso {{permission}} para ver esto."
+      },
+      "ACTION": {
+        "OPEN_BILLS": "Abrir facturas",
+        "OPEN_BANK_CHECKUP": "Abrir revisión bancaria"
+      },
+      "METHOD": {
+        "CASH": "Efectivo",
+        "CARD": "Tarjeta",
+        "ON_ACCOUNT": "A cuenta",
+        "OTHER": "Otro",
+        "UNKNOWN": "Desconocido"
+      },
+      "TODO": {
+        "TITLE": "Su lista de pendientes",
+        "FILTER_ARIA": "Mostrar pendientes",
+        "FILTER": {
+          "ALL": "Todos ({{count}})",
+          "PAYMENTS": "Pagos de clientes ({{count}})",
+          "BANK": "Banco ({{count}})"
+        },
+        "EMPTY": "Está al día",
+        "EMPTY_FILTER": "No hay nada pendiente con este filtro.",
+        "PICK_ONE": "Elija un pendiente para ver qué hacer.",
+        "WHAT_TO_DO": "Qué hacer",
+        "BADGE": {
+          "PAYMENT": "Pago de cliente",
+          "BANK": "Banco",
+          "APPROVAL": "Por aprobar"
+        },
+        "MORE": {
+          "PAYMENTS": "Hay {{count}} pagos más en espera.",
+          "OPEN_PAYMENTS": "Abrir Aplicar pago",
+          "BANK_LINES": "Hay {{count}} líneas bancarias más que no están en los libros.",
+          "APPROVALS": "Hay {{count}} revisiones más en espera de aprobación.",
+          "OPEN_BANK": "Abrir revisión bancaria"
+        },
+        "SOURCE_FAILED": {
+          "PAYMENTS": "No se pudieron cargar los pagos por conciliar.",
+          "BANK_LINES": "No se pudieron cargar las líneas bancarias que no están en los libros.",
+          "APPROVALS": "No se pudieron cargar las revisiones bancarias por aprobar."
+        },
+        "PAYMENT": {
+          "TITLE": "Pago listo para conciliar",
+          "PANEL_TITLE": "Pago listo para conciliar",
+          "REASON_LINE": "Aún no se concilia con las facturas que paga.",
+          "CUSTOMER": "Cliente",
+          "TAKEN_AGAINST": "Recibido para la factura",
+          "METHOD": "Método",
+          "RECEIVED": "Recibido",
+          "UNAPPLIED": "Por conciliar",
+          "REASONS_ARIA": "Por qué estas facturas",
+          "REASON": {
+            "REMITTANCE_REFERENCE": "Recibido para esta factura",
+            "SAME_CUSTOMER": "Mismo cliente",
+            "EXACT_TOTAL": "El total cuadra exactamente",
+            "UNKNOWN": "Desconocido"
+          },
+          "SUGGESTED_CAPTION": "Facturas que este pago probablemente paga",
+          "COL_INVOICE": "Factura",
+          "COL_BALANCE": "Saldo pendiente",
+          "COL_APPLYING": "Se aplica",
+          "APPLYING": "Se aplica",
+          "LEFT_OVER": "Sobrante",
+          "NO_SUGGESTION": "Este cliente no tiene facturas abiertas que sugerir.",
+          "WHAT_TO_DO": "Compare las facturas sugeridas con lo que le indicó el cliente. La conciliación desde este panel llegará con la página Pagos de clientes; mientras tanto, concílielo en Aplicar pago."
+        },
+        "BANK_LINE": {
+          "TITLE": "Línea bancaria que no está en los libros",
+          "PANEL_TITLE": "Línea bancaria que no está en los libros",
+          "REASON_LINE": "El banco la muestra; los libros todavía no.",
+          "ACCOUNT": "Cuenta",
+          "DATE": "Fecha",
+          "AMOUNT": "Importe",
+          "DESCRIPTION": "Descripción del banco",
+          "WHAT_TO_DO": "Abra la revisión bancaria de esta cuenta y concilie la línea con un asiento, regístrela como comisión bancaria o exclúyala."
+        },
+        "APPROVAL": {
+          "TITLE": "Revisión bancaria por aprobar",
+          "PANEL_TITLE": "Revisión bancaria por aprobar",
+          "REASON_LINE": "Enviada y en espera de una segunda persona.",
+          "ACCOUNT": "Cuenta",
+          "PERIOD": "Periodo del estado de cuenta",
+          "SUBMITTED_BY": "Enviada por",
+          "SUBMITTED_AT": "Enviada",
+          "WHAT_TO_DO": "Revise las cifras y luego apruebe el mes. Debe aprobarla una persona distinta de quien la preparó.",
+          "REVIEW_LOADING": "Comprobando si puede aprobarla…",
+          "REVIEW_FAILED": "No pudimos comprobar si puede aprobarla. Elija de nuevo el pendiente para reintentar.",
+          "CONSEQUENCE": "Aprobar termina la revisión bancaria de este mes para {{account}}. Si un asiento de este mes cambia después, habrá que aprobarla de nuevo.",
+          "APPROVE": "Aprobar el mes",
+          "ERROR": {
+            "SELF_APPROVAL": "No puede aprobar una revisión que usted preparó.",
+            "NOT_SUBMITTED": "Esta revisión ya no está en espera de aprobación. La lista se volvió a cargar.",
+            "NOT_BALANCED": "Esta revisión ya no cuadra. Se volvió a cargar.",
+            "HAS_UNEXPLAINED_ITEMS": "Aún quedan sin explicar {{bank}} líneas bancarias y {{ledger}} asientos. Se volvió a cargar.",
+            "ALREADY_FINALIZED": "Alguien ya aprobó esta revisión. La lista se volvió a cargar.",
+            "OPTIMISTIC_LOCK": "Otra persona cambió esta revisión. Se volvió a cargar; inténtelo de nuevo.",
+            "FORBIDDEN": "Necesita el permiso {{permission}} para aprobar una revisión bancaria.",
+            "OTHER": "No se pudo completar. Inténtelo de nuevo."
+          }
+        }
+      },
+      "MORE_TOOLS": {
+        "TITLE": "Más herramientas de contabilidad",
+        "DESCRIPTION": "Todas las demás páginas de contabilidad que puede abrir: eventos, reglas de contabilización, notas de crédito, pagos a proveedores, informes y más."
+      }
+    },
+    "HELP": {
+      "WHATS_THIS": "¿Qué es esto?",
+      "RECEIVABLES": {
+        "TEXT": "Lo que los clientes aún le deben en facturas abiertas, dividido en vencido y aún no vence. Las cifras vienen directamente de los libros.",
+        "EXAMPLE": "Por ejemplo: una factura que venció la semana pasada y sigue sin pagar cuenta como vencida y aparece en el indicador de 1 a 30 días de atraso."
+      },
+      "PAYABLES": {
+        "TEXT": "Lo que el taller debe a los proveedores en facturas aprobadas, dividido en vencido y aún no vence. Las facturas en espera de aprobación o en revisión aparecen en su propia línea y no se suman.",
+        "EXAMPLE": "Por ejemplo: una factura de refacciones aprobada ayer que vence en dos semanas cuenta como aún no vence."
+      },
+      "TODO": {
+        "TEXT": "Solo lo que necesita a una persona, y solo aquello sobre lo que usted puede actuar. Elija un pendiente para ver los detalles y qué hacer.",
+        "EXAMPLE": "Por ejemplo: un pago con tarjeta de un cliente que aún no se concilia con su factura."
+      },
+      "WHY_MATCH": {
+        "SUMMARY": "¿Por qué conciliar un pago?",
+        "TEXT": "Conciliar indica a los libros qué facturas paga un pago. Mientras no se concilie, la factura parece sin pagar y el cliente parece deber dinero.",
+        "EXAMPLE": "Por ejemplo: un pago con tarjeta de $4,615.00 recibido para INV-2026-01702 paga esa factura una vez conciliado."
+      },
+      "WHY_TWO_PEOPLE": {
+        "SUMMARY": "¿Por qué dos personas?",
+        "TEXT": "Una persona prepara la revisión bancaria y otra la aprueba. Un segundo par de ojos detecta errores y mantiene los libros confiables.",
+        "EXAMPLE": "Por ejemplo: un auxiliar concilia las líneas bancarias del mes y la envía; un contralor revisa las cifras y aprueba el mes."
+      },
+      "GLOSSARY": {
+        "BILL": {
+          "WORD": "Factura por pagar",
+          "TERM": "factura de proveedor",
+          "MEANING": "Lo que un proveedor le envía para que le pague."
+        },
+        "INVOICE": {
+          "WORD": "Factura",
+          "TERM": "factura de cliente",
+          "MEANING": "Lo que usted envía a un cliente para que le pague."
+        },
+        "MATCHING": {
+          "WORD": "Conciliar",
+          "TERM": "aplicar un pago",
+          "MEANING": "Indicar qué facturas paga un pago."
+        },
+        "WAITING_DEPOSIT": {
+          "WORD": "Por depositar",
+          "TERM": "fondos no depositados",
+          "MEANING": "El efectivo y los cheques recibidos que aún no están en el banco."
+        },
+        "CREDIT": {
+          "WORD": "Crédito",
+          "TERM": "crédito de cliente",
+          "MEANING": "Dinero que un cliente puede usar en una factura posterior."
+        },
+        "BANK_CHECKUP": {
+          "WORD": "Revisión bancaria",
+          "TERM": "conciliación bancaria",
+          "MEANING": "Comprobar que el estado de cuenta del banco y los libros coinciden."
+        },
+        "REVERSE": {
+          "WORD": "Revertir",
+          "TERM": "asiento de reversión",
+          "MEANING": "Deshacer un asiento con otro igual y opuesto, conservando ambos en el registro."
+        },
+        "MONTH_CLOSED": {
+          "WORD": "Mes cerrado",
+          "TERM": "periodo cerrado",
+          "MEANING": "Un mes cuyos asientos ya no pueden cambiar."
+        }
+      },
+      "HOW": {
+        "PAY_VENDOR": {
+          "QUESTION": "¿Cómo pago a un proveedor?",
+          "ANSWER": "Abra Pagos a proveedores y elija Nuevo pago. Elija el proveedor y las facturas aprobadas que va a pagar, revise el importe y confirme.",
+          "EXAMPLE": "Por ejemplo: pagar en un solo pago dos facturas de refacciones del mismo proveedor.",
+          "LINK": "Abrir pagos a proveedores"
+        }
+      }
     }
   },
   "PRODUCT": {

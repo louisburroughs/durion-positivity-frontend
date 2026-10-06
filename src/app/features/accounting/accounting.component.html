@@ -1,0 +1,36 @@
+<div class="accounting-shell">
+  <div class="accounting-shell__bar">
+    <nav class="accounting-subnav" [attr.aria-label]="'ACCOUNTING.SHELL.NAV.ARIA' | translate">
+      <ul class="accounting-subnav__list">
+        @for (entry of visibleEntries(); track entry.route) {
+          <li>
+            <a
+              class="accounting-subnav__link"
+              [routerLink]="link(entry)"
+              routerLinkActive="accounting-subnav__link--active"
+              [routerLinkActiveOptions]="{ exact: entry.route === '' }"
+              ariaCurrentWhenActive="page"
+              [attr.data-route]="entry.route"
+            >
+              {{ entry.labelKey | translate }}
+              @if (showTerms() && entry.termKey) {
+                <span class="accounting-subnav__term">({{ entry.termKey | translate }})</span>
+              }
+            </a>
+          </li>
+        }
+      </ul>
+    </nav>
+    <label class="terms-switch">
+      <input
+        type="checkbox"
+        class="terms-switch__input"
+        data-testid="show-terms"
+        [checked]="showTerms()"
+        (change)="onShowTermsChange($event)"
+      />
+      <span>{{ 'ACCOUNTING.SHELL.SHOW_TERMS' | translate }}</span>
+    </label>
+  </div>
+  <router-outlet />
+</div>

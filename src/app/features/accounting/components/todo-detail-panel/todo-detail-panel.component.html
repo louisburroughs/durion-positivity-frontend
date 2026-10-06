@@ -1,0 +1,206 @@
+@let empty = 'COMMON.EMPTY_VALUE' | translate;
+<section class="todo-panel" aria-labelledby="todo-panel-heading" data-testid="todo-panel">
+  @if (payment(); as payment) {
+    <h3 id="todo-panel-heading" class="todo-panel__heading" tabindex="-1" #panelHeading>
+      {{ 'ACCOUNTING.HOME.TODO.PAYMENT.PANEL_TITLE' | translate }}
+    </h3>
+    <dl class="todo-panel__facts">
+      <div>
+        <dt>{{ 'ACCOUNTING.HOME.TODO.PAYMENT.CUSTOMER' | translate }}</dt>
+        <dd>
+          {{ payment.customerName ?? empty }}
+          @if (payment.customerReference) {
+            <span class="reference">{{ payment.customerReference }}</span>
+          }
+        </dd>
+      </div>
+      <div>
+        <dt>{{ 'ACCOUNTING.HOME.TODO.PAYMENT.TAKEN_AGAINST' | translate }}</dt>
+        <dd class="reference">{{ payment.sourceInvoiceNumber ?? empty }}</dd>
+      </div>
+      <div>
+        <dt>{{ 'ACCOUNTING.HOME.TODO.PAYMENT.METHOD' | translate }}</dt>
+        <dd>
+          @if (methodKey(payment.method); as key) {
+            {{ key | translate }}
+          } @else {
+            {{ empty }}
+          }
+        </dd>
+      </div>
+      <div>
+        <dt>{{ 'ACCOUNTING.HOME.TODO.PAYMENT.RECEIVED' | translate }}</dt>
+        <dd>{{ (payment.receivedAt | date: 'mediumDate') ?? empty }}</dd>
+      </div>
+      <div>
+        <dt>{{ 'ACCOUNTING.HOME.TODO.PAYMENT.UNAPPLIED' | translate }}</dt>
+        <dd class="numeric">{{ payment.unappliedAmount | money: payment.currency }}</dd>
+      </div>
+    </dl>
+
+    @if (payment.reasons.length > 0) {
+      <ul class="chip-list" [attr.aria-label]="'ACCOUNTING.HOME.TODO.PAYMENT.REASONS_ARIA' | translate">
+        @for (reason of payment.reasons; track reason) {
+          <li class="status-badge" [attr.data-reason]="reason">{{ reasonKey(reason) | translate }}</li>
+        }
+      </ul>
+    }
+
+    @if (payment.suggestedInvoices.length > 0) {
+      <div class="table-scroll-container">
+        <table class="ledger-table todo-panel__table">
+          <caption>{{ 'ACCOUNTING.HOME.TODO.PAYMENT.SUGGESTED_CAPTION' | translate }}</caption>
+          <thead>
+            <tr>
+              <th scope="col">{{ 'ACCOUNTING.HOME.TODO.PAYMENT.COL_INVOICE' | translate }}</th>
+              <th scope="col" class="numeric">{{ 'ACCOUNTING.HOME.TODO.PAYMENT.COL_BALANCE' | translate }}</th>
+              <th scope="col" class="numeric">{{ 'ACCOUNTING.HOME.TODO.PAYMENT.COL_APPLYING' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (invoice of payment.suggestedInvoices; track $index) {
+              <tr>
+                <td class="reference">{{ invoice.invoiceNumber ?? empty }}</td>
+                <td class="numeric">{{ invoice.balanceDue | money: payment.currency }}</td>
+                <td class="numeric">{{ invoice.suggestedAmount | money: payment.currency }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <dl class="todo-panel__facts">
+        <div>
+          <dt>{{ 'ACCOUNTING.HOME.TODO.PAYMENT.APPLYING' | translate }}</dt>
+          <dd class="numeric">{{ payment.suggestedTotal | money: payment.currency }}</dd>
+        </div>
+        <div>
+          <dt>{{ 'ACCOUNTING.HOME.TODO.PAYMENT.LEFT_OVER' | translate }}</dt>
+          <dd class="numeric" data-testid="left-over">{{ (payment.leftOver | money: payment.currency) ?? empty }}</dd>
+        </div>
+      </dl>
+    } @else {
+      <p class="hint-text">{{ 'ACCOUNTING.HOME.TODO.PAYMENT.NO_SUGGESTION' | translate }}</p>
+    }
+
+    <h4 class="todo-panel__subheading">{{ 'ACCOUNTING.HOME.TODO.WHAT_TO_DO' | translate }}</h4>
+    <p>{{ 'ACCOUNTING.HOME.TODO.PAYMENT.WHAT_TO_DO' | translate }}</p>
+    <app-help-disclosure
+      summaryKey="ACCOUNTING.HELP.WHY_MATCH.SUMMARY"
+      textKey="ACCOUNTING.HELP.WHY_MATCH.TEXT"
+      exampleKey="ACCOUNTING.HELP.WHY_MATCH.EXAMPLE"
+    />
+  }
+
+  @if (line(); as line) {
+    <h3 id="todo-panel-heading" class="todo-panel__heading" tabindex="-1" #panelHeading>
+      {{ 'ACCOUNTING.HOME.TODO.BANK_LINE.PANEL_TITLE' | translate }}
+    </h3>
+    <dl class="todo-panel__facts">
+      <div>
+        <dt>{{ 'ACCOUNTING.HOME.TODO.BANK_LINE.ACCOUNT' | translate }}</dt>
+        <dd>
+          {{ line.accountName ?? empty }}
+          @if (showTerms() && line.accountCode) {
+            <span class="reference">{{ line.accountCode }}</span>
+          }
+        </dd>
+      </div>
+      <div>
+        <dt>{{ 'ACCOUNTING.HOME.TODO.BANK_LINE.DATE' | translate }}</dt>
+        <dd>{{ (toDate(line.transactionDate) | date: 'mediumDate') ?? empty }}</dd>
+      </div>
+      <div>
+        <dt>{{ 'ACCOUNTING.HOME.TODO.BANK_LINE.AMOUNT' | translate }}</dt>
+        <dd class="numeric">{{ (line.signedAmount | money: line.currency) ?? empty }}</dd>
+      </div>
+      <div>
+        <dt>{{ 'ACCOUNTING.HOME.TODO.BANK_LINE.DESCRIPTION' | translate }}</dt>
+        <dd data-testid="bank-description">{{ line.description ?? empty }}</dd>
+      </div>
+    </dl>
+    <h4 class="todo-panel__subheading">{{ 'ACCOUNTING.HOME.TODO.WHAT_TO_DO' | translate }}</h4>
+    <p>{{ 'ACCOUNTING.HOME.TODO.BANK_LINE.WHAT_TO_DO' | translate }}</p>
+    <div class="form-actions">
+      <a class="btn btn--accent todo-panel__action" [routerLink]="bankCheckupLink(line.glAccountId)">
+        {{ 'ACCOUNTING.HOME.ACTION.OPEN_BANK_CHECKUP' | translate }}
+      </a>
+    </div>
+  }
+
+  @if (checkup(); as checkup) {
+    <h3 id="todo-panel-heading" class="todo-panel__heading" tabindex="-1" #panelHeading>
+      {{ 'ACCOUNTING.HOME.TODO.APPROVAL.PANEL_TITLE' | translate }}
+    </h3>
+    <dl class="todo-panel__facts">
+      <div>
+        <dt>{{ 'ACCOUNTING.HOME.TODO.APPROVAL.ACCOUNT' | translate }}</dt>
+        <dd>
+          {{ checkup.accountName ?? empty }}
+          @if (showTerms() && checkup.accountCode) {
+            <span class="reference">{{ checkup.accountCode }}</span>
+          }
+        </dd>
+      </div>
+      <div>
+        <dt>{{ 'ACCOUNTING.HOME.TODO.APPROVAL.PERIOD' | translate }}</dt>
+        <dd>
+          {{ (toDate(checkup.statementStartDate) | date: 'mediumDate') ?? empty }} –
+          {{ (toDate(checkup.statementEndDate) | date: 'mediumDate') ?? empty }}
+        </dd>
+      </div>
+      <div>
+        <dt>{{ 'ACCOUNTING.HOME.TODO.APPROVAL.SUBMITTED_BY' | translate }}</dt>
+        <dd data-testid="submitted-by">{{ checkup.submittedBy ?? ('COMMON.NOT_AVAILABLE' | translate) }}</dd>
+      </div>
+      <div>
+        <dt>{{ 'ACCOUNTING.HOME.TODO.APPROVAL.SUBMITTED_AT' | translate }}</dt>
+        <dd>{{ (checkup.submittedAt | date: 'medium') ?? empty }}</dd>
+      </div>
+    </dl>
+    <h4 class="todo-panel__subheading">{{ 'ACCOUNTING.HOME.TODO.WHAT_TO_DO' | translate }}</h4>
+    <p>{{ 'ACCOUNTING.HOME.TODO.APPROVAL.WHAT_TO_DO' | translate }}</p>
+
+    @if (reviewStatus() === 'PENDING') {
+      <p class="pending-note" role="status">{{ 'ACCOUNTING.HOME.TODO.APPROVAL.REVIEW_LOADING' | translate }}</p>
+    } @else if (reviewStatus() === 'FAILED') {
+      <p class="field-error">{{ 'ACCOUNTING.HOME.TODO.APPROVAL.REVIEW_FAILED' | translate }}</p>
+    }
+
+    @if (canApprove()) {
+      <p class="todo-panel__consequence" id="approve-consequence">
+        {{ 'ACCOUNTING.HOME.TODO.APPROVAL.CONSEQUENCE' | translate: { account: checkup.accountName ?? empty } }}
+      </p>
+      @if (blockingReasons().length > 0) {
+        <ul class="reason-list" id="approve-reasons" data-testid="approve-reasons">
+          @for (reason of blockingReasons(); track reason) {
+            <li [attr.data-reason]="reason">
+              {{ readinessReasonKey(reason) | translate: {
+                code: reason,
+                bank: review()?.readiness?.countUnexplainedBank ?? 0,
+                ledger: review()?.readiness?.countUnexplainedLedger ?? 0
+              } }}
+            </li>
+          }
+        </ul>
+      }
+      <div class="form-actions">
+        <button
+          type="button"
+          class="btn btn--accent todo-panel__action"
+          data-testid="approve-month"
+          [attr.aria-disabled]="approveEnabled() ? null : 'true'"
+          [attr.aria-describedby]="blockingReasons().length > 0 ? 'approve-consequence approve-reasons' : 'approve-consequence'"
+          (click)="onApprove()"
+        >
+          {{ 'ACCOUNTING.HOME.TODO.APPROVAL.APPROVE' | translate }}
+        </button>
+      </div>
+    }
+  }
+
+  <div class="todo-panel__outcome" aria-live="polite" data-testid="approve-outcome">
+    @if (approveMessageKey(); as key) {
+      <p class="field-error">{{ key | translate: approveMessageParams() }}</p>
+    }
+  </div>
+</section>

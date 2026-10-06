@@ -166,6 +166,8 @@ export const ten05 = (p: Project): ArchRule =>
 export const TEN06_TENANT_SCOPED = (p: Project): RegExp[] => [
   file(p, 'core/services/auth.service.ts'),
   file(p, 'features/shell/services/chat-history.store.ts'),
+  // Accounting workspace preferences (CAP:550 S4): keyed durion.accounting.prefs:<tid>:<sub>.
+  file(p, 'features/accounting/services/accounting-preferences.service.ts'),
 ];
 
 export const TEN06_PREFERENCE = (p: Project): RegExp[] => [

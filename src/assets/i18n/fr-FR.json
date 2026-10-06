@@ -5198,6 +5198,269 @@
         "AMOUNT_PRECISION_EXCEEDS_CURRENCY": "Le montant a plus de décimales que la devise ne le permet.",
         "OPTIMISTIC_LOCK": "Quelqu’un d’autre a modifié ce rapprochement. Il a été rechargé ; réessayez."
       }
+    },
+    "SHELL": {
+      "NAV": {
+        "ARIA": "Sections de la comptabilité",
+        "HOME": "Accueil",
+        "BILLS": "Factures à payer",
+        "BILLS_TERM": "comptes fournisseurs",
+        "BANK": "Banque",
+        "BANK_TERM": "rapprochement bancaire",
+        "MONTH_END": "Fin de mois",
+        "MONTH_END_TERM": "clôture de période"
+      },
+      "SHOW_TERMS": "Afficher les termes comptables"
+    },
+    "HOME": {
+      "OVERLINE": "Comptabilité",
+      "TITLE": "Accueil de la comptabilité",
+      "STANDFIRST": "Voyez ce que les clients vous doivent, ce que l’atelier doit et où en est la vérification bancaire, et réglez ce qui demande une personne.",
+      "PERIOD_CHIP": {
+        "OPEN": "{{month}} est ouvert",
+        "CLOSED": "{{month}} est clôturé"
+      },
+      "HELP_BUTTON": "Aide",
+      "REFRESH": "Actualiser",
+      "RETRY": "Réessayer",
+      "LOADING": "Chargement de l’accueil de la comptabilité…",
+      "ERROR": {
+        "ALL_FAILED": "Rien n’a pu être chargé sur l’accueil de la comptabilité. Vérifiez votre connexion et réessayez."
+      },
+      "AS_OF": "Au {{time}}",
+      "START_HERE": {
+        "TITLE": "Commencez ici",
+        "HABIT_TODO": "Chaque jour, videz votre liste de tâches.",
+        "HABIT_BANK": "Une fois par mois, faites la vérification bancaire.",
+        "OPEN_GUIDE": "Ouvrir le guide d’aide",
+        "DISMISS": "Masquer Commencez ici"
+      },
+      "HELP_GUIDE": {
+        "TITLE": "Guide d’aide",
+        "WORDS_TITLE": "Les mots que vous verrez",
+        "HOW_TITLE": "Comment faire…"
+      },
+      "LANES": {
+        "HEADING": "L’argent en un coup d’œil",
+        "OVERDUE": "En retard",
+        "NOT_YET_DUE": "Pas encore dû",
+        "RECEIVABLES": {
+          "TITLE": "Argent qui vous est dû",
+          "TERM": "comptes clients",
+          "LATE_1_30": "1 à 30 jours de retard : {{amount}}",
+          "PAYMENTS_WAITING": "Paiements en attente de rapprochement : {{count}}",
+          "PAYMENTS_UNAVAILABLE": "Les paiements en attente de rapprochement n’ont pas pu être chargés."
+        },
+        "PAYABLES": {
+          "TITLE": "Factures à payer",
+          "TERM": "comptes fournisseurs",
+          "APPROVED_NOTE": "Dû sur les factures approuvées.",
+          "UNAPPROVED": "En attente d’approbation ou encore en vérification",
+          "UNAPPROVED_COUNT": "({{count}} factures)"
+        },
+        "BANK": {
+          "TITLE": "Vérification bancaire",
+          "TERM": "rapprochement bancaire",
+          "NO_ACCOUNTS": "Aucun compte bancaire n’est encore configuré pour la vérification.",
+          "MASK": "se terminant par {{mask}}",
+          "STATEMENT_END": "Fin du dernier relevé",
+          "CLOSING_BALANCE": "Solde du relevé",
+          "RECONCILED_THROUGH": "Vérifié jusqu’au",
+          "NOT_IN_BOOKS": "Lignes bancaires absentes des livres",
+          "STATUS": {
+            "NOT_STARTED": "Pas commencée",
+            "IN_PROGRESS": "En cours",
+            "SUBMITTED": "En attente d’approbation par une deuxième personne",
+            "FINALIZED": "Terminée",
+            "UNKNOWN": "Inconnu"
+          }
+        }
+      },
+      "REGION": {
+        "LOADING": "Chargement…",
+        "LOAD_FAILED": "Ceci n’a pas pu être chargé.",
+        "REFRESH_FAILED": "Ceci n’a pas pu être actualisé; ce sont les derniers chiffres chargés.",
+        "DENIED": "Il vous faut l’autorisation {{permission}} pour voir ceci."
+      },
+      "ACTION": {
+        "OPEN_BILLS": "Ouvrir les factures",
+        "OPEN_BANK_CHECKUP": "Ouvrir la vérification bancaire"
+      },
+      "METHOD": {
+        "CASH": "Comptant",
+        "CARD": "Carte",
+        "ON_ACCOUNT": "Porté au compte",
+        "OTHER": "Autre",
+        "UNKNOWN": "Inconnu"
+      },
+      "TODO": {
+        "TITLE": "Votre liste de tâches",
+        "FILTER_ARIA": "Afficher les tâches",
+        "FILTER": {
+          "ALL": "Toutes ({{count}})",
+          "PAYMENTS": "Paiements clients ({{count}})",
+          "BANK": "Banque ({{count}})"
+        },
+        "EMPTY": "Vous êtes à jour",
+        "EMPTY_FILTER": "Rien à faire pour ce filtre.",
+        "PICK_ONE": "Choisissez une tâche pour voir quoi faire.",
+        "WHAT_TO_DO": "Quoi faire",
+        "BADGE": {
+          "PAYMENT": "Paiement client",
+          "BANK": "Banque",
+          "APPROVAL": "À approuver"
+        },
+        "MORE": {
+          "PAYMENTS": "{{count}} autres paiements sont en attente.",
+          "OPEN_PAYMENTS": "Ouvrir Appliquer un paiement",
+          "BANK_LINES": "{{count}} autres lignes bancaires sont absentes des livres.",
+          "APPROVALS": "{{count}} autres vérifications attendent une approbation.",
+          "OPEN_BANK": "Ouvrir la vérification bancaire"
+        },
+        "SOURCE_FAILED": {
+          "PAYMENTS": "Les paiements en attente de rapprochement n’ont pas pu être chargés.",
+          "BANK_LINES": "Les lignes bancaires absentes des livres n’ont pas pu être chargées.",
+          "APPROVALS": "Les vérifications bancaires à approuver n’ont pas pu être chargées."
+        },
+        "PAYMENT": {
+          "TITLE": "Paiement prêt à rapprocher",
+          "PANEL_TITLE": "Paiement prêt à rapprocher",
+          "REASON_LINE": "Pas encore rapproché des factures qu’il paie.",
+          "CUSTOMER": "Client",
+          "TAKEN_AGAINST": "Reçu pour la facture",
+          "METHOD": "Mode",
+          "RECEIVED": "Reçu le",
+          "UNAPPLIED": "En attente de rapprochement",
+          "REASONS_ARIA": "Pourquoi ces factures",
+          "REASON": {
+            "REMITTANCE_REFERENCE": "Reçu pour cette facture",
+            "SAME_CUSTOMER": "Même client",
+            "EXACT_TOTAL": "Le total correspond exactement",
+            "UNKNOWN": "Inconnu"
+          },
+          "SUGGESTED_CAPTION": "Factures que ce paiement paie probablement",
+          "COL_INVOICE": "Facture",
+          "COL_BALANCE": "Reste dû",
+          "COL_APPLYING": "Appliqué",
+          "APPLYING": "Appliqué",
+          "LEFT_OVER": "Reste",
+          "NO_SUGGESTION": "Ce client n’a aucune facture ouverte à suggérer.",
+          "WHAT_TO_DO": "Comparez les factures suggérées avec ce que le client vous a indiqué. Le rapprochement depuis ce panneau arrivera avec la page Paiements clients; d’ici là, rapprochez-le dans Appliquer un paiement."
+        },
+        "BANK_LINE": {
+          "TITLE": "Ligne bancaire absente des livres",
+          "PANEL_TITLE": "Ligne bancaire absente des livres",
+          "REASON_LINE": "La banque l’affiche; les livres pas encore.",
+          "ACCOUNT": "Compte",
+          "DATE": "Date",
+          "AMOUNT": "Montant",
+          "DESCRIPTION": "Description de la banque",
+          "WHAT_TO_DO": "Ouvrez la vérification bancaire de ce compte, puis rapprochez la ligne d’une écriture, enregistrez-la comme frais bancaires ou excluez-la."
+        },
+        "APPROVAL": {
+          "TITLE": "Vérification bancaire à approuver",
+          "PANEL_TITLE": "Vérification bancaire à approuver",
+          "REASON_LINE": "Soumise et en attente d’une deuxième personne.",
+          "ACCOUNT": "Compte",
+          "PERIOD": "Période du relevé",
+          "SUBMITTED_BY": "Soumise par",
+          "SUBMITTED_AT": "Soumise le",
+          "WHAT_TO_DO": "Vérifiez les chiffres, puis approuvez le mois. Une personne autre que celle qui l’a préparée doit l’approuver.",
+          "REVIEW_LOADING": "Vérification de votre droit d’approuver…",
+          "REVIEW_FAILED": "Impossible de vérifier si vous pouvez l’approuver. Choisissez de nouveau la tâche pour réessayer.",
+          "CONSEQUENCE": "L’approbation termine la vérification bancaire de ce mois pour {{account}}. Si une écriture de ce mois change plus tard, il faudra l’approuver de nouveau.",
+          "APPROVE": "Approuver le mois",
+          "ERROR": {
+            "SELF_APPROVAL": "Vous ne pouvez pas approuver une vérification que vous avez préparée.",
+            "NOT_SUBMITTED": "Cette vérification n’attend plus d’approbation. La liste a été rechargée.",
+            "NOT_BALANCED": "Cette vérification n’est plus équilibrée. Elle a été rechargée.",
+            "HAS_UNEXPLAINED_ITEMS": "{{bank}} lignes bancaires et {{ledger}} écritures restent inexpliquées. Elle a été rechargée.",
+            "ALREADY_FINALIZED": "Quelqu’un a déjà approuvé cette vérification. La liste a été rechargée.",
+            "OPTIMISTIC_LOCK": "Quelqu’un d’autre a modifié cette vérification. Elle a été rechargée; réessayez.",
+            "FORBIDDEN": "Il vous faut l’autorisation {{permission}} pour approuver une vérification bancaire.",
+            "OTHER": "L’opération n’a pas pu être effectuée. Réessayez."
+          }
+        }
+      },
+      "MORE_TOOLS": {
+        "TITLE": "Autres outils comptables",
+        "DESCRIPTION": "Toutes les autres pages comptables que vous pouvez ouvrir : événements, règles d’imputation, notes de crédit, paiements fournisseurs, rapports et plus."
+      }
+    },
+    "HELP": {
+      "WHATS_THIS": "Qu’est-ce que c’est?",
+      "RECEIVABLES": {
+        "TEXT": "Ce que les clients vous doivent encore sur les factures ouvertes, réparti entre en retard et pas encore dû. Les chiffres viennent directement des livres.",
+        "EXAMPLE": "Par exemple : une facture échue la semaine dernière et toujours impayée compte comme en retard et apparaît dans l’indicateur 1 à 30 jours de retard."
+      },
+      "PAYABLES": {
+        "TEXT": "Ce que l’atelier doit aux fournisseurs sur les factures approuvées, réparti entre en retard et pas encore dû. Les factures en attente d’approbation ou en vérification figurent sur leur propre ligne et ne sont pas additionnées.",
+        "EXAMPLE": "Par exemple : une facture de pièces approuvée hier et due dans deux semaines compte comme pas encore due."
+      },
+      "TODO": {
+        "TEXT": "Seulement ce qui demande une personne, et seulement ce sur quoi vous pouvez agir. Choisissez une tâche pour voir les détails et quoi faire.",
+        "EXAMPLE": "Par exemple : un paiement par carte d’un client qui n’a pas encore été rapproché de sa facture."
+      },
+      "WHY_MATCH": {
+        "SUMMARY": "Pourquoi rapprocher un paiement?",
+        "TEXT": "Le rapprochement indique aux livres quelles factures un paiement règle. Tant qu’il n’est pas rapproché, la facture semble impayée et le client semble devoir de l’argent.",
+        "EXAMPLE": "Par exemple : un paiement par carte de 4 615,00 $ reçu pour INV-2026-01702 règle cette facture une fois rapproché."
+      },
+      "WHY_TWO_PEOPLE": {
+        "SUMMARY": "Pourquoi deux personnes?",
+        "TEXT": "Une personne prépare la vérification bancaire et une deuxième l’approuve. Un deuxième regard repère les erreurs et garde les livres fiables.",
+        "EXAMPLE": "Par exemple : un commis rapproche les lignes bancaires du mois et soumet; un contrôleur revoit les chiffres et approuve le mois."
+      },
+      "GLOSSARY": {
+        "BILL": {
+          "WORD": "Facture à payer",
+          "TERM": "facture fournisseur",
+          "MEANING": "Ce qu’un fournisseur vous envoie pour être payé."
+        },
+        "INVOICE": {
+          "WORD": "Facture",
+          "TERM": "facture client",
+          "MEANING": "Ce que vous envoyez à un client pour être payé."
+        },
+        "MATCHING": {
+          "WORD": "Rapprochement",
+          "TERM": "application d’un paiement",
+          "MEANING": "Indiquer quelles factures un paiement règle."
+        },
+        "WAITING_DEPOSIT": {
+          "WORD": "En attente de dépôt",
+          "TERM": "fonds non déposés",
+          "MEANING": "L’argent comptant et les chèques reçus mais pas encore à la banque."
+        },
+        "CREDIT": {
+          "WORD": "Crédit",
+          "TERM": "crédit client",
+          "MEANING": "Un montant qu’un client peut utiliser sur une facture future."
+        },
+        "BANK_CHECKUP": {
+          "WORD": "Vérification bancaire",
+          "TERM": "rapprochement bancaire",
+          "MEANING": "Vérifier que le relevé de la banque et les livres concordent."
+        },
+        "REVERSE": {
+          "WORD": "Contrepasser",
+          "TERM": "écriture de contrepassation",
+          "MEANING": "Annuler une écriture par une écriture égale et opposée, en gardant les deux au dossier."
+        },
+        "MONTH_CLOSED": {
+          "WORD": "Mois clôturé",
+          "TERM": "période clôturée",
+          "MEANING": "Un mois dont les écritures ne peuvent plus changer."
+        }
+      },
+      "HOW": {
+        "PAY_VENDOR": {
+          "QUESTION": "Comment payer un fournisseur?",
+          "ANSWER": "Ouvrez Paiements fournisseurs et choisissez Nouveau paiement. Choisissez le fournisseur et les factures approuvées que vous payez, vérifiez le montant, puis confirmez.",
+          "EXAMPLE": "Par exemple : payer en un seul paiement deux factures de pièces du même fournisseur.",
+          "LINK": "Ouvrir les paiements fournisseurs"
+        }
+      }
     }
   },
   "PRODUCT": {

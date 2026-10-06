@@ -18,6 +18,9 @@ const ROUTES = [
   '/app/crm',
   '/app/workexec/estimates/new',
   '/app/workexec/workorders/WO-123',
+  // Accounting home (CAP:550 S4). Rendered-DOM axe coverage lives in
+  // src/app/features/accounting/pages/home/accounting-home-page.a11y.spec.ts.
+  '/app/accounting',
   '/app/accounting/events',
   '/app/accounting/vendor-payments',
   '/app/people/employees/EMP-123',

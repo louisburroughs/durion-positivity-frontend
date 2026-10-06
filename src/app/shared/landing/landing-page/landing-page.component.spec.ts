@@ -1,8 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Router, provideRouter } from '@angular/router';
+import { provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { of } from 'rxjs';
-import { vi, describe, beforeEach, it, expect } from 'vitest';
+import { describe, beforeEach, it, expect } from 'vitest';
 
 import { AuthService } from '../../../core/services/auth.service';
 import { LandingPageComponent } from './landing-page.component';
@@ -33,7 +33,6 @@ const CONFIG: LandingPageConfig = {
 describe('LandingPageComponent', () => {
   let component: LandingPageComponent;
   let fixture: ComponentFixture<LandingPageComponent>;
-  let router: Router;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -41,7 +40,6 @@ describe('LandingPageComponent', () => {
       providers: [provideRouter([])],
     }).compileComponents();
 
-    router = TestBed.inject(Router);
     fixture = TestBed.createComponent(LandingPageComponent);
     component = fixture.componentInstance;
     component.config = CONFIG;
@@ -56,71 +54,9 @@ describe('LandingPageComponent', () => {
     expect(component.hasGuided()).toBe(true);
   });
 
-  it('renders a selector only for sections with a record kind', () => {
-    expect(component.hasSelector(CONFIG.sections[0])).toBe(true);
-    expect(component.hasSelector(CONFIG.sections[1])).toBe(false);
-  });
-
-  it('gates guided cards until a record is selected', () => {
-    const section = CONFIG.sections[0];
-    const guided = section.cards[1];
-    expect(component.isPending(section, guided)).toBe(true);
-
-    component.onRecordSelected(section, 'EST-1');
-    expect(component.isPending(section, guided)).toBe(false);
-
-    component.onRecordCleared(section);
-    expect(component.isPending(section, guided)).toBe(true);
-  });
-
-  it('navigates a guided card using the selected record id', () => {
-    const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
-    const section = CONFIG.sections[0];
-    const guided = section.cards[1];
-
-    // No-op while pending.
-    component.launchGuided(section, guided as never);
-    expect(navigate).not.toHaveBeenCalled();
-
-    component.onRecordSelected(section, 'EST-1');
-    component.launchGuided(section, guided as never);
-    expect(navigate).toHaveBeenCalledWith(['/x', 'EST-1']);
-  });
-
-  it('keeps a card with a secondary input pending until both values are set', () => {
-    const section: (typeof CONFIG.sections)[number] = {
-      titleKey: 'SEC.C',
-      descriptionKey: 'D',
-      recordKind: 'invoice',
-      cards: [
-        {
-          kind: 'guided',
-          icon: 'undo',
-          titleKey: 'C.VOID',
-          descriptionKey: 'D',
-          ctaKey: 'CTA',
-          secondary: { labelKey: 'PAY', placeholderKey: 'PAY.PH' },
-          buildCommands: (id, pid) => ['/inv', id, 'payments', pid ?? '', 'void'],
-        },
-      ],
-    };
-    component.config = { ...CONFIG, sections: [section] };
-    const card = section.cards[0];
-
-    component.onRecordSelected(section, 'INV-1');
-    expect(component.isPending(section, card)).toBe(true);
-
-    component.onSecondaryInput(component.cardKey(section, card), 'PAY-9');
-    expect(component.isPending(section, card)).toBe(false);
-
-    const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
-    component.launchGuided(section, card as never);
-    expect(navigate).toHaveBeenCalledWith(['/inv', 'INV-1', 'payments', 'PAY-9', 'void']);
-  });
-
-  it('resolves selector placeholder from the record kind by default', () => {
-    expect(component.selectorPlaceholderKey(CONFIG.sections[0])).toBe('LANDING.KIND.ESTIMATE.PLACEHOLDER');
-    expect(component.selectorMode(CONFIG.sections[0])).toBe('search');
+  it('renders the extracted sections block with the config sections', () => {
+    const host = fixture.nativeElement as HTMLElement;
+    expect(host.querySelectorAll('app-landing-sections .landing-section').length).toBe(2);
   });
 });
 
@@ -243,27 +179,6 @@ describe('LandingPageComponent access filtering', () => {
 
     const nothing = await renderWith([]);
     expect(nothing.hasHeroActions()).toBe(false);
-  });
-
-  it('keys entered state to the card, not to its position in the filtered list', async () => {
-    // Filtering shifts rendered positions: with 'a:read' withheld, SEC.WRITE
-    // renders first. Index-keyed state would file its record under the slot
-    // SEC.OPEN occupies in the config and hand it to the wrong section once
-    // visibility changed (a token refresh is enough).
-    const component = await renderWith(['a:write']);
-    const [open, write] = GATED_CONFIG.sections;
-
-    expect(component.visibleSections()[0].titleKey).toBe('SEC.OPEN');
-    component.onRecordSelected(write, 'WO-1');
-
-    expect(component.selectedId(write)).toBe('WO-1');
-    expect(component.selectedId(open)).toBe('');
-
-    // Secondary values are keyed the same way, so two cards sharing a position
-    // across sections cannot collide.
-    expect(component.cardKey(write, write.cards[0])).not.toBe(
-      component.cardKey(open, open.cards[0]),
-    );
   });
 
   it('falls back to showing everything for a token without a perm_bits claim', async () => {
