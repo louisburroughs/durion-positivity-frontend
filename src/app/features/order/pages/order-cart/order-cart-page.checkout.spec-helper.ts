@@ -1,7 +1,6 @@
-import { vi } from 'vitest';
 import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
+import { ActivatedRoute, ParamMap, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { TranslateModule, TranslateService, TranslationObject } from '@ngx-translate/core';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { CheckoutRequest, SalesOrderResponse, SetCartCustomerRequest } from '@durion-sdk/order';
@@ -65,6 +64,8 @@ export interface CartHarness {
   root: HTMLElement;
   mocks: CartMocks;
   navigate: ReturnType<typeof vi.spyOn>;
+  /** Drives the route's `orderId`, as a navigation to another cart that reuses the page instance. */
+  paramMap$: BehaviorSubject<ParamMap>;
   /** Re-renders after a signal change. */
   render(): void;
   q<T extends Element = HTMLElement>(testId: string): T | null;
@@ -79,6 +80,7 @@ export function renderCart(
   permissions: readonly string[] | null = ALL_CART_PERMISSIONS,
 ): CartHarness {
   const granted = signal<ReadonlySet<string> | null>(permissions ? new Set(permissions) : null);
+  const paramMap$ = new BehaviorSubject<ParamMap>(convertToParamMap({ orderId: cart.orderId }));
   const mocks: CartMocks = {
     getOrder: vi.fn<(orderId: string) => Observable<SalesOrderResponse>>().mockReturnValue(of(cart)),
     createCart: vi.fn(),
@@ -105,7 +107,7 @@ export function renderCart(
       { provide: CUSTOMER_LOOKUP_SOURCE, useValue: { search: mocks.search, getById: () => of(null) } },
       {
         provide: ActivatedRoute,
-        useValue: { paramMap: new BehaviorSubject(convertToParamMap({ orderId: cart.orderId })).asObservable() },
+        useValue: { paramMap: paramMap$.asObservable() },
       },
     ],
   });
@@ -125,6 +127,7 @@ export function renderCart(
     root,
     mocks,
     navigate,
+    paramMap$,
     render: () => fixture.detectChanges(),
     q: <T extends Element = HTMLElement>(testId: string) => root.querySelector<T>(`[data-testid="${testId}"]`),
   };

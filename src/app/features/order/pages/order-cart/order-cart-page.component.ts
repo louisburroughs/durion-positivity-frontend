@@ -24,18 +24,32 @@ export type TenderMode = 'PAY_NOW' | 'ON_ACCOUNT';
 /** Why Check out is blocked, or null when it may be pressed. */
 export type CheckoutBlock = 'NO_CUSTOMER' | 'WALK_IN_NOT_COVERED' | null;
 
+const TYPED_MONEY = /^\d+([.,]\d{0,2})?$/;
+
 /**
- * A typed money amount as integer cents, or 0 when blank or not a non-negative number.
- * Accepts a decimal comma as well as a point, since fr/es cashiers type one. A preview only
- * (P7): the server decides whether the tender covers its own total.
+ * A typed money amount as integer cents, or 0 when blank or not a plain non-negative amount
+ * with at most two decimals. Accepts a decimal comma as well as a point, since fr/es cashiers
+ * type one. Parsed from the digits, never through a binary double. A preview only (P7): the
+ * server decides whether the tender covers its own total.
  */
 export function moneyToCents(text: string): number {
-  const normalised = text.trim().replace(',', '.');
-  if (!normalised) {
+  const trimmed = text.trim();
+  if (!TYPED_MONEY.test(trimmed)) {
     return 0;
   }
-  const value = Number(normalised);
-  return Number.isFinite(value) && value >= 0 ? Math.round(value * 100) : 0;
+  const [whole, fraction = ''] = trimmed.split(/[.,]/);
+  return Number(whole) * 100 + Number(fraction.padEnd(2, '0'));
+}
+
+/**
+ * A served decimal amount as the integer cents the backend makes payable: `setScale(2, HALF_UP)`.
+ * The double is first fixed at four decimals so 84.365 (8436.4999… × 100 in binary) rounds to
+ * 8437, as the server's BigDecimal does, not 8436.
+ */
+export function servedToCents(value: number): number {
+  const tenThousandths = Math.round(Math.abs(value) * 10000);
+  const cents = Math.floor((tenThousandths + 50) / 100);
+  return value < 0 ? -cents : cents;
 }
 
 function newIdempotencyKey(): string {
@@ -70,6 +84,8 @@ export class OrderCartPageComponent {
   readonly actionState = signal<'idle' | 'submitting' | 'error'>('idle');
   readonly actionErrorKey = signal<string | null>(null);
   readonly actionErrorParams = signal<Readonly<Record<string, string | number>> | null>(null);
+  /** The re-read after a refusal that changed the cart succeeded, so the page may say so. */
+  readonly actionReloaded = signal(false);
 
   readonly tenderMode = signal<TenderMode>('PAY_NOW');
   readonly cashText = signal('');
@@ -77,6 +93,8 @@ export class OrderCartPageComponent {
   readonly customerControl = new FormControl<string>('', { nonNullable: true });
 
   private readonly actionAlert = viewChild<ElementRef<HTMLElement>>('actionAlert');
+  private readonly checkoutButton = viewChild<ElementRef<HTMLElement>>('checkoutButton');
+  private readonly outcomeRegion = viewChild<ElementRef<HTMLElement>>('outcomeRegion');
 
   /**
    * The Idempotency-Key of the current checkout attempt: created on the first press, reused when
@@ -108,7 +126,7 @@ export class OrderCartPageComponent {
   readonly typedAmount = computed(() => this.typedCents() / 100);
   readonly grandTotalCents = computed(() => {
     const total = this.order()?.grandTotal;
-    return total === undefined || total === null ? null : Math.round(total * 100);
+    return total === undefined || total === null ? null : servedToCents(total);
   });
 
   /** Pay now is chosen and the typed amounts cover the served grand total. */
@@ -183,6 +201,16 @@ export class OrderCartPageComponent {
         this.customerControl.setValue('', { emitEvent: false });
         this.chooseCustomer(customerId);
       });
+
+    // "submitting disables the panel's controls": the lookup is a form control, so it is
+    // disabled through its control rather than a template binding.
+    effect(() => {
+      if (this.submitting()) {
+        this.customerControl.disable({ emitEvent: false });
+      } else {
+        this.customerControl.enable({ emitEvent: false });
+      }
+    });
   }
 
   createNewCart(vehicleId?: string): void {
@@ -211,6 +239,9 @@ export class OrderCartPageComponent {
   }
 
   addItem(sku: string, quantity: number): void {
+    if (this.submitting()) {
+      return;
+    }
     const orderId = this.orderId();
     if (!orderId) {
       this.state.set('error');
@@ -248,6 +279,9 @@ export class OrderCartPageComponent {
   }
 
   removeItem(lineId: string): void {
+    if (this.submitting()) {
+      return;
+    }
     const orderId = this.orderId();
     if (!orderId) {
       this.state.set('error');
@@ -321,6 +355,7 @@ export class OrderCartPageComponent {
       ? { tenderType: 'ON_ACCOUNT' }
       : { tenderType: 'DEFAULT', tenderedAmount: this.typedAmount() };
     const permission = onAccount ? ORDER_SECTION.chargeOnAccount[0] : ORDER_SECTION.checkout[0];
+    const customerValidationPending = this.order()?.customerValidationStatus === 'PENDING';
 
     this.beginAction();
     const seq = ++this.orderSeq;
@@ -330,6 +365,9 @@ export class OrderCartPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: order => {
+          if (!this.isCurrent(orderId)) {
+            return; // ADR-0063 §7: an answer for a cart no longer on screen
+          }
           this.checkoutKey = null;
           this.actionState.set('idle');
           if (order.status === 'PENDING_PAYMENT' && order.invoiceId && this.canTakePayment()) {
@@ -337,9 +375,14 @@ export class OrderCartPageComponent {
             return;
           }
           this.applyOrder(order, seq);
+          // The Check out section is gone; land focus on the outcome that replaced it.
+          setTimeout(() => this.outcomeRegion()?.nativeElement.focus());
         },
         error: (error: unknown) => {
-          const failure = classifyCartActionError(error, 'CHECKOUT', permission);
+          if (!this.isCurrent(orderId)) {
+            return;
+          }
+          const failure = classifyCartActionError(error, 'CHECKOUT', permission, { customerValidationPending });
           if (failure.answered) {
             // The server judged this attempt; the next press is a new attempt (§8.2).
             this.checkoutKey = null;
@@ -366,22 +409,39 @@ export class OrderCartPageComponent {
       )
       .subscribe({
         next: order => {
+          if (!this.isCurrent(orderId)) {
+            return;
+          }
           this.actionState.set('idle');
           this.applyOrder(order, seq);
         },
-        error: (error: unknown) =>
-          this.failAction(classifyCartActionError(error, action, ORDER_SECTION.setCustomer[0]), orderId),
+        error: (error: unknown) => {
+          if (!this.isCurrent(orderId)) {
+            return;
+          }
+          this.failAction(classifyCartActionError(error, action, ORDER_SECTION.setCustomer[0]), orderId);
+        },
       });
   }
 
   private beginAction(): void {
+    const alert = this.actionAlert()?.nativeElement;
+    const alertHadFocus = !!alert && typeof document !== 'undefined' && document.activeElement === alert;
     this.actionState.set('submitting');
     this.actionErrorKey.set(null);
     this.actionErrorParams.set(null);
+    this.actionReloaded.set(false);
+    if (alertHadFocus) {
+      // The alert empties; hand focus back to Check out rather than leave it on nothing.
+      setTimeout(() => this.checkoutButton()?.nativeElement.focus());
+    }
   }
 
   /** ADR-0031 §1: the action state moves before its error key; the cart stays on screen. */
   private failAction(failure: CartActionFailure, orderId: string): void {
+    if (!this.isCurrent(orderId)) {
+      return;
+    }
     this.actionState.set('error');
     this.actionErrorKey.set(failure.key);
     this.actionErrorParams.set(failure.params ?? null);
@@ -392,14 +452,28 @@ export class OrderCartPageComponent {
   }
 
   private reread(orderId: string): void {
+    if (!this.isCurrent(orderId)) {
+      return;
+    }
     const seq = ++this.orderSeq;
     this.orderService
       .getOrder(orderId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: order => this.applyOrder(order, seq),
+        next: order => {
+          if (!this.isCurrent(orderId) || seq !== this.orderSeq) {
+            return;
+          }
+          this.applyOrder(order, seq);
+          this.actionReloaded.set(true);
+        },
         error: () => undefined, // keep the cart already on screen beside the refusal
       });
+  }
+
+  /** The cart a response answers is still the one on screen (ADR-0063 §1, §7). */
+  private isCurrent(orderId: string): boolean {
+    return this.orderId() === orderId;
   }
 
   private applyOrder(order: SalesOrderResponse, seq: number): void {
@@ -417,6 +491,7 @@ export class OrderCartPageComponent {
     this.actionState.set('idle');
     this.actionErrorKey.set(null);
     this.actionErrorParams.set(null);
+    this.actionReloaded.set(false);
     this.checkoutKey = null;
     this.cashText.set('');
     this.cardText.set('');

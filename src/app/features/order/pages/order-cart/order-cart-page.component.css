@@ -103,7 +103,8 @@
 .order-cart__add-btn:focus-visible,
 .order-cart__remove-btn:focus-visible,
 .order-cart__choice input:focus-visible,
-.order-cart__action-alert:focus-visible {
+.order-cart__action-alert:focus-visible,
+.order-cart__outcome:focus-visible {
   outline: 2px solid var(--input-focus-border);
   outline-offset: 2px;
 }

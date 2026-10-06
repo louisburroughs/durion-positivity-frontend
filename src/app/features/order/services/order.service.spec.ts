@@ -221,6 +221,9 @@ describe('classifyCartActionError (CAP:550 S10)', () => {
     ['ORDER_UNPROCESSABLE', refusal(422, 'ORDER_UNPROCESSABLE'), 'ORDER.CART.ERROR.UNPROCESSABLE'],
     ['ORDER_FORBIDDEN', refusal(403, 'ORDER_FORBIDDEN'), 'ORDER.CART.ERROR.FORBIDDEN'],
     ['bare 403', new HttpErrorResponse({ status: 403 }), 'ORDER.CART.ERROR.FORBIDDEN'],
+    ['ORDER_INVALID_STATE_TRANSITION', refusal(409, 'ORDER_INVALID_STATE_TRANSITION'), 'ORDER.CART.ERROR.INVALID_STATE'],
+    ['ORDER_TAX_UNAVAILABLE', refusal(503, 'ORDER_TAX_UNAVAILABLE'), 'ORDER.CART.ERROR.TAX_UNAVAILABLE'],
+    ['ORDER_INVOICING_UNAVAILABLE', refusal(503, 'ORDER_INVOICING_UNAVAILABLE'), 'ORDER.CART.ERROR.INVOICING_UNAVAILABLE'],
     ['unknown code', refusal(422, 'SOMETHING_NEW'), 'ORDER.CART.ERROR.CHECKOUT'],
   ];
 
@@ -252,8 +255,15 @@ describe('classifyCartActionError (CAP:550 S10)', () => {
       .toEqual({ permission: 'order:order:edit' });
   });
 
-  it('asks for a re-read only on ORDER_NOT_EDITABLE', () => {
+  it('names a pending CRM validation separately when the cart says so', () => {
+    expect(classifyCartActionError(refusal(422, 'ORDER_INVALID_CUSTOMER'), 'CHECKOUT', 'order:order:checkout', {
+      customerValidationPending: true,
+    }).key).toBe('ORDER.CART.ERROR.CUSTOMER_VALIDATION_PENDING');
+  });
+
+  it('asks for a re-read only when the cart changed state', () => {
     expect(classify(refusal(409, 'ORDER_NOT_EDITABLE')).reread).toBe(true);
+    expect(classify(refusal(409, 'ORDER_INVALID_STATE_TRANSITION')).reread).toBe(true);
     expect(classify(refusal(422, 'ORDER_UNPROCESSABLE')).reread).toBe(false);
   });
 

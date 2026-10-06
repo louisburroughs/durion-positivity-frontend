@@ -8390,7 +8390,7 @@
         "ITEMS_TABLE": "Order line items",
         "SUMMARY": "Order summary"
       },
-      "IDLE": "Enter customer details to start a cart.",
+      "IDLE": "Start a cart; you choose the customer before checking out.",
       "EMPTY": "No items in cart.",
       "ERROR": {
         "LOAD": "Unable to load order.",
@@ -8403,14 +8403,19 @@
         "WALK_IN_NOT_ALLOWED": "Walk-in isn't allowed for this sale; choose the customer.",
         "WALK_IN_NOT_ALLOWED_ON_ACCOUNT": "Walk-in sales can't go on account. Take the payment now, or choose the customer.",
         "WALK_IN_NOT_ALLOWED_DEPOSIT": "A walk-in customer can't leave a deposit; choose the customer.",
-        "WALK_IN_NOT_ALLOWED_WORKORDER_LINK": "A sale linked to a workorder can't be a walk-in; it keeps the workorder's customer.",
+        "WALK_IN_NOT_ALLOWED_WORKORDER_LINK": "A walk-in sale can't be linked to a workorder; choose a registered customer.",
         "WALK_IN_NOT_PAID_IN_FULL": "The total is now {{total}}. A walk-in sale must be paid in full now: adjust the cash and card, then check out again.",
         "WALK_IN_NOT_PAID_IN_FULL_NO_TOTAL": "A walk-in sale must be paid in full now: adjust the cash and card, then check out again.",
         "WALK_IN_UNAVAILABLE": "Walk-in isn't set up for this shop yet; choose the customer.",
         "INVALID_CUSTOMER": "This customer can't be used for this sale; choose another customer.",
-        "NOT_EDITABLE": "This order has changed and can no longer be edited; it has been reloaded.",
+        "NOT_EDITABLE": "This order has changed and can no longer be edited.",
         "UNPROCESSABLE": "This cart can't be checked out yet; check the items and try again.",
-        "FORBIDDEN": "You don't have permission to do this ({{permission}})."
+        "FORBIDDEN": "You don't have permission to do this ({{permission}}).",
+        "INVALID_STATE": "This order's status no longer allows checkout.",
+        "RELOADED": "The order on screen has been reloaded.",
+        "CUSTOMER_VALIDATION_PENDING": "This customer's details are still being checked. Wait a moment and check out again, or choose another customer.",
+        "TAX_UNAVAILABLE": "Tax can't be calculated right now, so nothing was checked out. Try again in a moment.",
+        "INVOICING_UNAVAILABLE": "The invoice can't be created right now, so nothing was checked out. Try again in a moment."
       },
       "FIELD": {
         "VEHICLE_ID": "Vehicle ID (optional)",

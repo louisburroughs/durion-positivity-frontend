@@ -1,6 +1,7 @@
 import { formatCurrency, getCurrencySymbol } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { By } from '@angular/platform-browser';
+import { convertToParamMap } from '@angular/router';
 import { TestBed } from '@angular/core/testing';
 import { TranslateService, TranslationObject } from '@ngx-translate/core';
 import { Subject, of, throwError } from 'rxjs';
@@ -11,7 +12,7 @@ import esUS from '../../../../../assets/i18n/es-US.json';
 import frCA from '../../../../../assets/i18n/fr-CA.json';
 import frFR from '../../../../../assets/i18n/fr-FR.json';
 import { CustomerLookupComponent } from '../../../../shared/customer-lookup/customer-lookup.component';
-import { moneyToCents } from './order-cart-page.component';
+import { moneyToCents, servedToCents } from './order-cart-page.component';
 import {
   ALL_CART_PERMISSIONS,
   draftCart,
@@ -101,6 +102,13 @@ describe('OrderCartPageComponent — customer, payment and checkout (CAP:550 S10
       ['no served total', 'PAY_NOW', '84.37', '', undefined, ALL_CART_PERMISSIONS as unknown as string[], false],
       ['no order:order:edit', 'PAY_NOW', '84.37', '', 84.37, without('order:order:edit'), false],
       ['legacy token', 'PAY_NOW', '84.37', '', 84.37, null, true],
+      // Served totals with a half cent: payable is setScale(2, HALF_UP), never the binary double.
+      ['84.365 vs 84.36', 'PAY_NOW', '84.36', '', 84.365, ALL_CART_PERMISSIONS as unknown as string[], false],
+      ['84.365 vs 84.37', 'PAY_NOW', '84.37', '', 84.365, ALL_CART_PERMISSIONS as unknown as string[], true],
+      ['76.104 vs 76.10', 'PAY_NOW', '76.10', '', 76.104, ALL_CART_PERMISSIONS as unknown as string[], true],
+      ['1.005 vs 1.00', 'PAY_NOW', '1.00', '', 1.005, ALL_CART_PERMISSIONS as unknown as string[], false],
+      ['1.005 vs 1.01', 'PAY_NOW', '1.01', '', 1.005, ALL_CART_PERMISSIONS as unknown as string[], true],
+      ['three typed decimals', 'PAY_NOW', '84.375', '', 84.37, ALL_CART_PERMISSIONS as unknown as string[], false],
     ];
     for (const [name, mode, cash, card, total, permissions, enabled] of table) {
       it(`enablement: ${name} → ${enabled ? 'enabled' : 'disabled'}`, () => {
@@ -122,6 +130,18 @@ describe('OrderCartPageComponent — customer, payment and checkout (CAP:550 S10
       expect(moneyToCents('-5')).toBe(0);
       expect(moneyToCents('abc')).toBe(0);
       expect(moneyToCents('')).toBe(0);
+      expect(moneyToCents('84.375')).toBe(0);
+      expect(moneyToCents('1e2')).toBe(0);
+      expect(moneyToCents('0.1')).toBe(10);
+      expect(moneyToCents('19.99')).toBe(1999);
+    });
+
+    it('rounds a served total half-up at the cent, as the backend does', () => {
+      expect(servedToCents(84.365)).toBe(8437);
+      expect(servedToCents(76.104)).toBe(7610);
+      expect(servedToCents(1.005)).toBe(101);
+      expect(servedToCents(84.37)).toBe(8437);
+      expect(servedToCents(0)).toBe(0);
     });
   });
 
@@ -245,7 +265,57 @@ describe('OrderCartPageComponent — customer, payment and checkout (CAP:550 S10
 
       expect(h.mocks.getOrder).toHaveBeenCalledTimes(2);
       expect(h.component.order()?.status).toBe('PENDING_PAYMENT');
+      expect(text(h.q('order-cart-action-alert'))).toBe(`${CART.ERROR.NOT_EDITABLE} ${CART.ERROR.RELOADED}`);
+    });
+
+    it('does not claim a reload when the re-read after ORDER_NOT_EDITABLE fails (ADR-0064 §4)', () => {
+      const h = renderCart(registeredCart);
+      h.mocks.checkout.mockReturnValue(throwError(() => refusal(409, 'ORDER_NOT_EDITABLE')));
+      h.mocks.getOrder.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 503 })));
+
+      h.component.checkout();
+      h.render();
+
       expect(text(h.q('order-cart-action-alert'))).toBe(CART.ERROR.NOT_EDITABLE);
+      expect(h.component.order()).toEqual(registeredCart);
+    });
+
+    it('re-reads the cart on ORDER_INVALID_STATE_TRANSITION', () => {
+      const h = renderCart(registeredCart);
+      h.mocks.checkout.mockReturnValue(throwError(() => refusal(409, 'ORDER_INVALID_STATE_TRANSITION')));
+      h.mocks.getOrder.mockReturnValue(of({ ...registeredCart, status: 'CANCELLED' }));
+
+      h.component.checkout();
+      h.render();
+
+      expect(h.mocks.getOrder).toHaveBeenCalledTimes(2);
+      expect(h.component.order()?.status).toBe('CANCELLED');
+      expect(text(h.q('order-cart-action-alert'))).toBe(`${CART.ERROR.INVALID_STATE} ${CART.ERROR.RELOADED}`);
+    });
+
+    it('explains a refused customer whose CRM validation is still pending', () => {
+      const h = renderCart({ ...registeredCart, customerValidationStatus: 'PENDING' });
+      h.mocks.checkout.mockReturnValue(throwError(() => refusal(422, 'ORDER_INVALID_CUSTOMER')));
+
+      h.component.checkout();
+      h.render();
+
+      expect(text(h.q('order-cart-action-alert'))).toBe(CART.ERROR.CUSTOMER_VALIDATION_PENDING);
+    });
+
+    it('gives tax unavailability its own message and keeps the key for the retry', () => {
+      const h = renderCart(registeredCart);
+      h.mocks.checkout
+        .mockReturnValueOnce(throwError(() => refusal(503, 'ORDER_TAX_UNAVAILABLE')))
+        .mockReturnValueOnce(of(checkedOut));
+
+      h.component.checkout();
+      h.render();
+      expect(text(h.q('order-cart-action-alert'))).toBe(CART.ERROR.TAX_UNAVAILABLE);
+
+      h.component.checkout();
+      const keys = h.mocks.checkout.mock.calls.map(call => call[1]);
+      expect(keys[1]).toBe(keys[0]);
     });
 
     it('shows the story message when Walk-in is not set up, never inventing one', () => {
@@ -436,20 +506,20 @@ describe('OrderCartPageComponent — customer, payment and checkout (CAP:550 S10
   });
 
   describe('sequence guard (ADR-0063)', () => {
-    it('drops a slower re-read after setCartCustomer once a newer read has landed', () => {
+    it('drops a slower add-item re-read once a newer setCartCustomer re-read has landed', () => {
       const h = renderCart(draftCart);
       const slowRead = new Subject<SalesOrderResponse>();
-      h.mocks.setCartCustomer.mockReturnValue(of(registeredCart));
-      h.mocks.getOrder.mockReturnValueOnce(slowRead);
-      h.component.chooseCustomer('b3f1c2d4-0000-7000-8000-000000000002');
-
-      // A newer cart read (after adding an item) lands first.
       h.mocks.addItem.mockReturnValue(of({}));
-      h.mocks.getOrder.mockReturnValueOnce(of({ ...registeredCart, grandTotal: 99 }));
+      h.mocks.getOrder.mockReturnValueOnce(slowRead);
       h.component.addItem('SKU-2', 1);
+
+      // A newer cart read (after choosing the customer) lands first.
+      h.mocks.setCartCustomer.mockReturnValue(of(registeredCart));
+      h.mocks.getOrder.mockReturnValueOnce(of({ ...registeredCart, grandTotal: 99 }));
+      h.component.chooseCustomer('b3f1c2d4-0000-7000-8000-000000000002');
       expect(h.component.order()?.grandTotal).toBe(99);
 
-      slowRead.next({ ...registeredCart, grandTotal: 84.37 });
+      slowRead.next({ ...draftCart, grandTotal: 84.37 });
       slowRead.complete();
       expect(h.component.order()?.grandTotal).toBe(99);
     });
@@ -473,5 +543,180 @@ describe('OrderCartPageComponent — customer, payment and checkout (CAP:550 S10
         expect(text(checkout)).toBe(bundle.ORDER.CART.CHECKOUT.ACTION);
       });
     }
+  });
+
+  describe('responses for a cart no longer on screen (ADR-0063 §1, §7)', () => {
+    const cartB: SalesOrderResponse = { ...registeredCart, orderId: 'ord-2', orderNumber: 'SO-2002', grandTotal: 12 };
+
+    function navigateToB(h: ReturnType<typeof renderCart>): void {
+      h.mocks.getOrder.mockReturnValue(of(cartB));
+      h.paramMap$.next(convertToParamMap({ orderId: 'ord-2' }));
+      h.render();
+      expect(h.component.order()?.orderId).toBe('ord-2');
+      expect(h.component.actionState()).toBe('idle');
+    }
+
+    it('ignores cart A checking out after the page moved to cart B', () => {
+      const h = renderCart(registeredCart);
+      const pending = new Subject<SalesOrderResponse>();
+      h.mocks.checkout.mockReturnValue(pending);
+      h.component.checkout();
+      navigateToB(h);
+
+      pending.next({ ...checkedOut, orderId: 'ord-1' });
+      pending.complete();
+      h.render();
+
+      expect(h.navigate).not.toHaveBeenCalled();
+      expect(h.component.order()).toEqual(cartB);
+      expect(text(h.q('order-cart-outcome'))).toBe('');
+    });
+
+    it("ignores cart A's 409 after the page moved to cart B: no alert, no re-read of A", () => {
+      const h = renderCart(registeredCart);
+      const pending = new Subject<SalesOrderResponse>();
+      h.mocks.checkout.mockReturnValue(pending);
+      h.component.checkout();
+      navigateToB(h);
+      const readsBefore = h.mocks.getOrder.mock.calls.length;
+
+      pending.error(refusal(409, 'ORDER_NOT_EDITABLE'));
+      h.render();
+
+      expect(h.component.actionErrorKey()).toBeNull();
+      expect(text(h.q('order-cart-action-alert'))).toBe('');
+      expect(h.mocks.getOrder.mock.calls.length).toBe(readsBefore);
+      expect(h.component.order()).toEqual(cartB);
+    });
+
+    it("ignores cart A's setCartCustomer 422 and success after the page moved to cart B", () => {
+      const h = renderCart(draftCart);
+      const refused = new Subject<SalesOrderResponse>();
+      h.mocks.setCartCustomer.mockReturnValue(refused);
+      h.component.chooseCustomer('b3f1c2d4-0000-7000-8000-000000000002');
+      navigateToB(h);
+
+      refused.error(refusal(422, 'ORDER_INVALID_CUSTOMER'));
+      h.render();
+      expect(h.component.actionErrorKey()).toBeNull();
+      expect(h.component.order()).toEqual(cartB);
+
+      const accepted = new Subject<SalesOrderResponse>();
+      h.mocks.setCartCustomer.mockReturnValue(accepted);
+      h.mocks.getOrder.mockReturnValue(of(registeredCart));
+      h.paramMap$.next(convertToParamMap({ orderId: 'ord-1' }));
+      h.render();
+      h.component.chooseCustomer('b3f1c2d4-0000-7000-8000-000000000002');
+      navigateToB(h);
+      accepted.next(registeredCart);
+      accepted.complete();
+      expect(h.component.order()).toEqual(cartB);
+    });
+
+    it('clears the submitting state, alert and key when the route changes', () => {
+      const h = renderCart(registeredCart);
+      h.mocks.checkout.mockReturnValueOnce(throwError(() => new HttpErrorResponse({ status: 0 })));
+      h.component.checkout();
+      expect(h.component.actionErrorKey()).not.toBeNull();
+      navigateToB(h);
+      expect(h.component.actionErrorKey()).toBeNull();
+
+      h.mocks.checkout.mockReturnValue(of(checkedOut));
+      h.component.checkout();
+      const keys = h.mocks.checkout.mock.calls.map(call => call[1]);
+      expect(keys[1]).not.toBe(keys[0]);
+      expect(h.mocks.checkout.mock.calls[1][0]).toBe('ord-2');
+    });
+  });
+
+  describe('submitting disables the panel controls', () => {
+    it('disables add item, remove and the customer lookup while an action is in flight, and the handlers refuse', () => {
+      const h = renderCart(registeredCart);
+      const pending = new Subject<SalesOrderResponse>();
+      h.mocks.checkout.mockReturnValue(pending);
+      h.component.checkout();
+      h.render();
+
+      expect(h.root.querySelector<HTMLButtonElement>('.order-cart__add-btn')!.disabled).toBe(true);
+      expect(h.root.querySelector<HTMLInputElement>('#order-cart-sku')!.disabled).toBe(true);
+      expect(h.root.querySelector<HTMLButtonElement>('.order-cart__remove-btn')!.disabled).toBe(true);
+      expect(h.root.querySelector<HTMLInputElement>('#order-cart-customer-lookup')!.disabled).toBe(true);
+
+      h.component.addItem('SKU-2', 1);
+      h.component.removeItem('line-1');
+      expect(h.mocks.addItem).not.toHaveBeenCalled();
+      expect(h.mocks.removeItem).not.toHaveBeenCalled();
+
+      pending.error(refusal(422, 'ORDER_UNPROCESSABLE'));
+      h.render();
+      expect(h.root.querySelector<HTMLButtonElement>('.order-cart__add-btn')!.disabled).toBe(false);
+      expect(h.root.querySelector<HTMLInputElement>('#order-cart-customer-lookup')!.disabled).toBe(false);
+    });
+  });
+
+  describe('focus management (ADR-0029 §8.7)', () => {
+    function attached(cart: SalesOrderResponse, permissions?: string[]): ReturnType<typeof renderCart> {
+      vi.useFakeTimers();
+      const h = permissions ? renderCart(cart, permissions) : renderCart(cart);
+      document.body.appendChild(h.root);
+      return h;
+    }
+
+    it('returns focus to Check out when the focused alert clears for a new attempt', () => {
+      const h = attached(registeredCart);
+      h.mocks.checkout.mockReturnValueOnce(throwError(() => refusal(422, 'ORDER_UNPROCESSABLE')));
+      h.component.checkout();
+      h.render();
+      vi.runAllTimers();
+      expect(document.activeElement).toBe(h.q('order-cart-action-alert'));
+
+      h.mocks.checkout.mockReturnValueOnce(new Subject<SalesOrderResponse>());
+      h.component.checkout();
+      h.render();
+      vi.runAllTimers();
+      expect(document.activeElement).toBe(h.q('order-cart-checkout'));
+      h.root.remove();
+    });
+
+    it('lands focus on the outcome after an on-account completion', () => {
+      const h = attached(registeredCart);
+      h.component.setTenderMode('ON_ACCOUNT');
+      h.mocks.checkout.mockReturnValue(of({ ...registeredCart, status: 'COMPLETED', invoiceNumber: 'INV-2009' }));
+      h.component.checkout();
+      h.render();
+      vi.runAllTimers();
+
+      const outcome = h.q('order-cart-outcome')!;
+      expect(outcome.getAttribute('tabindex')).toBe('-1');
+      expect(document.activeElement).toBe(outcome);
+      h.root.remove();
+    });
+
+    it('lands focus on the outcome when checkout cannot hand off to payment capture', () => {
+      const h = attached(walkInCart, without('invoice:payment:process'));
+      typeAmount(h, 'cash', '84.37');
+      h.mocks.checkout.mockReturnValue(of(checkedOut));
+      h.component.checkout();
+      h.render();
+      vi.runAllTimers();
+
+      expect(document.activeElement).toBe(h.q('order-cart-outcome'));
+      h.root.remove();
+    });
+  });
+
+  describe('copy truthfulness (ADR-0064 §4)', () => {
+    it('the workorder-link refusal does not claim the sale keeps a customer', () => {
+      expect(CART.ERROR.WALK_IN_NOT_ALLOWED_WORKORDER_LINK).not.toMatch(/keeps/i);
+      expect(CART.ERROR.NOT_EDITABLE).not.toMatch(/reloaded/i);
+    });
+
+    it('the idle prompt no longer asks for customer details', () => {
+      const h = renderCart(draftCart);
+      h.paramMap$.next(convertToParamMap({}));
+      h.render();
+      expect(text(h.root.querySelector('.order-cart__idle'))).toBe(CART.IDLE);
+      expect(CART.IDLE).not.toMatch(/customer details/i);
+    });
   });
 });

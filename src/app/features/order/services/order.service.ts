@@ -78,7 +78,7 @@ export interface CartActionFailure {
   readonly key: string;
   /** Interpolation params for {@link key}; only business values, never ids. */
   readonly params?: Readonly<Record<string, string | number>>;
-  /** The cart changed under the cashier (ORDER_NOT_EDITABLE): re-read it. */
+  /** The cart changed under the cashier (ORDER_NOT_EDITABLE, ORDER_INVALID_STATE_TRANSITION): re-read it. */
   readonly reread: boolean;
   /**
    * The server answered with a refusal (any 4xx), so the cart or request is now judged and a
@@ -110,7 +110,12 @@ function namedGrandTotal(message: string | undefined): number | null {
  * (CAP:550 S8), falling back to the HTTP status and then to the action's generic key.
  * `permission` is the code the refused action needs, named in the 403 copy.
  */
-export function classifyCartActionError(error: unknown, action: CartAction, permission: string): CartActionFailure {
+export function classifyCartActionError(
+  error: unknown,
+  action: CartAction,
+  permission: string,
+  context: { readonly customerValidationPending?: boolean } = {},
+): CartActionFailure {
   if (!(error instanceof HttpErrorResponse)) {
     return { key: GENERIC_KEY[action], reread: false, answered: false };
   }
@@ -141,9 +146,22 @@ export function classifyCartActionError(error: unknown, action: CartAction, perm
     case 'ORDER_WALK_IN_UNAVAILABLE':
       return { key: 'ORDER.CART.ERROR.WALK_IN_UNAVAILABLE', reread: false, answered };
     case 'ORDER_INVALID_CUSTOMER':
-      return { key: 'ORDER.CART.ERROR.INVALID_CUSTOMER', reread: false, answered };
+      // The code also covers a customer whose CRM validation is still PENDING; the cart says which.
+      return {
+        key: context.customerValidationPending
+          ? 'ORDER.CART.ERROR.CUSTOMER_VALIDATION_PENDING'
+          : 'ORDER.CART.ERROR.INVALID_CUSTOMER',
+        reread: false,
+        answered,
+      };
     case 'ORDER_NOT_EDITABLE':
       return { key: 'ORDER.CART.ERROR.NOT_EDITABLE', reread: true, answered };
+    case 'ORDER_INVALID_STATE_TRANSITION':
+      return { key: 'ORDER.CART.ERROR.INVALID_STATE', reread: true, answered };
+    case 'ORDER_TAX_UNAVAILABLE':
+      return { key: 'ORDER.CART.ERROR.TAX_UNAVAILABLE', reread: false, answered };
+    case 'ORDER_INVOICING_UNAVAILABLE':
+      return { key: 'ORDER.CART.ERROR.INVOICING_UNAVAILABLE', reread: false, answered };
     case 'ORDER_UNPROCESSABLE':
       return { key: 'ORDER.CART.ERROR.UNPROCESSABLE', reread: false, answered };
     case 'ORDER_FORBIDDEN':

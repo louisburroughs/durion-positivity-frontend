@@ -8390,7 +8390,7 @@
         "ITEMS_TABLE": "Líneas de la orden",
         "SUMMARY": "Resumen de la orden"
       },
-      "IDLE": "Ingresa datos del cliente para iniciar un carrito.",
+      "IDLE": "Inicie un carrito; elegirá el cliente antes de cobrar.",
       "EMPTY": "No hay artículos en el carrito.",
       "ERROR": {
         "LOAD": "No se pudo cargar la orden.",
@@ -8403,14 +8403,19 @@
         "WALK_IN_NOT_ALLOWED": "El cliente de mostrador no está permitido para esta venta; elija el cliente.",
         "WALK_IN_NOT_ALLOWED_ON_ACCOUNT": "Las ventas de mostrador no se pueden cargar a cuenta. Reciba el pago ahora, o elija el cliente.",
         "WALK_IN_NOT_ALLOWED_DEPOSIT": "Un cliente de mostrador no puede dejar un anticipo; elija el cliente.",
-        "WALK_IN_NOT_ALLOWED_WORKORDER_LINK": "Una venta vinculada a una orden de trabajo no puede ser de mostrador; conserva el cliente de la orden de trabajo.",
+        "WALK_IN_NOT_ALLOWED_WORKORDER_LINK": "Una venta de mostrador no se puede vincular a una orden de trabajo; elija un cliente registrado.",
         "WALK_IN_NOT_PAID_IN_FULL": "El total ahora es {{total}}. Una venta de mostrador debe pagarse por completo ahora: ajuste el efectivo y la tarjeta, y vuelva a cobrar.",
         "WALK_IN_NOT_PAID_IN_FULL_NO_TOTAL": "Una venta de mostrador debe pagarse por completo ahora: ajuste el efectivo y la tarjeta, y vuelva a cobrar.",
         "WALK_IN_UNAVAILABLE": "El cliente de mostrador aún no está configurado para este taller; elija el cliente.",
         "INVALID_CUSTOMER": "Este cliente no se puede usar para esta venta; elija otro cliente.",
-        "NOT_EDITABLE": "Este pedido cambió y ya no se puede editar; se volvió a cargar.",
+        "NOT_EDITABLE": "Este pedido cambió y ya no se puede editar.",
         "UNPROCESSABLE": "Este carrito aún no se puede cobrar; revise los artículos e intente de nuevo.",
-        "FORBIDDEN": "No tiene permiso para hacer esto ({{permission}})."
+        "FORBIDDEN": "No tiene permiso para hacer esto ({{permission}}).",
+        "INVALID_STATE": "El estado de este pedido ya no permite cobrarlo.",
+        "RELOADED": "El pedido en pantalla se volvió a cargar.",
+        "CUSTOMER_VALIDATION_PENDING": "Los datos de este cliente aún se están verificando. Espere un momento y vuelva a cobrar, o elija otro cliente.",
+        "TAX_UNAVAILABLE": "No se puede calcular el impuesto en este momento, así que no se cobró nada. Intente de nuevo en un momento.",
+        "INVOICING_UNAVAILABLE": "No se puede crear la factura en este momento, así que no se cobró nada. Intente de nuevo en un momento."
       },
       "FIELD": {
         "VEHICLE_ID": "ID del vehículo (opcional)",

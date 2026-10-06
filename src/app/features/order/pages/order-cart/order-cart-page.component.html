@@ -67,7 +67,7 @@
             }
           </td>
           <td>
-            <button class="order-cart__remove-btn" type="button" (click)="removeItem(line.orderLineId!)">
+            <button class="order-cart__remove-btn" type="button" [disabled]="submitting()" (click)="removeItem(line.orderLineId!)">
               {{ 'ORDER.CART.ACTION.REMOVE_ITEM' | translate }}
             </button>
           </td>
@@ -84,16 +84,16 @@
       <div class="order-cart__field">
         <label for="order-cart-sku">{{ 'ORDER.CART.FIELD.SKU' | translate }}</label>
         <input id="order-cart-sku" #sku class="order-cart__input" type="text" autocomplete="off"
-          [disabled]="addingItem()" required />
+          [disabled]="addingItem() || submitting()" required />
       </div>
 
       <div class="order-cart__field">
         <label for="order-cart-qty">{{ 'ORDER.CART.FIELD.QTY' | translate }}</label>
         <input id="order-cart-qty" #qty class="order-cart__input" type="number" min="1" step="1" value="1"
-          [disabled]="addingItem()" required />
+          [disabled]="addingItem() || submitting()" required />
       </div>
 
-      <button class="order-cart__add-btn" type="submit" [disabled]="addingItem()">
+      <button class="order-cart__add-btn" type="submit" [disabled]="addingItem() || submitting()">
         {{ (addingItem() ? 'ORDER.CART.ACTION.ADDING' : 'ORDER.CART.ACTION.ADD_ITEM') | translate }}
       </button>
     </form>
@@ -235,6 +235,9 @@
           total: params?.['total'] !== undefined ? (params?.['total'] | money:currency:'symbol':'1.2-2') : '',
           permission: params?.['permission'] ?? ''
         } }}
+        @if (actionReloaded()) {
+        {{ 'ORDER.CART.ERROR.RELOADED' | translate }}
+        }
       </p>
       }
     </div>
@@ -242,7 +245,7 @@
     @if (isDraft() && canCheckout()) {
     <section class="order-cart__checkout" data-testid="order-cart-checkout-section">
       <p id="order-cart-checkout-consequence" class="order-cart__hint">{{ 'ORDER.CART.CHECKOUT.CONSEQUENCE' | translate }}</p>
-      <button class="order-cart__primary-btn" type="button" data-testid="order-cart-checkout"
+      <button #checkoutButton class="order-cart__primary-btn" type="button" data-testid="order-cart-checkout"
         [attr.aria-disabled]="checkoutEnabled() ? null : 'true'"
         [attr.aria-busy]="submitting() ? 'true' : null"
         [attr.aria-describedby]="checkoutBlock() ? 'order-cart-checkout-consequence order-cart-checkout-reason' : 'order-cart-checkout-consequence'"
@@ -261,7 +264,7 @@
     </section>
     }
 
-    <div class="order-cart__outcome" role="status" data-testid="order-cart-outcome">
+    <div #outcomeRegion class="order-cart__outcome" role="status" tabindex="-1" data-testid="order-cart-outcome">
       @if (currentOrder.status === 'PENDING_PAYMENT') {
       <p>
         {{ 'ORDER.CART.CHECKOUT.READY_FOR_PAYMENT' | translate: {

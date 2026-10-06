@@ -8390,7 +8390,7 @@
         "ITEMS_TABLE": "Lignes de commande",
         "SUMMARY": "Resume de la commande"
       },
-      "IDLE": "Entrez les details client pour demarrer un panier.",
+      "IDLE": "Démarrez un panier; vous choisissez le client avant de passer à la caisse.",
       "EMPTY": "Aucun article dans le panier.",
       "ERROR": {
         "LOAD": "Impossible de charger la commande.",
@@ -8403,14 +8403,19 @@
         "WALK_IN_NOT_ALLOWED": "Le client de passage n'est pas permis pour cette vente; choisissez le client.",
         "WALK_IN_NOT_ALLOWED_ON_ACCOUNT": "Une vente à un client de passage ne peut pas être portée au compte. Encaissez le paiement maintenant, ou choisissez le client.",
         "WALK_IN_NOT_ALLOWED_DEPOSIT": "Un client de passage ne peut pas laisser d'acompte; choisissez le client.",
-        "WALK_IN_NOT_ALLOWED_WORKORDER_LINK": "Une vente liée à un bon de travail ne peut pas être à un client de passage; elle garde le client du bon de travail.",
+        "WALK_IN_NOT_ALLOWED_WORKORDER_LINK": "Une vente à un client de passage ne peut pas être liée à un bon de travail; choisissez un client enregistré.",
         "WALK_IN_NOT_PAID_IN_FULL": "Le total est maintenant de {{total}}. Une vente à un client de passage doit être payée en entier maintenant : ajustez le comptant et la carte, puis repassez à la caisse.",
         "WALK_IN_NOT_PAID_IN_FULL_NO_TOTAL": "Une vente à un client de passage doit être payée en entier maintenant : ajustez le comptant et la carte, puis repassez à la caisse.",
         "WALK_IN_UNAVAILABLE": "Le client de passage n'est pas encore configuré pour cet atelier; choisissez le client.",
         "INVALID_CUSTOMER": "Ce client ne peut pas être utilisé pour cette vente; choisissez un autre client.",
-        "NOT_EDITABLE": "Cette commande a changé et ne peut plus être modifiée; elle a été rechargée.",
+        "NOT_EDITABLE": "Cette commande a changé et ne peut plus être modifiée.",
         "UNPROCESSABLE": "Ce panier ne peut pas encore passer à la caisse; vérifiez les articles et réessayez.",
-        "FORBIDDEN": "Vous n'avez pas la permission de faire ceci ({{permission}})."
+        "FORBIDDEN": "Vous n'avez pas la permission de faire ceci ({{permission}}).",
+        "INVALID_STATE": "Le statut de cette commande ne permet plus de passer à la caisse.",
+        "RELOADED": "La commande affichée a été rechargée.",
+        "CUSTOMER_VALIDATION_PENDING": "Les renseignements de ce client sont encore en vérification. Attendez un instant et repassez à la caisse, ou choisissez un autre client.",
+        "TAX_UNAVAILABLE": "La taxe ne peut pas être calculée pour l'instant; rien n'a été passé à la caisse. Réessayez dans un instant.",
+        "INVOICING_UNAVAILABLE": "La facture ne peut pas être créée pour l'instant; rien n'a été passé à la caisse. Réessayez dans un instant."
       },
       "FIELD": {
         "VEHICLE_ID": "ID vehicule (optionnel)",
