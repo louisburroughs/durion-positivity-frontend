@@ -8,11 +8,13 @@ import {
   Injector,
   afterNextRender,
   computed,
+  effect,
   inject,
   signal,
   viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Subscription } from 'rxjs';
 import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { canAccess } from '../../../../core/security/route-access';
@@ -316,11 +318,54 @@ export class AccountingHomePageComponent {
 
   readonly toDate = toDatePipeInput;
 
+  /**
+   * The `tid|sub` the held data belongs to. A plain field seeded from the
+   * current token, so the effect's first run is not read as a change (the
+   * `ChatBlobService` precedent).
+   */
+  private trackedIdentity = this.identity();
+  /** The Approve month write in flight, if any; dropped on an identity change. */
+  private approveSubscription: Subscription | null = null;
+
   constructor() {
     this.destroyRef.onDestroy(() => {
       for (const region of [...Object.values(this.regions), this.review]) region.dispose();
+      this.approveSubscription?.unsubscribe();
+    });
+    // ADR-0063 §7: a token for another tenant or person while the home stays
+    // mounted invalidates every read in flight and clears what the previous
+    // identity loaded, before anything is read for the new one. Preferences
+    // follow on their own: their storage key is derived from the same claims.
+    effect(() => {
+      const identity = this.identity();
+      if (identity === this.trackedIdentity) return;
+      this.trackedIdentity = identity;
+      this.resetForIdentity();
+      this.refresh();
     });
     this.refresh();
+  }
+
+  /** `tid|sub`, each half percent-encoded so no value can contain the delimiter. The tenant is the `tid` claim, via AuthService. */
+  private identity(): string {
+    const part = (value: string | null | undefined): string => encodeURIComponent(value?.trim() ?? '');
+    return `${part(this.auth.tenantId())}|${part(this.auth.currentUserClaims()?.sub)}`;
+  }
+
+  /** Drops every read and write in flight (each region's sequence moves on) and clears all page state. */
+  private resetForIdentity(): void {
+    for (const region of [...Object.values(this.regions), this.review]) region.reset();
+    this.approveSubscription?.unsubscribe();
+    this.approveSubscription = null;
+    this.approving.set(false);
+    this.approveMessage.set(null);
+    this.approvedAccount.set(null);
+    this.focusOwed = false;
+    this.selectedId.set(null);
+    this.filter.set('ALL');
+    this.helpOpen.set(false);
+    this.state.set('idle');
+    this.errorKey.set(null);
   }
 
   /** Re-reads every permitted region that has not been refused (ADR-0064 §6). */
@@ -504,7 +549,8 @@ export class AccountingHomePageComponent {
     this.approving.set(true);
     this.approveMessage.set(null);
     this.approvedAccount.set(null);
-    this.workspace
+    this.approveSubscription?.unsubscribe();
+    this.approveSubscription = this.workspace
       .approve(reconciliationId, review.header.version)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({

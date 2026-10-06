@@ -53,6 +53,7 @@ export class HomeRegion<T> {
     this.issuedKey.set(null);
     this.dataKey.set(null);
     this.data.set(null);
+    this.denied.set(false);
     this.status.set('PENDING');
   }
 
