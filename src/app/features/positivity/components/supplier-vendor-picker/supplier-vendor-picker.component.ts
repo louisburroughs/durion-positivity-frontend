@@ -9,10 +9,10 @@ import {
   effect,
   inject,
   input,
-  output,
   signal,
   viewChild,
 } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
@@ -26,6 +26,7 @@ import {
   VENDOR_PAGE_SIZE,
 } from '../../services/supplier-vendor.service';
 import { isForbidden } from '../../utils/supplier-error.util';
+import { supplierIdentityKey } from '../../utils/supplier-identity.util';
 
 /** Permission the vendor reads require (backend S23, #2516). */
 export const SUPPLIER_VENDOR_READ = 'supplier:vendor:read';
@@ -94,6 +95,7 @@ export class SupplierVendorPickerComponent {
   private readonly destroyRef = inject(DestroyRef);
   private readonly injector = inject(Injector);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly document = inject(DOCUMENT);
 
   /** The form's `vendorId` control. Must carry `Validators.required`. */
   readonly control = input.required<FormControl<string>>();
@@ -107,11 +109,6 @@ export class SupplierVendorPickerComponent {
   readonly errorKey = input<string | null>(null);
   /** Backend detail text for that error — server data, rendered beneath the label only. */
   readonly errorDetail = input<string | null>(null);
-  /**
-   * The signed-in identity (tenant or subject) changed. Feedback the host holds
-   * from the previous identity's submission is stale; the host clears it.
-   */
-  readonly identityChanged = output<void>();
 
   private readonly retryButton = viewChild<ElementRef<HTMLButtonElement>>('retryButton');
   private readonly select = viewChild<ElementRef<HTMLSelectElement>>('vendorSelect');
@@ -136,8 +133,9 @@ export class SupplierVendorPickerComponent {
     () => !this.auth.permissionsKnown() || this.auth.hasPermission(SUPPLIER_VENDOR_READ),
   );
 
-  private readonly identity = computed(
-    () => `${this.auth.tenantId() ?? ''}|${this.auth.currentUserClaims()?.sub ?? ''}`,
+  /** `tid|sub`, each half percent-encoded so distinct identities never share a key. */
+  private readonly identity = computed(() =>
+    supplierIdentityKey(this.auth.tenantId(), this.auth.currentUserClaims()?.sub),
   );
 
   /**
@@ -217,7 +215,7 @@ export class SupplierVendorPickerComponent {
       .pipe(
         tap(next => {
           if (previous) {
-            this.reconcile(previous, next);
+            this.reconcile();
           }
           previous = next;
         }),
@@ -258,21 +256,19 @@ export class SupplierVendorPickerComponent {
    * Every key-driven reload (identity, permission, current vendor, retry)
    * re-derives the control from what this key may legitimately hold (ADR-0063):
    * create clears it, edit puts back the profile's own vendor. A choice made
-   * under another identity or permission never survives into a submit.
+   * under another identity or permission never survives into a submit. The host
+   * pages reset their own state on an identity change (ADR-0063 §7).
    *
    * If focus is inside the picker, the reload is about to remove the focused
    * control; focus is parked on the loading message and then moved to the
    * outcome (ADR-0029 §8.7).
    */
-  private reconcile(previous: LoadKey, next: LoadKey): void {
-    const active = document.activeElement;
-    if (active && active !== document.body && this.host.nativeElement.contains(active)) {
+  private reconcile(): void {
+    const active = this.document.activeElement;
+    if (active && active !== this.document.body && this.host.nativeElement.contains(active)) {
       this.focusAfterLoad = true;
     }
     this.control().setValue(this.currentVendor()?.vendorId ?? '');
-    if (previous.identity !== next.identity) {
-      this.identityChanged.emit();
-    }
   }
 
   retry(): void {

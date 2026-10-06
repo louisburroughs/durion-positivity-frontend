@@ -1,7 +1,7 @@
 <main class="profiles-page" aria-labelledby="profiles-page-title">
   <header class="profiles-page__header">
     <div>
-      <h1 id="profiles-page-title">{{ 'POSITIVITY.PROFILES.TITLE' | translate }}</h1>
+      <h1 id="profiles-page-title" tabindex="-1">{{ 'POSITIVITY.PROFILES.TITLE' | translate }}</h1>
       <p class="profiles-page__subtitle">{{ 'POSITIVITY.PROFILES.SUBTITLE' | translate }}</p>
     </div>
     <div class="profiles-page__actions">
@@ -62,7 +62,6 @@
         [control]="createForm.controls.vendorId"
         [errorKey]="fieldError('vendorId')"
         [errorDetail]="fieldDetail('vendorId')"
-        (identityChanged)="clearFieldFeedback()"
       />
 
       <div class="pos-field">

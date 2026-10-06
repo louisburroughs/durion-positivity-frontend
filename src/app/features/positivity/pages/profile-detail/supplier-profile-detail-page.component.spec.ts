@@ -592,4 +592,59 @@ describe('SupplierProfileDetailPageComponent', () => {
     expect(component.profile()?.displayName).toBe('Michelin EU');
     expect(component.saving()).toBe(false);
   });
+
+  // ── Identity change (ADR-0063 §7) ──────────────────────────────────────────
+
+  it('an identity change mid-flight: the old load and a late save never render; the new identity’s profile loads', async () => {
+    const auth = new AuthStub();
+    await setup(adminProfile, auth);
+    const oldLoad = new Subject<VendorProfile>();
+    const lateSave = new Subject<VendorProfile>();
+    service.getProfile.mockReturnValueOnce(oldLoad.asObservable());
+    service.updateProfile.mockReturnValueOnce(lateSave.asObservable());
+    component.openEdit();
+    component.saveProfile();
+    component.reload();
+    service.getProfile.mockReturnValue(of({ ...adminProfile, displayName: 'New identity' }));
+
+    auth.tenant.set('tenant-2');
+    fixture.detectChanges();
+
+    expect(component.editOpen()).toBe(false);
+    expect(component.saving()).toBe(false);
+    expect(service.getProfile).toHaveBeenLastCalledWith(PROFILE_ID);
+    expect(component.profile()?.displayName).toBe('New identity');
+
+    oldLoad.next({ ...adminProfile, displayName: 'Old identity load' });
+    lateSave.next({ ...adminProfile, displayName: 'Old identity save' });
+    fixture.detectChanges();
+
+    expect(component.profile()?.displayName).toBe('New identity');
+    expect(component.state()).toBe('ready');
+  });
+
+  it('an identity change clears the banner and field feedback from the previous identity', async () => {
+    const auth = new AuthStub();
+    await setup(adminProfile, auth);
+    service.updateProfile.mockReturnValueOnce(
+      throwError(
+        () =>
+          new HttpErrorResponse({
+            status: 422,
+            statusText: 'x',
+            error: { code: 'SUPPLIER_VENDOR_NOT_FOUND', message: 'nope' },
+          }),
+      ),
+    );
+    component.openEdit();
+    component.saveProfile();
+    expect(component.fieldError('vendorId')).toBe('POSITIVITY.ERROR.FIELD.VENDOR_NOT_FOUND');
+
+    auth.claims.set({ sub: 'clerk.b' });
+    fixture.detectChanges();
+
+    expect(component.fieldError('vendorId')).toBeNull();
+    expect(component.errorKey()).toBeNull();
+    expect(component.state()).toBe('ready');
+  });
 });

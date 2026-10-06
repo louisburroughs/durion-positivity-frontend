@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
-import { of, throwError } from 'rxjs';
+import { Subject, of, throwError } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SupplierProfileListPageComponent } from './supplier-profile-list-page.component';
 import { SupplierProfileService } from '../../services/supplier-profile.service';
@@ -355,5 +355,49 @@ describe('SupplierProfileListPageComponent', () => {
 
     expect(component.fieldError('vendorId')).toBeNull();
     expect(component.createForm.controls.vendorId.value).toBe('');
+  });
+
+  it('an identity change mid-flight drops the old list, a late create and the banner, then reloads (ADR-0063 §7)', async () => {
+    const auth = new AuthStub();
+    await setup(undefined, auth);
+    const oldList = new Subject<VendorProfileSummary[]>();
+    const lateCreate = new Subject<VendorProfileSummary>();
+    service.listProfiles.mockReturnValueOnce(oldList.asObservable());
+    service.createProfile.mockReturnValueOnce(lateCreate.asObservable());
+    component.load();
+    component.openCreate();
+    component.createForm.patchValue({ vendorId: ACME.vendorId, supplierRef: 'new', displayName: 'New' });
+    component.create();
+    component.errorKey.set('POSITIVITY.ERROR.VALIDATION');
+    component.state.set('error');
+    service.listProfiles.mockReturnValue(of([yamlProfile]));
+
+    auth.tenant.set('tenant-2');
+    fixture.detectChanges();
+
+    expect(component.createOpen()).toBe(false);
+    expect(component.saving()).toBe(false);
+    expect(component.errorKey()).toBeNull();
+    expect(component.profiles()).toEqual([yamlProfile]);
+    const callsAfterReset = service.listProfiles.mock.calls.length;
+
+    oldList.next([adminProfile]);
+    lateCreate.next(adminProfile);
+    fixture.detectChanges();
+
+    expect(component.profiles()).toEqual([yamlProfile]);
+    expect(service.listProfiles).toHaveBeenCalledTimes(callsAfterReset);
+    expect(component.state()).toBe('ready');
+  });
+
+  it('an identity change resets even with the create form closed', async () => {
+    const auth = new AuthStub();
+    await setup(undefined, auth);
+    service.listProfiles.mockReturnValue(of([yamlProfile]));
+
+    auth.claims.set({ sub: 'clerk.b' });
+    fixture.detectChanges();
+
+    expect(component.profiles()).toEqual([yamlProfile]);
   });
 });

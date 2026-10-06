@@ -1,4 +1,17 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  ElementRef,
+  Injector,
+  afterNextRender,
+  computed,
+  effect,
+  inject,
+  signal,
+  untracked,
+} from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -13,6 +26,7 @@ import {
   VendorProfileSummary,
 } from '../../models/supplier-profile.models';
 import { mapSupplierError } from '../../utils/supplier-error.util';
+import { supplierIdentityKey } from '../../utils/supplier-identity.util';
 
 type PageState = 'idle' | 'loading' | 'ready' | 'empty' | 'error' | 'forbidden';
 
@@ -50,6 +64,23 @@ export class SupplierProfileListPageComponent {
   private readonly service = inject(SupplierProfileService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly auth = inject(AuthService);
+  private readonly document = inject(DOCUMENT);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly injector = inject(Injector);
+
+  /**
+   * Monotonic per-writer sequences (ADR-0063): a list or create callback
+   * applies only while its sequence is still the latest issued. An identity
+   * change moves both on, so nothing the previous identity started can land.
+   */
+  private listSeq = 0;
+  private createSeq = 0;
+
+  /** `tid|sub`, each half percent-encoded. */
+  private readonly identity = computed(() =>
+    supplierIdentityKey(this.auth.tenantId(), this.auth.currentUserClaims()?.sub),
+  );
+  private trackedIdentity = this.identity();
 
   readonly state = signal<PageState>('idle');
   readonly errorKey = signal<string | null>(null);
@@ -77,6 +108,18 @@ export class SupplierProfileListPageComponent {
   });
 
   constructor() {
+    // ADR-0063 §7: a token for another tenant or person while the page stays
+    // mounted drops every read and write in flight and clears what the previous
+    // identity loaded, then reads again — whether or not the form is open.
+    effect(() => {
+      const identity = this.identity();
+      if (identity === this.trackedIdentity) return;
+      this.trackedIdentity = identity;
+      untracked(() => {
+        this.resetForIdentity();
+        this.load();
+      });
+    });
     this.load();
   }
 
@@ -96,6 +139,7 @@ export class SupplierProfileListPageComponent {
   }
 
   load(): void {
+    const seq = ++this.listSeq;
     this.state.set('loading');
     this.errorKey.set(null);
 
@@ -104,15 +148,43 @@ export class SupplierProfileListPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: profiles => {
+          if (seq !== this.listSeq) return;
           this.profiles.set(profiles);
           this.state.set(profiles.length === 0 ? 'empty' : 'ready');
         },
         error: (err: unknown) => {
+          if (seq !== this.listSeq) return;
           const outcome = mapSupplierError(err, 'POSITIVITY.PROFILES.ERROR.LOAD');
           this.state.set(outcome.kind === 'forbidden' ? 'forbidden' : 'error');
           this.errorKey.set(outcome.errorKey);
         },
       });
+  }
+
+  /** Drops every list and create callback in flight and clears all page state. */
+  private resetForIdentity(): void {
+    const active = this.document.activeElement;
+    const focusInside = !!active && active !== this.document.body && this.host.nativeElement.contains(active);
+    this.listSeq += 1;
+    this.createSeq += 1;
+    this.saving.set(false);
+    this.createOpen.set(false);
+    this.createForm.reset({ vendorId: '', supplierRef: '', displayName: '', sandbox: false, enabled: true });
+    this.clearFieldFeedback();
+    this.profiles.set([]);
+    this.errorKey.set(null);
+    this.state.set('idle');
+    if (focusInside) {
+      // The control that held focus may be gone with the form (ADR-0029 §8).
+      afterNextRender(() => this.focusTitleIfLost(), { injector: this.injector });
+    }
+  }
+
+  private focusTitleIfLost(): void {
+    const active = this.document.activeElement;
+    if (!active || active === this.document.body || !this.host.nativeElement.contains(active)) {
+      this.host.nativeElement.querySelector<HTMLElement>('#profiles-page-title')?.focus();
+    }
   }
 
   openCreate(): void {
@@ -149,6 +221,7 @@ export class SupplierProfileListPageComponent {
       enabled: raw.enabled,
     };
 
+    const seq = ++this.createSeq;
     this.saving.set(true);
     this.fieldErrors.set({});
     this.fieldDetails.set({});
@@ -158,12 +231,14 @@ export class SupplierProfileListPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
+          if (seq !== this.createSeq) return;
           this.saving.set(false);
           this.createOpen.set(false);
           this.errorKey.set(null);
           this.load();
         },
         error: (err: unknown) => {
+          if (seq !== this.createSeq) return;
           this.saving.set(false);
           const outcome = mapSupplierError(err, 'POSITIVITY.PROFILES.ERROR.CREATE');
           this.state.set('error');

@@ -27,7 +27,6 @@ import { SupplierVendorRoster } from '../../models/supplier-profile.models';
       [control]="control"
       [currentVendor]="current()"
       [mode]="mode()"
-      (identityChanged)="identityChanges = identityChanges + 1"
       [errorKey]="errorKey()"
       [errorDetail]="errorDetail()"
     />
@@ -37,7 +36,6 @@ class HostComponent {
   readonly control = new FormControl('', { nonNullable: true, validators: [Validators.required] });
   readonly current = signal<SupplierCurrentVendor | null>(null);
   readonly mode = signal<'create' | 'edit'>('create');
-  identityChanges = 0;
   readonly errorKey = signal<string | null>(null);
   readonly errorDetail = signal<string | null>(null);
 }
@@ -375,7 +373,7 @@ describe('SupplierVendorPickerComponent', () => {
     fixture.detectChanges();
   };
 
-  it('create: an identity change clears the previous identity’s vendor and reports it', () => {
+  it('create: an identity change clears the previous identity’s vendor', () => {
     setup();
     choose(BOLT.vendorId);
 
@@ -383,7 +381,6 @@ describe('SupplierVendorPickerComponent', () => {
 
     expect(host.control.value).toBe('');
     expect(select().value).toBe('');
-    expect(host.identityChanges).toBe(1);
   });
 
   it('create: revoking vendor read after a selection clears it', () => {
@@ -394,7 +391,6 @@ describe('SupplierVendorPickerComponent', () => {
 
     expect(query('vendor-forbidden')).not.toBeNull();
     expect(host.control.value).toBe('');
-    expect(host.identityChanges).toBe(0);
   });
 
   it('edit: an identity change resets the selection to the profile’s current vendor', () => {
@@ -405,7 +401,6 @@ describe('SupplierVendorPickerComponent', () => {
 
     expect(host.control.value).toBe(ACME.vendorId);
     expect(select().value).toBe(ACME.vendorId);
-    expect(host.identityChanges).toBe(1);
   });
 
   it('edit: revoking vendor read resets to the current vendor, matching the "kept" message', () => {
@@ -464,5 +459,20 @@ describe('SupplierVendorPickerComponent', () => {
     expect(document.activeElement).toBe(outside);
     el().remove();
     outside.remove();
+  });
+
+  it('tid=a|b/sub=c → tid=a/sub=b|c is an identity change, not the same key (ADR-0065)', () => {
+    const colliding = new AuthStub();
+    colliding.tenant.set('a|b');
+    colliding.claims.set({ sub: 'c' });
+    setup({ auth: colliding });
+    choose(BOLT.vendorId);
+
+    colliding.tenant.set('a');
+    colliding.claims.set({ sub: 'b|c' });
+    fixture.detectChanges();
+
+    expect(service.listActiveVendors).toHaveBeenCalledTimes(2);
+    expect(host.control.value).toBe('');
   });
 });

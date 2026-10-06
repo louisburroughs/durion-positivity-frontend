@@ -6,9 +6,12 @@ import {
   Injector,
   afterNextRender,
   computed,
+  effect,
   inject,
   signal,
+  untracked,
 } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -34,6 +37,7 @@ import {
   VendorProfileRequest,
 } from '../../models/supplier-profile.models';
 import { mapSupplierError } from '../../utils/supplier-error.util';
+import { supplierIdentityKey } from '../../utils/supplier-identity.util';
 import { SUPPLIER_RETRY_BACKOFFS } from '../../utils/supplier-capability-keys';
 
 type PageState = 'idle' | 'loading' | 'ready' | 'error' | 'forbidden';
@@ -100,6 +104,13 @@ export class SupplierProfileDetailPageComponent {
   private readonly auth = inject(AuthService);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly injector = inject(Injector);
+  private readonly document = inject(DOCUMENT);
+
+  /** `tid|sub`, each half percent-encoded. */
+  private readonly identity = computed(() =>
+    supplierIdentityKey(this.auth.tenantId(), this.auth.currentUserClaims()?.sub),
+  );
+  private trackedIdentity = this.identity();
 
   /**
    * Monotonic per-writer sequences (ADR-0063). The route id alone is not an
@@ -187,28 +198,20 @@ export class SupplierProfileDetailPageComponent {
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe(profileId => {
-        // A different profile: whatever form was open belonged to the last one.
-        // If focus sat inside this page (say, in the edit form) it is about to
-        // be removed; hold it on the loading target, then the heading (ADR-0029 §8).
-        const active = document.activeElement;
-        this.restoreFocusAfterLoad =
-          this.restoreFocusAfterLoad || (!!active && active !== document.body && this.host.nativeElement.contains(active));
-        this.saveSeq += 1;
-        this.saving.set(false);
-        this.editOpen.set(false);
-        this.clearFieldFeedback();
-        this.profile.set(null);
+        // A different profile: whatever the page held belonged to the last one.
         this.vendorProfileId.set(profileId);
-        if (profileId) {
-          this.loadProfile(profileId);
-        } else {
-          // No profile to load, so no load will settle and restore focus.
-          this.restoreFocusAfterLoad = false;
-        }
-        if (this.restoreFocusAfterLoad) {
-          afterNextRender(() => this.focusTarget('[data-testid="profile-loading"]'), { injector: this.injector });
-        }
+        this.resetAndLoad();
       });
+
+    // ADR-0063 §7: a token for another tenant or person while the page stays
+    // mounted drops every load and save in flight, clears what the previous
+    // identity loaded, and reads the routed profile again under the new one.
+    effect(() => {
+      const identity = this.identity();
+      if (identity === this.trackedIdentity) return;
+      this.trackedIdentity = identity;
+      untracked(() => this.resetAndLoad());
+    });
   }
 
   tabId(tab: ProfileTab): string {
@@ -234,7 +237,7 @@ export class SupplierProfileDetailPageComponent {
     event.preventDefault();
     const next = this.tabs[nextIndex];
     this.selectTab(next);
-    const element = document.getElementById(this.tabId(next));
+    const element = this.document.getElementById(this.tabId(next));
     element?.focus();
   }
 
@@ -395,9 +398,37 @@ export class SupplierProfileDetailPageComponent {
       });
   }
 
-  /** The signed-in identity changed under the open form: its field feedback is stale. */
-  onVendorIdentityChanged(): void {
+  /**
+   * A different profile or a different identity: everything on the page
+   * belonged to the previous one. Every load and save in flight is superseded
+   * (its response is ignored when it arrives; the HTTP request is not aborted),
+   * the form closes, the profile and feedback clear, and the routed profile is
+   * read again. If focus sat inside the page it is about to be removed; it is
+   * held on the loading target, then the heading (ADR-0029 §8).
+   */
+  private resetAndLoad(): void {
+    const active = this.document.activeElement;
+    this.restoreFocusAfterLoad =
+      this.restoreFocusAfterLoad ||
+      (!!active && active !== this.document.body && this.host.nativeElement.contains(active));
+    this.loadSeq += 1;
+    this.saveSeq += 1;
+    this.saving.set(false);
+    this.editOpen.set(false);
     this.clearFieldFeedback();
+    this.errorKey.set(null);
+    this.state.set('idle');
+    this.profile.set(null);
+    const profileId = this.vendorProfileId();
+    if (!profileId) {
+      // No profile to load, so no load will settle and restore focus.
+      this.restoreFocusAfterLoad = false;
+      return;
+    }
+    this.loadProfile(profileId);
+    if (this.restoreFocusAfterLoad) {
+      afterNextRender(() => this.focusTarget('[data-testid="profile-loading"]'), { injector: this.injector });
+    }
   }
 
   private restoreFocusIfPending(): void {
