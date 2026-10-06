@@ -44,6 +44,13 @@
     <form class="profiles-form" [formGroup]="createForm" (ngSubmit)="create()">
       <h2 class="profiles-form__title">{{ 'POSITIVITY.PROFILES.FORM.CREATE_TITLE' | translate }}</h2>
 
+      <app-supplier-vendor-picker
+        inputId="profile-vendor"
+        [control]="createForm.controls.vendorId"
+        [errorKey]="fieldError('vendorId')"
+        [errorDetail]="fieldDetail('vendorId')"
+      />
+
       <div class="pos-field">
         <label class="pos-field__label" for="profile-supplier-ref">
           {{ 'POSITIVITY.PROFILES.FIELD.SUPPLIER_REF' | translate }}
@@ -126,6 +133,7 @@
           <tr>
             <th scope="col">{{ 'POSITIVITY.PROFILES.TABLE.NAME' | translate }}</th>
             <th scope="col">{{ 'POSITIVITY.PROFILES.FIELD.SUPPLIER_REF' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.PROFILES.VENDOR.LABEL' | translate }}</th>
             <th scope="col">{{ 'POSITIVITY.PROFILES.TABLE.STATE' | translate }}</th>
             <th scope="col">{{ 'POSITIVITY.PROFILES.TABLE.ENVIRONMENT' | translate }}</th>
             <th scope="col">{{ 'POSITIVITY.PROFILES.TABLE.SOURCE' | translate }}</th>
@@ -139,6 +147,16 @@
             <tr>
               <th scope="row" class="profiles-page__name">{{ profile.displayName }}</th>
               <td><code class="profiles-page__ref">{{ profile.supplierRef }}</code></td>
+              <td data-testid="profile-vendor">
+                @if (profile.vendorNumber || profile.vendorDisplayName) {
+                  {{
+                    'POSITIVITY.PROFILES.VENDOR.OPTION'
+                      | translate: { number: profile.vendorNumber, name: profile.vendorDisplayName }
+                  }}
+                } @else {
+                  {{ 'POSITIVITY.PROFILES.VENDOR.NOT_REPORTED' | translate }}
+                }
+              </td>
               <td>
                 <app-supplier-status-chip
                   [labelKey]="

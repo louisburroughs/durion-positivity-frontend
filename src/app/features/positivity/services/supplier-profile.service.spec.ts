@@ -51,6 +51,9 @@ const profileView: VendorProfileView = {
   maxRetries: 2,
   sandboxBaseUrlOverride: 'https://sandbox.example.com',
   retryBackoff: VendorProfileViewRetryBackoffEnum.Exponential,
+  vendorId: 'ffc9a4c2-0000-7000-8000-00000000v001',
+  vendorNumber: 'V-000001',
+  vendorDisplayName: 'Michelin',
 };
 
 const authConfigView: AuthConfigView = {
@@ -119,6 +122,7 @@ const inactiveLocation: LocationResponseDTO = {
 };
 
 const profileRequest: VendorProfileRequest = {
+  vendorId: 'ffc9a4c2-0000-7000-8000-00000000v001',
   supplierRef: 'michelin-eu',
   displayName: 'Michelin EU',
   enabled: true,
@@ -192,18 +196,31 @@ describe('SupplierProfileService', () => {
         enabled: true,
         sandbox: false,
         sourceOfTruth: 'ADMIN',
+        vendorId: 'ffc9a4c2-0000-7000-8000-00000000v001',
+        vendorNumber: 'V-000001',
+        vendorDisplayName: 'Michelin',
       },
     ]);
+  });
+
+  it('listProfiles(vendorId) narrows the list to one vendor (`?vendorId=`)', () => {
+    profilesSdk.listVendorProfiles.mockReturnValue(of([profileView]));
+
+    service.listProfiles('ffc9a4c2-0000-7000-8000-00000000v001').subscribe();
+
+    expect(profilesSdk.listVendorProfiles).toHaveBeenCalledWith('ffc9a4c2-0000-7000-8000-00000000v001');
   });
 
   it('listProfiles() resolves the SDK’s optional fields at the boundary', () => {
     profilesSdk.listVendorProfiles.mockReturnValue(of([{} as VendorProfileView]));
 
-    let result: { supplierRef: string; enabled: boolean }[] = [];
+    let result: { supplierRef: string; enabled: boolean; vendorId: string; vendorNumber: string }[] = [];
     service.listProfiles().subscribe(value => (result = value));
 
     expect(result[0].supplierRef).toBe('');
     expect(result[0].enabled).toBe(false);
+    expect(result[0].vendorId).toBe('');
+    expect(result[0].vendorNumber).toBe('');
   });
 
   it('getProfile() carries the contract-named timeout fields through', () => {
@@ -229,12 +246,35 @@ describe('SupplierProfileService', () => {
     expect(body['retryBackoff']).toBe('EXPONENTIAL');
   });
 
+  it('createProfile() carries the required vendorId (backend S23)', () => {
+    profilesSdk.createVendorProfile.mockReturnValue(of(profileView));
+
+    service.createProfile(profileRequest).subscribe();
+
+    const body = profilesSdk.createVendorProfile.mock.calls[0][0] as Record<string, unknown>;
+    expect(body['vendorId']).toBe('ffc9a4c2-0000-7000-8000-00000000v001');
+  });
+
   it('updateProfile() targets the profile id', () => {
     profilesSdk.updateVendorProfile.mockReturnValue(of(profileView));
 
     service.updateProfile(PROFILE_ID, profileRequest).subscribe();
 
-    expect(profilesSdk.updateVendorProfile).toHaveBeenCalledWith(PROFILE_ID, expect.any(Object));
+    expect(profilesSdk.updateVendorProfile).toHaveBeenCalledWith(
+      PROFILE_ID,
+      expect.objectContaining({ vendorId: 'ffc9a4c2-0000-7000-8000-00000000v001' }),
+    );
+  });
+
+  it('getProfile() carries the vendor the profile belongs to', () => {
+    profilesSdk.getVendorProfile.mockReturnValue(of(profileView));
+
+    let result: { vendorId?: string; vendorNumber?: string; vendorDisplayName?: string } = {};
+    service.getProfile(PROFILE_ID).subscribe(value => (result = value));
+
+    expect(result.vendorId).toBe('ffc9a4c2-0000-7000-8000-00000000v001');
+    expect(result.vendorNumber).toBe('V-000001');
+    expect(result.vendorDisplayName).toBe('Michelin');
   });
 
   it('deleteProfile() completes with no value', () => {

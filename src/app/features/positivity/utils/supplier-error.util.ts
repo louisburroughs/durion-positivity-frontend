@@ -84,6 +84,19 @@ const FIELD_NAME_KEYS: Readonly<Record<string, string>> = {
   readTimeoutMillis: 'POSITIVITY.ERROR.FIELD.TIMEOUT_INVALID',
   maxRetries: 'POSITIVITY.ERROR.FIELD.MAX_RETRIES_INVALID',
   sandboxBaseUrlOverride: 'POSITIVITY.ERROR.FIELD.BASE_URL_MALFORMED',
+  vendorId: 'POSITIVITY.ERROR.FIELD.VENDOR_REQUIRED',
+};
+
+/**
+ * Envelope-level codes that are really about one field (#2516).
+ *
+ * The profile admin API answers a `vendorId` it cannot use with a `422` whose
+ * `ApiError.code` names the cause and which carries **no** `fieldErrors`. These
+ * are mapped onto the `vendorId` field so the picker shows them inline.
+ */
+const ENVELOPE_CODE_FIELDS: Readonly<Record<string, { field: string; key: string }>> = {
+  SUPPLIER_VENDOR_NOT_FOUND: { field: 'vendorId', key: 'POSITIVITY.ERROR.FIELD.VENDOR_NOT_FOUND' },
+  SUPPLIER_VENDOR_INACTIVE: { field: 'vendorId', key: 'POSITIVITY.ERROR.FIELD.VENDOR_INACTIVE' },
 };
 
 /**
@@ -180,6 +193,20 @@ export function mapSupplierError(error: unknown, fallbackKey: string): SupplierE
   if (error.status === 400 || error.status === 422) {
     const entries = collectFieldErrors(body);
     const { fieldErrors, fieldDetails } = indexFieldErrors(entries);
+    const envelopeField = body?.code ? ENVELOPE_CODE_FIELDS[body.code] : undefined;
+    if (envelopeField) {
+      fieldErrors[envelopeField.field] = envelopeField.key;
+      if (typeof body?.message === 'string' && body.message !== '') {
+        fieldDetails[envelopeField.field] = body.message;
+      }
+      return {
+        kind: 'validation',
+        errorKey: 'POSITIVITY.ERROR.VALIDATION',
+        fieldErrors,
+        fieldDetails,
+        retryable: false,
+      };
+    }
     return {
       kind: 'validation',
       errorKey: entries.length > 0 ? 'POSITIVITY.ERROR.VALIDATION' : fallbackKey,

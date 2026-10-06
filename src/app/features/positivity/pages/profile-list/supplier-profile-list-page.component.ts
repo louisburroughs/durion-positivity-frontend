@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
 import { SupplierStatusChipComponent } from '../../components/supplier-status-chip/supplier-status-chip.component';
+import { SupplierVendorPickerComponent } from '../../components/supplier-vendor-picker/supplier-vendor-picker.component';
 import { SupplierProfileService } from '../../services/supplier-profile.service';
 import {
   VendorProfileRequest,
@@ -21,6 +22,10 @@ type PageState = 'idle' | 'loading' | 'ready' | 'empty' | 'error' | 'forbidden';
  * profile happens here; auth configs, accounts, bindings, health, and PRICAT are
  * managed on the detail screen.
  *
+ * Every profile belongs to one pos-supplier vendor (backend S23, #484): the
+ * create form requires one, chosen from the tenant's active vendors, and the
+ * list shows each profile's vendor number and name.
+ *
  * YAML-managed profiles are listed and readable but not editable — the admin API
  * rejects writes to them by design, so the UI states the reason rather than
  * offering a control that will fail (ADR-0050 §6).
@@ -28,7 +33,13 @@ type PageState = 'idle' | 'loading' | 'ready' | 'empty' | 'error' | 'forbidden';
 @Component({
   selector: 'app-supplier-profile-list-page',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, TranslatePipe, SupplierStatusChipComponent],
+  imports: [
+    ReactiveFormsModule,
+    RouterLink,
+    TranslatePipe,
+    SupplierStatusChipComponent,
+    SupplierVendorPickerComponent,
+  ],
   templateUrl: './supplier-profile-list-page.component.html',
   styleUrls: ['../../positivity-shared.css', './supplier-profile-list-page.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -46,6 +57,7 @@ export class SupplierProfileListPageComponent {
   readonly saving = signal(false);
 
   readonly createForm = new FormGroup({
+    vendorId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     supplierRef: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     displayName: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     sandbox: new FormControl(false, { nonNullable: true }),
@@ -88,7 +100,7 @@ export class SupplierProfileListPageComponent {
   openCreate(): void {
     this.fieldErrors.set({});
     this.fieldDetails.set({});
-    this.createForm.reset({ supplierRef: '', displayName: '', sandbox: false, enabled: true });
+    this.createForm.reset({ vendorId: '', supplierRef: '', displayName: '', sandbox: false, enabled: true });
     this.createOpen.set(true);
   }
 
@@ -106,6 +118,7 @@ export class SupplierProfileListPageComponent {
 
     const raw = this.createForm.getRawValue();
     const request: VendorProfileRequest = {
+      vendorId: raw.vendorId,
       supplierRef: raw.supplierRef.trim(),
       displayName: raw.displayName.trim(),
       sandbox: raw.sandbox,

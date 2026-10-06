@@ -7,6 +7,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SupplierProfileListPageComponent } from './supplier-profile-list-page.component';
 import { SupplierProfileService } from '../../services/supplier-profile.service';
 import { VendorProfileSummary } from '../../models/supplier-profile.models';
+import {
+  ACME,
+  VendorServiceStub,
+  vendorPickerProviders,
+  vendorServiceStub,
+} from '../../components/supplier-vendor-picker/supplier-vendor-picker.spec-helper';
 
 const adminProfile: VendorProfileSummary = {
   vendorProfileId: 'profile-1',
@@ -15,6 +21,9 @@ const adminProfile: VendorProfileSummary = {
   enabled: true,
   sandbox: false,
   sourceOfTruth: 'ADMIN',
+  vendorId: ACME.vendorId,
+  vendorNumber: 'V-000001',
+  vendorDisplayName: 'Acme Tire',
 };
 
 const yamlProfile: VendorProfileSummary = {
@@ -24,6 +33,9 @@ const yamlProfile: VendorProfileSummary = {
   enabled: false,
   sandbox: true,
   sourceOfTruth: 'YAML',
+  vendorId: 'ffc9a4c2-0000-7000-8000-00000000v003',
+  vendorNumber: '',
+  vendorDisplayName: '',
 };
 
 describe('SupplierProfileListPageComponent', () => {
@@ -33,6 +45,7 @@ describe('SupplierProfileListPageComponent', () => {
     listProfiles: ReturnType<typeof vi.fn>;
     createProfile: ReturnType<typeof vi.fn>;
   };
+  let vendors: VendorServiceStub;
 
   async function setup(
     profiles: VendorProfileSummary[] | HttpErrorResponse = [adminProfile, yamlProfile],
@@ -46,10 +59,15 @@ describe('SupplierProfileListPageComponent', () => {
       createProfile: vi.fn().mockReturnValue(of(adminProfile)),
     };
 
+    vendors = vendorServiceStub();
     TestBed.resetTestingModule();
     await TestBed.configureTestingModule({
       imports: [SupplierProfileListPageComponent, TranslateModule.forRoot()],
-      providers: [provideRouter([]), { provide: SupplierProfileService, useValue: service }],
+      providers: [
+        provideRouter([]),
+        { provide: SupplierProfileService, useValue: service },
+        ...vendorPickerProviders(vendors),
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(SupplierProfileListPageComponent);
@@ -131,6 +149,7 @@ describe('SupplierProfileListPageComponent', () => {
     await setup();
     component.openCreate();
     component.createForm.patchValue({
+      vendorId: ACME.vendorId,
       supplierRef: ' michelin-eu ',
       displayName: ' Michelin EU ',
       sandbox: true,
@@ -139,6 +158,7 @@ describe('SupplierProfileListPageComponent', () => {
     component.create();
 
     expect(service.createProfile).toHaveBeenCalledWith({
+      vendorId: ACME.vendorId,
       supplierRef: 'michelin-eu',
       displayName: 'Michelin EU',
       sandbox: true,
@@ -170,7 +190,7 @@ describe('SupplierProfileListPageComponent', () => {
       ),
     );
     component.openCreate();
-    component.createForm.patchValue({ supplierRef: 'dup', displayName: 'Dup' });
+    component.createForm.patchValue({ vendorId: ACME.vendorId, supplierRef: 'dup', displayName: 'Dup' });
     component.create();
 
     expect(component.state()).toBe('error');
@@ -181,7 +201,7 @@ describe('SupplierProfileListPageComponent', () => {
   it('reloads the list after a successful create', async () => {
     await setup();
     component.openCreate();
-    component.createForm.patchValue({ supplierRef: 'new', displayName: 'New vendor' });
+    component.createForm.patchValue({ vendorId: ACME.vendorId, supplierRef: 'new', displayName: 'New vendor' });
     component.create();
 
     expect(service.listProfiles).toHaveBeenCalledTimes(2);
@@ -199,5 +219,64 @@ describe('SupplierProfileListPageComponent', () => {
       expect(id).toBeTruthy();
       expect(host.querySelector(`label[for="${id}"]`), `no label for #${id}`).not.toBeNull();
     }
+  });
+
+  // ── Vendor (#484) ──────────────────────────────────────────────────────────
+
+  it('blocks a create without a vendor client-side and says why (AC1)', async () => {
+    await setup();
+    component.openCreate();
+    fixture.detectChanges();
+    component.createForm.patchValue({ supplierRef: 'new', displayName: 'New vendor' });
+    component.create();
+    fixture.detectChanges();
+
+    expect(service.createProfile).not.toHaveBeenCalled();
+    const host = fixture.nativeElement as HTMLElement;
+    expect(host.querySelector('[data-testid="vendor-required"]')?.textContent).toContain(
+      'POSITIVITY.ERROR.FIELD.VENDOR_REQUIRED',
+    );
+  });
+
+  it('creates with the vendor chosen in the picker (AC1)', async () => {
+    await setup();
+    component.openCreate();
+    fixture.detectChanges();
+    const host = fixture.nativeElement as HTMLElement;
+    const select = host.querySelector('[data-testid="vendor-select"]') as HTMLSelectElement;
+    select.value = ACME.vendorId;
+    select.dispatchEvent(new Event('change'));
+    component.createForm.patchValue({ supplierRef: 'new', displayName: 'New vendor' });
+    component.create();
+
+    expect(service.createProfile).toHaveBeenCalledWith(expect.objectContaining({ vendorId: ACME.vendorId }));
+    expect(vendors.listActiveVendors).toHaveBeenCalled();
+  });
+
+  it.each([
+    ['SUPPLIER_VENDOR_NOT_FOUND', 'POSITIVITY.ERROR.FIELD.VENDOR_NOT_FOUND'],
+    ['SUPPLIER_VENDOR_INACTIVE', 'POSITIVITY.ERROR.FIELD.VENDOR_INACTIVE'],
+  ])('renders a 422 %s on the vendor picker (AC3)', async (code, key) => {
+    await setup();
+    service.createProfile.mockReturnValue(
+      throwError(() => new HttpErrorResponse({ status: 422, statusText: 'x', error: { code, message: 'nope' } })),
+    );
+    component.openCreate();
+    component.createForm.patchValue({ vendorId: ACME.vendorId, supplierRef: 'new', displayName: 'New' });
+    component.create();
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    expect(host.querySelector('[data-testid="vendor-error"]')?.textContent).toContain(key);
+    expect(host.querySelector('#profile-vendor')?.getAttribute('aria-invalid')).toBe('true');
+  });
+
+  it('shows each profile’s vendor number and name, and says when the view omits it', async () => {
+    await setup();
+    const cells = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('[data-testid="profile-vendor"]')).map(
+      cell => cell.textContent?.trim(),
+    );
+
+    expect(cells).toEqual(['POSITIVITY.PROFILES.VENDOR.OPTION', 'POSITIVITY.PROFILES.VENDOR.NOT_REPORTED']);
   });
 });

@@ -19,6 +19,10 @@ import { SupplierHealthPanelComponent } from '../../components/supplier-health-p
 import { SupplierPriceCatalogPanelComponent } from '../../components/supplier-pricecat-panel/supplier-pricecat-panel.component';
 import { SupplierStockSnapshotPanelComponent } from '../../components/supplier-stock-snapshot-panel/supplier-stock-snapshot-panel.component';
 import { SupplierStatusChipComponent } from '../../components/supplier-status-chip/supplier-status-chip.component';
+import {
+  SupplierCurrentVendor,
+  SupplierVendorPickerComponent,
+} from '../../components/supplier-vendor-picker/supplier-vendor-picker.component';
 import { SupplierProfileService } from '../../services/supplier-profile.service';
 import {
   SupplierRetryBackoff,
@@ -55,6 +59,11 @@ export type ProfileTab = (typeof PROFILE_TABS)[number];
  * why the system will not let them proceed, and leaves them looking for a button
  * that is not there.
  *
+ * Every profile belongs to one pos-supplier vendor (backend S23, #484). The
+ * header names it, and the edit form carries a required vendor picker that
+ * pre-selects it — an inactive current vendor stays selectable, labelled as
+ * inactive, because the backend lets a profile keep it.
+ *
  * The Health tab is present but reports that connection health is not yet
  * available: there is no health or circuit-breaker endpoint in the supplier
  * contract. See the panel for the reasoning.
@@ -73,6 +82,7 @@ export type ProfileTab = (typeof PROFILE_TABS)[number];
     SupplierHealthPanelComponent,
     SupplierPriceCatalogPanelComponent,
     SupplierStockSnapshotPanelComponent,
+    SupplierVendorPickerComponent,
   ],
   templateUrl: './supplier-profile-detail-page.component.html',
   styleUrls: ['../../positivity-shared.css', './supplier-profile-detail-page.component.css'],
@@ -106,7 +116,23 @@ export class SupplierProfileDetailPageComponent {
   /** YAML-sourced profiles are configuration rollouts, not operator data. */
   readonly readOnly = computed(() => this.profile()?.sourceOfTruth === 'YAML');
 
+  /** The profile's own vendor, pre-selected (and always offered) by the edit form's picker. */
+  readonly currentVendor = computed<SupplierCurrentVendor | null>(
+    () => {
+      const profile = this.profile();
+      return profile?.vendorId
+        ? {
+            vendorId: profile.vendorId,
+            vendorNumber: profile.vendorNumber,
+            displayName: profile.vendorDisplayName,
+          }
+        : null;
+    },
+    { equal: (a, b) => a?.vendorId === b?.vendorId && a?.vendorNumber === b?.vendorNumber && a?.displayName === b?.displayName },
+  );
+
   readonly editForm = new FormGroup({
+    vendorId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     supplierRef: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     displayName: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     sandbox: new FormControl(false, { nonNullable: true }),
@@ -126,6 +152,10 @@ export class SupplierProfileDetailPageComponent {
           distinctUntilChanged(),
         )
         .subscribe(profileId => {
+          // A different profile: whatever form was open belonged to the last one.
+          this.editOpen.set(false);
+          this.clearFieldFeedback();
+          this.profile.set(null);
           this.vendorProfileId.set(profileId);
           if (profileId) {
             this.loadProfile(profileId);
@@ -197,8 +227,13 @@ export class SupplierProfileDetailPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: profile => {
+          // The route moved on while this was in flight: not this page's profile any more.
+          if (this.vendorProfileId() !== vendorProfileId) {
+            return;
+          }
           this.profile.set(profile);
           this.editForm.reset({
+            vendorId: profile.vendorId,
             supplierRef: profile.supplierRef,
             displayName: profile.displayName,
             sandbox: profile.sandbox,
@@ -212,6 +247,9 @@ export class SupplierProfileDetailPageComponent {
           this.state.set('ready');
         },
         error: (err: unknown) => {
+          if (this.vendorProfileId() !== vendorProfileId) {
+            return;
+          }
           const outcome = mapSupplierError(err, 'POSITIVITY.PROFILES.ERROR.LOAD_DETAIL');
           this.state.set(outcome.kind === 'forbidden' ? 'forbidden' : 'error');
           this.errorKey.set(outcome.errorKey);
@@ -245,6 +283,7 @@ export class SupplierProfileDetailPageComponent {
 
     const raw = this.editForm.getRawValue();
     const request: VendorProfileRequest = {
+      vendorId: raw.vendorId,
       supplierRef: raw.supplierRef.trim(),
       displayName: raw.displayName.trim(),
       sandbox: raw.sandbox,
@@ -265,12 +304,18 @@ export class SupplierProfileDetailPageComponent {
       .subscribe({
         next: profile => {
           this.saving.set(false);
+          if (this.vendorProfileId() !== profileId) {
+            return;
+          }
           this.profile.set(profile);
           this.editOpen.set(false);
           this.errorKey.set(null);
         },
         error: (err: unknown) => {
           this.saving.set(false);
+          if (this.vendorProfileId() !== profileId) {
+            return;
+          }
           this.handleMutationError(err, 'POSITIVITY.PROFILES.ERROR.SAVE');
         },
       });

@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
-import { BehaviorSubject, of, throwError } from 'rxjs';
+import { BehaviorSubject, Subject, of, throwError } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   PROFILE_TABS,
@@ -12,6 +12,14 @@ import { SupplierProfileService } from '../../services/supplier-profile.service'
 import { SupplierPriceCatalogService } from '../../services/supplier-price-catalog.service';
 import { SupplierStockSnapshotService } from '../../services/supplier-stock-snapshot.service';
 import { VendorProfile } from '../../models/supplier-profile.models';
+import {
+  ACME,
+  BOLT,
+  RETIRED,
+  VendorServiceStub,
+  vendorPickerProviders,
+  vendorServiceStub,
+} from '../../components/supplier-vendor-picker/supplier-vendor-picker.spec-helper';
 
 const PROFILE_ID = 'profile-1';
 
@@ -22,6 +30,9 @@ const adminProfile: VendorProfile = {
   enabled: true,
   sandbox: false,
   sourceOfTruth: 'ADMIN',
+  vendorId: ACME.vendorId,
+  vendorNumber: ACME.vendorNumber,
+  vendorDisplayName: ACME.displayName,
 };
 
 const yamlProfile: VendorProfile = { ...adminProfile, sourceOfTruth: 'YAML' };
@@ -38,6 +49,8 @@ describe('SupplierProfileDetailPageComponent', () => {
     listBindings: ReturnType<typeof vi.fn>;
   };
   let router: { navigate: ReturnType<typeof vi.fn> };
+  let vendors: VendorServiceStub;
+  let paramMap$: BehaviorSubject<ReturnType<typeof convertToParamMap>>;
 
   async function setup(profile: VendorProfile | HttpErrorResponse = adminProfile): Promise<void> {
     service = {
@@ -82,6 +95,8 @@ describe('SupplierProfileDetailPageComponent', () => {
         of({ items: [], page: 0, size: 25, totalCount: 0, totalPages: 0 }),
       ),
     };
+    vendors = vendorServiceStub();
+    paramMap$ = new BehaviorSubject(convertToParamMap({ vendorProfileId: PROFILE_ID }));
     TestBed.resetTestingModule();
     await TestBed.configureTestingModule({
       imports: [SupplierProfileDetailPageComponent, TranslateModule.forRoot()],
@@ -89,13 +104,9 @@ describe('SupplierProfileDetailPageComponent', () => {
         { provide: SupplierProfileService, useValue: service },
         { provide: SupplierPriceCatalogService, useValue: priceCatalogService },
         { provide: SupplierStockSnapshotService, useValue: stockSnapshotService },
+        ...vendorPickerProviders(vendors),
         provideRouter([]),
-        {
-          provide: ActivatedRoute,
-          useValue: {
-            paramMap: new BehaviorSubject(convertToParamMap({ vendorProfileId: PROFILE_ID })),
-          },
-        },
+        { provide: ActivatedRoute, useValue: { paramMap: paramMap$ } },
       ],
     }).compileComponents();
 
@@ -279,6 +290,7 @@ describe('SupplierProfileDetailPageComponent', () => {
     component.saveProfile();
 
     expect(service.updateProfile).toHaveBeenCalledWith(PROFILE_ID, {
+      vendorId: ACME.vendorId,
       supplierRef: 'michelin-eu',
       displayName: 'Michelin EMEA',
       sandbox: false,
@@ -359,5 +371,96 @@ describe('SupplierProfileDetailPageComponent', () => {
     );
 
     expect(crumb?.getAttribute('href')).toBe('/app/positivity');
+  });
+
+  // ── Vendor (#484) ──────────────────────────────────────────────────────────
+
+  it('names the profile’s vendor in the settings', async () => {
+    await setup();
+    const vendor = (fixture.nativeElement as HTMLElement).querySelector('[data-testid="profile-vendor"]');
+
+    expect(vendor?.textContent).toContain('POSITIVITY.PROFILES.VENDOR.OPTION');
+  });
+
+  it('edit pre-selects the profile’s vendor and saves it unchanged (AC2)', async () => {
+    await setup();
+    component.openEdit();
+    fixture.detectChanges();
+    const select = (fixture.nativeElement as HTMLElement).querySelector('#edit-vendor') as HTMLSelectElement;
+
+    expect(select.value).toBe(ACME.vendorId);
+    component.saveProfile();
+    expect(service.updateProfile).toHaveBeenCalledWith(PROFILE_ID, expect.objectContaining({ vendorId: ACME.vendorId }));
+  });
+
+  it('edit can re-point the profile to another active vendor', async () => {
+    await setup();
+    component.openEdit();
+    fixture.detectChanges();
+    const select = (fixture.nativeElement as HTMLElement).querySelector('#edit-vendor') as HTMLSelectElement;
+    select.value = BOLT.vendorId;
+    select.dispatchEvent(new Event('change'));
+    component.saveProfile();
+
+    expect(service.updateProfile).toHaveBeenCalledWith(PROFILE_ID, expect.objectContaining({ vendorId: BOLT.vendorId }));
+  });
+
+  it('edit keeps an inactive current vendor, labelled as inactive, and saves it', async () => {
+    await setup({
+      ...adminProfile,
+      vendorId: RETIRED.vendorId,
+      vendorNumber: RETIRED.vendorNumber,
+      vendorDisplayName: RETIRED.displayName,
+    });
+    component.openEdit();
+    fixture.detectChanges();
+    const host = fixture.nativeElement as HTMLElement;
+
+    expect(host.querySelector('[data-testid="vendor-inactive"]')).not.toBeNull();
+    component.saveProfile();
+    expect(service.updateProfile).toHaveBeenCalledWith(PROFILE_ID, expect.objectContaining({ vendorId: RETIRED.vendorId }));
+  });
+
+  it('renders a 422 SUPPLIER_VENDOR_INACTIVE on the picker (AC3)', async () => {
+    await setup();
+    service.updateProfile.mockReturnValue(
+      throwError(
+        () =>
+          new HttpErrorResponse({
+            status: 422,
+            statusText: 'x',
+            error: { code: 'SUPPLIER_VENDOR_INACTIVE', message: 'Vendor is inactive' },
+          }),
+      ),
+    );
+    component.openEdit();
+    component.saveProfile();
+    fixture.detectChanges();
+
+    const error = (fixture.nativeElement as HTMLElement).querySelector('[data-testid="vendor-error"]');
+    expect(error?.textContent).toContain('POSITIVITY.ERROR.FIELD.VENDOR_INACTIVE');
+    expect(error?.textContent).toContain('Vendor is inactive');
+  });
+
+  it('drops a profile load that resolves after the route moved to another profile (ADR-0063)', async () => {
+    await setup();
+    const late = new Subject<VendorProfile>();
+    service.getProfile.mockReturnValueOnce(late.asObservable()).mockReturnValue(of({ ...adminProfile, vendorProfileId: 'profile-3', displayName: 'Third' }));
+
+    paramMap$.next(convertToParamMap({ vendorProfileId: 'profile-2' }));
+    paramMap$.next(convertToParamMap({ vendorProfileId: 'profile-3' }));
+    late.next({ ...adminProfile, vendorProfileId: 'profile-2', displayName: 'Second' });
+    fixture.detectChanges();
+
+    expect(component.vendorProfileId()).toBe('profile-3');
+    expect(component.profile()?.displayName).toBe('Third');
+  });
+
+  it('closes an open edit form when the route moves to another profile', async () => {
+    await setup();
+    component.openEdit();
+    paramMap$.next(convertToParamMap({ vendorProfileId: 'profile-2' }));
+
+    expect(component.editOpen()).toBe(false);
   });
 });

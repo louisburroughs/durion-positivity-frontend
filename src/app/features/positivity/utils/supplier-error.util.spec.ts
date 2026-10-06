@@ -260,3 +260,36 @@ describe('isSourceOfTruthConflict', () => {
     expect(isSourceOfTruthConflict(httpError(400), true)).toBe(false);
   });
 });
+
+describe('mapSupplierError — vendor envelope codes on 422 (backend S23)', () => {
+  it.each([
+    ['SUPPLIER_VENDOR_NOT_FOUND', 'POSITIVITY.ERROR.FIELD.VENDOR_NOT_FOUND'],
+    ['SUPPLIER_VENDOR_INACTIVE', 'POSITIVITY.ERROR.FIELD.VENDOR_INACTIVE'],
+  ])('maps %s onto the vendorId field', (code, key) => {
+    const outcome = mapSupplierError(
+      httpError(422, { code, message: 'Vendor x is not usable' }),
+      'POSITIVITY.PROFILES.ERROR.CREATE',
+    );
+
+    expect(outcome.kind).toBe('validation');
+    expect(outcome.errorKey).toBe('POSITIVITY.ERROR.VALIDATION');
+    expect(outcome.fieldErrors).toEqual({ vendorId: key });
+    expect(outcome.fieldDetails).toEqual({ vendorId: 'Vendor x is not usable' });
+  });
+
+  it('maps the 400 "vendorId is required" field error to the picker message', () => {
+    const outcome = mapSupplierError(
+      httpError(400, { code: 'VALIDATION_ERROR', fieldErrors: [{ field: 'vendorId', message: 'vendorId is required' }] }),
+      'POSITIVITY.PROFILES.ERROR.CREATE',
+    );
+
+    expect(outcome.fieldErrors).toEqual({ vendorId: 'POSITIVITY.ERROR.FIELD.VENDOR_REQUIRED' });
+  });
+
+  it('leaves an unrelated 422 code on the fallback banner', () => {
+    const outcome = mapSupplierError(httpError(422, { code: 'SOMETHING_ELSE' }), 'POSITIVITY.PROFILES.ERROR.CREATE');
+
+    expect(outcome.errorKey).toBe('POSITIVITY.PROFILES.ERROR.CREATE');
+    expect(outcome.fieldErrors).toEqual({});
+  });
+});

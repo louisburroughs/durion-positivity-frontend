@@ -86,6 +86,19 @@
 
     <dl class="profile-detail__settings">
       <div class="profile-detail__setting">
+        <dt>{{ 'POSITIVITY.PROFILES.VENDOR.LABEL' | translate }}</dt>
+        <dd data-testid="profile-vendor">
+          @if (current.vendorNumber || current.vendorDisplayName) {
+            {{
+              'POSITIVITY.PROFILES.VENDOR.OPTION'
+                | translate: { number: current.vendorNumber, name: current.vendorDisplayName }
+            }}
+          } @else {
+            {{ 'POSITIVITY.PROFILES.VENDOR.NOT_REPORTED' | translate }}
+          }
+        </dd>
+      </div>
+      <div class="profile-detail__setting">
         <dt>{{ 'POSITIVITY.PROFILES.FIELD.CONNECT_TIMEOUT' | translate }}</dt>
         <dd>
           @if (current.connectTimeoutMillis !== undefined) {
@@ -142,6 +155,14 @@
     @if (editOpen()) {
       <form class="profile-detail__form" [formGroup]="editForm" (ngSubmit)="saveProfile()">
         <h2 class="profile-detail__form-title">{{ 'POSITIVITY.PROFILES.FORM.EDIT_TITLE' | translate }}</h2>
+
+        <app-supplier-vendor-picker
+          inputId="edit-vendor"
+          [control]="editForm.controls.vendorId"
+          [currentVendor]="currentVendor()"
+          [errorKey]="fieldError('vendorId')"
+          [errorDetail]="fieldDetail('vendorId')"
+        />
 
         <div class="pos-field">
           <label class="pos-field__label" for="edit-supplier-ref">

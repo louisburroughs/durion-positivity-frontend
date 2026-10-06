@@ -1,0 +1,15 @@
+/* Vendor picker (#484). Field, banner and button styles come from positivity-shared.css. */
+.vendor-picker__current {
+	margin: 0;
+	font-size: 0.9375rem;
+	color: var(--currentTextColor);
+}
+
+.vendor-picker__inactive {
+	font-weight: 600;
+	color: var(--status-warning-fg);
+}
+
+.vendor-picker__error {
+	margin-bottom: 0;
+}

@@ -70,6 +70,12 @@ export interface VendorProfileSummary {
   /** True when the profile resolves its sandbox overlay instead of production endpoints. */
   sandbox: boolean;
   sourceOfTruth: SupplierSourceOfTruth;
+  /** The pos-supplier vendor this connection belongs to (UUIDv7, #2516). */
+  vendorId: string;
+  /** That vendor's number — the reference people quote. Empty when the view omits it. */
+  vendorNumber: string;
+  /** That vendor's display name. Empty when the view omits it. */
+  vendorDisplayName: string;
 }
 
 /** Full profile record returned by the detail endpoint. */
@@ -87,6 +93,13 @@ export interface VendorProfile extends VendorProfileSummary {
 
 /** Create/update payload — server-generated fields are omitted entirely (ADR-0034). */
 export interface VendorProfileRequest {
+  /**
+   * The vendor the profile belongs to. Required by the backend on create and
+   * update (400 without it); must be ACTIVE on create, and an update may keep
+   * the profile's own vendor after it went inactive but never re-point to a
+   * different inactive one (422 `SUPPLIER_VENDOR_INACTIVE`).
+   */
+  vendorId: string;
   supplierRef: string;
   displayName: string;
   enabled: boolean;
@@ -96,6 +109,27 @@ export interface VendorProfileRequest {
   maxRetries?: number;
   sandboxBaseUrlOverride?: string;
   retryBackoff?: SupplierRetryBackoff;
+}
+
+/** A vendor as the profile form's vendor picker needs it. */
+export interface SupplierVendorOption {
+  readonly vendorId: string;
+  vendorNumber: string;
+  displayName: string;
+  /** False for an INACTIVE vendor — offered only as a profile's own current vendor. */
+  active: boolean;
+}
+
+/**
+ * The ACTIVE vendors a profile may be pointed at.
+ *
+ * The list endpoint is paged; the roster is read page by page up to a bound.
+ * `truncated` is true when the tenant has more active vendors than that bound,
+ * so the picker can say so instead of implying the list is complete.
+ */
+export interface SupplierVendorRoster {
+  vendors: SupplierVendorOption[];
+  truncated: boolean;
 }
 
 /**

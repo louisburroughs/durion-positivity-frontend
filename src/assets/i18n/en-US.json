@@ -9123,7 +9123,10 @@
         "UNKNOWN_PROTOCOL_FAMILY": "The service does not recognise this protocol family key.",
         "PROTOCOL_VERSION": "This version key was rejected. It must match a registered adapter exactly and be at most 64 characters.",
         "TIMEOUT_INVALID": "Enter a timeout greater than zero, or leave it empty to use the deployment default.",
-        "MAX_RETRIES_INVALID": "Enter zero or more retries, or leave it empty to use the deployment default."
+        "MAX_RETRIES_INVALID": "Enter zero or more retries, or leave it empty to use the deployment default.",
+        "VENDOR_REQUIRED": "Choose the vendor this profile belongs to.",
+        "VENDOR_NOT_FOUND": "This vendor no longer exists. Choose another vendor.",
+        "VENDOR_INACTIVE": "This vendor is inactive. Choose an active vendor."
       },
       "CONFLICT_YAML": "This profile is managed by deployment configuration (YAML), so the service rejected the change. Update it through your configuration pipeline instead."
     },
@@ -9208,6 +9211,21 @@
       "BACKOFF": {
         "FIXED": "Fixed",
         "EXPONENTIAL": "Exponential"
+      },
+      "VENDOR": {
+        "LABEL": "Vendor",
+        "PLACEHOLDER": "Choose a vendor",
+        "OPTION": "{{number}} — {{name}}",
+        "OPTION_INACTIVE": "{{number}} — {{name}} (inactive)",
+        "CURRENT_INACTIVE": "This profile’s vendor is inactive. You can keep it, but you can only switch to an active vendor.",
+        "TRUNCATED": "Only the first {{count}} active vendors are listed.",
+        "LOADING": "Loading vendors…",
+        "FORBIDDEN_CREATE": "You do not have permission to view vendors, so you cannot choose a vendor for a new profile. Ask an administrator for vendor access.",
+        "FORBIDDEN_EDIT": "You do not have permission to view vendors, so the vendor cannot be changed here. The profile keeps its current vendor.",
+        "LOAD_ERROR": "The vendor list could not be loaded.",
+        "LOAD_ERROR_EDIT": "The vendor list could not be loaded. The profile keeps its current vendor unless you reload the list and choose another.",
+        "EMPTY": "There are no active vendors. A vendor must be added before a supplier profile can be created.",
+        "NOT_REPORTED": "Not reported"
       }
     },
     "AUTH": {

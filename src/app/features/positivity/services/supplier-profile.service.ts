@@ -11,6 +11,11 @@
  *   SupplierCommercialAccountsService  billing / delivery accounts
  *   SupplierEndpointBindingsService    capability bindings
  *
+ * Every profile belongs to one pos-supplier vendor (backend S23, #2516):
+ * `vendorId` is sent on create and update, and the view's vendor number and
+ * display name are carried through. The vendor reads behind the form's picker
+ * live in `SupplierVendorService`.
+ *
  * SDK view fields are almost all optional. That optionality is resolved **here**,
  * once, so pages and templates get the required-field shapes in
  * `models/supplier-profile.models.ts` and never carry `?? ''` noise.
@@ -85,9 +90,10 @@ export class SupplierProfileService {
 
   // ── Profiles ───────────────────────────────────────────────────────────────
 
-  listProfiles(): Observable<VendorProfileSummary[]> {
+  /** Every profile, or only those of one vendor when `vendorId` is given (`?vendorId=`). */
+  listProfiles(vendorId?: string): Observable<VendorProfileSummary[]> {
     return this.profilesSdk
-      .listVendorProfiles()
+      .listVendorProfiles(vendorId)
       .pipe(map(views => views.map(view => this.toProfileSummary(view))));
   }
 
@@ -248,6 +254,9 @@ export class SupplierProfileService {
       enabled: view.enabled ?? false,
       sandbox: view.sandbox ?? false,
       sourceOfTruth: view.sourceOfTruth ?? 'ADMIN',
+      vendorId: view.vendorId ?? '',
+      vendorNumber: view.vendorNumber ?? '',
+      vendorDisplayName: view.vendorDisplayName ?? '',
     };
   }
 
@@ -264,6 +273,7 @@ export class SupplierProfileService {
 
   private toSdkProfileRequest(request: VendorProfileRequest): SdkVendorProfileRequest {
     return {
+      vendorId: request.vendorId,
       supplierRef: request.supplierRef,
       displayName: request.displayName,
       enabled: request.enabled,
