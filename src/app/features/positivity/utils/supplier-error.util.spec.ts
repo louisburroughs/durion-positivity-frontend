@@ -292,4 +292,25 @@ describe('mapSupplierError — vendor envelope codes on 422 (backend S23)', () =
     expect(outcome.errorKey).toBe('POSITIVITY.PROFILES.ERROR.CREATE');
     expect(outcome.fieldErrors).toEqual({});
   });
+
+  it.each([
+    ['not a UUID', 'Invalid UUID string: abc'],
+    ['no message', undefined],
+  ])('maps any other 400 on vendorId (%s) to the invalid-vendor message, not "choose"', (_case, message) => {
+    const outcome = mapSupplierError(
+      httpError(400, { code: 'VALIDATION_ERROR', fieldErrors: [{ field: 'vendorId', message } as SupplierFieldError] }),
+      'POSITIVITY.PROFILES.ERROR.SAVE',
+    );
+
+    expect(outcome.fieldErrors).toEqual({ vendorId: 'POSITIVITY.ERROR.FIELD.VENDOR_INVALID' });
+  });
+
+  it('treats "must not be null" on vendorId as missing', () => {
+    const outcome = mapSupplierError(
+      httpError(400, { fieldErrors: [{ field: 'vendorId', message: 'must not be null' }] }),
+      'POSITIVITY.PROFILES.ERROR.SAVE',
+    );
+
+    expect(outcome.fieldErrors).toEqual({ vendorId: 'POSITIVITY.ERROR.FIELD.VENDOR_REQUIRED' });
+  });
 });

@@ -10,6 +10,10 @@
 	color: var(--status-warning-fg);
 }
 
+.vendor-picker__status:empty {
+	display: none;
+}
+
 .vendor-picker__error {
 	margin-bottom: 0;
 }

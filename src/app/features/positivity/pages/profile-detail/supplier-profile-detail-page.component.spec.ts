@@ -16,6 +16,7 @@ import {
   ACME,
   BOLT,
   RETIRED,
+  AuthStub,
   VendorServiceStub,
   vendorPickerProviders,
   vendorServiceStub,
@@ -52,7 +53,10 @@ describe('SupplierProfileDetailPageComponent', () => {
   let vendors: VendorServiceStub;
   let paramMap$: BehaviorSubject<ReturnType<typeof convertToParamMap>>;
 
-  async function setup(profile: VendorProfile | HttpErrorResponse = adminProfile): Promise<void> {
+  async function setup(
+    profile: VendorProfile | HttpErrorResponse = adminProfile,
+    auth: AuthStub = new AuthStub(),
+  ): Promise<void> {
     service = {
       getProfile: vi
         .fn()
@@ -104,7 +108,7 @@ describe('SupplierProfileDetailPageComponent', () => {
         { provide: SupplierProfileService, useValue: service },
         { provide: SupplierPriceCatalogService, useValue: priceCatalogService },
         { provide: SupplierStockSnapshotService, useValue: stockSnapshotService },
-        ...vendorPickerProviders(vendors),
+        ...vendorPickerProviders(vendors, auth),
         provideRouter([]),
         { provide: ActivatedRoute, useValue: { paramMap: paramMap$ } },
       ],
@@ -462,5 +466,21 @@ describe('SupplierProfileDetailPageComponent', () => {
     paramMap$.next(convertToParamMap({ vendorProfileId: 'profile-2' }));
 
     expect(component.editOpen()).toBe(false);
+  });
+
+  it('edit without supplier:vendor:read explains it and still saves the current vendorId (AC4)', async () => {
+    const noAccess = new AuthStub();
+    noAccess.permissions.set(new Set(['supplier:profile:read', 'supplier:profile:write']));
+    await setup(adminProfile, noAccess);
+    component.openEdit();
+    fixture.detectChanges();
+    const host = fixture.nativeElement as HTMLElement;
+
+    expect(host.querySelector('[data-testid="vendor-forbidden"]')?.textContent).toContain(
+      'POSITIVITY.PROFILES.VENDOR.FORBIDDEN_EDIT',
+    );
+    expect(vendors.listActiveVendors).not.toHaveBeenCalled();
+    component.saveProfile();
+    expect(service.updateProfile).toHaveBeenCalledWith(PROFILE_ID, expect.objectContaining({ vendorId: ACME.vendorId }));
   });
 });

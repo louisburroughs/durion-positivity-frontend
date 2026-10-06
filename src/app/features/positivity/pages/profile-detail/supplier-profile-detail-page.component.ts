@@ -60,7 +60,7 @@ export type ProfileTab = (typeof PROFILE_TABS)[number];
  * that is not there.
  *
  * Every profile belongs to one pos-supplier vendor (backend S23, #484). The
- * header names it, and the edit form carries a required vendor picker that
+ * settings list names it, and the edit form carries a required vendor picker that
  * pre-selects it — an inactive current vendor stays selectable, labelled as
  * inactive, because the backend lets a profile keep it.
  *

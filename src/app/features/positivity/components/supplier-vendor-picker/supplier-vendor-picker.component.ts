@@ -50,6 +50,8 @@ interface PickerResult {
 
 interface LoadKey {
   identity: string;
+  /** Part of the key so a token refresh that grants or revokes the read re-evaluates. */
+  canRead: boolean;
   currentVendorId: string;
   attempt: number;
 }
@@ -97,6 +99,8 @@ export class SupplierVendorPickerComponent {
   readonly inputId = input.required<string>();
   /** Edit: the profile's vendor. Create: `null`. */
   readonly currentVendor = input<SupplierCurrentVendor | null>(null);
+  /** Which form hosts the picker — decides the wording of the status messages. */
+  readonly mode = input<'create' | 'edit'>('create');
   /** Translation key of a server-side error on `vendorId`. */
   readonly errorKey = input<string | null>(null);
   /** Backend detail text for that error — server data, rendered beneath the label only. */
@@ -105,6 +109,7 @@ export class SupplierVendorPickerComponent {
   private readonly retryButton = viewChild<ElementRef<HTMLButtonElement>>('retryButton');
   private readonly select = viewChild<ElementRef<HTMLSelectElement>>('vendorSelect');
   private readonly statusMessage = viewChild<ElementRef<HTMLElement>>('statusMessage');
+  private readonly loadingMessage = viewChild<ElementRef<HTMLElement>>('loadingMessage');
 
   private readonly attempt = signal(0);
   private readonly result = signal<PickerResult>(LOADING);
@@ -152,8 +157,24 @@ export class SupplierVendorPickerComponent {
   /** The profile's vendor is known to be INACTIVE. */
   readonly currentInactive = computed(() => !!this.currentVendor()?.vendorId && this.currentStatus() === 'inactive');
 
-  /** Nothing to choose from on create. */
+  /** Nothing to choose from. */
   readonly empty = computed(() => this.state() === 'ready' && this.options().length === 0);
+
+  readonly forbiddenKey = computed(() =>
+    this.currentVendor()
+      ? 'POSITIVITY.PROFILES.VENDOR.FORBIDDEN_EDIT'
+      : this.mode() === 'edit'
+        ? 'POSITIVITY.PROFILES.VENDOR.FORBIDDEN_CHOOSE'
+        : 'POSITIVITY.PROFILES.VENDOR.FORBIDDEN_CREATE',
+  );
+
+  readonly loadErrorKey = computed(() =>
+    this.currentVendor() ? 'POSITIVITY.PROFILES.VENDOR.LOAD_ERROR_EDIT' : 'POSITIVITY.PROFILES.VENDOR.LOAD_ERROR',
+  );
+
+  readonly emptyKey = computed(() =>
+    this.mode() === 'edit' ? 'POSITIVITY.PROFILES.VENDOR.EMPTY_EDIT' : 'POSITIVITY.PROFILES.VENDOR.EMPTY',
+  );
 
   /** Client-side "choose a vendor" message: touched, empty, and no server message. */
   readonly showRequired = computed(() => {
@@ -171,12 +192,16 @@ export class SupplierVendorPickerComponent {
     const key = computed<LoadKey>(
       () => ({
         identity: this.identity(),
+        canRead: this.canRead(),
         currentVendorId: this.currentVendor()?.vendorId ?? '',
         attempt: this.attempt(),
       }),
       {
         equal: (a, b) =>
-          a.identity === b.identity && a.currentVendorId === b.currentVendorId && a.attempt === b.attempt,
+          a.identity === b.identity &&
+          a.canRead === b.canRead &&
+          a.currentVendorId === b.currentVendorId &&
+          a.attempt === b.attempt,
       },
     );
 
@@ -187,10 +212,18 @@ export class SupplierVendorPickerComponent {
       )
       .subscribe(result => {
         this.result.set(result);
-        if (result.state !== 'loading' && this.focusAfterLoad) {
-          this.focusAfterLoad = false;
-          afterNextRender(() => this.focusOutcome(), { injector: this.injector });
+        if (!this.focusAfterLoad) {
+          return;
         }
+        // A retry removes the Retry button. While loading, the loading message
+        // holds focus; once settled, focus moves to the outcome — never <body>.
+        const settled = result.state !== 'loading';
+        if (settled) {
+          this.focusAfterLoad = false;
+        }
+        afterNextRender(() => (settled ? this.focusOutcome() : this.loadingMessage()?.nativeElement.focus()), {
+          injector: this.injector,
+        });
       });
   }
 
@@ -213,7 +246,7 @@ export class SupplierVendorPickerComponent {
   }
 
   private load(key: LoadKey): Observable<PickerResult> {
-    if (!this.canRead()) {
+    if (!key.canRead) {
       return of({ ...LOADING, state: 'forbidden' as const });
     }
     return this.vendorService.listActiveVendors().pipe(

@@ -9126,7 +9126,8 @@
         "MAX_RETRIES_INVALID": "Enter zero or more retries, or leave it empty to use the deployment default.",
         "VENDOR_REQUIRED": "Choose the vendor this profile belongs to.",
         "VENDOR_NOT_FOUND": "This vendor no longer exists. Choose another vendor.",
-        "VENDOR_INACTIVE": "This vendor is inactive. Choose an active vendor."
+        "VENDOR_INACTIVE": "This vendor is inactive. Choose an active vendor.",
+        "VENDOR_INVALID": "The service rejected this vendor. Choose a vendor from the list."
       },
       "CONFLICT_YAML": "This profile is managed by deployment configuration (YAML), so the service rejected the change. Update it through your configuration pipeline instead."
     },
@@ -9225,7 +9226,9 @@
         "LOAD_ERROR": "The vendor list could not be loaded.",
         "LOAD_ERROR_EDIT": "The vendor list could not be loaded. The profile keeps its current vendor unless you reload the list and choose another.",
         "EMPTY": "There are no active vendors. A vendor must be added before a supplier profile can be created.",
-        "NOT_REPORTED": "Not reported"
+        "NOT_REPORTED": "Not reported",
+        "EMPTY_EDIT": "There are no active vendors to choose from.",
+        "FORBIDDEN_CHOOSE": "You do not have permission to view vendors, so you cannot choose a vendor. Ask an administrator for vendor access."
       }
     },
     "AUTH": {

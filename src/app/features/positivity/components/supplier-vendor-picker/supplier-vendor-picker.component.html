@@ -38,18 +38,20 @@
       </p>
     }
   } @else {
-    <span class="pos-field__label" [id]="messageId('label')">
-      {{ 'POSITIVITY.PROFILES.VENDOR.LABEL' | translate }}
-    </span>
+    <span class="pos-field__label">{{ 'POSITIVITY.PROFILES.VENDOR.LABEL' | translate }}</span>
     @if (currentVendor(); as current) {
       <p class="vendor-picker__current" data-testid="vendor-current">
         {{ 'POSITIVITY.PROFILES.VENDOR.OPTION' | translate: { number: current.vendorNumber, name: current.displayName } }}
       </p>
     }
+  }
 
+  <!-- One persistent polite live region: loading, permission, load-error and
+       empty messages are announced as the state changes, including on first load. -->
+  <div class="vendor-picker__status" aria-live="polite" data-testid="vendor-status">
     @switch (state()) {
       @case ('loading') {
-        <p class="pos-field__hint" aria-live="polite" data-testid="vendor-loading">
+        <p #loadingMessage class="pos-field__hint" tabindex="-1" data-testid="vendor-loading">
           {{ 'POSITIVITY.PROFILES.VENDOR.LOADING' | translate }}
         </p>
       }
@@ -61,36 +63,32 @@
           data-testid="vendor-forbidden"
           [id]="messageId('status')"
         >
-          {{
-            (currentVendor() ? 'POSITIVITY.PROFILES.VENDOR.FORBIDDEN_EDIT' : 'POSITIVITY.PROFILES.VENDOR.FORBIDDEN_CREATE')
-              | translate
-          }}
+          {{ forbiddenKey() | translate }}
         </p>
       }
       @case ('error') {
-        <div class="pos-banner pos-banner--error vendor-picker__error" role="alert" data-testid="vendor-load-error">
-          {{
-            (currentVendor() ? 'POSITIVITY.PROFILES.VENDOR.LOAD_ERROR_EDIT' : 'POSITIVITY.PROFILES.VENDOR.LOAD_ERROR')
-              | translate
-          }}
+        <div class="pos-banner pos-banner--error vendor-picker__error" data-testid="vendor-load-error">
+          {{ loadErrorKey() | translate }}
           <button #retryButton class="pos-btn pos-btn--secondary" type="button" data-testid="vendor-retry" (click)="retry()">
             {{ 'POSITIVITY.COMMON.RETRY' | translate }}
           </button>
         </div>
       }
       @default {
-        <p
-          #statusMessage
-          class="pos-banner pos-banner--warning"
-          tabindex="-1"
-          data-testid="vendor-empty"
-          [id]="messageId('status')"
-        >
-          {{ 'POSITIVITY.PROFILES.VENDOR.EMPTY' | translate }}
-        </p>
+        @if (empty()) {
+          <p
+            #statusMessage
+            class="pos-banner pos-banner--warning"
+            tabindex="-1"
+            data-testid="vendor-empty"
+            [id]="messageId('status')"
+          >
+            {{ emptyKey() | translate }}
+          </p>
+        }
       }
     }
-  }
+  </div>
 
   @if (errorKey(); as key) {
     <p class="pos-field__error" role="alert" data-testid="vendor-error" [id]="messageId('error')">

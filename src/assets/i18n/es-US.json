@@ -9126,7 +9126,8 @@
         "MAX_RETRIES_INVALID": "Introduzca cero o más reintentos, o déjelo vacío para usar el valor predeterminado del despliegue.",
         "VENDOR_REQUIRED": "Elija el proveedor al que pertenece este perfil.",
         "VENDOR_NOT_FOUND": "Este proveedor ya no existe. Elija otro proveedor.",
-        "VENDOR_INACTIVE": "Este proveedor está inactivo. Elija un proveedor activo."
+        "VENDOR_INACTIVE": "Este proveedor está inactivo. Elija un proveedor activo.",
+        "VENDOR_INVALID": "El servicio rechazó este proveedor. Elija un proveedor de la lista."
       },
       "CONFLICT_YAML": "Este perfil se gestiona mediante la configuración de despliegue (YAML), por lo que el servicio rechazó el cambio. Actualícelo a través de su canalización de configuración."
     },
@@ -9225,7 +9226,9 @@
         "LOAD_ERROR": "No se pudo cargar la lista de proveedores.",
         "LOAD_ERROR_EDIT": "No se pudo cargar la lista de proveedores. El perfil conserva su proveedor actual, a menos que vuelva a cargar la lista y elija otro.",
         "EMPTY": "No hay proveedores activos. Debe agregarse un proveedor antes de poder crear un perfil.",
-        "NOT_REPORTED": "No informado"
+        "NOT_REPORTED": "No informado",
+        "EMPTY_EDIT": "No hay proveedores activos para elegir.",
+        "FORBIDDEN_CHOOSE": "No tiene permiso para ver proveedores, por lo que no puede elegir uno. Solicite acceso a proveedores a un administrador."
       }
     },
     "AUTH": {

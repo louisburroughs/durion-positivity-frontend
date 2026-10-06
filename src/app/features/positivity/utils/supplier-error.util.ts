@@ -84,8 +84,22 @@ const FIELD_NAME_KEYS: Readonly<Record<string, string>> = {
   readTimeoutMillis: 'POSITIVITY.ERROR.FIELD.TIMEOUT_INVALID',
   maxRetries: 'POSITIVITY.ERROR.FIELD.MAX_RETRIES_INVALID',
   sandboxBaseUrlOverride: 'POSITIVITY.ERROR.FIELD.BASE_URL_MALFORMED',
-  vendorId: 'POSITIVITY.ERROR.FIELD.VENDOR_REQUIRED',
 };
+
+/**
+ * Fields whose "missing" failure deserves its own message. Any other rejection
+ * of the field (a malformed UUID, say) gets the `invalid` key — telling the
+ * operator to "choose a vendor" when they did choose one would be untrue.
+ */
+const REQUIRED_AWARE_FIELDS: Readonly<Record<string, { required: string; invalid: string }>> = {
+  vendorId: {
+    required: 'POSITIVITY.ERROR.FIELD.VENDOR_REQUIRED',
+    invalid: 'POSITIVITY.ERROR.FIELD.VENDOR_INVALID',
+  },
+};
+
+/** Backend detail text that means the value was absent or blank. */
+const MISSING_VALUE_MESSAGE = /\brequired\b|must not be (null|blank|empty)/i;
 
 /**
  * Envelope-level codes that are really about one field (#2516).
@@ -151,6 +165,10 @@ function collectFieldErrors(body: SupplierApiErrorBody | null): SupplierFieldErr
 export function fieldErrorKey(error: SupplierFieldError): string {
   if (error.code && FIELD_CODE_KEYS[error.code]) {
     return FIELD_CODE_KEYS[error.code];
+  }
+  const requiredAware = REQUIRED_AWARE_FIELDS[error.field];
+  if (requiredAware) {
+    return MISSING_VALUE_MESSAGE.test(error.message ?? '') ? requiredAware.required : requiredAware.invalid;
   }
   return FIELD_NAME_KEYS[error.field] ?? GENERIC_FIELD_KEY;
 }

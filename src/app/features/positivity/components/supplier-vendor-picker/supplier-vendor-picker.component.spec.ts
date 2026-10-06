@@ -26,6 +26,7 @@ import { SupplierVendorRoster } from '../../models/supplier-profile.models';
       inputId="vendor"
       [control]="control"
       [currentVendor]="current()"
+      [mode]="mode()"
       [errorKey]="errorKey()"
       [errorDetail]="errorDetail()"
     />
@@ -34,6 +35,7 @@ import { SupplierVendorRoster } from '../../models/supplier-profile.models';
 class HostComponent {
   readonly control = new FormControl('', { nonNullable: true, validators: [Validators.required] });
   readonly current = signal<SupplierCurrentVendor | null>(null);
+  readonly mode = signal<'create' | 'edit'>('create');
   readonly errorKey = signal<string | null>(null);
   readonly errorDetail = signal<string | null>(null);
 }
@@ -54,6 +56,7 @@ describe('SupplierVendorPickerComponent', () => {
     service?: VendorServiceStub;
     auth?: AuthStub;
     current?: SupplierCurrentVendor | null;
+    mode?: 'create' | 'edit';
   } = {}): void {
     service = options.service ?? vendorServiceStub();
     auth = options.auth ?? new AuthStub();
@@ -63,6 +66,7 @@ describe('SupplierVendorPickerComponent', () => {
     });
     fixture = TestBed.createComponent(HostComponent);
     host = fixture.componentInstance;
+    host.mode.set(options.mode ?? (options.current ? 'edit' : 'create'));
     if (options.current) {
       host.current.set(options.current);
       host.control.setValue(options.current.vendorId);
@@ -253,5 +257,103 @@ describe('SupplierVendorPickerComponent', () => {
 
     expect(stub.listActiveVendors).toHaveBeenCalledTimes(2);
     expect(optionValues()).toEqual(['', BOLT.vendorId]);
+  });
+
+  // ── Review round (#487) ────────────────────────────────────────────────────
+
+  it('keeps focus off <body> while a retry is loading: the loading message takes it', async () => {
+    const pending = new Subject<SupplierVendorRoster>();
+    const stub = vendorServiceStub();
+    stub.listActiveVendors
+      .mockReturnValueOnce(throwError(() => new HttpErrorResponse({ status: 503 })))
+      .mockReturnValueOnce(pending.asObservable());
+    setup({ service: stub });
+    document.body.appendChild(el());
+
+    query('vendor-retry')?.focus();
+    query('vendor-retry')?.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(query('vendor-retry')).toBeNull();
+    expect(document.activeElement).toBe(query('vendor-loading'));
+    expect(document.activeElement).not.toBe(document.body);
+
+    pending.next(roster(ACME));
+    pending.complete();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(document.activeElement).toBe(select());
+    el().remove();
+  });
+
+  it('announces every status through one persistent polite live region', () => {
+    const pending = new Subject<SupplierVendorRoster>();
+    const stub = vendorServiceStub();
+    stub.listActiveVendors.mockReturnValue(pending.asObservable());
+    setup({ service: stub });
+
+    const region = query('vendor-status');
+    expect(region?.getAttribute('aria-live')).toBe('polite');
+    expect(region?.contains(query('vendor-loading'))).toBe(true);
+
+    pending.next(roster());
+    pending.complete();
+    fixture.detectChanges();
+
+    expect(query('vendor-status')).toBe(region);
+    expect(region?.contains(query('vendor-empty'))).toBe(true);
+  });
+
+  it('announces the forbidden message inside the live region on first load', () => {
+    const noAccess = new AuthStub();
+    noAccess.permissions.set(new Set());
+    setup({ auth: noAccess });
+
+    expect(query('vendor-status')?.getAttribute('aria-live')).toBe('polite');
+    expect(query('vendor-status')?.contains(query('vendor-forbidden'))).toBe(true);
+  });
+
+  it('re-reads vendors when a token refresh grants supplier:vendor:read', () => {
+    const noAccess = new AuthStub();
+    noAccess.permissions.set(new Set());
+    setup({ auth: noAccess });
+    expect(query('vendor-forbidden')).not.toBeNull();
+
+    noAccess.permissions.set(new Set(['supplier:vendor:read']));
+    fixture.detectChanges();
+
+    expect(service.listActiveVendors).toHaveBeenCalledTimes(1);
+    expect(query('vendor-forbidden')).toBeNull();
+    expect(select()).not.toBeNull();
+  });
+
+  it('edit: an ACTIVE current vendor past the roster bound is pre-selected with the plain label', () => {
+    const beyond = { ...ACME, vendorId: 'ffc9a4c2-0000-7000-8000-00000000v777', vendorNumber: 'V-000777' };
+    setup({
+      service: vendorServiceStub({ vendors: [BOLT], truncated: true }, [beyond, BOLT]),
+      current: asCurrent(beyond),
+    });
+
+    expect(service.getVendor).toHaveBeenCalledWith(beyond.vendorId);
+    expect(select().value).toBe(beyond.vendorId);
+    expect(optionTexts()[1]).toBe('POSITIVITY.PROFILES.VENDOR.OPTION');
+    expect(query('vendor-inactive')).toBeNull();
+    expect(query('vendor-truncated')).not.toBeNull();
+  });
+
+  it('edit with no current vendor and no active vendors uses edit wording, not create wording', () => {
+    setup({ service: vendorServiceStub(roster()), mode: 'edit' });
+
+    expect(query('vendor-empty')?.textContent).toContain('POSITIVITY.PROFILES.VENDOR.EMPTY_EDIT');
+  });
+
+  it('edit with no current vendor and no access does not mention a new profile', () => {
+    const noAccess = new AuthStub();
+    noAccess.permissions.set(new Set());
+    setup({ auth: noAccess, mode: 'edit' });
+
+    expect(query('vendor-forbidden')?.textContent).toContain('POSITIVITY.PROFILES.VENDOR.FORBIDDEN_CHOOSE');
   });
 });
