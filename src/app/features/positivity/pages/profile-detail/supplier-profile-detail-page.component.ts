@@ -2,8 +2,10 @@ import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
+  ElementRef,
+  Injector,
+  afterNextRender,
   computed,
-  effect,
   inject,
   signal,
 } from '@angular/core';
@@ -11,7 +13,9 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
-import { Subscription, distinctUntilChanged, map } from 'rxjs';
+import { POSITIVITY_PAGE } from '../../../../core/security/route-permissions';
+import { AuthService } from '../../../../core/services/auth.service';
+import { distinctUntilChanged, map } from 'rxjs';
 import { SupplierAccountsPanelComponent } from '../../components/supplier-accounts-panel/supplier-accounts-panel.component';
 import { SupplierAuthPanelComponent } from '../../components/supplier-auth-panel/supplier-auth-panel.component';
 import { SupplierBindingsPanelComponent } from '../../components/supplier-bindings-panel/supplier-bindings-panel.component';
@@ -93,6 +97,20 @@ export class SupplierProfileDetailPageComponent {
   private readonly router = inject(Router);
   private readonly service = inject(SupplierProfileService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly auth = inject(AuthService);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly injector = inject(Injector);
+
+  /**
+   * Monotonic per-writer sequences (ADR-0063). The route id alone is not an
+   * ownership token: A → B → A with the first A request still pending would let
+   * that stale response overwrite the newer one. A callback applies only when its
+   * sequence is still the latest one issued for that writer.
+   */
+  private loadSeq = 0;
+  private saveSeq = 0;
+  /** Set when a route change removed the focused control; the next settled load restores focus. */
+  private restoreFocusAfterLoad = false;
 
   readonly state = signal<PageState>('idle');
   readonly errorKey = signal<string | null>(null);
@@ -115,6 +133,20 @@ export class SupplierProfileDetailPageComponent {
 
   /** YAML-sourced profiles are configuration rollouts, not operator data. */
   readonly readOnly = computed(() => this.profile()?.sourceOfTruth === 'YAML');
+
+  /**
+   * `supplier:profile:write` (ADR-0040 §6a): the route admits on the read
+   * permission, which never enables a write. A token without `perm_bits` leaves
+   * permissions unknown and keeps the legacy open behaviour, as `canAccess()` does.
+   */
+  readonly canWrite = computed(
+    () => !this.auth.permissionsKnown() || this.auth.hasAnyPermission(POSITIVITY_PAGE.profileWrite),
+  );
+
+  /** Why the write controls are disabled, if they are. */
+  readonly writeBlockedReasonId = computed(() =>
+    this.readOnly() ? 'profile-readonly-reason' : this.canWrite() ? null : 'profile-write-reason',
+  );
 
   /** The profile's own vendor, pre-selected (and always offered) by the edit form's picker. */
   readonly currentVendor = computed<SupplierCurrentVendor | null>(
@@ -145,25 +177,35 @@ export class SupplierProfileDetailPageComponent {
   });
 
   constructor() {
-    effect(onCleanup => {
-      const sub: Subscription = this.route.paramMap
-        .pipe(
-          map(params => params.get('vendorProfileId')),
-          distinctUntilChanged(),
-        )
-        .subscribe(profileId => {
-          // A different profile: whatever form was open belonged to the last one.
-          this.editOpen.set(false);
-          this.clearFieldFeedback();
-          this.profile.set(null);
-          this.vendorProfileId.set(profileId);
-          if (profileId) {
-            this.loadProfile(profileId);
-          }
-        });
-
-      onCleanup(() => sub.unsubscribe());
-    });
+    // Subscribed once, outside any reactive context: inside an effect, the
+    // signals the load reads would be tracked and every change-detection pass
+    // would resubscribe and reload the profile.
+    this.route.paramMap
+      .pipe(
+        map(params => params.get('vendorProfileId')),
+        distinctUntilChanged(),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(profileId => {
+        // A different profile: whatever form was open belonged to the last one.
+        // If focus sat inside this page (say, in the edit form) it is about to
+        // be removed; hold it on the loading target, then the heading (ADR-0029 §8).
+        const active = document.activeElement;
+        this.restoreFocusAfterLoad =
+          this.restoreFocusAfterLoad || (!!active && active !== document.body && this.host.nativeElement.contains(active));
+        this.saveSeq += 1;
+        this.saving.set(false);
+        this.editOpen.set(false);
+        this.clearFieldFeedback();
+        this.profile.set(null);
+        this.vendorProfileId.set(profileId);
+        if (profileId) {
+          this.loadProfile(profileId);
+        }
+        if (this.restoreFocusAfterLoad) {
+          afterNextRender(() => this.focusTarget('[data-testid="profile-loading"]'), { injector: this.injector });
+        }
+      });
   }
 
   tabId(tab: ProfileTab): string {
@@ -219,6 +261,8 @@ export class SupplierProfileDetailPageComponent {
   }
 
   loadProfile(vendorProfileId: string): void {
+    const seq = ++this.loadSeq;
+    const current = (): boolean => seq === this.loadSeq && this.vendorProfileId() === vendorProfileId;
     this.state.set('loading');
     this.errorKey.set(null);
 
@@ -227,8 +271,8 @@ export class SupplierProfileDetailPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: profile => {
-          // The route moved on while this was in flight: not this page's profile any more.
-          if (this.vendorProfileId() !== vendorProfileId) {
+          // Superseded by a newer load, or the route moved on: not this page's profile any more.
+          if (!current()) {
             return;
           }
           this.profile.set(profile);
@@ -245,14 +289,16 @@ export class SupplierProfileDetailPageComponent {
             retryBackoff: profile.retryBackoff ?? '',
           });
           this.state.set('ready');
+          this.restoreFocusIfPending();
         },
         error: (err: unknown) => {
-          if (this.vendorProfileId() !== vendorProfileId) {
+          if (!current()) {
             return;
           }
           const outcome = mapSupplierError(err, 'POSITIVITY.PROFILES.ERROR.LOAD_DETAIL');
           this.state.set(outcome.kind === 'forbidden' ? 'forbidden' : 'error');
           this.errorKey.set(outcome.errorKey);
+          this.restoreFocusIfPending();
         },
       });
   }
@@ -265,6 +311,9 @@ export class SupplierProfileDetailPageComponent {
   }
 
   openEdit(): void {
+    if (!this.canWrite() || this.readOnly()) {
+      return;
+    }
     this.clearFieldFeedback();
     this.editOpen.set(true);
   }
@@ -276,7 +325,10 @@ export class SupplierProfileDetailPageComponent {
 
   saveProfile(): void {
     const profileId = this.vendorProfileId();
-    if (!profileId || this.readOnly() || this.editForm.invalid) {
+    if (!profileId || this.readOnly() || !this.canWrite()) {
+      return;
+    }
+    if (this.editForm.invalid) {
       this.editForm.markAllAsTouched();
       return;
     }
@@ -295,6 +347,8 @@ export class SupplierProfileDetailPageComponent {
       retryBackoff: raw.retryBackoff || undefined,
     };
 
+    const seq = ++this.saveSeq;
+    const current = (): boolean => seq === this.saveSeq && this.vendorProfileId() === profileId;
     this.saving.set(true);
     this.clearFieldFeedback();
 
@@ -303,19 +357,19 @@ export class SupplierProfileDetailPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: profile => {
-          this.saving.set(false);
-          if (this.vendorProfileId() !== profileId) {
+          if (!current()) {
             return;
           }
+          this.saving.set(false);
           this.profile.set(profile);
           this.editOpen.set(false);
           this.errorKey.set(null);
         },
         error: (err: unknown) => {
-          this.saving.set(false);
-          if (this.vendorProfileId() !== profileId) {
+          if (!current()) {
             return;
           }
+          this.saving.set(false);
           this.handleMutationError(err, 'POSITIVITY.PROFILES.ERROR.SAVE');
         },
       });
@@ -323,7 +377,7 @@ export class SupplierProfileDetailPageComponent {
 
   deleteProfile(): void {
     const profileId = this.vendorProfileId();
-    if (!profileId || this.readOnly()) {
+    if (!profileId || this.readOnly() || !this.canWrite()) {
       return;
     }
 
@@ -336,6 +390,28 @@ export class SupplierProfileDetailPageComponent {
         },
         error: (err: unknown) => this.handleMutationError(err, 'POSITIVITY.PROFILES.ERROR.DELETE'),
       });
+  }
+
+  private restoreFocusIfPending(): void {
+    if (!this.restoreFocusAfterLoad) {
+      return;
+    }
+    this.restoreFocusAfterLoad = false;
+    afterNextRender(
+      () => this.focusTarget('#profile-detail-title', '[data-testid="profile-error"]', '[data-testid="profile-forbidden"]'),
+      { injector: this.injector },
+    );
+  }
+
+  /** Focus the first of `selectors` present in this page. */
+  private focusTarget(...selectors: string[]): void {
+    for (const selector of selectors) {
+      const element = this.host.nativeElement.querySelector<HTMLElement>(selector);
+      if (element) {
+        element.focus();
+        return;
+      }
+    }
   }
 
   private clearFieldFeedback(): void {

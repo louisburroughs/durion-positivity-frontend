@@ -483,4 +483,113 @@ describe('SupplierProfileDetailPageComponent', () => {
     component.saveProfile();
     expect(service.updateProfile).toHaveBeenCalledWith(PROFILE_ID, expect.objectContaining({ vendorId: ACME.vendorId }));
   });
+
+  // ── supplier:profile:write gate (ADR-0040 §6a) ─────────────────────────────
+
+  const readOnlySession = (): AuthStub => {
+    const auth = new AuthStub();
+    auth.permissions.set(new Set(['supplier:profile:read', 'supplier:vendor:read']));
+    return auth;
+  };
+  const button = (testId: string): HTMLButtonElement =>
+    (fixture.nativeElement as HTMLElement).querySelector(`[data-testid="${testId}"]`) as HTMLButtonElement;
+
+  it('write granted: edit and delete controls are enabled', async () => {
+    await setup();
+
+    expect(button('profile-edit').disabled).toBe(false);
+    expect(button('profile-delete').disabled).toBe(false);
+  });
+
+  it('read-only session: edit and delete are disabled with the reason, and the methods refuse', async () => {
+    await setup(adminProfile, readOnlySession());
+    const host = fixture.nativeElement as HTMLElement;
+
+    expect(button('profile-edit').disabled).toBe(true);
+    expect(button('profile-delete').disabled).toBe(true);
+    expect(button('profile-edit').getAttribute('aria-describedby')).toBe('profile-write-reason');
+    expect(host.querySelector('#profile-write-reason')?.textContent).toContain('POSITIVITY.PROFILES.WRITE_FORBIDDEN');
+
+    component.openEdit();
+    expect(component.editOpen()).toBe(false);
+    component.editOpen.set(true);
+    component.saveProfile();
+    component.deleteProfile();
+    expect(service.updateProfile).not.toHaveBeenCalled();
+    expect(service.deleteProfile).not.toHaveBeenCalled();
+  });
+
+  it('unknown perm_bits: edit stays enabled and saves (legacy-token fallback)', async () => {
+    const legacy = new AuthStub();
+    legacy.permissions.set(null);
+    await setup(adminProfile, legacy);
+
+    expect(button('profile-edit').disabled).toBe(false);
+    component.openEdit();
+    component.saveProfile();
+    expect(service.updateProfile).toHaveBeenCalled();
+  });
+
+  // ── Route changes (ADR-0029 §8, ADR-0063) ──────────────────────────────────
+
+  it('moves focus off the removed edit form to the loading target, then the heading', async () => {
+    await setup();
+    const host = fixture.nativeElement as HTMLElement;
+    document.body.appendChild(host);
+    component.openEdit();
+    fixture.detectChanges();
+    (host.querySelector('#edit-display-name') as HTMLInputElement).focus();
+
+    const next = new Subject<VendorProfile>();
+    service.getProfile.mockReturnValueOnce(next.asObservable());
+    paramMap$.next(convertToParamMap({ vendorProfileId: 'profile-2' }));
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(host.querySelector('#edit-display-name')).toBeNull();
+    expect(document.activeElement).toBe(host.querySelector('[data-testid="profile-loading"]'));
+
+    next.next({ ...adminProfile, vendorProfileId: 'profile-2', displayName: 'Second' });
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(document.activeElement).toBe(host.querySelector('#profile-detail-title'));
+    host.remove();
+  });
+
+  it('A → B → A: a stale first-A load cannot overwrite the newer A load', async () => {
+    await setup();
+    const firstA = new Subject<VendorProfile>();
+    const b = new Subject<VendorProfile>();
+    const secondA = new Subject<VendorProfile>();
+    service.getProfile
+      .mockReturnValueOnce(firstA.asObservable())
+      .mockReturnValueOnce(b.asObservable())
+      .mockReturnValueOnce(secondA.asObservable());
+
+    paramMap$.next(convertToParamMap({ vendorProfileId: 'profile-a' }));
+    paramMap$.next(convertToParamMap({ vendorProfileId: 'profile-b' }));
+    paramMap$.next(convertToParamMap({ vendorProfileId: 'profile-a' }));
+    secondA.next({ ...adminProfile, vendorProfileId: 'profile-a', displayName: 'A (fresh)' });
+    firstA.next({ ...adminProfile, vendorProfileId: 'profile-a', displayName: 'A (stale)' });
+    b.next({ ...adminProfile, vendorProfileId: 'profile-b', displayName: 'B' });
+
+    expect(component.vendorProfileId()).toBe('profile-a');
+    expect(component.profile()?.displayName).toBe('A (fresh)');
+  });
+
+  it('A → B → A: a save issued on the first A cannot land after the route came back to A', async () => {
+    await setup();
+    const save = new Subject<VendorProfile>();
+    service.updateProfile.mockReturnValueOnce(save.asObservable());
+    component.openEdit();
+    component.saveProfile();
+
+    paramMap$.next(convertToParamMap({ vendorProfileId: 'profile-b' }));
+    paramMap$.next(convertToParamMap({ vendorProfileId: PROFILE_ID }));
+    save.next({ ...adminProfile, displayName: 'Stale save' });
+
+    expect(component.profile()?.displayName).toBe('Michelin EU');
+    expect(component.saving()).toBe(false);
+  });
 });

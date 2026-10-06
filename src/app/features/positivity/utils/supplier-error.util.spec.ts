@@ -313,4 +313,25 @@ describe('mapSupplierError — vendor envelope codes on 422 (backend S23)', () =
 
     expect(outcome.fieldErrors).toEqual({ vendorId: 'POSITIVITY.ERROR.FIELD.VENDOR_REQUIRED' });
   });
+
+  it('maps the real 400 envelope (code VALIDATION_ERROR, message only) onto the picker', () => {
+    const outcome = mapSupplierError(
+      httpError(400, { code: 'VALIDATION_ERROR', message: 'vendorId is required' }),
+      'POSITIVITY.PROFILES.ERROR.CREATE',
+    );
+
+    expect(outcome.errorKey).toBe('POSITIVITY.ERROR.VALIDATION');
+    expect(outcome.fieldErrors).toEqual({ vendorId: 'POSITIVITY.ERROR.FIELD.VENDOR_REQUIRED' });
+    expect(outcome.fieldDetails).toEqual({ vendorId: 'vendorId is required' });
+  });
+
+  it('leaves a 400 envelope that names no known field on the banner', () => {
+    const outcome = mapSupplierError(
+      httpError(400, { code: 'VALIDATION_ERROR', message: 'something else' }),
+      'POSITIVITY.PROFILES.ERROR.CREATE',
+    );
+
+    expect(outcome.errorKey).toBe('POSITIVITY.PROFILES.ERROR.CREATE');
+    expect(outcome.fieldErrors).toEqual({});
+  });
 });

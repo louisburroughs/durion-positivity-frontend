@@ -9,6 +9,7 @@ import { SupplierProfileService } from '../../services/supplier-profile.service'
 import { VendorProfileSummary } from '../../models/supplier-profile.models';
 import {
   ACME,
+  AuthStub,
   VendorServiceStub,
   vendorPickerProviders,
   vendorServiceStub,
@@ -49,6 +50,7 @@ describe('SupplierProfileListPageComponent', () => {
 
   async function setup(
     profiles: VendorProfileSummary[] | HttpErrorResponse = [adminProfile, yamlProfile],
+    auth: AuthStub = new AuthStub(),
   ): Promise<void> {
     service = {
       listProfiles: vi
@@ -66,7 +68,7 @@ describe('SupplierProfileListPageComponent', () => {
       providers: [
         provideRouter([]),
         { provide: SupplierProfileService, useValue: service },
-        ...vendorPickerProviders(vendors),
+        ...vendorPickerProviders(vendors, auth),
       ],
     }).compileComponents();
 
@@ -278,5 +280,53 @@ describe('SupplierProfileListPageComponent', () => {
     );
 
     expect(cells).toEqual(['POSITIVITY.PROFILES.VENDOR.OPTION', 'POSITIVITY.PROFILES.VENDOR.NOT_REPORTED']);
+  });
+
+  // ── supplier:profile:write gate (ADR-0040 §6a) ─────────────────────────────
+
+  const readOnlySession = (): AuthStub => {
+    const auth = new AuthStub();
+    auth.permissions.set(new Set(['supplier:profile:read', 'supplier:vendor:read']));
+    return auth;
+  };
+  const createButton = (): HTMLButtonElement =>
+    (fixture.nativeElement as HTMLElement).querySelector('[data-testid="profile-create"]') as HTMLButtonElement;
+
+  it('write granted: the create control is enabled and create() sends', async () => {
+    await setup();
+
+    expect(createButton().disabled).toBe(false);
+    component.openCreate();
+    component.createForm.patchValue({ vendorId: ACME.vendorId, supplierRef: 'new', displayName: 'New' });
+    component.create();
+    expect(service.createProfile).toHaveBeenCalled();
+  });
+
+  it('read-only session: the create control is disabled with the reason, and the methods refuse', async () => {
+    await setup(undefined, readOnlySession());
+    fixture.detectChanges();
+    const host = fixture.nativeElement as HTMLElement;
+
+    expect(createButton().disabled).toBe(true);
+    expect(createButton().getAttribute('aria-describedby')).toBe('profiles-write-reason');
+    expect(host.querySelector('#profiles-write-reason')?.textContent).toContain('POSITIVITY.PROFILES.WRITE_FORBIDDEN');
+
+    component.openCreate();
+    expect(component.createOpen()).toBe(false);
+    component.createForm.patchValue({ vendorId: ACME.vendorId, supplierRef: 'new', displayName: 'New' });
+    component.create();
+    expect(service.createProfile).not.toHaveBeenCalled();
+  });
+
+  it('unknown perm_bits: the create control stays enabled (legacy-token fallback)', async () => {
+    const legacy = new AuthStub();
+    legacy.permissions.set(null);
+    await setup(undefined, legacy);
+
+    expect(createButton().disabled).toBe(false);
+    component.openCreate();
+    component.createForm.patchValue({ vendorId: ACME.vendorId, supplierRef: 'new', displayName: 'New' });
+    component.create();
+    expect(service.createProfile).toHaveBeenCalled();
   });
 });

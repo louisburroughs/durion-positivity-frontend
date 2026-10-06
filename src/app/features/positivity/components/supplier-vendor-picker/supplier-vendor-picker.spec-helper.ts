@@ -60,12 +60,15 @@ export function vendorServiceStub(
 export class AuthStub {
   readonly claims = signal<Partial<JwtClaims> | null>({ sub: 'clerk.a' });
   readonly tenant = signal<string | null>('tenant-1');
-  readonly permissions = signal<ReadonlySet<string> | null>(new Set(['supplier:vendor:read']));
+  readonly permissions = signal<ReadonlySet<string> | null>(
+    new Set(['supplier:profile:read', 'supplier:profile:write', 'supplier:vendor:read']),
+  );
 
   readonly currentUserClaims = () => this.claims();
   readonly tenantId = () => this.tenant();
   readonly permissionsKnown = () => this.permissions() !== null;
   readonly hasPermission = (code: string) => this.permissions()?.has(code) ?? false;
+  readonly hasAnyPermission = (codes: readonly string[]) => codes.some(code => this.hasPermission(code));
 }
 
 export function vendorPickerProviders(service: VendorServiceStub, auth: AuthStub = new AuthStub()) {

@@ -9229,7 +9229,8 @@
         "NOT_REPORTED": "Not reported",
         "EMPTY_EDIT": "There are no active vendors to choose from.",
         "FORBIDDEN_CHOOSE": "You do not have permission to view vendors, so you cannot choose a vendor. Ask an administrator for vendor access."
-      }
+      },
+      "WRITE_FORBIDDEN": "You can view supplier profiles but not change them. Ask an administrator for supplier profile write access."
     },
     "AUTH": {
       "TITLE": "Authentication configurations",

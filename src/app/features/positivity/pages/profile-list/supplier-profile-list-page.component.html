@@ -11,11 +11,24 @@
       <a class="pos-btn pos-btn--secondary" [routerLink]="['/app', 'positivity', 'manual-review']">
         {{ 'POSITIVITY.MANUAL_REVIEW.TITLE' | translate }}
       </a>
-      <button class="pos-btn pos-btn--primary" type="button" (click)="openCreate()">
+      <button
+        class="pos-btn pos-btn--primary"
+        type="button"
+        data-testid="profile-create"
+        [disabled]="!canWrite()"
+        [attr.aria-describedby]="canWrite() ? null : 'profiles-write-reason'"
+        (click)="openCreate()"
+      >
         {{ 'POSITIVITY.PROFILES.CREATE' | translate }}
       </button>
     </div>
   </header>
+
+  @if (!canWrite()) {
+    <p class="pos-banner pos-banner--info" id="profiles-write-reason">
+      {{ 'POSITIVITY.PROFILES.WRITE_FORBIDDEN' | translate }}
+    </p>
+  }
 
   @if (state() === 'error') {
     <div class="pos-banner pos-banner--error" role="alert">

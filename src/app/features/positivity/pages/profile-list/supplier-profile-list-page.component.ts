@@ -1,8 +1,10 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
+import { POSITIVITY_PAGE } from '../../../../core/security/route-permissions';
+import { AuthService } from '../../../../core/services/auth.service';
 import { SupplierStatusChipComponent } from '../../components/supplier-status-chip/supplier-status-chip.component';
 import { SupplierVendorPickerComponent } from '../../components/supplier-vendor-picker/supplier-vendor-picker.component';
 import { SupplierProfileService } from '../../services/supplier-profile.service';
@@ -47,6 +49,7 @@ type PageState = 'idle' | 'loading' | 'ready' | 'empty' | 'error' | 'forbidden';
 export class SupplierProfileListPageComponent {
   private readonly service = inject(SupplierProfileService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly auth = inject(AuthService);
 
   readonly state = signal<PageState>('idle');
   readonly errorKey = signal<string | null>(null);
@@ -55,6 +58,15 @@ export class SupplierProfileListPageComponent {
   readonly fieldDetails = signal<Record<string, string>>({});
   readonly createOpen = signal(false);
   readonly saving = signal(false);
+
+  /**
+   * `supplier:profile:write` (ADR-0040 §6a). The page is admitted on the read
+   * permission, which never enables a write. A token without `perm_bits` leaves
+   * permissions unknown and keeps the legacy open behaviour, as `canAccess()` does.
+   */
+  readonly canWrite = computed(
+    () => !this.auth.permissionsKnown() || this.auth.hasAnyPermission(POSITIVITY_PAGE.profileWrite),
+  );
 
   readonly createForm = new FormGroup({
     vendorId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
@@ -98,6 +110,9 @@ export class SupplierProfileListPageComponent {
   }
 
   openCreate(): void {
+    if (!this.canWrite()) {
+      return;
+    }
     this.fieldErrors.set({});
     this.fieldDetails.set({});
     this.createForm.reset({ vendorId: '', supplierRef: '', displayName: '', sandbox: false, enabled: true });
@@ -111,6 +126,9 @@ export class SupplierProfileListPageComponent {
   }
 
   create(): void {
+    if (!this.canWrite()) {
+      return;
+    }
     if (this.createForm.invalid) {
       this.createForm.markAllAsTouched();
       return;

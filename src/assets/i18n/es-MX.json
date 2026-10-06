@@ -9229,7 +9229,8 @@
         "NOT_REPORTED": "No informado",
         "EMPTY_EDIT": "No hay proveedores activos para elegir.",
         "FORBIDDEN_CHOOSE": "No tiene permiso para ver proveedores, por lo que no puede elegir uno. Solicite acceso a proveedores a un administrador."
-      }
+      },
+      "WRITE_FORBIDDEN": "Puede ver los perfiles de proveedor, pero no modificarlos. Solicite a un administrador acceso de escritura a los perfiles de proveedor."
     },
     "AUTH": {
       "TITLE": "Configuraciones de autenticación",

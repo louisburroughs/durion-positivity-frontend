@@ -132,6 +132,18 @@ const FIELD_CODE_KEYS: Readonly<Record<string, string>> = {
 
 const GENERIC_FIELD_KEY = 'POSITIVITY.ERROR.FIELD.INVALID';
 
+/**
+ * A 400 whose envelope carries no `fieldErrors`, only a message naming a
+ * required-aware field as missing — the real shape of "vendorId is required".
+ */
+function missingFieldFromMessage(message: string | undefined): { field: string; key: string } | undefined {
+  if (typeof message !== 'string' || !MISSING_VALUE_MESSAGE.test(message)) {
+    return undefined;
+  }
+  const field = Object.keys(REQUIRED_AWARE_FIELDS).find(name => new RegExp(`\\b${name}\\b`).test(message));
+  return field ? { field, key: REQUIRED_AWARE_FIELDS[field].required } : undefined;
+}
+
 function asErrorBody(error: HttpErrorResponse): SupplierApiErrorBody | null {
   const body: unknown = error.error;
   if (!body || typeof body !== 'object' || Array.isArray(body)) {
@@ -211,7 +223,9 @@ export function mapSupplierError(error: unknown, fallbackKey: string): SupplierE
   if (error.status === 400 || error.status === 422) {
     const entries = collectFieldErrors(body);
     const { fieldErrors, fieldDetails } = indexFieldErrors(entries);
-    const envelopeField = body?.code ? ENVELOPE_CODE_FIELDS[body.code] : undefined;
+    const envelopeField =
+      (body?.code ? ENVELOPE_CODE_FIELDS[body.code] : undefined) ??
+      (error.status === 400 && entries.length === 0 ? missingFieldFromMessage(body?.message) : undefined);
     if (envelopeField) {
       fieldErrors[envelopeField.field] = envelopeField.key;
       if (typeof body?.message === 'string' && body.message !== '') {
