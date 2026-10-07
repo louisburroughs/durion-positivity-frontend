@@ -498,9 +498,14 @@ export class CapacityCalendarService {
       // once and plainly, rather than as a month of empty cells.
       locationHasNoSchedule: load.total > 0 && load.absent === load.total,
       skillRequirementsUnknown: !request.job.skillRequirementsConfigured,
-      // The day board's duty comes from the schedule view's own overlay, which
-      // says "unknown" through its own status; the notice belongs to the grids.
-      technicianAvailabilityUnknown: false,
+      // Duty is measured when the capacity read knows the roster, or when the
+      // fallback schedule view's overlay answered. Otherwise the roster was
+      // counted on duty all day, which is an assumption, so it is said so. A
+      // failed or 404 read is already reported as degraded or as no schedule.
+      technicianAvailabilityUnknown:
+        !(capacity.staffingKnown && usableDay(request.focusDate)?.status === DayCapacityViewStatusEnum.Ok) &&
+        schedules.get(request.focusDate) !== undefined &&
+        schedules.get(request.focusDate)?.availabilityOverlayStatus !== 'AVAILABLE',
     };
   }
 

@@ -667,13 +667,14 @@ describe('CapacityCalendarService', () => {
 
     const DAY = { ...MONTH, scope: 'day' } as unknown as typeof MONTH;
     /** The view for one date: 08:00-12:00, with whatever appointment lanes are given. */
-    const viewFor = (resources: ScheduleViewResponse['resources'] = []) =>
+    const viewFor = (resources: ScheduleViewResponse['resources'] = [], availabilityOverlayStatus = 'AVAILABLE') =>
       scheduleApi().viewSchedule.mockImplementation((_loc: string, date: string) =>
         of({
           date,
           dayStartAt: local(date, 8),
           dayEndAt: local(date, 12),
           locationId: 'loc-1',
+          availabilityOverlayStatus,
           resources,
           viewGeneratedAt: local(date, 8),
         }),
@@ -802,6 +803,26 @@ describe('CapacityCalendarService', () => {
 
       expect(view.degraded).toBe(true);
       expect(view.focusDay?.kind).toBe('open');
+    });
+
+    it('says technician duty is unknown when neither the capacity read nor the view overlay measured it', async () => {
+      // No staffingStatus on the capacity read, and the view's HR overlay unavailable:
+      // the roster is counted on duty all day, which is an assumption.
+      arrange();
+      viewFor([], 'UNAVAILABLE');
+
+      const view = await calendar(DAY);
+
+      expect(view.technicianAvailabilityUnknown).toBe(true);
+    });
+
+    it('measures technician duty from the view overlay when the capacity read does not know staffing', async () => {
+      arrange();
+      viewFor();
+
+      const view = await calendar(DAY);
+
+      expect(view.technicianAvailabilityUnknown).toBe(false);
     });
 
     it('a failed capacity read leaves the board to the appointments and degrades', async () => {

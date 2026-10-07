@@ -26,6 +26,7 @@ import {
   computeDay,
   isoDateLocal,
 } from '../../models/capacity-calendar.models';
+import enUS from '../../../../../assets/i18n/en-US.json';
 
 // ── Fixtures ────────────────────────────────────────────────────────────────
 
@@ -374,12 +375,9 @@ describe('ScheduleViewPageComponent', () => {
     capacityStub.getCalendar.mockReturnValue(of(view({ focusDay: day(TODAY, { grid }), board: [] })));
     await setup();
     const translate = TestBed.inject(TranslateService);
-    translate.setTranslation(
-      'en',
-      { SHOPMGMT: { SCHEDULE_VIEW: { BAY_BUSY_RANGE: '{{bay}} busy from {{start}} to {{end}}' } } },
-      true,
-    );
-    translate.use('en');
+    // ADR-0035 §8: the copy comes from the shipped bundle, not a stand-in.
+    translate.setTranslation('en-US', enUS);
+    translate.use('en-US');
     component.setScope('day');
     fixture.detectChanges();
 
