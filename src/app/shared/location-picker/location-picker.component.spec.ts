@@ -186,6 +186,15 @@ describe('LocationPickerComponent', () => {
     expect(input.hasAttribute('aria-controls')).toBe(false);
   });
 
+  it('keeps input focus on a listbox mousedown so the scrollbar stays draggable', () => {
+    component.onInput('');
+    fixture.detectChanges();
+    const listbox = fixture.nativeElement.querySelector('[role="listbox"]') as HTMLElement;
+    const down = new MouseEvent('mousedown', { bubbles: true, cancelable: true });
+    listbox.dispatchEvent(down);
+    expect(down.defaultPrevented).toBe(true);
+  });
+
   it('shows an error state when locations fail to load', () => {
     locationServiceStub.getAll.mockReturnValue(throwError(() => ({ status: 500 })));
     const fx = TestBed.createComponent(LocationPickerComponent);

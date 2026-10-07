@@ -421,3 +421,39 @@ describe('errors and cancellation', () => {
     expect(comp.resultRows().length).toBe(0);
   }));
 });
+
+// ── Listbox scrollbar drag ───────────────────────────────────────────────
+
+describe('listbox mousedown', () => {
+  function mousedownPrevented(el: HTMLElement): boolean {
+    const down = new MouseEvent('mousedown', { bubbles: true, cancelable: true });
+    el.dispatchEvent(down);
+    return down.defaultPrevented;
+  }
+
+  it('keeps input focus on a location listbox mousedown so the scrollbar stays draggable', fakeAsync(() => {
+    const fixture = createComponent();
+    fixture.detectChanges();
+    tick();
+    const comp = fixture.componentInstance;
+    comp.allParentLocations.set([location('l1', 'HQ')]);
+    comp.locationPickerOpen.set(true);
+    fixture.detectChanges();
+
+    const listbox = fixture.nativeElement.querySelector('#loc-picker-listbox') as HTMLElement;
+    expect(mousedownPrevented(listbox)).toBe(true);
+  }));
+
+  it('keeps input focus on a product listbox mousedown so the scrollbar stays draggable', fakeAsync(() => {
+    const fixture = createComponent();
+    fixture.detectChanges();
+    tick();
+    const comp = fixture.componentInstance;
+    comp.productSuggestions.set([product('SKU-7', 'Widget')]);
+    comp.showProductSuggestions.set(true);
+    fixture.detectChanges();
+
+    const listbox = fixture.nativeElement.querySelector('#product-filter-listbox') as HTMLElement;
+    expect(mousedownPrevented(listbox)).toBe(true);
+  }));
+});

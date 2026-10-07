@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { ProductSummary } from '@durion-sdk/catalog';
 import { provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
@@ -82,5 +83,19 @@ describe('AvailabilityComponent', () => {
     const stateIdx = calls.findIndex(c => c === 'state:error');
     const errIdx = calls.findIndex(c => c.startsWith('errKey:'));
     expect(stateIdx).toBeLessThan(errIdx);
+  });
+  it('keeps input focus on a product listbox mousedown so the scrollbar stays draggable', () => {
+    const fixture = TestBed.createComponent(AvailabilityComponent);
+    fixture.detectChanges();
+    const comp = fixture.componentInstance;
+    const widget: ProductSummary = { productId: 'p1', sku: 'SKU-7', name: 'Widget' };
+    comp.productSuggestions.set([widget]);
+    comp.showProductSuggestions.set(true);
+    fixture.detectChanges();
+
+    const listbox = fixture.nativeElement.querySelector('#avail-sku-listbox') as HTMLElement;
+    const down = new MouseEvent('mousedown', { bubbles: true, cancelable: true });
+    listbox.dispatchEvent(down);
+    expect(down.defaultPrevented).toBe(true);
   });
 });
