@@ -54,6 +54,7 @@ export class TodoDetailPanelComponent {
   /** The match panel's apply landed, its payment changed, or it has something to announce (S6). */
   readonly paymentWriteStarted = output<PaymentApplied>();
   readonly paymentWriteReleased = output<PaymentApplied>();
+  readonly paymentWriteSettled = output<PaymentApplied>();
   readonly paymentApplied = output<PaymentApplied>();
   readonly paymentChanged = output<void>();
   readonly paymentAnnounce = output<MatchMessage>();

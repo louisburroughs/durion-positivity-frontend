@@ -642,6 +642,36 @@ describe('AccountingHomePageComponent', () => {
       expect(document.activeElement?.id).toBe('todo-heading');
     });
 
+    it('keeps the payment item while its write is in flight: another item waits, the late answer is announced and read back (Copilot)', () => {
+      const answer = pending<ApplyResult>();
+      mocks.customerPayments.openInvoices.mockReturnValue(of(openInvoice9));
+      mocks.customerPayments.applyPayment.mockReturnValue(answer);
+      render();
+      q('.todo-item[data-kind="PAYMENT"]')!.click();
+      fixture.detectChanges();
+      const paymentId = component.selectedId();
+      q('[data-testid="apply"]')!.click();
+      fixture.detectChanges();
+
+      const bank = q('.todo-item[data-kind="BANK_LINE"]')!;
+      expect(bank.getAttribute('aria-disabled')).toBe('true');
+      bank.click();
+      fixture.detectChanges();
+      expect(component.selectedId()).toBe(paymentId);
+      expect(q('app-payment-match')).not.toBeNull();
+
+      const reads = mocks.home.paymentsToMatch.mock.calls.length;
+      answer.next({ appliedAmount: 4615, remainingAmount: 0, currency: 'USD', lines: [], creditAmount: null });
+      fixture.detectChanges();
+      expect(mocks.home.paymentsToMatch.mock.calls.length).toBe(reads + 1);
+      expect(text('[data-testid="approve-done"]')).toBe('ACCOUNTING.CUSTOMER_PAYMENTS.RESULT.ANNOUNCE_APPLIED');
+
+      expect(q('.todo-item[data-kind="BANK_LINE"]')!.getAttribute('aria-disabled')).toBeNull();
+      q('.todo-item[data-kind="BANK_LINE"]')!.click();
+      fixture.detectChanges();
+      expect(component.selectedId()).toContain('BANK_LINE:');
+    });
+
     it('drops a held payment panel once the payments read is refused (ADR-0064 §6)', () => {
       mocks.customerPayments.openInvoices.mockReturnValue(of(openInvoice9));
       render();

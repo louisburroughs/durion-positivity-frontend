@@ -302,6 +302,12 @@ export class AccountingHomePageComponent {
    * payments page's `resultFor`). A refused payments read drops it (ADR-0064 §6).
    */
   private readonly heldPayment = signal<TodoItem | null>(null);
+  /**
+   * A payment write (apply → credit → refund) is in flight in the detail panel.
+   * Another item cannot be chosen until it settles: switching would destroy the
+   * panel and cancel the request with its outcome and readback (ADR-0063 §4–5).
+   */
+  readonly paymentWriteInFlight = signal(false);
 
   readonly selectedItem = computed(() => {
     const id = this.selectedId();
@@ -387,6 +393,7 @@ export class AccountingHomePageComponent {
     this.approvedAccount.set(null);
     this.paymentMessage.set(null);
     this.heldPayment.set(null);
+    this.paymentWriteInFlight.set(false);
     this.focusOwed = false;
     this.selectedId.set(null);
     this.filter.set('ALL');
@@ -545,6 +552,7 @@ export class AccountingHomePageComponent {
   }
 
   select(item: TodoItem): void {
+    if (this.paymentWriteInFlight() && this.selectedId() !== item.id) return;
     this.approvedAccount.set(null);
     if (this.selectedId() !== item.id) {
       this.paymentMessage.set(null);
@@ -569,11 +577,18 @@ export class AccountingHomePageComponent {
   onPaymentWriteStarted(): void {
     const item = this.selectedItem();
     if (item?.kind === 'PAYMENT') this.heldPayment.set(item);
+    this.paymentWriteInFlight.set(true);
+  }
+
+  /** Nothing of the panel's write chain is in flight: other items can be chosen again. */
+  onPaymentWriteSettled(): void {
+    this.paymentWriteInFlight.set(false);
   }
 
   /** The apply was refused (4xx): nothing was written, so the item is released and follows the list again. */
   onPaymentWriteReleased(): void {
     this.heldPayment.set(null);
+    this.paymentWriteInFlight.set(false);
     // A payments read that settled during the apply may already have dropped the item: settle the
     // selection now, clearing it and moving focus to the to-do heading (ADR-0063 §1, ADR-0029 §8.7).
     this.onTodoSourceSettled();

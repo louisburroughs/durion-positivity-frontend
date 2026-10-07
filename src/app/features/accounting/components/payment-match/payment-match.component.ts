@@ -187,6 +187,12 @@ export class PaymentMatchComponent {
    * before `changed`, so the re-read that follows can drop a payment that left.
    */
   readonly writeReleased = output<PaymentApplied>();
+  /**
+   * No request of this panel is in flight any more (every outcome is said once
+   * it lands): a host that held its item steady while the write chain ran may
+   * let the person move on (ADR-0063 §4).
+   */
+  readonly writeSettled = output<PaymentApplied>();
   /** The payment changed under the person (a refusal), or its remainder moved: the host re-reads its list. */
   readonly changed = output<void>();
   readonly announce = output<MatchMessage>();
@@ -801,6 +807,7 @@ export class PaymentMatchComponent {
   private say(message: MatchMessage): void {
     this.message.set(message);
     this.announce.emit(message);
+    this.writeSettled.emit({ paymentId: this.payment().paymentId });
   }
 
   /** Moves focus to the panel heading (small screens on selection). */

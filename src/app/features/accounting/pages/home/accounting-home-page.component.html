@@ -388,6 +388,7 @@
                     class="todo-item"
                     [attr.data-kind]="item.kind"
                     [attr.aria-pressed]="selectedId() === item.id"
+                    [attr.aria-disabled]="paymentWriteInFlight() && selectedId() !== item.id ? 'true' : null"
                     (click)="select(item)"
                   >
                     @switch (item.kind) {
@@ -513,6 +514,7 @@
               (approve)="approveMonth()"
               (paymentWriteStarted)="onPaymentWriteStarted()"
               (paymentWriteReleased)="onPaymentWriteReleased()"
+              (paymentWriteSettled)="onPaymentWriteSettled()"
               (paymentApplied)="onPaymentApplied()"
               (paymentChanged)="onPaymentChanged()"
               (paymentAnnounce)="onPaymentAnnounce($event)"

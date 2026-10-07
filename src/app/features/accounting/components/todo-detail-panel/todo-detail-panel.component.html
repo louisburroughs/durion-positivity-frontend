@@ -17,6 +17,7 @@
       [embedded]="true"
       (writeStarted)="paymentWriteStarted.emit($event)"
       (writeReleased)="paymentWriteReleased.emit($event)"
+      (writeSettled)="paymentWriteSettled.emit($event)"
       (applied)="paymentApplied.emit($event)"
       (changed)="paymentChanged.emit()"
       (announce)="paymentAnnounce.emit($event)"
