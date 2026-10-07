@@ -176,6 +176,7 @@ export class DrawerMovementDialogComponent {
   private readonly alert = viewChild<ElementRef<HTMLElement>>('alert');
   private readonly usernameInput = viewChild<ElementRef<HTMLInputElement>>('usernameInput');
   private readonly primaryButton = viewChild<ElementRef<HTMLButtonElement>>('primaryButton');
+  private readonly title = viewChild<ElementRef<HTMLElement>>('title');
 
   // ── Form ─────────────────────────────────────────────────────────────────
   readonly reason = signal<DrawerReason | null>(null);
@@ -249,14 +250,18 @@ export class DrawerMovementDialogComponent {
   readonly consequenceKey = computed(() =>
     this.chosen()?.direction === 'PAID_IN' ? 'ORDER.DRAWER.DIALOG.CONSEQUENCE_IN' : 'ORDER.DRAWER.DIALOG.CONSEQUENCE_OUT',
   );
-  readonly canSubmitDetails = computed(
-    () => this.canRecord() && this.optionsCurrent() && !this.busy() && this.detailsComplete(),
-  );
-  readonly canApprove = computed(
+  readonly canSubmitDetails = computed(() => this.submitReady() && !this.busy());
+  readonly canApprove = computed(() => this.approveReady() && !this.busy());
+  /**
+   * Record and Approve are `disabled` only while they could not be pressed at all; while a request
+   * is in flight they are `aria-disabled` instead, so the pressed button keeps focus (ADR-0029 §8.7)
+   * and the handlers refuse (§8.2).
+   */
+  readonly submitReady = computed(() => this.canRecord() && this.optionsCurrent() && this.detailsComplete());
+  readonly approveReady = computed(
     () =>
       this.canRecord() &&
       this.optionsCurrent() &&
-      !this.busy() &&
       this.detailsComplete() &&
       this.managerUsername().trim().length > 0 &&
       this.managerPassword().length > 0,
@@ -430,9 +435,10 @@ export class DrawerMovementDialogComponent {
     setTimeout(() => this.primaryButton()?.nativeElement.focus());
   }
 
-  /** Asks the page to read the options again after a failed read. */
+  /** Asks the page to read the options again; the Retry button goes, so focus moves to the title. */
   retryOptions(): void {
     this.optionsStale.emit();
+    setTimeout(() => this.title()?.nativeElement.focus());
   }
 
   cancel(): void {

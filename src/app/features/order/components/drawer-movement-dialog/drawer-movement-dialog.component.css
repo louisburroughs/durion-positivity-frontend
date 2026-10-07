@@ -177,6 +177,7 @@
 }
 
 .drawer-dialog__primary:disabled,
+.drawer-dialog__primary[aria-disabled='true'],
 .drawer-dialog__secondary:disabled {
   opacity: 0.65;
   cursor: not-allowed;
@@ -187,7 +188,8 @@
 .drawer-dialog__input:focus-visible,
 .drawer-dialog__choice input:focus-visible,
 .drawer-dialog__never summary:focus-visible,
-.drawer-dialog__alert:focus-visible {
+.drawer-dialog__alert:focus-visible,
+.drawer-dialog__title:focus-visible {
   outline: 2px solid var(--input-focus-border);
   outline-offset: 2px;
 }

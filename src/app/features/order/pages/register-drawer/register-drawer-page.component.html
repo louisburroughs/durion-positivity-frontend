@@ -25,7 +25,7 @@
   <p class="drawer__muted" data-testid="drawer-loading">{{ 'ORDER.DRAWER.LOADING' | translate }}</p>
   }
   @case ('error') {
-  <button type="button" class="drawer__secondary" data-testid="drawer-retry" (click)="loadSession()">
+  <button type="button" class="drawer__secondary" data-testid="drawer-retry" (click)="onRetrySession()">
     {{ 'COMMON.RETRY' | translate }}
   </button>
   }
@@ -70,7 +70,7 @@
   @if (showActions()) {
   <div class="drawer__actions" data-testid="drawer-actions">
     <!-- aria-disabled, not disabled: the trigger keeps focus when the dialog closes during a re-read. -->
-    <button type="button" class="drawer__primary" data-testid="drawer-pay-out"
+    <button #payOutButton type="button" class="drawer__primary" data-testid="drawer-pay-out"
       [attr.aria-disabled]="!canPayOut() || null" (click)="openPayOut()">
       {{ 'ORDER.DRAWER.ACTIONS.PAY_OUT' | translate }}
     </button>
@@ -82,7 +82,7 @@
   @if (optionsStatus() === 'FAILED') {
   <div class="drawer__inline-error" data-testid="drawer-options-failed">
     <p>{{ 'ORDER.DRAWER.OPTIONS_FAILED' | translate }}</p>
-    <button type="button" class="drawer__secondary" data-testid="drawer-options-retry" (click)="retryOptions()">
+    <button type="button" class="drawer__secondary" data-testid="drawer-options-retry" (click)="onRetryOptions()">
       {{ 'ORDER.DRAWER.RETRY_OPTIONS' | translate }}
     </button>
   </div>
@@ -90,11 +90,11 @@
   }
 
   <section class="drawer__movements" aria-labelledby="drawer-movements-heading">
-    <h2 id="drawer-movements-heading" class="drawer__heading">{{ 'ORDER.DRAWER.MOVEMENTS.HEADING' | translate }}</h2>
+    <h2 #movementsHeading id="drawer-movements-heading" class="drawer__heading" tabindex="-1">{{ 'ORDER.DRAWER.MOVEMENTS.HEADING' | translate }}</h2>
     @if (movementsStatus() === 'FAILED') {
     <div class="drawer__inline-error" data-testid="drawer-movements-failed">
       <p>{{ 'ORDER.DRAWER.MOVEMENTS.FAILED' | translate }}</p>
-      <button type="button" class="drawer__secondary" data-testid="drawer-movements-retry" (click)="retryMovements()">
+      <button type="button" class="drawer__secondary" data-testid="drawer-movements-retry" (click)="onRetryMovements()">
         {{ 'ORDER.DRAWER.RETRY_MOVEMENTS' | translate }}
       </button>
     </div>

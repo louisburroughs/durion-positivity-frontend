@@ -88,6 +88,8 @@ export class RegisterDrawerPageComponent {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly notice = viewChild<ElementRef<HTMLElement>>('notice');
   private readonly heading = viewChild<ElementRef<HTMLElement>>('heading');
+  private readonly movementsHeading = viewChild<ElementRef<HTMLElement>>('movementsHeading');
+  private readonly payOutButton = viewChild<ElementRef<HTMLElement>>('payOutButton');
 
   readonly state = signal<DrawerPageState>('idle');
   readonly errorKey = signal<string | null>(null);
@@ -372,6 +374,27 @@ export class RegisterDrawerPageComponent {
     if (sessionId && this.isOpen()) {
       this.loadOptions(sessionId);
     }
+  }
+
+  // ── Retry buttons: each removes itself, so focus is handed on (ADR-0029 §8.7) ─
+  onRetrySession(): void {
+    this.loadSession();
+    this.focusLater(() => this.heading());
+  }
+
+  onRetryOptions(): void {
+    this.retryOptions();
+    // Pay out stays focusable (aria-disabled) while the re-read runs.
+    this.focusLater(() => this.payOutButton() ?? this.heading());
+  }
+
+  onRetryMovements(): void {
+    this.retryMovements();
+    this.focusLater(() => this.movementsHeading() ?? this.heading());
+  }
+
+  private focusLater(target: () => ElementRef<HTMLElement> | undefined): void {
+    setTimeout(() => target()?.nativeElement.focus());
   }
 
   // ── Actions ────────────────────────────────────────────────────────────

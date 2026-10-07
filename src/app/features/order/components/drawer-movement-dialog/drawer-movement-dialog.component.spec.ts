@@ -317,6 +317,28 @@ describe('DrawerMovementDialogComponent (CAP:550 S22)', () => {
       expect(h.record).toHaveBeenCalledTimes(1);
     });
 
+    it('keeps focus on Approve while the step-up is in flight (aria-disabled, ADR-0029 §8.7)', () => {
+      const h = renderDialog();
+      h.record.mockReturnValue(throwError(() => refusal(403, 'CASH_MOVEMENT_APPROVAL_REQUIRED')));
+      h.approve.mockReturnValue(new Subject<DrawerApproval>());
+      fillBankDrop(h);
+      h.component.submitDetails();
+      h.render();
+      h.component.managerUsername.set('manager-2');
+      h.component.managerPassword.set('secret');
+      h.render();
+      const approve = h.q<HTMLButtonElement>('drawer-approve')!;
+      approve.focus();
+      approve.click();
+      h.render();
+
+      expect(h.approve).toHaveBeenCalledTimes(1);
+      expect(approve.getAttribute('aria-disabled')).toBe('true');
+      expect(document.activeElement).toBe(approve);
+      approve.click();
+      expect(h.approve).toHaveBeenCalledTimes(1);
+    });
+
     it('empties the credentials on Back', () => {
       const h = renderDialog();
       h.record.mockReturnValue(throwError(() => refusal(403, 'CASH_MOVEMENT_APPROVAL_REQUIRED')));

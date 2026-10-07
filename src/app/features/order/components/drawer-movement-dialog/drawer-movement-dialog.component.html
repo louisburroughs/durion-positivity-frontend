@@ -6,7 +6,7 @@
   data-testid="drawer-dialog"
 >
   <div class="drawer-dialog__panel">
-    <h2 id="drawer-dialog-title" class="drawer-dialog__title">{{ titleKey() | translate }}</h2>
+    <h2 #title id="drawer-dialog-title" class="drawer-dialog__title" tabindex="-1" data-testid="drawer-dialog-title">{{ titleKey() | translate }}</h2>
 
     <!-- Kept in the DOM so every refusal is announced (ADR-0029 §8.8). -->
     <div #alert class="drawer-dialog__alert" role="alert" tabindex="-1" data-testid="drawer-dialog-alert"
@@ -171,7 +171,7 @@
         </button>
         @if (canRecord()) {
         <button #primaryButton type="submit" class="drawer-dialog__primary" data-testid="drawer-record"
-          [disabled]="!canSubmitDetails()">
+          [disabled]="!submitReady()" [attr.aria-disabled]="busy() || null">
           {{ primaryKey() | translate }}
         </button>
         }
@@ -212,7 +212,9 @@
           {{ 'ORDER.DRAWER.APPROVAL.BACK' | translate }}
         </button>
         @if (canRecord()) {
-        <button type="submit" class="drawer-dialog__primary" data-testid="drawer-approve" [disabled]="!canApprove()">
+        <!-- aria-disabled while in flight, not disabled: the pressed button keeps focus (ADR-0029 §8.7). -->
+        <button type="submit" class="drawer-dialog__primary" data-testid="drawer-approve" [disabled]="!approveReady()"
+          [attr.aria-disabled]="busy() || null">
           {{ 'ORDER.DRAWER.APPROVAL.APPROVE' | translate }}
         </button>
         }

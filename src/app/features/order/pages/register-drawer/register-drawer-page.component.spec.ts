@@ -541,6 +541,37 @@ describe('RegisterDrawerPageComponent (CAP:550 S22)', () => {
       expect(h.q('drawer-pay-out')!.getAttribute('aria-disabled')).toBeNull();
     });
 
+    it('hands focus on when a Retry button removes itself (ADR-0029 §8.7)', async () => {
+      const failing = renderDrawer({
+        before: mocks => mocks.currentSession.mockReturnValue(throwError(() => refusal(500))),
+      });
+      failing.mocks.currentSession.mockReturnValue(new Subject<DrawerSession | null>());
+      failing.q<HTMLButtonElement>('drawer-retry')!.focus();
+      click(failing, 'drawer-retry');
+      await flush(failing);
+      expect(document.activeElement).toBe(failing.q('drawer-heading'));
+    });
+
+    it('hands focus to Pay out and to the movements heading when their Retry buttons go', async () => {
+      const h = renderDrawer({
+        before: mocks => {
+          mocks.options.mockReturnValue(throwError(() => refusal(500)));
+          mocks.movements.mockReturnValue(throwError(() => refusal(500)));
+        },
+      });
+      h.mocks.options.mockReturnValue(new Subject<DrawerOptions>());
+      h.q<HTMLButtonElement>('drawer-options-retry')!.focus();
+      click(h, 'drawer-options-retry');
+      await flush(h);
+      expect(document.activeElement).toBe(h.q('drawer-pay-out'));
+
+      h.mocks.movements.mockReturnValue(new Subject<DrawerMovement[]>());
+      h.q<HTMLButtonElement>('drawer-movements-retry')!.focus();
+      click(h, 'drawer-movements-retry');
+      await flush(h);
+      expect(document.activeElement).toBe(h.root.querySelector('#drawer-movements-heading'));
+    });
+
     it('drops reads in flight when the read code goes, and reads afresh when it returns (read-only user)', () => {
       const h = renderDrawer({ permissions: ['order:session:view'] });
       const stale$ = new Subject<DrawerMovement[]>();
@@ -599,13 +630,17 @@ describe('RegisterDrawerPageComponent (CAP:550 S22)', () => {
       h.mocks.recordMovement.mockReturnValueOnce(first$).mockReturnValueOnce(second$);
       fillPettyExpense(h);
 
-      // Both clicks land before change detection disables the button: the handler refuses the second.
+      // The handler refuses the second click and any later submit while the first is in flight.
+      recordButton(h).focus();
       recordButton(h).click();
       recordButton(h).click();
       h.render();
       dialog(h).submitDetails();
+      recordButton(h).click();
       expect(h.mocks.recordMovement).toHaveBeenCalledTimes(1);
-      expect(recordButton(h).disabled).toBe(true);
+      // aria-disabled, not disabled: the pressed button keeps focus while in flight (ADR-0029 §8.7).
+      expect(recordButton(h).getAttribute('aria-disabled')).toBe('true');
+      expect(document.activeElement).toBe(recordButton(h));
 
       first$.error(refusal(504));
       h.render();
@@ -837,7 +872,7 @@ describe('RegisterDrawerPageComponent (CAP:550 S22)', () => {
       expect(h.q('drawer-pay-out')!.getAttribute('aria-disabled')).toBeNull();
     });
 
-    it('stops the open dialog from choosing or submitting when its options re-read fails', () => {
+    it('stops the open dialog from choosing or submitting when its options re-read fails', async () => {
       const h = renderDrawer();
       h.mocks.recordMovement.mockReturnValue(throwError(() => refusal(422, 'PETTY_EXPENSE_CATEGORY_UNKNOWN')));
       h.mocks.options.mockReturnValue(throwError(() => refusal(500)));
@@ -853,9 +888,13 @@ describe('RegisterDrawerPageComponent (CAP:550 S22)', () => {
       expect(h.mocks.recordMovement).toHaveBeenCalledTimes(1);
 
       h.mocks.options.mockReturnValue(of(drawerOptions));
+      h.q<HTMLButtonElement>('drawer-dialog-options-retry')!.focus();
       click(h, 'drawer-dialog-options-retry');
+      await flush(h);
       expect(h.q('drawer-dialog-options-failed')).toBeNull();
       expect(recordButton(h).disabled).toBe(false);
+      // The Retry button went; focus is handed to the dialog title, never the document (ADR-0029 §8.7).
+      expect(document.activeElement).toBe(h.q('drawer-dialog-title'));
     });
   });
 
