@@ -28,7 +28,7 @@
             [attr.placeholder]="'INVENTORY.AVAILABILITY.FILTER.SKU_PLACEHOLDER' | translate"
           />
           @if (showProductSuggestions() && productSuggestions().length > 0) {
-            <ul id="avail-sku-listbox" class="typeahead-suggestions" role="listbox">
+            <ul id="avail-sku-listbox" class="typeahead-suggestions" role="listbox" (mousedown)="$event.preventDefault()">
               @for (p of productSuggestions(); track p.productId) {
                 <li class="typeahead-item" role="option" aria-selected="false" (mousedown)="selectProduct(p)">
                   <span class="suggestion-primary">{{ p.name }}</span>

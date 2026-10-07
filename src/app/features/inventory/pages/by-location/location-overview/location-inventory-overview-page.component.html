@@ -139,6 +139,7 @@
           class="typeahead-suggestions"
           role="listbox"
           [attr.aria-label]="'INVENTORY.BY_LOCATION.PRODUCT_FILTER.DROPDOWN_ARIA' | translate"
+          (mousedown)="$event.preventDefault()"
         >
           @for (p of productSuggestions(); track p.productId; let i = $index) {
           <li
