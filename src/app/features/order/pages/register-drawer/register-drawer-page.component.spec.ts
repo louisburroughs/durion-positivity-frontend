@@ -113,6 +113,11 @@ describe('RegisterDrawerPageComponent (CAP:550 S22)', () => {
       expect(offered(h)).toEqual(['PETTY_EXPENSE', 'BANK_DROP', 'FLOAT_DECREASE']);
     });
 
+    it('reads a movement without a known direction as Unknown, never as Out', () => {
+      const h = renderDrawer({ movements: [{ ...pettyMovement, movementType: undefined }] });
+      expect(text(h.all('drawer-movement-amount')[0])).toBe('Unknown CA$12.50');
+    });
+
     it('reads an unknown reason code as Unknown and never shows the code', () => {
       const legacy: DrawerMovement = { ...unknownMovement, movementId: 'mv-9', reason: null, note: 'Old free text' };
       const h = renderDrawer({ movements: [unknownMovement, legacy] });
@@ -523,6 +528,25 @@ describe('RegisterDrawerPageComponent (CAP:550 S22)', () => {
       reread$.next(drawerOptions);
       h.render();
       expect(h.q('drawer-pay-out')!.getAttribute('aria-disabled')).toBeNull();
+    });
+
+    it('drops reads in flight when the read code goes, and reads afresh when it returns (read-only user)', () => {
+      const h = renderDrawer({ permissions: ['order:session:view'] });
+      const stale$ = new Subject<DrawerMovement[]>();
+      h.mocks.movements.mockReturnValueOnce(stale$);
+      h.component.retryMovements();
+
+      h.granted.set(new Set());
+      h.render();
+      expect(stale$.observed).toBe(false);
+      expect(h.component.session()).toBeNull();
+      expect(h.q('drawer-summary')).toBeNull();
+
+      h.mocks.movements.mockReturnValue(of([]));
+      h.granted.set(new Set(['order:session:view']));
+      h.render();
+      expect(h.mocks.currentSession).toHaveBeenCalledTimes(2);
+      expect(h.q('drawer-movements-empty')).not.toBeNull();
     });
 
     it('stops rendering the drawer when the read code is revoked (ADR-0064 §6)', () => {

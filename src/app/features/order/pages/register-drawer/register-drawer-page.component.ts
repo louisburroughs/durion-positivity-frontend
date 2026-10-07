@@ -177,8 +177,9 @@ export class RegisterDrawerPageComponent {
   /** Move focus to the page's notice once the session read it triggered has landed (ADR-0029 §8.7). */
   private focusNoticeAfterRead = false;
 
-  /** Whether the drawer and its write code were held at the last check (seeded: not a change). */
-  private cashMovementAllowed = this.canView() && this.canCashMovement();
+  /** The drawer read and the write code as last seen, tracked apart (seeded: not a change). */
+  private viewAllowed = this.canView();
+  private writeAllowed = this.canCashMovement();
 
   /** `tid|sub` the held data belongs to; seeded so the effect's first run is not a change. */
   private trackedIdentity = this.identity();
@@ -197,22 +198,32 @@ export class RegisterDrawerPageComponent {
         this.loadSession();
       });
     });
-    // Losing a permission closes the dialog at once, its write lock with it (ADR-0040 §6a);
-    // regaining it re-reads the session and options, so nothing acts on what was read before the
-    // revocation or on a 403 that no longer holds (ADR-0064 §1).
+    // The drawer read and the write code are tracked apart (ADR-0040 §6a, ADR-0064 §1, §6):
+    // - losing either closes the dialog at once, its write lock with it;
+    // - losing the read also drops every read in flight and everything held;
+    // - regaining either re-reads the session (and options), so nothing acts on data read before
+    //   the revocation or on a 403 that no longer holds.
     effect(() => {
-      const allowed = this.canView() && this.canCashMovement();
-      if (allowed === this.cashMovementAllowed) {
+      const view = this.canView();
+      const write = this.canCashMovement();
+      if (view === this.viewAllowed && write === this.writeAllowed) {
         return;
       }
-      this.cashMovementAllowed = allowed;
+      const regained = (view && !this.viewAllowed) || (view && write && !this.writeAllowed);
+      this.viewAllowed = view;
+      this.writeAllowed = write;
       untracked(() => {
-        if (!allowed) {
+        if (!view || !write) {
           this.closeDialogKeepingFocus();
+        }
+        if (!view) {
+          this.dropEverything();
           return;
         }
-        this.optionsDenied.set(false);
-        this.loadSession();
+        if (regained) {
+          this.optionsDenied.set(false);
+          this.loadSession();
+        }
       });
     });
     this.loadSession();
@@ -414,7 +425,14 @@ export class RegisterDrawerPageComponent {
   }
 
   directionKey(movement: DrawerMovement): string {
-    return movement.movementType === 'PAID_IN' ? 'ORDER.DRAWER.DIRECTION.IN' : 'ORDER.DRAWER.DIRECTION.OUT';
+    switch (movement.movementType) {
+      case 'PAID_IN':
+        return 'ORDER.DRAWER.DIRECTION.IN';
+      case 'PAID_OUT':
+        return 'ORDER.DRAWER.DIRECTION.OUT';
+      default:
+        return 'ORDER.DRAWER.DIRECTION.UNKNOWN'; // never guessed from a missing or unknown direction
+    }
   }
 
   /** A category's served label while the options hold it; otherwise its code (never an id). */
@@ -492,7 +510,8 @@ export class RegisterDrawerPageComponent {
     this.sessionSub = this.movementsSub = this.optionsSub = null;
   }
 
-  private resetForIdentity(): void {
+  /** Invalidates every read in flight and drops everything held (identity change, read lost). */
+  private dropEverything(): void {
     this.sessionSeq++;
     this.movementsSeq++;
     this.optionsSeq++;
@@ -500,11 +519,15 @@ export class RegisterDrawerPageComponent {
     this.dialogKind.set(null);
     this.clearSessionData();
     this.sessionStatus.set('PENDING');
+    this.state.set('idle');
+    this.errorKey.set(null);
+  }
+
+  private resetForIdentity(): void {
+    this.dropEverything();
     this.announcement.set(null);
     this.noticeKey.set(null);
     this.focusNoticeAfterRead = false;
-    this.state.set('idle');
-    this.errorKey.set(null);
   }
 
   /** `tid|sub`, each half percent-encoded so no value can contain the delimiter. */

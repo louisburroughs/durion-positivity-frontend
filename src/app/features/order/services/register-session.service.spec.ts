@@ -128,6 +128,17 @@ describe('RegisterSessionService', () => {
       expect(rows[1].reason).toBeNull();
     });
 
+    it('keeps an unknown or missing direction unknown rather than guessing one', async () => {
+      api.listCashMovements.mockReturnValue(
+        of([
+          { ...servedMovement, movementType: undefined },
+          { ...servedMovement, movementType: 'SIDEWAYS' as unknown as CashMovementResponseMovementTypeEnum },
+        ]),
+      );
+      const rows = await firstValueFrom(service.movements(SESSION_ID));
+      expect(rows.map(row => row.movementType)).toEqual([undefined, undefined]);
+    });
+
     it('maps a null body to an empty list', async () => {
       api.listCashMovements.mockReturnValue(of(null));
       expect(await firstValueFrom(service.movements(SESSION_ID))).toEqual([]);
@@ -158,6 +169,13 @@ describe('RegisterSessionService', () => {
           },
           // A code this build does not know is never offered (§8.2).
           { reason: 'CUSTOMER_REFUND' as unknown as ReasonOptionReasonEnum, allowedNow: true },
+          // A known reason without a known direction is dropped, never defaulted to OUT (AC 2).
+          { reason: ReasonOptionReasonEnum.BankDrop, allowedNow: true, requiredFields: ['bagNumber'] },
+          {
+            reason: ReasonOptionReasonEnum.FloatDecrease,
+            direction: 'SIDEWAYS' as unknown as ReasonOptionDirectionEnum,
+            allowedNow: true,
+          },
         ],
         categories: [
           { code: 'OFFICE', label: 'Office supplies', examples: 'Pens, paper' },

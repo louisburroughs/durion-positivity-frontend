@@ -21,6 +21,7 @@ import {
   DrawerReasonOption,
   DrawerSession,
   PettyCategory,
+  isDrawerDirection,
   isDrawerReason,
 } from '../models/register-drawer.models';
 
@@ -57,7 +58,7 @@ function toMovement(response: CashMovementResponse): DrawerMovement {
     movementId: response.movementId,
     occurredAt: response.occurredAt,
     reason: response.reason ?? null,
-    movementType: response.movementType,
+    movementType: isDrawerDirection(response.movementType) ? response.movementType : undefined,
     amount: response.amount,
     currencyCode: response.currencyCode,
     categoryCode: response.categoryCode,
@@ -70,16 +71,19 @@ function toMovement(response: CashMovementResponse): DrawerMovement {
   };
 }
 
-/** Keeps only the known reasons: an unknown served code is never offered (§8.2, AW15). */
+/**
+ * Keeps only the known reasons with a known direction: an unknown served code is never offered,
+ * and a missing or unknown direction is never defaulted to OUT (§8.2, AW15, AC 2).
+ */
 function toOptions(response: CashMovementOptionsResponse): DrawerOptions {
   const reasons: DrawerReasonOption[] = [];
   for (const option of response.reasons ?? []) {
-    if (!isDrawerReason(option.reason)) {
+    if (!isDrawerReason(option.reason) || !isDrawerDirection(option.direction)) {
       continue;
     }
     reasons.push({
       reason: option.reason,
-      direction: option.direction === 'PAID_IN' ? 'PAID_IN' : 'PAID_OUT',
+      direction: option.direction,
       allowedNow: option.allowedNow === true,
       cashierLimit: typeof option.cashierLimit === 'number' ? option.cashierLimit : null,
       alwaysNeedsManager: option.alwaysNeedsManager === true,

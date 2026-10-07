@@ -13,6 +13,11 @@ export type DrawerReason = 'PETTY_EXPENSE' | 'VENDOR_COD' | 'BANK_DROP' | 'FLOAT
 
 export type DrawerDirection = 'PAID_IN' | 'PAID_OUT';
 
+/** Only the two served directions are valid; anything else is malformed and never defaulted. */
+export function isDrawerDirection(value: unknown): value is DrawerDirection {
+  return value === 'PAID_IN' || value === 'PAID_OUT';
+}
+
 export const FLOAT_REASONS: readonly DrawerReason[] = ['FLOAT_INCREASE', 'FLOAT_DECREASE'];
 
 /** The reasons offered under **Pay out**, in the order they are listed (§6 item 2). */
@@ -53,7 +58,8 @@ export interface DrawerMovement {
   readonly occurredAt?: string;
   /** Null on a movement recorded before the fixed reasons; an unknown code reads as Unknown. */
   readonly reason?: string | null;
-  readonly movementType?: DrawerDirection | string;
+  /** Absent when the served direction is missing or not one of the two known values. */
+  readonly movementType?: DrawerDirection;
   readonly amount?: number;
   readonly currencyCode?: string;
   readonly categoryCode?: string;

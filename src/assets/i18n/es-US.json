@@ -8976,7 +8976,8 @@
       },
       "DIRECTION": {
         "OUT": "Salida",
-        "IN": "Entrada"
+        "IN": "Entrada",
+        "UNKNOWN": "Desconocida"
       },
       "DETAIL": {
         "CATEGORY": "Categoría: {{value}}",
