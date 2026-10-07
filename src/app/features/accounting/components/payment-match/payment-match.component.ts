@@ -455,6 +455,9 @@ export class PaymentMatchComponent {
     this.rotateKeys();
     this.phase.set('editing');
     this.loadInvoices();
+    // A fresh intent holds nothing: the host lets its list decide again, so a payment an
+    // unconfirmed apply used up closes on the re-read instead of offering a second apply (ADR-0063).
+    this.writeReleased.emit({ paymentId: this.payment().paymentId });
     // An apply whose outcome was never confirmed may have landed: the host's list says.
     if (wasUnknown) this.changed.emit();
     this.focusAfterRender(() => this.heading()?.nativeElement.focus());

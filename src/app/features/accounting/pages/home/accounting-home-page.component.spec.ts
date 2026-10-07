@@ -601,6 +601,24 @@ describe('AccountingHomePageComponent', () => {
       expect(component.selectedId()).toBeNull();
     });
 
+    it('releases a held payment on Start over after an unknown apply, so a payment that apply used up closes (Copilot, ADR-0063)', () => {
+      mocks.customerPayments.openInvoices.mockReturnValue(of(openInvoice9));
+      mocks.customerPayments.applyPayment.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 504 })));
+      render();
+      q('.todo-item[data-kind="PAYMENT"]')!.click();
+      fixture.detectChanges();
+      q('[data-testid="apply"]')!.click();
+      fixture.detectChanges();
+      expect(q('[data-testid="retry-apply"]')).not.toBeNull();
+      mocks.home.paymentsToMatch.mockReturnValue(of(paymentsPage([])));
+
+      q('[data-testid="start-over"]')!.click();
+      fixture.detectChanges();
+
+      expect(q('app-payment-match')).toBeNull();
+      expect(component.selectedItem()).toBeNull();
+    });
+
     it('drops a held payment panel once the payments read is refused (ADR-0064 §6)', () => {
       mocks.customerPayments.openInvoices.mockReturnValue(of(openInvoice9));
       render();

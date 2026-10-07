@@ -352,7 +352,8 @@
         {{ 'ACCOUNTING.CUSTOMER_PAYMENTS.REFUND.BODY' | translate: { customer: p.customerName ?? empty, amount: keptAmount } }}
       </p>
       <div class="form-actions">
-        <button type="button" class="btn btn--accent match__action" data-testid="kept-refund-confirm" (click)="confirmKeptRefund()">
+        <button type="button" class="btn btn--accent match__action" data-testid="kept-refund-confirm"
+          [attr.aria-disabled]="canRefund() ? null : 'true'" (click)="confirmKeptRefund()">
           {{ 'ACCOUNTING.CUSTOMER_PAYMENTS.REFUND.CONFIRM_KEPT' | translate: { amount: keptAmount } }}
         </button>
         <button type="button" class="btn btn--outline match__action" data-testid="kept-refund-cancel" (click)="cancelKeptRefund()">
@@ -371,7 +372,8 @@
         {{ 'ACCOUNTING.CUSTOMER_PAYMENTS.REFUND.BODY' | translate: { customer: p.customerName ?? empty, amount: leftOverText } }}
       </p>
       <div class="form-actions">
-        <button type="button" class="btn btn--accent match__action" data-testid="refund-confirm" (click)="confirmRefund()">
+        <button type="button" class="btn btn--accent match__action" data-testid="refund-confirm"
+          [attr.aria-disabled]="canRefund() && applyEnabled() ? null : 'true'" (click)="confirmRefund()">
           {{ 'ACCOUNTING.CUSTOMER_PAYMENTS.REFUND.CONFIRM' | translate: { applying: (applying() | money: currency), leftOver: leftOverText } }}
         </button>
         <button type="button" class="btn btn--outline match__action" data-testid="refund-cancel" (click)="cancelRefund()">

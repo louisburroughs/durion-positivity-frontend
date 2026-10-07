@@ -378,6 +378,21 @@ describe('CustomerPaymentsPageComponent (CAP:550 S6)', () => {
       expect(document.activeElement?.id).toBe('payments-list-heading');
     });
 
+    it('releases the payment on Start over after an unknown apply, so a payment that apply used up closes (Copilot, ADR-0063)', async () => {
+      mocks.service.applyPayment.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 504 })));
+      render();
+      click('[data-testid="payment-item"]');
+      click('[data-testid="apply"]');
+      expect(q('[data-testid="retry-apply"]')).not.toBeNull();
+      mocks.service.waitingPayments.mockReturnValue(of(waitingList([payment({ paymentId: 'pay-2' })])));
+
+      click('[data-testid="start-over"]');
+      await fixture.whenStable();
+
+      expect(component.selected()).toBeNull();
+      expect(q('app-payment-match')).toBeNull();
+    });
+
     it('keeps the payment selected while its apply is in flight, even when a re-read drops it', () => {
       const answer = pending<ApplyResult>();
       mocks.service.applyPayment.mockReturnValue(answer);

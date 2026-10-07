@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { LocaleService } from '../../../../core/services/locale.service';
 import { ApplyResult, OpenInvoicesList, RemainderCredit, WaitingPayment } from '../../models/customer-payments.models';
 import {
+  ALL_PAYMENT_PERMISSIONS,
   PaymentsMocks,
   applyResult,
   configurePayments,
@@ -527,6 +528,30 @@ describe('PaymentMatchComponent (CAP:550 S6 match panel)', () => {
       expect(q('[data-testid="refund-dialog"]')).toBeNull();
       expect(mocks.service.refundCredit).not.toHaveBeenCalled();
       expect(mocks.service.creditRemainder).toHaveBeenCalledTimes(1);
+    });
+
+    it('shows the refund confirmations as disabled once the permission goes away while they are open (ADR-0040 §6a)', () => {
+      mocks.service.applyPayment.mockReturnValue(of(applyResult({ appliedAmount: 450, remainingAmount: 150 })));
+      mocks.service.creditRemainder.mockReturnValue(of({ creditId: 'credit-1', amount: 150, currency: 'USD' }));
+      render();
+      type('INV-2026-01702', '250');
+      click('[data-testid="leftover-refund"]');
+      click('[data-testid="apply"]');
+      expect(q('[data-testid="refund-confirm"]')?.getAttribute('aria-disabled')).toBeNull();
+      mocks.held.set(['accounting:payment:apply']);
+      fixture.detectChanges();
+      expect(q('[data-testid="refund-confirm"]')?.getAttribute('aria-disabled')).toBe('true');
+
+      mocks.held.set(ALL_PAYMENT_PERMISSIONS);
+      fixture.detectChanges();
+      click('[data-testid="refund-confirm"]');
+      click('[data-testid="refund-kept"]');
+      expect(q('[data-testid="kept-refund-confirm"]')?.getAttribute('aria-disabled')).toBeNull();
+      mocks.held.set(['accounting:payment:apply']);
+      fixture.detectChanges();
+      expect(q('[data-testid="kept-refund-confirm"]')?.getAttribute('aria-disabled')).toBe('true');
+      click('[data-testid="kept-refund-confirm"]');
+      expect(mocks.service.refundCredit).not.toHaveBeenCalled();
     });
 
     it('refuses a refund confirmed after the permission went away', () => {
