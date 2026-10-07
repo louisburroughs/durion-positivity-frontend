@@ -308,6 +308,13 @@ export class AccountingHomePageComponent {
    * panel and cancel the request with its outcome and readback (ADR-0063 §4–5).
    */
   readonly paymentWriteInFlight = signal(false);
+  /**
+   * The lock that holds the other items: only while the write's own item is
+   * still the selected panel. If that panel goes away (a refused payments read,
+   * a lost permission) its request is cancelled with it and no settle ever
+   * arrives, so the lock must not outlive the panel.
+   */
+  readonly paymentLock = computed(() => this.paymentWriteInFlight() && this.selectedItem()?.kind === 'PAYMENT');
 
   readonly selectedItem = computed(() => {
     const id = this.selectedId();
@@ -495,6 +502,9 @@ export class AccountingHomePageComponent {
     const stillThere = !!selected && this.selectedItem() !== null;
     if (selected && !stillThere) {
       this.selectedId.set(null);
+      // The panel, and any write it held, went with the item: nothing is held or locked any more.
+      this.heldPayment.set(null);
+      this.paymentWriteInFlight.set(false);
       this.review.reset();
       this.approveMessage.set(null);
       this.focusOwed = false;
@@ -552,7 +562,7 @@ export class AccountingHomePageComponent {
   }
 
   select(item: TodoItem): void {
-    if (this.paymentWriteInFlight() && this.selectedId() !== item.id) return;
+    if (this.paymentLock() && this.selectedId() !== item.id) return;
     this.approvedAccount.set(null);
     if (this.selectedId() !== item.id) {
       this.paymentMessage.set(null);

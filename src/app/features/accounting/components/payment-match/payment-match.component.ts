@@ -642,6 +642,8 @@ export class PaymentMatchComponent {
     const intent = this.intent;
     this.pendingCredit = plan;
     this.phase.set('crediting');
+    // A write of its own (also on Try again): the host holds the payment until it settles.
+    this.writeStarted.emit({ paymentId: plan.paymentId });
     this.writeSubscription = this.service
       .creditRemainder(plan.paymentId, plan.expected, this.creditRequestId)
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -726,6 +728,7 @@ export class PaymentMatchComponent {
     const requestId = this.refundRequestId ?? uuidV7();
     this.refundRequestId = requestId;
     this.phase.set('refunding');
+    this.writeStarted.emit({ paymentId: this.payment().paymentId });
     this.writeSubscription = this.service
       .refundCredit(credit.creditId, credit.amount, requestId)
       .pipe(takeUntilDestroyed(this.destroyRef))

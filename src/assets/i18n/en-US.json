@@ -5349,7 +5349,8 @@
             "OTHER": "That couldn't be completed. Try again."
           },
           "DONE": "Approved: this month's bank check-up for {{account}} is done."
-        }
+        },
+        "LOCKED": "Finishing this payment — other items wait until it's done."
       },
       "MORE_TOOLS": {
         "TITLE": "More accounting tools",

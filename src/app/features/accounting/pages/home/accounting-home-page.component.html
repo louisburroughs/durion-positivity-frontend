@@ -380,6 +380,9 @@
             <p class="hint-text">{{ 'ACCOUNTING.HOME.TODO.EMPTY_FILTER' | translate }}</p>
           }
           @if (visibleItems().length > 0) {
+            @if (paymentLock()) {
+              <p id="todo-lock-hint" class="hint-text" data-testid="todo-lock-hint">{{ 'ACCOUNTING.HOME.TODO.LOCKED' | translate }}</p>
+            }
             <ul class="todo__list">
               @for (item of visibleItems(); track item.id) {
                 <li>
@@ -388,7 +391,8 @@
                     class="todo-item"
                     [attr.data-kind]="item.kind"
                     [attr.aria-pressed]="selectedId() === item.id"
-                    [attr.aria-disabled]="paymentWriteInFlight() && selectedId() !== item.id ? 'true' : null"
+                    [attr.aria-disabled]="paymentLock() && selectedId() !== item.id ? 'true' : null"
+                    [attr.aria-describedby]="paymentLock() && selectedId() !== item.id ? 'todo-lock-hint' : null"
                     (click)="select(item)"
                   >
                     @switch (item.kind) {

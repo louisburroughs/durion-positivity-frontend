@@ -113,6 +113,8 @@ describe('Customer payments copy (real bundles)', () => {
       "The invoice it was taken against isn't open — check for a duplicate payment",
     );
     expect(en('ACCOUNTING.HOME.TODO.MORE.OPEN_PAYMENTS')).toBe('Open Customer payments');
+    // Why the other to-do items wait while a payment write runs (ADR-0029 §8).
+    expect(en('ACCOUNTING.HOME.TODO.LOCKED')).toBe("Finishing this payment — other items wait until it's done.");
     for (const [, bundle] of LOCALES) {
       expect(JSON.stringify(bundle)).not.toMatch(/Apply payment\b|Appliquer un paiement|Aplicar pago\b/);
     }

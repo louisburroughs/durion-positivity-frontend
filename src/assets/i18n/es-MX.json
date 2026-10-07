@@ -5349,7 +5349,8 @@
             "OTHER": "No se pudo completar. Inténtelo de nuevo."
           },
           "DONE": "Aprobada: la revisión bancaria de este mes para {{account}} está hecha."
-        }
+        },
+        "LOCKED": "Terminando este pago — los demás elementos esperan hasta que termine."
       },
       "MORE_TOOLS": {
         "TITLE": "Más herramientas de contabilidad",

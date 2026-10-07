@@ -5349,7 +5349,8 @@
             "OTHER": "L’opération n’a pas pu être effectuée. Réessayez."
           },
           "DONE": "Approuvée : la vérification bancaire de ce mois pour {{account}} est terminée."
-        }
+        },
+        "LOCKED": "Finalisation de ce paiement — les autres éléments attendent qu'il soit terminé."
       },
       "MORE_TOOLS": {
         "TITLE": "Autres outils comptables",

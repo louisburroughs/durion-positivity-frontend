@@ -655,6 +655,10 @@ describe('AccountingHomePageComponent', () => {
 
       const bank = q('.todo-item[data-kind="BANK_LINE"]')!;
       expect(bank.getAttribute('aria-disabled')).toBe('true');
+      // The reason is visible and linked to every waiting item (ADR-0029 §8).
+      expect(text('[data-testid="todo-lock-hint"]')).toBe('ACCOUNTING.HOME.TODO.LOCKED');
+      expect(bank.getAttribute('aria-describedby')).toBe('todo-lock-hint');
+      expect(q('.todo-item[data-kind="PAYMENT"]')!.getAttribute('aria-describedby')).toBeNull();
       bank.click();
       fixture.detectChanges();
       expect(component.selectedId()).toBe(paymentId);
@@ -667,9 +671,74 @@ describe('AccountingHomePageComponent', () => {
       expect(text('[data-testid="approve-done"]')).toBe('ACCOUNTING.CUSTOMER_PAYMENTS.RESULT.ANNOUNCE_APPLIED');
 
       expect(q('.todo-item[data-kind="BANK_LINE"]')!.getAttribute('aria-disabled')).toBeNull();
+      expect(q('[data-testid="todo-lock-hint"]')).toBeNull();
       q('.todo-item[data-kind="BANK_LINE"]')!.click();
       fixture.detectChanges();
       expect(component.selectedId()).toContain('BANK_LINE:');
+    });
+
+    it('releases the lock when a refused payments read takes the panel away mid-write: other items are selectable again', () => {
+      const answer = pending<ApplyResult>();
+      mocks.customerPayments.openInvoices.mockReturnValue(of(openInvoice9));
+      mocks.customerPayments.applyPayment.mockReturnValue(answer);
+      render();
+      q('.todo-item[data-kind="PAYMENT"]')!.click();
+      fixture.detectChanges();
+      q('[data-testid="apply"]')!.click();
+      fixture.detectChanges();
+      expect(component.paymentLock()).toBe(true);
+
+      mocks.home.paymentsToMatch.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 403 })));
+      component.retryRegion('payments');
+      fixture.detectChanges();
+
+      expect(q('app-payment-match')).toBeNull();
+      expect(component.paymentLock()).toBe(false);
+      expect(component.paymentWriteInFlight()).toBe(false);
+      expect(qa('.todo-item[aria-disabled="true"]')).toEqual([]);
+      expect(q('[data-testid="todo-lock-hint"]')).toBeNull();
+      q('.todo-item[data-kind="BANK_LINE"]')!.click();
+      fixture.detectChanges();
+      expect(component.selectedId()).toContain('BANK_LINE:');
+    });
+
+    it('re-takes the lock for a retry in the chain: switching is refused while Try again runs (S6)', () => {
+      const waiting = payment({ unappliedAmount: 5000, totalAmount: 5000, leftOver: 385 });
+      mocks.home.paymentsToMatch.mockReturnValue(of(paymentsPage([waiting])));
+      mocks.customerPayments.openInvoices.mockReturnValue(of(openInvoice9));
+      mocks.customerPayments.applyPayment.mockReturnValue(
+        of({
+          appliedAmount: 4615,
+          remainingAmount: 385,
+          currency: 'USD',
+          lines: [{ invoiceId: 'inv-9', appliedAmount: 4615, balanceAfter: 0 }],
+          creditAmount: null,
+        }),
+      );
+      const retried = pending<{ creditId: string; amount: number; currency: string | null }>();
+      mocks.customerPayments.creditRemainder
+        .mockReturnValueOnce(throwError(() => new HttpErrorResponse({ status: 503 })))
+        .mockReturnValueOnce(retried);
+      render();
+      q('.todo-item[data-kind="PAYMENT"]')!.click();
+      fixture.detectChanges();
+      const paymentId = component.selectedId();
+      q('[data-testid="apply"]')!.click();
+      fixture.detectChanges();
+      // The credit's outcome is unknown: nothing is in flight, so the lock is off.
+      expect(component.paymentLock()).toBe(false);
+
+      q('[data-testid="retry-credit"]')!.click();
+      fixture.detectChanges();
+      expect(component.paymentLock()).toBe(true);
+      q('.todo-item[data-kind="BANK_LINE"]')!.click();
+      fixture.detectChanges();
+      expect(component.selectedId()).toBe(paymentId);
+
+      retried.next({ creditId: 'credit-1', amount: 385, currency: 'USD' });
+      fixture.detectChanges();
+      expect(text('[data-testid="approve-done"]')).toBe('ACCOUNTING.CUSTOMER_PAYMENTS.RESULT.ANNOUNCE_KEPT');
+      expect(component.paymentLock()).toBe(false);
     });
 
     it('drops a held payment panel once the payments read is refused (ADR-0064 §6)', () => {
