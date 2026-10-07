@@ -619,6 +619,29 @@ describe('AccountingHomePageComponent', () => {
       expect(component.selectedItem()).toBeNull();
     });
 
+    it('settles the selection when a refused apply releases an item a pending-time re-read already dropped (Copilot)', async () => {
+      const answer = pending<ApplyResult>();
+      mocks.customerPayments.openInvoices.mockReturnValue(of(openInvoice9));
+      mocks.customerPayments.applyPayment.mockReturnValue(answer);
+      render();
+      q('.todo-item[data-kind="PAYMENT"]')!.click();
+      fixture.detectChanges();
+      q('[data-testid="apply"]')!.click();
+      fixture.detectChanges();
+      mocks.home.paymentsToMatch.mockReturnValue(of(paymentsPage([])));
+      component.retryRegion('payments');
+      fixture.detectChanges();
+      expect(q('app-payment-match')).not.toBeNull();
+
+      answer.error(new HttpErrorResponse({ status: 409, error: { code: 'CONFLICT', message: 'x' } }));
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(component.selectedId()).toBeNull();
+      expect(q('app-payment-match')).toBeNull();
+      expect(document.activeElement?.id).toBe('todo-heading');
+    });
+
     it('drops a held payment panel once the payments read is refused (ADR-0064 §6)', () => {
       mocks.customerPayments.openInvoices.mockReturnValue(of(openInvoice9));
       render();

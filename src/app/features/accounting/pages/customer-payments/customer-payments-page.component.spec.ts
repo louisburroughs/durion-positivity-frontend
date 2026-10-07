@@ -393,6 +393,28 @@ describe('CustomerPaymentsPageComponent (CAP:550 S6)', () => {
       expect(q('app-payment-match')).toBeNull();
     });
 
+    it('settles the selection when a refused apply releases a payment a pending-time re-read already dropped (Copilot)', async () => {
+      const answer = pending<ApplyResult>();
+      mocks.service.applyPayment.mockReturnValue(answer);
+      render();
+      click('[data-testid="payment-item"]');
+      click('[data-testid="apply"]');
+      mocks.service.waitingPayments.mockReturnValue(of(waitingList([payment({ paymentId: 'pay-2' })])));
+      component.refresh();
+      fixture.detectChanges();
+      expect(component.selected()?.paymentId).toBe('pay-1');
+      const reads = mocks.service.waitingPayments.mock.calls.length;
+
+      answer.error(new HttpErrorResponse({ status: 409, error: { code: 'CONFLICT', message: 'x' } }));
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(mocks.service.waitingPayments.mock.calls.length).toBe(reads);
+      expect(component.selected()).toBeNull();
+      expect(q('app-payment-match')).toBeNull();
+      expect(document.activeElement?.id).toBe('payments-list-heading');
+    });
+
     it('keeps the payment selected while its apply is in flight, even when a re-read drops it', () => {
       const answer = pending<ApplyResult>();
       mocks.service.applyPayment.mockReturnValue(answer);

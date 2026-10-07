@@ -574,6 +574,9 @@ export class AccountingHomePageComponent {
   /** The apply was refused (4xx): nothing was written, so the item is released and follows the list again. */
   onPaymentWriteReleased(): void {
     this.heldPayment.set(null);
+    // A payments read that settled during the apply may already have dropped the item: settle the
+    // selection now, clearing it and moving focus to the to-do heading (ADR-0063 §1, ADR-0029 §8.7).
+    this.onTodoSourceSettled();
   }
 
   /**

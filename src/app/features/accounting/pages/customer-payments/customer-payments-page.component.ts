@@ -376,7 +376,11 @@ export class CustomerPaymentsPageComponent {
 
   /** The apply was refused (4xx): nothing was written, so the payment is no longer held against the list. */
   onWriteReleased(event: PaymentApplied): void {
-    if (this.resultFor === event.paymentId) this.resultFor = null;
+    if (this.resultFor !== event.paymentId) return;
+    this.resultFor = null;
+    // A list read that settled while the apply was pending may already have dropped the payment:
+    // settle the selection against the current list now (ADR-0063 §1).
+    if (this.payments.status() === 'OK') this.onPaymentsSettled(true);
   }
 
   /** An apply was sent: the payment stays selected until the person picks another, whatever the list says. */
