@@ -535,6 +535,7 @@ export class DrawerMovementDialogComponent {
         this.sessionChanged.emit('CONFLICT');
         return;
       case 'INVALID':
+        this.approval = null; // a definitive refusal: the token goes with it
         this.invalidFields.set(new Set(failure.fields));
         this.showFailure({ key: FAILURE_KEYS['INVALID'], fieldKeys: this.fieldLabelKeys(failure.fields) });
         return;

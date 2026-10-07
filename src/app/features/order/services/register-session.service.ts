@@ -124,7 +124,7 @@ export class RegisterSessionService {
 
   /**
    * The terminal's OPEN or CLOSING session, or null on 204 (no drawer open). Only a 204 means "no
-   * drawer": a 200 without a body is a failed read, never the empty state (ADR-0064 §1).
+   * drawer": a 200 without a session (or its id) is a failed read, never the empty state (ADR-0064 §1).
    */
   currentSession(terminalId: string): Observable<DrawerSession | null> {
     return this.api.getCurrentRegisterSession(terminalId, 'response').pipe(
@@ -132,7 +132,7 @@ export class RegisterSessionService {
         if (response.status === 204) {
           return null;
         }
-        if (!response.body) {
+        if (!response.body?.sessionId) {
           throw new Error('The current session read answered without a session');
         }
         return toSession(response.body);

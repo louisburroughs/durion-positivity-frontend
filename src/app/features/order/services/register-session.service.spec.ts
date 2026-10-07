@@ -106,6 +106,10 @@ describe('RegisterSessionService', () => {
         of(new HttpResponse<RegisterSessionResponse>({ status: 200, body: null })),
       );
       await expect(firstValueFrom(service.currentSession('T-2'))).rejects.toThrow();
+      api.getCurrentRegisterSession.mockReturnValue(
+        of(new HttpResponse<RegisterSessionResponse>({ status: 200, body: { ...servedSession, sessionId: undefined } })),
+      );
+      await expect(firstValueFrom(service.currentSession('T-2'))).rejects.toThrow();
     });
   });
 

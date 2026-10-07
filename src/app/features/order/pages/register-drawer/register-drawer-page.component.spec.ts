@@ -649,6 +649,23 @@ describe('RegisterDrawerPageComponent (CAP:550 S22)', () => {
       expect(h.mocks.requestApproval).toHaveBeenCalledTimes(1);
     });
 
+    it('drops the approval token on a definitive 400 refusal', () => {
+      const h = renderDrawer();
+      h.mocks.recordMovement
+        .mockReturnValueOnce(throwError(() => refusal(403, 'CASH_MOVEMENT_APPROVAL_REQUIRED')))
+        .mockReturnValueOnce(throwError(() => refusal(400, 'REGISTER_SESSION_INVALID_ARGUMENT', ['note'])));
+      h.mocks.requestApproval.mockReturnValue(of(approval));
+      fillPettyExpense(h, '80');
+      click(h, 'drawer-record');
+      type(h, 'drawer-manager-username', 'manager-2');
+      type(h, 'drawer-manager-password', 'secret');
+      click(h, 'drawer-approve');
+
+      expect(h.mocks.recordMovement.mock.calls[1][1].approvalToken).toBe('approval-token-1');
+      expect(dialog(h).step()).toBe('details');
+      expect(dialog(h).holdsApproval()).toBe(false);
+    });
+
     it('drops an expired token instead of resending it', () => {
       const h = renderDrawer();
       h.mocks.recordMovement
