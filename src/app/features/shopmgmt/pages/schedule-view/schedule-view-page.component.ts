@@ -6,6 +6,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 
 import { LocationPickerComponent } from '../../../../shared/location-picker/location-picker.component';
 import {
+  BayHourState,
   BoardAppointment,
   CapacityCalendarView,
   CapacityDay,
@@ -97,6 +98,18 @@ export interface BoardColumn {
   readonly bayType: string;
   readonly eligible: boolean;
   readonly outOfService: boolean;
+  /**
+   * Runs of consecutive busy hours from the day's bay load. They come from the
+   * capacity read, so they show a bay held by a work order that has no
+   * appointment card to draw.
+   */
+  readonly loadRuns: readonly {
+    readonly topPx: number;
+    readonly heightPx: number;
+    /** Wall-clock bounds of the run, for the screen-reader statement of it. */
+    readonly start: Date;
+    readonly end: Date;
+  }[];
   readonly cards: readonly BoardCard[];
 }
 
@@ -259,12 +272,18 @@ export class ScheduleViewPageComponent implements OnInit {
       return [];
     }
     const first = current.hours[0] ?? 0;
-    return current.bays.map(bay => ({
+    return current.bays.map((bay, bayIndex) => ({
       bayId: bay.bayId,
       name: bay.name,
       bayType: bay.bayType,
       eligible: isEligibleBay(bay, this.activeJob(), this.view()?.bays ?? []),
       outOfService: bay.outOfService,
+      loadRuns: busyRuns(current.focusDay?.bayStates[bayIndex] ?? []).map(run => ({
+        topPx: run.start * HOUR_PITCH_PX,
+        heightPx: run.length * HOUR_PITCH_PX,
+        start: this.hourDate(first + run.start),
+        end: this.hourDate(first + run.start + run.length),
+      })),
       cards: current.board
         .filter(appointment => appointment.bayId === bay.bayId)
         .map(appointment => ({
@@ -598,4 +617,21 @@ export class ScheduleViewPageComponent implements OnInit {
   limitOf(hour: CapacityHour): LimitReason {
     return hour.limit;
   }
+}
+
+/** Consecutive busy (or held) hours of one bay, as hour-index runs. */
+function busyRuns(states: readonly BayHourState[]): { start: number; length: number }[] {
+  const runs: { start: number; length: number }[] = [];
+  states.forEach((state, index) => {
+    if (state !== 'busy' && state !== 'hold') {
+      return;
+    }
+    const last = runs[runs.length - 1];
+    if (last && last.start + last.length === index) {
+      last.length += 1;
+    } else {
+      runs.push({ start: index, length: 1 });
+    }
+  });
+  return runs;
 }

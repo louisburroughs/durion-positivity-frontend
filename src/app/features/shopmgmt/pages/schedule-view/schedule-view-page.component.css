@@ -761,6 +761,15 @@
   );
 }
 
+/* Bay load behind the cards, in the legend's "shop load" colour. It is the
+   only mark for a bay held by a work order with no appointment card. */
+.board-load {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background: color-mix(in srgb, var(--handleColor) 35%, transparent);
+}
+
 .board-card {
   position: absolute;
   left: 4px;

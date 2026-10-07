@@ -26,6 +26,7 @@ import {
   computeDay,
   isoDateLocal,
 } from '../../models/capacity-calendar.models';
+import enUS from '../../../../../assets/i18n/en-US.json';
 
 // ── Fixtures ────────────────────────────────────────────────────────────────
 
@@ -343,6 +344,50 @@ describe('ScheduleViewPageComponent', () => {
     // 9 AM on a 7 AM board, at 64px per hour.
     expect(card.style.top).toBe('128px');
     expect(card.style.height).toBe('96px');
+  });
+
+  it('shades a bay\'s busy hours on the board even with no appointment card, merging runs', async () => {
+    // Bay 1 held 8-10 AM and 11 AM (say, by a work order); the rack free.
+    const grid: BayHourState[][] = [
+      ['free', 'busy', 'busy', 'free', 'busy'],
+      HOURS.map(() => 'free'),
+    ];
+    capacityStub.getCalendar.mockReturnValue(of(view({ focusDay: day(TODAY, { grid }), board: [] })));
+    await setup();
+    component.setScope('day');
+    fixture.detectChanges();
+
+    const columns = all('.board-column');
+    const runs = columns[0].queryAll(By.css('.board-load')).map(run => run.nativeElement as HTMLElement);
+    expect(runs.map(run => [run.style.top, run.style.height])).toEqual([
+      ['64px', '128px'],
+      ['256px', '64px'],
+    ]);
+    expect(columns[1].queryAll(By.css('.board-load')).length).toBe(0);
+    expect(all('.board-card').length).toBe(0);
+  });
+
+  it('states each busy run for screen readers, since the shading is hidden from them', async () => {
+    const grid: BayHourState[][] = [
+      ['free', 'busy', 'busy', 'free', 'busy'],
+      HOURS.map(() => 'free'),
+    ];
+    capacityStub.getCalendar.mockReturnValue(of(view({ focusDay: day(TODAY, { grid }), board: [] })));
+    await setup();
+    const translate = TestBed.inject(TranslateService);
+    // ADR-0035 §8: the copy comes from the shipped bundle, not a stand-in.
+    translate.setTranslation('en-US', enUS);
+    translate.use('en-US');
+    component.setScope('day');
+    fixture.detectChanges();
+
+    const columns = all('.board-column');
+    const lines = columns[0]
+      .queryAll(By.css('.sr-only li'))
+      // DatePipe's shortTime puts a narrow no-break space before AM/PM.
+      .map(line => (line.nativeElement as HTMLElement).textContent?.replace(/\s+/g, ' ').trim());
+    expect(lines).toEqual(['Bay 1 busy from 8:00 AM to 10:00 AM', 'Bay 1 busy from 11:00 AM to 12:00 PM']);
+    expect(columns[1].queryAll(By.css('.sr-only')).length).toBe(0);
   });
 
   it('greys a bay that cannot do the selected job instead of hiding it', async () => {

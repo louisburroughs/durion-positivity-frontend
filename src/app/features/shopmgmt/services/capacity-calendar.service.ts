@@ -148,21 +148,21 @@ const LANE_MECHANIC = 'MECHANIC';
  *
  *   bays                    → columns, bay type, specialty codes, duty class, OOS
  *   location technicians    → technician roster and the skill codes they hold
- *   schedule capacity       → month and week grids: per-day status, operating
- *                             window, bay occupancy by hour, carry-over, and each
- *                             rostered technician's on-duty and assigned hours,
- *                             in one read (backend #2023, #2527)
- *   schedule view (per day) → day board: bay occupancy and the appointments
- *                             themselves
+ *   schedule capacity       → every scope: per-day status, operating window, bay
+ *                             occupancy by hour (work orders included),
+ *                             carry-over, and each rostered technician's on-duty
+ *                             and assigned hours, in one read (backend #2023, #2527)
+ *   schedule view (per day) → day board: the appointment cards, which the
+ *                             capacity read does not itemise
  *   catalog services        → the job-type filter, its operation code, its
  *                             required skills and its default duration
  *
  * Technician duty and assignment come from the capacity read (backend #2527).
  * When it reports `staffingStatus` UNAVAILABLE (or an older backend omits it)
  * the roster is counted on duty and unassigned, and the view says technician
- * availability is unknown rather than presenting that as measured. The day
- * board still reads the schedule view, which sees a technician as busy only
- * for an appointment booked directly on a mechanic resource.
+ * availability is unknown rather than presenting that as measured; the day
+ * board then falls back to the schedule view's overlay, which sees a technician
+ * as busy only for an appointment booked directly on a mechanic resource.
  *
  * Eligibility is read, not inferred: a bay's `serviceCapabilityCodes` against the
  * service's `operationCode` (CAP-325 D14) and a technician's held credentials
@@ -277,14 +277,19 @@ export class CapacityCalendarService {
 
     const dates = [request.focusDate];
 
+    // The day board reads both: the schedule view for the appointment cards, and
+    // the capacity read for bay load. The view lists appointments only, so a bay
+    // held by a work order with no appointment would read as free, and the day
+    // would contradict the week grid that counts it.
     return forkJoin({
       bays: this.loadBays(request.locationId),
       technicians: this.loadTechnicians(request.locationId),
       locationName: this.loadLocationName(request.locationId),
       schedules: this.loadSchedules(request.locationId, dates),
+      capacity: this.loadCapacity(request.locationId, dates),
     }).pipe(
-      map(({ bays, technicians, locationName, schedules }) =>
-        this.assemble(request, bays, technicians, locationName, schedules),
+      map(({ bays, technicians, locationName, schedules, capacity }) =>
+        this.assemble(request, bays, technicians, locationName, schedules, capacity),
       ),
     );
   }
@@ -415,30 +420,51 @@ export class CapacityCalendarService {
     technicians: { roster: LocationTechnicianRosterEntryResponse[]; ok: boolean },
     locationName: string | undefined,
     load: ScheduleLoad,
+    capacity: CapacityLoad,
   ): CapacityCalendarView {
     const schedules = load.byDate;
-    const hours = this.hourLabels(schedules.values());
+    // An answered read that has no usable day for a date (missing, or marked
+    // UNAVAILABLE) is treated like a failed read for that date: the board falls
+    // back to the schedule view and the view degrades, rather than drawing a
+    // closed day nobody confirmed.
+    const usableDay = (date: string): DayCapacityView | undefined => {
+      const day = capacity.byDate.get(date);
+      return day?.status === DayCapacityViewStatusEnum.Unavailable ? undefined : day;
+    };
+    const capacityGap =
+      !capacity.failed && !capacity.absent && usableDay(request.focusDate) === undefined;
+    const hours = this.hourLabels([...schedules.values(), usableDay(request.focusDate)]);
     const today = isoDateLocal(new Date());
     const currentHour = new Date().getHours();
 
+    const dayTechnicians = (date: string): CapacityTechnician[] => {
+      const day = usableDay(date);
+      // Duty and assignment come from the capacity read when it knows the
+      // roster, as on the week grid; otherwise from the schedule view's overlay.
+      return capacity.staffingKnown && day?.status === DayCapacityViewStatusEnum.Ok
+        ? this.capacityTechnicianHours(technicians.roster, day, true, hours)
+        : this.technicianHours(technicians.roster, schedules.get(date), hours);
+    };
+
     const buildDay = (date: string): CapacityDay => {
       const schedule = schedules.get(date);
-      const kind: DayKind = this.dayKind(schedule);
-      const dayTechnicians = this.technicianHours(technicians.roster, schedule, hours);
-      return computeDay({
-        date,
-        kind,
-        isToday: date === today,
-        hours,
-        bays: bays.bays,
-        technicians: dayTechnicians,
-        job: request.job,
-        grid: this.bayGrid(bays.bays, schedule, hours),
-        currentHour,
-        // The schedule view publishes no actual-vs-planned times (#476), so
-        // carry-over is left unset here; only the month's capacity read has it.
-        carryOver: undefined,
-      });
+      const day = usableDay(date);
+      const kind: DayKind = day ? capacityDayKind(day) : this.dayKind(schedule);
+      return {
+        ...computeDay({
+          date,
+          kind,
+          isToday: date === today,
+          hours,
+          bays: bays.bays,
+          technicians: dayTechnicians(date),
+          job: request.job,
+          grid: this.dayGrid(bays.bays, schedule, day, hours),
+          currentHour,
+          carryOver: carryOverInto(day),
+        }),
+        closureReason: day?.status === DayCapacityViewStatusEnum.Holiday ? day.closureReason : undefined,
+      };
     };
 
     const focusDay = buildDay(request.focusDate);
@@ -449,11 +475,7 @@ export class CapacityCalendarService {
       focusDate: request.focusDate,
       job: request.job,
       bays: bays.bays,
-      technicians: this.technicianHours(
-        technicians.roster,
-        schedules.get(request.focusDate),
-        hours,
-      ),
+      technicians: dayTechnicians(request.focusDate),
       hours,
       weeks: [],
       weekDays: [],
@@ -466,15 +488,24 @@ export class CapacityCalendarService {
       // the rest. That mixture cannot be told apart from a genuinely quiet day
       // downstream, so the blank cells would read as "open and empty" when the
       // truth is "unknown". Only all-404 is unambiguous absence.
-      degraded: !bays.ok || !technicians.ok || load.failed > 0 || isPartiallyAbsent(load),
+      // A failed capacity read, or one with no usable focus day, leaves the bay
+      // load to the appointments alone, which understates it, so it degrades
+      // like any other failed read.
+      degraded:
+        !bays.ok || !technicians.ok || load.failed > 0 || isPartiallyAbsent(load) || capacity.failed || capacityGap,
       // Every day answered 404: the schedule service does not know this
       // location as a shop, so there is nothing to report for any date. Said
       // once and plainly, rather than as a month of empty cells.
       locationHasNoSchedule: load.total > 0 && load.absent === load.total,
       skillRequirementsUnknown: !request.job.skillRequirementsConfigured,
-      // The day board's duty comes from the schedule view's own overlay, which
-      // says "unknown" through its own status; the notice belongs to the grids.
-      technicianAvailabilityUnknown: false,
+      // Duty is measured when the capacity read knows the roster, or when the
+      // fallback schedule view's overlay answered. Otherwise the roster was
+      // counted on duty all day, which is an assumption, so it is said so. A
+      // failed or 404 read is already reported as degraded or as no schedule.
+      technicianAvailabilityUnknown:
+        !(capacity.staffingKnown && usableDay(request.focusDate)?.status === DayCapacityViewStatusEnum.Ok) &&
+        schedules.get(request.focusDate) !== undefined &&
+        schedules.get(request.focusDate)?.availabilityOverlayStatus !== 'AVAILABLE',
     };
   }
 
@@ -673,6 +704,31 @@ export class CapacityCalendarService {
         return (occupancy[slot] ?? 0) > 0 ? 'busy' : 'free';
       });
     });
+  }
+
+  /**
+   * `grid[bayIndex][hourIndex]` for the day board: the capacity read's bay load,
+   * which counts work orders the schedule view does not list, with any hour
+   * the view has an appointment in marked busy too, even one outside the
+   * capacity read's window (the two reads can disagree on it, backend #2589).
+   * Only a downed bay stays down. Without a usable capacity day the view's
+   * appointments are all there is.
+   */
+  private dayGrid(
+    bays: readonly CapacityBay[],
+    schedule: ScheduleViewResponse | undefined,
+    day: DayCapacityView | undefined,
+    hours: readonly number[],
+  ): BayHourState[][] {
+    const fromView = this.bayGrid(bays, schedule, hours);
+    if (!day) {
+      return fromView;
+    }
+    return this.capacityGrid(bays, day, hours).map((row, bayIndex) =>
+      row.map((state, hourIndex) =>
+        state !== 'down' && fromView[bayIndex][hourIndex] === 'busy' ? 'busy' : state,
+      ),
+    );
   }
 
   /**
