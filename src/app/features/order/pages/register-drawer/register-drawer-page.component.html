@@ -8,7 +8,7 @@
   <div #notice class="drawer__notice" role="alert" tabindex="-1" data-testid="drawer-notice"
     [class.drawer__notice--shown]="!!noticeKey() || state() === 'error'">
     @if (noticeKey(); as key) {
-    <p>{{ key | translate }}</p>
+    <p>{{ key | translate: { permission: cashMovementCode } }}</p>
     }
     @if (state() === 'error') {
     <p>{{ (errorKey() ?? 'ORDER.DRAWER.ERROR.LOAD') | translate }}</p>

@@ -14,5 +14,18 @@ export function parseAmount(text: string, currencyCode: string): number | null {
     return null;
   }
   const value = Number(trimmed.replace(',', '.'));
-  return Number.isFinite(value) && value > 0 ? value : null;
+  if (!Number.isFinite(value) || value <= 0) {
+    return null;
+  }
+  // The number sent must be exactly the amount typed: refuse one a double cannot carry, rather
+  // than let 9999999999999999 go out as 10000000000000000 (F-7: the UI never rounds money).
+  return String(value) === canonical(trimmed) ? value : null;
+}
+
+/** The typed decimal without leading zeros, trailing fraction zeros or a decimal comma. */
+function canonical(typed: string): string {
+  const [whole, fraction = ''] = typed.split(/[.,]/);
+  const digits = whole.replace(/^0+(?=\d)/, '');
+  const decimals = fraction.replace(/0+$/, '');
+  return decimals ? `${digits}.${decimals}` : digits;
 }

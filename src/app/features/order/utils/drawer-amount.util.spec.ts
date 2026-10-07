@@ -15,6 +15,18 @@ describe('parseAmount (ADR-0067 PC-14 F-4)', () => {
     expect(parseAmount('1.234', 'BHD')).toBe(1.234);
   });
 
+  it('reads leading and trailing zeros as typed', () => {
+    expect(parseAmount('012.50', 'CAD')).toBe(12.5);
+    expect(parseAmount('300.00', 'CAD')).toBe(300);
+  });
+
+  it('refuses an amount a JavaScript number cannot carry exactly, rather than rounding it', () => {
+    expect(parseAmount('9999999999999999', 'CAD')).toBeNull();
+    expect(parseAmount('90071992547409.91', 'CAD')).toBeNull();
+    expect(parseAmount('1000000000000000000000', 'CAD')).toBeNull();
+    expect(parseAmount('999999999999.99', 'CAD')).toBe(999999999999.99);
+  });
+
   it('refuses blank, zero, negative and malformed text', () => {
     for (const typed of ['', '0', '0.00', '-5', '1e3', '12.', '.5', '1,000.00', 'abc']) {
       expect(parseAmount(typed, 'CAD')).toBeNull();

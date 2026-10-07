@@ -613,6 +613,27 @@ describe('RegisterDrawerPageComponent (CAP:550 S22)', () => {
       expect(h.q('drawer-movements')).toBeNull();
     });
 
+    it('keeps a record 403 refusal in the page alert when the options re-read then closes the dialog', async () => {
+      const h = renderDrawer();
+      h.mocks.recordMovement.mockReturnValue(throwError(() => refusal(403, 'ORDER_FORBIDDEN')));
+      const options$ = new Subject<DrawerOptions>();
+      h.mocks.options.mockReturnValue(options$);
+      fillPettyExpense(h);
+      click(h, 'drawer-record');
+      expect(text(h.q('drawer-dialog-alert'))).toContain('it needs the order:session:cash_movement permission');
+
+      options$.error(refusal(403, 'ORDER_FORBIDDEN'));
+      h.render();
+      await flush(h);
+
+      expect(h.q('drawer-dialog')).toBeNull();
+      expect(h.q('drawer-actions')).toBeNull();
+      expect(text(h.q('drawer-notice'))).toBe(
+        "You can't record drawer movements here; it needs the order:session:cash_movement permission. Nothing was recorded.",
+      );
+      expect(document.activeElement).toBe(h.q('drawer-notice'));
+    });
+
     it('hides the actions when the options read answers 403', () => {
       const h = renderDrawer();
       h.mocks.options.mockReturnValue(throwError(() => refusal(403, 'ORDER_FORBIDDEN')));
@@ -682,6 +703,29 @@ describe('RegisterDrawerPageComponent (CAP:550 S22)', () => {
       expect(calls[2].approvalToken).toBe('approval-token-1');
       expect(new Set(calls.map(call => call.requestId)).size).toBe(1);
       expect(h.mocks.requestApproval).toHaveBeenCalledTimes(1);
+    });
+
+    it('records nothing when the reason is switched off while the step-up is pending', () => {
+      const h = renderDrawer();
+      h.mocks.recordMovement.mockReturnValue(throwError(() => refusal(403, 'CASH_MOVEMENT_APPROVAL_REQUIRED')));
+      const approve$ = new Subject<typeof approval>();
+      h.mocks.requestApproval.mockReturnValue(approve$);
+      fillPettyExpense(h, '80');
+      click(h, 'drawer-record');
+      type(h, 'drawer-manager-username', 'manager-2');
+      type(h, 'drawer-manager-password', 'secret');
+      click(h, 'drawer-approve');
+
+      h.mocks.options.mockReturnValue(of(withAllowed(drawerOptions, 'PETTY_EXPENSE', false)));
+      h.component.onOptionsStale();
+      h.render();
+      approve$.next(approval);
+      approve$.complete();
+      h.render();
+
+      expect(h.mocks.recordMovement).toHaveBeenCalledTimes(1);
+      expect(dialog(h).holdsApproval()).toBe(false);
+      expect(dialog(h).reason()).toBeNull();
     });
 
     it('drops the approval token on a definitive 400 refusal', () => {

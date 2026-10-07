@@ -60,6 +60,19 @@ function isStatus(error: unknown, status: number): boolean {
   return error instanceof HttpErrorResponse && error.status === status;
 }
 
+/** A refused options read, named truthfully: only ORDER_FORBIDDEN is a missing permission (ADR-0064 §4). */
+function refusalNoticeKey(error: unknown): string {
+  const code = error instanceof HttpErrorResponse ? (error.error as { code?: unknown } | null)?.code : undefined;
+  switch (code) {
+    case 'ORDER_FORBIDDEN':
+      return 'ORDER.DRAWER.ERROR.FORBIDDEN';
+    case 'LOCATION_SCOPE_DENIED':
+      return 'ORDER.DRAWER.ERROR.SCOPE_DENIED';
+    default:
+      return 'ORDER.DRAWER.ERROR.REFUSED';
+  }
+}
+
 /**
  * The register drawer (CAP:550 S22, `/app/order/drawer`): the terminal's current session, its
  * movements and the **Pay out** and **Change the float** actions.
@@ -172,6 +185,8 @@ export class RegisterDrawerPageComponent {
   });
 
   readonly reasonKeyOf = reasonKey;
+  /** The write code a refusal notice names. */
+  readonly cashMovementCode = ORDER_SECTION.cashMovement[0];
 
   private sessionSeq = 0;
   private movementsSeq = 0;
@@ -349,8 +364,15 @@ export class RegisterDrawerPageComponent {
         }
         if (isStatus(error, 403)) {
           this.optionsDenied.set(true);
-          this.closeDialogKeepingFocus();
           this.optionsStatus.set('FAILED');
+          if (this.dialogKind()) {
+            // The open dialog's refusal would vanish with it: the page's alert keeps it (ADR-0029 §8.8).
+            this.noticeKey.set(refusalNoticeKey(error));
+            this.dialogKind.set(null);
+            this.focusLater(() => this.notice());
+            return;
+          }
+          this.closeDialogKeepingFocus();
           return;
         }
         if (isStatus(error, 404)) {

@@ -456,6 +456,12 @@ export class DrawerMovementDialogComponent {
     if (!this.canRecord() || !this.optionsCurrent() || this.busy()) {
       return;
     }
+    if (this.chosen()?.reason !== draft.reason) {
+      // The reason left the offer (switched off) while the step-up was pending: the captured
+      // movement is no longer current, so its token goes and nothing is sent (ADR-0063, ADR-0064).
+      this.approval = null;
+      return;
+    }
     const token = this.heldToken(draft);
     const request: CashMovementRequest = {
       requestId: this.requestId,
