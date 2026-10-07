@@ -36,7 +36,7 @@
           [attr.aria-activedescendant]="showTechList() && activeIndex() >= 0 ? ('technician-opt-' + activeIndex()) : null"
           [value]="techQuery()"
           (input)="onTechInput($any($event.target).value)"
-          (focus)="onTechFocus()"
+          (focus)="onTechFocus()" (click)="onTechFocus()"
           (blur)="onTechBlur()"
           (keydown)="onTechKeydown($event)"
           [placeholder]="'WORKEXEC.WORKORDER_ASSIGN.SEARCH_PH' | translate"

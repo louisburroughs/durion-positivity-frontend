@@ -19,7 +19,7 @@
             autocomplete="off"
             [value]="productDisplayName()"
             (input)="onProductInput($any($event.target).value)"
-            (focus)="onProductFocus()"
+            (focus)="onProductFocus()" (click)="onProductFocus()"
             (blur)="onProductBlur()"
             [attr.aria-expanded]="showProductSuggestions() && productSuggestions().length > 0"
             aria-autocomplete="list"

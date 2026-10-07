@@ -13,7 +13,7 @@
         autocomplete="off" spellcheck="false" [value]="partyQuery()"
         [placeholder]="'CRM.SNAPSHOT.FIELD.CUSTOMER_SEARCH' | translate"
         (input)="onPartyInput($any($event.target).value)"
-        (focus)="onPartyFocus()" (blur)="onPartyBlur()" />
+        (focus)="onPartyFocus()" (click)="onPartyFocus()" (blur)="onPartyBlur()" />
       @if (showPartySuggestions()) {
       <ul id="partyId-listbox" class="crm-snapshot__suggestions" role="listbox" (mousedown)="$event.preventDefault()">
         @if (searchingParty()) {

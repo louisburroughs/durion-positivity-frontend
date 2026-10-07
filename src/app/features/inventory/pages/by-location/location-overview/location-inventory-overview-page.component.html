@@ -48,7 +48,7 @@
           [attr.placeholder]="'INVENTORY.BY_LOCATION.PICKER.PLACEHOLDER' | translate"
           (input)="onLocationInput($any($event.target).value)"
           (keydown)="onLocationKeydown($event)"
-          (focus)="onLocationFocus()"
+          (focus)="onLocationFocus()" (click)="onLocationFocus()"
           (blur)="onLocationBlur()"
         />
         @if (locationPickerOpen() && filteredLocations().length > 0) {
@@ -131,7 +131,7 @@
           [attr.placeholder]="'INVENTORY.BY_LOCATION.PRODUCT_FILTER.PLACEHOLDER' | translate"
           (input)="onProductInput($any($event.target).value)"
           (keydown)="onProductKeydown($event)"
-          (focus)="onProductFocus()"
+          (focus)="onProductFocus()" (click)="onProductFocus()"
           (blur)="onProductBlur()"
         />
         @if (showProductSuggestions() && productSuggestions().length > 0) {

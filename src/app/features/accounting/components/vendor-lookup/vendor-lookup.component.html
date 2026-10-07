@@ -17,7 +17,7 @@
     [disabled]="disabled()"
     [placeholder]="placeholderText"
     (input)="onInput($any($event.target).value)"
-    (focus)="onFocus()"
+    (focus)="onFocus()" (click)="onFocus()"
     (blur)="onBlur()"
     (keydown)="onKeydown($event)" />
 

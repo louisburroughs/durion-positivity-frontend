@@ -431,7 +431,7 @@ describe('listbox mousedown', () => {
     return down.defaultPrevented;
   }
 
-  it('keeps input focus on a location listbox mousedown so the scrollbar stays draggable', fakeAsync(() => {
+  it('keeps input focus on a location listbox mousedown, and reopens the list on an input click', fakeAsync(() => {
     const fixture = createComponent();
     fixture.detectChanges();
     tick();
@@ -442,9 +442,17 @@ describe('listbox mousedown', () => {
 
     const listbox = fixture.nativeElement.querySelector('#loc-picker-listbox') as HTMLElement;
     expect(mousedownPrevented(listbox)).toBe(true);
+    // A pick keeps focus on the input too, so an input click must reopen the list.
+    expect(mousedownPrevented(listbox.firstElementChild as HTMLElement)).toBe(true);
+    comp.locationPickerOpen.set(false);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('#loc-picker-listbox')).toBeNull();
+    (fixture.nativeElement.querySelector('#loc-picker-input') as HTMLElement).click();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('#loc-picker-listbox')).not.toBeNull();
   }));
 
-  it('keeps input focus on a product listbox mousedown so the scrollbar stays draggable', fakeAsync(() => {
+  it('keeps input focus on a product listbox mousedown, and reopens the list on an input click', fakeAsync(() => {
     const fixture = createComponent();
     fixture.detectChanges();
     tick();
@@ -455,5 +463,15 @@ describe('listbox mousedown', () => {
 
     const listbox = fixture.nativeElement.querySelector('#product-filter-listbox') as HTMLElement;
     expect(mousedownPrevented(listbox)).toBe(true);
+    // A pick keeps focus on the input too, so an input click must reopen the list.
+    expect(mousedownPrevented(listbox.firstElementChild as HTMLElement)).toBe(true);
+    // The option mousedown above picked the product, which clears the suggestions.
+    comp.productSuggestions.set([product('SKU-8', 'Gizmo')]);
+    comp.showProductSuggestions.set(false);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('#product-filter-listbox')).toBeNull();
+    (fixture.nativeElement.querySelector('#product-filter-input') as HTMLElement).click();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('#product-filter-listbox')).not.toBeNull();
   }));
 });

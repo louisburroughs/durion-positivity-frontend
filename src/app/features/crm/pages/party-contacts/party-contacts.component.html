@@ -187,7 +187,7 @@
 							autocomplete="off" spellcheck="false" [value]="personQuery()"
 							[placeholder]="'CRM.PARTY_CONTACTS.PERSON_PLACEHOLDER' | translate"
 							(input)="onPersonInput($any($event.target).value)"
-							(focus)="onPersonFocus()" (blur)="onPersonBlur()" />
+							(focus)="onPersonFocus()" (click)="onPersonFocus()" (blur)="onPersonBlur()" />
 						@if (showPersonSuggestions()) {
 						<ul id="personId-listbox" class="person-typeahead__list" role="listbox" (mousedown)="$event.preventDefault()">
 							@if (searchingPerson()) {

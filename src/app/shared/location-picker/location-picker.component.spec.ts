@@ -186,13 +186,23 @@ describe('LocationPickerComponent', () => {
     expect(input.hasAttribute('aria-controls')).toBe(false);
   });
 
-  it('keeps input focus on a listbox mousedown so the scrollbar stays draggable', () => {
+  it('keeps input focus on a listbox mousedown, and reopens the list on an input click', () => {
     component.onInput('');
     fixture.detectChanges();
     const listbox = fixture.nativeElement.querySelector('[role="listbox"]') as HTMLElement;
     const down = new MouseEvent('mousedown', { bubbles: true, cancelable: true });
     listbox.dispatchEvent(down);
     expect(down.defaultPrevented).toBe(true);
+    // A pick keeps focus on the input too, so an input click must reopen the list.
+    const optionDown = new MouseEvent('mousedown', { bubbles: true, cancelable: true });
+    (listbox.firstElementChild as HTMLElement).dispatchEvent(optionDown);
+    expect(optionDown.defaultPrevented).toBe(true);
+    component.open.set(false);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[role="listbox"]')).toBeNull();
+    (fixture.nativeElement.querySelector('input[role="combobox"]') as HTMLElement).click();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[role="listbox"]')).not.toBeNull();
   });
 
   it('shows an error state when locations fail to load', () => {

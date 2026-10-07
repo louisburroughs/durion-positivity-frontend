@@ -156,7 +156,7 @@ describe('CustomerLookupComponent', () => {
       expect(component.suggestions().map(p => p.partyId)).toEqual(['p1', 'p2', 'p3']);
     }));
   });
-  it('keeps input focus on a listbox mousedown so the scrollbar stays draggable', fakeAsync(() => {
+  it('keeps input focus on a listbox mousedown, and reopens the list on an input click', fakeAsync(() => {
     component.onInput('cust');
     tick(250);
     fixture.detectChanges();
@@ -164,5 +164,16 @@ describe('CustomerLookupComponent', () => {
     const down = new MouseEvent('mousedown', { bubbles: true, cancelable: true });
     listbox.dispatchEvent(down);
     expect(down.defaultPrevented).toBe(true);
+    // A pick keeps focus on the input too, so an input click must reopen the list.
+    const optionDown = new MouseEvent('mousedown', { bubbles: true, cancelable: true });
+    (listbox.firstElementChild as HTMLElement).dispatchEvent(optionDown);
+    expect(optionDown.defaultPrevented).toBe(true);
+    component.showList.set(false);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[role="listbox"]')).toBeNull();
+    (fixture.nativeElement.querySelector('input[role="combobox"]') as HTMLElement).click();
+    tick(250);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[role="listbox"]')).not.toBeNull();
   }));
 });
