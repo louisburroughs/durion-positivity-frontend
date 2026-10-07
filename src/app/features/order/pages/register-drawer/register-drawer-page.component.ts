@@ -524,15 +524,16 @@ export class RegisterDrawerPageComponent {
     this.dialogKind.set(null);
     this.clearSessionData();
     this.sessionStatus.set('PENDING');
+    // The live regions carry drawer data too ("Recorded: …"): they empty with the rest (ADR-0064 §6).
+    this.announcement.set(null);
+    this.noticeKey.set(null);
+    this.focusNoticeAfterRead = false;
     this.state.set('idle');
     this.errorKey.set(null);
   }
 
   private resetForIdentity(): void {
     this.dropEverything();
-    this.announcement.set(null);
-    this.noticeKey.set(null);
-    this.focusNoticeAfterRead = false;
   }
 
   /** `tid|sub`, each half percent-encoded so no value can contain the delimiter. */

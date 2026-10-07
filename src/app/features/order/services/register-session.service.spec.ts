@@ -100,6 +100,13 @@ describe('RegisterSessionService', () => {
       expect(await firstValueFrom(service.currentSession('T-2'))).toBeNull();
       expect(api.getCurrentRegisterSession).toHaveBeenCalledWith('T-2', 'response');
     });
+
+    it('fails on a 200 without a body rather than reading it as no drawer (ADR-0064 §1)', async () => {
+      api.getCurrentRegisterSession.mockReturnValue(
+        of(new HttpResponse<RegisterSessionResponse>({ status: 200, body: null })),
+      );
+      await expect(firstValueFrom(service.currentSession('T-2'))).rejects.toThrow();
+    });
   });
 
   describe('movements()', () => {
@@ -139,9 +146,14 @@ describe('RegisterSessionService', () => {
       expect(rows.map(row => row.movementType)).toEqual([undefined, undefined]);
     });
 
-    it('maps a null body to an empty list', async () => {
-      api.listCashMovements.mockReturnValue(of(null));
+    it('maps an empty list to no movements', async () => {
+      api.listCashMovements.mockReturnValue(of([]));
       expect(await firstValueFrom(service.movements(SESSION_ID))).toEqual([]);
+    });
+
+    it('fails on a missing list rather than reading it as empty (ADR-0064 §1)', async () => {
+      api.listCashMovements.mockReturnValue(of(null));
+      await expect(firstValueFrom(service.movements(SESSION_ID))).rejects.toThrow();
     });
   });
 

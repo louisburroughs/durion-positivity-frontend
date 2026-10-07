@@ -122,15 +122,34 @@ function toApproval(response: CashMovementApprovalResponse): DrawerApproval {
 export class RegisterSessionService {
   private readonly api = inject(RegisterSessionsService);
 
-  /** The terminal's OPEN or CLOSING session, or null on 204 (no drawer open). */
+  /**
+   * The terminal's OPEN or CLOSING session, or null on 204 (no drawer open). Only a 204 means "no
+   * drawer": a 200 without a body is a failed read, never the empty state (ADR-0064 §1).
+   */
   currentSession(terminalId: string): Observable<DrawerSession | null> {
-    return this.api
-      .getCurrentRegisterSession(terminalId, 'response')
-      .pipe(map(response => (response.status === 204 || !response.body ? null : toSession(response.body))));
+    return this.api.getCurrentRegisterSession(terminalId, 'response').pipe(
+      map(response => {
+        if (response.status === 204) {
+          return null;
+        }
+        if (!response.body) {
+          throw new Error('The current session read answered without a session');
+        }
+        return toSession(response.body);
+      }),
+    );
   }
 
+  /** The session's movements; a missing list is a failed read, never an empty one (ADR-0064 §1). */
   movements(sessionId: string): Observable<DrawerMovement[]> {
-    return this.api.listCashMovements(sessionId).pipe(map(rows => (rows ?? []).map(toMovement)));
+    return this.api.listCashMovements(sessionId).pipe(
+      map(rows => {
+        if (!Array.isArray(rows)) {
+          throw new Error('The movements read answered without a list');
+        }
+        return rows.map(toMovement);
+      }),
+    );
   }
 
   /** What the register may offer for the session: reasons, limits and categories (S16 PROPOSED 5). */

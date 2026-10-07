@@ -560,6 +560,20 @@ describe('RegisterDrawerPageComponent (CAP:550 S22)', () => {
       expect(h.q('drawer-movements-empty')).not.toBeNull();
     });
 
+    it('empties the announcement and notice when the read code is revoked (ADR-0064 §6)', () => {
+      const h = renderDrawer();
+      h.mocks.recordMovement.mockReturnValue(of(pettyMovement));
+      fillPettyExpense(h);
+      click(h, 'drawer-record');
+      expect(text(h.q('drawer-announcement'))).toBe('Recorded: Petty expense, CA$12.50');
+
+      h.granted.set(new Set());
+      h.render();
+
+      expect(text(h.q('drawer-announcement'))).toBe('');
+      expect(text(h.q('drawer-notice'))).toBe('');
+    });
+
     it('stops rendering the drawer when the read code is revoked (ADR-0064 §6)', () => {
       const h = renderDrawer();
       h.granted.set(new Set());
