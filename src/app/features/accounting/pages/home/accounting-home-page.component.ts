@@ -11,6 +11,7 @@ import {
   effect,
   inject,
   signal,
+  untracked,
   viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -381,6 +382,12 @@ export class AccountingHomePageComponent {
       this.resetForIdentity();
       this.refresh();
     });
+    // The payment lock never outlives its panel: whenever no payment panel is showing (a refused read,
+    // a lost permission with no re-read), its write was cancelled with it and nothing will settle it.
+    effect(() => {
+      if (this.selectedItem()?.kind === 'PAYMENT') return;
+      untracked(() => this.paymentWriteInFlight.set(false));
+    });
     this.refresh();
   }
 
@@ -567,6 +574,9 @@ export class AccountingHomePageComponent {
     if (this.selectedId() !== item.id) {
       this.paymentMessage.set(null);
       this.heldPayment.set(null);
+      // Only reachable with the lock off: a flag left by a panel that went away without settling
+      // (e.g. a lost permission with no payments re-read) must not lock the new item.
+      this.paymentWriteInFlight.set(false);
     }
     if (this.selectedId() !== item.id) {
       this.approveMessage.set(null);

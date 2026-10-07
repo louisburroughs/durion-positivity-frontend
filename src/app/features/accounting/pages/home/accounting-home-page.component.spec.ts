@@ -715,6 +715,36 @@ describe('AccountingHomePageComponent', () => {
       expect(component.selectedId()).toContain('BANK_LINE:');
     });
 
+    it('never leaves a lock behind when a lost permission takes the panel away with no re-read (reselect → other items free)', () => {
+      const answer = pending<ApplyResult>();
+      mocks.customerPayments.openInvoices.mockReturnValue(of(openInvoice9));
+      mocks.customerPayments.applyPayment.mockReturnValue(answer);
+      render();
+      q('.todo-item[data-kind="PAYMENT"]')!.click();
+      fixture.detectChanges();
+      q('[data-testid="apply"]')!.click();
+      fixture.detectChanges();
+      expect(component.paymentLock()).toBe(true);
+
+      // The permission goes away and comes back with no payments re-read in between.
+      mocks.held.set(ALL_HOME_PERMISSIONS.filter(code => code !== 'accounting:payment:apply'));
+      fixture.detectChanges();
+      expect(q('app-payment-match')).toBeNull();
+      mocks.held.set(ALL_HOME_PERMISSIONS);
+      fixture.detectChanges();
+      // The same item is selected again (its id never changed), with no request running.
+      q('.todo-item[data-kind="PAYMENT"]')!.click();
+      fixture.detectChanges();
+      expect(q('app-payment-match')).not.toBeNull();
+
+      expect(component.paymentLock()).toBe(false);
+      expect(qa('.todo-item[aria-disabled="true"]')).toEqual([]);
+      expect(q('[data-testid="todo-lock-hint"]')).toBeNull();
+      q('.todo-item[data-kind="BANK_LINE"]')!.click();
+      fixture.detectChanges();
+      expect(component.selectedId()).toContain('BANK_LINE:');
+    });
+
     it('re-takes the lock for a retry in the chain: switching is refused while Try again runs (S6)', () => {
       const waiting = payment({ unappliedAmount: 5000, totalAmount: 5000, leftOver: 385 });
       mocks.home.paymentsToMatch.mockReturnValue(of(paymentsPage([waiting])));

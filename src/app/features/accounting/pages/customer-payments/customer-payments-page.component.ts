@@ -335,6 +335,7 @@ export class CustomerPaymentsPageComponent {
     if (this.payments.denied()) {
       // Refused: nothing read under this permission keeps rendering, the panel included (ADR-0064 §6).
       this.selected.set(null);
+      this.writeInFlightFor.set(null);
       this.resultFor = null;
       return;
     }
@@ -348,6 +349,7 @@ export class CustomerPaymentsPageComponent {
     }
     if (this.resultFor === current.paymentId) return;
     this.selected.set(null);
+    this.writeInFlightFor.set(null);
     this.focusAfterRender(() => this.listHeading()?.nativeElement.focus());
   }
 
@@ -384,7 +386,12 @@ export class CustomerPaymentsPageComponent {
     if (!this.canSeePayments()) return;
     if (this.paymentLock() && this.selected()?.paymentId !== payment.paymentId) return;
     this.queryNotWaiting.set(false);
-    if (this.selected()?.paymentId !== payment.paymentId) this.resultFor = null;
+    if (this.selected()?.paymentId !== payment.paymentId) {
+      this.resultFor = null;
+      // Only reachable with the lock off: any flag left by a panel that went away (and took its
+      // cancelled request with it) must not lock the newly chosen payment.
+      this.writeInFlightFor.set(null);
+    }
     this.selected.set(payment);
     if (this.isSmallScreen()) this.focusAfterRender(() => this.match()?.focusHeading());
   }

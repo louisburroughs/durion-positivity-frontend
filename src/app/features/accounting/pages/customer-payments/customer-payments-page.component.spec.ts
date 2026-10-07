@@ -465,6 +465,37 @@ describe('CustomerPaymentsPageComponent (CAP:550 S6)', () => {
       expect(component.selected()?.paymentId).toBe('pay-2');
     });
 
+    it('never leaves a lock behind when a refused list takes the panel away mid-write (apply → 403 → OK → reselect A)', () => {
+      const answer = pending<ApplyResult>();
+      mocks.service.applyPayment.mockReturnValue(answer);
+      const both = waitingList([payment(), payment({ paymentId: 'pay-2', customerId: 'cust-2', customerName: 'Ana Ruiz' })]);
+      mocks.service.waitingPayments.mockReturnValue(of(both));
+      render();
+      qa('[data-testid="payment-item"]')[0].click();
+      fixture.detectChanges();
+      click('[data-testid="apply"]');
+      expect(component.paymentLock()).toBe(true);
+
+      mocks.service.waitingPayments.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 403 })));
+      component.retryPayments();
+      fixture.detectChanges();
+      expect(q('app-payment-match')).toBeNull();
+
+      mocks.service.waitingPayments.mockReturnValue(of(both));
+      component.retryPayments();
+      fixture.detectChanges();
+      qa('[data-testid="payment-item"]')[0].click();
+      fixture.detectChanges();
+
+      expect(component.selected()?.paymentId).toBe('pay-1');
+      expect(component.paymentLock()).toBe(false);
+      expect(q('[data-testid="payments-lock-hint"]')).toBeNull();
+      expect(qa('[data-testid="payment-item"][aria-disabled="true"]')).toEqual([]);
+      qa('[data-testid="payment-item"]')[1].click();
+      fixture.detectChanges();
+      expect(component.selected()?.paymentId).toBe('pay-2');
+    });
+
     it('keeps the payment selected while its apply is in flight, even when a re-read drops it', () => {
       const answer = pending<ApplyResult>();
       mocks.service.applyPayment.mockReturnValue(answer);
