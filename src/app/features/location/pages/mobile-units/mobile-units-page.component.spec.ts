@@ -446,6 +446,16 @@ describe('MobileUnitsPageComponent', () => {
       expect(locationServiceStub.patchMobileUnit).toHaveBeenCalledWith('mu-9', { name: 'Van 9A' });
     });
 
+    it('lets the status radio switch an active unit out of service', () => {
+      component.openEdit(VAN_9);
+      render();
+      const outOfService = query<HTMLInputElement>('input[name="unit-status"][value="OUT_OF_SERVICE"]')!;
+      outOfService.click();
+      render();
+      expect(outOfService.checked).toBe(true);
+      expect(component.draft().status).toBe('OUT_OF_SERVICE');
+    });
+
     it('locks "No policy" on a unit that has one, since PATCH cannot clear it yet', () => {
       component.openEdit(VAN_9);
       render();
