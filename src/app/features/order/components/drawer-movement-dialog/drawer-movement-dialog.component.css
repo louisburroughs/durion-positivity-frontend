@@ -191,3 +191,18 @@
   outline: 2px solid var(--input-focus-border);
   outline-offset: 2px;
 }
+
+.drawer-dialog__options-failed {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--status-warning-bg);
+  color: var(--status-warning-fg);
+}
+
+.drawer-dialog__options-failed p {
+  margin: 0;
+}

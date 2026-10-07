@@ -569,7 +569,7 @@ describe('RegisterDrawerPageComponent (CAP:550 S22)', () => {
       h.mocks.recordMovement
         .mockReturnValueOnce(throwError(() => refusal(403, 'CASH_MOVEMENT_APPROVAL_REQUIRED')))
         .mockReturnValueOnce(throwError(() => refusal(0)))
-        .mockReturnValueOnce(throwError(() => refusal(403, 'CASH_MOVEMENT_APPROVAL_REQUIRED')));
+        .mockReturnValueOnce(new Subject<DrawerMovement>());
       h.mocks.requestApproval.mockReturnValue(of({ approvalToken: 'stale', expiresAt: '2026-10-07T13:59:00Z' }));
       fillPettyExpense(h, '80');
       click(h, 'drawer-record');
@@ -579,6 +579,27 @@ describe('RegisterDrawerPageComponent (CAP:550 S22)', () => {
       click(h, 'drawer-record');
 
       expect(h.mocks.recordMovement.mock.calls[2][1].approvalToken).toBeUndefined();
+      expect(dialog(h).holdsApproval()).toBe(false); // dropped when its expiry was seen, not kept until close
+    });
+
+    it('locks the fields while the outcome is unknown and retries the original movement, not an edit', () => {
+      const h = renderDrawer();
+      h.mocks.recordMovement
+        .mockReturnValueOnce(throwError(() => refusal(504)))
+        .mockReturnValueOnce(of(pettyMovement));
+      fillPettyExpense(h, '12.50');
+      click(h, 'drawer-record');
+
+      expect(h.q<HTMLInputElement>('drawer-amount')!.disabled).toBe(true);
+      expect(h.q<HTMLFieldSetElement>('drawer-reasons')!.disabled).toBe(true);
+      dialog(h).amountText.set('99'); // an edit that slipped past the lock must not change the retry
+      h.render();
+      click(h, 'drawer-record');
+
+      const [first, retry] = h.mocks.recordMovement.mock.calls.map(call => call[1]);
+      expect(retry).toEqual(first);
+      expect(retry.amount).toBe(12.5);
+      expect(text(h.q('drawer-announcement'))).toBe('Recorded: Petty expense, CA$12.50');
     });
   });
 
@@ -596,6 +617,25 @@ describe('RegisterDrawerPageComponent (CAP:550 S22)', () => {
       expect(text(h.q('drawer-notice'))).toBe('This drawer is no longer open for payouts. Nothing was recorded.');
       expect(h.q('drawer-actions')).toBeNull();
       expect(document.activeElement).toBe(h.q('drawer-notice'));
+    });
+
+    it('makes the actions wait while the session is re-resolved after a 404 (ADR-0064)', () => {
+      const h = renderDrawer();
+      const session$ = new Subject<DrawerSession | null>();
+      h.mocks.movements.mockReturnValueOnce(throwError(() => refusal(404)));
+      h.mocks.currentSession.mockReturnValue(session$);
+      h.component.retryMovements();
+      h.render();
+
+      expect(h.component.sessionStatus()).toBe('PENDING');
+      expect(h.q('drawer-pay-out')!.getAttribute('aria-disabled')).toBe('true');
+      h.component.openPayOut();
+      h.render();
+      expect(h.q('drawer-dialog')).toBeNull();
+
+      session$.next(openSession);
+      h.render();
+      expect(h.q('drawer-pay-out')!.getAttribute('aria-disabled')).toBeNull();
     });
 
     it('re-resolves the session on a 404 from the movements read', () => {
@@ -628,8 +668,8 @@ describe('RegisterDrawerPageComponent (CAP:550 S22)', () => {
     it('disables the actions with a Retry when the options read fails, and keeps the movements', () => {
       const h = renderDrawer({ before: mocks => mocks.options.mockReturnValue(throwError(() => refusal(500))) });
 
-      expect(h.q<HTMLButtonElement>('drawer-pay-out')!.disabled).toBe(true);
-      expect(h.q<HTMLButtonElement>('drawer-change-float')!.disabled).toBe(true);
+      expect(h.q('drawer-pay-out')!.getAttribute('aria-disabled')).toBe('true');
+      expect(h.q('drawer-change-float')!.getAttribute('aria-disabled')).toBe('true');
       expect(text(h.q('drawer-options-failed'))).toContain("Payout options couldn't be loaded");
       expect(h.all('drawer-movement-row')).toHaveLength(1);
       h.component.openPayOut();
@@ -638,26 +678,58 @@ describe('RegisterDrawerPageComponent (CAP:550 S22)', () => {
 
       h.mocks.options.mockReturnValue(of(drawerOptions));
       click(h, 'drawer-options-retry');
-      expect(h.q<HTMLButtonElement>('drawer-pay-out')!.disabled).toBe(false);
+      expect(h.q('drawer-pay-out')!.getAttribute('aria-disabled')).toBeNull();
       expect(h.q('drawer-options-failed')).toBeNull();
     });
 
-    it('keeps the actions usable while a re-read of good options is in flight', () => {
+    it('makes the actions wait for every options re-read, not only the first (ADR-0064 §1)', () => {
       const h = renderDrawer();
-      h.mocks.options.mockReturnValue(new Subject<DrawerOptions>());
+      const reread$ = new Subject<DrawerOptions>();
+      h.mocks.options.mockReturnValue(reread$);
       h.component.onOptionsStale();
       h.render();
-      expect(h.q<HTMLButtonElement>('drawer-pay-out')!.disabled).toBe(false);
+
+      expect(h.q('drawer-pay-out')!.getAttribute('aria-disabled')).toBe('true');
+      h.component.openPayOut();
+      h.render();
+      expect(h.q('drawer-dialog')).toBeNull();
+
+      reread$.next(drawerOptions);
+      h.render();
+      expect(h.q('drawer-pay-out')!.getAttribute('aria-disabled')).toBeNull();
+    });
+
+    it('stops the open dialog from choosing or submitting when its options re-read fails', () => {
+      const h = renderDrawer();
+      h.mocks.recordMovement.mockReturnValue(throwError(() => refusal(422, 'PETTY_EXPENSE_CATEGORY_UNKNOWN')));
+      h.mocks.options.mockReturnValue(throwError(() => refusal(500)));
+      fillPettyExpense(h);
+      click(h, 'drawer-record');
+      type(h, 'drawer-category', 'CLEANING');
+
+      expect(text(h.q('drawer-dialog-options-failed'))).toContain("Payout options couldn't be loaded");
+      expect(text(h.q('drawer-dialog-alert'))).toContain('That category can no longer be used');
+      expect(recordButton(h).disabled).toBe(true);
+      expect(h.q<HTMLFieldSetElement>('drawer-reasons')!.disabled).toBe(true);
+      dialog(h).submitDetails();
+      expect(h.mocks.recordMovement).toHaveBeenCalledTimes(1);
+
+      h.mocks.options.mockReturnValue(of(drawerOptions));
+      click(h, 'drawer-dialog-options-retry');
+      expect(h.q('drawer-dialog-options-failed')).toBeNull();
+      expect(recordButton(h).disabled).toBe(false);
     });
   });
 
   describe('identity (ADR-0063 §7)', () => {
     it('clears the page and ignores the old identity’s answers when the subject changes', () => {
       const h = renderDrawer();
+      fillPettyExpense(h);
       const stale$ = new Subject<DrawerSession | null>();
       h.mocks.currentSession.mockReturnValueOnce(stale$);
       h.component.loadSession();
-      fillPettyExpense(h);
+      h.render();
+      expect(dialog(h).optionsCurrent()).toBe(false); // the open dialog waits for the re-read too
 
       const fresh$ = new Subject<DrawerSession | null>();
       h.mocks.currentSession.mockReturnValueOnce(fresh$);

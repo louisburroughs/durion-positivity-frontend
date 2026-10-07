@@ -156,6 +156,13 @@ export class DrawerMovementDialogComponent {
   /** The session's stamped currency (ADR-0067): every amount here is in it and sent with it. */
   readonly currencyCode = input.required<string>();
   readonly options = input.required<DrawerOptions>();
+  /**
+   * The page's session and options reads are both `'OK'` for this session right now (ADR-0064):
+   * while either is pending or failed, no reason can be chosen and nothing can be submitted.
+   */
+  readonly optionsCurrent = input(true);
+  /** The options read failed: the dialog says so and offers a re-read. */
+  readonly optionsFailed = input(false);
 
   /** A confirmed recording: the page closes the dialog, announces it and re-reads. */
   readonly recorded = output<RecordedMovement>();
@@ -192,6 +199,9 @@ export class DrawerMovementDialogComponent {
   readonly cashMovementCode = ORDER_SECTION.cashMovement[0];
 
   readonly busy = computed(() => this.phase() !== 'idle');
+  /** The movement's fields are frozen while a request is in flight or its outcome is unknown. */
+  readonly fieldsLocked = computed(() => this.busy() || this.outcomeUnknown());
+  readonly reasonsLocked = computed(() => this.fieldsLocked() || !this.optionsCurrent());
   readonly canRecord = computed(() => canAccess(this.auth, { permissions: ORDER_SECTION.cashMovement }));
 
   readonly offered = computed(() => offeredReasons(this.options(), this.kind()));
@@ -238,10 +248,13 @@ export class DrawerMovementDialogComponent {
   readonly consequenceKey = computed(() =>
     this.chosen()?.direction === 'PAID_IN' ? 'ORDER.DRAWER.DIALOG.CONSEQUENCE_IN' : 'ORDER.DRAWER.DIALOG.CONSEQUENCE_OUT',
   );
-  readonly canSubmitDetails = computed(() => this.canRecord() && !this.busy() && this.detailsComplete());
+  readonly canSubmitDetails = computed(
+    () => this.canRecord() && this.optionsCurrent() && !this.busy() && this.detailsComplete(),
+  );
   readonly canApprove = computed(
     () =>
       this.canRecord() &&
+      this.optionsCurrent() &&
       !this.busy() &&
       this.detailsComplete() &&
       this.managerUsername().trim().length > 0 &&
@@ -261,6 +274,11 @@ export class DrawerMovementDialogComponent {
   /** The approval token: never in a signal, storage or log, and dropped on success or close. */
   private approval: HeldApproval | null = null;
   private inFlight: Subscription | null = null;
+  /**
+   * The movement whose record's outcome is unknown: Retry resends exactly it (same `requestId`), so
+   * a replayed first result is never announced as an edited movement (§8.2).
+   */
+  private unconfirmed: Draft | null = null;
   /** Each request takes a ticket; only the current ticket may apply its answer (ADR-0063 §1). */
   private ticket = 0;
 
@@ -285,7 +303,7 @@ export class DrawerMovementDialogComponent {
 
   // ── Form handlers ────────────────────────────────────────────────────────
   chooseReason(reason: DrawerReason): void {
-    if (this.busy() || !this.offered().some(option => option.reason === reason)) {
+    if (this.reasonsLocked() || !this.offered().some(option => option.reason === reason)) {
       return;
     }
     this.reason.set(reason);
@@ -336,7 +354,7 @@ export class DrawerMovementDialogComponent {
     if (!this.canSubmitDetails()) {
       return;
     }
-    const draft = this.draft();
+    const draft = this.unconfirmed ?? this.draft();
     if (!draft) {
       return;
     }
@@ -353,7 +371,7 @@ export class DrawerMovementDialogComponent {
     if (!this.canApprove()) {
       return;
     }
-    const draft = this.draft();
+    const draft = this.unconfirmed ?? this.draft();
     if (!draft) {
       return;
     }
@@ -403,18 +421,24 @@ export class DrawerMovementDialogComponent {
     setTimeout(() => this.primaryButton()?.nativeElement.focus());
   }
 
+  /** Asks the page to read the options again after a failed read. */
+  retryOptions(): void {
+    this.optionsStale.emit();
+  }
+
   cancel(): void {
     this.ticket++;
     this.inFlight?.unsubscribe();
     this.inFlight = null;
     this.phase.set('idle');
     this.approval = null;
+    this.unconfirmed = null;
     this.clearCredentials();
     this.cancelled.emit();
   }
 
   private record(draft: Draft): void {
-    if (!this.canRecord() || this.busy()) {
+    if (!this.canRecord() || !this.optionsCurrent() || this.busy()) {
       return;
     }
     const token = this.heldToken(draft);
@@ -444,6 +468,7 @@ export class DrawerMovementDialogComponent {
           }
           this.phase.set('idle');
           this.approval = null;
+          this.unconfirmed = null;
           this.requestId = uuidv7();
           this.recorded.emit({ reason: draft.reason, amount: draft.amount, currencyCode: draft.currencyCode });
         },
@@ -452,7 +477,10 @@ export class DrawerMovementDialogComponent {
             return;
           }
           this.phase.set('idle');
-          this.applyFailure(classifyDrawerError(error, 'RECORD'), draft);
+          const failure = classifyDrawerError(error, 'RECORD');
+          // Only an unanswered record keeps its movement for Retry; any answer settles it.
+          this.unconfirmed = failure.kind === 'UNKNOWN_OUTCOME' ? draft : null;
+          this.applyFailure(failure, draft);
         },
       });
   }
@@ -550,6 +578,7 @@ export class DrawerMovementDialogComponent {
   private clearReason(): void {
     this.reason.set(null);
     this.approval = null;
+    this.unconfirmed = null;
     this.outcomeUnknown.set(false);
     if (this.step() === 'approval') {
       this.step.set('details');
@@ -568,6 +597,7 @@ export class DrawerMovementDialogComponent {
       return null;
     }
     if (approval.expiresAt && Date.parse(approval.expiresAt) <= this.clock().getTime()) {
+      this.approval = null; // expired: dropped, never held for later
       return null;
     }
     return approval.approvalToken;

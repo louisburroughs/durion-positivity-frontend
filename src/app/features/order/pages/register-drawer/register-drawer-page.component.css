@@ -108,7 +108,7 @@
   color: var(--currentTextColor);
 }
 
-.drawer__primary:disabled,
+.drawer__primary[aria-disabled='true'],
 .drawer__secondary:disabled {
   opacity: 0.65;
   cursor: not-allowed;

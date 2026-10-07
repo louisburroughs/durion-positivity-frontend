@@ -1,5 +1,5 @@
 import axe from 'axe-core';
-import { of, throwError } from 'rxjs';
+import { Subject, of, throwError } from 'rxjs';
 import { afterEach, describe, expect, it } from 'vitest';
 import enUS from '../../../../../assets/i18n/en-US.json';
 import esMX from '../../../../../assets/i18n/es-MX.json';
@@ -7,6 +7,7 @@ import esUS from '../../../../../assets/i18n/es-US.json';
 import frCA from '../../../../../assets/i18n/fr-CA.json';
 import frFR from '../../../../../assets/i18n/fr-FR.json';
 import qpsPloc from '../../../../../assets/i18n/qps-ploc.json';
+import { DrawerOptions } from '../../models/register-drawer.models';
 import {
   approval,
   click,
@@ -150,6 +151,21 @@ describe('Register drawer a11y (rendered DOM)', () => {
     expect(live.getAttribute('role')).toBe('status');
     expect(live.getAttribute('aria-live')).toBe('polite');
     expect(text(live)).toBe('Recorded: Petty expense, CA$12.50');
+  });
+
+  it('returns focus to Pay out even while the options re-read is still pending (aria-disabled, not disabled)', async () => {
+    const h = renderDrawer();
+    h.mocks.recordMovement.mockReturnValue(of(pettyMovement));
+    h.q<HTMLButtonElement>('drawer-pay-out')!.focus();
+    click(h, 'drawer-pay-out');
+    fillPettyExpense(h);
+    h.mocks.options.mockReturnValue(new Subject<DrawerOptions>());
+    click(h, 'drawer-record');
+    await flush(h);
+
+    const trigger = h.q('drawer-pay-out')!;
+    expect(trigger.getAttribute('aria-disabled')).toBe('true');
+    expect(document.activeElement).toBe(trigger);
   });
 
   it('keeps both live regions in the DOM in every state', () => {

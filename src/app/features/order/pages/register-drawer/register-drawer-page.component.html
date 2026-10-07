@@ -69,12 +69,13 @@
 
   @if (showActions()) {
   <div class="drawer__actions" data-testid="drawer-actions">
-    <button type="button" class="drawer__primary" data-testid="drawer-pay-out" [disabled]="!canPayOut()"
-      (click)="openPayOut()">
+    <!-- aria-disabled, not disabled: the trigger keeps focus when the dialog closes during a re-read. -->
+    <button type="button" class="drawer__primary" data-testid="drawer-pay-out"
+      [attr.aria-disabled]="!canPayOut() || null" (click)="openPayOut()">
       {{ 'ORDER.DRAWER.ACTIONS.PAY_OUT' | translate }}
     </button>
-    <button type="button" class="drawer__primary" data-testid="drawer-change-float" [disabled]="!canChangeFloat()"
-      (click)="openFloatChange()">
+    <button type="button" class="drawer__primary" data-testid="drawer-change-float"
+      [attr.aria-disabled]="!canChangeFloat() || null" (click)="openFloatChange()">
       {{ 'ORDER.DRAWER.ACTIONS.CHANGE_FLOAT' | translate }}
     </button>
   </div>
@@ -169,6 +170,8 @@
     [sessionId]="open.sessionId"
     [currencyCode]="open.currencyCode"
     [options]="open.options"
+    [optionsCurrent]="open.optionsCurrent"
+    [optionsFailed]="open.optionsFailed"
     (recorded)="onRecorded($event)"
     (cancelled)="onCancelled()"
     (sessionChanged)="onSessionChanged($event)"

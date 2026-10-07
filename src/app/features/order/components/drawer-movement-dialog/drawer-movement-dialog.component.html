@@ -31,7 +31,17 @@
       <p class="drawer-dialog__note" data-testid="drawer-float-note">{{ 'ORDER.DRAWER.DIALOG.FLOAT_NOTE' | translate }}</p>
       }
 
-      <fieldset class="drawer-dialog__reasons" data-testid="drawer-reasons" [disabled]="busy()">
+      @if (optionsFailed()) {
+      <div class="drawer-dialog__options-failed" data-testid="drawer-dialog-options-failed">
+        <p>{{ 'ORDER.DRAWER.OPTIONS_FAILED' | translate }}</p>
+        <button type="button" class="drawer-dialog__secondary" data-testid="drawer-dialog-options-retry"
+          (click)="retryOptions()">
+          {{ 'ORDER.DRAWER.RETRY_OPTIONS' | translate }}
+        </button>
+      </div>
+      }
+
+      <fieldset class="drawer-dialog__reasons" data-testid="drawer-reasons" [disabled]="reasonsLocked()">
         <legend>{{ legendKey() | translate }}</legend>
         @for (option of offered(); track option.reason) {
         <div class="drawer-dialog__choice">
@@ -78,7 +88,7 @@
             class="drawer-dialog__input"
             data-testid="drawer-category"
             required
-            [disabled]="busy()"
+            [disabled]="fieldsLocked()"
             [attr.aria-invalid]="isInvalid('categoryCode') || null"
             [attr.aria-describedby]="selectedCategory()?.examples ? 'drawer-category-hint' : null"
             (change)="onCategory($event)"
@@ -100,7 +110,7 @@
         <div class="drawer-dialog__field">
           <label for="drawer-bag-number">{{ 'ORDER.DRAWER.DIALOG.BAG_NUMBER' | translate }}</label>
           <input id="drawer-bag-number" class="drawer-dialog__input" type="text" autocomplete="off" required
-            data-testid="drawer-bag-number" [value]="bagNumber()" [disabled]="busy()"
+            data-testid="drawer-bag-number" [value]="bagNumber()" [disabled]="fieldsLocked()"
             [attr.aria-invalid]="isInvalid('bagNumber') || null" (input)="onBagNumber($event)" />
         </div>
         }
@@ -110,7 +120,7 @@
             (chosenReason === 'PETTY_EXPENSE' ? 'ORDER.DRAWER.DIALOG.RECEIPT_TOTAL' : 'ORDER.DRAWER.DIALOG.AMOUNT') | translate
           }}</label>
           <input id="drawer-amount" class="drawer-dialog__input" type="text" inputmode="decimal" autocomplete="off"
-            required data-testid="drawer-amount" [value]="amountText()" [disabled]="busy()"
+            required data-testid="drawer-amount" [value]="amountText()" [disabled]="fieldsLocked()"
             [attr.aria-invalid]="isInvalid('amount') || null" (input)="onAmount($event)" />
         </div>
 
@@ -118,7 +128,7 @@
         <div class="drawer-dialog__field">
           <label for="drawer-note">{{ 'ORDER.DRAWER.DIALOG.NOTE' | translate }}</label>
           <input id="drawer-note" class="drawer-dialog__input" type="text" autocomplete="off" required
-            data-testid="drawer-note" [value]="note()" [disabled]="busy()"
+            data-testid="drawer-note" [value]="note()" [disabled]="fieldsLocked()"
             [attr.aria-invalid]="isInvalid('note') || null" (input)="onNote($event)" />
         </div>
         }
@@ -127,7 +137,7 @@
         <div class="drawer-dialog__field">
           <label for="drawer-receipt-reference">{{ 'ORDER.DRAWER.DIALOG.RECEIPT_REFERENCE' | translate }}</label>
           <input id="drawer-receipt-reference" class="drawer-dialog__input" type="text" autocomplete="off" required
-            data-testid="drawer-receipt-reference" [value]="receiptReference()" [disabled]="busy()"
+            data-testid="drawer-receipt-reference" [value]="receiptReference()" [disabled]="fieldsLocked()"
             [attr.aria-invalid]="isInvalid('receiptReference') || null" (input)="onReceiptReference($event)" />
         </div>
         }

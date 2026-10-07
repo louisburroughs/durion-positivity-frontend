@@ -91,6 +91,8 @@ export class RegisterDrawerPageComponent {
   readonly errorKey = signal<string | null>(null);
 
   readonly session = signal<DrawerSession | null>(null);
+  /** The latest session read: a re-resolution in flight (after a 404 or 409) is not `'OK'` (ADR-0064). */
+  readonly sessionStatus = signal<ReadStatus>('PENDING');
   readonly movements = signal<readonly DrawerMovement[]>([]);
   /** The session the held movements answer (ADR-0063 §1). */
   readonly movementsFor = signal<string | null>(null);
@@ -131,8 +133,15 @@ export class RegisterDrawerPageComponent {
   readonly showActions = computed(
     () => this.state() === 'ready' && this.isOpen() && this.canCashMovement() && !this.optionsDenied(),
   );
+  /**
+   * What the drawer offers is current: the latest session read and the latest options read (every
+   * refresh, not only the first) are both `'OK'` for the session on screen (ADR-0064 §1).
+   */
+  readonly optionsCurrent = computed(
+    () => this.sessionStatus() === 'OK' && this.optionsStatus() === 'OK' && !!this.optionsView(),
+  );
   private readonly actionable = computed(
-    () => this.showActions() && this.optionsStatus() === 'OK' && !!this.optionsView() && !!this.currencyCode(),
+    () => this.showActions() && this.optionsCurrent() && !!this.currencyCode(),
   );
   readonly canPayOut = computed(() => this.actionable() && offeredReasons(this.optionsView(), 'PAY_OUT').length > 0);
   readonly canChangeFloat = computed(() => this.actionable() && offeredReasons(this.optionsView(), 'FLOAT').length > 0);
@@ -144,7 +153,14 @@ export class RegisterDrawerPageComponent {
     const options = this.optionsView();
     const currencyCode = this.currencyCode();
     return kind && sessionId && options && currencyCode && this.showActions()
-      ? { kind, sessionId, options, currencyCode }
+      ? {
+          kind,
+          sessionId,
+          options,
+          currencyCode,
+          optionsCurrent: this.optionsCurrent(),
+          optionsFailed: this.optionsStatus() === 'FAILED',
+        }
       : null;
   });
 
@@ -196,6 +212,7 @@ export class RegisterDrawerPageComponent {
     this.movementsSeq++;
     this.optionsSeq++;
     this.cancelReads();
+    this.sessionStatus.set('PENDING');
     if (this.state() !== 'ready') {
       this.state.set('loading');
       this.errorKey.set(null);
@@ -206,6 +223,7 @@ export class RegisterDrawerPageComponent {
         if (seq !== this.sessionSeq) {
           return;
         }
+        this.sessionStatus.set('FAILED');
         this.dialogKind.set(null);
         this.state.set('error');
         this.errorKey.set('ORDER.DRAWER.ERROR.LOAD');
@@ -218,6 +236,7 @@ export class RegisterDrawerPageComponent {
     if (seq !== this.sessionSeq) {
       return;
     }
+    this.sessionStatus.set('OK');
     const sessionId = session?.sessionId ?? null;
     if (!session || !sessionId) {
       this.dialogKind.set(null);
@@ -278,9 +297,9 @@ export class RegisterDrawerPageComponent {
     }
     const seq = ++this.optionsSeq;
     this.optionsSub?.unsubscribe();
-    if (this.optionsFor() !== sessionId) {
-      this.optionsStatus.set('PENDING');
-    }
+    // Every refresh, not only the first: held options stay for display (category labels) but are
+    // not actionable until the current read answers (ADR-0064 §1).
+    this.optionsStatus.set('PENDING');
     this.optionsSub = this.service.options(sessionId).subscribe({
       next: options => {
         if (seq !== this.optionsSeq) {
@@ -443,6 +462,7 @@ export class RegisterDrawerPageComponent {
     this.cancelReads();
     this.dialogKind.set(null);
     this.clearSessionData();
+    this.sessionStatus.set('PENDING');
     this.announcement.set(null);
     this.noticeKey.set(null);
     this.focusNoticeAfterRead = false;
