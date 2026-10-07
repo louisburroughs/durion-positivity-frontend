@@ -19,6 +19,16 @@
     {{ 'ORDER.DRAWER.RECORDED' | translate: { reason: (recorded.reasonKey | translate), amount: (recorded.amount | money: recorded.currencyCode) } }}
     }
   </p>
+  <!-- Read failures, announced every time a read (a Retry included) fails; the visible messages
+       with their Retry buttons below are not live regions themselves (ADR-0029 §8.8). -->
+  <p class="sr-only" role="status" aria-live="polite" data-testid="drawer-read-status">
+    @if (showActions() && optionsStatus() === 'FAILED') {
+    {{ 'ORDER.DRAWER.OPTIONS_FAILED' | translate }}
+    }
+    @if (state() === 'ready' && movementsStatus() === 'FAILED') {
+    {{ 'ORDER.DRAWER.MOVEMENTS.FAILED' | translate }}
+    }
+  </p>
 
   @switch (state()) {
   @case ('loading') {

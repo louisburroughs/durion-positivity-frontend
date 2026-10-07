@@ -441,7 +441,16 @@ export class DrawerMovementDialogComponent {
     setTimeout(() => this.title()?.nativeElement.focus());
   }
 
+  /**
+   * Cancel and Escape. Refused while a request is in flight: its attempt (and `requestId`) stays
+   * until the server answers, so a re-read cannot race the commit and a reopened dialog cannot
+   * send the same movement under a new id (§8.2, ADR-0063). Once it has answered — an unknown
+   * outcome included — the dialog may close and the id rotates, as the story says (item 6).
+   */
   cancel(): void {
+    if (this.busy()) {
+      return;
+    }
     this.ticket++;
     this.inFlight?.unsubscribe();
     this.inFlight = null;

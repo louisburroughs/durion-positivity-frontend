@@ -31,6 +31,12 @@
       <p class="drawer-dialog__note" data-testid="drawer-float-note">{{ 'ORDER.DRAWER.DIALOG.FLOAT_NOTE' | translate }}</p>
       }
 
+      <!-- A persistent status region, so a failed options re-read is announced every time (ADR-0029 §8.8). -->
+      <p class="sr-only" role="status" aria-live="polite" data-testid="drawer-dialog-read-status">
+        @if (optionsFailed()) {
+        {{ 'ORDER.DRAWER.OPTIONS_FAILED' | translate }}
+        }
+      </p>
       @if (optionsFailed()) {
       <div class="drawer-dialog__options-failed" data-testid="drawer-dialog-options-failed">
         <p>{{ 'ORDER.DRAWER.OPTIONS_FAILED' | translate }}</p>
@@ -166,7 +172,8 @@
       }
 
       <div class="drawer-dialog__actions">
-        <button type="button" class="drawer-dialog__secondary" data-testid="drawer-cancel" (click)="cancel()">
+        <button type="button" class="drawer-dialog__secondary" data-testid="drawer-cancel"
+          [attr.aria-disabled]="busy() || null" (click)="cancel()">
           {{ 'ORDER.DRAWER.DIALOG.CANCEL' | translate }}
         </button>
         @if (canRecord()) {
@@ -204,7 +211,8 @@
         </div>
       </fieldset>
       <div class="drawer-dialog__actions">
-        <button type="button" class="drawer-dialog__secondary" data-testid="drawer-cancel" (click)="cancel()">
+        <button type="button" class="drawer-dialog__secondary" data-testid="drawer-cancel"
+          [attr.aria-disabled]="busy() || null" (click)="cancel()">
           {{ 'ORDER.DRAWER.DIALOG.CANCEL' | translate }}
         </button>
         <button type="button" class="drawer-dialog__secondary" data-testid="drawer-approval-back" [disabled]="busy()"

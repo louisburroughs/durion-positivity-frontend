@@ -899,6 +899,32 @@ describe('RegisterDrawerPageComponent (CAP:550 S22)', () => {
       expect(h.q('drawer-options-failed')).toBeNull();
     });
 
+    it('announces each failed options and movements read through a persistent status region (ADR-0029 §8.8)', () => {
+      const h = renderDrawer({
+        before: mocks => {
+          mocks.options.mockReturnValue(throwError(() => refusal(500)));
+          mocks.movements.mockReturnValue(throwError(() => refusal(500)));
+        },
+      });
+      const region = h.q('drawer-read-status')!;
+      expect(region.getAttribute('aria-live')).toBe('polite');
+      expect(text(region)).toBe("Payout options couldn't be loaded The movements couldn't be loaded.");
+
+      const options$ = new Subject<DrawerOptions>();
+      const movements$ = new Subject<DrawerMovement[]>();
+      h.mocks.options.mockReturnValue(options$);
+      h.mocks.movements.mockReturnValue(movements$);
+      click(h, 'drawer-options-retry');
+      click(h, 'drawer-movements-retry');
+      expect(text(region)).toBe('');
+
+      options$.error(refusal(500));
+      movements$.error(refusal(500));
+      h.render();
+      expect(h.q('drawer-read-status')).toBe(region);
+      expect(text(region)).toBe("Payout options couldn't be loaded The movements couldn't be loaded.");
+    });
+
     it('makes the actions wait for every options re-read, not only the first (ADR-0064 §1)', () => {
       const h = renderDrawer();
       const reread$ = new Subject<DrawerOptions>();

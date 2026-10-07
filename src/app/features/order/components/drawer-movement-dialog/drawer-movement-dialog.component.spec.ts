@@ -166,20 +166,47 @@ describe('DrawerMovementDialogComponent (CAP:550 S22)', () => {
   });
 
   describe('write lock release', () => {
-    it('releases the lock and drops the request when Cancel is pressed mid-flight', () => {
+    it('refuses Cancel and Escape while a record is in flight, keeping the attempt until it settles', () => {
       const h = renderDialog();
       const pending$ = new Subject<DrawerMovement>();
       h.record.mockReturnValue(pending$);
       fillBankDrop(h);
       h.component.submitDetails();
+      h.render();
       expect(h.component.phase()).toBe('submitting');
+      expect(h.q('drawer-cancel')!.getAttribute('aria-disabled')).toBe('true');
 
       h.component.cancel();
-      expect(h.component.phase()).toBe('idle');
-      expect(pending$.observed).toBe(false);
-      expect(h.events.cancelled).toHaveBeenCalledTimes(1);
+      h.root.querySelector('dialog')!.dispatchEvent(new Event('cancel', { cancelable: true }));
+      expect(h.events.cancelled).not.toHaveBeenCalled();
+      expect(pending$.observed).toBe(true);
+
       pending$.next(recorded);
-      expect(h.events.recorded).not.toHaveBeenCalled();
+      expect(h.events.recorded).toHaveBeenCalledTimes(1);
+      expect(h.component.phase()).toBe('idle');
+    });
+
+    it('lets the cashier close after an unknown outcome (the id rotates on close, item 6)', () => {
+      const h = renderDialog();
+      h.record.mockReturnValue(throwError(() => refusal(504)));
+      fillBankDrop(h);
+      h.component.submitDetails();
+      expect(h.component.outcomeUnknown()).toBe(true);
+
+      h.component.cancel();
+      expect(h.events.cancelled).toHaveBeenCalledTimes(1);
+    });
+
+    it('announces a failed options read through a persistent status region', () => {
+      const h = renderDialog();
+      const region = h.q('drawer-dialog-read-status')!;
+      expect(region.getAttribute('role')).toBe('status');
+      expect(text(region)).toBe('');
+
+      h.fixture.componentRef.setInput('optionsFailed', true);
+      h.render();
+      expect(h.q('drawer-dialog-read-status')).toBe(region);
+      expect(text(region)).toBe("Payout options couldn't be loaded");
     });
 
     it('releases the lock on a refusal and on a server error', () => {
