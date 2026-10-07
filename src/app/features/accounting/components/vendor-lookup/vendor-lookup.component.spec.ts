@@ -96,7 +96,7 @@ describe('VendorLookupComponent', () => {
     expect(component.activeIndex()).toBe(-1);
     expect(down.defaultPrevented).toBe(false);
   });
-  it('keeps input focus on a listbox mousedown so the scrollbar stays draggable', fakeAsync(() => {
+  it('keeps input focus on a listbox mousedown, and reopens the list on an input click', fakeAsync(() => {
     component.onInput('acme');
     tick(250);
     fixture.detectChanges();
@@ -104,9 +104,16 @@ describe('VendorLookupComponent', () => {
     const down = new MouseEvent('mousedown', { bubbles: true, cancelable: true });
     listbox.dispatchEvent(down);
     expect(down.defaultPrevented).toBe(true);
-    // An option mousedown must still blur, or a later click cannot reopen the list.
+    // A pick keeps focus on the input too, so an input click must reopen the list.
     const optionDown = new MouseEvent('mousedown', { bubbles: true, cancelable: true });
     (listbox.firstElementChild as HTMLElement).dispatchEvent(optionDown);
-    expect(optionDown.defaultPrevented).toBe(false);
+    expect(optionDown.defaultPrevented).toBe(true);
+    component.showList.set(false);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[role="listbox"]')).toBeNull();
+    (fixture.nativeElement.querySelector('input[role="combobox"]') as HTMLElement).click();
+    tick(250);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[role="listbox"]')).not.toBeNull();
   }));
 });

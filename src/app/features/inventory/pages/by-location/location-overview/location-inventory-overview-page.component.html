@@ -48,7 +48,7 @@
           [attr.placeholder]="'INVENTORY.BY_LOCATION.PICKER.PLACEHOLDER' | translate"
           (input)="onLocationInput($any($event.target).value)"
           (keydown)="onLocationKeydown($event)"
-          (focus)="onLocationFocus()"
+          (focus)="onLocationFocus()" (click)="onLocationFocus()"
           (blur)="onLocationBlur()"
         />
         @if (locationPickerOpen() && filteredLocations().length > 0) {
@@ -57,7 +57,7 @@
           class="picker-dropdown"
           role="listbox"
           [attr.aria-label]="'INVENTORY.BY_LOCATION.PICKER.DROPDOWN_ARIA' | translate"
-          (mousedown)="$event.target === $event.currentTarget ? $event.preventDefault() : undefined"
+          (mousedown)="$event.preventDefault()"
         >
           @for (loc of filteredLocations(); track loc.id; let i = $index) {
           <li
@@ -131,7 +131,7 @@
           [attr.placeholder]="'INVENTORY.BY_LOCATION.PRODUCT_FILTER.PLACEHOLDER' | translate"
           (input)="onProductInput($any($event.target).value)"
           (keydown)="onProductKeydown($event)"
-          (focus)="onProductFocus()"
+          (focus)="onProductFocus()" (click)="onProductFocus()"
           (blur)="onProductBlur()"
         />
         @if (showProductSuggestions() && productSuggestions().length > 0) {
@@ -140,7 +140,7 @@
           class="typeahead-suggestions"
           role="listbox"
           [attr.aria-label]="'INVENTORY.BY_LOCATION.PRODUCT_FILTER.DROPDOWN_ARIA' | translate"
-          (mousedown)="$event.target === $event.currentTarget ? $event.preventDefault() : undefined"
+          (mousedown)="$event.preventDefault()"
         >
           @for (p of productSuggestions(); track p.productId; let i = $index) {
           <li

@@ -326,7 +326,7 @@ describe('CrmSnapshotComponent', () => {
       expect(component.canRefresh()).toBe(false);
     });
   });
-  it('keeps input focus on a listbox mousedown so the scrollbar stays draggable', async () => {
+  it('keeps input focus on a listbox mousedown, and reopens the list on an input click', async () => {
     await setup();
     component.showPartySuggestions.set(true);
     fixture.detectChanges();
@@ -334,9 +334,16 @@ describe('CrmSnapshotComponent', () => {
     const down = new MouseEvent('mousedown', { bubbles: true, cancelable: true });
     listbox.dispatchEvent(down);
     expect(down.defaultPrevented).toBe(true);
-    // An option mousedown must still blur, or a later click cannot reopen the list.
+    // A pick keeps focus on the input too, so an input click must reopen the list.
     const optionDown = new MouseEvent('mousedown', { bubbles: true, cancelable: true });
     (listbox.firstElementChild as HTMLElement).dispatchEvent(optionDown);
-    expect(optionDown.defaultPrevented).toBe(false);
+    expect(optionDown.defaultPrevented).toBe(true);
+    component.partySuggestions.set([{ partyId: PARTY_ID, legalName: 'Acme' }]);
+    component.showPartySuggestions.set(false);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('#partyId-listbox')).toBeNull();
+    (fixture.nativeElement.querySelector('#partyId') as HTMLElement).click();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('#partyId-listbox')).not.toBeNull();
   });
 });

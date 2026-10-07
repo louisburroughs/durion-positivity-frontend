@@ -93,7 +93,7 @@ describe('WorkorderAssignPageComponent', () => {
     expect(overline()).toBe(enUS.WORKEXEC.WORKORDER_COMMON.WORK_ORDER);
     expect(visibleText(fixture.nativeElement as HTMLElement)).not.toMatch(UUID);
   });
-  it('keeps input focus on a listbox mousedown so the scrollbar stays draggable', async () => {
+  it('keeps input focus on a listbox mousedown, and reopens the list on an input click', async () => {
     await setup();
     component.technicians.set([{ id: TECH_ID, name: 'Ana Ruiz' }]);
     component.showTechList.set(true);
@@ -102,9 +102,15 @@ describe('WorkorderAssignPageComponent', () => {
     const down = new MouseEvent('mousedown', { bubbles: true, cancelable: true });
     listbox.dispatchEvent(down);
     expect(down.defaultPrevented).toBe(true);
-    // An option mousedown must still blur, or a later click cannot reopen the list.
+    // A pick keeps focus on the input too, so an input click must reopen the list.
     const optionDown = new MouseEvent('mousedown', { bubbles: true, cancelable: true });
     (listbox.firstElementChild as HTMLElement).dispatchEvent(optionDown);
-    expect(optionDown.defaultPrevented).toBe(false);
+    expect(optionDown.defaultPrevented).toBe(true);
+    component.showTechList.set(false);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('#technician-listbox')).toBeNull();
+    (fixture.nativeElement.querySelector('#technicianId') as HTMLElement).click();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('#technician-listbox')).not.toBeNull();
   });
 });

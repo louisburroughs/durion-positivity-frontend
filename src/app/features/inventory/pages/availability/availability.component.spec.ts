@@ -84,7 +84,7 @@ describe('AvailabilityComponent', () => {
     const errIdx = calls.findIndex(c => c.startsWith('errKey:'));
     expect(stateIdx).toBeLessThan(errIdx);
   });
-  it('keeps input focus on a product listbox mousedown so the scrollbar stays draggable', () => {
+  it('keeps input focus on a product listbox mousedown, and reopens the list on an input click', () => {
     const fixture = TestBed.createComponent(AvailabilityComponent);
     fixture.detectChanges();
     const comp = fixture.componentInstance;
@@ -97,9 +97,15 @@ describe('AvailabilityComponent', () => {
     const down = new MouseEvent('mousedown', { bubbles: true, cancelable: true });
     listbox.dispatchEvent(down);
     expect(down.defaultPrevented).toBe(true);
-    // An option mousedown must still blur, or a later click cannot reopen the list.
+    // A pick keeps focus on the input too, so an input click must reopen the list.
     const optionDown = new MouseEvent('mousedown', { bubbles: true, cancelable: true });
     (listbox.firstElementChild as HTMLElement).dispatchEvent(optionDown);
-    expect(optionDown.defaultPrevented).toBe(false);
+    expect(optionDown.defaultPrevented).toBe(true);
+    comp.showProductSuggestions.set(false);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('#avail-sku-listbox')).toBeNull();
+    (fixture.nativeElement.querySelector('#avail-sku') as HTMLElement).click();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('#avail-sku-listbox')).not.toBeNull();
   });
 });

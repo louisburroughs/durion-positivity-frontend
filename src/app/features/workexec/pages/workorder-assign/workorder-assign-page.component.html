@@ -36,7 +36,7 @@
           [attr.aria-activedescendant]="showTechList() && activeIndex() >= 0 ? ('technician-opt-' + activeIndex()) : null"
           [value]="techQuery()"
           (input)="onTechInput($any($event.target).value)"
-          (focus)="onTechFocus()"
+          (focus)="onTechFocus()" (click)="onTechFocus()"
           (blur)="onTechBlur()"
           (keydown)="onTechKeydown($event)"
           [placeholder]="'WORKEXEC.WORKORDER_ASSIGN.SEARCH_PH' | translate"
@@ -56,7 +56,7 @@
         }
 
         @if (showTechList() && filteredTechnicians().length > 0) {
-          <ul id="technician-listbox" class="tech-list" role="listbox" (mousedown)="$event.target === $event.currentTarget ? $event.preventDefault() : undefined" [attr.aria-label]="'WORKEXEC.WORKORDER_ASSIGN.LISTBOX_ARIA' | translate">
+          <ul id="technician-listbox" class="tech-list" role="listbox" (mousedown)="$event.preventDefault()" [attr.aria-label]="'WORKEXEC.WORKORDER_ASSIGN.LISTBOX_ARIA' | translate">
             @for (tech of filteredTechnicians(); track tech.id; let i = $index) {
               <li
                 role="option"

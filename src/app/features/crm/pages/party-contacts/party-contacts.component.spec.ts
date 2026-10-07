@@ -5,7 +5,7 @@ import { of } from 'rxjs';
 
 import { PartyContactsComponent } from './party-contacts.component';
 import { CrmService } from '../../services/crm.service';
-import { PartyDetail, Relationship } from '../../models/crm.models';
+import { CreatePersonResponse, PartyDetail, Relationship } from '../../models/crm.models';
 
 // ── Fixtures (ADR-0032: typed, no `any`) ────────────────────────────────────
 
@@ -144,7 +144,7 @@ describe('PartyContactsComponent [#344]', () => {
       expect(fixture.componentInstance.modalState()).toBe('open');
     });
   });
-  it('keeps input focus on a listbox mousedown so the scrollbar stays draggable', async () => {
+  it('keeps input focus on a listbox mousedown, and reopens the list on an input click', async () => {
     const fixture = await setup();
     fixture.detectChanges();
     fixture.componentInstance.openModal();
@@ -154,9 +154,17 @@ describe('PartyContactsComponent [#344]', () => {
     const down = new MouseEvent('mousedown', { bubbles: true, cancelable: true });
     listbox.dispatchEvent(down);
     expect(down.defaultPrevented).toBe(true);
-    // An option mousedown must still blur, or a later click cannot reopen the list.
+    // A pick keeps focus on the input too, so an input click must reopen the list.
     const optionDown = new MouseEvent('mousedown', { bubbles: true, cancelable: true });
     (listbox.firstElementChild as HTMLElement).dispatchEvent(optionDown);
-    expect(optionDown.defaultPrevented).toBe(false);
+    expect(optionDown.defaultPrevented).toBe(true);
+    const person: CreatePersonResponse = { personId: 'p-1', firstName: 'Ana', lastName: 'Ruiz' };
+    fixture.componentInstance.personSuggestions.set([person]);
+    fixture.componentInstance.showPersonSuggestions.set(false);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('#personId-listbox')).toBeNull();
+    (fixture.nativeElement.querySelector('#personId') as HTMLElement).click();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('#personId-listbox')).not.toBeNull();
   });
 });

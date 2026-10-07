@@ -187,9 +187,9 @@
 							autocomplete="off" spellcheck="false" [value]="personQuery()"
 							[placeholder]="'CRM.PARTY_CONTACTS.PERSON_PLACEHOLDER' | translate"
 							(input)="onPersonInput($any($event.target).value)"
-							(focus)="onPersonFocus()" (blur)="onPersonBlur()" />
+							(focus)="onPersonFocus()" (click)="onPersonFocus()" (blur)="onPersonBlur()" />
 						@if (showPersonSuggestions()) {
-						<ul id="personId-listbox" class="person-typeahead__list" role="listbox" (mousedown)="$event.target === $event.currentTarget ? $event.preventDefault() : undefined">
+						<ul id="personId-listbox" class="person-typeahead__list" role="listbox" (mousedown)="$event.preventDefault()">
 							@if (searchingPerson()) {
 							<li class="person-typeahead__hint" role="presentation">{{ 'CRM.PARTY_CONTACTS.SEARCHING' | translate }}</li>
 							} @else if (personSuggestions().length === 0) {
