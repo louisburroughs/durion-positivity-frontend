@@ -473,7 +473,7 @@
                 <label>
                   <input type="radio" name="unit-status" [value]="status" [checked]="draft().status === status"
                     [attr.aria-disabled]="status === 'ACTIVE' && !draftCanBeActive() ? true : null"
-                    (change)="setStatus(status)" (click)="status === 'ACTIVE' && !draftCanBeActive() && $event.preventDefault()" />
+                    (change)="setStatus(status)" (click)="status === 'ACTIVE' && !draftCanBeActive() ? $event.preventDefault() : undefined" />
                   {{ statusKey(status) | translate }}
                 </label>
               }
