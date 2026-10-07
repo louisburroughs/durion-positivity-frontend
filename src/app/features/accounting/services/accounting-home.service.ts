@@ -9,14 +9,12 @@ import {
   BankTransactionsService as BankTransactionsSdk,
   FinancialReportingService as FinancialReportingSdk,
   PaymentApplicationsService as PaymentApplicationsSdk,
-  UnappliedPaymentRow,
 } from '@durion-sdk/accounting';
 import {
   BankCheckupRow,
   CheckupAwaitingApproval,
   CheckupStatus,
   PayablesLane,
-  PaymentToMatch,
   PaymentsToMatchPage,
   ReceivablesLane,
   TodoSourcePage,
@@ -24,6 +22,7 @@ import {
 } from '../models/accounting-home.models';
 import { BankAccount, BankStatement } from '../models/bank-reconciliation.models';
 import { displayActor } from '../models/period-close.models';
+import { toWaitingPayment } from '../utils/payment-match';
 import { BankReconciliationService } from './bank-reconciliation.service';
 
 /** Enough for every reconciliation of one month across a tenant's bank accounts. */
@@ -71,7 +70,7 @@ export class AccountingHomeService {
   paymentsToMatch(size: number): Observable<PaymentsToMatchPage> {
     return this.paymentsSdk.listUnappliedPayments(UNAPPLIED_STATUS, undefined, 0, size).pipe(
       map(response => ({
-        items: (response?.items ?? []).filter(row => !!row.paymentId).map(toPaymentToMatch),
+        items: (response?.items ?? []).filter(row => !!row.paymentId && !!row.customerId).map(toWaitingPayment),
         totalElements: response?.totalElements ?? 0,
         waitingCount: response?.summary?.count ?? response?.totalElements ?? 0,
       })),
@@ -172,30 +171,6 @@ function toPayables(asOfDate: string, report: AgedPayablesReport): PayablesLane 
     notYetDue: report?.totals?.notYetDue ?? 0,
     unapproved: report?.unapproved ?? 0,
     unapprovedBillCount: report?.unapprovedBillCount ?? 0,
-  };
-}
-
-function toPaymentToMatch(row: UnappliedPaymentRow): PaymentToMatch {
-  const suggestion = row.suggestion;
-  return {
-    paymentId: row.paymentId,
-    customerName: text(row.customerDisplayName),
-    customerReference: text(row.customerReference),
-    sourceInvoiceNumber: text(row.sourceInvoiceNumber),
-    method: text(row.paymentMethod),
-    receivedAt: text(row.receivedAt),
-    totalAmount: row.totalAmount,
-    unappliedAmount: row.unappliedAmount,
-    currency: text(row.currency),
-    reasons: suggestion?.reasons ?? [],
-    suggestedInvoices: (suggestion?.invoices ?? []).map(invoice => ({
-      invoiceNumber: text(invoice.invoiceNumber),
-      balanceDue: invoice.balanceDue,
-      suggestedAmount: invoice.suggestedAmount,
-    })),
-    suggestedTotal: suggestion?.suggestedTotal ?? 0,
-    // Served null for walk-in (CASH) payments, whose remainder never becomes a credit.
-    leftOver: amount(suggestion?.leftOver),
   };
 }
 

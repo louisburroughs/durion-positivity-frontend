@@ -155,6 +155,11 @@
               </div>
             }
           }
+          @if (canOpenCustomerPayments()) {
+            <a class="btn btn--accent lane__action" routerLink="/app/accounting/payments" data-testid="match-customer-payments">
+              {{ 'ACCOUNTING.HOME.ACTION.MATCH_CUSTOMER_PAYMENTS' | translate }}
+            </a>
+          }
           @if (canOpenWhoOwesWhat()) {
             <a class="btn btn--outline lane__action" routerLink="/app/accounting/books" [queryParams]="{ tab: 'owed' }" data-testid="who-owes-what">
               {{ 'ACCOUNTING.HOME.ACTION.WHO_OWES_WHAT' | translate }}
@@ -329,6 +334,9 @@
         @if (approvedAccount(); as done) {
           {{ 'ACCOUNTING.HOME.TODO.APPROVAL.DONE' | translate: { account: done.account ?? empty } }}
         }
+        @if (paymentMessage(); as message) {
+          {{ message.key | translate: message.params }}
+        }
       </p>
       <div class="todo__filters" role="group" [attr.aria-label]="'ACCOUNTING.HOME.TODO.FILTER_ARIA' | translate">
         <button
@@ -372,6 +380,9 @@
             <p class="hint-text">{{ 'ACCOUNTING.HOME.TODO.EMPTY_FILTER' | translate }}</p>
           }
           @if (visibleItems().length > 0) {
+            @if (paymentLock()) {
+              <p id="todo-lock-hint" class="hint-text" data-testid="todo-lock-hint">{{ 'ACCOUNTING.HOME.TODO.LOCKED' | translate }}</p>
+            }
             <ul class="todo__list">
               @for (item of visibleItems(); track item.id) {
                 <li>
@@ -380,6 +391,8 @@
                     class="todo-item"
                     [attr.data-kind]="item.kind"
                     [attr.aria-pressed]="selectedId() === item.id"
+                    [attr.aria-disabled]="paymentLock() && selectedId() !== item.id ? 'true' : null"
+                    [attr.aria-describedby]="paymentLock() && selectedId() !== item.id ? 'todo-lock-hint' : null"
                     (click)="select(item)"
                   >
                     @switch (item.kind) {
@@ -434,8 +447,8 @@
             @if (page.totalElements > page.items.length) {
               <p class="hint-text" data-testid="more-payments">
                 {{ 'ACCOUNTING.HOME.TODO.MORE.PAYMENTS' | translate: { count: page.totalElements - page.items.length } }}
-                @if (canOpenPaymentApply()) {
-                  <a class="link-button" routerLink="/app/accounting/payments/apply">{{ 'ACCOUNTING.HOME.TODO.MORE.OPEN_PAYMENTS' | translate }}</a>
+                @if (canOpenCustomerPayments()) {
+                  <a class="link-button" routerLink="/app/accounting/payments">{{ 'ACCOUNTING.HOME.TODO.MORE.OPEN_PAYMENTS' | translate }}</a>
                 }
               </p>
             }
@@ -503,6 +516,12 @@
               [approveMessageKey]="approveMessage()?.key ?? null"
               [approveMessageParams]="approveMessage()?.params ?? {}"
               (approve)="approveMonth()"
+              (paymentWriteStarted)="onPaymentWriteStarted()"
+              (paymentWriteReleased)="onPaymentWriteReleased()"
+              (paymentWriteSettled)="onPaymentWriteSettled()"
+              (paymentApplied)="onPaymentApplied()"
+              (paymentChanged)="onPaymentChanged()"
+              (paymentAnnounce)="onPaymentAnnounce($event)"
             />
           } @else if (visibleItems().length > 0) {
             <p class="hint-text todo__panel-hint">{{ 'ACCOUNTING.HOME.TODO.PICK_ONE' | translate }}</p>

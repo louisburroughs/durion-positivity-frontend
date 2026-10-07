@@ -3678,19 +3678,6 @@
       "COL_PUBLISHED_AT": "Published at",
       "COL_PUBLISHED_BY": "Published by"
     },
-    "PAYMENT_APPLY": {
-      "OVERLINE": "Accounts Receivable",
-      "TITLE": "Apply Payment",
-      "FIELD_PAYMENT_ID": "Payment ID",
-      "FIELD_APPLICATIONS": "Applications JSON",
-      "SUBMIT": "Apply payment",
-      "ERROR": "Unable to apply payment.",
-      "EMPTY": "Provide allocation data to apply payment.",
-      "RESULT_TITLE": "Application Result",
-      "RESULT_PAYMENT_ID": "Payment ID",
-      "RESULT_TOTAL": "Payment total",
-      "RESULT_APPLIED": "Applied total"
-    },
     "CREDIT_MEMO_CREATE": {
       "OVERLINE": "Accounts Receivable",
       "TITLE": "Create Credit Memo",
@@ -3923,10 +3910,6 @@
           "TITLE": "Rule Set Detail",
           "DESCRIPTION": "Open a specific posting rule set by its rule set ID."
         },
-        "PAYMENT_APPLY": {
-          "TITLE": "Apply Payment",
-          "DESCRIPTION": "Apply a payment to one or more outstanding invoices."
-        },
         "VENDOR_PAYMENTS": {
           "TITLE": "Vendor Payments",
           "DESCRIPTION": "View all vendor payment runs and their disbursement status."
@@ -3978,6 +3961,10 @@
         "BANK_RECONCILIATION": {
           "TITLE": "Bank Accounts",
           "DESCRIPTION": "See each bank account's reconciliation status, import a statement, or start a reconciliation."
+        },
+        "CUSTOMER_PAYMENTS": {
+          "TITLE": "Customer payments",
+          "DESCRIPTION": "Match customer payments to the invoices they pay."
         }
       },
       "FIELD": {
@@ -5206,6 +5193,8 @@
         "HOME": "Home",
         "BILLS": "Bills to pay",
         "BILLS_TERM": "accounts payable",
+        "CUSTOMER_PAYMENTS": "Customer payments",
+        "CUSTOMER_PAYMENTS_TERM": "accounts receivable",
         "BANK": "Bank",
         "BANK_TERM": "bank reconciliation",
         "MONTH_END": "Month-end",
@@ -5289,14 +5278,8 @@
       "ACTION": {
         "OPEN_BILLS": "Open bills",
         "OPEN_BANK_CHECKUP": "Open bank check-up",
-        "WHO_OWES_WHAT": "Who owes what"
-      },
-      "METHOD": {
-        "CASH": "Cash",
-        "CARD": "Card",
-        "ON_ACCOUNT": "On account",
-        "OTHER": "Other",
-        "UNKNOWN": "Unknown"
+        "WHO_OWES_WHAT": "Who owes what",
+        "MATCH_CUSTOMER_PAYMENTS": "Match customer payments"
       },
       "TODO": {
         "TITLE": "Your to-do list",
@@ -5317,7 +5300,7 @@
         },
         "MORE": {
           "PAYMENTS": "{{count}} more payments are waiting.",
-          "OPEN_PAYMENTS": "Open Apply payment",
+          "OPEN_PAYMENTS": "Open Customer payments",
           "BANK_LINES": "{{count}} more bank lines are not in the books.",
           "APPROVALS": "{{count}} more check-ups are waiting for approval.",
           "OPEN_BANK": "Open bank check-up"
@@ -5331,26 +5314,7 @@
           "TITLE": "Payment ready to match",
           "PANEL_TITLE": "Payment ready to match",
           "REASON_LINE": "Not yet matched to the invoices it pays.",
-          "CUSTOMER": "Customer",
-          "TAKEN_AGAINST": "Taken against invoice",
-          "METHOD": "Method",
-          "RECEIVED": "Received",
-          "UNAPPLIED": "Waiting to be matched",
-          "REASONS_ARIA": "Why these invoices",
-          "REASON": {
-            "REMITTANCE_REFERENCE": "Taken against this invoice",
-            "SAME_CUSTOMER": "Same customer",
-            "EXACT_TOTAL": "Adds up exactly",
-            "UNKNOWN": "Unknown"
-          },
-          "SUGGESTED_CAPTION": "Invoices this payment most likely pays",
-          "COL_INVOICE": "Invoice",
-          "COL_BALANCE": "Still owed",
-          "COL_APPLYING": "Applying",
-          "APPLYING": "Applying",
-          "LEFT_OVER": "Left over",
-          "NO_SUGGESTION": "This customer has no open invoice to suggest.",
-          "WHAT_TO_DO": "Check the suggested invoices against what the customer told you. Matching from this panel comes with the Customer payments page; until then, match it on Apply payment."
+          "WHAT_TO_DO": "Check the suggested invoices against what the customer told you, tick the invoices this payment pays, then apply it."
         },
         "BANK_LINE": {
           "TITLE": "Bank line not in the books",
@@ -5386,7 +5350,8 @@
             "OTHER": "That couldn't be completed. Try again."
           },
           "DONE": "Approved: this month's bank check-up for {{account}} is done."
-        }
+        },
+        "LOCKED": "Finishing this payment — other items wait until it's done."
       },
       "MORE_TOOLS": {
         "TITLE": "More accounting tools",
@@ -5720,6 +5685,191 @@
           "PDF": "PDF",
           "CSV": "CSV (spreadsheet)"
         }
+      }
+    },
+    "CUSTOMER_PAYMENTS": {
+      "OVERLINE": "Accounting · Money owed to you",
+      "TITLE": "Customer payments",
+      "STANDFIRST": "Payments taken at the counter skip this list: they're matched as soon as they're taken and show under Matched automatically.",
+      "WHO_OWES_WHAT": "Who owes what",
+      "STEPS": {
+        "ARIA": "How to match a payment",
+        "PICK": "Pick a payment",
+        "TICK": "Tick the invoices it pays",
+        "CHECK": "Check what's left over",
+        "APPLY": "Apply it"
+      },
+      "CARDS": {
+        "ARIA": "At a glance",
+        "OWED": "Customers owe you",
+        "OVERDUE": "Overdue",
+        "WAITING": "Payments waiting",
+        "WAITING_COUNT": "{{count}} waiting to be matched",
+        "AS_OF": "As of {{time}}",
+        "FAILED": "These figures couldn't load."
+      },
+      "HELP": {
+        "OWED": {
+          "TEXT": "What customers still owe you on open invoices, straight from the books.",
+          "EXAMPLE": "For example: an invoice for $480.00 that is half paid counts $240.00 here."
+        },
+        "OVERDUE": {
+          "TEXT": "The part of what customers owe that is past its due date.",
+          "EXAMPLE": "For example: an invoice due last Friday and still unpaid counts as overdue today."
+        },
+        "WAITING": {
+          "TEXT": "Money customers paid that is not yet matched to the invoices it pays. Until it is matched, those invoices still look unpaid.",
+          "EXAMPLE": "For example: a $4,615.00 bank transfer from a fleet customer waits here until you match it."
+        },
+        "WHY_THESE": {
+          "SUMMARY": "Why these invoices?",
+          "TEXT": "We suggest invoices of the same customer: the invoice the payment was taken against, or invoices whose amounts add up exactly to the payment. Check them against what the customer told you.",
+          "EXAMPLE": "For example: a $600.00 payment and two open invoices of $250.00 and $350.00 add up exactly."
+        }
+      },
+      "REGION": {
+        "LOADING": "Loading…",
+        "REFRESH_FAILED": "This couldn't refresh; these are the last figures loaded.",
+        "DENIED": "You need the {{permission}} permission to see this."
+      },
+      "ERROR": {
+        "LOAD": "The payments waiting to be matched couldn't load. Check your connection and try again.",
+        "APPLY_UNKNOWN": "We couldn't confirm the payment was applied. Try again: if it already went through, nothing is applied twice.",
+        "APPLY_FORBIDDEN": "You need the {{permission}} permission to apply payments.",
+        "APPLY_CONFLICT": "One of these invoices can no longer take a payment.",
+        "APPLY_CONFLICT_NAMED": "One of these invoices can no longer take a payment: {{invoices}}. It has been unticked.",
+        "CURRENCY": "This payment's currency isn't supported here. Nothing was applied.",
+        "APPLY_CHANGED": "This payment changed since you opened it. Check the amounts and apply again.",
+        "APPLY_OTHER": "The payment wasn't applied. Check the amounts and try again.",
+        "CREDIT_UNKNOWN": "The payment was applied, but we couldn't confirm the rest was kept as credit. Try again: it is never kept twice.",
+        "CREDIT_FORBIDDEN": "The payment was applied. Keeping the rest as credit needs the {{permission}} permission, so it stays on the payment.",
+        "CREDIT_WALK_IN": "The payment was applied. Walk-in sales never keep a credit, so the rest stays on the payment.",
+        "CREDIT_CURRENCY": "The payment was applied. The rest can't be kept as credit in this currency, so it stays on the payment.",
+        "CREDIT_CHANGED": "The payment was applied, but the amount left on it changed, so nothing was kept as credit. It stays on the payment for later matching.",
+        "CREDIT_OTHER": "The payment was applied, but the rest wasn't kept as credit. It stays on the payment for later matching.",
+        "REFUND_FAILED": "The payment was applied and {{amount}} is kept as credit, but the refund did not go through.",
+        "REFUND_FORBIDDEN": "The payment was applied and {{amount}} is kept as credit. Refunding it needs the {{permission}} permission.",
+        "REFUND_AMOUNT_CHANGED": "{{amount}} was left on the payment, not the amount you confirmed, so it was kept as credit. Refund it only after you confirm this amount."
+      },
+      "LIST": {
+        "HEADING": "Payments waiting",
+        "NOT_WAITING": "That payment isn't waiting to be matched any more.",
+        "EMPTY": "No payments are waiting to be matched",
+        "NO_NAME": "Name not available",
+        "SUGGESTED": "Suggested match",
+        "TRUNCATED": "Showing {{shown}} of {{count}} payments waiting.",
+        "PICK_ONE": "Pick a payment to match it.",
+        "LOCKED": "Finishing this payment — other payments wait until it's done."
+      },
+      "DUPLICATE": {
+        "BADGE": "The invoice it was taken against isn't open — check for a duplicate payment",
+        "HINT": "The invoice this payment was taken against isn't open any more. Check with the customer before you keep it as credit or refund it."
+      },
+      "AUTOMATIC": {
+        "SUMMARY": "Matched automatically this week",
+        "HEADING": "Matched in the last seven days",
+        "HINT": "A payment taken against an invoice is matched to it as soon as it settles.",
+        "FAILED": "Payments matched automatically couldn't load.",
+        "EMPTY": "Nothing was matched automatically this week.",
+        "UNDONE_BADGE": "Undone",
+        "UNDO": "Undo",
+        "UNDO_CONTEXT": "for {{invoice}}, {{customer}}",
+        "TRUNCATED": "Only the most recent matches are shown.",
+        "UNDO_TITLE": "Undo this match?",
+        "UNDO_BODY": "This takes {{amount}} off {{invoice}} and puts it back on the payment, recorded as a new entry. The payment then waits to be matched again.",
+        "REASON_LABEL": "Why?",
+        "REASON_HINT": "Between {{min}} and {{max}} characters.",
+        "UNDO_CONFIRM": "Undo match",
+        "UNDONE": "Match undone for {{invoice}}. The payment is back under Payments waiting.",
+        "ERROR": {
+          "WHOLE_REQUEST": "This match was made together with others; reverse it from the payment.",
+          "FORBIDDEN": "You need the {{permission}} permission to undo a match.",
+          "UNKNOWN": "We couldn't confirm the match was undone. The list shows what stands now.",
+          "OTHER": "The match wasn't undone. The list shows what stands now."
+        }
+      },
+      "MATCH": {
+        "HEADING": "Payment from {{customer}}",
+        "CUSTOMER": "Customer",
+        "METHOD": "Method · received",
+        "TAKEN_AGAINST": "Taken against invoice",
+        "WAITING": "Waiting to be matched",
+        "REASONS_ARIA": "Why these invoices",
+        "INVOICES_HEADING": "This customer's open invoices",
+        "INVOICES_FAILED": "This customer's open invoices couldn't load.",
+        "NO_INVOICES": "This customer has no open invoice.",
+        "FILTER_LABEL": "Search other invoices",
+        "FILTER_HINT": "By invoice number.",
+        "FILTER_EMPTY": "No invoice matches your search.",
+        "INVOICES_TRUNCATED": "Only the oldest open invoices are shown.",
+        "NO_NUMBER": "Invoice without a number",
+        "SUGGESTED": "Suggested",
+        "OVERDUE": "Overdue",
+        "DUE": "Due {{date}}",
+        "STILL_OWED": "Still owed",
+        "AMOUNT_LABEL": "Amount to apply to {{invoice}}",
+        "ERROR_AMOUNT_INVALID": "Enter an amount, like 120.50.",
+        "ERROR_AMOUNT_PRECISION": "Use at most two decimals.",
+        "ERROR_AMOUNT_MINIMUM": "Enter at least 0.01.",
+        "ERROR_AMOUNT_OVER_BALANCE": "This is more than the {{owed}} still owed on this invoice.",
+        "CONSEQUENCE": "This lowers what {{customer}} owes on {{count}} invoices. A mistake is fixed with a reversal, recorded as a new entry.",
+        "APPLY": "Apply {{applying}}",
+        "APPLY_AND_KEEP": "Apply {{applying}} and keep {{leftOver}} as credit",
+        "APPLY_AND_REFUND": "Apply {{applying}} and refund {{leftOver}}",
+        "APPLYING_NOW": "Applying…",
+        "TRY_AGAIN": "Try again",
+        "START_OVER": "Start over"
+      },
+      "PREVIEW": {
+        "PAYMENT": "Payment",
+        "APPLYING": "Applying to {{count}} invoices",
+        "LEFT_OVER": "Left over",
+        "OVER_APPLIED": "You're applying {{amount}} more than this payment. Untick an invoice or lower an amount."
+      },
+      "LEFTOVER": {
+        "LEGEND": "What happens to the {{amount}} left over?",
+        "CREDIT": "Keep it as credit the customer can use later",
+        "REFUND": "Refund it to the customer",
+        "STAYS": "The rest, {{amount}}, stays on the payment for later matching."
+      },
+      "RESULT": {
+        "HEADING": "Payment applied",
+        "CAPTION": "What the payment paid",
+        "COL_INVOICE": "Invoice",
+        "COL_APPLIED": "Applied",
+        "COL_BALANCE_AFTER": "Still owed now",
+        "APPLIED": "Applied",
+        "REMAINING": "Left on the payment",
+        "KEPT_AS_CREDIT": "Kept as credit",
+        "REFUNDED": "Refunded",
+        "CREDITING": "Keeping the rest as credit…",
+        "REFUNDING": "Refunding…",
+        "RETRY_CREDIT": "Try again",
+        "RETRY_REFUND": "Try the refund again",
+        "MATCH_REST": "Match the rest of this payment",
+        "ANNOUNCE_APPLIED": "Payment applied: {{amount}}.",
+        "ANNOUNCE_KEPT": "Payment applied; {{amount}} kept as credit.",
+        "ANNOUNCE_REFUNDED": "Payment applied; {{amount}} refunded.",
+        "REFUND_KEPT": "Refund {{amount}}"
+      },
+      "REFUND": {
+        "TITLE": "Refund the rest?",
+        "BODY": "{{customer}} gets {{amount}} back. Money leaves the shop; this can't be undone here.",
+        "CONFIRM": "Apply {{applying}} and refund {{leftOver}}",
+        "CONFIRM_KEPT": "Refund {{amount}}"
+      },
+      "REASON": {
+        "REMITTANCE_REFERENCE": "Remittance reference",
+        "SAME_CUSTOMER": "Same customer",
+        "EXACT_TOTAL": "Adds up exactly",
+        "UNKNOWN": "Unknown"
+      },
+      "METHOD": {
+        "CASH": "Cash",
+        "CARD": "Card",
+        "ON_ACCOUNT": "On account",
+        "OTHER": "Other",
+        "UNKNOWN": "Unknown"
       }
     }
   },
@@ -9217,7 +9367,6 @@
     "LABEL": {
       "ADD_VEHICLE": "Add Vehicle",
       "ADJUSTMENTS": "Adjustments",
-      "APPLY": "Apply",
       "APPROVAL": "Approval",
       "ASSIGN": "Assign",
       "ASSIGNMENTS": "Assignments",
@@ -9340,7 +9489,8 @@
       "IMPORT": "Import",
       "RECONCILIATIONS": "Bank reconciliations",
       "BOOKS": "Your books",
-      "ENTRIES": "Journal entries"
+      "ENTRIES": "Journal entries",
+      "PAYMENTS": "Payments"
     }
   },
   "POSITIVITY": {

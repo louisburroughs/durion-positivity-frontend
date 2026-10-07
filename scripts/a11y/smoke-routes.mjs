@@ -21,6 +21,9 @@ const ROUTES = [
   // Accounting home (CAP:550 S4). Rendered-DOM axe coverage lives in
   // src/app/features/accounting/pages/home/accounting-home-page.a11y.spec.ts.
   '/app/accounting',
+  // Customer payments (CAP:550 S6). Rendered-DOM axe coverage, with a payment selected, the refund
+  // dialog and the undo dialog, lives in src/app/features/accounting/pages/customer-payments/customer-payments-page.a11y.spec.ts.
+  '/app/accounting/payments',
   // Your books and the journal-entry page (CAP:550 S5). The entry route is keyed by a journal-entry
   // UUID; this harness never runs the bundle (see the NOTE below), so no fixture entry can be served
   // and axe sees the shell only. Rendered-DOM axe coverage of both pages, including a real entry and

@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { JwtClaims } from '../../../../core/models/auth.models';
 import { ACCOUNTING_LANDING_CONFIG } from '../landing/accounting-landing.config';
 import { ReceivablesLane } from '../../models/accounting-home.models';
+import { ApplyResult, OpenInvoicesList } from '../../models/customer-payments.models';
 import { AccountingHomePageComponent } from './accounting-home-page.component';
 import {
   ALL_HOME_PERMISSIONS,
@@ -29,6 +30,22 @@ import {
 } from './accounting-home-page.spec-helper';
 
 const CLERK = ['accounting:reconciliation:view', 'accounting:reconciliation:adjust'];
+
+/** The open invoice the home's payment fixture is suggested against (CAP:550 S6). */
+const openInvoice9: OpenInvoicesList = {
+  items: [
+    {
+      invoiceId: 'inv-9',
+      invoiceNumber: 'INV-2026-01702',
+      documentDate: TODAY_ISO,
+      dueDate: TODAY_ISO,
+      overdue: false,
+      balanceDue: 4615,
+      currency: 'USD',
+    },
+  ],
+  truncated: false,
+};
 const APPROVER = ['accounting:reconciliation:view', 'accounting:reconciliation:approve'];
 
 describe('AccountingHomePageComponent', () => {
@@ -223,6 +240,19 @@ describe('AccountingHomePageComponent', () => {
       const link = q('[data-testid="lane-receivables"] [data-testid="who-owes-what"]');
       expect(link?.getAttribute('href')).toBe('/app/accounting/books?tab=owed');
       expect(link?.textContent?.trim()).toBe('ACCOUNTING.HOME.ACTION.WHO_OWES_WHAT');
+    });
+
+    it('offers "Match customer payments" on Money owed with accounting:payment:apply, and not without (CAP:550 S6)', () => {
+      render();
+      const link = q('[data-testid="lane-receivables"] [data-testid="match-customer-payments"]');
+      expect(link?.getAttribute('href')).toBe('/app/accounting/payments');
+      expect(link?.textContent?.trim()).toBe('ACCOUNTING.HOME.ACTION.MATCH_CUSTOMER_PAYMENTS');
+
+      host.remove();
+      TestBed.resetTestingModule();
+      mocks.held.set(ALL_HOME_PERMISSIONS.filter(code => code !== 'accounting:payment:apply'));
+      render();
+      expect(q('[data-testid="match-customer-payments"]')).toBeNull();
     });
 
     it('does not offer "Who owes what" to a session that cannot read that tab (accounting:je:view alone)', () => {
@@ -483,6 +513,292 @@ describe('AccountingHomePageComponent', () => {
       fixture.detectChanges();
 
       expect(document.activeElement?.id).toBe('todo-panel-heading');
+    });
+
+    it('matches a payment in place: the detail panel embeds the match component and an apply re-reads the lanes (CAP:550 S6 AC 11)', () => {
+      mocks.customerPayments.openInvoices.mockReturnValue(of(openInvoice9));
+      render();
+      q('.todo-item[data-kind="PAYMENT"]')!.click();
+      fixture.detectChanges();
+
+      expect(q('app-todo-detail-panel app-payment-match')).not.toBeNull();
+      expect(mocks.customerPayments.openInvoices).toHaveBeenCalledWith('cust-1');
+      const paymentsReads = mocks.home.paymentsToMatch.mock.calls.length;
+      const receivablesReads = mocks.home.receivables.mock.calls.length;
+
+      q('[data-testid="apply"]')!.click();
+      fixture.detectChanges();
+
+      expect(mocks.customerPayments.applyPayment).toHaveBeenCalledWith(
+        'pay-1',
+        expect.any(String),
+        [{ invoiceId: 'inv-9', amount: 4615 }],
+      );
+      expect(mocks.home.paymentsToMatch.mock.calls.length).toBe(paymentsReads + 1);
+      expect(mocks.home.receivables.mock.calls.length).toBe(receivablesReads + 1);
+      expect(text('[data-testid="approve-done"]')).toBe('ACCOUNTING.CUSTOMER_PAYMENTS.RESULT.ANNOUNCE_APPLIED');
+    });
+
+    it('keeps a payment selected through keep-as-credit and refund after the re-read drops it, so the refund is answered and retryable (S6)', () => {
+      mocks.held.set([...ALL_HOME_PERMISSIONS, 'accounting:customer-credit:refund']);
+      const waiting = payment({ unappliedAmount: 5000, totalAmount: 5000, leftOver: 385 });
+      mocks.home.paymentsToMatch.mockReturnValueOnce(of(paymentsPage([waiting]))).mockReturnValue(of(paymentsPage([])));
+      mocks.customerPayments.openInvoices.mockReturnValue(of(openInvoice9));
+      mocks.customerPayments.applyPayment.mockReturnValue(
+        of({
+          appliedAmount: 4615,
+          remainingAmount: 385,
+          currency: 'USD',
+          lines: [{ invoiceId: 'inv-9', appliedAmount: 4615, balanceAfter: 0 }],
+          creditAmount: null,
+        }),
+      );
+      mocks.customerPayments.creditRemainder.mockReturnValue(of({ creditId: 'credit-1', amount: 385, currency: 'USD' }));
+      const refund = pending<number | null>();
+      const retried = pending<number | null>();
+      mocks.customerPayments.refundCredit.mockReturnValueOnce(refund).mockReturnValueOnce(retried);
+      render();
+      q('.todo-item[data-kind="PAYMENT"]')!.click();
+      fixture.detectChanges();
+      q('[data-testid="leftover-refund"]')!.click();
+      fixture.detectChanges();
+      q('[data-testid="apply"]')!.click();
+      fixture.detectChanges();
+      q('[data-testid="refund-confirm"]')!.click();
+      fixture.detectChanges();
+
+      // The credit's re-read dropped the used-up payment from the to-do, but its panel stays.
+      expect(qa('.todo-item[data-kind="PAYMENT"]').length).toBe(0);
+      expect(mocks.customerPayments.refundCredit).toHaveBeenCalledWith('credit-1', 385, expect.any(String));
+      expect(q('app-payment-match')).not.toBeNull();
+
+      refund.error(new HttpErrorResponse({ status: 503 }));
+      fixture.detectChanges();
+      expect(text('[data-testid="approve-done"]')).toBe('ACCOUNTING.CUSTOMER_PAYMENTS.ERROR.REFUND_FAILED');
+      const firstKey = mocks.customerPayments.refundCredit.mock.calls[0][2];
+
+      // The failed refund settled the chain: nothing is in flight, so the other items are free.
+      expect(component.paymentLock()).toBe(false);
+      q('[data-testid="retry-refund"]')!.click();
+      fixture.detectChanges();
+      expect(mocks.customerPayments.refundCredit).toHaveBeenCalledTimes(2);
+      expect(mocks.customerPayments.refundCredit.mock.calls[1][2]).toBe(firstKey);
+      // The retry re-takes the lock: picking another item is refused until it answers (Copilot).
+      expect(component.paymentLock()).toBe(true);
+      const selectedBefore = component.selectedId();
+      q('.todo-item[data-kind="BANK_LINE"]')!.click();
+      fixture.detectChanges();
+      expect(component.selectedId()).toBe(selectedBefore);
+
+      retried.next(385);
+      fixture.detectChanges();
+      expect(text('[data-testid="approve-done"]')).toBe('ACCOUNTING.CUSTOMER_PAYMENTS.RESULT.ANNOUNCE_REFUNDED');
+      expect(component.paymentLock()).toBe(false);
+    });
+
+    it('releases a held payment when its apply is refused (400): the re-read without it closes the panel (ADR-0063 §1)', () => {
+      mocks.customerPayments.openInvoices.mockReturnValue(of(openInvoice9));
+      mocks.customerPayments.applyPayment.mockReturnValue(
+        throwError(() => new HttpErrorResponse({ status: 400, error: { code: 'VALIDATION_ERROR', message: 'x' } })),
+      );
+      mocks.home.paymentsToMatch.mockReturnValueOnce(of(paymentsPage([payment()]))).mockReturnValue(of(paymentsPage([])));
+      render();
+      q('.todo-item[data-kind="PAYMENT"]')!.click();
+      fixture.detectChanges();
+
+      q('[data-testid="apply"]')!.click();
+      fixture.detectChanges();
+
+      expect(q('app-payment-match')).toBeNull();
+      expect(component.selectedItem()).toBeNull();
+      expect(component.selectedId()).toBeNull();
+    });
+
+    it('releases a held payment on Start over after an unknown apply, so a payment that apply used up closes (Copilot, ADR-0063)', () => {
+      mocks.customerPayments.openInvoices.mockReturnValue(of(openInvoice9));
+      mocks.customerPayments.applyPayment.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 504 })));
+      render();
+      q('.todo-item[data-kind="PAYMENT"]')!.click();
+      fixture.detectChanges();
+      q('[data-testid="apply"]')!.click();
+      fixture.detectChanges();
+      expect(q('[data-testid="retry-apply"]')).not.toBeNull();
+      mocks.home.paymentsToMatch.mockReturnValue(of(paymentsPage([])));
+
+      q('[data-testid="start-over"]')!.click();
+      fixture.detectChanges();
+
+      expect(q('app-payment-match')).toBeNull();
+      expect(component.selectedItem()).toBeNull();
+    });
+
+    it('settles the selection when a refused apply releases an item a pending-time re-read already dropped (Copilot)', async () => {
+      const answer = pending<ApplyResult>();
+      mocks.customerPayments.openInvoices.mockReturnValue(of(openInvoice9));
+      mocks.customerPayments.applyPayment.mockReturnValue(answer);
+      render();
+      q('.todo-item[data-kind="PAYMENT"]')!.click();
+      fixture.detectChanges();
+      q('[data-testid="apply"]')!.click();
+      fixture.detectChanges();
+      mocks.home.paymentsToMatch.mockReturnValue(of(paymentsPage([])));
+      component.retryRegion('payments');
+      fixture.detectChanges();
+      expect(q('app-payment-match')).not.toBeNull();
+
+      answer.error(new HttpErrorResponse({ status: 409, error: { code: 'CONFLICT', message: 'x' } }));
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(component.selectedId()).toBeNull();
+      expect(q('app-payment-match')).toBeNull();
+      expect(document.activeElement?.id).toBe('todo-heading');
+    });
+
+    it('keeps the payment item while its write is in flight: another item waits, the late answer is announced and read back (Copilot)', () => {
+      const answer = pending<ApplyResult>();
+      mocks.customerPayments.openInvoices.mockReturnValue(of(openInvoice9));
+      mocks.customerPayments.applyPayment.mockReturnValue(answer);
+      render();
+      q('.todo-item[data-kind="PAYMENT"]')!.click();
+      fixture.detectChanges();
+      const paymentId = component.selectedId();
+      q('[data-testid="apply"]')!.click();
+      fixture.detectChanges();
+
+      const bank = q('.todo-item[data-kind="BANK_LINE"]')!;
+      expect(bank.getAttribute('aria-disabled')).toBe('true');
+      // The reason is visible and linked to every waiting item (ADR-0029 §8).
+      expect(text('[data-testid="todo-lock-hint"]')).toBe('ACCOUNTING.HOME.TODO.LOCKED');
+      expect(bank.getAttribute('aria-describedby')).toBe('todo-lock-hint');
+      expect(q('.todo-item[data-kind="PAYMENT"]')!.getAttribute('aria-describedby')).toBeNull();
+      bank.click();
+      fixture.detectChanges();
+      expect(component.selectedId()).toBe(paymentId);
+      expect(q('app-payment-match')).not.toBeNull();
+
+      const reads = mocks.home.paymentsToMatch.mock.calls.length;
+      answer.next({ appliedAmount: 4615, remainingAmount: 0, currency: 'USD', lines: [], creditAmount: null });
+      fixture.detectChanges();
+      expect(mocks.home.paymentsToMatch.mock.calls.length).toBe(reads + 1);
+      expect(text('[data-testid="approve-done"]')).toBe('ACCOUNTING.CUSTOMER_PAYMENTS.RESULT.ANNOUNCE_APPLIED');
+
+      expect(q('.todo-item[data-kind="BANK_LINE"]')!.getAttribute('aria-disabled')).toBeNull();
+      expect(q('[data-testid="todo-lock-hint"]')).toBeNull();
+      q('.todo-item[data-kind="BANK_LINE"]')!.click();
+      fixture.detectChanges();
+      expect(component.selectedId()).toContain('BANK_LINE:');
+    });
+
+    it('releases the lock when a refused payments read takes the panel away mid-write: other items are selectable again', () => {
+      const answer = pending<ApplyResult>();
+      mocks.customerPayments.openInvoices.mockReturnValue(of(openInvoice9));
+      mocks.customerPayments.applyPayment.mockReturnValue(answer);
+      render();
+      q('.todo-item[data-kind="PAYMENT"]')!.click();
+      fixture.detectChanges();
+      q('[data-testid="apply"]')!.click();
+      fixture.detectChanges();
+      expect(component.paymentLock()).toBe(true);
+
+      mocks.home.paymentsToMatch.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 403 })));
+      component.retryRegion('payments');
+      fixture.detectChanges();
+
+      expect(q('app-payment-match')).toBeNull();
+      expect(component.paymentLock()).toBe(false);
+      expect(component.paymentWriteInFlight()).toBe(false);
+      expect(qa('.todo-item[aria-disabled="true"]')).toEqual([]);
+      expect(q('[data-testid="todo-lock-hint"]')).toBeNull();
+      q('.todo-item[data-kind="BANK_LINE"]')!.click();
+      fixture.detectChanges();
+      expect(component.selectedId()).toContain('BANK_LINE:');
+    });
+
+    it('never leaves a lock behind when a lost permission takes the panel away with no re-read (reselect → other items free)', () => {
+      const answer = pending<ApplyResult>();
+      mocks.customerPayments.openInvoices.mockReturnValue(of(openInvoice9));
+      mocks.customerPayments.applyPayment.mockReturnValue(answer);
+      render();
+      q('.todo-item[data-kind="PAYMENT"]')!.click();
+      fixture.detectChanges();
+      q('[data-testid="apply"]')!.click();
+      fixture.detectChanges();
+      expect(component.paymentLock()).toBe(true);
+
+      // The permission goes away and comes back with no payments re-read in between.
+      mocks.held.set(ALL_HOME_PERMISSIONS.filter(code => code !== 'accounting:payment:apply'));
+      fixture.detectChanges();
+      expect(q('app-payment-match')).toBeNull();
+      mocks.held.set(ALL_HOME_PERMISSIONS);
+      fixture.detectChanges();
+      // The same item is selected again (its id never changed), with no request running.
+      q('.todo-item[data-kind="PAYMENT"]')!.click();
+      fixture.detectChanges();
+      expect(q('app-payment-match')).not.toBeNull();
+
+      expect(component.paymentLock()).toBe(false);
+      expect(qa('.todo-item[aria-disabled="true"]')).toEqual([]);
+      expect(q('[data-testid="todo-lock-hint"]')).toBeNull();
+      q('.todo-item[data-kind="BANK_LINE"]')!.click();
+      fixture.detectChanges();
+      expect(component.selectedId()).toContain('BANK_LINE:');
+    });
+
+    it('re-takes the lock for a retry in the chain: switching is refused while Try again runs (S6)', () => {
+      const waiting = payment({ unappliedAmount: 5000, totalAmount: 5000, leftOver: 385 });
+      mocks.home.paymentsToMatch.mockReturnValue(of(paymentsPage([waiting])));
+      mocks.customerPayments.openInvoices.mockReturnValue(of(openInvoice9));
+      mocks.customerPayments.applyPayment.mockReturnValue(
+        of({
+          appliedAmount: 4615,
+          remainingAmount: 385,
+          currency: 'USD',
+          lines: [{ invoiceId: 'inv-9', appliedAmount: 4615, balanceAfter: 0 }],
+          creditAmount: null,
+        }),
+      );
+      const retried = pending<{ creditId: string; amount: number; currency: string | null }>();
+      mocks.customerPayments.creditRemainder
+        .mockReturnValueOnce(throwError(() => new HttpErrorResponse({ status: 503 })))
+        .mockReturnValueOnce(retried);
+      render();
+      q('.todo-item[data-kind="PAYMENT"]')!.click();
+      fixture.detectChanges();
+      const paymentId = component.selectedId();
+      q('[data-testid="apply"]')!.click();
+      fixture.detectChanges();
+      // The credit's outcome is unknown: nothing is in flight, so the lock is off.
+      expect(component.paymentLock()).toBe(false);
+
+      q('[data-testid="retry-credit"]')!.click();
+      fixture.detectChanges();
+      expect(component.paymentLock()).toBe(true);
+      q('.todo-item[data-kind="BANK_LINE"]')!.click();
+      fixture.detectChanges();
+      expect(component.selectedId()).toBe(paymentId);
+
+      retried.next({ creditId: 'credit-1', amount: 385, currency: 'USD' });
+      fixture.detectChanges();
+      expect(text('[data-testid="approve-done"]')).toBe('ACCOUNTING.CUSTOMER_PAYMENTS.RESULT.ANNOUNCE_KEPT');
+      expect(component.paymentLock()).toBe(false);
+    });
+
+    it('drops a held payment panel once the payments read is refused (ADR-0064 §6)', () => {
+      mocks.customerPayments.openInvoices.mockReturnValue(of(openInvoice9));
+      render();
+      q('.todo-item[data-kind="PAYMENT"]')!.click();
+      fixture.detectChanges();
+      q('[data-testid="apply"]')!.click();
+      fixture.detectChanges();
+      expect(q('app-payment-match')).not.toBeNull();
+
+      mocks.home.paymentsToMatch.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 403 })));
+      component.retryRegion('payments');
+      fixture.detectChanges();
+
+      expect(q('app-payment-match')).toBeNull();
+      expect(component.selectedItem()).toBeNull();
     });
 
     it('keeps focus on the item on a wide screen', () => {
@@ -755,6 +1071,26 @@ describe('AccountingHomePageComponent', () => {
       tenant.set(tenantId);
       fixture.detectChanges();
     };
+
+    it('tears down the embedded match panel and ignores its late apply answer (CAP:550 S6)', () => {
+      const answer = pending<ApplyResult>();
+      mocks.customerPayments.applyPayment.mockReturnValue(answer);
+      mocks.customerPayments.openInvoices.mockReturnValue(of(openInvoice9));
+      render();
+      q('.todo-item[data-kind="PAYMENT"]')!.click();
+      fixture.detectChanges();
+      q('[data-testid="apply"]')!.click();
+      fixture.detectChanges();
+
+      switchTo('clerk.other', 'tenant-b');
+      expect(q('app-payment-match')).toBeNull();
+      answer.next({ appliedAmount: 4615, remainingAmount: 0, currency: 'USD', lines: [], creditAmount: null });
+      fixture.detectChanges();
+
+      expect(component.paymentMessage()).toBeNull();
+      expect(component.selectedId()).toBeNull();
+      expect(text('[data-testid="approve-done"]')).toBe('');
+    });
 
     it('drops the old identity’s in-flight reads, clears the home and loads for the new identity', () => {
       const oldRead = pending<ReceivablesLane>();

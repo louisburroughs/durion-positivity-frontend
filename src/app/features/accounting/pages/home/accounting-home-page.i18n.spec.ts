@@ -16,7 +16,7 @@ import frCA from '../../../../../assets/i18n/fr-CA.json';
 import frFR from '../../../../../assets/i18n/fr-FR.json';
 import qpsPloc from '../../../../../assets/i18n/qps-ploc.json';
 import { HelpDisclosureComponent } from '../../components/help-disclosure/help-disclosure.component';
-import { paymentMethodKey, paymentReasonKey } from '../../components/todo-detail-panel/todo-detail-panel.component';
+import { paymentMethodKey, paymentReasonKey } from '../../utils/payment-match';
 import { ACCOUNTING_SUBNAV } from '../../accounting-subnav';
 import { GLOSSARY_WORDS } from './accounting-home-page.component';
 

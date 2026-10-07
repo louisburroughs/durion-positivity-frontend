@@ -320,7 +320,12 @@ export const ACCOUNTING_PAGE = {
   events: ['accounting:events:view'],
   eventsSubmit: ['accounting:events:submit'],
   postingRules: ['accounting:posting_rules:view'],
-  paymentApply: ['accounting:payment:apply'],
+  /**
+   * Customer payments (CAP:550 S6, SPEC-accounting-workspace §8.1): `listUnappliedPayments`,
+   * `listCustomerOpenInvoices`, `applyPayment` and S35's `creditPaymentRemainder` all enforce it,
+   * so the Apply control and its handler gate on it too (ADR-0040 §6a).
+   */
+  customerPayments: ['accounting:payment:apply'],
   creditMemoView: ['accounting:credit-memo:read'],
   creditMemoCreate: ['accounting:credit-memo:create'],
   vendorPaymentView: ['accounting:ap:view'],
@@ -435,6 +440,15 @@ export const ACCOUNTING_SECTION = {
    * `accounting:report:export`, the download `reporting:view:financial-statements`.
    */
   reportExport: ['accounting:report:export', 'reporting:view:financial-statements'],
+  /*
+   * Customer payments (CAP:550 S6, SPEC-accounting-workspace §5.3). The page
+   * admits `accounting:payment:apply`; Undo and Refund are other writes with
+   * their own codes (`PaymentApplicationController`, `CustomerCreditController`).
+   */
+  /** Undo on "Matched automatically this week": `reversePaymentApplication`. */
+  paymentReverse: ['accounting:payment:reverse'],
+  /** Refund a left-over amount: `refundCustomerCredit`. */
+  customerCreditRefund: ['accounting:customer-credit:refund'],
 } as const satisfies Record<string, readonly string[]>;
 
 /** `/app/crm/*` — one entry per routed page, keyed by route path. */

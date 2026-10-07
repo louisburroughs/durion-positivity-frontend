@@ -62,6 +62,8 @@ export interface BankCheckupRow {
 
 /** A served match suggestion's invoice (S1). */
 export interface SuggestedInvoiceLine {
+  /** Key only: pre-ticks this invoice on the match panel (S6). */
+  readonly invoiceId: string;
   readonly invoiceNumber: string | null;
   readonly balanceDue: number;
   readonly suggestedAmount: number;
@@ -71,8 +73,12 @@ export interface SuggestedInvoiceLine {
 export interface PaymentToMatch {
   /** Key only. */
   readonly paymentId: string;
+  /** Key only: reads the customer's open invoices (S6). */
+  readonly customerId: string;
   readonly customerName: string | null;
   readonly customerReference: string | null;
+  /** Key only: the invoice the payment was taken against, when known. */
+  readonly sourceInvoiceId: string | null;
   /** The invoice the payment was taken against: the payment's business reference. */
   readonly sourceInvoiceNumber: string | null;
   /** CASH, CARD, ON_ACCOUNT, OTHER as served; anything else renders "Unknown". */

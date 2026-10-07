@@ -19,9 +19,11 @@ import {
 import { ReconciliationReview } from '../../models/bank-reconciliation.models';
 import { AccountingPeriod } from '../../models/period-close.models';
 import { AccountingHomeService } from '../../services/accounting-home.service';
+import { CustomerPaymentsService } from '../../services/customer-payments.service';
 import { PeriodCloseService } from '../../services/period-close.service';
 import { ReconciliationWorkspaceService } from '../../services/reconciliation-workspace.service';
 import { toIsoDate } from '../../utils/date-window.util';
+import { PaymentsMocks, createPaymentsMocks } from '../customer-payments/customer-payments-page.spec-helper';
 import { ACCOUNTING_HOME_CLOCK } from './accounting-home-page.component';
 
 /**
@@ -101,8 +103,10 @@ export const submittedRow: BankCheckupRow = {
 
 export const payment = (overrides: Partial<PaymentToMatch> = {}): PaymentToMatch => ({
   paymentId: 'pay-1',
+  customerId: 'cust-1',
   customerName: 'Harbor Fleet Services',
   customerReference: 'C-1042',
+  sourceInvoiceId: 'inv-9',
   sourceInvoiceNumber: 'INV-2026-01702',
   method: 'CARD',
   receivedAt: NOW.toISOString(),
@@ -110,7 +114,7 @@ export const payment = (overrides: Partial<PaymentToMatch> = {}): PaymentToMatch
   unappliedAmount: 4615,
   currency: 'USD',
   reasons: ['REMITTANCE_REFERENCE', 'EXACT_TOTAL'],
-  suggestedInvoices: [{ invoiceNumber: 'INV-2026-01702', balanceDue: 4615, suggestedAmount: 4615 }],
+  suggestedInvoices: [{ invoiceId: 'inv-9', invoiceNumber: 'INV-2026-01702', balanceDue: 4615, suggestedAmount: 4615 }],
   suggestedTotal: 4615,
   leftOver: 0,
   ...overrides,
@@ -240,6 +244,8 @@ export interface HomeMocks {
     getReview: ReturnType<typeof vi.fn<(id: string) => Observable<ReconciliationReview>>>;
     approve: ReturnType<typeof vi.fn<(id: string, version: number) => Observable<'FINALIZED' | null>>>;
   };
+  /** The match panel's service (CAP:550 S6), embedded in the payment item's detail panel. */
+  readonly customerPayments: PaymentsMocks['service'];
 }
 
 /** Every read answers at once with a full, non-empty home; tests override per case. */
@@ -261,6 +267,7 @@ export function createHomeMocks(held: readonly string[] | null = ALL_HOME_PERMIS
       getReview: vi.fn(() => of(review(true))),
       approve: vi.fn(() => of<'FINALIZED' | null>('FINALIZED')),
     },
+    customerPayments: createPaymentsMocks().service,
   };
 }
 
@@ -289,6 +296,7 @@ export function configureHome(mocks: HomeMocks, authExtras: Partial<AuthService>
       { provide: AccountingHomeService, useValue: mocks.home },
       { provide: PeriodCloseService, useValue: mocks.periods },
       { provide: ReconciliationWorkspaceService, useValue: mocks.workspace },
+      { provide: CustomerPaymentsService, useValue: mocks.customerPayments },
       { provide: ACCOUNTING_HOME_CLOCK, useValue: () => new Date(NOW.getTime()) },
     ],
   });

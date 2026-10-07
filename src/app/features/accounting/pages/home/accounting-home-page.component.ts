@@ -11,6 +11,7 @@ import {
   effect,
   inject,
   signal,
+  untracked,
   viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -196,7 +197,10 @@ export class AccountingHomePageComponent {
    * tab's own read (`generateAgedReceivables`), not the page's any-of gate, which `accounting:je:view` alone passes.
    */
   readonly canOpenWhoOwesWhat = computed(() => canAccess(this.auth, { permissions: ACCOUNTING_SECTION.booksSummary }));
-  readonly canOpenPaymentApply = computed(() => canAccess(this.auth, { permissions: ACCOUNTING_PAGE.paymentApply }));
+  /** "Match customer payments" and the to-do's "more payments" link open Customer payments (CAP:550 S6). */
+  readonly canOpenCustomerPayments = computed(() =>
+    canAccess(this.auth, { permissions: ACCOUNTING_PAGE.customerPayments }),
+  );
   readonly canOpenVendorPayments = computed(() =>
     canAccess(this.auth, { permissions: ACCOUNTING_PAGE.vendorPaymentView }),
   );
@@ -291,7 +295,35 @@ export class AccountingHomePageComponent {
     );
   });
 
-  readonly selectedItem = computed(() => this.todoItems().find(item => item.id === this.selectedId()) ?? null);
+  /**
+   * The payment item whose match panel sent a write (CAP:550 S6). A re-read
+   * that drops the now used-up payment must not tear its panel down while the
+   * apply → credit → refund chain is in flight or its result is on screen, so
+   * the item stays selected until the person picks another (the Customer
+   * payments page's `resultFor`). A refused payments read drops it (ADR-0064 §6).
+   */
+  private readonly heldPayment = signal<TodoItem | null>(null);
+  /**
+   * A payment write (apply → credit → refund) is in flight in the detail panel.
+   * Another item cannot be chosen until it settles: switching would destroy the
+   * panel and cancel the request with its outcome and readback (ADR-0063 §4–5).
+   */
+  readonly paymentWriteInFlight = signal(false);
+  /**
+   * The lock that holds the other items: only while the write's own item is
+   * still the selected panel. If that panel goes away (a refused payments read,
+   * a lost permission) its request is cancelled with it and no settle ever
+   * arrives, so the lock must not outlive the panel.
+   */
+  readonly paymentLock = computed(() => this.paymentWriteInFlight() && this.selectedItem()?.kind === 'PAYMENT');
+
+  readonly selectedItem = computed(() => {
+    const id = this.selectedId();
+    const listed = this.todoItems().find(item => item.id === id);
+    if (listed) return listed;
+    const held = this.heldPayment();
+    return held && held.id === id && this.canSeePayments() && !this.payments.denied() ? held : null;
+  });
 
   /** True once every permitted to-do source has answered OK at least once with nothing to do. */
   readonly allCaughtUp = computed(
@@ -318,6 +350,8 @@ export class AccountingHomePageComponent {
   /** The last approved check-up, for the page-level polite status (null account renders an em dash). */
   readonly approvedAccount = signal<{ account: string | null } | null>(null);
   readonly approveMessage = signal<{ key: string; params: Readonly<Record<string, unknown>> } | null>(null);
+  /** The match panel's last outcome (CAP:550 S6), announced once in the to-do's status region. */
+  readonly paymentMessage = signal<{ key: string; params: Readonly<Record<string, unknown>> } | null>(null);
   /** Focus owed after an approve re-read; drained by whichever approvals read lands last (ADR-0063 §4). */
   private focusOwed = false;
 
@@ -348,6 +382,12 @@ export class AccountingHomePageComponent {
       this.resetForIdentity();
       this.refresh();
     });
+    // The payment lock never outlives its panel: whenever no payment panel is showing (a refused read,
+    // a lost permission with no re-read), its write was cancelled with it and nothing will settle it.
+    effect(() => {
+      if (this.selectedItem()?.kind === 'PAYMENT') return;
+      untracked(() => this.paymentWriteInFlight.set(false));
+    });
     this.refresh();
   }
 
@@ -365,6 +405,9 @@ export class AccountingHomePageComponent {
     this.approving.set(false);
     this.approveMessage.set(null);
     this.approvedAccount.set(null);
+    this.paymentMessage.set(null);
+    this.heldPayment.set(null);
+    this.paymentWriteInFlight.set(false);
     this.focusOwed = false;
     this.selectedId.set(null);
     this.filter.set('ALL');
@@ -463,9 +506,12 @@ export class AccountingHomePageComponent {
   private onTodoSourceSettled(): void {
     this.settlePage();
     const selected = this.selectedId();
-    const stillThere = !!selected && this.todoItems().some(item => item.id === selected);
+    const stillThere = !!selected && this.selectedItem() !== null;
     if (selected && !stillThere) {
       this.selectedId.set(null);
+      // The panel, and any write it held, went with the item: nothing is held or locked any more.
+      this.heldPayment.set(null);
+      this.paymentWriteInFlight.set(false);
       this.review.reset();
       this.approveMessage.set(null);
       this.focusOwed = false;
@@ -523,7 +569,15 @@ export class AccountingHomePageComponent {
   }
 
   select(item: TodoItem): void {
+    if (this.paymentLock() && this.selectedId() !== item.id) return;
     this.approvedAccount.set(null);
+    if (this.selectedId() !== item.id) {
+      this.paymentMessage.set(null);
+      this.heldPayment.set(null);
+      // Only reachable with the lock off: a flag left by a panel that went away without settling
+      // (e.g. a lost permission with no payments re-read) must not lock the new item.
+      this.paymentWriteInFlight.set(false);
+    }
     if (this.selectedId() !== item.id) {
       this.approveMessage.set(null);
       this.focusOwed = false;
@@ -537,6 +591,50 @@ export class AccountingHomePageComponent {
     if (this.isSmallScreen()) {
       this.focusAfterRender(() => this.panel()?.focusHeading());
     }
+  }
+
+  /** The match panel sent an apply: hold its payment item selected through the write chain and its result. */
+  onPaymentWriteStarted(): void {
+    const item = this.selectedItem();
+    if (item?.kind === 'PAYMENT') this.heldPayment.set(item);
+    this.paymentWriteInFlight.set(true);
+  }
+
+  /** Nothing of the panel's write chain is in flight: other items can be chosen again. */
+  onPaymentWriteSettled(): void {
+    this.paymentWriteInFlight.set(false);
+  }
+
+  /** The apply was refused (4xx): nothing was written, so the item is released and follows the list again. */
+  onPaymentWriteReleased(): void {
+    this.heldPayment.set(null);
+    this.paymentWriteInFlight.set(false);
+    // A payments read that settled during the apply may already have dropped the item: settle the
+    // selection now, clearing it and moving focus to the to-do heading (ADR-0063 §1, ADR-0029 §8.7).
+    this.onTodoSourceSettled();
+  }
+
+  /**
+   * The match panel applied a payment (CAP:550 S6): the payments and the Money
+   * owed lane re-read under their own guards. A payment that is now fully
+   * applied leaves the to-do list, but its item stays selected (`heldPayment`)
+   * so the panel keeps its result, and any credit or refund still running,
+   * until the person picks another item; the outcome stays announced.
+   */
+  onPaymentApplied(): void {
+    this.today.set(startOfLocalDay(this.clock()));
+    if (this.canSeePayments() && !this.payments.denied()) this.loadRegion('payments');
+    if (this.canSeeReceivables() && !this.receivables.denied()) this.loadRegion('receivables');
+  }
+
+  /** The payment changed under the person, or its remainder moved: the payments re-read. */
+  onPaymentChanged(): void {
+    if (this.canSeePayments() && !this.payments.denied()) this.loadRegion('payments');
+  }
+
+  onPaymentAnnounce(message: { key: string; params: Readonly<Record<string, unknown>> }): void {
+    this.approvedAccount.set(null);
+    this.paymentMessage.set({ key: message.key, params: message.params });
   }
 
   /** Approve month (§5.1, §9.1): permission, the served `canApprove` and no write in flight, re-checked here. */

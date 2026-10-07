@@ -1,3 +1,4 @@
+import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
@@ -10,13 +11,20 @@ import {
   review,
   submittedRow,
 } from '../../pages/home/accounting-home-page.spec-helper';
-import { TodoDetailPanelComponent, paymentMethodKey, paymentReasonKey } from './todo-detail-panel.component';
+import {
+  configurePayments,
+  createPaymentsMocks,
+} from '../../pages/customer-payments/customer-payments-page.spec-helper';
+import { paymentMethodKey, paymentReasonKey } from '../../utils/payment-match';
+import { PaymentMatchComponent } from '../payment-match/payment-match.component';
+import { TodoDetailPanelComponent } from './todo-detail-panel.component';
 
 describe('TodoDetailPanelComponent (§5.1 detail panel templates)', () => {
   let fixture: ComponentFixture<TodoDetailPanelComponent>;
   let host: HTMLElement;
 
   beforeEach(() => {
+    configurePayments(createPaymentsMocks(), { tenantId: signal<string | null>('tenant-a') });
     TestBed.configureTestingModule({
       imports: [TodoDetailPanelComponent, TranslateModule.forRoot()],
       providers: [provideRouter([])],
@@ -33,26 +41,38 @@ describe('TodoDetailPanelComponent (§5.1 detail panel templates)', () => {
 
   const text = (selector: string): string => host.querySelector(selector)?.textContent?.replace(/\s+/g, ' ').trim() ?? '';
 
-  describe('Payment ready to match', () => {
-    it('shows the served suggestion, reason chips, What to do and the help disclosure, read-only', () => {
+  describe('Payment ready to match (CAP:550 S6 AC 11)', () => {
+    it('embeds the Customer payments match panel, with What to do and the help disclosure', () => {
       show({ kind: 'PAYMENT', id: 'PAYMENT:pay-1', payment: payment() });
 
       expect(text('#todo-panel-heading')).toBe('ACCOUNTING.HOME.TODO.PAYMENT.PANEL_TITLE');
-      expect(Array.from(host.querySelectorAll('.chip-list li')).map(li => li.getAttribute('data-reason'))).toEqual([
-        'REMITTANCE_REFERENCE',
-        'EXACT_TOTAL',
-      ]);
-      expect(host.querySelector('table caption')).not.toBeNull();
-      expect(host.querySelectorAll('th[scope="col"]').length).toBe(3);
-      expect(text('[data-testid="left-over"]')).toBe('$0.00');
       expect(host.textContent).toContain('ACCOUNTING.HOME.TODO.WHAT_TO_DO');
       expect(host.querySelector('app-help-disclosure details')).not.toBeNull();
-      expect(host.querySelector('button')).toBeNull();
+      const match = fixture.debugElement.query(debug => debug.componentInstance instanceof PaymentMatchComponent);
+      expect(match).not.toBeNull();
+      const instance = match.componentInstance as PaymentMatchComponent;
+      expect(instance.payment().paymentId).toBe('pay-1');
+      expect(instance.embedded()).toBe(true);
+      // Embedded: the panel's h3 heads it; the match panel adds no h2 of its own.
+      expect(host.querySelector('h2')).toBeNull();
+      expect(host.querySelector('[data-testid="apply"]')).not.toBeNull();
     });
 
-    it('renders a null left-over (walk-in payment) as an em dash key, never $0', () => {
-      show({ kind: 'PAYMENT', id: 'PAYMENT:pay-2', payment: payment({ leftOver: null }) });
-      expect(text('[data-testid="left-over"]')).toBe('COMMON.EMPTY_VALUE');
+    it('forwards the match panel’s outcomes to the home', () => {
+      show({ kind: 'PAYMENT', id: 'PAYMENT:pay-1', payment: payment() });
+      const panel = fixture.componentInstance;
+      const seen: string[] = [];
+      panel.paymentApplied.subscribe(event => seen.push(`applied:${event.paymentId}`));
+      panel.paymentChanged.subscribe(() => seen.push('changed'));
+      panel.paymentAnnounce.subscribe(message => seen.push(message.key));
+      const match = fixture.debugElement.query(debug => debug.componentInstance instanceof PaymentMatchComponent)
+        .componentInstance as PaymentMatchComponent;
+
+      match.applied.emit({ paymentId: 'pay-1' });
+      match.changed.emit();
+      match.announce.emit({ key: 'K', params: {}, tone: 'success' });
+
+      expect(seen).toEqual(['applied:pay-1', 'changed', 'K']);
     });
   });
 
@@ -136,8 +156,8 @@ describe('TodoDetailPanelComponent (§5.1 detail panel templates)', () => {
   });
 
   it('maps unknown reason and method codes to Unknown, and a missing method to nothing', () => {
-    expect(paymentReasonKey('BRAND_NEW')).toBe('ACCOUNTING.HOME.TODO.PAYMENT.REASON.UNKNOWN');
-    expect(paymentMethodKey('WIRE')).toBe('ACCOUNTING.HOME.METHOD.UNKNOWN');
+    expect(paymentReasonKey('BRAND_NEW')).toBe('ACCOUNTING.CUSTOMER_PAYMENTS.REASON.UNKNOWN');
+    expect(paymentMethodKey('WIRE')).toBe('ACCOUNTING.CUSTOMER_PAYMENTS.METHOD.UNKNOWN');
     expect(paymentMethodKey(null)).toBeNull();
   });
 });

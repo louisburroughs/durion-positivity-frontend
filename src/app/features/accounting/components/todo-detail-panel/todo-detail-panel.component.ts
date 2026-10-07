@@ -7,39 +7,17 @@ import { BankCheckupRow, RegionStatus, TodoItem } from '../../models/accounting-
 import { ReconciliationReview } from '../../models/bank-reconciliation.models';
 import { toDatePipeInput } from '../../utils/date-only.util';
 import { HelpDisclosureComponent } from '../help-disclosure/help-disclosure.component';
+import { MatchMessage, PaymentApplied, PaymentMatchComponent } from '../payment-match/payment-match.component';
 import { READINESS_REASON_KEYS } from '../reconciliation-review-panel/reconciliation-review-panel.component';
-
-/** Served suggestion reasons with copy (S1); literal so the i18n check sees every key. */
-const PAYMENT_REASON_KEYS: Readonly<Record<string, string>> = {
-  REMITTANCE_REFERENCE: 'ACCOUNTING.HOME.TODO.PAYMENT.REASON.REMITTANCE_REFERENCE',
-  SAME_CUSTOMER: 'ACCOUNTING.HOME.TODO.PAYMENT.REASON.SAME_CUSTOMER',
-  EXACT_TOTAL: 'ACCOUNTING.HOME.TODO.PAYMENT.REASON.EXACT_TOTAL',
-};
-
-/** Served settlement methods (S1); anything else reads "Unknown". */
-const METHOD_KEYS: Readonly<Record<string, string>> = {
-  CASH: 'ACCOUNTING.HOME.METHOD.CASH',
-  CARD: 'ACCOUNTING.HOME.METHOD.CARD',
-  ON_ACCOUNT: 'ACCOUNTING.HOME.METHOD.ON_ACCOUNT',
-  OTHER: 'ACCOUNTING.HOME.METHOD.OTHER',
-};
-
-export function paymentReasonKey(reason: string): string {
-  return PAYMENT_REASON_KEYS[reason] ?? 'ACCOUNTING.HOME.TODO.PAYMENT.REASON.UNKNOWN';
-}
-
-export function paymentMethodKey(method: string | null): string | null {
-  if (!method) return null;
-  return METHOD_KEYS[method] ?? 'ACCOUNTING.HOME.METHOD.UNKNOWN';
-}
 
 /**
  * The to-do detail panel, v1 templates (SPEC-accounting-workspace §5.1
- * "Detail panel templates"): *Payment ready to match* (read-only here; S6 adds
- * matching), *Bank line not in the books* and *Bank check-up needs approval*.
- * Every panel has **What to do**.
+ * "Detail panel templates"): *Payment ready to match* (the Customer payments
+ * match panel, `app-payment-match`, CAP:550 S6), *Bank line not in the books*
+ * and *Bank check-up needs approval*. Every panel has **What to do**.
  *
- * Presentational: the page owns the reads and the Approve month write, and
+ * The payment template embeds the match panel, which owns its own reads and
+ * writes. Otherwise presentational: the page owns the reads and the Approve month write, and
  * passes the review, its read status and the approve permission in. Approve
  * month is shown only with `accounting:reconciliation:approve` (`canApprove`);
  * when the served review says the person cannot approve (P5, e.g. they
@@ -52,7 +30,7 @@ export function paymentMethodKey(method: string | null): string | null {
 @Component({
   selector: 'app-todo-detail-panel',
   standalone: true,
-  imports: [DatePipe, MoneyPipe, RouterLink, TranslatePipe, HelpDisclosureComponent],
+  imports: [DatePipe, MoneyPipe, RouterLink, TranslatePipe, HelpDisclosureComponent, PaymentMatchComponent],
   templateUrl: './todo-detail-panel.component.html',
   styleUrls: ['../../bank-reconciliation-shared.css', './todo-detail-panel.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -73,6 +51,13 @@ export class TodoDetailPanelComponent {
   readonly approveMessageParams = input<Readonly<Record<string, unknown>>>({});
 
   readonly approve = output<void>();
+  /** The match panel's apply landed, its payment changed, or it has something to announce (S6). */
+  readonly paymentWriteStarted = output<PaymentApplied>();
+  readonly paymentWriteReleased = output<PaymentApplied>();
+  readonly paymentWriteSettled = output<PaymentApplied>();
+  readonly paymentApplied = output<PaymentApplied>();
+  readonly paymentChanged = output<void>();
+  readonly paymentAnnounce = output<MatchMessage>();
 
   private readonly heading = viewChild<ElementRef<HTMLElement>>('panelHeading');
 
@@ -90,8 +75,6 @@ export class TodoDetailPanelComponent {
   });
 
   readonly toDate = toDatePipeInput;
-  readonly methodKey = paymentMethodKey;
-  readonly reasonKey = paymentReasonKey;
 
   /** Served blocking reasons; PROPOSALS_PENDING does not hold approval (review panel rule). */
   readonly blockingReasons = computed(() =>
