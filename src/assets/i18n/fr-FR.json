@@ -2860,6 +2860,7 @@
       "KPI_UTILIZATION": "Utilisation",
       "KPI_NEXT_ELIGIBLE": "Prochain créneau éligible",
       "BAY_DOWN": "Baie hors service",
+      "BAY_BUSY_RANGE": "{{bay}} occupée de {{start}} à {{end}}",
       "CONFLICT": "Conflit {{severity}}",
       "TECH_LANE": "Couloir technicien — la seconde moitié de la capacité",
       "TECH_LANE_NOTE": "une baie sans technicien certifié n’est pas de la capacité",

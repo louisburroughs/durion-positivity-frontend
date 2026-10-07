@@ -2860,6 +2860,7 @@
       "KPI_UTILIZATION": "Utilization",
       "KPI_NEXT_ELIGIBLE": "Next eligible slot",
       "BAY_DOWN": "Bay down",
+      "BAY_BUSY_RANGE": "{{bay}} busy from {{start}} to {{end}}",
       "CONFLICT": "{{severity}} conflict",
       "TECH_LANE": "Technician lane — the second half of capacity",
       "TECH_LANE_NOTE": "a bay without a certified technician is not capacity",

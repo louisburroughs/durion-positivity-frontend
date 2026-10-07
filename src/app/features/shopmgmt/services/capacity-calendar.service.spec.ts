@@ -754,6 +754,56 @@ describe('CapacityCalendarService', () => {
       expect([...view.technicians[0].assignedHours]).toEqual([0]);
     });
 
+    it('keeps an appointment the view has in an hour outside the capacity read\'s window (backend #2589)', async () => {
+      // Capacity says 08:00-10:00, the view 08:00-12:00 with an appointment at 11:00.
+      arrange({ '2026-09-29': okDay('2026-09-29', [bayDay({ occupancy: [0, 0] })], 10) });
+      viewFor([
+        {
+          resourceType: 'BAY',
+          resourceId: 'bay-1',
+          events: [
+            {
+              eventId: 'appt-1',
+              eventType: 'APPOINTMENT',
+              startTime: local('2026-09-29', 11),
+              endTime: local('2026-09-29', 12),
+              affected: false,
+              hasConflict: false,
+            },
+          ],
+        },
+      ]);
+
+      const view = await calendar(DAY);
+
+      expect(view.hours).toEqual([8, 9, 10, 11]);
+      expect(view.focusDay?.bayStates[0]).toEqual(['free', 'free', 'closed', 'busy']);
+    });
+
+    it('an answered read with the focus day UNAVAILABLE falls back to the view and degrades', async () => {
+      arrange({ '2026-09-29': shutDay('2026-09-29', DayCapacityViewStatusEnum.Unavailable) });
+      viewFor();
+
+      const view = await calendar(DAY);
+
+      expect(view.degraded).toBe(true);
+      expect(view.focusDay?.kind).toBe('open');
+      expect(view.focusDay?.bayStates[0]).toEqual(['free', 'free', 'free', 'free']);
+    });
+
+    it('an answered read that omits the focus day falls back to the view and degrades', async () => {
+      arrange();
+      scheduleApi().getScheduleCapacity.mockReturnValue(
+        of({ locationId: 'loc-1', from: '2026-09-29', to: '2026-09-29', viewGeneratedAt: local('2026-09-29', 8), days: [] }),
+      );
+      viewFor();
+
+      const view = await calendar(DAY);
+
+      expect(view.degraded).toBe(true);
+      expect(view.focusDay?.kind).toBe('open');
+    });
+
     it('a failed capacity read leaves the board to the appointments and degrades', async () => {
       arrange();
       scheduleApi().getScheduleCapacity.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 503 })));

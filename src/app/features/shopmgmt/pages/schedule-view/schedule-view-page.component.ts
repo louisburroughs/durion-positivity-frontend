@@ -103,7 +103,13 @@ export interface BoardColumn {
    * capacity read, so they show a bay held by a work order that has no
    * appointment card to draw.
    */
-  readonly loadRuns: readonly { readonly topPx: number; readonly heightPx: number }[];
+  readonly loadRuns: readonly {
+    readonly topPx: number;
+    readonly heightPx: number;
+    /** Wall-clock bounds of the run, for the screen-reader statement of it. */
+    readonly start: Date;
+    readonly end: Date;
+  }[];
   readonly cards: readonly BoardCard[];
 }
 
@@ -275,6 +281,8 @@ export class ScheduleViewPageComponent implements OnInit {
       loadRuns: busyRuns(current.focusDay?.bayStates[bayIndex] ?? []).map(run => ({
         topPx: run.start * HOUR_PITCH_PX,
         heightPx: run.length * HOUR_PITCH_PX,
+        start: this.hourDate(first + run.start),
+        end: this.hourDate(first + run.start + run.length),
       })),
       cards: current.board
         .filter(appointment => appointment.bayId === bay.bayId)

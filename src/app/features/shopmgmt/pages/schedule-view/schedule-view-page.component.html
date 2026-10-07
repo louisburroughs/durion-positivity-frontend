@@ -392,6 +392,21 @@
               <div class="board-load" [style.top.px]="run.topPx" [style.height.px]="run.heightPx"
                 aria-hidden="true"></div>
             }
+            <!-- The shading is the only per-bay mark of a bay held by a work order
+                 with no card, so each run is also stated for screen readers. -->
+            @if (column.loadRuns.length > 0) {
+              <ul class="sr-only">
+                @for (run of column.loadRuns; track run.topPx) {
+                  <li>
+                    {{ 'SHOPMGMT.SCHEDULE_VIEW.BAY_BUSY_RANGE' | translate: {
+                      bay: column.name,
+                      start: (run.start | date: 'shortTime'),
+                      end: (run.end | date: 'shortTime'),
+                    } }}
+                  </li>
+                }
+              </ul>
+            }
             @for (card of column.cards; track card.appointment.eventId) {
               <article class="board-card" [class]="'state-' + card.appointment.state"
                 [style.top.px]="card.topPx" [style.height.px]="card.heightPx">

@@ -423,12 +423,22 @@ export class CapacityCalendarService {
     capacity: CapacityLoad,
   ): CapacityCalendarView {
     const schedules = load.byDate;
-    const hours = this.hourLabels([...schedules.values(), ...capacity.byDate.values()]);
+    // An answered read that has no usable day for a date (missing, or marked
+    // UNAVAILABLE) is treated like a failed read for that date: the board falls
+    // back to the schedule view and the view degrades, rather than drawing a
+    // closed day nobody confirmed.
+    const usableDay = (date: string): DayCapacityView | undefined => {
+      const day = capacity.byDate.get(date);
+      return day?.status === DayCapacityViewStatusEnum.Unavailable ? undefined : day;
+    };
+    const capacityGap =
+      !capacity.failed && !capacity.absent && usableDay(request.focusDate) === undefined;
+    const hours = this.hourLabels([...schedules.values(), usableDay(request.focusDate)]);
     const today = isoDateLocal(new Date());
     const currentHour = new Date().getHours();
 
     const dayTechnicians = (date: string): CapacityTechnician[] => {
-      const day = capacity.byDate.get(date);
+      const day = usableDay(date);
       // Duty and assignment come from the capacity read when it knows the
       // roster, as on the week grid; otherwise from the schedule view's overlay.
       return capacity.staffingKnown && day?.status === DayCapacityViewStatusEnum.Ok
@@ -438,7 +448,7 @@ export class CapacityCalendarService {
 
     const buildDay = (date: string): CapacityDay => {
       const schedule = schedules.get(date);
-      const day = capacity.byDate.get(date);
+      const day = usableDay(date);
       const kind: DayKind = day ? capacityDayKind(day) : this.dayKind(schedule);
       return {
         ...computeDay({
@@ -478,9 +488,11 @@ export class CapacityCalendarService {
       // the rest. That mixture cannot be told apart from a genuinely quiet day
       // downstream, so the blank cells would read as "open and empty" when the
       // truth is "unknown". Only all-404 is unambiguous absence.
-      // A failed capacity read leaves the bay load to the appointments alone,
-      // which understates it, so it degrades like any other failed read.
-      degraded: !bays.ok || !technicians.ok || load.failed > 0 || isPartiallyAbsent(load) || capacity.failed,
+      // A failed capacity read, or one with no usable focus day, leaves the bay
+      // load to the appointments alone, which understates it, so it degrades
+      // like any other failed read.
+      degraded:
+        !bays.ok || !technicians.ok || load.failed > 0 || isPartiallyAbsent(load) || capacity.failed || capacityGap,
       // Every day answered 404: the schedule service does not know this
       // location as a shop, so there is nothing to report for any date. Said
       // once and plainly, rather than as a month of empty cells.
@@ -691,10 +703,11 @@ export class CapacityCalendarService {
 
   /**
    * `grid[bayIndex][hourIndex]` for the day board: the capacity read's bay load,
-   * which counts work orders the schedule view does not list, with any
-   * appointment the view shows on a free hour marked busy too. Without a
-   * capacity day (the read failed or 404ed) the view's appointments are all
-   * there is.
+   * which counts work orders the schedule view does not list, with any hour
+   * the view has an appointment in marked busy too, even one outside the
+   * capacity read's window (the two reads can disagree on it, backend #2589).
+   * Only a downed bay stays down. Without a usable capacity day the view's
+   * appointments are all there is.
    */
   private dayGrid(
     bays: readonly CapacityBay[],
@@ -708,7 +721,7 @@ export class CapacityCalendarService {
     }
     return this.capacityGrid(bays, day, hours).map((row, bayIndex) =>
       row.map((state, hourIndex) =>
-        state === 'free' && fromView[bayIndex][hourIndex] === 'busy' ? 'busy' : state,
+        state !== 'down' && fromView[bayIndex][hourIndex] === 'busy' ? 'busy' : state,
       ),
     );
   }

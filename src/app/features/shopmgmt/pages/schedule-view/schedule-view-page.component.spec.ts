@@ -366,6 +366,32 @@ describe('ScheduleViewPageComponent', () => {
     expect(all('.board-card').length).toBe(0);
   });
 
+  it('states each busy run for screen readers, since the shading is hidden from them', async () => {
+    const grid: BayHourState[][] = [
+      ['free', 'busy', 'busy', 'free', 'busy'],
+      HOURS.map(() => 'free'),
+    ];
+    capacityStub.getCalendar.mockReturnValue(of(view({ focusDay: day(TODAY, { grid }), board: [] })));
+    await setup();
+    const translate = TestBed.inject(TranslateService);
+    translate.setTranslation(
+      'en',
+      { SHOPMGMT: { SCHEDULE_VIEW: { BAY_BUSY_RANGE: '{{bay}} busy from {{start}} to {{end}}' } } },
+      true,
+    );
+    translate.use('en');
+    component.setScope('day');
+    fixture.detectChanges();
+
+    const columns = all('.board-column');
+    const lines = columns[0]
+      .queryAll(By.css('.sr-only li'))
+      // DatePipe's shortTime puts a narrow no-break space before AM/PM.
+      .map(line => (line.nativeElement as HTMLElement).textContent?.replace(/\s+/g, ' ').trim());
+    expect(lines).toEqual(['Bay 1 busy from 8:00 AM to 10:00 AM', 'Bay 1 busy from 11:00 AM to 12:00 PM']);
+    expect(columns[1].queryAll(By.css('.sr-only')).length).toBe(0);
+  });
+
   it('greys a bay that cannot do the selected job instead of hiding it', async () => {
     await setup();
     component.selectJob(ALIGNMENT_JOB);
