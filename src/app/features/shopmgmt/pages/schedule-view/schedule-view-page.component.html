@@ -388,6 +388,10 @@
         @for (column of boardColumns(); track column.bayId) {
           <div class="board-column" [class.is-ineligible]="!column.eligible"
             [class.is-down]="column.outOfService">
+            @for (run of column.loadRuns; track run.topPx) {
+              <div class="board-load" [style.top.px]="run.topPx" [style.height.px]="run.heightPx"
+                aria-hidden="true"></div>
+            }
             @for (card of column.cards; track card.appointment.eventId) {
               <article class="board-card" [class]="'state-' + card.appointment.state"
                 [style.top.px]="card.topPx" [style.height.px]="card.heightPx">

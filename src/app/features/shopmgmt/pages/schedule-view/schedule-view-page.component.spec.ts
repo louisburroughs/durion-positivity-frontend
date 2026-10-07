@@ -345,6 +345,27 @@ describe('ScheduleViewPageComponent', () => {
     expect(card.style.height).toBe('96px');
   });
 
+  it('shades a bay\'s busy hours on the board even with no appointment card, merging runs', async () => {
+    // Bay 1 held 8-10 AM and 11 AM (say, by a work order); the rack free.
+    const grid: BayHourState[][] = [
+      ['free', 'busy', 'busy', 'free', 'busy'],
+      HOURS.map(() => 'free'),
+    ];
+    capacityStub.getCalendar.mockReturnValue(of(view({ focusDay: day(TODAY, { grid }), board: [] })));
+    await setup();
+    component.setScope('day');
+    fixture.detectChanges();
+
+    const columns = all('.board-column');
+    const runs = columns[0].queryAll(By.css('.board-load')).map(run => run.nativeElement as HTMLElement);
+    expect(runs.map(run => [run.style.top, run.style.height])).toEqual([
+      ['64px', '128px'],
+      ['256px', '64px'],
+    ]);
+    expect(columns[1].queryAll(By.css('.board-load')).length).toBe(0);
+    expect(all('.board-card').length).toBe(0);
+  });
+
   it('greys a bay that cannot do the selected job instead of hiding it', async () => {
     await setup();
     component.selectJob(ALIGNMENT_JOB);

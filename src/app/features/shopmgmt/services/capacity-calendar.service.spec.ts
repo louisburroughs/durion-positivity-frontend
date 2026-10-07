@@ -199,12 +199,17 @@ describe('CapacityCalendarService', () => {
     });
 
     const calendarFor = async (laneId: string) => {
-      const schedule = TestBed.inject(ScheduleAPIService) as unknown as { viewSchedule: ReturnType<typeof vi.fn> };
+      const schedule = TestBed.inject(ScheduleAPIService) as unknown as {
+        viewSchedule: ReturnType<typeof vi.fn>;
+        getScheduleCapacity: ReturnType<typeof vi.fn>;
+      };
       const bays = TestBed.inject(BayAPIService) as unknown as { listBays: ReturnType<typeof vi.fn> };
       const techs = TestBed.inject(TechnicianAPIService) as unknown as { listLocationTechnicians: ReturnType<typeof vi.fn> };
       const locations = TestBed.inject(LocationAPIService) as unknown as { getLocationById: ReturnType<typeof vi.fn> };
       bays.listBays.mockReturnValue(of({ content: [] }));
       techs.listLocationTechnicians.mockReturnValue(of({ content: [rosterEntry] }));
+      // No capacity day, so duty and assignment fall back to the view's overlay, which is what this pins.
+      schedule.getScheduleCapacity.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 404 })));
       locations.getLocationById.mockReturnValue(of({ id: 'loc-1', name: 'Northgate' }));
       schedule.viewSchedule.mockReturnValue(of(scheduleWithLane(laneId)));
       return new Promise<CapacityCalendarView>(resolve => service.getCalendar(REQUEST).subscribe(resolve));
@@ -240,12 +245,17 @@ describe('CapacityCalendarService', () => {
     };
 
     const arrange = (scheduleResult: unknown) => {
-      const schedule = TestBed.inject(ScheduleAPIService) as unknown as { viewSchedule: ReturnType<typeof vi.fn> };
+      const schedule = TestBed.inject(ScheduleAPIService) as unknown as {
+        viewSchedule: ReturnType<typeof vi.fn>;
+        getScheduleCapacity: ReturnType<typeof vi.fn>;
+      };
       const bays = TestBed.inject(BayAPIService) as unknown as { listBays: ReturnType<typeof vi.fn> };
       const techs = TestBed.inject(TechnicianAPIService) as unknown as { listLocationTechnicians: ReturnType<typeof vi.fn> };
       const locations = TestBed.inject(LocationAPIService) as unknown as { getLocationById: ReturnType<typeof vi.fn> };
       bays.listBays.mockReturnValue(of({ content: [] }));
       techs.listLocationTechnicians.mockReturnValue(of({ content: [] }));
+      // The capacity read answers the same 404 as the view for a location it has no shop for.
+      schedule.getScheduleCapacity.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 404 })));
       locations.getLocationById.mockReturnValue(of({ id: 'loc-1', name: 'Northgate Warehouse' }));
       schedule.viewSchedule.mockReturnValue(scheduleResult);
       return schedule;
@@ -655,25 +665,105 @@ describe('CapacityCalendarService', () => {
       expect([...view.technicians[0].assignedHours]).toEqual([0]);
     });
 
-    it('leaves the day scope on the per-day schedule read, which carries the board (#488 AC5)', async () => {
-      arrange();
+    const DAY = { ...MONTH, scope: 'day' } as unknown as typeof MONTH;
+    /** The view for one date: 08:00-12:00, with whatever appointment lanes are given. */
+    const viewFor = (resources: ScheduleViewResponse['resources'] = []) =>
       scheduleApi().viewSchedule.mockImplementation((_loc: string, date: string) =>
         of({
           date,
           dayStartAt: local(date, 8),
           dayEndAt: local(date, 12),
           locationId: 'loc-1',
-          resources: [],
+          resources,
           viewGeneratedAt: local(date, 8),
         }),
       );
 
-      const view = await calendar({ ...MONTH, scope: 'day' } as unknown as typeof MONTH);
+    it('reads the day board from the schedule view for its cards and the capacity read for its load', async () => {
+      arrange();
+      viewFor();
+
+      const view = await calendar(DAY);
 
       expect(scheduleApi().viewSchedule).toHaveBeenCalledTimes(1);
-      expect(scheduleApi().getScheduleCapacity).not.toHaveBeenCalled();
+      expect(scheduleApi().getScheduleCapacity).toHaveBeenCalledTimes(1);
+      expect(scheduleApi().getScheduleCapacity).toHaveBeenCalledWith('loc-1', '2026-09-29', '2026-09-29');
       expect(view.focusDay?.date).toBe('2026-09-29');
+      expect(view.degraded).toBe(false);
       expect(view.technicianAvailabilityUnknown).toBe(false);
+    });
+
+    it('counts a bay held by a work order the schedule view does not list, as the week grid does', async () => {
+      arrange({
+        '2026-09-29': okDay('2026-09-29', [
+          bayDay({
+            occupancy: [1, 1, 0, 0],
+            occupiedMinutes: 120,
+            carryOverIn: [{ workorderId: 'wo-1', bayHours: 2, fromDate: '2026-09-28' }],
+          }),
+        ]),
+      });
+      // The view lists appointments only, and this day has none.
+      viewFor();
+
+      const view = await calendar(DAY);
+      const day = view.focusDay!;
+
+      expect(day.bayStates[0]).toEqual(['busy', 'busy', 'free', 'free']);
+      expect(day.shopFreeBayHours).toBe(2);
+      expect(day.shopCapacityBayHours).toBe(4);
+      expect(day.carryOver).toEqual({ hours: 2, fromDate: '2026-09-28' });
+      expect(view.board).toEqual([]);
+    });
+
+    it('still marks an hour busy for an appointment the capacity read has not counted', async () => {
+      arrange();
+      viewFor([
+        {
+          resourceType: 'BAY',
+          resourceId: 'bay-1',
+          events: [
+            {
+              eventId: 'appt-1',
+              eventType: 'APPOINTMENT',
+              startTime: local('2026-09-29', 10),
+              endTime: local('2026-09-29', 11),
+              affected: false,
+              hasConflict: false,
+            },
+          ],
+        },
+      ]);
+
+      const view = await calendar(DAY);
+
+      expect(view.focusDay?.bayStates[0]).toEqual(['free', 'free', 'busy', 'free']);
+    });
+
+    it('takes the day\'s duty and assignment from the capacity read when it knows the roster', async () => {
+      arrange(
+        { '2026-09-29': withTechnicians('2026-09-29', [technicianDay({ onDuty: [1, 1, 0, 0], assigned: [1, 0, 0, 0] })]) },
+        undefined,
+        AVAILABLE,
+      );
+      viewFor();
+
+      const view = await calendar(DAY);
+
+      expect([...view.technicians[0].onDutyHours]).toEqual([0, 1]);
+      expect([...view.technicians[0].assignedHours]).toEqual([0]);
+    });
+
+    it('a failed capacity read leaves the board to the appointments and degrades', async () => {
+      arrange();
+      scheduleApi().getScheduleCapacity.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 503 })));
+      viewFor();
+
+      const view = await calendar(DAY);
+
+      expect(view.degraded).toBe(true);
+      expect(view.focusDay?.kind).toBe('open');
+      expect(view.focusDay?.bayStates[0]).toEqual(['free', 'free', 'free', 'free']);
     });
   });
 
