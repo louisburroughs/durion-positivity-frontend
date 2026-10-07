@@ -9010,6 +9010,7 @@
         "FLOAT_NOT_RECORDED": "Cela ne correspond pas à la modification du fonds de caisse enregistrée par la comptabilité.",
         "INVALID": "Des renseignements manquent ou ne sont pas valides. Rien n'a été enregistré.",
         "FORBIDDEN": "Vous ne pouvez pas enregistrer de mouvements de tiroir ici; il faut la permission {{permission}}. Rien n'a été enregistré.",
+        "SCOPE_DENIED": "Ce tiroir se trouve à un emplacement où vous ne pouvez pas travailler. Rien n'a été enregistré.",
         "REFUSED": "Cela n'a pas pu être enregistré. Rien n'a été enregistré.",
         "UNKNOWN_OUTCOME": "Nous n'avons pas pu confirmer l'enregistrement. Réessayer le renvoie; il ne sera pas enregistré deux fois."
       },

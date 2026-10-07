@@ -9010,6 +9010,7 @@
         "FLOAT_NOT_RECORDED": "This doesn't match the float change accounting recorded.",
         "INVALID": "Some details are missing or not valid. Nothing was recorded.",
         "FORBIDDEN": "You can't record drawer movements here; it needs the {{permission}} permission. Nothing was recorded.",
+        "SCOPE_DENIED": "This drawer is at a location you can't work at. Nothing was recorded.",
         "REFUSED": "This couldn't be recorded. Nothing was recorded.",
         "UNKNOWN_OUTCOME": "We couldn't confirm that this was recorded. Retry sends it again; it won't be recorded twice."
       },

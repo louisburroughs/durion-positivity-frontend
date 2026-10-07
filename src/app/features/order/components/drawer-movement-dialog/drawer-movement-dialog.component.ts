@@ -91,6 +91,7 @@ const FAILURE_KEYS: Readonly<Record<string, string>> = {
   FLOAT_NOT_RECORDED: 'ORDER.DRAWER.ERROR.FLOAT_NOT_RECORDED',
   INVALID: 'ORDER.DRAWER.ERROR.INVALID',
   FORBIDDEN: 'ORDER.DRAWER.ERROR.FORBIDDEN',
+  SCOPE_DENIED: 'ORDER.DRAWER.ERROR.SCOPE_DENIED',
   REFUSED: 'ORDER.DRAWER.ERROR.REFUSED',
   UNKNOWN_OUTCOME: 'ORDER.DRAWER.ERROR.UNKNOWN_OUTCOME',
   APPROVAL_UNAVAILABLE: 'ORDER.DRAWER.ERROR.APPROVAL_UNAVAILABLE',
@@ -538,8 +539,10 @@ export class DrawerMovementDialogComponent {
         this.showFailure({ key: FAILURE_KEYS['INVALID'], fieldKeys: this.fieldLabelKeys(failure.fields) });
         return;
       case 'FORBIDDEN':
+      case 'SCOPE_DENIED':
+        // The options read enforces the same code and scope: its 403 hides the actions.
         this.approval = null;
-        this.showFailure({ key: FAILURE_KEYS['FORBIDDEN'] });
+        this.showFailure({ key: FAILURE_KEYS[failure.kind] });
         this.optionsStale.emit();
         return;
       case 'UNKNOWN_OUTCOME':

@@ -71,6 +71,17 @@ describe('RegisterDrawerPageComponent (CAP:550 S22)', () => {
       expect(text(h.q('drawer-actions'))).toContain('Pay out');
     });
 
+    it('offers no action on a session without its own stamped currency, even when the options name one', () => {
+      const h = renderDrawer({ session: { ...openSession, currencyCode: undefined } });
+
+      expect(h.q('drawer-pay-out')!.getAttribute('aria-disabled')).toBe('true');
+      expect(h.q('drawer-change-float')!.getAttribute('aria-disabled')).toBe('true');
+      h.component.openPayOut();
+      h.render();
+      expect(h.q('drawer-dialog')).toBeNull();
+      expect(text(h.q('drawer-opening-float'))).toBe('—');
+    });
+
     it('keeps a CLOSING drawer read-only and never reads its options', () => {
       const h = renderDrawer({ session: closingSession });
 
@@ -696,6 +707,42 @@ describe('RegisterDrawerPageComponent (CAP:550 S22)', () => {
       session$.next(openSession);
       h.render();
       expect(h.q('drawer-pay-out')!.getAttribute('aria-disabled')).toBeNull();
+    });
+
+    it('marks every movements read pending, a Retry included, while keeping the rows on screen (ADR-0064 §1)', () => {
+      const h = renderDrawer();
+      h.mocks.movements.mockReturnValueOnce(throwError(() => refusal(500)));
+      h.component.retryMovements();
+      h.render();
+      expect(h.component.movementsStatus()).toBe('FAILED');
+      expect(h.q('drawer-movements-failed')).not.toBeNull();
+      expect(h.all('drawer-movement-row')).toHaveLength(1);
+
+      const retry$ = new Subject<DrawerMovement[]>();
+      h.mocks.movements.mockReturnValueOnce(retry$);
+      click(h, 'drawer-movements-retry');
+      expect(h.component.movementsStatus()).toBe('PENDING');
+      expect(h.q('drawer-movements-failed')).toBeNull();
+      expect(h.all('drawer-movement-row')).toHaveLength(1);
+
+      retry$.next([pettyMovement, unknownMovement]);
+      h.render();
+      expect(h.component.movementsStatus()).toBe('OK');
+      expect(h.all('drawer-movement-row')).toHaveLength(2);
+    });
+
+    it('closes a dialog opened over a session that a re-read replaces with another (ADR-0063 §3)', async () => {
+      const h = renderDrawer();
+      fillPettyExpense(h);
+      h.q<HTMLInputElement>('drawer-note')!.focus();
+      h.mocks.currentSession.mockReturnValue(of({ ...openSession, sessionId: OTHER_SESSION_ID }));
+      h.mocks.options.mockReturnValue(of({ ...drawerOptions, sessionId: OTHER_SESSION_ID }));
+      h.component.loadSession();
+      h.render();
+      await flush(h);
+
+      expect(h.q('drawer-dialog')).toBeNull();
+      expect(document.activeElement).not.toBe(document.body);
     });
 
     it('re-resolves the session on a 404 from the movements read', () => {

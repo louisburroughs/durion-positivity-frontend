@@ -128,8 +128,11 @@ export class RegisterDrawerPageComponent {
 
   readonly isOpen = computed(() => this.sessionView()?.status === 'OPEN');
   readonly isClosing = computed(() => this.sessionView()?.status === 'CLOSING');
-  /** The drawer's stamped currency (ADR-0067 PC-14): every amount it holds is in it. */
-  readonly currencyCode = computed(() => this.sessionView()?.currencyCode ?? this.optionsView()?.currencyCode ?? null);
+  /**
+   * The drawer's stamped currency (ADR-0067 PC-14): every amount it holds is in it and every
+   * recording is sent with it. Only the session's own stamp counts; without one, nothing is offered.
+   */
+  readonly currencyCode = computed(() => this.sessionView()?.currencyCode ?? null);
 
   /** Pay out and Change the float exist only on an OPEN drawer, for a holder of the write code. */
   readonly showActions = computed(
@@ -251,7 +254,7 @@ export class RegisterDrawerPageComponent {
           return;
         }
         this.sessionStatus.set('FAILED');
-        this.dialogKind.set(null);
+        this.closeDialogKeepingFocus();
         this.state.set('error');
         this.errorKey.set('ORDER.DRAWER.ERROR.LOAD');
         this.settleNoticeFocus();
@@ -266,7 +269,7 @@ export class RegisterDrawerPageComponent {
     this.sessionStatus.set('OK');
     const sessionId = session?.sessionId ?? null;
     if (!session || !sessionId) {
-      this.dialogKind.set(null);
+      this.closeDialogKeepingFocus();
       this.clearSessionData();
       this.state.set('noSession');
       this.errorKey.set(null);
@@ -274,6 +277,8 @@ export class RegisterDrawerPageComponent {
       return;
     }
     if (sessionId !== this.session()?.sessionId) {
+      // ADR-0063 §3: a dialog opened over another session never carries on against this one.
+      this.closeDialogKeepingFocus();
       this.clearSessionData();
     }
     this.session.set(session);
@@ -281,7 +286,7 @@ export class RegisterDrawerPageComponent {
     this.state.set('ready');
     this.errorKey.set(null);
     if (session.status !== 'OPEN') {
-      this.dialogKind.set(null);
+      this.closeDialogKeepingFocus();
     }
     this.loadMovements(sessionId);
     if (session.status === 'OPEN') {
@@ -293,9 +298,9 @@ export class RegisterDrawerPageComponent {
   private loadMovements(sessionId: string): void {
     const seq = ++this.movementsSeq;
     this.movementsSub?.unsubscribe();
-    if (this.movementsFor() !== sessionId) {
-      this.movementsStatus.set('PENDING');
-    }
+    // Every read, retries and refreshes included: held rows stay on screen, but the status
+    // describes the read in flight (ADR-0064 §1).
+    this.movementsStatus.set('PENDING');
     this.movementsSub = this.service.movements(sessionId).subscribe({
       next: rows => {
         if (seq !== this.movementsSeq) {

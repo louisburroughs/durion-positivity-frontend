@@ -170,9 +170,11 @@ export type DrawerFailureKind =
   | 'SESSION_GONE'
   /** 400: the named fields. */
   | 'INVALID'
-  /** Any other 403: the cashier's own permission. */
+  /** 403 ORDER_FORBIDDEN: the cashier lacks the code the endpoint enforces. */
   | 'FORBIDDEN'
-  /** Any other 4xx: the server judged and refused; nothing was recorded. */
+  /** 403 LOCATION_SCOPE_DENIED: the drawer's location is outside the cashier's scope (ADR-0061). */
+  | 'SCOPE_DENIED'
+  /** Any other 4xx, an unexplained 403 included: the server refused; nothing was recorded. */
   | 'REFUSED'
   /** A record whose outcome is unknown (network, timeout, 5xx): Retry resends the same requestId. */
   | 'UNKNOWN_OUTCOME'
@@ -184,6 +186,15 @@ export interface DrawerFailure {
   /** Request fields a 400 named, when the server listed them. */
   readonly fields: readonly string[];
 }
+
+/**
+ * Codes either call may answer. Only ORDER_FORBIDDEN (Spring's access denial) means a missing
+ * permission; any other 403 is not claimed to be one (ADR-0064 §4).
+ */
+const SHARED_CODES: Readonly<Record<string, DrawerFailureKind>> = {
+  ORDER_FORBIDDEN: 'FORBIDDEN',
+  LOCATION_SCOPE_DENIED: 'SCOPE_DENIED',
+};
 
 const RECORD_CODES: Readonly<Record<string, DrawerFailureKind>> = {
   CASH_MOVEMENT_APPROVAL_REQUIRED: 'APPROVAL_REQUIRED',
@@ -214,15 +225,14 @@ export function classifyDrawerError(error: unknown, operation: 'RECORD' | 'APPRO
   const fields = Array.isArray(body.fieldErrors)
     ? body.fieldErrors.map(entry => entry?.field).filter((field): field is string => typeof field === 'string')
     : [];
-  const byCode = (operation === 'RECORD' ? RECORD_CODES : APPROVAL_CODES)[body.code ?? ''];
+  const code = body.code ?? '';
+  const byCode = (operation === 'RECORD' ? RECORD_CODES : APPROVAL_CODES)[code] ?? SHARED_CODES[code];
   if (byCode) {
     return { kind: byCode, fields: [] };
   }
   switch (error.status) {
     case 400:
       return { kind: 'INVALID', fields };
-    case 403:
-      return { kind: 'FORBIDDEN', fields: [] };
     case 404:
       return { kind: 'SESSION_GONE', fields: [] };
     case 409:

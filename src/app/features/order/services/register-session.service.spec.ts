@@ -292,7 +292,10 @@ describe('classifyDrawerError', () => {
     [refusal(409, 'IDEMPOTENCY_CONFLICT'), 'CONFLICT'],
     [refusal(404, 'REGISTER_SESSION_NOT_FOUND'), 'SESSION_GONE'],
     [refusal(403, 'ORDER_FORBIDDEN'), 'FORBIDDEN'],
-    [refusal(403, 'LOCATION_SCOPE_DENIED'), 'FORBIDDEN'],
+    [refusal(403, 'LOCATION_SCOPE_DENIED'), 'SCOPE_DENIED'],
+    // An unexplained 403 is never claimed to be a missing permission (ADR-0064 §4).
+    [refusal(403, 'SOMETHING_NEW'), 'REFUSED'],
+    [refusal(403), 'REFUSED'],
     [refusal(422, 'CURRENCY_NOT_SUPPORTED'), 'REFUSED'],
     [refusal(500), 'UNKNOWN_OUTCOME'],
     [refusal(0), 'UNKNOWN_OUTCOME'],
@@ -312,8 +315,10 @@ describe('classifyDrawerError', () => {
     expect(classifyDrawerError(refusal(403, 'CASH_MOVEMENT_APPROVAL_DENIED'), 'APPROVE').kind).toBe('APPROVAL_DENIED');
     expect(classifyDrawerError(refusal(403, 'CASH_MOVEMENT_SELF_APPROVAL'), 'APPROVE').kind).toBe('SELF_APPROVAL');
     expect(classifyDrawerError(refusal(409, 'REGISTER_SESSION_CONFLICT'), 'APPROVE').kind).toBe('SESSION_NOT_OPEN');
-    // APPROVAL_REQUIRED is a record answer; on the step-up an unknown 403 falls back to the status.
-    expect(classifyDrawerError(refusal(403, 'CASH_MOVEMENT_CALLER_UNIDENTIFIED'), 'APPROVE').kind).toBe('FORBIDDEN');
+    expect(classifyDrawerError(refusal(403, 'LOCATION_SCOPE_DENIED'), 'APPROVE').kind).toBe('SCOPE_DENIED');
+    expect(classifyDrawerError(refusal(403, 'ORDER_FORBIDDEN'), 'APPROVE').kind).toBe('FORBIDDEN');
+    // An unknown 403 on the step-up is a refusal, not a claimed missing permission.
+    expect(classifyDrawerError(refusal(403, 'CASH_MOVEMENT_CALLER_UNIDENTIFIED'), 'APPROVE').kind).toBe('REFUSED');
   });
 
   it('treats an unanswered step-up as unavailable, never as a refusal', () => {

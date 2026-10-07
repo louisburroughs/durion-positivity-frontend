@@ -239,6 +239,29 @@ describe('DrawerMovementDialogComponent (CAP:550 S22)', () => {
       expect(h.events.optionsStale).toHaveBeenCalledTimes(1);
     });
 
+    it('says the drawer is outside the cashier’s locations on LOCATION_SCOPE_DENIED, not a missing permission', () => {
+      const h = renderDialog();
+      h.record.mockReturnValue(throwError(() => refusal(403, 'LOCATION_SCOPE_DENIED')));
+      fillBankDrop(h);
+      h.component.submitDetails();
+      h.render();
+
+      expect(text(h.q('drawer-dialog-alert'))).toBe(
+        "This drawer is at a location you can't work at. Nothing was recorded.",
+      );
+      expect(h.events.optionsStale).toHaveBeenCalledTimes(1);
+    });
+
+    it('never claims a missing permission for an unexplained 403', () => {
+      const h = renderDialog();
+      h.record.mockReturnValue(throwError(() => refusal(403, 'SOMETHING_NEW')));
+      fillBankDrop(h);
+      h.component.submitDetails();
+      h.render();
+
+      expect(text(h.q('drawer-dialog-alert'))).toBe("This couldn't be recorded. Nothing was recorded.");
+    });
+
     it.each([
       [refusal(404), 'GONE'],
       [refusal(409, 'REGISTER_SESSION_CONFLICT'), 'NOT_OPEN'],

@@ -9010,6 +9010,7 @@
         "FLOAT_NOT_RECORDED": "Esto no coincide con el cambio de fondo que registró contabilidad.",
         "INVALID": "Faltan datos o no son válidos. No se registró nada.",
         "FORBIDDEN": "No puede registrar movimientos de caja aquí; se necesita el permiso {{permission}}. No se registró nada.",
+        "SCOPE_DENIED": "Esta caja está en una ubicación en la que usted no puede trabajar. No se registró nada.",
         "REFUSED": "No se pudo registrar esto. No se registró nada.",
         "UNKNOWN_OUTCOME": "No pudimos confirmar que esto se registró. Reintentar lo envía de nuevo; no se registrará dos veces."
       },
