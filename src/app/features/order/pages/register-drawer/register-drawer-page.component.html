@@ -1,7 +1,7 @@
 @let empty = 'COMMON.EMPTY_VALUE' | translate;
 <section class="drawer" [attr.data-state]="state()" data-testid="register-drawer-page">
   <header class="drawer__header">
-    <h1 class="drawer__title">{{ 'ORDER.DRAWER.TITLE' | translate }}</h1>
+    <h1 #heading class="drawer__title" tabindex="-1" data-testid="drawer-heading">{{ 'ORDER.DRAWER.TITLE' | translate }}</h1>
   </header>
 
   <!-- Both live regions stay in the DOM across every state (ADR-0029 §8.8). -->

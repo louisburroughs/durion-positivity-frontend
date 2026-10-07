@@ -85,7 +85,9 @@ export class RegisterDrawerPageComponent {
   private readonly service = inject(RegisterSessionService);
   private readonly destroyRef = inject(DestroyRef);
 
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly notice = viewChild<ElementRef<HTMLElement>>('notice');
+  private readonly heading = viewChild<ElementRef<HTMLElement>>('heading');
 
   readonly state = signal<DrawerPageState>('idle');
   readonly errorKey = signal<string | null>(null);
@@ -175,6 +177,9 @@ export class RegisterDrawerPageComponent {
   /** Move focus to the page's notice once the session read it triggered has landed (ADR-0029 §8.7). */
   private focusNoticeAfterRead = false;
 
+  /** Whether the drawer and its write code were held at the last check (seeded: not a change). */
+  private cashMovementAllowed = this.canView() && this.canCashMovement();
+
   /** `tid|sub` the held data belongs to; seeded so the effect's first run is not a change. */
   private trackedIdentity = this.identity();
 
@@ -192,12 +197,23 @@ export class RegisterDrawerPageComponent {
         this.loadSession();
       });
     });
-    // Losing a permission closes the dialog at once; its write lock goes with it (ADR-0040 §6a).
+    // Losing a permission closes the dialog at once, its write lock with it (ADR-0040 §6a);
+    // regaining it re-reads the session and options, so nothing acts on what was read before the
+    // revocation or on a 403 that no longer holds (ADR-0064 §1).
     effect(() => {
       const allowed = this.canView() && this.canCashMovement();
-      if (!allowed) {
-        untracked(() => this.dialogKind.set(null));
+      if (allowed === this.cashMovementAllowed) {
+        return;
       }
+      this.cashMovementAllowed = allowed;
+      untracked(() => {
+        if (!allowed) {
+          this.closeDialogKeepingFocus();
+          return;
+        }
+        this.optionsDenied.set(false);
+        this.loadSession();
+      });
     });
     this.loadSession();
   }
@@ -315,7 +331,7 @@ export class RegisterDrawerPageComponent {
         }
         if (isStatus(error, 403)) {
           this.optionsDenied.set(true);
-          this.dialogKind.set(null);
+          this.closeDialogKeepingFocus();
           this.optionsStatus.set('FAILED');
           return;
         }
@@ -426,6 +442,27 @@ export class RegisterDrawerPageComponent {
     if (this.isOpen()) {
       this.loadOptions(sessionId);
     }
+  }
+
+  /**
+   * Closes the dialog when the actions themselves are going away (a permission lost, the options
+   * refused). The opener goes too, so the dialog cannot hand focus back to it: focus lands on the
+   * page heading instead of falling to the document body (ADR-0029 §8.7).
+   */
+  private closeDialogKeepingFocus(): void {
+    const host = this.host.nativeElement;
+    const active = typeof document === 'undefined' ? null : document.activeElement;
+    const focusWasOnPage = !!active && active !== document.body && host.contains(active);
+    this.dialogKind.set(null);
+    if (!focusWasOnPage) {
+      return;
+    }
+    setTimeout(() => {
+      const now = document.activeElement;
+      if (!now || now === document.body || !host.contains(now)) {
+        this.heading()?.nativeElement.focus();
+      }
+    });
   }
 
   private settleNoticeFocus(): void {

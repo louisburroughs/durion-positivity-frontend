@@ -193,12 +193,14 @@
           <label for="drawer-manager-username">{{ 'ORDER.DRAWER.APPROVAL.USERNAME' | translate }}</label>
           <input #usernameInput id="drawer-manager-username" class="drawer-dialog__input" type="text"
             autocomplete="off" autocapitalize="none" spellcheck="false" required data-testid="drawer-manager-username"
+            [attr.aria-invalid]="isInvalid('managerUsername') || null"
             [value]="managerUsername()" (input)="onUsername($event)" />
         </div>
         <div class="drawer-dialog__field">
           <label for="drawer-manager-password">{{ 'ORDER.DRAWER.APPROVAL.PASSWORD' | translate }}</label>
           <input id="drawer-manager-password" class="drawer-dialog__input" type="password" autocomplete="off" required
-            data-testid="drawer-manager-password" [value]="managerPassword()" (input)="onPassword($event)" />
+            data-testid="drawer-manager-password"
+            [attr.aria-invalid]="isInvalid('managerPassword') || null" [value]="managerPassword()" (input)="onPassword($event)" />
         </div>
       </fieldset>
       <div class="drawer-dialog__actions">

@@ -489,6 +489,42 @@ describe('RegisterDrawerPageComponent (CAP:550 S22)', () => {
       expect(record$.observed).toBe(false);
     });
 
+    it('moves focus to the page heading when a revocation removes the dialog it was in (ADR-0029 §8.7)', async () => {
+      const h = renderDrawer();
+      fillPettyExpense(h);
+      h.q<HTMLInputElement>('drawer-note')!.focus();
+      expect(document.activeElement).toBe(h.q('drawer-note'));
+
+      h.granted.set(new Set(['order:session:view']));
+      h.render();
+      await flush(h);
+
+      expect(h.q('drawer-dialog')).toBeNull();
+      expect(document.activeElement).toBe(h.q('drawer-heading'));
+    });
+
+    it('re-reads the session and options when the write code comes back, clearing an options 403', () => {
+      const h = renderDrawer();
+      h.mocks.options.mockReturnValue(throwError(() => refusal(403, 'ORDER_FORBIDDEN')));
+      h.component.onOptionsStale();
+      h.render();
+      expect(h.q('drawer-actions')).toBeNull();
+
+      h.granted.set(new Set(['order:session:view']));
+      h.render();
+      const reread$ = new Subject<DrawerOptions>();
+      h.mocks.options.mockReturnValue(reread$);
+      h.granted.set(new Set(['order:session:view', 'order:session:cash_movement']));
+      h.render();
+
+      expect(h.mocks.currentSession).toHaveBeenCalledTimes(2);
+      expect(h.component.optionsDenied()).toBe(false);
+      expect(h.q('drawer-pay-out')!.getAttribute('aria-disabled')).toBe('true'); // pending until it answers
+      reread$.next(drawerOptions);
+      h.render();
+      expect(h.q('drawer-pay-out')!.getAttribute('aria-disabled')).toBeNull();
+    });
+
     it('stops rendering the drawer when the read code is revoked (ADR-0064 §6)', () => {
       const h = renderDrawer();
       h.granted.set(new Set());

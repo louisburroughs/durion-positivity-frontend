@@ -272,6 +272,28 @@ describe('DrawerMovementDialogComponent (CAP:550 S22)', () => {
       expect(h.record).toHaveBeenCalledTimes(1);
     });
 
+    it('keeps a step-up 400 on the manager step, naming the manager fields', () => {
+      const h = renderDialog();
+      h.record.mockReturnValue(throwError(() => refusal(403, 'CASH_MOVEMENT_APPROVAL_REQUIRED')));
+      h.approve.mockReturnValue(
+        throwError(() => refusal(400, 'REGISTER_SESSION_INVALID_ARGUMENT', ['managerUsername'])),
+      );
+      fillBankDrop(h);
+      h.component.submitDetails();
+      h.component.managerUsername.set('m');
+      h.component.managerPassword.set('secret');
+      h.component.approve();
+      h.render();
+
+      expect(h.component.step()).toBe('approval');
+      expect(text(h.q('drawer-dialog-alert'))).toBe(
+        "Some details are missing or not valid. Nothing was recorded. Manager's username",
+      );
+      expect(h.q('drawer-manager-username')!.getAttribute('aria-invalid')).toBe('true');
+      expect(h.component.managerPassword()).toBe('');
+      expect(h.record).toHaveBeenCalledTimes(1);
+    });
+
     it('empties the credentials on Back', () => {
       const h = renderDialog();
       h.record.mockReturnValue(throwError(() => refusal(403, 'CASH_MOVEMENT_APPROVAL_REQUIRED')));

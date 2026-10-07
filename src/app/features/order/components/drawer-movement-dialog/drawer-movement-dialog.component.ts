@@ -386,6 +386,7 @@ export class DrawerMovementDialogComponent {
     const ticket = ++this.ticket;
     this.phase.set('approving');
     this.failure.set(null);
+    this.invalidFields.set(new Set());
     this.inFlight = this.service
       .requestApproval(this.sessionId(), request)
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -405,7 +406,14 @@ export class DrawerMovementDialogComponent {
           }
           this.clearCredentials();
           this.phase.set('idle');
-          this.applyFailure(classifyDrawerError(error, 'APPROVE'));
+          const failure = classifyDrawerError(error, 'APPROVE');
+          if (failure.kind === 'INVALID') {
+            // A step-up 400 names the manager's fields: stay on the manager step to say which.
+            this.invalidFields.set(new Set(failure.fields));
+            this.enterApproval({ key: FAILURE_KEYS['INVALID'], fieldKeys: this.fieldLabelKeys(failure.fields) });
+            return;
+          }
+          this.applyFailure(failure);
         },
       });
   }
@@ -525,14 +533,10 @@ export class DrawerMovementDialogComponent {
       case 'CONFLICT':
         this.sessionChanged.emit('CONFLICT');
         return;
-      case 'INVALID': {
+      case 'INVALID':
         this.invalidFields.set(new Set(failure.fields));
-        const fieldKeys = failure.fields
-          .map(field => FIELD_LABEL_KEYS[field])
-          .filter((key): key is string => !!key);
-        this.showFailure({ key: FAILURE_KEYS['INVALID'], fieldKeys });
+        this.showFailure({ key: FAILURE_KEYS['INVALID'], fieldKeys: this.fieldLabelKeys(failure.fields) });
         return;
-      }
       case 'FORBIDDEN':
         this.approval = null;
         this.showFailure({ key: FAILURE_KEYS['FORBIDDEN'] });
@@ -551,6 +555,10 @@ export class DrawerMovementDialogComponent {
         this.showFailure({ key: FAILURE_KEYS['REFUSED'] });
         return;
     }
+  }
+
+  private fieldLabelKeys(fields: readonly string[]): string[] {
+    return fields.map(field => FIELD_LABEL_KEYS[field]).filter((key): key is string => !!key);
   }
 
   /** The manager step, with the refusal that sent the dialog back to it, if any. */
