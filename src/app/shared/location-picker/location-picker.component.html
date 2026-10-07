@@ -25,9 +25,10 @@
     <p class="location-picker__error" role="alert">{{ errorText ?? ('LOCATION.PICKER.ERROR_LOAD' | translate) }}</p>
   }
   @if (open() && suggestions().length > 0) {
-    <!-- preventDefault keeps focus on the input: a scrollbar mousedown otherwise moves
-         focus to the focusable shell <main>, and the blur closes the list mid-drag. -->
-    <ul class="location-picker__list" [id]="listId" role="listbox" (mousedown)="$event.preventDefault()">
+    <!-- A mousedown on the list itself (its scrollbar) keeps focus on the input: it
+         otherwise moves to the focusable shell <main> and the blur closes the list
+         mid-drag. Option mousedowns still blur, so a later click refocuses and reopens. -->
+    <ul class="location-picker__list" [id]="listId" role="listbox" (mousedown)="$event.target === $event.currentTarget ? $event.preventDefault() : undefined">
       @for (loc of suggestions(); track loc.id; let i = $index) {
         <li
           class="location-picker__item"

@@ -57,7 +57,7 @@
           class="picker-dropdown"
           role="listbox"
           [attr.aria-label]="'INVENTORY.BY_LOCATION.PICKER.DROPDOWN_ARIA' | translate"
-          (mousedown)="$event.preventDefault()"
+          (mousedown)="$event.target === $event.currentTarget ? $event.preventDefault() : undefined"
         >
           @for (loc of filteredLocations(); track loc.id; let i = $index) {
           <li
@@ -140,7 +140,7 @@
           class="typeahead-suggestions"
           role="listbox"
           [attr.aria-label]="'INVENTORY.BY_LOCATION.PRODUCT_FILTER.DROPDOWN_ARIA' | translate"
-          (mousedown)="$event.preventDefault()"
+          (mousedown)="$event.target === $event.currentTarget ? $event.preventDefault() : undefined"
         >
           @for (p of productSuggestions(); track p.productId; let i = $index) {
           <li

@@ -193,6 +193,10 @@ describe('LocationPickerComponent', () => {
     const down = new MouseEvent('mousedown', { bubbles: true, cancelable: true });
     listbox.dispatchEvent(down);
     expect(down.defaultPrevented).toBe(true);
+    // An option mousedown must still blur, or a later click cannot reopen the list.
+    const optionDown = new MouseEvent('mousedown', { bubbles: true, cancelable: true });
+    (listbox.firstElementChild as HTMLElement).dispatchEvent(optionDown);
+    expect(optionDown.defaultPrevented).toBe(false);
   });
 
   it('shows an error state when locations fail to load', () => {

@@ -442,6 +442,8 @@ describe('listbox mousedown', () => {
 
     const listbox = fixture.nativeElement.querySelector('#loc-picker-listbox') as HTMLElement;
     expect(mousedownPrevented(listbox)).toBe(true);
+    // An option mousedown must still blur, or a later click cannot reopen the list.
+    expect(mousedownPrevented(listbox.firstElementChild as HTMLElement)).toBe(false);
   }));
 
   it('keeps input focus on a product listbox mousedown so the scrollbar stays draggable', fakeAsync(() => {
@@ -455,5 +457,7 @@ describe('listbox mousedown', () => {
 
     const listbox = fixture.nativeElement.querySelector('#product-filter-listbox') as HTMLElement;
     expect(mousedownPrevented(listbox)).toBe(true);
+    // An option mousedown must still blur, or a later click cannot reopen the list.
+    expect(mousedownPrevented(listbox.firstElementChild as HTMLElement)).toBe(false);
   }));
 });
