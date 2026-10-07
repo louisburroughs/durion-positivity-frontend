@@ -326,4 +326,13 @@ describe('CrmSnapshotComponent', () => {
       expect(component.canRefresh()).toBe(false);
     });
   });
+  it('keeps input focus on a listbox mousedown so the scrollbar stays draggable', async () => {
+    await setup();
+    component.showPartySuggestions.set(true);
+    fixture.detectChanges();
+    const listbox = fixture.nativeElement.querySelector('#partyId-listbox') as HTMLElement;
+    const down = new MouseEvent('mousedown', { bubbles: true, cancelable: true });
+    listbox.dispatchEvent(down);
+    expect(down.defaultPrevented).toBe(true);
+  });
 });

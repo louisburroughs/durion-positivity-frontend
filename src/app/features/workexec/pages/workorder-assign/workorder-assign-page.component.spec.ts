@@ -93,4 +93,14 @@ describe('WorkorderAssignPageComponent', () => {
     expect(overline()).toBe(enUS.WORKEXEC.WORKORDER_COMMON.WORK_ORDER);
     expect(visibleText(fixture.nativeElement as HTMLElement)).not.toMatch(UUID);
   });
+  it('keeps input focus on a listbox mousedown so the scrollbar stays draggable', async () => {
+    await setup();
+    component.technicians.set([{ id: TECH_ID, name: 'Ana Ruiz' }]);
+    component.showTechList.set(true);
+    fixture.detectChanges();
+    const listbox = fixture.nativeElement.querySelector('#technician-listbox') as HTMLElement;
+    const down = new MouseEvent('mousedown', { bubbles: true, cancelable: true });
+    listbox.dispatchEvent(down);
+    expect(down.defaultPrevented).toBe(true);
+  });
 });

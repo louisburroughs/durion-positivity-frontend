@@ -96,4 +96,13 @@ describe('VendorLookupComponent', () => {
     expect(component.activeIndex()).toBe(-1);
     expect(down.defaultPrevented).toBe(false);
   });
+  it('keeps input focus on a listbox mousedown so the scrollbar stays draggable', fakeAsync(() => {
+    component.onInput('acme');
+    tick(250);
+    fixture.detectChanges();
+    const listbox = fixture.nativeElement.querySelector('[role="listbox"]') as HTMLElement;
+    const down = new MouseEvent('mousedown', { bubbles: true, cancelable: true });
+    listbox.dispatchEvent(down);
+    expect(down.defaultPrevented).toBe(true);
+  }));
 });

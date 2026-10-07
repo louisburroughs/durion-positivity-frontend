@@ -156,4 +156,13 @@ describe('CustomerLookupComponent', () => {
       expect(component.suggestions().map(p => p.partyId)).toEqual(['p1', 'p2', 'p3']);
     }));
   });
+  it('keeps input focus on a listbox mousedown so the scrollbar stays draggable', fakeAsync(() => {
+    component.onInput('cust');
+    tick(250);
+    fixture.detectChanges();
+    const listbox = fixture.nativeElement.querySelector('[role="listbox"]') as HTMLElement;
+    const down = new MouseEvent('mousedown', { bubbles: true, cancelable: true });
+    listbox.dispatchEvent(down);
+    expect(down.defaultPrevented).toBe(true);
+  }));
 });
