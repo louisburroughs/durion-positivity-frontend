@@ -2831,6 +2831,7 @@
       "NO_SHOP_SCHEDULE": "El servicio de programación no tiene un registro de taller para {{location}}, por lo que no hay capacidad que mostrar. Una ubicación solo puede programarse cuando existe como taller; pide a un administrador que la registre.",
       "THIS_LOCATION": "esta ubicación",
       "SKILLS_NOT_CONFIGURED": "El catálogo no ha declarado qué habilidades requiere este servicio, así que se cuenta a todos los técnicos programados como capaces de hacerlo. Configure los requisitos de habilidades del servicio para ver la capacidad certificada.",
+      "TECH_AVAILABILITY_UNKNOWN": "Los horarios de los técnicos no están disponibles para esta ubicación, así que se cuenta a todos los técnicos programados como presentes y libres todo el día. La capacidad puede estar sobrestimada.",
       "LEGEND_ARIA": "Qué significan los colores de capacidad",
       "LEGEND_LOAD": "carga del taller",
       "LEGEND_FITS": "el trabajo cabe aquí",

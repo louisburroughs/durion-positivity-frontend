@@ -119,6 +119,12 @@
       </output>
     }
 
+    @if (view()?.technicianAvailabilityUnknown) {
+      <output class="alert alert-warning" aria-live="polite">
+        {{ 'SHOPMGMT.SCHEDULE_VIEW.TECH_AVAILABILITY_UNKNOWN' | translate }}
+      </output>
+    }
+
     <ul class="legend" [attr.aria-label]="'SHOPMGMT.SCHEDULE_VIEW.LEGEND_ARIA' | translate">
       <li><span class="swatch swatch-load" aria-hidden="true"></span>{{ 'SHOPMGMT.SCHEDULE_VIEW.LEGEND_LOAD' | translate }}</li>
       <li><span class="swatch tick tick-fits" aria-hidden="true"></span>{{ 'SHOPMGMT.SCHEDULE_VIEW.LEGEND_FITS' | translate }}</li>

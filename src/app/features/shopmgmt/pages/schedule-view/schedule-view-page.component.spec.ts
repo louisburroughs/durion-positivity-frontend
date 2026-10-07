@@ -127,6 +127,7 @@ function view(overrides: Partial<CapacityCalendarView> = {}): CapacityCalendarVi
     degraded: false,
     locationHasNoSchedule: false,
     skillRequirementsUnknown: false,
+    technicianAvailabilityUnknown: false,
     ...overrides,
   };
 }
@@ -503,6 +504,18 @@ describe('ScheduleViewPageComponent', () => {
     capacityStub.getCalendar.mockReturnValue(of(view({ skillRequirementsUnknown: true })));
     await setup();
     expect(text()).toContain('SHOPMGMT.SCHEDULE_VIEW.SKILLS_NOT_CONFIGURED');
+  });
+
+  it('says so when technician availability is unknown, rather than presenting it as measured (#488)', async () => {
+    capacityStub.getCalendar.mockReturnValue(of(view({ technicianAvailabilityUnknown: true })));
+    await setup();
+    expect(text()).toContain('SHOPMGMT.SCHEDULE_VIEW.TECH_AVAILABILITY_UNKNOWN');
+  });
+
+  it('shows no technician-availability notice when rostering is known', async () => {
+    capacityStub.getCalendar.mockReturnValue(of(view()));
+    await setup();
+    expect(text()).not.toContain('SHOPMGMT.SCHEDULE_VIEW.TECH_AVAILABILITY_UNKNOWN');
   });
 
   it('warns when an upstream source was unavailable', async () => {
