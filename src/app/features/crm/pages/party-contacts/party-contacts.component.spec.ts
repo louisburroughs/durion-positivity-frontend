@@ -144,4 +144,15 @@ describe('PartyContactsComponent [#344]', () => {
       expect(fixture.componentInstance.modalState()).toBe('open');
     });
   });
+  it('keeps input focus on a listbox mousedown so the scrollbar stays draggable', async () => {
+    const fixture = await setup();
+    fixture.detectChanges();
+    fixture.componentInstance.openModal();
+    fixture.componentInstance.showPersonSuggestions.set(true);
+    fixture.detectChanges();
+    const listbox = fixture.nativeElement.querySelector('#personId-listbox') as HTMLElement;
+    const down = new MouseEvent('mousedown', { bubbles: true, cancelable: true });
+    listbox.dispatchEvent(down);
+    expect(down.defaultPrevented).toBe(true);
+  });
 });
