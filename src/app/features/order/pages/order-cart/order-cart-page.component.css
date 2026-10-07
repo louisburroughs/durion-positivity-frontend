@@ -26,10 +26,32 @@
   box-shadow: var(--shadow-card);
 }
 
+.order-cart__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
 .order-cart__header h1 {
   font-family: var(--font-primary);
   font-size: 1.5rem;
   color: var(--currentTextColor);
+}
+
+.order-cart__drawer-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  color: var(--link-color);
+  font-weight: 600;
+  text-underline-offset: 0.125rem;
+}
+
+.order-cart__drawer-link:focus-visible {
+  outline: 2px solid var(--input-focus-border);
+  outline-offset: 2px;
 }
 
 .order-cart__idle,

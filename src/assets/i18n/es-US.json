@@ -8932,6 +8932,129 @@
         "PAYMENT_REVERSAL_REQUIRED": "Se requiere reverso del pago.",
         "PAYMENT_REVERSAL_ACTION": "Anular/Reembolsar pago"
       }
+    },
+    "DRAWER": {
+      "LINK": "Efectivo de la caja",
+      "TITLE": "Efectivo de la caja",
+      "LOADING": "Cargando la caja…",
+      "NO_SESSION": "No hay ninguna caja abierta en esta registradora.",
+      "CLOSING": "Se está contando la caja; los pagos están cerrados.",
+      "RECORDED": "Registrado: {{reason}}, {{amount}}",
+      "OPTIONS_FAILED": "No se pudieron cargar las opciones de pago",
+      "RETRY_OPTIONS": "Reintentar cargar las opciones de pago",
+      "RETRY_MOVEMENTS": "Reintentar cargar los movimientos",
+      "SUMMARY": {
+        "HEADING": "Esta caja",
+        "REGISTER": "Registradora",
+        "STATUS": "Estado",
+        "OPENED_AT": "Abierta el",
+        "OPENED_BY": "Abierta por",
+        "OPENING_FLOAT": "Fondo inicial"
+      },
+      "STATUS": {
+        "OPEN": "Abierta",
+        "CLOSING": "En conteo",
+        "CLOSED": "Cerrada",
+        "UNKNOWN": "Desconocido"
+      },
+      "ACTIONS": {
+        "PAY_OUT": "Pagar desde la caja",
+        "CHANGE_FLOAT": "Cambiar el fondo"
+      },
+      "MOVEMENTS": {
+        "HEADING": "Movimientos",
+        "CAPTION": "Efectivo sacado de esta caja y puesto en ella",
+        "TIME": "Hora",
+        "REASON": "Motivo",
+        "DETAILS": "Detalles",
+        "AMOUNT": "Salida / Entrada",
+        "RECORDED_BY": "Registrado por",
+        "APPROVED_BY": "Aprobado por",
+        "EMPTY": "Todavía no se ha sacado ni puesto efectivo en esta caja.",
+        "LOADING": "Cargando los movimientos…",
+        "FAILED": "No se pudieron cargar los movimientos."
+      },
+      "DIRECTION": {
+        "OUT": "Salida",
+        "IN": "Entrada"
+      },
+      "DETAIL": {
+        "CATEGORY": "Categoría: {{value}}",
+        "VENDOR": "Proveedor: {{value}}",
+        "BAG_NUMBER": "Número de bolsa: {{value}}",
+        "NOTE": "Nota: {{value}}",
+        "RECEIPT": "Recibo: {{value}}"
+      },
+      "REASON": {
+        "PETTY_EXPENSE": "Gasto menor",
+        "VENDOR_COD": "Pago contra entrega a proveedor",
+        "BANK_DROP": "Depósito bancario",
+        "FLOAT_INCREASE": "Aumento del fondo",
+        "FLOAT_DECREASE": "Disminución del fondo",
+        "UNKNOWN": "Desconocido"
+      },
+      "NOTICE": {
+        "SESSION_NOT_OPEN": "Esta caja ya no está abierta para pagos. No se registró nada.",
+        "SESSION_GONE": "Esta sesión de caja ya no existe. No se registró nada.",
+        "CONFLICT": "La caja cambió mientras se registraba esto. Revise sus movimientos antes de volver a intentarlo."
+      },
+      "ERROR": {
+        "LOAD": "No se pudo cargar la caja.",
+        "APPROVAL_DENIED": "No funcionó. Revise el usuario y la contraseña, y que esta persona pueda aprobar pagos de la caja.",
+        "SELF_APPROVAL": "El gerente debe ser una persona distinta del cajero.",
+        "APPROVAL_INVALID": "Esa aprobación ya no se puede usar. Un gerente debe aprobar de nuevo.",
+        "APPROVAL_UNAVAILABLE": "No se pudieron verificar el usuario y la contraseña del gerente en este momento. No se aprobó nada; inténtelo de nuevo.",
+        "TYPE_NOT_ALLOWED": "{{reason}} se acaba de desactivar para esta caja. No se registró nada.",
+        "CATEGORY_UNKNOWN": "Esa categoría ya no se puede usar; elija otra. No se registró nada.",
+        "FLOAT_NOT_RECORDED": "Esto no coincide con el cambio de fondo que registró contabilidad.",
+        "INVALID": "Faltan datos o no son válidos. No se registró nada.",
+        "FORBIDDEN": "No puede registrar movimientos de caja aquí; se necesita el permiso {{permission}}. No se registró nada.",
+        "REFUSED": "No se pudo registrar esto. No se registró nada.",
+        "UNKNOWN_OUTCOME": "No pudimos confirmar que esto se registró. Reintentar lo envía de nuevo; no se registrará dos veces."
+      },
+      "DIALOG": {
+        "TITLE_PAY_OUT": "Pagar desde la caja",
+        "TITLE_FLOAT": "Cambiar el fondo",
+        "LEGEND_PAY_OUT": "¿Para qué es este pago?",
+        "LEGEND_FLOAT": "¿En qué sentido cambia el fondo?",
+        "FLOAT_ADD": "Agregar a la caja",
+        "FLOAT_TAKE": "Sacar de la caja",
+        "FLOAT_NOTE": "Cambiar el fondo siempre necesita un gerente. Debe coincidir con el cambio de fondo que registró contabilidad.",
+        "LIMIT_HINT": "Hasta {{limit}} por sesión de caja sin un gerente; cuenta todo lo de este tipo en la caja",
+        "NONE_ALLOWED": "En este momento no se puede registrar nada de esta forma en esta caja.",
+        "CATEGORY": "Categoría",
+        "CATEGORY_PLACEHOLDER": "Elija una categoría",
+        "CATEGORY_EXAMPLES": "Por ejemplo: {{examples}}",
+        "RECEIPT_TOTAL": "Total del recibo (impuestos incluidos)",
+        "AMOUNT": "Importe",
+        "NOTE": "Nota",
+        "RECEIPT_REFERENCE": "Referencia del recibo",
+        "BAG_NUMBER": "Número de bolsa de depósito",
+        "NEVER_PETTY": {
+          "SUMMARY": "¿Qué no se puede pagar desde la caja?",
+          "TIRES_PARTS": "Llantas y refacciones",
+          "WAGES": "Salarios",
+          "TIPS": "Propinas o anticipos",
+          "OWNER": "Gastos del dueño",
+          "REFUNDS": "Reembolsos a clientes: use la pantalla de reembolsos",
+          "EQUIPMENT": "Equipo que dura años",
+          "VENDOR_BILLS": "Facturas de proveedores que no sean pago contra entrega"
+        },
+        "CONSEQUENCE_OUT": "Esto saca {{amount}} de la caja como {{reason}}. Los pagos registrados no se pueden cambiar ni eliminar.",
+        "CONSEQUENCE_IN": "Esto pone {{amount}} en la caja como {{reason}}. Los movimientos registrados no se pueden cambiar ni eliminar.",
+        "RECORD": "Registrar",
+        "CONTINUE_TO_MANAGER": "Continuar a la aprobación del gerente",
+        "RETRY": "Reintentar",
+        "CANCEL": "Cancelar"
+      },
+      "APPROVAL": {
+        "INTRO": "Un gerente debe aprobar esto. Escribe aquí su propio usuario y contraseña y debe ser una persona distinta de usted.",
+        "LEGEND": "Aprobación del gerente",
+        "USERNAME": "Usuario del gerente",
+        "PASSWORD": "Contraseña del gerente",
+        "APPROVE": "Aprobar",
+        "BACK": "Atrás"
+      }
     }
   },
   "COMMON": {
@@ -9491,7 +9614,8 @@
       "RECONCILIATIONS": "Conciliaciones bancarias",
       "BOOKS": "Sus libros",
       "ENTRIES": "Asientos contables",
-      "PAYMENTS": "Pagos"
+      "PAYMENTS": "Pagos",
+      "DRAWER": "Caja"
     }
   },
   "POSITIVITY": {

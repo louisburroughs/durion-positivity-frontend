@@ -720,3 +720,24 @@ describe('OrderCartPageComponent — customer, payment and checkout (CAP:550 S10
     });
   });
 });
+
+describe('OrderCartPageComponent — Drawer cash link (CAP:550 S22)', () => {
+  it('links to the drawer with routerLink for a holder of order:session:view', () => {
+    const h = renderCart(draftCart, [...ALL_CART_PERMISSIONS, 'order:session:view']);
+    const link = h.q<HTMLAnchorElement>('order-cart-drawer-link')!;
+
+    expect(text(link)).toBe(enUS.ORDER.DRAWER.LINK);
+    expect(link.getAttribute('href')).toBe('/app/order/drawer');
+    expect(h.root.querySelector('header')!.contains(link)).toBe(true);
+  });
+
+  it('hides the link without order:session:view', () => {
+    const h = renderCart(draftCart, ALL_CART_PERMISSIONS);
+    expect(h.q('order-cart-drawer-link')).toBeNull();
+  });
+
+  it('follows the canAccess fallback for a token without perm_bits', () => {
+    const h = renderCart(draftCart, null);
+    expect(h.q('order-cart-drawer-link')).not.toBeNull();
+  });
+});

@@ -26,6 +26,12 @@ export const ORDER_ROUTES: Routes = [
           import('./pages/order-cart/order-cart-page.component').then(m => m.OrderCartPageComponent),
       },
       {
+        path: 'drawer',
+        data: { permissions: ORDER_PAGE.drawer },
+        loadComponent: () =>
+          import('./pages/register-drawer/register-drawer-page.component').then(m => m.RegisterDrawerPageComponent),
+      },
+      {
         path: ':orderId/price-override/:lineId',
         data: { permissions: ORDER_PAGE.priceOverride },
         loadComponent: () =>

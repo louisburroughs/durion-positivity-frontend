@@ -1,0 +1,211 @@
+<dialog
+  class="drawer-dialog"
+  appModalDialog
+  (modalCancel)="cancel()"
+  aria-labelledby="drawer-dialog-title"
+  data-testid="drawer-dialog"
+>
+  <div class="drawer-dialog__panel">
+    <h2 id="drawer-dialog-title" class="drawer-dialog__title">{{ titleKey() | translate }}</h2>
+
+    <!-- Kept in the DOM so every refusal is announced (ADR-0029 §8.8). -->
+    <div #alert class="drawer-dialog__alert" role="alert" tabindex="-1" data-testid="drawer-dialog-alert"
+      [class.drawer-dialog__alert--shown]="!!failure()">
+      @if (failure(); as f) {
+      <p>
+        {{ f.key | translate: { reason: (f.reasonKey ? (f.reasonKey | translate) : ''), permission: cashMovementCode } }}
+      </p>
+      @if (f.fieldKeys?.length) {
+      <ul>
+        @for (fieldKey of f.fieldKeys; track fieldKey) {
+        <li>{{ fieldKey | translate }}</li>
+        }
+      </ul>
+      }
+      }
+    </div>
+
+    @if (step() === 'details') {
+    <form class="drawer-dialog__form" (submit)="submitDetails($event)" novalidate>
+      @if (kind() === 'FLOAT') {
+      <p class="drawer-dialog__note" data-testid="drawer-float-note">{{ 'ORDER.DRAWER.DIALOG.FLOAT_NOTE' | translate }}</p>
+      }
+
+      <fieldset class="drawer-dialog__reasons" data-testid="drawer-reasons" [disabled]="busy()">
+        <legend>{{ legendKey() | translate }}</legend>
+        @for (option of offered(); track option.reason) {
+        <div class="drawer-dialog__choice">
+          <input
+            type="radio"
+            name="drawer-reason"
+            [id]="'drawer-reason-' + option.reason"
+            [value]="option.reason"
+            [checked]="reason() === option.reason"
+            [attr.aria-describedby]="
+              kind() === 'PAY_OUT' && (option.alwaysNeedsManager || option.cashierLimit !== null)
+                ? 'drawer-reason-hint-' + option.reason
+                : null
+            "
+            [attr.data-testid]="'drawer-reason-' + option.reason"
+            (change)="chooseReason(option.reason)"
+          />
+          <label [for]="'drawer-reason-' + option.reason">{{ reasonLabelKey(option.reason) | translate }}</label>
+        </div>
+        @if (kind() === 'PAY_OUT') {
+        @if (option.alwaysNeedsManager) {
+        <p class="drawer-dialog__hint" [id]="'drawer-reason-hint-' + option.reason">
+          {{ 'ORDER.DRAWER.DIALOG.FLOAT_NOTE' | translate }}
+        </p>
+        } @else if (option.cashierLimit !== null) {
+        <p class="drawer-dialog__hint" [id]="'drawer-reason-hint-' + option.reason"
+          [attr.data-testid]="'drawer-limit-' + option.reason">
+          {{ 'ORDER.DRAWER.DIALOG.LIMIT_HINT' | translate: { limit: (option.cashierLimit | money: currencyCode()) } }}
+        </p>
+        }
+        }
+        } @empty {
+        <p class="drawer-dialog__hint" data-testid="drawer-none-allowed">{{ 'ORDER.DRAWER.DIALOG.NONE_ALLOWED' | translate }}</p>
+        }
+      </fieldset>
+
+      @if (reason(); as chosenReason) {
+      <div class="drawer-dialog__fields" data-testid="drawer-fields">
+        @if (rendered().has('categoryCode')) {
+        <div class="drawer-dialog__field">
+          <label for="drawer-category">{{ 'ORDER.DRAWER.DIALOG.CATEGORY' | translate }}</label>
+          <select
+            id="drawer-category"
+            class="drawer-dialog__input"
+            data-testid="drawer-category"
+            required
+            [disabled]="busy()"
+            [attr.aria-invalid]="isInvalid('categoryCode') || null"
+            [attr.aria-describedby]="selectedCategory()?.examples ? 'drawer-category-hint' : null"
+            (change)="onCategory($event)"
+          >
+            <option value="" [selected]="!categoryCode()">{{ 'ORDER.DRAWER.DIALOG.CATEGORY_PLACEHOLDER' | translate }}</option>
+            @for (category of categories(); track category.code) {
+            <option [value]="category.code" [selected]="category.code === categoryCode()">{{ category.label }}</option>
+            }
+          </select>
+          @if (selectedCategory()?.examples; as examples) {
+          <p id="drawer-category-hint" class="drawer-dialog__hint">
+            {{ 'ORDER.DRAWER.DIALOG.CATEGORY_EXAMPLES' | translate: { examples: examples } }}
+          </p>
+          }
+        </div>
+        }
+
+        @if (rendered().has('bagNumber')) {
+        <div class="drawer-dialog__field">
+          <label for="drawer-bag-number">{{ 'ORDER.DRAWER.DIALOG.BAG_NUMBER' | translate }}</label>
+          <input id="drawer-bag-number" class="drawer-dialog__input" type="text" autocomplete="off" required
+            data-testid="drawer-bag-number" [value]="bagNumber()" [disabled]="busy()"
+            [attr.aria-invalid]="isInvalid('bagNumber') || null" (input)="onBagNumber($event)" />
+        </div>
+        }
+
+        <div class="drawer-dialog__field">
+          <label for="drawer-amount">{{
+            (chosenReason === 'PETTY_EXPENSE' ? 'ORDER.DRAWER.DIALOG.RECEIPT_TOTAL' : 'ORDER.DRAWER.DIALOG.AMOUNT') | translate
+          }}</label>
+          <input id="drawer-amount" class="drawer-dialog__input" type="text" inputmode="decimal" autocomplete="off"
+            required data-testid="drawer-amount" [value]="amountText()" [disabled]="busy()"
+            [attr.aria-invalid]="isInvalid('amount') || null" (input)="onAmount($event)" />
+        </div>
+
+        @if (rendered().has('note')) {
+        <div class="drawer-dialog__field">
+          <label for="drawer-note">{{ 'ORDER.DRAWER.DIALOG.NOTE' | translate }}</label>
+          <input id="drawer-note" class="drawer-dialog__input" type="text" autocomplete="off" required
+            data-testid="drawer-note" [value]="note()" [disabled]="busy()"
+            [attr.aria-invalid]="isInvalid('note') || null" (input)="onNote($event)" />
+        </div>
+        }
+
+        @if (rendered().has('receiptReference')) {
+        <div class="drawer-dialog__field">
+          <label for="drawer-receipt-reference">{{ 'ORDER.DRAWER.DIALOG.RECEIPT_REFERENCE' | translate }}</label>
+          <input id="drawer-receipt-reference" class="drawer-dialog__input" type="text" autocomplete="off" required
+            data-testid="drawer-receipt-reference" [value]="receiptReference()" [disabled]="busy()"
+            [attr.aria-invalid]="isInvalid('receiptReference') || null" (input)="onReceiptReference($event)" />
+        </div>
+        }
+
+        @if (chosenReason === 'PETTY_EXPENSE') {
+        <details class="drawer-dialog__never" data-testid="drawer-never-petty">
+          <summary>{{ 'ORDER.DRAWER.DIALOG.NEVER_PETTY.SUMMARY' | translate }}</summary>
+          <ul>
+            <li>{{ 'ORDER.DRAWER.DIALOG.NEVER_PETTY.TIRES_PARTS' | translate }}</li>
+            <li>{{ 'ORDER.DRAWER.DIALOG.NEVER_PETTY.WAGES' | translate }}</li>
+            <li>{{ 'ORDER.DRAWER.DIALOG.NEVER_PETTY.TIPS' | translate }}</li>
+            <li>{{ 'ORDER.DRAWER.DIALOG.NEVER_PETTY.OWNER' | translate }}</li>
+            <li>{{ 'ORDER.DRAWER.DIALOG.NEVER_PETTY.REFUNDS' | translate }}</li>
+            <li>{{ 'ORDER.DRAWER.DIALOG.NEVER_PETTY.EQUIPMENT' | translate }}</li>
+            <li>{{ 'ORDER.DRAWER.DIALOG.NEVER_PETTY.VENDOR_BILLS' | translate }}</li>
+          </ul>
+        </details>
+        }
+
+        @if (amount(); as typed) {
+        <p class="drawer-dialog__consequence" data-testid="drawer-consequence">
+          {{ consequenceKey() | translate: { amount: (typed | money: currencyCode()), reason: (reasonKeyOf(chosenReason) | translate) } }}
+        </p>
+        }
+      </div>
+      }
+
+      <div class="drawer-dialog__actions">
+        <button type="button" class="drawer-dialog__secondary" data-testid="drawer-cancel" (click)="cancel()">
+          {{ 'ORDER.DRAWER.DIALOG.CANCEL' | translate }}
+        </button>
+        @if (canRecord()) {
+        <button #primaryButton type="submit" class="drawer-dialog__primary" data-testid="drawer-record"
+          [disabled]="!canSubmitDetails()">
+          {{ primaryKey() | translate }}
+        </button>
+        }
+      </div>
+    </form>
+    } @else {
+    <form class="drawer-dialog__form" (submit)="approve($event)" novalidate data-testid="drawer-approval">
+      <p id="drawer-approval-intro" class="drawer-dialog__note">{{ 'ORDER.DRAWER.APPROVAL.INTRO' | translate }}</p>
+      @if (reason(); as chosenReason) {
+      @if (amount(); as typed) {
+      <p class="drawer-dialog__consequence" data-testid="drawer-approval-summary">
+        {{ consequenceKey() | translate: { amount: (typed | money: currencyCode()), reason: (reasonKeyOf(chosenReason) | translate) } }}
+      </p>
+      }
+      }
+      <fieldset class="drawer-dialog__credentials" [disabled]="busy()" aria-describedby="drawer-approval-intro">
+        <legend>{{ 'ORDER.DRAWER.APPROVAL.LEGEND' | translate }}</legend>
+        <div class="drawer-dialog__field">
+          <label for="drawer-manager-username">{{ 'ORDER.DRAWER.APPROVAL.USERNAME' | translate }}</label>
+          <input #usernameInput id="drawer-manager-username" class="drawer-dialog__input" type="text"
+            autocomplete="off" autocapitalize="none" spellcheck="false" required data-testid="drawer-manager-username"
+            [value]="managerUsername()" (input)="onUsername($event)" />
+        </div>
+        <div class="drawer-dialog__field">
+          <label for="drawer-manager-password">{{ 'ORDER.DRAWER.APPROVAL.PASSWORD' | translate }}</label>
+          <input id="drawer-manager-password" class="drawer-dialog__input" type="password" autocomplete="off" required
+            data-testid="drawer-manager-password" [value]="managerPassword()" (input)="onPassword($event)" />
+        </div>
+      </fieldset>
+      <div class="drawer-dialog__actions">
+        <button type="button" class="drawer-dialog__secondary" data-testid="drawer-cancel" (click)="cancel()">
+          {{ 'ORDER.DRAWER.DIALOG.CANCEL' | translate }}
+        </button>
+        <button type="button" class="drawer-dialog__secondary" data-testid="drawer-approval-back" [disabled]="busy()"
+          (click)="backToDetails()">
+          {{ 'ORDER.DRAWER.APPROVAL.BACK' | translate }}
+        </button>
+        @if (canRecord()) {
+        <button type="submit" class="drawer-dialog__primary" data-testid="drawer-approve" [disabled]="!canApprove()">
+          {{ 'ORDER.DRAWER.APPROVAL.APPROVE' | translate }}
+        </button>
+        }
+      </div>
+    </form>
+    }
+  </div>
+</dialog>
