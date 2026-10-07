@@ -555,7 +555,8 @@ describe('AccountingHomePageComponent', () => {
       );
       mocks.customerPayments.creditRemainder.mockReturnValue(of({ creditId: 'credit-1', amount: 385, currency: 'USD' }));
       const refund = pending<number | null>();
-      mocks.customerPayments.refundCredit.mockReturnValueOnce(refund).mockReturnValue(of(385));
+      const retried = pending<number | null>();
+      mocks.customerPayments.refundCredit.mockReturnValueOnce(refund).mockReturnValueOnce(retried);
       render();
       q('.todo-item[data-kind="PAYMENT"]')!.click();
       fixture.detectChanges();
@@ -576,11 +577,23 @@ describe('AccountingHomePageComponent', () => {
       expect(text('[data-testid="approve-done"]')).toBe('ACCOUNTING.CUSTOMER_PAYMENTS.ERROR.REFUND_FAILED');
       const firstKey = mocks.customerPayments.refundCredit.mock.calls[0][2];
 
+      // The failed refund settled the chain: nothing is in flight, so the other items are free.
+      expect(component.paymentLock()).toBe(false);
       q('[data-testid="retry-refund"]')!.click();
       fixture.detectChanges();
       expect(mocks.customerPayments.refundCredit).toHaveBeenCalledTimes(2);
       expect(mocks.customerPayments.refundCredit.mock.calls[1][2]).toBe(firstKey);
+      // The retry re-takes the lock: picking another item is refused until it answers (Copilot).
+      expect(component.paymentLock()).toBe(true);
+      const selectedBefore = component.selectedId();
+      q('.todo-item[data-kind="BANK_LINE"]')!.click();
+      fixture.detectChanges();
+      expect(component.selectedId()).toBe(selectedBefore);
+
+      retried.next(385);
+      fixture.detectChanges();
       expect(text('[data-testid="approve-done"]')).toBe('ACCOUNTING.CUSTOMER_PAYMENTS.RESULT.ANNOUNCE_REFUNDED');
+      expect(component.paymentLock()).toBe(false);
     });
 
     it('releases a held payment when its apply is refused (400): the re-read without it closes the panel (ADR-0063 §1)', () => {

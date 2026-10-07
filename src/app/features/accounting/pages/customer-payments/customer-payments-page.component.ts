@@ -133,14 +133,21 @@ export class CustomerPaymentsPageComponent {
   });
 
   /** Every data view requires `!denied()` and the key it answers (ADR-0063 §1, ADR-0064 §6). */
+  // ...and the live permission: data read before a code was revoked stops rendering at once (ADR-0040, ADR-0064 §6).
   readonly paymentsData = computed(() =>
-    !this.payments.denied() && this.payments.dataKey() === 'AVAILABLE' ? this.payments.data() : null,
+    this.canSeePayments() && !this.payments.denied() && this.payments.dataKey() === 'AVAILABLE'
+      ? this.payments.data()
+      : null,
   );
   readonly receivablesData = computed(() =>
-    !this.receivables.denied() && this.receivables.dataKey() === this.asOfKey() ? this.receivables.data() : null,
+    this.canSeeCards() && !this.receivables.denied() && this.receivables.dataKey() === this.asOfKey()
+      ? this.receivables.data()
+      : null,
   );
   readonly automaticData = computed(() =>
-    !this.automatic.denied() && this.automatic.dataKey() === this.since() ? this.automatic.data() : null,
+    this.canSeePayments() && !this.automatic.denied() && this.automatic.dataKey() === this.since()
+      ? this.automatic.data()
+      : null,
   );
 
   // ── Selection ─────────────────────────────────────────────────────────

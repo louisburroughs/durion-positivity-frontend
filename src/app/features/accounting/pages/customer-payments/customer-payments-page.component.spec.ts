@@ -176,6 +176,22 @@ describe('CustomerPaymentsPageComponent (CAP:550 S6)', () => {
       expect(q('[data-testid="cards-denied"]')).not.toBeNull();
     });
 
+    it('stops rendering every figure read under a code the moment that code is revoked (Copilot)', () => {
+      render();
+      expect(q('[data-testid="card-waiting"]')).not.toBeNull();
+      expect(q('[data-testid="card-owed"]')).not.toBeNull();
+
+      mocks.held.set(['reporting:view:financial-statements']);
+      fixture.detectChanges();
+      expect(q('[data-testid="card-waiting"]')).toBeNull();
+      expect(component.automaticData()).toBeNull();
+      expect(q('[data-testid="card-owed"]')).not.toBeNull();
+
+      mocks.held.set([]);
+      fixture.detectChanges();
+      expect(q('[data-testid="card-owed"]')).toBeNull();
+    });
+
     it('shows no cards and reads no aging without reporting:view:financial-statements', () => {
       mocks.held.set(['accounting:payment:apply']);
       render();
