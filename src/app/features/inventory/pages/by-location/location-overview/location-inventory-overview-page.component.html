@@ -57,6 +57,7 @@
           class="picker-dropdown"
           role="listbox"
           [attr.aria-label]="'INVENTORY.BY_LOCATION.PICKER.DROPDOWN_ARIA' | translate"
+          (mousedown)="$event.preventDefault()"
         >
           @for (loc of filteredLocations(); track loc.id; let i = $index) {
           <li
