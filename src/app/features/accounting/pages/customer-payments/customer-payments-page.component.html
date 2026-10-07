@@ -128,6 +128,9 @@
             @if (list.items.length === 0) {
               <p class="state-panel state-panel--empty" data-testid="payments-empty">{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.LIST.EMPTY' | translate }}</p>
             } @else {
+              @if (paymentLock()) {
+                <p id="payments-lock-hint" class="hint-text" data-testid="payments-lock-hint">{{ 'ACCOUNTING.CUSTOMER_PAYMENTS.LIST.LOCKED' | translate }}</p>
+              }
               <ul class="payments__list">
                 @for (item of list.items; track item.paymentId) {
                   <li>
@@ -136,6 +139,8 @@
                       class="payment-item"
                       data-testid="payment-item"
                       [attr.aria-pressed]="selected()?.paymentId === item.paymentId"
+                      [attr.aria-disabled]="paymentLock() && selected()?.paymentId !== item.paymentId ? 'true' : null"
+                      [attr.aria-describedby]="paymentLock() && selected()?.paymentId !== item.paymentId ? 'payments-lock-hint' : null"
                       (click)="select(item)"
                     >
                       <span class="payment-item__text">
@@ -236,6 +241,7 @@
             [payment]="payment"
             (writeStarted)="onWriteStarted($event)"
             (writeReleased)="onWriteReleased($event)"
+            (writeSettled)="onWriteSettled($event)"
             (applied)="onApplied($event)"
             (changed)="onChanged()"
             (announce)="onAnnounce($event)"

@@ -5757,7 +5757,8 @@
         "NO_NAME": "Name not available",
         "SUGGESTED": "Suggested match",
         "TRUNCATED": "Showing {{shown}} of {{count}} payments waiting.",
-        "PICK_ONE": "Pick a payment to match it."
+        "PICK_ONE": "Pick a payment to match it.",
+        "LOCKED": "Finishing this payment — other payments wait until it's done."
       },
       "DUPLICATE": {
         "BADGE": "The invoice it was taken against isn't open — check for a duplicate payment",

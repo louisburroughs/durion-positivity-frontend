@@ -229,6 +229,7 @@ export class CustomerPaymentsPageComponent {
     this.undoErrorKey.set(null);
     this.selected.set(null);
     this.resultFor = null;
+    this.writeInFlightFor.set(null);
     this.queryHandled = null;
     this.queryNotWaiting.set(false);
     this.announcement.set(null);
@@ -365,9 +366,23 @@ export class CustomerPaymentsPageComponent {
   }
 
   // ── Selection ─────────────────────────────────────────────────────────
+  /** The selected panel's apply / credit / refund request is in flight (between `writeStarted` and its settle or release). */
+  private readonly writeInFlightFor = signal<string | null>(null);
+  /**
+   * While a write is in flight no other payment can be chosen: switching would
+   * reset the panel and rotate the key while the first request is unresolved,
+   * so A → B → A could apply A twice (AC 3, ADR-0063 §1). The lock holds only
+   * while the writing payment is still the selected panel.
+   */
+  readonly paymentLock = computed(() => {
+    const writing = this.writeInFlightFor();
+    return !!writing && writing === this.selected()?.paymentId && !this.payments.denied();
+  });
+
   /** Another payment discards the draft and rotates its key (the panel does both on a new payment). */
   select(payment: WaitingPayment): void {
     if (!this.canSeePayments()) return;
+    if (this.paymentLock() && this.selected()?.paymentId !== payment.paymentId) return;
     this.queryNotWaiting.set(false);
     if (this.selected()?.paymentId !== payment.paymentId) this.resultFor = null;
     this.selected.set(payment);
@@ -383,6 +398,7 @@ export class CustomerPaymentsPageComponent {
 
   /** The apply was refused (4xx): nothing was written, so the payment is no longer held against the list. */
   onWriteReleased(event: PaymentApplied): void {
+    if (this.writeInFlightFor() === event.paymentId) this.writeInFlightFor.set(null);
     if (this.resultFor !== event.paymentId) return;
     this.resultFor = null;
     // A list read that settled while the apply was pending may already have dropped the payment:
@@ -392,7 +408,14 @@ export class CustomerPaymentsPageComponent {
 
   /** An apply was sent: the payment stays selected until the person picks another, whatever the list says. */
   onWriteStarted(event: PaymentApplied): void {
-    if (this.selected()?.paymentId === event.paymentId) this.resultFor = event.paymentId;
+    if (this.selected()?.paymentId !== event.paymentId) return;
+    this.resultFor = event.paymentId;
+    this.writeInFlightFor.set(event.paymentId);
+  }
+
+  /** Nothing of the panel's write chain is in flight: other payments can be chosen again. */
+  onWriteSettled(event: PaymentApplied): void {
+    if (this.writeInFlightFor() === event.paymentId) this.writeInFlightFor.set(null);
   }
 
   onApplied(event: PaymentApplied): void {

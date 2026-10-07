@@ -5757,7 +5757,8 @@
         "NO_NAME": "Nom non disponible",
         "SUGGESTED": "Lettrage suggéré",
         "TRUNCATED": "{{shown}} paiements en attente affichés sur {{count}}.",
-        "PICK_ONE": "Choisissez un paiement pour le lettrer."
+        "PICK_ONE": "Choisissez un paiement pour le lettrer.",
+        "LOCKED": "Finalisation de ce paiement — les autres paiements attendent qu'il soit terminé."
       },
       "DUPLICATE": {
         "BADGE": "La facture sur laquelle il a été encaissé n'est pas ouverte — vérifiez s'il s'agit d'un paiement en double",

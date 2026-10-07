@@ -431,6 +431,40 @@ describe('CustomerPaymentsPageComponent (CAP:550 S6)', () => {
       expect(document.activeElement?.id).toBe('payments-list-heading');
     });
 
+    it('refuses another payment while the apply is in flight, so A → B → A can never apply A twice (AC 3, Copilot)', () => {
+      const answer = pending<ApplyResult>();
+      mocks.service.applyPayment.mockReturnValue(answer);
+      mocks.service.waitingPayments.mockReturnValue(
+        of(waitingList([payment(), payment({ paymentId: 'pay-2', customerId: 'cust-2', customerName: 'Ana Ruiz' })])),
+      );
+      render();
+      const [a, b] = qa('[data-testid="payment-item"]');
+      a.click();
+      fixture.detectChanges();
+      const key = component['match']()!.currentApplicationRequestId();
+      click('[data-testid="apply"]');
+
+      expect(b.getAttribute('aria-disabled')).toBe('true');
+      expect(b.getAttribute('aria-describedby')).toBe('payments-lock-hint');
+      expect(text('[data-testid="payments-lock-hint"]')).toBe('ACCOUNTING.CUSTOMER_PAYMENTS.LIST.LOCKED');
+      b.click();
+      fixture.detectChanges();
+      a.click();
+      fixture.detectChanges();
+      expect(component.selected()?.paymentId).toBe('pay-1');
+      expect(mocks.service.applyPayment).toHaveBeenCalledTimes(1);
+      expect(mocks.service.applyPayment.mock.calls[0][1]).toBe(key);
+
+      answer.next(applyResult());
+      fixture.detectChanges();
+      expect(q('[data-testid="match-result"]')).not.toBeNull();
+      expect(component.paymentLock()).toBe(false);
+      expect(q('[data-testid="payments-lock-hint"]')).toBeNull();
+      qa('[data-testid="payment-item"]')[1].click();
+      fixture.detectChanges();
+      expect(component.selected()?.paymentId).toBe('pay-2');
+    });
+
     it('keeps the payment selected while its apply is in flight, even when a re-read drops it', () => {
       const answer = pending<ApplyResult>();
       mocks.service.applyPayment.mockReturnValue(answer);

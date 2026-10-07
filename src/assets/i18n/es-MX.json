@@ -5757,7 +5757,8 @@
         "NO_NAME": "Nombre no disponible",
         "SUGGESTED": "Conciliación sugerida",
         "TRUNCATED": "Se muestran {{shown}} de {{count}} pagos en espera.",
-        "PICK_ONE": "Elija un pago para conciliarlo."
+        "PICK_ONE": "Elija un pago para conciliarlo.",
+        "LOCKED": "Terminando este pago — los demás pagos esperan hasta que termine."
       },
       "DUPLICATE": {
         "BADGE": "La factura contra la que se cobró no está abierta — verifique si hay un pago duplicado",
