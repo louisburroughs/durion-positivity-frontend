@@ -512,6 +512,7 @@
               [approveMessageParams]="approveMessage()?.params ?? {}"
               (approve)="approveMonth()"
               (paymentWriteStarted)="onPaymentWriteStarted()"
+              (paymentWriteReleased)="onPaymentWriteReleased()"
               (paymentApplied)="onPaymentApplied()"
               (paymentChanged)="onPaymentChanged()"
               (paymentAnnounce)="onPaymentAnnounce($event)"

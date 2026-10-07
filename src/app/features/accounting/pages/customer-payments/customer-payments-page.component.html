@@ -235,6 +235,7 @@
           <app-payment-match
             [payment]="payment"
             (writeStarted)="onWriteStarted($event)"
+            (writeReleased)="onWriteReleased($event)"
             (applied)="onApplied($event)"
             (changed)="onChanged()"
             (announce)="onAnnounce($event)"

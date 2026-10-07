@@ -282,13 +282,16 @@ export class CustomerPaymentsPageComponent {
   }
 
   retryReceivables(): void {
+    const before = this.receivables.issuedKey();
     this.advanceToday();
-    this.loadReceivables();
+    // advanceToday already read it for a new day; otherwise this is the retry's own read.
+    if (this.receivables.issuedKey() === before) this.loadReceivables();
   }
 
   retryAutomatic(): void {
+    const before = this.automatic.issuedKey();
     this.advanceToday();
-    this.loadAutomatic();
+    if (this.automatic.issuedKey() === before) this.loadAutomatic();
     this.focusAfterRender(() => this.automaticHeading()?.nativeElement.focus());
   }
 
@@ -364,6 +367,18 @@ export class CustomerPaymentsPageComponent {
     if (this.isSmallScreen()) this.focusAfterRender(() => this.match()?.focusHeading());
   }
 
+  /** After an Undo, the list and the cards re-read, and the automatic window once (advanceToday may already have read it). */
+  private reloadAutomaticAfterUndo(): void {
+    const before = this.automatic.issuedKey();
+    this.reloadAfterWrite();
+    if (this.canSeePayments() && !this.automatic.denied() && this.automatic.issuedKey() === before) this.loadAutomatic();
+  }
+
+  /** The apply was refused (4xx): nothing was written, so the payment is no longer held against the list. */
+  onWriteReleased(event: PaymentApplied): void {
+    if (this.resultFor === event.paymentId) this.resultFor = null;
+  }
+
   /** An apply was sent: the payment stays selected until the person picks another, whatever the list says. */
   onWriteStarted(event: PaymentApplied): void {
     if (this.selected()?.paymentId === event.paymentId) this.resultFor = event.paymentId;
@@ -430,8 +445,7 @@ export class CustomerPaymentsPageComponent {
             params: { invoice: row.invoiceNumber ?? '' },
           });
           // The payment reappears under Payments waiting; the row now reads Undone.
-          this.loadAutomatic();
-          this.reloadAfterWrite();
+          this.reloadAutomaticAfterUndo();
           // The Undo that opened the dialog is gone after the re-read: focus the section heading.
           this.focusAfterRender(() => this.automaticHeading()?.nativeElement.focus());
         },
@@ -452,8 +466,7 @@ export class CustomerPaymentsPageComponent {
             this.undoTarget.set(null);
             this.undoReason.set('');
             this.announcement.set({ key: 'ACCOUNTING.CUSTOMER_PAYMENTS.AUTOMATIC.ERROR.UNKNOWN', params: {} });
-            this.loadAutomatic();
-            this.reloadAfterWrite();
+            this.reloadAutomaticAfterUndo();
             this.focusAfterRender(() => this.automaticHeading()?.nativeElement.focus());
             return;
           }

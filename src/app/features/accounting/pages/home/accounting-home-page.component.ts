@@ -565,17 +565,24 @@ export class AccountingHomePageComponent {
     }
   }
 
-  /**
-   * The match panel applied a payment (CAP:550 S6): the payments and the Money
-   * owed lane re-read under their own guards. A payment that is now fully
-   * applied leaves the list, which clears the panel and moves focus to the
-   * to-do heading (`onTodoSourceSettled`); the outcome stays announced.
-   */
+  /** The match panel sent an apply: hold its payment item selected through the write chain and its result. */
   onPaymentWriteStarted(): void {
     const item = this.selectedItem();
     if (item?.kind === 'PAYMENT') this.heldPayment.set(item);
   }
 
+  /** The apply was refused (4xx): nothing was written, so the item is released and follows the list again. */
+  onPaymentWriteReleased(): void {
+    this.heldPayment.set(null);
+  }
+
+  /**
+   * The match panel applied a payment (CAP:550 S6): the payments and the Money
+   * owed lane re-read under their own guards. A payment that is now fully
+   * applied leaves the to-do list, but its item stays selected (`heldPayment`)
+   * so the panel keeps its result, and any credit or refund still running,
+   * until the person picks another item; the outcome stays announced.
+   */
   onPaymentApplied(): void {
     this.today.set(startOfLocalDay(this.clock()));
     if (this.canSeePayments() && !this.payments.denied()) this.loadRegion('payments');

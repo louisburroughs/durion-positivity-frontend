@@ -583,6 +583,24 @@ describe('AccountingHomePageComponent', () => {
       expect(text('[data-testid="approve-done"]')).toBe('ACCOUNTING.CUSTOMER_PAYMENTS.RESULT.ANNOUNCE_REFUNDED');
     });
 
+    it('releases a held payment when its apply is refused (400): the re-read without it closes the panel (ADR-0063 §1)', () => {
+      mocks.customerPayments.openInvoices.mockReturnValue(of(openInvoice9));
+      mocks.customerPayments.applyPayment.mockReturnValue(
+        throwError(() => new HttpErrorResponse({ status: 400, error: { code: 'VALIDATION_ERROR', message: 'x' } })),
+      );
+      mocks.home.paymentsToMatch.mockReturnValueOnce(of(paymentsPage([payment()]))).mockReturnValue(of(paymentsPage([])));
+      render();
+      q('.todo-item[data-kind="PAYMENT"]')!.click();
+      fixture.detectChanges();
+
+      q('[data-testid="apply"]')!.click();
+      fixture.detectChanges();
+
+      expect(q('app-payment-match')).toBeNull();
+      expect(component.selectedItem()).toBeNull();
+      expect(component.selectedId()).toBeNull();
+    });
+
     it('drops a held payment panel once the payments read is refused (ADR-0064 §6)', () => {
       mocks.customerPayments.openInvoices.mockReturnValue(of(openInvoice9));
       render();

@@ -181,6 +181,12 @@ export class PaymentMatchComponent {
    * another, so the chain apply → credit → refund is never torn down mid-flight.
    */
   readonly writeStarted = output<PaymentApplied>();
+  /**
+   * The apply was refused (4xx): nothing was written, so the host stops
+   * holding the payment and lets its list decide again (ADR-0063 §1). Emitted
+   * before `changed`, so the re-read that follows can drop a payment that left.
+   */
+  readonly writeReleased = output<PaymentApplied>();
   /** The payment changed under the person (a refusal), or its remainder moved: the host re-reads its list. */
   readonly changed = output<void>();
   readonly announce = output<MatchMessage>();
@@ -559,6 +565,7 @@ export class PaymentMatchComponent {
   }
 
   private onApplyRefused(status: number, code: string | null, sent: readonly OpenInvoice[]): void {
+    if (!outcomeUnknown(status)) this.writeReleased.emit({ paymentId: this.payment().paymentId });
     if (outcomeUnknown(status)) {
       // The apply may have landed: same key, locked draft, Try again (§8.2).
       this.phase.set('unknown');

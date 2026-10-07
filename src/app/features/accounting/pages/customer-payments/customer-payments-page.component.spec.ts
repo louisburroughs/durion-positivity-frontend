@@ -242,6 +242,41 @@ describe('CustomerPaymentsPageComponent (CAP:550 S6)', () => {
       expect(q('[data-testid="automatic-row"]')).not.toBeNull();
     });
 
+    it('reads each date-keyed section once per retry, past midnight or not', () => {
+      render();
+      const automaticReads = mocks.service.automaticApplications.mock.calls.length;
+      const agingReads = mocks.service.receivablesTotals.mock.calls.length;
+
+      component.retryAutomatic();
+      component.retryReceivables();
+      expect(mocks.service.automaticApplications.mock.calls.length).toBe(automaticReads + 1);
+      expect(mocks.service.receivablesTotals.mock.calls.length).toBe(agingReads + 1);
+
+      now = new Date(NOW.getFullYear(), NOW.getMonth(), NOW.getDate() + 1, 0, 5);
+      component.retryAutomatic();
+      // The day changed: advanceToday read both for the new day; neither retry reads again.
+      expect(mocks.service.automaticApplications.mock.calls.length).toBe(automaticReads + 2);
+      expect(mocks.service.receivablesTotals.mock.calls.length).toBe(agingReads + 2);
+      component.retryReceivables();
+      expect(mocks.service.receivablesTotals.mock.calls.length).toBe(agingReads + 3);
+    });
+
+    it('reads the automatic window once after an Undo past midnight', () => {
+      render();
+      (q('[data-testid="automatic"]') as HTMLDetailsElement).open = true;
+      fixture.detectChanges();
+      click('[data-testid="undo"]');
+      const field = q('[data-testid="undo-reason"]') as HTMLTextAreaElement;
+      field.value = 'Customer paid the wrong invoice';
+      field.dispatchEvent(new Event('input'));
+      now = new Date(NOW.getFullYear(), NOW.getMonth(), NOW.getDate() + 1, 0, 5);
+      const reads = mocks.service.automaticApplications.mock.calls.length;
+
+      click('[data-testid="undo-confirm"]');
+
+      expect(mocks.service.automaticApplications.mock.calls.length).toBe(reads + 1);
+    });
+
     it('re-reads the date-keyed sections after a write past midnight', () => {
       render();
       click('[data-testid="payment-item"]');
@@ -327,6 +362,22 @@ describe('CustomerPaymentsPageComponent (CAP:550 S6)', () => {
   });
 
   describe('selecting a payment (§5.3 item 4)', () => {
+    it('releases the payment when its apply is refused (400): the re-read without it closes the panel (ADR-0063 §1)', async () => {
+      mocks.service.applyPayment.mockReturnValue(
+        throwError(() => new HttpErrorResponse({ status: 400, error: { code: 'VALIDATION_ERROR', message: 'x' } })),
+      );
+      render();
+      click('[data-testid="payment-item"]');
+      mocks.service.waitingPayments.mockReturnValue(of(waitingList([payment({ paymentId: 'pay-2' })])));
+
+      click('[data-testid="apply"]');
+      await fixture.whenStable();
+
+      expect(component.selected()).toBeNull();
+      expect(q('app-payment-match')).toBeNull();
+      expect(document.activeElement?.id).toBe('payments-list-heading');
+    });
+
     it('keeps the payment selected while its apply is in flight, even when a re-read drops it', () => {
       const answer = pending<ApplyResult>();
       mocks.service.applyPayment.mockReturnValue(answer);
