@@ -623,6 +623,16 @@ export class PaymentMatchComponent {
 
   // ── Keep as credit, then refund (S35) ─────────────────────────────────
   private runCredit(plan: { readonly paymentId: string; readonly expected: number; readonly refund: boolean }): void {
+    // Its own write: re-checked here, so a permission revoked while the apply was in flight sends nothing (ADR-0040 §6a).
+    if (!this.canApply()) {
+      this.pendingCredit = null;
+      this.finish({
+        key: 'ACCOUNTING.CUSTOMER_PAYMENTS.ERROR.CREDIT_FORBIDDEN',
+        params: { permission: this.codes.apply },
+        tone: 'error',
+      });
+      return;
+    }
     const intent = this.intent;
     this.pendingCredit = plan;
     this.phase.set('crediting');

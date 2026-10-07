@@ -463,6 +463,27 @@ describe('PaymentMatchComponent (CAP:550 S6 match panel)', () => {
       expect(component.phase()).toBe('done');
     });
 
+    it('sends no remainder credit when accounting:payment:apply is revoked while the apply is in flight (Copilot)', () => {
+      const answer = pending<ApplyResult>();
+      mocks.service.applyPayment.mockReturnValue(answer);
+      render();
+      leaveHundred();
+      click('[data-testid="apply"]');
+      mocks.held.set(['reporting:view:financial-statements']);
+      answer.next(applyResult({ appliedAmount: 500, remainingAmount: 100 }));
+      fixture.detectChanges();
+
+      expect(mocks.service.creditRemainder).not.toHaveBeenCalled();
+      expect(component.message()).toEqual({
+        key: 'ACCOUNTING.CUSTOMER_PAYMENTS.ERROR.CREDIT_FORBIDDEN',
+        params: { permission: 'accounting:payment:apply' },
+        tone: 'error',
+      });
+      expect(component.phase()).toBe('done');
+      component.retryCredit();
+      expect(mocks.service.creditRemainder).not.toHaveBeenCalled();
+    });
+
     it('does not retry a failed refund once the permission is gone', () => {
       mocks.service.applyPayment.mockReturnValue(of(applyResult({ appliedAmount: 500, remainingAmount: 100 })));
       mocks.service.refundCredit.mockReturnValueOnce(throwError(() => httpError(503)));
