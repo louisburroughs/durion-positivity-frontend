@@ -744,25 +744,35 @@ export const BILLING_SECTION = {
   paymentLimitOverride: ['invoice:payment:limit_override'],
 } as const satisfies Record<string, readonly string[]>;
 
-/** `/app/order/*` — carts, lines, price overrides, cancellation. */
+/** `/app/order/*` — carts, lines, price overrides, cancellation and the register drawer. */
 export const ORDER_PAGE = {
   cartCreate: ['order:order:create'],
   cartView: ['order:order:view'],
   priceOverride: ['order:price_override:view'],
   cancel: ['order:order:cancel'],
+  /**
+   * The register drawer (CAP:550 S22): `getCurrentRegisterSession` and `listCashMovements`
+   * (`RegisterSessionController`) both enforce `order:session:view`.
+   */
+  drawer: ['order:session:view'],
 } as const satisfies Record<string, readonly string[]>;
 
 /**
- * Write controls *inside* the register cart page (CAP:550 S10), as opposed to the page gate in
- * {@link ORDER_PAGE}. The cart admits anyone holding `order:order:view`, but `setCartCustomer`
- * enforces `order:order:edit`, `checkoutOrder` enforces `order:order:checkout`, and an
- * ON_ACCOUNT checkout additionally needs `order:order:charge_on_account`, so each control and
- * its handler gate on its own code (ADR-0040 §6a).
+ * Write controls *inside* the register cart page (CAP:550 S10) and the register drawer page
+ * (CAP:550 S22), as opposed to the page gates in {@link ORDER_PAGE}. The cart admits anyone
+ * holding `order:order:view`, but `setCartCustomer` enforces `order:order:edit`, `checkoutOrder`
+ * enforces `order:order:checkout`, and an ON_ACCOUNT checkout additionally needs
+ * `order:order:charge_on_account`. The drawer admits `order:session:view`, but
+ * `getCashMovementOptions`, `recordCashMovement` and the manager step-up
+ * `requestCashMovementApproval` all enforce `order:session:cash_movement` (the step-up then
+ * checks the *manager* holds `order:session:approve_cash_movement`; the UI never checks that).
+ * Each control and its handler gate on its own code (ADR-0040 §6a).
  */
 export const ORDER_SECTION = {
   setCustomer: ['order:order:edit'],
   checkout: ['order:order:checkout'],
   chargeOnAccount: ['order:order:charge_on_account'],
+  cashMovement: ['order:session:cash_movement'],
 } as const satisfies Record<string, readonly string[]>;
 
 /**

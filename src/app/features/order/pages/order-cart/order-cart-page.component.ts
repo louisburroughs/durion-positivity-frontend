@@ -12,8 +12,9 @@ import {
   SetCartCustomerRequest,
 } from '@durion-sdk/order';
 import { Subscription, distinctUntilChanged, filter, map, of, switchMap } from 'rxjs';
-import { BILLING_SECTION, ORDER_SECTION } from '../../../../core/security/route-permissions';
+import { BILLING_SECTION, ORDER_PAGE, ORDER_SECTION } from '../../../../core/security/route-permissions';
 import { AuthService } from '../../../../core/services/auth.service';
+import { REGISTER_TERMINAL_ID } from '../../models/register-drawer.models';
 import { CartAction, CartActionFailure, OrderService, classifyCartActionError } from '../../services/order.service';
 import { MoneyPipe } from '../../../../shared/money.pipe';
 import { CustomerLookupComponent } from '../../../../shared/customer-lookup/customer-lookup.component';
@@ -115,6 +116,8 @@ export class OrderCartPageComponent {
   readonly canCheckout = computed(() => this.permitted(ORDER_SECTION.checkout));
   readonly canChargeOnAccount = computed(() => this.permitted(ORDER_SECTION.chargeOnAccount));
   readonly canTakePayment = computed(() => this.permitted(BILLING_SECTION.paymentProcess));
+  /** The **Drawer cash** link (CAP:550 S22) shows to holders of the drawer page's read (ADR-0037). */
+  readonly canViewDrawer = computed(() => this.permitted(ORDER_PAGE.drawer));
 
   readonly isDraft = computed(() => this.order()?.status === 'DRAFT');
   readonly isWalkIn = computed(() => this.order()?.walkIn === true);
@@ -216,7 +219,7 @@ export class OrderCartPageComponent {
   createNewCart(vehicleId?: string): void {
     const request: CreateCartRequest = {
       clerkId: this.authService.currentUserClaims()?.sub ?? '',
-      terminalId: 'DEFAULT',
+      terminalId: REGISTER_TERMINAL_ID, // the drawer page resolves the same session (CAP:550 S22)
       vehicleId,
     };
 

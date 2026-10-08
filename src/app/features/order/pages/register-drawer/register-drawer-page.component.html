@@ -1,0 +1,205 @@
+@let empty = 'COMMON.EMPTY_VALUE' | translate;
+<section class="drawer" [attr.data-state]="state()" data-testid="register-drawer-page">
+  <header class="drawer__header">
+    <h1 #heading class="drawer__title" tabindex="-1" data-testid="drawer-heading">{{ 'ORDER.DRAWER.TITLE' | translate }}</h1>
+  </header>
+
+  <!-- Both live regions stay in the DOM across every state (ADR-0029 §8.8). -->
+  <div #notice class="drawer__notice" role="alert" tabindex="-1" data-testid="drawer-notice"
+    [class.drawer__notice--shown]="!!noticeKey() || state() === 'error'">
+    @if (noticeKey(); as key) {
+    <p>{{ key | translate: { permission: cashMovementCode } }}</p>
+    }
+    @if (state() === 'error') {
+    <p>{{ (errorKey() ?? 'ORDER.DRAWER.ERROR.LOAD') | translate: { permission: drawerViewCode } }}</p>
+    }
+  </div>
+  <p class="drawer__announcement" role="status" aria-live="polite" data-testid="drawer-announcement">
+    @if (announcement(); as recorded) {
+    {{ 'ORDER.DRAWER.RECORDED' | translate: { reason: (recorded.reasonKey | translate), amount: (recorded.amount | money: recorded.currencyCode) } }}
+    }
+  </p>
+  <!-- Read failures, announced every time a read (a Retry included) fails; the visible messages
+       with their Retry buttons below are not live regions themselves (ADR-0029 §8.8). -->
+  <p class="sr-only" role="status" aria-live="polite" data-testid="drawer-read-status">
+    @if (showActions() && optionsStatus() === 'FAILED') {
+    {{ 'ORDER.DRAWER.OPTIONS_FAILED' | translate }}
+    }
+    @if (state() === 'ready' && movementsStatus() === 'FAILED') {
+    {{ (movementsDenied() ? 'ORDER.DRAWER.MOVEMENTS.DENIED' : 'ORDER.DRAWER.MOVEMENTS.FAILED') | translate }}
+    }
+  </p>
+
+  @switch (state()) {
+  @case ('loading') {
+  <p class="drawer__muted" data-testid="drawer-loading">{{ 'ORDER.DRAWER.LOADING' | translate }}</p>
+  }
+  @case ('error') {
+  <button type="button" class="drawer__secondary" data-testid="drawer-retry" (click)="onRetrySession()">
+    {{ 'COMMON.RETRY' | translate }}
+  </button>
+  }
+  @case ('noSession') {
+  <p class="drawer__muted" data-testid="drawer-no-session">{{ 'ORDER.DRAWER.NO_SESSION' | translate }}</p>
+  }
+  @case ('ready') {
+  @if (sessionView(); as session) {
+  <section class="drawer__summary" aria-labelledby="drawer-summary-heading" data-testid="drawer-summary">
+    <h2 id="drawer-summary-heading" class="drawer__heading">{{ 'ORDER.DRAWER.SUMMARY.HEADING' | translate }}</h2>
+    <dl class="drawer__facts">
+      <div>
+        <dt>{{ 'ORDER.DRAWER.SUMMARY.REGISTER' | translate }}</dt>
+        <dd data-testid="drawer-terminal">{{ session.terminalId ?? empty }}</dd>
+      </div>
+      <div>
+        <dt>{{ 'ORDER.DRAWER.SUMMARY.STATUS' | translate }}</dt>
+        <dd><span class="drawer__status" data-testid="drawer-status">{{ statusKey(session.status) | translate }}</span></dd>
+      </div>
+      <div>
+        <dt>{{ 'ORDER.DRAWER.SUMMARY.OPENED_AT' | translate }}</dt>
+        <dd data-testid="drawer-opened-at">{{ session.openedAt ? (session.openedAt | date: 'short') : empty }}</dd>
+      </div>
+      <div>
+        <dt>{{ 'ORDER.DRAWER.SUMMARY.OPENED_BY' | translate }}</dt>
+        <!-- The session serves the opener's id only, never a name (spec discrepancy 3). -->
+        <dd data-testid="drawer-opened-by">{{ empty }}</dd>
+      </div>
+      <div>
+        <dt>{{ 'ORDER.DRAWER.SUMMARY.OPENING_FLOAT' | translate }}</dt>
+        <dd data-testid="drawer-opening-float">
+          {{ (session.openingFloat ?? null) !== null && session.currencyCode ? (session.openingFloat | money: session.currencyCode) : empty }}
+        </dd>
+      </div>
+    </dl>
+  </section>
+
+  @if (isClosing()) {
+  <p class="drawer__muted" data-testid="drawer-closing">{{ 'ORDER.DRAWER.CLOSING' | translate }}</p>
+  }
+
+  @if (showActions()) {
+  <div class="drawer__actions" data-testid="drawer-actions">
+    <!-- aria-disabled, not disabled: the trigger keeps focus when the dialog closes during a re-read. -->
+    <button #payOutButton type="button" class="drawer__primary" data-testid="drawer-pay-out"
+      [attr.aria-disabled]="!canPayOut() || null" (click)="openPayOut()">
+      {{ 'ORDER.DRAWER.ACTIONS.PAY_OUT' | translate }}
+    </button>
+    <button type="button" class="drawer__primary" data-testid="drawer-change-float"
+      [attr.aria-disabled]="!canChangeFloat() || null" (click)="openFloatChange()">
+      {{ 'ORDER.DRAWER.ACTIONS.CHANGE_FLOAT' | translate }}
+    </button>
+  </div>
+  @if (pendingAttempt(); as pending) {
+  <!-- A record whose outcome is unknown: either action reopens it to retry (item 6 amendment). -->
+  <p class="drawer__pending" data-testid="drawer-pending">
+    {{ 'ORDER.DRAWER.PENDING' | translate: { reason: (reasonKeyOf(pending.draft.reason) | translate), amount: (pending.draft.amount | money: pending.draft.currencyCode) } }}
+  </p>
+  }
+  @if (optionsStatus() === 'FAILED') {
+  <div class="drawer__inline-error" data-testid="drawer-options-failed">
+    <p>{{ 'ORDER.DRAWER.OPTIONS_FAILED' | translate }}</p>
+    <button type="button" class="drawer__secondary" data-testid="drawer-options-retry" (click)="onRetryOptions()">
+      {{ 'ORDER.DRAWER.RETRY_OPTIONS' | translate }}
+    </button>
+  </div>
+  }
+  }
+
+  <section class="drawer__movements" aria-labelledby="drawer-movements-heading">
+    <h2 #movementsHeading id="drawer-movements-heading" class="drawer__heading" tabindex="-1">{{ 'ORDER.DRAWER.MOVEMENTS.HEADING' | translate }}</h2>
+    @if (movementsDenied()) {
+    <p class="drawer__inline-error" data-testid="drawer-movements-denied">{{ 'ORDER.DRAWER.MOVEMENTS.DENIED' | translate }}</p>
+    } @else if (movementsStatus() === 'FAILED') {
+    <div class="drawer__inline-error" data-testid="drawer-movements-failed">
+      <p>{{ 'ORDER.DRAWER.MOVEMENTS.FAILED' | translate }}</p>
+      <button type="button" class="drawer__secondary" data-testid="drawer-movements-retry" (click)="onRetryMovements()">
+        {{ 'ORDER.DRAWER.RETRY_MOVEMENTS' | translate }}
+      </button>
+    </div>
+    }
+    @if (movementsView(); as rows) {
+    @if (rows.length === 0) {
+    <p class="drawer__muted" data-testid="drawer-movements-empty">{{ 'ORDER.DRAWER.MOVEMENTS.EMPTY' | translate }}</p>
+    } @else {
+    <!-- Focusable so a keyboard user can scroll a wide table (WCAG 2.1.1). -->
+    <div class="drawer__table-wrap" tabindex="0" role="region" aria-labelledby="drawer-movements-heading"
+      data-testid="drawer-movements-region">
+      <table class="drawer__table" data-testid="drawer-movements">
+        <caption>{{ 'ORDER.DRAWER.MOVEMENTS.CAPTION' | translate }}</caption>
+        <thead>
+          <tr>
+            <th scope="col">{{ 'ORDER.DRAWER.MOVEMENTS.TIME' | translate }}</th>
+            <th scope="col">{{ 'ORDER.DRAWER.MOVEMENTS.REASON' | translate }}</th>
+            <th scope="col">{{ 'ORDER.DRAWER.MOVEMENTS.DETAILS' | translate }}</th>
+            <th scope="col">{{ 'ORDER.DRAWER.MOVEMENTS.AMOUNT' | translate }}</th>
+            <th scope="col">{{ 'ORDER.DRAWER.MOVEMENTS.RECORDED_BY' | translate }}</th>
+            <th scope="col">{{ 'ORDER.DRAWER.MOVEMENTS.APPROVED_BY' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (movement of rows; track movement.movementId ?? $index) {
+          <tr data-testid="drawer-movement-row">
+            <td>{{ movement.occurredAt ? (movement.occurredAt | date: 'short') : empty }}</td>
+            <td data-testid="drawer-movement-reason">{{ reasonKeyOf(movement.reason) | translate }}</td>
+            <td data-testid="drawer-movement-details">
+              @if (hasDetails(movement)) {
+              <ul class="drawer__details">
+                @if (movement.categoryCode) {
+                <li>{{ 'ORDER.DRAWER.DETAIL.CATEGORY' | translate: { value: categoryLabel(movement.categoryCode) } }}</li>
+                }
+                @if (movement.vendorId || movement.reason === 'VENDOR_COD') {
+                <!-- Only the vendor's id is served, never shown (ADR-0064). -->
+                <li>{{ 'ORDER.DRAWER.DETAIL.VENDOR' | translate: { value: empty } }}</li>
+                }
+                @if (movement.bagNumber) {
+                <li>{{ 'ORDER.DRAWER.DETAIL.BAG_NUMBER' | translate: { value: movement.bagNumber } }}</li>
+                }
+                @if (movement.note) {
+                <li>{{ 'ORDER.DRAWER.DETAIL.NOTE' | translate: { value: movement.note } }}</li>
+                }
+                @if (movement.receiptReference) {
+                <li>{{ 'ORDER.DRAWER.DETAIL.RECEIPT' | translate: { value: movement.receiptReference } }}</li>
+                }
+              </ul>
+              } @else {
+              {{ empty }}
+              }
+            </td>
+            <td data-testid="drawer-movement-amount">
+              {{ directionKey(movement) | translate }}
+              @let movementCurrency = movement.currencyCode ?? session.currencyCode;
+              {{ (movement.amount ?? null) !== null && movementCurrency ? (movement.amount | money: movementCurrency) : empty }}
+            </td>
+            <!-- Cashier and approver are served as ids only (spec discrepancy 3): never shown. -->
+            <td data-testid="drawer-movement-recorded-by">{{ empty }}</td>
+            <td data-testid="drawer-movement-approved-by">{{ empty }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    }
+    } @else if (movementsStatus() === 'PENDING') {
+    <p class="drawer__muted" data-testid="drawer-movements-loading">{{ 'ORDER.DRAWER.MOVEMENTS.LOADING' | translate }}</p>
+    }
+  </section>
+
+  @if (dialog(); as open) {
+  <app-drawer-movement-dialog
+    [kind]="open.kind"
+    [sessionId]="open.sessionId"
+    [currencyCode]="open.currencyCode"
+    [options]="open.options"
+    [optionsCurrent]="open.optionsCurrent"
+    [optionsFailed]="open.optionsFailed"
+    [attempt]="open.attempt"
+    (recorded)="onRecorded($event)"
+    (cancelled)="onCancelled()"
+    (sessionChanged)="onSessionChanged($event)"
+    (optionsStale)="onOptionsStale()"
+  />
+  }
+  }
+  }
+  }
+</section>

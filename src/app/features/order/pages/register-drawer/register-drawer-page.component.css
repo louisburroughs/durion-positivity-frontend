@@ -1,0 +1,182 @@
+.drawer {
+  display: grid;
+  gap: var(--space-4);
+  width: 100%;
+  background: var(--themeBackground);
+  color: var(--currentTextColor);
+}
+
+.drawer__title {
+  margin: 0;
+  font-family: var(--font-primary);
+  font-size: 1.5rem;
+}
+
+.drawer__heading {
+  margin: 0 0 var(--space-2);
+  font-family: var(--font-primary);
+  font-size: 1.125rem;
+}
+
+/* The empty live regions stay in the DOM (ADR-0029 §8.8) without adding a gap row. */
+.drawer__notice:not(.drawer__notice--shown),
+.drawer__announcement:empty {
+  margin-block-end: calc(-1 * var(--space-4));
+}
+
+.drawer__notice--shown {
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--status-error-bg);
+  color: var(--status-error-fg);
+}
+
+.drawer__notice p {
+  margin: 0;
+}
+
+.drawer__announcement {
+  margin: 0;
+  font-weight: 600;
+}
+
+.drawer__muted {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.drawer__summary,
+.drawer__movements {
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--cardBackground);
+  box-shadow: var(--shadow-card);
+}
+
+.drawer__facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+}
+
+.drawer__facts dt {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.drawer__facts dd {
+  margin: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.drawer__status {
+  display: inline-block;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--status-neutral-bg);
+  color: var(--status-neutral-fg);
+}
+
+.drawer__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+/* Primary actions are at least 44px tall (S22, ADR-0029 §8). */
+.drawer__primary,
+.drawer__secondary {
+  min-height: 2.75rem;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.drawer__primary {
+  border: 0;
+  background: var(--brand-primary);
+  color: var(--contrastTextColor);
+}
+
+.drawer__secondary {
+  justify-self: start;
+  border: 1px solid var(--input-border);
+  background: transparent;
+  color: var(--currentTextColor);
+}
+
+.drawer__primary[aria-disabled='true'],
+.drawer__secondary:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.drawer__primary:focus-visible,
+.drawer__secondary:focus-visible,
+.drawer__notice:focus-visible,
+.drawer__title:focus-visible,
+.drawer__heading:focus-visible {
+  outline: 2px solid var(--input-focus-border);
+  outline-offset: 2px;
+}
+
+.drawer__inline-error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--status-warning-bg);
+  color: var(--status-warning-fg);
+}
+
+.drawer__pending {
+  margin: 0;
+  font-weight: 600;
+}
+
+.drawer__table-wrap:focus-visible {
+  outline: 2px solid var(--input-focus-border);
+  outline-offset: 2px;
+}
+
+.drawer__inline-error p {
+  margin: 0;
+}
+
+.drawer__table-wrap {
+  overflow-x: auto;
+}
+
+.drawer__table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.drawer__table caption {
+  text-align: start;
+  font-weight: 600;
+  margin-bottom: var(--space-2);
+}
+
+.drawer__table th,
+.drawer__table td {
+  text-align: start;
+  padding: var(--space-2) var(--space-1);
+  vertical-align: top;
+}
+
+.drawer__table tbody tr {
+  border-bottom: 1px solid var(--border-color);
+}
+
+.drawer__details {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-wrap: anywhere;
+}

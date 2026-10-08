@@ -8932,6 +8932,143 @@
         "PAYMENT_REVERSAL_REQUIRED": "Payment reversal is required.",
         "PAYMENT_REVERSAL_ACTION": "Void/Refund Payment"
       }
+    },
+    "DRAWER": {
+      "LINK": "Drawer cash",
+      "TITLE": "Drawer cash",
+      "LOADING": "Loading the drawer…",
+      "NO_SESSION": "No drawer is open on this register.",
+      "CLOSING": "The drawer is being counted; payouts are closed.",
+      "RECORDED": "Recorded: {{reason}}, {{amount}}",
+      "OPTIONS_FAILED": "Payout options couldn't be loaded",
+      "RETRY_OPTIONS": "Retry loading payout options",
+      "RETRY_MOVEMENTS": "Retry loading movements",
+      "SUMMARY": {
+        "HEADING": "This drawer",
+        "REGISTER": "Register",
+        "STATUS": "Status",
+        "OPENED_AT": "Opened at",
+        "OPENED_BY": "Opened by",
+        "OPENING_FLOAT": "Opening float"
+      },
+      "STATUS": {
+        "OPEN": "Open",
+        "CLOSING": "Being counted",
+        "CLOSED": "Closed",
+        "UNKNOWN": "Unknown"
+      },
+      "ACTIONS": {
+        "PAY_OUT": "Pay out",
+        "CHANGE_FLOAT": "Change the float"
+      },
+      "MOVEMENTS": {
+        "HEADING": "Movements",
+        "CAPTION": "Cash taken out of and put into this drawer",
+        "TIME": "Time",
+        "REASON": "Reason",
+        "DETAILS": "Details",
+        "AMOUNT": "Out / In",
+        "RECORDED_BY": "Recorded by",
+        "APPROVED_BY": "Approved by",
+        "EMPTY": "No cash has been taken out of or put into this drawer yet.",
+        "LOADING": "Loading the movements…",
+        "FAILED": "The movements couldn't be loaded.",
+        "DENIED": "You aren't allowed to see this drawer's movements."
+      },
+      "DIRECTION": {
+        "OUT": "Out",
+        "IN": "In",
+        "UNKNOWN": "Unknown"
+      },
+      "DETAIL": {
+        "CATEGORY": "Category: {{value}}",
+        "VENDOR": "Vendor: {{value}}",
+        "BAG_NUMBER": "Bag number: {{value}}",
+        "NOTE": "Note: {{value}}",
+        "RECEIPT": "Receipt: {{value}}"
+      },
+      "REASON": {
+        "PETTY_EXPENSE": "Petty expense",
+        "VENDOR_COD": "Vendor cash on delivery",
+        "BANK_DROP": "Bank drop",
+        "FLOAT_INCREASE": "Float increase",
+        "FLOAT_DECREASE": "Float decrease",
+        "UNKNOWN": "Unknown"
+      },
+      "NOTICE": {
+        "SESSION_NOT_OPEN": "This drawer is no longer open for payouts. Nothing was recorded.",
+        "SESSION_GONE": "This drawer session no longer exists. Nothing was recorded.",
+        "CONFLICT": "The drawer changed while this was being recorded. Check its movements before you try again.",
+        "ALREADY_RECORDED": "An earlier attempt was already recorded; check the movements."
+      },
+      "ERROR": {
+        "LOAD": "The drawer couldn't be loaded.",
+        "APPROVAL_DENIED": "That didn't work. Check the username and password, and that this person can approve drawer payouts.",
+        "SELF_APPROVAL": "The manager must be someone other than the cashier.",
+        "APPROVAL_INVALID": "That approval can no longer be used. A manager needs to approve again.",
+        "APPROVAL_UNAVAILABLE": "The manager's username and password couldn't be checked just now. Nothing was approved; try again.",
+        "TYPE_NOT_ALLOWED": "{{reason}} was just turned off for this drawer. Nothing was recorded.",
+        "CATEGORY_UNKNOWN": "That category can no longer be used; choose another one. Nothing was recorded.",
+        "FLOAT_NOT_RECORDED": "This doesn't match the float change accounting recorded.",
+        "INVALID": "Some details are missing or not valid. Nothing was recorded.",
+        "FORBIDDEN": "You can't record drawer movements here; it needs the {{permission}} permission. Nothing was recorded.",
+        "SCOPE_DENIED": "This drawer is at a location you can't work at. Nothing was recorded.",
+        "REFUSED": "This couldn't be recorded. Nothing was recorded.",
+        "UNKNOWN_OUTCOME": "We couldn't confirm whether this was recorded. Retry sends the same request again, so it can't be recorded twice.",
+        "FORBIDDEN_RETRY": "You can't record drawer movements here; it needs the {{permission}} permission.",
+        "SCOPE_DENIED_RETRY": "This drawer is at a location you can't work at.",
+        "REFUSED_RETRY": "The drawer refused this request.",
+        "CURRENCY_NOT_SUPPORTED": "This drawer's currency is not the business's currency, so accounting must restate the float. Nothing was recorded.",
+        "CALLER_UNIDENTIFIED": "Your sign-in doesn't say who you are, so a manager can't approve for you. Sign out and sign in again.",
+        "LOAD_DENIED": "You aren't allowed to see this drawer; it needs the {{permission}} permission."
+      },
+      "DIALOG": {
+        "TITLE_PAY_OUT": "Pay out from the drawer",
+        "TITLE_FLOAT": "Change the float",
+        "LEGEND_PAY_OUT": "What is this payout for?",
+        "LEGEND_FLOAT": "Which way is the float changing?",
+        "FLOAT_ADD": "Add to the drawer",
+        "FLOAT_TAKE": "Take from the drawer",
+        "FLOAT_NOTE": "Changing the float always needs a manager. It must match the float change accounting recorded.",
+        "LIMIT_HINT": "Up to {{limit}} per drawer session without a manager; everything of this kind in the drawer counts",
+        "NONE_ALLOWED": "Nothing can be recorded this way on this drawer right now.",
+        "CATEGORY": "Category",
+        "CATEGORY_PLACEHOLDER": "Choose a category",
+        "CATEGORY_EXAMPLES": "For example: {{examples}}",
+        "RECEIPT_TOTAL": "Receipt total (tax included)",
+        "AMOUNT": "Amount",
+        "NOTE": "Note",
+        "RECEIPT_REFERENCE": "Receipt reference",
+        "BAG_NUMBER": "Deposit bag number",
+        "NEVER_PETTY": {
+          "SUMMARY": "What can't be paid from the drawer?",
+          "TIRES_PARTS": "Tires and parts",
+          "WAGES": "Wages",
+          "TIPS": "Tips or advances",
+          "OWNER": "The owner's spending",
+          "REFUNDS": "Customer refunds — use the refund screen",
+          "EQUIPMENT": "Equipment that lasts for years",
+          "VENDOR_BILLS": "Vendor bills other than cash on delivery"
+        },
+        "CONSEQUENCE_OUT": "This takes {{amount}} out of the drawer as {{reason}}. Recorded payouts can't be changed or deleted.",
+        "CONSEQUENCE_IN": "This puts {{amount}} into the drawer as {{reason}}. Recorded movements can't be changed or deleted.",
+        "RECORD": "Record",
+        "CONTINUE_TO_MANAGER": "Continue to manager approval",
+        "RETRY": "Retry",
+        "CANCEL": "Cancel",
+        "ALWAYS_MANAGER_HINT": "This always needs a manager's approval.",
+        "APPROVED_WAITING": "A manager approved this. Press Record once the payout options have loaded."
+      },
+      "APPROVAL": {
+        "INTRO": "A manager needs to approve this. They enter their own username and password here and must be someone other than you.",
+        "LEGEND": "Manager approval",
+        "USERNAME": "Manager's username",
+        "PASSWORD": "Manager's password",
+        "APPROVE": "Approve",
+        "BACK": "Back",
+        "CHECKING": "Checking the manager's approval…"
+      },
+      "PENDING": "{{reason}}, {{amount}}: not confirmed yet. Open Pay out or Change the float to retry it; it can't be recorded twice."
     }
   },
   "COMMON": {
@@ -9491,7 +9628,8 @@
       "RECONCILIATIONS": "Bank reconciliations",
       "BOOKS": "Your books",
       "ENTRIES": "Journal entries",
-      "PAYMENTS": "Payments"
+      "PAYMENTS": "Payments",
+      "DRAWER": "Drawer"
     }
   },
   "POSITIVITY": {

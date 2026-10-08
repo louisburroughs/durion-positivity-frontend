@@ -2,6 +2,11 @@
   <div class="order-cart__items">
     <header class="order-cart__header">
       <h1>{{ 'ORDER.CART.TITLE' | translate }}</h1>
+      @if (canViewDrawer()) {
+      <a routerLink="/app/order/drawer" class="order-cart__drawer-link" data-testid="order-cart-drawer-link">
+        {{ 'ORDER.DRAWER.LINK' | translate }}
+      </a>
+      }
     </header>
 
     @if (state() === 'error') {

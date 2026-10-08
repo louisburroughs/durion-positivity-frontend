@@ -8932,6 +8932,143 @@
         "PAYMENT_REVERSAL_REQUIRED": "Un renversement de paiement est requis.",
         "PAYMENT_REVERSAL_ACTION": "Annuler/Rembourser le paiement"
       }
+    },
+    "DRAWER": {
+      "LINK": "Encaisse du tiroir",
+      "TITLE": "Encaisse du tiroir",
+      "LOADING": "Chargement du tiroir…",
+      "NO_SESSION": "Aucun tiroir n'est ouvert sur cette caisse.",
+      "CLOSING": "Le tiroir est en cours de comptage; les sorties sont fermées.",
+      "RECORDED": "Enregistré : {{reason}}, {{amount}}",
+      "OPTIONS_FAILED": "Les options de sortie n'ont pas pu être chargées",
+      "RETRY_OPTIONS": "Réessayer de charger les options de sortie",
+      "RETRY_MOVEMENTS": "Réessayer de charger les mouvements",
+      "SUMMARY": {
+        "HEADING": "Ce tiroir",
+        "REGISTER": "Caisse",
+        "STATUS": "Statut",
+        "OPENED_AT": "Ouvert le",
+        "OPENED_BY": "Ouvert par",
+        "OPENING_FLOAT": "Fonds de caisse initial"
+      },
+      "STATUS": {
+        "OPEN": "Ouvert",
+        "CLOSING": "En comptage",
+        "CLOSED": "Fermé",
+        "UNKNOWN": "Inconnu"
+      },
+      "ACTIONS": {
+        "PAY_OUT": "Sortie de caisse",
+        "CHANGE_FLOAT": "Modifier le fonds de caisse"
+      },
+      "MOVEMENTS": {
+        "HEADING": "Mouvements",
+        "CAPTION": "Argent retiré de ce tiroir et ajouté à celui-ci",
+        "TIME": "Heure",
+        "REASON": "Motif",
+        "DETAILS": "Détails",
+        "AMOUNT": "Sortie / Entrée",
+        "RECORDED_BY": "Enregistré par",
+        "APPROVED_BY": "Approuvé par",
+        "EMPTY": "Aucun argent n'a encore été retiré de ce tiroir ni ajouté.",
+        "LOADING": "Chargement des mouvements…",
+        "FAILED": "Les mouvements n'ont pas pu être chargés.",
+        "DENIED": "Vous n'êtes pas autorisé à voir les mouvements de ce tiroir."
+      },
+      "DIRECTION": {
+        "OUT": "Sortie",
+        "IN": "Entrée",
+        "UNKNOWN": "Inconnue"
+      },
+      "DETAIL": {
+        "CATEGORY": "Catégorie : {{value}}",
+        "VENDOR": "Fournisseur : {{value}}",
+        "BAG_NUMBER": "Numéro de sac : {{value}}",
+        "NOTE": "Note : {{value}}",
+        "RECEIPT": "Reçu : {{value}}"
+      },
+      "REASON": {
+        "PETTY_EXPENSE": "Petite dépense",
+        "VENDOR_COD": "Paiement à la livraison d'un fournisseur",
+        "BANK_DROP": "Dépôt bancaire",
+        "FLOAT_INCREASE": "Augmentation du fonds de caisse",
+        "FLOAT_DECREASE": "Diminution du fonds de caisse",
+        "UNKNOWN": "Inconnu"
+      },
+      "NOTICE": {
+        "SESSION_NOT_OPEN": "Ce tiroir n'est plus ouvert aux sorties. Rien n'a été enregistré.",
+        "SESSION_GONE": "Cette session de tiroir n'existe plus. Rien n'a été enregistré.",
+        "CONFLICT": "Le tiroir a changé pendant l'enregistrement. Vérifiez ses mouvements avant de réessayer.",
+        "ALREADY_RECORDED": "Une tentative précédente a déjà été enregistrée; vérifiez les mouvements."
+      },
+      "ERROR": {
+        "LOAD": "Le tiroir n'a pas pu être chargé.",
+        "APPROVAL_DENIED": "Cela n'a pas fonctionné. Vérifiez le nom d'utilisateur et le mot de passe, et que cette personne peut approuver les sorties de caisse.",
+        "SELF_APPROVAL": "Le gestionnaire doit être une autre personne que le caissier.",
+        "APPROVAL_INVALID": "Cette approbation ne peut plus être utilisée. Un gestionnaire doit approuver de nouveau.",
+        "APPROVAL_UNAVAILABLE": "Le nom d'utilisateur et le mot de passe du gestionnaire n'ont pas pu être vérifiés pour le moment. Rien n'a été approuvé; réessayez.",
+        "TYPE_NOT_ALLOWED": "{{reason}} vient d'être désactivé pour ce tiroir. Rien n'a été enregistré.",
+        "CATEGORY_UNKNOWN": "Cette catégorie ne peut plus être utilisée; choisissez-en une autre. Rien n'a été enregistré.",
+        "FLOAT_NOT_RECORDED": "Cela ne correspond pas à la modification du fonds de caisse enregistrée par la comptabilité.",
+        "INVALID": "Des renseignements manquent ou ne sont pas valides. Rien n'a été enregistré.",
+        "FORBIDDEN": "Vous ne pouvez pas enregistrer de mouvements de tiroir ici; il faut la permission {{permission}}. Rien n'a été enregistré.",
+        "SCOPE_DENIED": "Ce tiroir se trouve à un emplacement où vous ne pouvez pas travailler. Rien n'a été enregistré.",
+        "REFUSED": "Cela n'a pas pu être enregistré. Rien n'a été enregistré.",
+        "UNKNOWN_OUTCOME": "Nous n'avons pas pu confirmer si cela a été enregistré. Réessayer renvoie la même demande, donc cela ne peut pas être enregistré deux fois.",
+        "FORBIDDEN_RETRY": "Vous ne pouvez pas enregistrer de mouvements de tiroir ici; il faut la permission {{permission}}.",
+        "SCOPE_DENIED_RETRY": "Ce tiroir se trouve à un emplacement où vous ne pouvez pas travailler.",
+        "REFUSED_RETRY": "Le tiroir a refusé cette demande.",
+        "CURRENCY_NOT_SUPPORTED": "La devise de ce tiroir n'est pas celle de l'entreprise; la comptabilité doit donc réenregistrer le fonds de caisse. Rien n'a été enregistré.",
+        "CALLER_UNIDENTIFIED": "Votre connexion n'indique pas qui vous êtes; un gestionnaire ne peut donc pas approuver pour vous. Déconnectez-vous puis reconnectez-vous.",
+        "LOAD_DENIED": "Vous n'êtes pas autorisé à voir ce tiroir; il faut la permission {{permission}}."
+      },
+      "DIALOG": {
+        "TITLE_PAY_OUT": "Sortie de caisse",
+        "TITLE_FLOAT": "Modifier le fonds de caisse",
+        "LEGEND_PAY_OUT": "À quoi sert cette sortie?",
+        "LEGEND_FLOAT": "Dans quel sens le fonds de caisse change-t-il?",
+        "FLOAT_ADD": "Ajouter au tiroir",
+        "FLOAT_TAKE": "Retirer du tiroir",
+        "FLOAT_NOTE": "Modifier le fonds de caisse nécessite toujours un gestionnaire. La modification doit correspondre à celle enregistrée par la comptabilité.",
+        "LIMIT_HINT": "Jusqu'à {{limit}} par session de tiroir sans gestionnaire; tout ce qui est de ce type dans le tiroir compte",
+        "NONE_ALLOWED": "Rien ne peut être enregistré de cette façon sur ce tiroir pour le moment.",
+        "CATEGORY": "Catégorie",
+        "CATEGORY_PLACEHOLDER": "Choisissez une catégorie",
+        "CATEGORY_EXAMPLES": "Par exemple : {{examples}}",
+        "RECEIPT_TOTAL": "Total du reçu (taxes incluses)",
+        "AMOUNT": "Montant",
+        "NOTE": "Note",
+        "RECEIPT_REFERENCE": "Référence du reçu",
+        "BAG_NUMBER": "Numéro du sac de dépôt",
+        "NEVER_PETTY": {
+          "SUMMARY": "Qu'est-ce qui ne peut pas être payé à partir du tiroir?",
+          "TIRES_PARTS": "Pneus et pièces",
+          "WAGES": "Salaires",
+          "TIPS": "Pourboires ou avances",
+          "OWNER": "Dépenses du propriétaire",
+          "REFUNDS": "Remboursements aux clients — utilisez l'écran des remboursements",
+          "EQUIPMENT": "Équipement qui dure des années",
+          "VENDOR_BILLS": "Factures de fournisseurs autres que le paiement à la livraison"
+        },
+        "CONSEQUENCE_OUT": "Cela retire {{amount}} du tiroir comme {{reason}}. Les sorties enregistrées ne peuvent être ni modifiées ni supprimées.",
+        "CONSEQUENCE_IN": "Cela ajoute {{amount}} au tiroir comme {{reason}}. Les mouvements enregistrés ne peuvent être ni modifiés ni supprimés.",
+        "RECORD": "Enregistrer",
+        "CONTINUE_TO_MANAGER": "Continuer vers l'approbation du gestionnaire",
+        "RETRY": "Réessayer",
+        "CANCEL": "Annuler",
+        "ALWAYS_MANAGER_HINT": "Cela nécessite toujours l'approbation d'un gestionnaire.",
+        "APPROVED_WAITING": "Un gestionnaire a approuvé ceci. Appuyez sur Enregistrer une fois les options de sortie chargées."
+      },
+      "APPROVAL": {
+        "INTRO": "Un gestionnaire doit approuver ceci. Il saisit ici son propre nom d'utilisateur et son mot de passe et doit être une autre personne que vous.",
+        "LEGEND": "Approbation du gestionnaire",
+        "USERNAME": "Nom d'utilisateur du gestionnaire",
+        "PASSWORD": "Mot de passe du gestionnaire",
+        "APPROVE": "Approuver",
+        "BACK": "Retour",
+        "CHECKING": "Vérification de l'approbation du gestionnaire…"
+      },
+      "PENDING": "{{reason}}, {{amount}} : pas encore confirmé. Ouvrez Sortie de caisse ou Modifier le fonds de caisse pour réessayer; cela ne peut pas être enregistré deux fois."
     }
   },
   "COMMON": {
@@ -9491,7 +9628,8 @@
       "RECONCILIATIONS": "Rapprochements bancaires",
       "BOOKS": "Vos livres",
       "ENTRIES": "Écritures de journal",
-      "PAYMENTS": "Paiements"
+      "PAYMENTS": "Paiements",
+      "DRAWER": "Tiroir"
     }
   },
   "POSITIVITY": {

@@ -8,6 +8,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { LocaleService } from '../../../../core/services/locale.service';
 import { OrderCartPageComponent } from './order-cart-page.component';
 import { OrderService } from '../../services/order.service';
+import { REGISTER_TERMINAL_ID } from '../../models/register-drawer.models';
 import { CUSTOMER_LOOKUP_SOURCE } from '../../../../shared/customer-lookup/customer-lookup.tokens';
 
 const orderLineFixture: SalesOrderLineResponse = {
@@ -84,9 +85,10 @@ describe('OrderCartPageComponent', () => {
     component.createNewCart('veh-1');
     expect(orderServiceMock.createCart).toHaveBeenCalledWith({
       clerkId: 'test-clerk',
-      terminalId: 'DEFAULT',
+      terminalId: REGISTER_TERMINAL_ID, // the drawer page resolves the same session (CAP:550 S22)
       vehicleId: 'veh-1',
     });
+    expect(REGISTER_TERMINAL_ID).toBe('DEFAULT');
   });
 
   it('loads order when orderId route param is present', () => {
