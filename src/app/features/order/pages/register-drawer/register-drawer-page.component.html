@@ -11,7 +11,7 @@
     <p>{{ key | translate: { permission: cashMovementCode } }}</p>
     }
     @if (state() === 'error') {
-    <p>{{ (errorKey() ?? 'ORDER.DRAWER.ERROR.LOAD') | translate }}</p>
+    <p>{{ (errorKey() ?? 'ORDER.DRAWER.ERROR.LOAD') | translate: { permission: drawerViewCode } }}</p>
     }
   </div>
   <p class="drawer__announcement" role="status" aria-live="polite" data-testid="drawer-announcement">
@@ -26,7 +26,7 @@
     {{ 'ORDER.DRAWER.OPTIONS_FAILED' | translate }}
     }
     @if (state() === 'ready' && movementsStatus() === 'FAILED') {
-    {{ 'ORDER.DRAWER.MOVEMENTS.FAILED' | translate }}
+    {{ (movementsDenied() ? 'ORDER.DRAWER.MOVEMENTS.DENIED' : 'ORDER.DRAWER.MOVEMENTS.FAILED') | translate }}
     }
   </p>
 
@@ -89,6 +89,12 @@
       {{ 'ORDER.DRAWER.ACTIONS.CHANGE_FLOAT' | translate }}
     </button>
   </div>
+  @if (pendingAttempt(); as pending) {
+  <!-- A record whose outcome is unknown: either action reopens it to retry (item 6 amendment). -->
+  <p class="drawer__pending" data-testid="drawer-pending">
+    {{ 'ORDER.DRAWER.PENDING' | translate: { reason: (reasonKeyOf(pending.draft.reason) | translate), amount: (pending.draft.amount | money: pending.draft.currencyCode) } }}
+  </p>
+  }
   @if (optionsStatus() === 'FAILED') {
   <div class="drawer__inline-error" data-testid="drawer-options-failed">
     <p>{{ 'ORDER.DRAWER.OPTIONS_FAILED' | translate }}</p>
@@ -101,7 +107,9 @@
 
   <section class="drawer__movements" aria-labelledby="drawer-movements-heading">
     <h2 #movementsHeading id="drawer-movements-heading" class="drawer__heading" tabindex="-1">{{ 'ORDER.DRAWER.MOVEMENTS.HEADING' | translate }}</h2>
-    @if (movementsStatus() === 'FAILED') {
+    @if (movementsDenied()) {
+    <p class="drawer__inline-error" data-testid="drawer-movements-denied">{{ 'ORDER.DRAWER.MOVEMENTS.DENIED' | translate }}</p>
+    } @else if (movementsStatus() === 'FAILED') {
     <div class="drawer__inline-error" data-testid="drawer-movements-failed">
       <p>{{ 'ORDER.DRAWER.MOVEMENTS.FAILED' | translate }}</p>
       <button type="button" class="drawer__secondary" data-testid="drawer-movements-retry" (click)="onRetryMovements()">
@@ -113,7 +121,9 @@
     @if (rows.length === 0) {
     <p class="drawer__muted" data-testid="drawer-movements-empty">{{ 'ORDER.DRAWER.MOVEMENTS.EMPTY' | translate }}</p>
     } @else {
-    <div class="drawer__table-wrap">
+    <!-- Focusable so a keyboard user can scroll a wide table (WCAG 2.1.1). -->
+    <div class="drawer__table-wrap" tabindex="0" role="region" aria-labelledby="drawer-movements-heading"
+      data-testid="drawer-movements-region">
       <table class="drawer__table" data-testid="drawer-movements">
         <caption>{{ 'ORDER.DRAWER.MOVEMENTS.CAPTION' | translate }}</caption>
         <thead>
@@ -182,6 +192,7 @@
     [options]="open.options"
     [optionsCurrent]="open.optionsCurrent"
     [optionsFailed]="open.optionsFailed"
+    [attempt]="open.attempt"
     (recorded)="onRecorded($event)"
     (cancelled)="onCancelled()"
     (sessionChanged)="onSessionChanged($event)"

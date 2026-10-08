@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  OnInit,
   DestroyRef,
   ElementRef,
   InjectionToken,
@@ -26,20 +27,25 @@ import { MoneyPipe } from '../../../../shared/money.pipe';
 import {
   DrawerApproval,
   DrawerDialogKind,
+  DrawerDraft,
   DrawerOptions,
   DrawerReason,
   DrawerReasonOption,
+  FLOAT_REASONS,
+  PendingAttempt,
   PettyCategory,
   RecordedMovement,
   offeredReasons,
   reasonKey,
 } from '../../models/register-drawer.models';
+import { DrawerAttemptStore } from '../../services/drawer-attempt.store';
 import {
   APPROVAL_REASON,
   DrawerFailure,
   RECORD_REASON,
   RegisterSessionService,
   classifyDrawerError,
+  settlesUnknownAttempt,
 } from '../../services/register-session.service';
 import { parseAmount } from '../../utils/drawer-amount.util';
 
@@ -50,7 +56,7 @@ export const DRAWER_CLOCK = new InjectionToken<() => Date>('DRAWER_CLOCK', {
 });
 
 /** Why the dialog handed the drawer back to the page: the session changed under it. */
-export type DrawerSessionChange = 'GONE' | 'NOT_OPEN' | 'CONFLICT';
+export type DrawerSessionChange = 'GONE' | 'NOT_OPEN' | 'CONFLICT' | 'ALREADY_RECORDED';
 
 /** A request field the form renders. */
 type DrawerField = 'categoryCode' | 'amount' | 'note' | 'receiptReference' | 'bagNumber';
@@ -94,6 +100,8 @@ const FAILURE_KEYS: Readonly<Record<string, string>> = {
   SCOPE_DENIED: 'ORDER.DRAWER.ERROR.SCOPE_DENIED',
   REFUSED: 'ORDER.DRAWER.ERROR.REFUSED',
   UNKNOWN_OUTCOME: 'ORDER.DRAWER.ERROR.UNKNOWN_OUTCOME',
+  CURRENCY_NOT_SUPPORTED: 'ORDER.DRAWER.ERROR.CURRENCY_NOT_SUPPORTED',
+  CALLER_UNIDENTIFIED: 'ORDER.DRAWER.ERROR.CALLER_UNIDENTIFIED',
   APPROVAL_UNAVAILABLE: 'ORDER.DRAWER.ERROR.APPROVAL_UNAVAILABLE',
 };
 
@@ -106,16 +114,17 @@ export interface DialogFailure {
   readonly fieldKeys?: readonly string[];
 }
 
-/** The movement as entered: what a record and its approval are both bound to. */
-interface Draft {
-  readonly reason: DrawerReason;
-  readonly amount: number;
-  readonly currencyCode: string;
-  readonly categoryCode?: string;
-  readonly note?: string;
-  readonly receiptReference?: string;
-  readonly bagNumber?: string;
-}
+/**
+ * A retried record whose earlier attempt is still unknown, refused before pos-order's replay check
+ * (a 403): the copy makes no claim about the earlier attempt (item 6 amendment).
+ */
+const KEPT_ATTEMPT_KEYS: Readonly<Record<string, string>> = {
+  FORBIDDEN: 'ORDER.DRAWER.ERROR.FORBIDDEN_RETRY',
+  SCOPE_DENIED: 'ORDER.DRAWER.ERROR.SCOPE_DENIED_RETRY',
+  REFUSED: 'ORDER.DRAWER.ERROR.REFUSED_RETRY',
+};
+
+type Draft = DrawerDraft;
 
 /** The step-up's token, with the movement it was issued for. */
 interface HeldApproval extends DrawerApproval {
@@ -135,6 +144,11 @@ function inputValue(event: Event): string {
  * cashier's session and are emptied as soon as it answers. The single-use token it returns lives
  * only in this component until the movement is recorded or the dialog closes (AW31, ADR-0065).
  *
+ * A record whose outcome is unknown is kept outside the dialog, in {@link DrawerAttemptStore}
+ * (story item 6 as amended on #467): closing, reopening or leaving the page keeps its `requestId`
+ * and frozen fields, and a reopened dialog restores it with Retry as the action. Only a definite
+ * answer releases it ({@link settlesUnknownAttempt}).
+ *
  * Every write is gated on `order:session:cash_movement` at the control and in the handler
  * (ADR-0040 §6a); the dialog never compares an amount with a limit (P7).
  */
@@ -146,8 +160,9 @@ function inputValue(event: Event): string {
   styleUrl: './drawer-movement-dialog.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class DrawerMovementDialogComponent {
+export class DrawerMovementDialogComponent implements OnInit {
   private readonly service = inject(RegisterSessionService);
+  private readonly attempts = inject(DrawerAttemptStore);
   private readonly auth = inject(AuthService);
   private readonly clock = inject(DRAWER_CLOCK);
   private readonly destroyRef = inject(DestroyRef);
@@ -164,6 +179,8 @@ export class DrawerMovementDialogComponent {
   readonly optionsCurrent = input(true);
   /** The options read failed: the dialog says so and offers a re-read. */
   readonly optionsFailed = input(false);
+  /** A record whose outcome is still unknown: the dialog opens on it, frozen, with Retry (item 6). */
+  readonly attempt = input<PendingAttempt | null>(null);
 
   /** A confirmed recording: the page closes the dialog, announces it and re-reads. */
   readonly recorded = output<RecordedMovement>();
@@ -196,21 +213,44 @@ export class DrawerMovementDialogComponent {
   readonly invalidFields = signal<ReadonlySet<string>>(new Set());
   /** The last record's outcome is unknown: the primary action becomes Retry, same `requestId`. */
   readonly outcomeUnknown = signal(false);
+  /**
+   * The movement every send repeats exactly — after an unknown outcome, and through the approval
+   * round trip that follows its retry — so a replayed first result is never announced as an edited
+   * movement and one `requestId` never carries two payloads (§8.2).
+   */
+  readonly frozen = signal<Draft | null>(null);
+  /** A step-up token is held (the token itself never sits in a signal). */
+  readonly approvalHeld = signal(false);
 
   /** The permission a refused write names (ADR-0040 §6a). */
   readonly cashMovementCode = ORDER_SECTION.cashMovement[0];
 
   readonly busy = computed(() => this.phase() !== 'idle');
-  /** The movement's fields are frozen while a request is in flight or its outcome is unknown. */
-  readonly fieldsLocked = computed(() => this.busy() || this.outcomeUnknown());
+  /** The movement's fields are frozen while a request is in flight or a movement is frozen. */
+  readonly fieldsLocked = computed(() => this.busy() || this.frozen() !== null);
   readonly reasonsLocked = computed(() => this.fieldsLocked() || !this.optionsCurrent());
   readonly canRecord = computed(() => canAccess(this.auth, { permissions: ORDER_SECTION.cashMovement }));
 
   readonly offered = computed(() => offeredReasons(this.options(), this.kind()));
+  /** The offered reasons, plus a frozen movement's reason even when it left the offer since. */
+  readonly listed = computed<readonly DrawerReasonOption[]>(() => {
+    const offered = this.offered();
+    const frozen = this.frozen();
+    if (!frozen || offered.some(option => option.reason === frozen.reason)) {
+      return offered;
+    }
+    const option = this.options().reasons.find(candidate => candidate.reason === frozen.reason);
+    return option ? [...offered, option] : offered;
+  });
   readonly categories = computed<readonly PettyCategory[]>(() => this.options().categories);
   readonly chosen = computed<DrawerReasonOption | null>(() => {
     const reason = this.reason();
     return this.offered().find(option => option.reason === reason) ?? null;
+  });
+  /** The chosen reason's served option, offered now or not (direction, hints). */
+  readonly reasonOption = computed<DrawerReasonOption | null>(() => {
+    const reason = this.reason();
+    return this.options().reasons.find(option => option.reason === reason) ?? null;
   });
   readonly selectedCategory = computed(
     () => this.categories().find(category => category.code === this.categoryCode()) ?? null,
@@ -245,10 +285,14 @@ export class DrawerMovementDialogComponent {
     if (this.outcomeUnknown()) {
       return 'ORDER.DRAWER.DIALOG.RETRY';
     }
-    return this.needsManagerFirst() ? 'ORDER.DRAWER.DIALOG.CONTINUE_TO_MANAGER' : 'ORDER.DRAWER.DIALOG.RECORD';
+    return this.needsManagerFirst() && !this.approvalHeld() && !this.frozen()
+      ? 'ORDER.DRAWER.DIALOG.CONTINUE_TO_MANAGER'
+      : 'ORDER.DRAWER.DIALOG.RECORD';
   });
   readonly consequenceKey = computed(() =>
-    this.chosen()?.direction === 'PAID_IN' ? 'ORDER.DRAWER.DIALOG.CONSEQUENCE_IN' : 'ORDER.DRAWER.DIALOG.CONSEQUENCE_OUT',
+    this.reasonOption()?.direction === 'PAID_IN'
+      ? 'ORDER.DRAWER.DIALOG.CONSEQUENCE_IN'
+      : 'ORDER.DRAWER.DIALOG.CONSEQUENCE_OUT',
   );
   readonly canSubmitDetails = computed(() => this.submitReady() && !this.busy());
   readonly canApprove = computed(() => this.approveReady() && !this.busy());
@@ -257,12 +301,14 @@ export class DrawerMovementDialogComponent {
    * is in flight they are `aria-disabled` instead, so the pressed button keeps focus (ADR-0029 §8.7)
    * and the handlers refuse (§8.2).
    */
-  readonly submitReady = computed(() => this.canRecord() && this.optionsCurrent() && this.detailsComplete());
+  readonly submitReady = computed(
+    () => this.canRecord() && this.optionsCurrent() && (this.frozen() !== null || this.detailsComplete()),
+  );
   readonly approveReady = computed(
     () =>
       this.canRecord() &&
       this.optionsCurrent() &&
-      this.detailsComplete() &&
+      (this.frozen() !== null || this.detailsComplete()) &&
       this.managerUsername().trim().length > 0 &&
       this.managerPassword().length > 0,
   );
@@ -274,37 +320,39 @@ export class DrawerMovementDialogComponent {
         : 'ORDER.DRAWER.DIALOG.FLOAT_TAKE'
       : reasonKey(reason);
   readonly reasonKeyOf = reasonKey;
+  /** A Pay out reason that always needs a manager: float decreases say why, others say only that. */
+  readonly managerHintKey = (reason: DrawerReason): string =>
+    FLOAT_REASONS.includes(reason) ? 'ORDER.DRAWER.DIALOG.FLOAT_NOTE' : 'ORDER.DRAWER.DIALOG.ALWAYS_MANAGER_HINT';
 
-  /** Created when the dialog opens; rotates only after a confirmed success (§8.2). */
+  /** Created when the dialog opens (or restored from a pending attempt); rotates only on a definite answer. */
   private requestId = uuidv7();
   /** The approval token: never in a signal, storage or log, and dropped on success or close. */
   private approval: HeldApproval | null = null;
   private inFlight: Subscription | null = null;
-  /**
-   * The movement whose record's outcome is unknown: Retry resends exactly it (same `requestId`), so
-   * a replayed first result is never announced as an edited movement (§8.2).
-   */
-  private unconfirmed: Draft | null = null;
+  /** The record in flight, as it would be kept if its outcome became unknown. */
+  private sending: PendingAttempt | null = null;
   /** Each request takes a ticket; only the current ticket may apply its answer (ADR-0063 §1). */
   private ticket = 0;
 
   constructor() {
-    this.destroyRef.onDestroy(() => {
-      this.ticket++;
-      this.inFlight?.unsubscribe();
-      this.inFlight = null;
-      this.approval = null;
-      this.managerUsername.set('');
-      this.managerPassword.set('');
-    });
-    // A reason the server no longer offers (switched off mid-session, §9.4) leaves the form.
+    // No output on destroy (NG0953): a record still in flight is kept in the store instead.
+    this.destroyRef.onDestroy(() => this.abandon());
+    // A reason the server no longer offers (switched off mid-session, §9.4) leaves the form — but a
+    // frozen movement keeps it: its retry is settled by the server, never by today's offer.
     effect(() => {
       const reason = this.reason();
       const offered = this.offered();
-      if (reason && !offered.some(option => option.reason === reason)) {
+      if (reason && !this.frozen() && !offered.some(option => option.reason === reason)) {
         untracked(() => this.clearReason());
       }
     });
+  }
+
+  ngOnInit(): void {
+    const attempt = this.attempt();
+    if (attempt && attempt.sessionId === this.sessionId()) {
+      this.restore(attempt);
+    }
   }
 
   // ── Form handlers ────────────────────────────────────────────────────────
@@ -349,6 +397,11 @@ export class DrawerMovementDialogComponent {
     return this.approval !== null;
   }
 
+  /** The `requestId` the next send carries (tests: it survives Cancel and reopening, item 6). */
+  currentRequestId(): string {
+    return this.requestId;
+  }
+
   isInvalid(field: string): boolean {
     return this.invalidFields().has(field);
   }
@@ -360,11 +413,13 @@ export class DrawerMovementDialogComponent {
     if (!this.canSubmitDetails()) {
       return;
     }
-    const draft = this.unconfirmed ?? this.draft();
+    const frozen = this.frozen();
+    const draft = frozen ?? this.draft();
     if (!draft) {
       return;
     }
-    if (this.needsManagerFirst() && !this.heldToken(draft)) {
+    // A frozen movement is resent as it was: a replay answers first, so no manager step comes first.
+    if (!frozen && this.needsManagerFirst() && !this.heldToken(draft)) {
       this.enterApproval();
       return;
     }
@@ -377,7 +432,7 @@ export class DrawerMovementDialogComponent {
     if (!this.canApprove()) {
       return;
     }
-    const draft = this.unconfirmed ?? this.draft();
+    const draft = this.frozen() ?? this.draft();
     if (!draft) {
       return;
     }
@@ -403,8 +458,8 @@ export class DrawerMovementDialogComponent {
           }
           this.clearCredentials();
           this.phase.set('idle');
-          this.approval = { ...approval, boundTo: this.bindingOf(draft) };
-          this.record(draft);
+          this.setApproval({ ...approval, boundTo: this.bindingOf(draft) });
+          this.recordAfterApproval(draft);
         },
         error: (error: unknown) => {
           if (ticket !== this.ticket) {
@@ -442,38 +497,43 @@ export class DrawerMovementDialogComponent {
   }
 
   /**
-   * Cancel and Escape. Refused while a request is in flight: its attempt (and `requestId`) stays
-   * until the server answers, so a re-read cannot race the commit and a reopened dialog cannot
-   * send the same movement under a new id (§8.2, ADR-0063). Once it has answered — an unknown
-   * outcome included — the dialog may close and the id rotates, as the story says (item 6).
+   * Cancel and Escape, always available so a hung request never traps the register in the modal. A
+   * record still in flight is kept as a pending attempt (its outcome is now unknown); a frozen one
+   * stays pending in the store; a plain Cancel with nothing pending starts over (item 6).
    */
   cancel(): void {
-    if (this.busy()) {
+    this.abandon();
+    this.cancelled.emit();
+  }
+
+  /**
+   * Records after a successful step-up — or says why it cannot yet, never a silent no-op: the reason
+   * left the offer (switched off), or the options are being read again (the token stays while valid).
+   */
+  private recordAfterApproval(draft: Draft): void {
+    if (!this.frozen() && this.chosen()?.reason !== draft.reason) {
+      this.setApproval(null);
+      this.showFailure({ key: FAILURE_KEYS['TYPE_NOT_ALLOWED'], reasonKey: reasonKey(draft.reason) });
+      this.clearReason();
       return;
     }
-    this.ticket++;
-    this.inFlight?.unsubscribe();
-    this.inFlight = null;
-    this.phase.set('idle');
-    this.approval = null;
-    this.unconfirmed = null;
-    this.clearCredentials();
-    this.cancelled.emit();
+    if (!this.optionsCurrent() || !this.canRecord()) {
+      this.step.set('details');
+      this.failure.set({ key: 'ORDER.DRAWER.DIALOG.APPROVED_WAITING' });
+      setTimeout(() => this.alert()?.nativeElement.focus());
+      return;
+    }
+    this.record(draft);
   }
 
   private record(draft: Draft): void {
     if (!this.canRecord() || !this.optionsCurrent() || this.busy()) {
       return;
     }
-    if (this.chosen()?.reason !== draft.reason) {
-      // The reason left the offer (switched off) while the step-up was pending: the captured
-      // movement is no longer current, so its token goes and nothing is sent (ADR-0063, ADR-0064).
-      this.approval = null;
-      return;
-    }
     const token = this.heldToken(draft);
+    const requestId = this.requestId;
     const request: CashMovementRequest = {
-      requestId: this.requestId,
+      requestId,
       reason: RECORD_REASON[draft.reason],
       amount: draft.amount,
       currencyCode: draft.currencyCode,
@@ -483,11 +543,18 @@ export class DrawerMovementDialogComponent {
       ...(draft.bagNumber ? { bagNumber: draft.bagNumber } : {}),
       ...(token ? { approvalToken: token } : {}),
     };
+    const sending: PendingAttempt = {
+      requestId,
+      draft,
+      kind: this.kind(),
+      sessionId: this.sessionId(),
+      identity: this.attempts.identity(),
+    };
     const ticket = ++this.ticket;
+    this.sending = sending;
     this.phase.set('submitting');
     this.failure.set(null);
     this.invalidFields.set(new Set());
-    this.outcomeUnknown.set(false);
     this.inFlight = this.service
       .recordMovement(this.sessionId(), request)
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -496,55 +563,96 @@ export class DrawerMovementDialogComponent {
           if (ticket !== this.ticket) {
             return;
           }
+          this.sending = null;
           this.phase.set('idle');
-          this.approval = null;
-          this.unconfirmed = null;
+          this.attempts.release(requestId);
+          this.setApproval(null);
+          this.unfreeze();
           this.requestId = uuidv7();
-          this.recorded.emit({ reason: draft.reason, amount: draft.amount, currencyCode: draft.currencyCode });
+          this.recorded.emit({ reason: draft.reason, amount: draft.amount, currencyCode: draft.currencyCode, requestId });
         },
         error: (error: unknown) => {
           if (ticket !== this.ticket) {
             return;
           }
+          this.sending = null;
           this.phase.set('idle');
           const failure = classifyDrawerError(error, 'RECORD');
-          // Only an unanswered record keeps its movement for Retry; any answer settles it.
-          this.unconfirmed = failure.kind === 'UNKNOWN_OUTCOME' ? draft : null;
+          const wasUnknown = this.outcomeUnknown();
+          if (failure.kind === 'UNKNOWN_OUTCOME') {
+            // Kept outside the dialog: Cancel, reopening and leaving the page keep this id (item 6).
+            this.frozen.set(draft);
+            this.outcomeUnknown.set(true);
+            this.attempts.hold(sending);
+            this.applyFailure(failure, draft);
+            return;
+          }
+          if (wasUnknown && !settlesUnknownAttempt(failure)) {
+            // Refused before pos-order's replay check: the earlier attempt is still unknown.
+            this.applyFailure(failure, draft, true);
+            return;
+          }
+          // A definite answer: the attempt is settled, nothing was recorded under this id.
+          this.attempts.release(requestId);
+          this.outcomeUnknown.set(false);
+          if (failure.kind !== 'APPROVAL_REQUIRED' && failure.kind !== 'APPROVAL_INVALID') {
+            this.unfreeze();
+            this.requestId = uuidv7();
+          }
           this.applyFailure(failure, draft);
         },
       });
   }
 
-  private applyFailure(failure: DrawerFailure, draft?: Draft): void {
+  /**
+   * @param kept the earlier attempt is still unknown (a refusal made before the replay check):
+   *   the copy makes no claim about it and the frozen movement stays for Retry.
+   */
+  private applyFailure(failure: DrawerFailure, draft?: Draft, kept = false): void {
+    if (kept) {
+      const key = KEPT_ATTEMPT_KEYS[failure.kind];
+      if (failure.kind === 'CONFLICT') {
+        this.sessionChanged.emit('CONFLICT');
+        return;
+      }
+      this.showFailure({ key: key ?? FAILURE_KEYS['UNKNOWN_OUTCOME'] });
+      if (failure.kind === 'FORBIDDEN' || failure.kind === 'SCOPE_DENIED') {
+        this.optionsStale.emit();
+      }
+      return;
+    }
     switch (failure.kind) {
       case 'APPROVAL_REQUIRED':
-        this.approval = null;
+        this.setApproval(null);
         this.enterApproval();
         return;
       case 'APPROVAL_INVALID':
-        this.approval = null;
+        this.setApproval(null);
         this.enterApproval({ key: FAILURE_KEYS['APPROVAL_INVALID'] });
         return;
       case 'APPROVAL_DENIED':
       case 'SELF_APPROVAL':
-        this.approval = null;
+      case 'CALLER_UNIDENTIFIED':
+        this.setApproval(null);
         this.enterApproval({ key: FAILURE_KEYS[failure.kind] });
         return;
       case 'TYPE_NOT_ALLOWED':
-        this.approval = null;
+        this.setApproval(null);
         this.showFailure({ key: FAILURE_KEYS['TYPE_NOT_ALLOWED'], reasonKey: reasonKey(draft?.reason) });
         this.clearReason();
         this.optionsStale.emit();
         return;
       case 'CATEGORY_UNKNOWN':
-        this.approval = null;
+        this.setApproval(null);
         this.categoryCode.set('');
         this.showFailure({ key: FAILURE_KEYS['CATEGORY_UNKNOWN'] });
         this.optionsStale.emit();
         return;
       case 'FLOAT_NOT_RECORDED':
-        this.approval = null;
-        this.showFailure({ key: FAILURE_KEYS['FLOAT_NOT_RECORDED'] });
+      case 'CURRENCY_NOT_SUPPORTED':
+      case 'REFUSED':
+        this.setApproval(null);
+        this.showFailure({ key: FAILURE_KEYS[failure.kind] });
         return;
       case 'SESSION_GONE':
         this.sessionChanged.emit('GONE');
@@ -552,34 +660,72 @@ export class DrawerMovementDialogComponent {
       case 'SESSION_NOT_OPEN':
         this.sessionChanged.emit('NOT_OPEN');
         return;
+      case 'IDEMPOTENCY_CONFLICT':
+        this.sessionChanged.emit('ALREADY_RECORDED');
+        return;
       case 'CONFLICT':
         this.sessionChanged.emit('CONFLICT');
         return;
       case 'INVALID':
-        this.approval = null; // a definitive refusal: the token goes with it
+        this.setApproval(null); // a definitive refusal: the token goes with it
         this.invalidFields.set(new Set(failure.fields));
         this.showFailure({ key: FAILURE_KEYS['INVALID'], fieldKeys: this.fieldLabelKeys(failure.fields) });
         return;
       case 'FORBIDDEN':
       case 'SCOPE_DENIED':
         // The options read enforces the same code and scope: its 403 hides the actions.
-        this.approval = null;
+        this.setApproval(null);
         this.showFailure({ key: FAILURE_KEYS[failure.kind] });
         this.optionsStale.emit();
         return;
       case 'UNKNOWN_OUTCOME':
         // The same requestId (and the token while it is valid) goes again on Retry (§8.2).
-        this.outcomeUnknown.set(true);
         this.showFailure({ key: FAILURE_KEYS['UNKNOWN_OUTCOME'] });
         return;
       case 'APPROVAL_UNAVAILABLE':
         this.enterApproval({ key: FAILURE_KEYS['APPROVAL_UNAVAILABLE'] });
         return;
-      case 'REFUSED':
-        this.approval = null;
-        this.showFailure({ key: FAILURE_KEYS['REFUSED'] });
-        return;
     }
+  }
+
+  /** Opens on a record whose outcome is still unknown: its fields, frozen, and its `requestId`. */
+  private restore(attempt: PendingAttempt): void {
+    const draft = attempt.draft;
+    this.requestId = attempt.requestId;
+    this.reason.set(draft.reason);
+    this.amountText.set(String(draft.amount));
+    this.categoryCode.set(draft.categoryCode ?? '');
+    this.note.set(draft.note ?? '');
+    this.receiptReference.set(draft.receiptReference ?? '');
+    this.bagNumber.set(draft.bagNumber ?? '');
+    this.frozen.set(draft);
+    this.outcomeUnknown.set(true);
+    this.failure.set({ key: FAILURE_KEYS['UNKNOWN_OUTCOME'] });
+  }
+
+  /** Stops whatever is in flight; a record in flight becomes a pending attempt (its outcome is unknown). */
+  private abandon(): void {
+    const sending = this.phase() === 'submitting' ? this.sending : null;
+    this.ticket++;
+    this.inFlight?.unsubscribe();
+    this.inFlight = null;
+    this.sending = null;
+    this.phase.set('idle');
+    this.setApproval(null); // a replay is checked before an approval, so a retry needs no token
+    this.clearCredentials();
+    if (sending) {
+      this.attempts.hold(sending);
+    }
+  }
+
+  private unfreeze(): void {
+    this.frozen.set(null);
+    this.outcomeUnknown.set(false);
+  }
+
+  private setApproval(approval: HeldApproval | null): void {
+    this.approval = approval;
+    this.approvalHeld.set(approval !== null);
   }
 
   private fieldLabelKeys(fields: readonly string[]): string[] {
@@ -608,11 +754,13 @@ export class DrawerMovementDialogComponent {
     setTimeout(() => this.alert()?.nativeElement.focus());
   }
 
+  /** Leaves the reason step; never while a movement is frozen (its retry is still owed). */
   private clearReason(): void {
+    if (this.frozen()) {
+      return;
+    }
     this.reason.set(null);
-    this.approval = null;
-    this.unconfirmed = null;
-    this.outcomeUnknown.set(false);
+    this.setApproval(null);
     if (this.step() === 'approval') {
       this.step.set('details');
     }
@@ -630,7 +778,7 @@ export class DrawerMovementDialogComponent {
       return null;
     }
     if (approval.expiresAt && Date.parse(approval.expiresAt) <= this.clock().getTime()) {
-      this.approval = null; // expired: dropped, never held for later
+      this.setApproval(null); // expired: dropped, never held for later
       return null;
     }
     return approval.approvalToken;

@@ -67,6 +67,8 @@ export interface DrawerMovement {
   readonly bagNumber?: string;
   readonly note?: string;
   readonly receiptReference?: string;
+  /** The register's idempotency key: a re-read holding a pending attempt's id settles it (§8.2). */
+  readonly requestId?: string;
   /** Served ids, never names (spec discrepancy 3): the page renders an em dash, never these. */
   readonly clerkId?: string;
   readonly approvedBy?: string;
@@ -113,6 +115,34 @@ export interface RecordedMovement {
   readonly reason: DrawerReason;
   readonly amount: number;
   readonly currencyCode: string;
+  readonly requestId: string;
+}
+
+/** The movement as entered: what a record and its approval are both bound to. */
+export interface DrawerDraft {
+  readonly reason: DrawerReason;
+  readonly amount: number;
+  readonly currencyCode: string;
+  readonly categoryCode?: string;
+  readonly note?: string;
+  readonly receiptReference?: string;
+  readonly bagNumber?: string;
+}
+
+/**
+ * A record whose outcome is unknown (timeout, network, 5xx), kept outside the dialog in memory only
+ * (story item 6 as amended on #467, §8.2): Cancel, Escape, reopening and navigating keep it, and a
+ * retry sends exactly this draft under this `requestId`, so pos-order (which dedupes on the id
+ * alone) can never record it twice. Only a definite answer releases it; a `tid|sub` or session
+ * change drops it.
+ */
+export interface PendingAttempt {
+  readonly requestId: string;
+  readonly draft: DrawerDraft;
+  readonly kind: DrawerDialogKind;
+  readonly sessionId: string;
+  /** `tid|sub` of the cashier who sent it. */
+  readonly identity: string;
 }
 
 /** Which action opened the dialog. */

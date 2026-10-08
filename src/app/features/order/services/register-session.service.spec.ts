@@ -25,7 +25,12 @@ import {
   DrawerSession,
   REGISTER_TERMINAL_ID,
 } from '../models/register-drawer.models';
-import { DrawerFailure, RegisterSessionService, classifyDrawerError } from './register-session.service';
+import {
+  DrawerFailure,
+  RegisterSessionService,
+  classifyDrawerError,
+  settlesUnknownAttempt,
+} from './register-session.service';
 
 const SESSION_ID = '018f2a6e-0000-7000-8000-00000000a001';
 
@@ -132,6 +137,7 @@ describe('RegisterSessionService', () => {
         bagNumber: undefined,
         note: 'Printer paper',
         receiptReference: 'R-100',
+        requestId: servedMovement.requestId,
         clerkId: 'cashier-1',
         approvedBy: servedMovement.approvedBy,
       };
@@ -305,14 +311,16 @@ describe('classifyDrawerError', () => {
     [refusal(422, 'PETTY_EXPENSE_CATEGORY_UNKNOWN'), 'CATEGORY_UNKNOWN'],
     [refusal(422, 'FLOAT_CHANGE_NOT_RECORDED'), 'FLOAT_NOT_RECORDED'],
     [refusal(409, 'REGISTER_SESSION_CONFLICT'), 'SESSION_NOT_OPEN'],
-    [refusal(409, 'IDEMPOTENCY_CONFLICT'), 'CONFLICT'],
+    [refusal(409, 'IDEMPOTENCY_CONFLICT'), 'IDEMPOTENCY_CONFLICT'],
+    [refusal(409, 'SOMETHING_ELSE'), 'CONFLICT'],
     [refusal(404, 'REGISTER_SESSION_NOT_FOUND'), 'SESSION_GONE'],
     [refusal(403, 'ORDER_FORBIDDEN'), 'FORBIDDEN'],
     [refusal(403, 'LOCATION_SCOPE_DENIED'), 'SCOPE_DENIED'],
     // An unexplained 403 is never claimed to be a missing permission (ADR-0064 §4).
     [refusal(403, 'SOMETHING_NEW'), 'REFUSED'],
     [refusal(403), 'REFUSED'],
-    [refusal(422, 'CURRENCY_NOT_SUPPORTED'), 'REFUSED'],
+    [refusal(422, 'CURRENCY_NOT_SUPPORTED'), 'CURRENCY_NOT_SUPPORTED'],
+    [refusal(422, 'SOMETHING_ELSE'), 'REFUSED'],
     [refusal(500), 'UNKNOWN_OUTCOME'],
     [refusal(0), 'UNKNOWN_OUTCOME'],
     [refusal(504), 'UNKNOWN_OUTCOME'],
@@ -324,7 +332,7 @@ describe('classifyDrawerError', () => {
 
   it('keeps the fields a 400 names', () => {
     const failure = classifyDrawerError(refusal(400, 'REGISTER_SESSION_INVALID_ARGUMENT', ['bagNumber']), 'RECORD');
-    expect(failure).toEqual({ kind: 'INVALID', fields: ['bagNumber'] });
+    expect(failure).toEqual({ kind: 'INVALID', fields: ['bagNumber'], status: 400 });
   });
 
   it('reads a step-up refusal by its own codes', () => {
@@ -333,8 +341,11 @@ describe('classifyDrawerError', () => {
     expect(classifyDrawerError(refusal(409, 'REGISTER_SESSION_CONFLICT'), 'APPROVE').kind).toBe('SESSION_NOT_OPEN');
     expect(classifyDrawerError(refusal(403, 'LOCATION_SCOPE_DENIED'), 'APPROVE').kind).toBe('SCOPE_DENIED');
     expect(classifyDrawerError(refusal(403, 'ORDER_FORBIDDEN'), 'APPROVE').kind).toBe('FORBIDDEN');
+    expect(classifyDrawerError(refusal(403, 'CASH_MOVEMENT_CALLER_UNIDENTIFIED'), 'APPROVE').kind).toBe(
+      'CALLER_UNIDENTIFIED',
+    );
     // An unknown 403 on the step-up is a refusal, not a claimed missing permission.
-    expect(classifyDrawerError(refusal(403, 'CASH_MOVEMENT_CALLER_UNIDENTIFIED'), 'APPROVE').kind).toBe('REFUSED');
+    expect(classifyDrawerError(refusal(403, 'SOMETHING_NEW'), 'APPROVE').kind).toBe('REFUSED');
   });
 
   it('treats an unanswered step-up as unavailable, never as a refusal', () => {
@@ -343,5 +354,39 @@ describe('classifyDrawerError', () => {
     );
     expect(classifyDrawerError(new Error('boom'), 'APPROVE').kind).toBe('APPROVAL_UNAVAILABLE');
     expect(classifyDrawerError(new Error('boom'), 'RECORD').kind).toBe('UNKNOWN_OUTCOME');
+  });
+});
+
+describe('settlesUnknownAttempt (item 6 amendment)', () => {
+  function failure(kind: DrawerFailure['kind'], status: number): DrawerFailure {
+    return { kind, fields: [], status };
+  }
+
+  it.each([
+    ['APPROVAL_REQUIRED', 403],
+    ['APPROVAL_INVALID', 403],
+    ['SELF_APPROVAL', 403],
+    ['TYPE_NOT_ALLOWED', 422],
+    ['CATEGORY_UNKNOWN', 422],
+    ['FLOAT_NOT_RECORDED', 422],
+    ['SESSION_NOT_OPEN', 409],
+    ['IDEMPOTENCY_CONFLICT', 409],
+    ['INVALID', 400],
+    ['SESSION_GONE', 404],
+    ['CURRENCY_NOT_SUPPORTED', 422],
+    ['REFUSED', 422],
+  ] as const)('%s (%i), evaluated after the replay check or same-payload, settles it', (kind, status) => {
+    expect(settlesUnknownAttempt(failure(kind, status))).toBe(true);
+  });
+
+  it.each([
+    ['UNKNOWN_OUTCOME', 0],
+    ['UNKNOWN_OUTCOME', 503],
+    ['FORBIDDEN', 403],
+    ['SCOPE_DENIED', 403],
+    ['REFUSED', 403],
+    ['CONFLICT', 409],
+  ] as const)('%s (%i), made before the replay check or unexplained, does not', (kind, status) => {
+    expect(settlesUnknownAttempt(failure(kind, status))).toBe(false);
   });
 });

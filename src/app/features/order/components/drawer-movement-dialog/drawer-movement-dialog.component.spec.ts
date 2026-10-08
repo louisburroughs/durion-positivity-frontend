@@ -13,6 +13,7 @@ import {
   DrawerMovement,
   DrawerOptions,
 } from '../../models/register-drawer.models';
+import { DrawerAttemptStore } from '../../services/drawer-attempt.store';
 import { RegisterSessionService } from '../../services/register-session.service';
 import { DRAWER_CLOCK, DrawerMovementDialogComponent, DrawerSessionChange } from './drawer-movement-dialog.component';
 
@@ -88,10 +89,14 @@ function renderDialog(
           hasPermission: (code: string) => granted()?.has(code) ?? false,
           hasAnyPermission: (codes: readonly string[]) => codes.some(code => granted()?.has(code) ?? false),
           hasAnyRole: () => false,
+          tenantId: () => 'tenant-1',
+          currentUserClaims: () => ({ sub: 'cashier-1' }),
         },
       },
     ],
   });
+  // The page scopes the store to its session; the dialog keeps unknown attempts there (item 6).
+  TestBed.inject(DrawerAttemptStore).scopeTo(SESSION_ID);
   const translate = TestBed.inject(TranslateService);
   translate.setTranslation('en-US', enUS as TranslationObject);
   translate.use('en-US');
@@ -161,40 +166,73 @@ describe('DrawerMovementDialogComponent (CAP:550 S22)', () => {
       expect(h.q('drawer-record')).not.toBeNull();
       h.component.submitDetails();
       expect(h.record).toHaveBeenCalledTimes(1);
-      expect(h.events.recorded).toHaveBeenCalledWith({ reason: 'BANK_DROP', amount: 300, currencyCode: 'CAD' });
+      expect(h.events.recorded).toHaveBeenCalledWith({
+        reason: 'BANK_DROP',
+        amount: 300,
+        currencyCode: 'CAD',
+        requestId: h.record.mock.calls[0][1].requestId,
+      });
     });
   });
 
   describe('write lock release', () => {
-    it('refuses Cancel and Escape while a record is in flight, keeping the attempt until it settles', () => {
+    it('lets Cancel close a hung record and keeps it as a pending attempt, never trapping the register', () => {
       const h = renderDialog();
-      const pending$ = new Subject<DrawerMovement>();
-      h.record.mockReturnValue(pending$);
+      const hung$ = new Subject<DrawerMovement>();
+      h.record.mockReturnValue(hung$);
       fillBankDrop(h);
       h.component.submitDetails();
       h.render();
       expect(h.component.phase()).toBe('submitting');
-      expect(h.q('drawer-cancel')!.getAttribute('aria-disabled')).toBe('true');
+      expect(h.q('drawer-cancel')!.getAttribute('aria-disabled')).toBeNull();
+      const sentId = h.record.mock.calls[0][1].requestId;
 
       h.component.cancel();
-      h.root.querySelector('dialog')!.dispatchEvent(new Event('cancel', { cancelable: true }));
-      expect(h.events.cancelled).not.toHaveBeenCalled();
-      expect(pending$.observed).toBe(true);
-
-      pending$.next(recorded);
-      expect(h.events.recorded).toHaveBeenCalledTimes(1);
-      expect(h.component.phase()).toBe('idle');
+      expect(h.events.cancelled).toHaveBeenCalledTimes(1);
+      expect(hung$.observed).toBe(false);
+      const kept = TestBed.inject(DrawerAttemptStore).pendingFor(SESSION_ID);
+      expect(kept?.requestId).toBe(sentId);
+      expect(kept?.draft).toEqual({ reason: 'BANK_DROP', amount: 300, currencyCode: 'CAD', bagNumber: 'BAG-7' });
     });
 
-    it('lets the cashier close after an unknown outcome (the id rotates on close, item 6)', () => {
+    it('lets Escape close a hung record too, keeping the attempt', () => {
+      const h = renderDialog();
+      h.record.mockReturnValue(new Subject<DrawerMovement>());
+      fillBankDrop(h);
+      h.component.submitDetails();
+      h.root.querySelector('dialog')!.dispatchEvent(new Event('cancel', { cancelable: true }));
+      expect(h.events.cancelled).toHaveBeenCalledTimes(1);
+      expect(TestBed.inject(DrawerAttemptStore).pendingFor(SESSION_ID)).not.toBeNull();
+    });
+
+    it('keeps the attempt when the cashier closes after an unknown outcome (item 6 amendment)', () => {
       const h = renderDialog();
       h.record.mockReturnValue(throwError(() => refusal(504)));
       fillBankDrop(h);
       h.component.submitDetails();
       expect(h.component.outcomeUnknown()).toBe(true);
+      const sentId = h.record.mock.calls[0][1].requestId;
 
       h.component.cancel();
       expect(h.events.cancelled).toHaveBeenCalledTimes(1);
+      expect(TestBed.inject(DrawerAttemptStore).pendingFor(SESSION_ID)?.requestId).toBe(sentId);
+    });
+
+    it('keeps a destroyed in-flight record as a pending attempt, without emitting (NG0953)', () => {
+      const h = renderDialog();
+      h.record.mockReturnValue(new Subject<DrawerMovement>());
+      fillBankDrop(h);
+      h.component.submitDetails();
+      const sentId = h.record.mock.calls[0][1].requestId;
+      h.fixture.destroy();
+      expect(TestBed.inject(DrawerAttemptStore).pendingFor(SESSION_ID)?.requestId).toBe(sentId);
+    });
+
+    it('a plain Cancel with nothing pending keeps nothing', () => {
+      const h = renderDialog();
+      fillBankDrop(h);
+      h.component.cancel();
+      expect(TestBed.inject(DrawerAttemptStore).pendingFor(SESSION_ID)).toBeNull();
     });
 
     it('announces a failed options read through a persistent status region', () => {
@@ -211,7 +249,7 @@ describe('DrawerMovementDialogComponent (CAP:550 S22)', () => {
 
     it('releases the lock on a refusal and on a server error', () => {
       const h = renderDialog();
-      h.record.mockReturnValueOnce(throwError(() => refusal(422, 'CURRENCY_NOT_SUPPORTED')));
+      h.record.mockReturnValueOnce(throwError(() => refusal(422, 'SOMETHING_ELSE')));
       fillBankDrop(h);
       h.component.submitDetails();
       h.render();
@@ -279,6 +317,61 @@ describe('DrawerMovementDialogComponent (CAP:550 S22)', () => {
       expect(h.events.optionsStale).toHaveBeenCalledTimes(1);
     });
 
+    it.each([
+      [
+        refusal(422, 'CURRENCY_NOT_SUPPORTED'),
+        "This drawer's currency is not the business's currency, so accounting must restate the float. Nothing was recorded.",
+      ],
+    ] as const)('gives CURRENCY_NOT_SUPPORTED its own copy', (error, copy) => {
+      const h = renderDialog();
+      h.record.mockReturnValue(throwError(() => error));
+      fillBankDrop(h);
+      h.component.submitDetails();
+      h.render();
+      expect(text(h.q('drawer-dialog-alert'))).toBe(copy);
+    });
+
+    it('gives CASH_MOVEMENT_CALLER_UNIDENTIFIED its own copy on the manager step', () => {
+      const h = renderDialog();
+      h.record.mockReturnValue(throwError(() => refusal(403, 'CASH_MOVEMENT_APPROVAL_REQUIRED')));
+      h.approve.mockReturnValue(throwError(() => refusal(403, 'CASH_MOVEMENT_CALLER_UNIDENTIFIED')));
+      fillBankDrop(h);
+      h.component.submitDetails();
+      h.component.managerUsername.set('manager-2');
+      h.component.managerPassword.set('secret');
+      h.component.approve();
+      h.render();
+      expect(h.component.step()).toBe('approval');
+      expect(text(h.q('drawer-dialog-alert'))).toBe(
+        "Your sign-in doesn't say who you are, so a manager can't approve for you. Sign out and sign in again.",
+      );
+    });
+
+    it('shows ALWAYS_MANAGER_HINT for a non-float reason that always needs a manager, FLOAT_NOTE only for float', () => {
+      const h = renderDialog();
+      h.fixture.componentRef.setInput('options', {
+        ...options,
+        reasons: [
+          ...options.reasons.map(option =>
+            option.reason === 'BANK_DROP' ? { ...option, alwaysNeedsManager: true } : option,
+          ),
+          {
+            reason: 'FLOAT_DECREASE',
+            direction: 'PAID_OUT',
+            allowedNow: true,
+            cashierLimit: null,
+            alwaysNeedsManager: true,
+            requiredFields: [],
+          },
+        ],
+      });
+      h.render();
+      expect(text(h.q('drawer-manager-hint-BANK_DROP'))).toBe("This always needs a manager's approval.");
+      expect(text(h.q('drawer-manager-hint-FLOAT_DECREASE'))).toBe(
+        'Changing the float always needs a manager. It must match the float change accounting recorded.',
+      );
+    });
+
     it('never claims a missing permission for an unexplained 403', () => {
       const h = renderDialog();
       h.record.mockReturnValue(throwError(() => refusal(403, 'SOMETHING_NEW')));
@@ -292,7 +385,8 @@ describe('DrawerMovementDialogComponent (CAP:550 S22)', () => {
     it.each([
       [refusal(404), 'GONE'],
       [refusal(409, 'REGISTER_SESSION_CONFLICT'), 'NOT_OPEN'],
-      [refusal(409, 'IDEMPOTENCY_CONFLICT'), 'CONFLICT'],
+      [refusal(409, 'IDEMPOTENCY_CONFLICT'), 'ALREADY_RECORDED'],
+      [refusal(409, 'SOMETHING_ELSE'), 'CONFLICT'],
     ] as const)('hands a changed session back to the page (%#)', (error, change) => {
       const h = renderDialog();
       h.record.mockReturnValue(throwError(() => error));

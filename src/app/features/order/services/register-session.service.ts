@@ -66,6 +66,7 @@ function toMovement(response: CashMovementResponse): DrawerMovement {
     bagNumber: response.bagNumber,
     note: response.note,
     receiptReference: response.receiptReference,
+    requestId: response.requestId,
     clerkId: response.clerkId,
     approvedBy: response.approvedBy,
   };
@@ -183,8 +184,14 @@ export type DrawerFailureKind =
   | 'FLOAT_NOT_RECORDED'
   /** 409 REGISTER_SESSION_CONFLICT: the session is no longer OPEN. */
   | 'SESSION_NOT_OPEN'
-  /** Any other 409, such as IDEMPOTENCY_CONFLICT. */
+  /** 409 IDEMPOTENCY_CONFLICT: the requestId was already recorded, for another payload. */
+  | 'IDEMPOTENCY_CONFLICT'
+  /** Any other 409. */
   | 'CONFLICT'
+  /** 422 CURRENCY_NOT_SUPPORTED: the drawer's stamped currency is not the functional one (ADR-0067). */
+  | 'CURRENCY_NOT_SUPPORTED'
+  /** 403 CASH_MOVEMENT_CALLER_UNIDENTIFIED: the cashier's sign-in carries no user id (step-up). */
+  | 'CALLER_UNIDENTIFIED'
   /** 404: the session is gone; the page re-resolves it. */
   | 'SESSION_GONE'
   /** 400: the named fields. */
@@ -204,6 +211,8 @@ export interface DrawerFailure {
   readonly kind: DrawerFailureKind;
   /** Request fields a 400 named, when the server listed them. */
   readonly fields: readonly string[];
+  /** The HTTP status, or 0 when the server never answered. */
+  readonly status: number;
 }
 
 /**
@@ -213,6 +222,7 @@ export interface DrawerFailure {
 const SHARED_CODES: Readonly<Record<string, DrawerFailureKind>> = {
   ORDER_FORBIDDEN: 'FORBIDDEN',
   LOCATION_SCOPE_DENIED: 'SCOPE_DENIED',
+  CURRENCY_NOT_SUPPORTED: 'CURRENCY_NOT_SUPPORTED',
 };
 
 const RECORD_CODES: Readonly<Record<string, DrawerFailureKind>> = {
@@ -223,11 +233,13 @@ const RECORD_CODES: Readonly<Record<string, DrawerFailureKind>> = {
   PETTY_EXPENSE_CATEGORY_UNKNOWN: 'CATEGORY_UNKNOWN',
   FLOAT_CHANGE_NOT_RECORDED: 'FLOAT_NOT_RECORDED',
   REGISTER_SESSION_CONFLICT: 'SESSION_NOT_OPEN',
+  IDEMPOTENCY_CONFLICT: 'IDEMPOTENCY_CONFLICT',
 };
 
 const APPROVAL_CODES: Readonly<Record<string, DrawerFailureKind>> = {
   CASH_MOVEMENT_APPROVAL_DENIED: 'APPROVAL_DENIED',
   CASH_MOVEMENT_SELF_APPROVAL: 'SELF_APPROVAL',
+  CASH_MOVEMENT_CALLER_UNIDENTIFIED: 'CALLER_UNIDENTIFIED',
   REGISTER_SESSION_CONFLICT: 'SESSION_NOT_OPEN',
 };
 
@@ -238,8 +250,9 @@ const APPROVAL_CODES: Readonly<Record<string, DrawerFailureKind>> = {
 export function classifyDrawerError(error: unknown, operation: 'RECORD' | 'APPROVE'): DrawerFailure {
   const unanswered: DrawerFailureKind = operation === 'RECORD' ? 'UNKNOWN_OUTCOME' : 'APPROVAL_UNAVAILABLE';
   if (!(error instanceof HttpErrorResponse)) {
-    return { kind: unanswered, fields: [] };
+    return { kind: unanswered, fields: [], status: 0 };
   }
+  const status = error.status;
   const body = (typeof error.error === 'object' && error.error !== null ? error.error : {}) as Partial<ApiError>;
   const fields = Array.isArray(body.fieldErrors)
     ? body.fieldErrors.map(entry => entry?.field).filter((field): field is string => typeof field === 'string')
@@ -247,18 +260,42 @@ export function classifyDrawerError(error: unknown, operation: 'RECORD' | 'APPRO
   const code = body.code ?? '';
   const byCode = (operation === 'RECORD' ? RECORD_CODES : APPROVAL_CODES)[code] ?? SHARED_CODES[code];
   if (byCode) {
-    return { kind: byCode, fields: [] };
+    return { kind: byCode, fields: [], status };
   }
-  switch (error.status) {
+  switch (status) {
     case 400:
-      return { kind: 'INVALID', fields };
+      return { kind: 'INVALID', fields, status };
     case 404:
-      return { kind: 'SESSION_GONE', fields: [] };
+      return { kind: 'SESSION_GONE', fields: [], status };
     case 409:
-      return { kind: 'CONFLICT', fields: [] };
+      return { kind: 'CONFLICT', fields: [], status };
   }
-  if (error.status >= 400 && error.status < 500) {
-    return { kind: 'REFUSED', fields: [] };
+  if (status >= 400 && status < 500) {
+    return { kind: 'REFUSED', fields: [], status };
   }
-  return { kind: unanswered, fields: [] };
+  return { kind: unanswered, fields: [], status };
+}
+
+/**
+ * Whether a refusal of a retried record settles its earlier, unknown attempt (story item 6 as
+ * amended on #467). pos-order checks the `requestId` for a replay after validation, the session's
+ * existence, the caller's scope and the currency, and before everything else; so:
+ * - any refusal it makes after that check (approval rules, policy, category, float, session not
+ *   OPEN, IDEMPOTENCY_CONFLICT), and a same-payload 400, 404 or 422 (which the first attempt would
+ *   have met too), proves the attempt is settled;
+ * - a 403 (ORDER_FORBIDDEN, LOCATION_SCOPE_DENIED or unexplained) runs before the replay check and
+ *   proves nothing, nor does an unexplained 409 or another unknown outcome.
+ */
+export function settlesUnknownAttempt(failure: DrawerFailure): boolean {
+  switch (failure.kind) {
+    case 'UNKNOWN_OUTCOME':
+    case 'FORBIDDEN':
+    case 'SCOPE_DENIED':
+    case 'CONFLICT':
+      return false;
+    case 'REFUSED':
+      return failure.status !== 403;
+    default:
+      return true;
+  }
 }

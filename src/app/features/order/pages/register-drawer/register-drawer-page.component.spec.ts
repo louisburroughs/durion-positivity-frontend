@@ -1,7 +1,10 @@
+import { TestBed } from '@angular/core/testing';
 import { Subject, of, throwError } from 'rxjs';
 import { CashMovementRequestReasonEnum } from '@durion-sdk/order';
 import { DrawerMovement, DrawerOptions, DrawerSession, REGISTER_TERMINAL_ID } from '../../models/register-drawer.models';
 import { DrawerMovementDialogComponent } from '../../components/drawer-movement-dialog/drawer-movement-dialog.component';
+import { DrawerAttemptStore } from '../../services/drawer-attempt.store';
+import { RegisterDrawerPageComponent } from './register-drawer-page.component';
 import {
   APPROVER_ID,
   CLERK_ID,
@@ -667,7 +670,7 @@ describe('RegisterDrawerPageComponent (CAP:550 S22)', () => {
       h.render();
       await flush(h);
       expect(text(h.q('drawer-dialog-alert'))).toBe(
-        "We couldn't confirm that this was recorded. Retry sends it again; it won't be recorded twice.",
+        "We couldn't confirm whether this was recorded. Retry sends the same request again, so it can't be recorded twice.",
       );
       expect(text(recordButton(h))).toBe('Retry');
       expect(document.activeElement).toBe(h.q('drawer-dialog-alert'));
@@ -1015,3 +1018,322 @@ describe('RegisterDrawerPageComponent (CAP:550 S22)', () => {
     });
   });
 });
+
+describe('RegisterDrawerPageComponent — a pending attempt (CAP:550 S22, item 6 amendment)', () => {
+  /** A petty expense of 12.50 whose record times out: its outcome is unknown. */
+  function unknownExpense(h: DrawerHarness): ReturnType<typeof requestOf> {
+    h.mocks.recordMovement.mockReturnValueOnce(throwError(() => refusal(504)));
+    fillPettyExpense(h);
+    click(h, 'drawer-record');
+    expect(dialog(h).outcomeUnknown()).toBe(true);
+    return requestOf(h, 0);
+  }
+
+  function requestOf(h: DrawerHarness, call: number) {
+    return h.mocks.recordMovement.mock.calls[call][1];
+  }
+
+  function store(): DrawerAttemptStore {
+    return TestBed.inject(DrawerAttemptStore);
+  }
+
+  it('keeps the requestId through Cancel and reopening: same id, same payload, locked fields and Retry', async () => {
+    const h = renderDrawer();
+    const first = unknownExpense(h);
+    click(h, 'drawer-cancel');
+    expect(h.q('drawer-dialog')).toBeNull();
+    expect(text(h.q('drawer-pending'))).toContain('Petty expense, CA$12.50: not confirmed yet.');
+
+    h.mocks.recordMovement.mockReturnValueOnce(new Subject<DrawerMovement>());
+    click(h, 'drawer-pay-out');
+    expect(dialog(h).currentRequestId()).toBe(first.requestId);
+    expect(h.q<HTMLInputElement>('drawer-amount')!.disabled).toBe(true);
+    expect(h.q<HTMLInputElement>('drawer-note')!.value).toBe('Printer paper');
+    expect(h.q<HTMLFieldSetElement>('drawer-reasons')!.disabled).toBe(true);
+    expect(text(recordButton(h))).toBe('Retry');
+    expect(text(h.q('drawer-dialog-alert'))).toContain("We couldn't confirm whether this was recorded.");
+
+    click(h, 'drawer-record');
+    expect(requestOf(h, 1)).toEqual(first);
+  });
+
+  it('keeps it through Escape, and Change the float reopens the same Pay out attempt', () => {
+    const h = renderDrawer();
+    const first = unknownExpense(h);
+    h.root.querySelector('dialog')!.dispatchEvent(new Event('cancel', { cancelable: true }));
+    h.render();
+    expect(h.q('drawer-dialog')).toBeNull();
+
+    h.mocks.recordMovement.mockReturnValueOnce(new Subject<DrawerMovement>());
+    click(h, 'drawer-change-float');
+    expect(dialog(h).kind()).toBe('PAY_OUT');
+    click(h, 'drawer-record');
+    expect(requestOf(h, 1)).toEqual(first);
+  });
+
+  it('keeps a hung record cancelled mid-flight, and its retry carries the same id', () => {
+    const h = renderDrawer();
+    const hung$ = new Subject<DrawerMovement>();
+    h.mocks.recordMovement.mockReturnValueOnce(hung$);
+    fillPettyExpense(h);
+    click(h, 'drawer-record');
+    const first = requestOf(h, 0);
+    click(h, 'drawer-cancel');
+    expect(hung$.observed).toBe(false);
+    expect(h.component.pendingAttempt()?.requestId).toBe(first.requestId);
+
+    h.mocks.recordMovement.mockReturnValueOnce(of(pettyMovement));
+    click(h, 'drawer-pay-out');
+    click(h, 'drawer-record');
+    expect(requestOf(h, 1)).toEqual(first);
+    expect(h.component.pendingAttempt()).toBeNull();
+  });
+
+  it('keeps it when the cashier leaves the page and comes back', () => {
+    const h = renderDrawer();
+    const first = unknownExpense(h);
+    click(h, 'drawer-cancel');
+    h.fixture.destroy();
+
+    const again = TestBed.createComponent(RegisterDrawerPageComponent);
+    again.detectChanges();
+    expect(again.componentInstance.pendingAttempt()?.requestId).toBe(first.requestId);
+    const root = again.nativeElement as HTMLElement;
+    expect(root.querySelector('[data-testid="drawer-pending"]')).not.toBeNull();
+  });
+
+  it('drops it on a tid|sub change', () => {
+    const h = renderDrawer();
+    unknownExpense(h);
+    click(h, 'drawer-cancel');
+    h.identity.set({ sub: 'cashier-2', tenant: 'tenant-1' });
+    h.render();
+    expect(h.component.pendingAttempt()).toBeNull();
+    h.identity.set({ sub: 'cashier-1', tenant: 'tenant-1' });
+    h.render();
+    expect(h.component.pendingAttempt()).toBeNull();
+    expect(store().pendingFor(SESSION_ID)).toBeNull();
+  });
+
+  it('drops it on a tid|sub change even when the other cashier\'s session read never lands', () => {
+    const h = renderDrawer();
+    unknownExpense(h);
+    click(h, 'drawer-cancel');
+    h.mocks.currentSession.mockReturnValueOnce(new Subject<DrawerSession | null>());
+    h.identity.set({ sub: 'cashier-2', tenant: 'tenant-1' });
+    h.render();
+    h.identity.set({ sub: 'cashier-1', tenant: 'tenant-1' });
+    h.render();
+    expect(h.component.state()).toBe('ready');
+    expect(h.component.pendingAttempt()).toBeNull();
+  });
+
+  it('drops it on a session change', () => {
+    const h = renderDrawer();
+    unknownExpense(h);
+    click(h, 'drawer-cancel');
+    h.mocks.currentSession.mockReturnValue(of({ ...openSession, sessionId: OTHER_SESSION_ID }));
+    h.mocks.options.mockReturnValue(of({ ...drawerOptions, sessionId: OTHER_SESSION_ID }));
+    h.component.loadSession();
+    h.render();
+    expect(h.component.pendingAttempt()).toBeNull();
+    expect(store().pendingFor(SESSION_ID)).toBeNull();
+  });
+
+  it('settles it when a movements re-read holds its requestId, and announces it', () => {
+    const h = renderDrawer();
+    const first = unknownExpense(h);
+    h.mocks.movements.mockReturnValue(of([pettyMovement, { ...pettyMovement, movementId: 'mv-9', requestId: first.requestId }]));
+    click(h, 'drawer-cancel');
+
+    expect(h.component.pendingAttempt()).toBeNull();
+    expect(h.q('drawer-pending')).toBeNull();
+    expect(text(h.q('drawer-announcement'))).toBe('Recorded: Petty expense, CA$12.50');
+  });
+
+  it('rotates after a definite refusal of the retry', () => {
+    const h = renderDrawer();
+    const first = unknownExpense(h);
+    h.mocks.recordMovement.mockReturnValueOnce(throwError(() => refusal(422, 'FLOAT_CHANGE_NOT_RECORDED')));
+    click(h, 'drawer-record');
+
+    expect(h.component.pendingAttempt()).toBeNull();
+    expect(dialog(h).frozen()).toBeNull();
+    expect(dialog(h).currentRequestId()).not.toBe(first.requestId);
+  });
+
+  it('a plain Cancel with nothing pending starts over with a new id', () => {
+    const h = renderDrawer();
+    click(h, 'drawer-pay-out');
+    const before = dialog(h).currentRequestId();
+    click(h, 'drawer-cancel');
+    click(h, 'drawer-pay-out');
+    expect(dialog(h).currentRequestId()).not.toBe(before);
+    expect(h.component.pendingAttempt()).toBeNull();
+  });
+
+  it('keeps the frozen reason and the attempt when that reason is switched off meanwhile (clearReason)', () => {
+    const h = renderDrawer();
+    const first = unknownExpense(h);
+    h.mocks.options.mockReturnValue(of(withAllowed(drawerOptions, 'PETTY_EXPENSE', false)));
+    h.component.onOptionsStale();
+    h.render();
+
+    expect(dialog(h).reason()).toBe('PETTY_EXPENSE');
+    expect(dialog(h).frozen()).not.toBeNull();
+    expect(h.component.pendingAttempt()?.requestId).toBe(first.requestId);
+    expect(recordButton(h).disabled).toBe(false);
+    h.mocks.recordMovement.mockReturnValueOnce(new Subject<DrawerMovement>());
+    click(h, 'drawer-record');
+    expect(requestOf(h, 1)).toEqual(first);
+  });
+
+  it('keeps it after a 403 on the retry, with copy that makes no claim about the earlier attempt', async () => {
+    const h = renderDrawer();
+    const first = unknownExpense(h);
+    h.mocks.recordMovement.mockReturnValueOnce(throwError(() => refusal(403, 'ORDER_FORBIDDEN')));
+    const options$ = new Subject<DrawerOptions>();
+    h.mocks.options.mockReturnValue(options$);
+    click(h, 'drawer-record');
+
+    expect(text(h.q('drawer-dialog-alert'))).toBe(
+      "You can't record drawer movements here; it needs the order:session:cash_movement permission.",
+    );
+    expect(h.component.pendingAttempt()?.requestId).toBe(first.requestId);
+    expect(dialog(h).outcomeUnknown()).toBe(true);
+
+    options$.error(refusal(403, 'ORDER_FORBIDDEN'));
+    h.render();
+    await flush(h);
+    expect(text(h.q('drawer-notice'))).toBe(
+      "You can't record drawer movements here; it needs the order:session:cash_movement permission.",
+    );
+    expect(store().pendingFor(SESSION_ID)?.requestId).toBe(first.requestId);
+  });
+
+  it('keeps the id through APPROVAL_REQUIRED on the retry and the approval round trip', () => {
+    const h = renderDrawer();
+    const first = unknownExpense(h);
+    h.mocks.recordMovement
+      .mockReturnValueOnce(throwError(() => refusal(403, 'CASH_MOVEMENT_APPROVAL_REQUIRED')))
+      .mockReturnValueOnce(of(pettyMovement));
+    h.mocks.requestApproval.mockReturnValue(of(approval));
+    click(h, 'drawer-record');
+    type(h, 'drawer-manager-username', 'manager-2');
+    type(h, 'drawer-manager-password', 'secret');
+    click(h, 'drawer-approve');
+
+    expect(requestOf(h, 2)).toEqual({ ...first, approvalToken: 'approval-token-1' });
+    expect(h.q('drawer-dialog')).toBeNull();
+  });
+
+  it('closes on IDEMPOTENCY_CONFLICT with its own notice and settles the attempt', async () => {
+    const h = renderDrawer();
+    unknownExpense(h);
+    h.mocks.recordMovement.mockReturnValueOnce(throwError(() => refusal(409, 'IDEMPOTENCY_CONFLICT')));
+    click(h, 'drawer-record');
+    await flush(h);
+
+    expect(h.q('drawer-dialog')).toBeNull();
+    expect(text(h.q('drawer-notice'))).toBe('An earlier attempt was already recorded; check the movements.');
+    expect(h.component.pendingAttempt()).toBeNull();
+  });
+});
+
+describe('RegisterDrawerPageComponent — focus, reads and the manager step (CAP:550 S22 review)', () => {
+  it('keeps focus on Approve (aria-disabled, not disabled) while its record runs after the step-up', () => {
+    const h = renderDrawer();
+    h.mocks.recordMovement
+      .mockReturnValueOnce(throwError(() => refusal(403, 'CASH_MOVEMENT_APPROVAL_REQUIRED')))
+      .mockReturnValueOnce(new Subject<DrawerMovement>());
+    h.mocks.requestApproval.mockReturnValue(of(approval));
+    fillPettyExpense(h, '80');
+    click(h, 'drawer-record');
+    type(h, 'drawer-manager-username', 'manager-2');
+    type(h, 'drawer-manager-password', 'secret');
+    const approve = h.q<HTMLButtonElement>('drawer-approve')!;
+    approve.focus();
+    click(h, 'drawer-approve');
+
+    expect(dialog(h).phase()).toBe('submitting');
+    expect(approve.disabled).toBe(false);
+    expect(approve.getAttribute('aria-disabled')).toBe('true');
+    expect(document.activeElement).toBe(approve);
+  });
+
+  it('says so, and keeps the token, when a step-up lands while the options are being re-read', () => {
+    const h = renderDrawer();
+    h.mocks.recordMovement
+      .mockReturnValueOnce(throwError(() => refusal(403, 'CASH_MOVEMENT_APPROVAL_REQUIRED')))
+      .mockReturnValueOnce(new Subject<DrawerMovement>());
+    const approve$ = new Subject<typeof approval>();
+    h.mocks.requestApproval.mockReturnValue(approve$);
+    fillPettyExpense(h, '80');
+    click(h, 'drawer-record');
+    type(h, 'drawer-manager-username', 'manager-2');
+    type(h, 'drawer-manager-password', 'secret');
+    click(h, 'drawer-approve');
+    const options$ = new Subject<DrawerOptions>();
+    h.mocks.options.mockReturnValue(options$);
+    h.component.onOptionsStale();
+    h.render();
+    approve$.next(approval);
+    approve$.complete();
+    h.render();
+
+    expect(h.mocks.recordMovement).toHaveBeenCalledTimes(1);
+    expect(dialog(h).step()).toBe('details');
+    expect(text(h.q('drawer-dialog-alert'))).toBe(
+      'A manager approved this. Press Record once the payout options have loaded.',
+    );
+    expect(dialog(h).holdsApproval()).toBe(true);
+
+    options$.next(drawerOptions);
+    h.render();
+    click(h, 'drawer-record');
+    expect(h.mocks.recordMovement.mock.calls[1][1].approvalToken).toBe('approval-token-1');
+  });
+
+  it('stops rendering movements a 403 refused, with its own message (ADR-0064 §6)', () => {
+    const h = renderDrawer();
+    h.mocks.movements.mockReturnValueOnce(throwError(() => refusal(403, 'LOCATION_SCOPE_DENIED')));
+    h.component.retryMovements();
+    h.render();
+
+    expect(h.component.movementsFor()).toBeNull();
+    expect(h.component.movements()).toEqual([]);
+    expect(h.all('drawer-movement-row')).toHaveLength(0);
+    expect(text(h.q('drawer-movements-denied'))).toBe("You aren't allowed to see this drawer's movements.");
+    expect(h.q('drawer-movements-retry')).toBeNull();
+  });
+
+  it('gates the held options on the options 403 (ADR-0064 §6)', () => {
+    const h = renderDrawer();
+    expect(h.component.optionsView()).not.toBeNull();
+    h.mocks.options.mockReturnValue(throwError(() => refusal(403, 'ORDER_FORBIDDEN')));
+    h.component.onOptionsStale();
+    expect(h.component.optionsView()).toBeNull();
+  });
+
+  it('gives a refused session read its own copy and drops what it held (ADR-0064 §6)', () => {
+    const h = renderDrawer();
+    h.mocks.currentSession.mockReturnValue(throwError(() => refusal(403, 'ORDER_FORBIDDEN')));
+    h.component.loadSession();
+    h.render();
+
+    expect(h.component.state()).toBe('error');
+    expect(h.component.session()).toBeNull();
+    expect(text(h.q('drawer-notice'))).toBe(
+      "You aren't allowed to see this drawer; it needs the order:session:view permission.",
+    );
+  });
+
+  it('makes the wide movements table a focusable, named region', () => {
+    const h = renderDrawer();
+    const region = h.q('drawer-movements-region')!;
+    expect(region.getAttribute('tabindex')).toBe('0');
+    expect(region.getAttribute('role')).toBe('region');
+    expect(region.getAttribute('aria-labelledby')).toBe('drawer-movements-heading');
+  });
+});
+

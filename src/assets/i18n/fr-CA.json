@@ -8972,7 +8972,8 @@
         "APPROVED_BY": "Approuvé par",
         "EMPTY": "Aucun argent n'a encore été retiré de ce tiroir ni ajouté.",
         "LOADING": "Chargement des mouvements…",
-        "FAILED": "Les mouvements n'ont pas pu être chargés."
+        "FAILED": "Les mouvements n'ont pas pu être chargés.",
+        "DENIED": "Vous n'êtes pas autorisé à voir les mouvements de ce tiroir."
       },
       "DIRECTION": {
         "OUT": "Sortie",
@@ -8997,7 +8998,8 @@
       "NOTICE": {
         "SESSION_NOT_OPEN": "Ce tiroir n'est plus ouvert aux sorties. Rien n'a été enregistré.",
         "SESSION_GONE": "Cette session de tiroir n'existe plus. Rien n'a été enregistré.",
-        "CONFLICT": "Le tiroir a changé pendant l'enregistrement. Vérifiez ses mouvements avant de réessayer."
+        "CONFLICT": "Le tiroir a changé pendant l'enregistrement. Vérifiez ses mouvements avant de réessayer.",
+        "ALREADY_RECORDED": "Une tentative précédente a déjà été enregistrée; vérifiez les mouvements."
       },
       "ERROR": {
         "LOAD": "Le tiroir n'a pas pu être chargé.",
@@ -9012,7 +9014,13 @@
         "FORBIDDEN": "Vous ne pouvez pas enregistrer de mouvements de tiroir ici; il faut la permission {{permission}}. Rien n'a été enregistré.",
         "SCOPE_DENIED": "Ce tiroir se trouve à un emplacement où vous ne pouvez pas travailler. Rien n'a été enregistré.",
         "REFUSED": "Cela n'a pas pu être enregistré. Rien n'a été enregistré.",
-        "UNKNOWN_OUTCOME": "Nous n'avons pas pu confirmer l'enregistrement. Réessayer le renvoie; il ne sera pas enregistré deux fois."
+        "UNKNOWN_OUTCOME": "Nous n'avons pas pu confirmer si cela a été enregistré. Réessayer renvoie la même demande, donc cela ne peut pas être enregistré deux fois.",
+        "FORBIDDEN_RETRY": "Vous ne pouvez pas enregistrer de mouvements de tiroir ici; il faut la permission {{permission}}.",
+        "SCOPE_DENIED_RETRY": "Ce tiroir se trouve à un emplacement où vous ne pouvez pas travailler.",
+        "REFUSED_RETRY": "Le tiroir a refusé cette demande.",
+        "CURRENCY_NOT_SUPPORTED": "La devise de ce tiroir n'est pas celle de l'entreprise; la comptabilité doit donc réenregistrer le fonds de caisse. Rien n'a été enregistré.",
+        "CALLER_UNIDENTIFIED": "Votre connexion n'indique pas qui vous êtes; un gestionnaire ne peut donc pas approuver pour vous. Déconnectez-vous puis reconnectez-vous.",
+        "LOAD_DENIED": "Vous n'êtes pas autorisé à voir ce tiroir; il faut la permission {{permission}}."
       },
       "DIALOG": {
         "TITLE_PAY_OUT": "Sortie de caisse",
@@ -9047,7 +9055,9 @@
         "RECORD": "Enregistrer",
         "CONTINUE_TO_MANAGER": "Continuer vers l'approbation du gestionnaire",
         "RETRY": "Réessayer",
-        "CANCEL": "Annuler"
+        "CANCEL": "Annuler",
+        "ALWAYS_MANAGER_HINT": "Cela nécessite toujours l'approbation d'un gestionnaire.",
+        "APPROVED_WAITING": "Un gestionnaire a approuvé ceci. Appuyez sur Enregistrer une fois les options de sortie chargées."
       },
       "APPROVAL": {
         "INTRO": "Un gestionnaire doit approuver ceci. Il saisit ici son propre nom d'utilisateur et son mot de passe et doit être une autre personne que vous.",
@@ -9056,7 +9066,8 @@
         "PASSWORD": "Mot de passe du gestionnaire",
         "APPROVE": "Approuver",
         "BACK": "Retour"
-      }
+      },
+      "PENDING": "{{reason}}, {{amount}} : pas encore confirmé. Ouvrez Sortie de caisse ou Modifier le fonds de caisse pour réessayer; cela ne peut pas être enregistré deux fois."
     }
   },
   "COMMON": {

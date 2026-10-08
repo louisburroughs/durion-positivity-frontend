@@ -33,6 +33,7 @@ import {
   offeredReasons,
   reasonKey,
 } from '../../models/register-drawer.models';
+import { DrawerAttemptStore } from '../../services/drawer-attempt.store';
 import { RegisterSessionService } from '../../services/register-session.service';
 
 export type DrawerPageState = 'idle' | 'loading' | 'ready' | 'noSession' | 'error';
@@ -47,6 +48,7 @@ const NOTICE_KEYS: Readonly<Record<DrawerSessionChange, string>> = {
   GONE: 'ORDER.DRAWER.NOTICE.SESSION_GONE',
   NOT_OPEN: 'ORDER.DRAWER.NOTICE.SESSION_NOT_OPEN',
   CONFLICT: 'ORDER.DRAWER.NOTICE.CONFLICT',
+  ALREADY_RECORDED: 'ORDER.DRAWER.NOTICE.ALREADY_RECORDED',
 };
 
 /** The polite announcement after a recording: "Recorded: {reason}, {amount}". */
@@ -60,16 +62,21 @@ function isStatus(error: unknown, status: number): boolean {
   return error instanceof HttpErrorResponse && error.status === status;
 }
 
-/** A refused options read, named truthfully: only ORDER_FORBIDDEN is a missing permission (ADR-0064 §4). */
-function refusalNoticeKey(error: unknown): string {
+/**
+ * A refused options read, named truthfully: only ORDER_FORBIDDEN is a missing permission
+ * (ADR-0064 §4). With an attempt still unknown, the copy makes no claim that nothing was recorded
+ * (item 6 amendment).
+ */
+function refusalNoticeKey(error: unknown, attemptPending: boolean): string {
   const code = error instanceof HttpErrorResponse ? (error.error as { code?: unknown } | null)?.code : undefined;
+  const suffix = attemptPending ? '_RETRY' : '';
   switch (code) {
     case 'ORDER_FORBIDDEN':
-      return 'ORDER.DRAWER.ERROR.FORBIDDEN';
+      return `ORDER.DRAWER.ERROR.FORBIDDEN${suffix}`;
     case 'LOCATION_SCOPE_DENIED':
-      return 'ORDER.DRAWER.ERROR.SCOPE_DENIED';
+      return `ORDER.DRAWER.ERROR.SCOPE_DENIED${suffix}`;
     default:
-      return 'ORDER.DRAWER.ERROR.REFUSED';
+      return `ORDER.DRAWER.ERROR.REFUSED${suffix}`;
   }
 }
 
@@ -96,6 +103,7 @@ function refusalNoticeKey(error: unknown): string {
 export class RegisterDrawerPageComponent {
   private readonly auth = inject(AuthService);
   private readonly service = inject(RegisterSessionService);
+  private readonly attempts = inject(DrawerAttemptStore);
   private readonly destroyRef = inject(DestroyRef);
 
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
@@ -114,6 +122,8 @@ export class RegisterDrawerPageComponent {
   /** The session the held movements answer (ADR-0063 §1). */
   readonly movementsFor = signal<string | null>(null);
   readonly movementsStatus = signal<ReadStatus>('PENDING');
+  /** The movements read answered 403: nothing of it renders (ADR-0064 §6). */
+  readonly movementsDenied = signal(false);
   readonly options = signal<DrawerOptions | null>(null);
   /** The session the held options answer. */
   readonly optionsFor = signal<string | null>(null);
@@ -138,7 +148,9 @@ export class RegisterDrawerPageComponent {
   });
   readonly optionsView = computed(() => {
     const sessionId = this.sessionView()?.sessionId;
-    return this.canCashMovement() && sessionId && this.optionsFor() === sessionId ? this.options() : null;
+    return this.canCashMovement() && !this.optionsDenied() && sessionId && this.optionsFor() === sessionId
+      ? this.options()
+      : null;
   });
 
   readonly isOpen = computed(() => this.sessionView()?.status === 'OPEN');
@@ -163,8 +175,17 @@ export class RegisterDrawerPageComponent {
   private readonly actionable = computed(
     () => this.showActions() && this.optionsCurrent() && !!this.currencyCode(),
   );
-  readonly canPayOut = computed(() => this.actionable() && offeredReasons(this.optionsView(), 'PAY_OUT').length > 0);
-  readonly canChangeFloat = computed(() => this.actionable() && offeredReasons(this.optionsView(), 'FLOAT').length > 0);
+  /**
+   * A record on this drawer whose outcome is still unknown (item 6 amendment): either action reopens
+   * it, frozen, with Retry, and no other movement starts until a definite answer settles it.
+   */
+  readonly pendingAttempt = computed(() => this.attempts.pendingFor(this.sessionView()?.sessionId ?? null));
+  readonly canPayOut = computed(
+    () => this.actionable() && (!!this.pendingAttempt() || offeredReasons(this.optionsView(), 'PAY_OUT').length > 0),
+  );
+  readonly canChangeFloat = computed(
+    () => this.actionable() && (!!this.pendingAttempt() || offeredReasons(this.optionsView(), 'FLOAT').length > 0),
+  );
 
   /** What the open dialog works on; null closes it (an action is only open over an OPEN, readable drawer). */
   readonly dialog = computed(() => {
@@ -180,6 +201,7 @@ export class RegisterDrawerPageComponent {
           currencyCode,
           optionsCurrent: this.optionsCurrent(),
           optionsFailed: this.optionsStatus() === 'FAILED',
+          attempt: this.pendingAttempt(),
         }
       : null;
   });
@@ -187,6 +209,8 @@ export class RegisterDrawerPageComponent {
   readonly reasonKeyOf = reasonKey;
   /** The write code a refusal notice names. */
   readonly cashMovementCode = ORDER_SECTION.cashMovement[0];
+  /** The read code a refused drawer read names. */
+  readonly drawerViewCode = ORDER_PAGE.drawer[0];
 
   private sessionSeq = 0;
   private movementsSeq = 0;
@@ -266,14 +290,18 @@ export class RegisterDrawerPageComponent {
     }
     this.sessionSub = this.service.currentSession(REGISTER_TERMINAL_ID).subscribe({
       next: session => this.applySession(session, seq),
-      error: () => {
+      error: (error: unknown) => {
         if (seq !== this.sessionSeq) {
           return;
         }
         this.sessionStatus.set('FAILED');
         this.closeDialogKeepingFocus();
+        const denied = isStatus(error, 403);
+        if (denied) {
+          this.clearSessionData(); // a refused read stops rendering what it held (ADR-0064 §6)
+        }
         this.state.set('error');
-        this.errorKey.set('ORDER.DRAWER.ERROR.LOAD');
+        this.errorKey.set(denied ? 'ORDER.DRAWER.ERROR.LOAD_DENIED' : 'ORDER.DRAWER.ERROR.LOAD');
         this.settleNoticeFocus();
       },
     });
@@ -285,6 +313,8 @@ export class RegisterDrawerPageComponent {
     }
     this.sessionStatus.set('OK');
     const sessionId = session?.sessionId ?? null;
+    // A pending attempt belongs to one session: another session (or none) drops it (item 6).
+    this.attempts.scopeTo(sessionId);
     if (!session || !sessionId) {
       this.closeDialogKeepingFocus();
       this.clearSessionData();
@@ -326,6 +356,8 @@ export class RegisterDrawerPageComponent {
         this.movements.set(rows);
         this.movementsFor.set(sessionId);
         this.movementsStatus.set('OK');
+        this.movementsDenied.set(false);
+        this.settleFromMovements(rows, sessionId);
       },
       error: (error: unknown) => {
         if (seq !== this.movementsSeq) {
@@ -335,7 +367,13 @@ export class RegisterDrawerPageComponent {
           this.loadSession(); // the session is gone: re-resolve it
           return;
         }
-        this.movementsStatus.set('FAILED'); // prior good rows stay (ADR-0064 §2)
+        if (isStatus(error, 403)) {
+          // Refused: what the read held stops rendering (ADR-0064 §6).
+          this.movements.set([]);
+          this.movementsFor.set(null);
+          this.movementsDenied.set(true);
+        }
+        this.movementsStatus.set('FAILED'); // otherwise prior good rows stay (ADR-0064 §2)
       },
     });
   }
@@ -367,7 +405,7 @@ export class RegisterDrawerPageComponent {
           this.optionsStatus.set('FAILED');
           if (this.dialogKind()) {
             // The open dialog's refusal would vanish with it: the page's alert keeps it (ADR-0029 §8.8).
-            this.noticeKey.set(refusalNoticeKey(error));
+            this.noticeKey.set(refusalNoticeKey(error, !!this.pendingAttempt()));
             this.dialogKind.set(null);
             this.focusLater(() => this.notice());
             return;
@@ -424,14 +462,14 @@ export class RegisterDrawerPageComponent {
     if (!this.canPayOut()) {
       return; // re-checked here, not only at the control (ADR-0040 §6a)
     }
-    this.openDialog('PAY_OUT');
+    this.openDialog(this.pendingAttempt()?.kind ?? 'PAY_OUT');
   }
 
   openFloatChange(): void {
     if (!this.canChangeFloat()) {
       return;
     }
-    this.openDialog('FLOAT');
+    this.openDialog(this.pendingAttempt()?.kind ?? 'FLOAT');
   }
 
   private openDialog(kind: DrawerDialogKind): void {
@@ -448,6 +486,26 @@ export class RegisterDrawerPageComponent {
       currencyCode: recorded.currencyCode,
     });
     this.rereadDrawer();
+  }
+
+  /**
+   * A movements read holding the pending attempt's `requestId` settles it: it was recorded (§8.2,
+   * item 6 amendment). The cashier hears it as if the retry had answered.
+   */
+  private settleFromMovements(rows: readonly DrawerMovement[], sessionId: string): void {
+    const attempt = this.attempts.pendingFor(sessionId);
+    if (!attempt || !rows.some(row => row.requestId === attempt.requestId)) {
+      return;
+    }
+    this.attempts.release(attempt.requestId);
+    if (this.dialogKind()) {
+      this.closeDialogKeepingFocus();
+    }
+    this.announcement.set({
+      reasonKey: reasonKey(attempt.draft.reason),
+      amount: attempt.draft.amount,
+      currencyCode: attempt.draft.currencyCode,
+    });
   }
 
   /** Closed without a confirmed recording: re-read, since a request may have landed meanwhile. */
@@ -547,6 +605,7 @@ export class RegisterDrawerPageComponent {
     this.movements.set([]);
     this.movementsFor.set(null);
     this.movementsStatus.set('PENDING');
+    this.movementsDenied.set(false);
     this.options.set(null);
     this.optionsFor.set(null);
     this.optionsStatus.set('PENDING');
@@ -579,11 +638,11 @@ export class RegisterDrawerPageComponent {
 
   private resetForIdentity(): void {
     this.dropEverything();
+    this.attempts.clear(); // nothing pending survives another cashier or tenant (item 6)
   }
 
   /** `tid|sub`, each half percent-encoded so no value can contain the delimiter. */
   private identity(): string {
-    const part = (value: string | null | undefined): string => encodeURIComponent(value?.trim() ?? '');
-    return `${part(this.auth.tenantId())}|${part(this.auth.currentUserClaims()?.sub)}`;
+    return this.attempts.identity();
   }
 }

@@ -24,7 +24,13 @@ Implements order-domain scaffolding for stories #254, #255, and #256.
     fixed reasons the cashier options read (`getCashMovementOptions`) allows now; vendor cash on
     delivery stays hidden until that read serves a vendor list (S24). The
     `drawer-movement-dialog` records with a `requestId` (UUIDv7) reused for every retry and the
-    manager round trip, and sends the session's stamped `currencyCode`, never a `clerkId`. When the
+    manager round trip, and sends the session's stamped `currencyCode`, never a `clerkId`. A
+    record whose outcome is unknown (timeout, network, 5xx, or a request cancelled in flight) is
+    kept in `DrawerAttemptStore` — root-provided, in memory only, scoped to `tid|sub` and the
+    session — so Cancel, reopening and leaving the page keep its `requestId`; reopening restores it
+    frozen with Retry. Only a definite answer releases it (a 2xx, a movements read holding its
+    `requestId`, or a refusal pos-order makes after its replay check: `settlesUnknownAttempt`); a
+    `tid|sub` or session change drops it (story item 6 as amended on #467). When the
     server answers `CASH_MOVEMENT_APPROVAL_REQUIRED` (or the reason always needs a manager, as a
     float change does), the manager types their own username and password once; they go to S16's
     step-up (`requestCashMovementApproval`) under the cashier's own session and are emptied as soon
@@ -40,6 +46,7 @@ Implements order-domain scaffolding for stories #254, #255, and #256.
 - `models/order.models.ts`
 - `models/register-drawer.models.ts`
 - `services/register-session.service.ts`
+- `services/drawer-attempt.store.ts`
 - `pages/register-drawer/register-drawer-page.component.ts`
 - `components/drawer-movement-dialog/drawer-movement-dialog.component.ts`
 - `services/order.service.ts`

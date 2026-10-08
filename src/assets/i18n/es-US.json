@@ -8972,7 +8972,8 @@
         "APPROVED_BY": "Aprobado por",
         "EMPTY": "Todavía no se ha sacado ni puesto efectivo en esta caja.",
         "LOADING": "Cargando los movimientos…",
-        "FAILED": "No se pudieron cargar los movimientos."
+        "FAILED": "No se pudieron cargar los movimientos.",
+        "DENIED": "No tiene permitido ver los movimientos de esta caja."
       },
       "DIRECTION": {
         "OUT": "Salida",
@@ -8997,7 +8998,8 @@
       "NOTICE": {
         "SESSION_NOT_OPEN": "Esta caja ya no está abierta para pagos. No se registró nada.",
         "SESSION_GONE": "Esta sesión de caja ya no existe. No se registró nada.",
-        "CONFLICT": "La caja cambió mientras se registraba esto. Revise sus movimientos antes de volver a intentarlo."
+        "CONFLICT": "La caja cambió mientras se registraba esto. Revise sus movimientos antes de volver a intentarlo.",
+        "ALREADY_RECORDED": "Un intento anterior ya se registró; revise los movimientos."
       },
       "ERROR": {
         "LOAD": "No se pudo cargar la caja.",
@@ -9012,7 +9014,13 @@
         "FORBIDDEN": "No puede registrar movimientos de caja aquí; se necesita el permiso {{permission}}. No se registró nada.",
         "SCOPE_DENIED": "Esta caja está en una ubicación en la que usted no puede trabajar. No se registró nada.",
         "REFUSED": "No se pudo registrar esto. No se registró nada.",
-        "UNKNOWN_OUTCOME": "No pudimos confirmar que esto se registró. Reintentar lo envía de nuevo; no se registrará dos veces."
+        "UNKNOWN_OUTCOME": "No pudimos confirmar si esto se registró. Reintentar envía la misma solicitud otra vez, así que no se puede registrar dos veces.",
+        "FORBIDDEN_RETRY": "No puede registrar movimientos de caja aquí; se necesita el permiso {{permission}}.",
+        "SCOPE_DENIED_RETRY": "Esta caja está en una ubicación en la que usted no puede trabajar.",
+        "REFUSED_RETRY": "La caja rechazó esta solicitud.",
+        "CURRENCY_NOT_SUPPORTED": "La moneda de esta caja no es la moneda del negocio, así que contabilidad debe volver a registrar el fondo. No se registró nada.",
+        "CALLER_UNIDENTIFIED": "Su inicio de sesión no indica quién es usted, así que un gerente no puede aprobar por usted. Cierre sesión y vuelva a iniciarla.",
+        "LOAD_DENIED": "No tiene permitido ver esta caja; se necesita el permiso {{permission}}."
       },
       "DIALOG": {
         "TITLE_PAY_OUT": "Pagar desde la caja",
@@ -9047,7 +9055,9 @@
         "RECORD": "Registrar",
         "CONTINUE_TO_MANAGER": "Continuar a la aprobación del gerente",
         "RETRY": "Reintentar",
-        "CANCEL": "Cancelar"
+        "CANCEL": "Cancelar",
+        "ALWAYS_MANAGER_HINT": "Esto siempre necesita la aprobación de un gerente.",
+        "APPROVED_WAITING": "Un gerente aprobó esto. Pulse Registrar cuando se hayan cargado las opciones de pago."
       },
       "APPROVAL": {
         "INTRO": "Un gerente debe aprobar esto. Escribe aquí su propio usuario y contraseña y debe ser una persona distinta de usted.",
@@ -9056,7 +9066,8 @@
         "PASSWORD": "Contraseña del gerente",
         "APPROVE": "Aprobar",
         "BACK": "Atrás"
-      }
+      },
+      "PENDING": "{{reason}}, {{amount}}: aún sin confirmar. Abra Pagar desde la caja o Cambiar el fondo para reintentarlo; no se puede registrar dos veces."
     }
   },
   "COMMON": {

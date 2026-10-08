@@ -8972,7 +8972,8 @@
         "APPROVED_BY": "Approved by",
         "EMPTY": "No cash has been taken out of or put into this drawer yet.",
         "LOADING": "Loading the movements…",
-        "FAILED": "The movements couldn't be loaded."
+        "FAILED": "The movements couldn't be loaded.",
+        "DENIED": "You aren't allowed to see this drawer's movements."
       },
       "DIRECTION": {
         "OUT": "Out",
@@ -8997,7 +8998,8 @@
       "NOTICE": {
         "SESSION_NOT_OPEN": "This drawer is no longer open for payouts. Nothing was recorded.",
         "SESSION_GONE": "This drawer session no longer exists. Nothing was recorded.",
-        "CONFLICT": "The drawer changed while this was being recorded. Check its movements before you try again."
+        "CONFLICT": "The drawer changed while this was being recorded. Check its movements before you try again.",
+        "ALREADY_RECORDED": "An earlier attempt was already recorded; check the movements."
       },
       "ERROR": {
         "LOAD": "The drawer couldn't be loaded.",
@@ -9012,7 +9014,13 @@
         "FORBIDDEN": "You can't record drawer movements here; it needs the {{permission}} permission. Nothing was recorded.",
         "SCOPE_DENIED": "This drawer is at a location you can't work at. Nothing was recorded.",
         "REFUSED": "This couldn't be recorded. Nothing was recorded.",
-        "UNKNOWN_OUTCOME": "We couldn't confirm that this was recorded. Retry sends it again; it won't be recorded twice."
+        "UNKNOWN_OUTCOME": "We couldn't confirm whether this was recorded. Retry sends the same request again, so it can't be recorded twice.",
+        "FORBIDDEN_RETRY": "You can't record drawer movements here; it needs the {{permission}} permission.",
+        "SCOPE_DENIED_RETRY": "This drawer is at a location you can't work at.",
+        "REFUSED_RETRY": "The drawer refused this request.",
+        "CURRENCY_NOT_SUPPORTED": "This drawer's currency is not the business's currency, so accounting must restate the float. Nothing was recorded.",
+        "CALLER_UNIDENTIFIED": "Your sign-in doesn't say who you are, so a manager can't approve for you. Sign out and sign in again.",
+        "LOAD_DENIED": "You aren't allowed to see this drawer; it needs the {{permission}} permission."
       },
       "DIALOG": {
         "TITLE_PAY_OUT": "Pay out from the drawer",
@@ -9047,7 +9055,9 @@
         "RECORD": "Record",
         "CONTINUE_TO_MANAGER": "Continue to manager approval",
         "RETRY": "Retry",
-        "CANCEL": "Cancel"
+        "CANCEL": "Cancel",
+        "ALWAYS_MANAGER_HINT": "This always needs a manager's approval.",
+        "APPROVED_WAITING": "A manager approved this. Press Record once the payout options have loaded."
       },
       "APPROVAL": {
         "INTRO": "A manager needs to approve this. They enter their own username and password here and must be someone other than you.",
@@ -9056,7 +9066,8 @@
         "PASSWORD": "Manager's password",
         "APPROVE": "Approve",
         "BACK": "Back"
-      }
+      },
+      "PENDING": "{{reason}}, {{amount}}: not confirmed yet. Open Pay out or Change the float to retry it; it can't be recorded twice."
     }
   },
   "COMMON": {

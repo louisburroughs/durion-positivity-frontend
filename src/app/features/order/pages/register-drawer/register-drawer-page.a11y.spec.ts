@@ -1,3 +1,4 @@
+import { TestBed } from '@angular/core/testing';
 import axe from 'axe-core';
 import { Subject, of, throwError } from 'rxjs';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -199,6 +200,51 @@ describe('Register drawer a11y (rendered DOM)', () => {
   });
 
   describe('copy and Label in Name per locale', () => {
+    it.each(HAND_MAINTAINED)(
+      '%s names Continue to manager approval, Approve, Back, Retry and both options-Retry buttons by their visible text',
+      (name, bundle) => {
+        const expectNamed = (h: ReturnType<typeof renderDrawer>, testId: string, key: string): void => {
+          const control = h.q(testId);
+          expect(control, testId).not.toBeNull();
+          expect(control!.getAttribute('aria-label')).toBeNull();
+          expect(text(control)).toBe(lookup(bundle, key));
+        };
+
+        // Change the float: the manager step comes first, then Approve and Back.
+        const float = renderDrawer({ locale: { name, bundle } });
+        float.mocks.requestApproval.mockReturnValue(new Subject<typeof approval>());
+        click(float, 'drawer-change-float');
+        click(float, 'drawer-reason-FLOAT_INCREASE');
+        type(float, 'drawer-amount', '50');
+        expectNamed(float, 'drawer-record', 'ORDER.DRAWER.DIALOG.CONTINUE_TO_MANAGER');
+        click(float, 'drawer-record');
+        expectNamed(float, 'drawer-approve', 'ORDER.DRAWER.APPROVAL.APPROVE');
+        expectNamed(float, 'drawer-approval-back', 'ORDER.DRAWER.APPROVAL.BACK');
+        float.fixture.destroy();
+        TestBed.resetTestingModule();
+
+        // An unknown outcome: the primary action is Retry; a failed options re-read in the dialog.
+        const unknown = renderDrawer({ locale: { name, bundle } });
+        unknown.mocks.recordMovement.mockReturnValue(throwError(() => refusal(504)));
+        fillPettyExpense(unknown);
+        click(unknown, 'drawer-record');
+        expectNamed(unknown, 'drawer-record', 'ORDER.DRAWER.DIALOG.RETRY');
+        unknown.mocks.options.mockReturnValue(throwError(() => refusal(500)));
+        unknown.component.onOptionsStale();
+        unknown.render();
+        expectNamed(unknown, 'drawer-dialog-options-retry', 'ORDER.DRAWER.RETRY_OPTIONS');
+        unknown.fixture.destroy();
+        TestBed.resetTestingModule();
+
+        // A failed options read on the page.
+        const failed = renderDrawer({
+          locale: { name, bundle },
+          before: mocks => mocks.options.mockReturnValue(throwError(() => refusal(500))),
+        });
+        expectNamed(failed, 'drawer-options-retry', 'ORDER.DRAWER.RETRY_OPTIONS');
+      },
+    );
+
     it.each(HAND_MAINTAINED)('%s names every control by its visible text, with no aria-label', (name, bundle) => {
       const h = renderDrawer({ locale: { name, bundle } });
       click(h, 'drawer-pay-out');
