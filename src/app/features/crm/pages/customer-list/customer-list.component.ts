@@ -12,12 +12,15 @@ type PageState = 'loading' | 'empty' | 'ready' | 'error' | 'access-denied';
 type SortField = 'name' | 'customerNumber';
 type SortDir = 'asc' | 'desc';
 
+/** Statuses with a CRM.CUSTOMER_LIST.STATUS label; any other value is shown as sent. */
+const KNOWN_STATUSES: ReadonlySet<string> = new Set(['ACTIVE', 'PENDING', 'SUSPENDED', 'INACTIVE']);
+
 @Component({
   selector: 'app-customer-list',
   standalone: true,
   imports: [ReactiveFormsModule, RouterLink, TranslatePipe],
   templateUrl: './customer-list.component.html',
-  styleUrls: ['./customer-list.component.css', '../../../../shared/styles/data-table.css'],
+  styleUrl: './customer-list.component.css',
 })
 export class CustomerListComponent implements OnInit {
   private readonly translate = inject(TranslateService);
@@ -27,6 +30,9 @@ export class CustomerListComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
 
   private static readonly PAGE_SIZE = 25;
+
+  /** Placeholder rows shown while a page loads. */
+  readonly skeletonRows = [1, 2, 3, 4, 5, 6, 7, 8];
 
   readonly state = signal<PageState>('loading');
   readonly parties = signal<PartyDetail[]>([]);
@@ -123,6 +129,10 @@ export class CustomerListComponent implements OnInit {
     }
   }
 
+  retry(): void {
+    this.load();
+  }
+
   clearFilters(): void {
     this.filterForm.reset({ name: '', status: '', partyType: '', customerNumber: '' });
   }
@@ -130,6 +140,10 @@ export class CustomerListComponent implements OnInit {
   private handleError(err: { status?: number; error?: { message?: string } }): void {
     this.state.set(err?.status === 403 ? 'access-denied' : 'error');
     this.error.set(err?.error?.message ?? this.translate.instant('CRM.CUSTOMER_LIST.ERROR.LOAD'));
+  }
+
+  isKnownStatus(status: string): boolean {
+    return KNOWN_STATUSES.has(status);
   }
 
   primaryContact(party: PartyDetail): PrimaryContact | undefined {

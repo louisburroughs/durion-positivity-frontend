@@ -1,158 +1,185 @@
-<section class="crm-page crm-list" aria-labelledby="crm-list-heading">
+<section class="page" aria-labelledby="crm-list-heading">
 
   <header class="page-header">
-    <h1 id="crm-list-heading">{{ 'CRM.CUSTOMER_LIST.TITLE' | translate }}</h1>
+    <h1 id="crm-list-heading" class="page-title">{{ 'CRM.CUSTOMER_LIST.TITLE' | translate }}</h1>
     <div class="header-actions">
-      <button class="btn btn--primary" type="button" (click)="createCommercial()">
+      <button class="btn-primary" type="button" (click)="createCommercial()">
         {{ 'CRM.CUSTOMER_LIST.NEW_COMMERCIAL' | translate }}
       </button>
-      <button class="btn btn--secondary" type="button" (click)="createIndividual()">
+      <button class="btn-secondary" type="button" (click)="createIndividual()">
         {{ 'CRM.CUSTOMER_LIST.NEW_INDIVIDUAL' | translate }}
       </button>
-      <button class="btn btn--ghost" type="button" (click)="navigateToMerge()">
+      <button class="btn-link" type="button" (click)="navigateToMerge()">
         {{ 'CRM.CUSTOMER_LIST.MERGE_DUPLICATES' | translate }}
       </button>
     </div>
   </header>
 
   <!-- Filters -->
-  <form [formGroup]="filterForm" class="filter-form" role="search"
+  <form [formGroup]="filterForm" class="card" role="search"
     [attr.aria-label]="'CRM.CUSTOMER_LIST.FILTERS_ARIA' | translate">
-    <div class="filter-field filter-field--grow">
-      <label for="filter-name" class="sr-only">{{ 'CRM.CUSTOMER_LIST.FILTER_NAME_LABEL' | translate }}</label>
-      <input id="filter-name" type="search" formControlName="name" class="search-input"
+    <div class="search-row">
+      <label for="filter-name" class="field-label">{{ 'CRM.CUSTOMER_LIST.FILTER_NAME_LABEL' | translate }}</label>
+      <input id="filter-name" type="search" formControlName="name" class="input-underline"
         [placeholder]="'CRM.CUSTOMER_LIST.FILTER_NAME_PLACEHOLDER' | translate" aria-controls="search-results" data-testid="filter-name" />
     </div>
-    <div class="filter-field">
-      <label for="filter-customer-number" class="sr-only">{{ 'CRM.CUSTOMER_LIST.FILTER_CUSTOMER_NUMBER_LABEL' | translate }}</label>
-      <input id="filter-customer-number" type="search" formControlName="customerNumber" class="search-input"
-        [placeholder]="'CRM.CUSTOMER_LIST.FILTER_CUSTOMER_NUMBER_PLACEHOLDER' | translate" data-testid="filter-customer-number" />
+
+    <div class="filter-row">
+      <div class="filter-field">
+        <label for="filter-customer-number" class="field-label">{{ 'CRM.CUSTOMER_LIST.FILTER_CUSTOMER_NUMBER_LABEL' | translate }}</label>
+        <input id="filter-customer-number" type="search" formControlName="customerNumber" class="input-underline"
+          [placeholder]="'CRM.CUSTOMER_LIST.FILTER_CUSTOMER_NUMBER_PLACEHOLDER' | translate" data-testid="filter-customer-number" />
+      </div>
+      <div class="filter-field">
+        <label for="filter-status" class="field-label">{{ 'CRM.CUSTOMER_LIST.FILTER_STATUS_LABEL' | translate }}</label>
+        <select id="filter-status" formControlName="status" class="input-underline" data-testid="filter-status">
+          <option value="">{{ 'CRM.CUSTOMER_LIST.STATUS.ALL' | translate }}</option>
+          <option value="ACTIVE">{{ 'CRM.CUSTOMER_LIST.STATUS.ACTIVE' | translate }}</option>
+          <option value="PENDING">{{ 'CRM.CUSTOMER_LIST.STATUS.PENDING' | translate }}</option>
+          <option value="SUSPENDED">{{ 'CRM.CUSTOMER_LIST.STATUS.SUSPENDED' | translate }}</option>
+          <option value="INACTIVE">{{ 'CRM.CUSTOMER_LIST.STATUS.INACTIVE' | translate }}</option>
+        </select>
+      </div>
+      <div class="filter-field">
+        <label for="filter-party-type" class="field-label">{{ 'CRM.CUSTOMER_LIST.FILTER_PARTY_TYPE_LABEL' | translate }}</label>
+        <select id="filter-party-type" formControlName="partyType" class="input-underline" data-testid="filter-party-type">
+          <option value="">{{ 'CRM.CUSTOMER_LIST.PARTY_TYPE.ALL' | translate }}</option>
+          <option value="COMMERCIAL">{{ 'CRM.CUSTOMER_LIST.PARTY_TYPE.COMMERCIAL' | translate }}</option>
+          <option value="PERSON">{{ 'CRM.CUSTOMER_LIST.PARTY_TYPE.PERSON' | translate }}</option>
+        </select>
+      </div>
+      <button class="btn-link" type="button" (click)="clearFilters()" data-testid="clear-filters">{{ 'CRM.CUSTOMER_LIST.CLEAR' | translate }}</button>
     </div>
-    <div class="filter-field">
-      <label for="filter-status" class="sr-only">{{ 'CRM.CUSTOMER_LIST.FILTER_STATUS_LABEL' | translate }}</label>
-      <select id="filter-status" formControlName="status" class="filter-select" data-testid="filter-status">
-        <option value="">{{ 'CRM.CUSTOMER_LIST.STATUS.ALL' | translate }}</option>
-        <option value="ACTIVE">{{ 'CRM.CUSTOMER_LIST.STATUS.ACTIVE' | translate }}</option>
-        <option value="PENDING">{{ 'CRM.CUSTOMER_LIST.STATUS.PENDING' | translate }}</option>
-        <option value="SUSPENDED">{{ 'CRM.CUSTOMER_LIST.STATUS.SUSPENDED' | translate }}</option>
-        <option value="INACTIVE">{{ 'CRM.CUSTOMER_LIST.STATUS.INACTIVE' | translate }}</option>
-      </select>
-    </div>
-    <div class="filter-field">
-      <label for="filter-party-type" class="sr-only">{{ 'CRM.CUSTOMER_LIST.FILTER_PARTY_TYPE_LABEL' | translate }}</label>
-      <select id="filter-party-type" formControlName="partyType" class="filter-select" data-testid="filter-party-type">
-        <option value="">{{ 'CRM.CUSTOMER_LIST.PARTY_TYPE.ALL' | translate }}</option>
-        <option value="COMMERCIAL">{{ 'CRM.CUSTOMER_LIST.PARTY_TYPE.COMMERCIAL' | translate }}</option>
-        <option value="PERSON">{{ 'CRM.CUSTOMER_LIST.PARTY_TYPE.PERSON' | translate }}</option>
-      </select>
-    </div>
-    <button class="btn btn--ghost" type="button" (click)="clearFilters()" data-testid="clear-filters">{{ 'CRM.CUSTOMER_LIST.CLEAR' | translate }}</button>
   </form>
 
   <!-- Results (status messages announced via the pagination status live region below) -->
-  <div id="search-results">
+  <div id="search-results" class="results" [attr.aria-busy]="state() === 'loading'">
 
     @if (state() === 'loading') {
-      <p class="hint-text" aria-busy="true">{{ 'CRM.CUSTOMER_LIST.LOADING' | translate }}</p>
+      <div class="card">
+        <p class="sr-only">{{ 'CRM.CUSTOMER_LIST.LOADING' | translate }}</p>
+        @for (_row of skeletonRows; track $index) {
+          <div class="skeleton-row"></div>
+        }
+      </div>
     }
 
     @if (state() === 'empty') {
-      <p class="hint-text">{{ 'CRM.CUSTOMER_LIST.EMPTY' | translate }}</p>
+      <div class="card state-card">
+        <p>{{ 'CRM.CUSTOMER_LIST.EMPTY' | translate }}</p>
+      </div>
     }
 
     @if (state() === 'access-denied') {
-      <p class="hint-text hint-text--warn">{{ 'CRM.CUSTOMER_LIST.FORBIDDEN' | translate }}</p>
+      <div class="error-banner" role="alert">
+        <span class="error-icon" aria-hidden="true">!</span>
+        <span>{{ 'CRM.CUSTOMER_LIST.FORBIDDEN' | translate }}</span>
+      </div>
     }
 
     @if (state() === 'error') {
-      <p class="hint-text hint-text--error">{{ error() }}</p>
+      <div class="error-banner" role="alert">
+        <span class="error-icon" aria-hidden="true">!</span>
+        <span>{{ error() }}</span>
+        <button class="btn-secondary" type="button" (click)="retry()" data-testid="retry">
+          {{ 'COMMON.RETRY' | translate }}
+        </button>
+      </div>
     }
 
     @if (state() === 'ready' && parties().length) {
-      <div class="table-wrap table-wrap--scroll">
-        <table class="data-table">
-          <caption class="sr-only">{{ 'CRM.CUSTOMER_LIST.TABLE_ARIA' | translate }}</caption>
-          <thead>
-            <tr>
-              <th scope="col"
-                [attr.aria-sort]="sortField() === 'name' ? (sortDir() === 'asc' ? 'ascending' : 'descending') : 'none'">
-                <button class="sort-btn" type="button" (click)="sort('name')">
-                  {{ 'CRM.CUSTOMER_LIST.COL.NAME' | translate }}
-                  <span class="sort-icon" aria-hidden="true">{{ sortField() === 'name' ? (sortDir() === 'asc' ? '↑' : '↓') : '↕' }}</span>
-                </button>
-              </th>
-              <th scope="col"
-                [attr.aria-sort]="sortField() === 'customerNumber' ? (sortDir() === 'asc' ? 'ascending' : 'descending') : 'none'">
-                <button class="sort-btn" type="button" (click)="sort('customerNumber')">
-                  {{ 'CRM.CUSTOMER_LIST.COL.CUSTOMER_NUMBER' | translate }}
-                  <span class="sort-icon" aria-hidden="true">{{ sortField() === 'customerNumber' ? (sortDir() === 'asc' ? '↑' : '↓') : '↕' }}</span>
-                </button>
-              </th>
-              <th scope="col">{{ 'CRM.CUSTOMER_LIST.COL.PRIMARY_CONTACT' | translate }}</th>
-              <th scope="col">{{ 'CRM.CUSTOMER_LIST.COL.PHONE' | translate }}</th>
-              <th scope="col">{{ 'CRM.CUSTOMER_LIST.COL.STATUS' | translate }}</th>
-              <th scope="col" class="num">{{ 'CRM.CUSTOMER_LIST.COL.VEHICLES' | translate }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (party of parties(); track party.partyId) {
-              <!-- Whole-row click is a pointer shortcut; the name link below is the
-                   focusable keyboard path to the same route (issue #392). -->
-              <tr class="party-row" (click)="onRowClick($event, party.partyId, party.customerNumber)">
-                <td>
-                  <a class="row-name"
-                    [routerLink]="['/app/crm/party', party.partyId]"
-                    [state]="{ customerNumber: party.customerNumber }">{{ party.legalName }}</a>
-                  @if (party.dba) {
-                    <span class="row-sub">{{ 'CRM.CUSTOMER_LIST.DBA' | translate: { dba: party.dba } }}</span>
-                  }
-                </td>
-                <td>
-                  @if (party.customerNumber) {
-                    {{ party.customerNumber }}
-                  } @else {
-                    <span class="party-row__empty">—</span>
-                  }
-                </td>
-                <td>
-                  @if (primaryContact(party); as contact) {
-                    <span class="row-name">{{ contact.name }}</span>
-                    @if (contact.email) {
-                      <span class="row-sub">{{ contact.email }}</span>
-                    }
-                  } @else {
-                    <span class="party-row__empty">—</span>
-                  }
-                </td>
-                <td>
-                  @if (party.primaryContact?.phone; as phone) {
-                    {{ phone }}
-                  } @else {
-                    <span class="party-row__empty">—</span>
-                  }
-                </td>
-                <td>
-                  @if (party.status; as status) {
-                    <span class="party-row__status" [attr.data-status]="status">{{ status }}</span>
-                  } @else {
-                    <span class="party-row__empty">—</span>
-                  }
-                </td>
-                <td class="num party-row__vehicles">{{ party.vehicleCount ?? party.vehicles?.length ?? 0 }}</td>
+      <div class="card table-card">
+        <div class="table-wrap table-wrap--scroll">
+          <table class="data-table">
+            <caption class="sr-only">{{ 'CRM.CUSTOMER_LIST.TABLE_ARIA' | translate }}</caption>
+            <thead>
+              <tr>
+                <th scope="col"
+                  [attr.aria-sort]="sortField() === 'name' ? (sortDir() === 'asc' ? 'ascending' : 'descending') : 'none'">
+                  <button class="sort-btn" type="button" (click)="sort('name')">
+                    {{ 'CRM.CUSTOMER_LIST.COL.NAME' | translate }}
+                    <span class="sort-icon" aria-hidden="true">{{ sortField() === 'name' ? (sortDir() === 'asc' ? '↑' : '↓') : '↕' }}</span>
+                  </button>
+                </th>
+                <th scope="col"
+                  [attr.aria-sort]="sortField() === 'customerNumber' ? (sortDir() === 'asc' ? 'ascending' : 'descending') : 'none'">
+                  <button class="sort-btn" type="button" (click)="sort('customerNumber')">
+                    {{ 'CRM.CUSTOMER_LIST.COL.CUSTOMER_NUMBER' | translate }}
+                    <span class="sort-icon" aria-hidden="true">{{ sortField() === 'customerNumber' ? (sortDir() === 'asc' ? '↑' : '↓') : '↕' }}</span>
+                  </button>
+                </th>
+                <th scope="col">{{ 'CRM.CUSTOMER_LIST.COL.PRIMARY_CONTACT' | translate }}</th>
+                <th scope="col">{{ 'CRM.CUSTOMER_LIST.COL.PHONE' | translate }}</th>
+                <th scope="col">{{ 'CRM.CUSTOMER_LIST.COL.STATUS' | translate }}</th>
+                <th scope="col" class="num">{{ 'CRM.CUSTOMER_LIST.COL.VEHICLES' | translate }}</th>
               </tr>
-            }
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              @for (party of parties(); track party.partyId) {
+                <!-- Whole-row click is a pointer shortcut; the name link below is the
+                     focusable keyboard path to the same route (issue #392). -->
+                <tr class="party-row" (click)="onRowClick($event, party.partyId, party.customerNumber)">
+                  <td>
+                    <a class="row-name"
+                      [routerLink]="['/app/crm/party', party.partyId]"
+                      [state]="{ customerNumber: party.customerNumber }">{{ party.legalName }}</a>
+                    @if (party.dba) {
+                      <span class="row-sub">{{ 'CRM.CUSTOMER_LIST.DBA' | translate: { dba: party.dba } }}</span>
+                    }
+                  </td>
+                  <td>
+                    @if (party.customerNumber) {
+                      {{ party.customerNumber }}
+                    } @else {
+                      <span class="party-row__empty">—</span>
+                    }
+                  </td>
+                  <td>
+                    @if (primaryContact(party); as contact) {
+                      <span class="row-name">{{ contact.name }}</span>
+                      @if (contact.email) {
+                        <span class="row-sub">{{ contact.email }}</span>
+                      }
+                    } @else {
+                      <span class="party-row__empty">—</span>
+                    }
+                  </td>
+                  <td>
+                    @if (party.primaryContact?.phone; as phone) {
+                      {{ phone }}
+                    } @else {
+                      <span class="party-row__empty">—</span>
+                    }
+                  </td>
+                  <td>
+                    @if (party.status; as status) {
+                      <span class="badge" [attr.data-status]="status"
+                        [class.badge--success]="status === 'ACTIVE'"
+                        [class.badge--warning]="status === 'PENDING'"
+                        [class.badge--error]="status === 'SUSPENDED'"
+                        [class.badge--neutral]="status !== 'ACTIVE' && status !== 'PENDING' && status !== 'SUSPENDED'">
+                        {{ isKnownStatus(status) ? ('CRM.CUSTOMER_LIST.STATUS.' + status | translate) : status }}
+                      </span>
+                    } @else {
+                      <span class="party-row__empty">—</span>
+                    }
+                  </td>
+                  <td class="num party-row__vehicles">{{ party.vehicleCount ?? party.vehicles?.length ?? 0 }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      <nav class="pagination" data-testid="crm-pagination"
+      <nav class="pager" data-testid="crm-pagination"
         [attr.aria-label]="'CRM.CUSTOMER_LIST.PAGINATION_ARIA' | translate">
-        <button class="btn btn--ghost" type="button" (click)="prevPage()"
+        <button class="btn-secondary" type="button" (click)="prevPage()"
           [disabled]="!canPrevPage()" data-testid="page-prev">{{ 'CRM.CUSTOMER_LIST.PREVIOUS' | translate }}</button>
-        <span aria-live="polite" data-testid="page-status">
+        <span class="pager-label" aria-live="polite" data-testid="page-status">
           {{ 'CRM.CUSTOMER_LIST.PAGE_STATUS' | translate: { page: pageIndex() + 1, total: totalPages(), count: totalCount() } }}
         </span>
-        <button class="btn btn--ghost" type="button" (click)="nextPage()"
+        <button class="btn-secondary" type="button" (click)="nextPage()"
           [disabled]="!canNextPage()" data-testid="page-next">{{ 'CRM.CUSTOMER_LIST.NEXT' | translate }}</button>
       </nav>
     }

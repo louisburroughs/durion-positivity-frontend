@@ -74,7 +74,7 @@ describe('CustomerListComponent', () => {
     const text = fixture.debugElement.query(By.css('.data-table tbody')).nativeElement.textContent;
     expect(text).toContain('CUST-000123');
     expect(text).toContain('+1-555-0142');
-    expect(text).toContain('ACTIVE');
+    expect(text).toContain(enUS.CRM.CUSTOMER_LIST.STATUS.ACTIVE);
     const headers = fixture.debugElement.queryAll(By.css('.data-table thead th'))
       .map(h => h.nativeElement.textContent.replace(/[↑↓↕]/g, '').trim());
     expect(headers).toEqual(expect.arrayContaining(['Customer #', 'Phone', 'Status']));
@@ -104,7 +104,35 @@ describe('CustomerListComponent', () => {
     expect(navigate.mock.calls[0][1]).toEqual(expect.objectContaining({ state: { customerNumber: 'CUST-000123' } }));
   });
 
-  it('renders the shared data table: a captioned table, underlined row links and a header that stays in view', () => {
+  it('renders status as a badge coloured by status, and an unlisted status as sent', () => {
+    const rows = ['ACTIVE', 'PENDING', 'SUSPENDED', 'INACTIVE', 'ARCHIVED']
+      .map((status, i) => ({ ...party(`p${i}`), status }));
+    crmServiceStub.browseParties.mockReturnValue(of(partyPage(rows, rows.length)));
+
+    fixture.detectChanges();
+
+    const badges = fixture.debugElement.queryAll(By.css('.data-table tbody .badge'))
+      .map(b => ({ text: b.nativeElement.textContent.trim(), cls: b.nativeElement.className }));
+    expect(badges).toEqual([
+      { text: 'Active', cls: expect.stringContaining('badge--success') },
+      { text: 'Pending', cls: expect.stringContaining('badge--warning') },
+      { text: 'Suspended', cls: expect.stringContaining('badge--error') },
+      { text: 'Inactive', cls: expect.stringContaining('badge--neutral') },
+      { text: 'ARCHIVED', cls: expect.stringContaining('badge--neutral') },
+    ]);
+  });
+
+  it('labels every filter with visible text', () => {
+    fixture.detectChanges();
+
+    for (const id of ['filter-name', 'filter-customer-number', 'filter-status', 'filter-party-type']) {
+      const label = fixture.debugElement.query(By.css(`label[for="${id}"]`)).nativeElement as HTMLElement;
+      expect(label.classList.contains('sr-only')).toBe(false);
+      expect(label.textContent?.trim()).not.toBe('');
+    }
+  });
+
+  it('renders a captioned table, underlined row links and a header that stays in view', () => {
     const many = Array.from({ length: 40 }, (_, i) => party(`p${i}`));
     crmServiceStub.browseParties.mockReturnValue(of(partyPage(many, many.length)));
 
@@ -217,6 +245,17 @@ describe('CustomerListComponent', () => {
     crmServiceStub.browseParties.mockReturnValueOnce(throwError(() => ({ status: 500 })));
     fixture.detectChanges();
     expect(component.state()).toBe('error');
+  });
+
+  it('retries the same page from the error banner', () => {
+    crmServiceStub.browseParties.mockReturnValueOnce(throwError(() => ({ status: 500 })));
+    fixture.detectChanges();
+
+    fixture.debugElement.query(By.css('[data-testid="retry"]')).nativeElement.click();
+
+    expect(crmServiceStub.browseParties).toHaveBeenCalledTimes(2);
+    expect(crmServiceStub.browseParties).toHaveBeenLastCalledWith(expect.objectContaining({ page: 0 }));
+    expect(component.state()).toBe('empty');
   });
 
   it('surfaces access-denied on 403', () => {
