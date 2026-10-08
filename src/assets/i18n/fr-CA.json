@@ -3829,7 +3829,7 @@
       "FIELD_PAYMENT_REF": "Référence de paiement",
       "FIELD_VENDOR": "Fournisseur",
       "FIELD_GROSS_AMOUNT": "Montant brut",
-      "FIELD_NET_AMOUNT": "Montant net",
+      "FIELD_PAYMENT_DATE": "Date du paiement",
       "FIELD_STATUS": "Statut",
       "FIELD_GATEWAY_TXN": "ID de transaction de passerelle",
       "FIELD_CREATED": "Créé le"

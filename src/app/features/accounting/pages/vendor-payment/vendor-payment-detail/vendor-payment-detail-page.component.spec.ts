@@ -15,7 +15,6 @@ describe('VendorPaymentDetailPageComponent', () => {
         paymentRef: 'ref-001',
         vendorName: 'Vendor A',
         grossAmount: 500,
-        netAmount: 500,
         status: 'SETTLED',
         gatewayTransactionId: 'txn-1',
         createdAt: '2024-01-01',
@@ -52,7 +51,7 @@ describe('VendorPaymentDetailPageComponent', () => {
         paymentRef: 'ref-001',
         vendorName: 'Vendor A',
         grossAmount: 500,
-        netAmount: 500,
+        paymentDate: '2024-01-02',
         status: 'SETTLED',
         gatewayTransactionId: 'txn-1',
         createdAt: '2024-01-01',
@@ -61,6 +60,24 @@ describe('VendorPaymentDetailPageComponent', () => {
     fixture.detectChanges();
     const el = fixture.nativeElement.querySelector('[data-testid="payment-detail"]');
     expect(el).toBeTruthy();
+  });
+
+  it('shows the payment date and no net amount row', () => {
+    accountingServiceStub.getPayment.mockReturnValueOnce(
+      of({
+        paymentId: 'payment-1',
+        paymentRef: 'ref-001',
+        vendorName: 'Vendor A',
+        grossAmount: 500,
+        paymentDate: '2024-01-02',
+        status: 'SETTLED',
+      }),
+    );
+    fixture.detectChanges();
+    const el: HTMLElement = fixture.nativeElement.querySelector('[data-testid="payment-detail"]');
+    expect(el.textContent).toContain('ACCOUNTING.VENDOR_PAYMENT_DETAIL.FIELD_PAYMENT_DATE');
+    expect(el.querySelector('[data-testid="payment-date"]')?.textContent?.trim()).toBe('2024-01-02');
+    expect(el.textContent).not.toContain('FIELD_NET_AMOUNT');
   });
 
   it('renders error state when service errors with 500', () => {

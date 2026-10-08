@@ -410,7 +410,6 @@ export interface VendorPaymentRequest {
   vendorId: string;
   grossAmount: number;
   feeAmount?: number;
-  netAmount?: number;
   currency: string;
   paymentRef: string;
   paymentMethod: 'ACH' | 'CHECK' | 'WIRE' | 'CREDIT_CARD' | 'OTHER';
@@ -429,9 +428,9 @@ export interface VendorPaymentResult {
   vendorName?: string;
   grossAmount?: number;
   feeAmount?: number;
-  netAmount?: number;
   unappliedAmount?: number;
   currency?: string;
+  paymentDate?: string;
   status?:
   | 'INITIATED'
   | 'GATEWAY_PENDING'

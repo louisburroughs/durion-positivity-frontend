@@ -3829,7 +3829,7 @@
       "FIELD_PAYMENT_REF": "Payment Reference",
       "FIELD_VENDOR": "Vendor",
       "FIELD_GROSS_AMOUNT": "Gross Amount",
-      "FIELD_NET_AMOUNT": "Net Amount",
+      "FIELD_PAYMENT_DATE": "Payment Date",
       "FIELD_STATUS": "Status",
       "FIELD_GATEWAY_TXN": "Gateway Transaction ID",
       "FIELD_CREATED": "Created at"
