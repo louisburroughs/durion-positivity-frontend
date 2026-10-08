@@ -3795,9 +3795,7 @@
       "PAYMENT_METHOD": {
         "ACH": "ACH",
         "CHECK": "Cheque",
-        "WIRE": "Transferencia bancaria",
-        "CREDIT_CARD": "Tarjeta de crédito",
-        "OTHER": "Otro"
+        "WIRE": "Transferencia bancaria"
       },
       "FIELD_PAYMENT_REF": "Referencia de pago",
       "FIELD_ALLOCATIONS": "JSON de asignaciones",
@@ -3829,7 +3827,7 @@
       "FIELD_PAYMENT_REF": "Referencia de Pago",
       "FIELD_VENDOR": "Proveedor",
       "FIELD_GROSS_AMOUNT": "Importe Bruto",
-      "FIELD_NET_AMOUNT": "Importe Neto",
+      "FIELD_PAYMENT_DATE": "Fecha de pago",
       "FIELD_STATUS": "Estado",
       "FIELD_GATEWAY_TXN": "ID de Transacción de Pasarela",
       "FIELD_CREATED": "Creado el"

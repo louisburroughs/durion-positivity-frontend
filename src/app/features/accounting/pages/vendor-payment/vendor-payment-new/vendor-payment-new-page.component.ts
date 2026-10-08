@@ -5,7 +5,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { VendorLookupComponent } from '../../../components/vendor-lookup/vendor-lookup.component';
-import { VendorBill, VendorPaymentResult } from '../../../models/accounting.models';
+import { VendorBill, VendorPaymentRequest, VendorPaymentResult } from '../../../models/accounting.models';
 import { AccountingService } from '../../../services/accounting.service';
 import { MoneyPipe } from '../../../../../shared/money.pipe';
 
@@ -122,7 +122,7 @@ export class VendorPaymentNewPageComponent implements OnInit {
         vendorId,
         grossAmount: Number(value.grossAmount),
         currency,
-        paymentMethod: value.paymentMethod as 'ACH' | 'CHECK' | 'WIRE' | 'CREDIT_CARD' | 'OTHER',
+        paymentMethod: value.paymentMethod as VendorPaymentRequest['paymentMethod'],
         paymentRef,
         paymentSource: value.paymentSource || undefined,
         memo: value.memo || undefined,

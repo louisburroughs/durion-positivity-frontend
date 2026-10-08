@@ -410,10 +410,10 @@ export interface VendorPaymentRequest {
   vendorId: string;
   grossAmount: number;
   feeAmount?: number;
-  netAmount?: number;
   currency: string;
   paymentRef: string;
-  paymentMethod: 'ACH' | 'CHECK' | 'WIRE' | 'CREDIT_CARD' | 'OTHER';
+  /** CREDIT_CARD and OTHER are refused by the API since CAP:550 S42 (422 AP_PAYMENT_METHOD_NOT_SUPPORTED). */
+  paymentMethod: 'ACH' | 'CHECK' | 'WIRE';
   paymentSource?: string;
   memo?: string;
   allocations?: Array<{
@@ -429,9 +429,9 @@ export interface VendorPaymentResult {
   vendorName?: string;
   grossAmount?: number;
   feeAmount?: number;
-  netAmount?: number;
   unappliedAmount?: number;
   currency?: string;
+  paymentDate?: string;
   status?:
   | 'INITIATED'
   | 'GATEWAY_PENDING'

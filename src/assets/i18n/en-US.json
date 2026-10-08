@@ -3795,9 +3795,7 @@
       "PAYMENT_METHOD": {
         "ACH": "ACH",
         "CHECK": "Check",
-        "WIRE": "Wire",
-        "CREDIT_CARD": "Credit Card",
-        "OTHER": "Other"
+        "WIRE": "Wire"
       },
       "FIELD_PAYMENT_REF": "Payment reference",
       "FIELD_ALLOCATIONS": "Allocations JSON",
@@ -3829,7 +3827,7 @@
       "FIELD_PAYMENT_REF": "Payment Reference",
       "FIELD_VENDOR": "Vendor",
       "FIELD_GROSS_AMOUNT": "Gross Amount",
-      "FIELD_NET_AMOUNT": "Net Amount",
+      "FIELD_PAYMENT_DATE": "Payment Date",
       "FIELD_STATUS": "Status",
       "FIELD_GATEWAY_TXN": "Gateway Transaction ID",
       "FIELD_CREATED": "Created at"

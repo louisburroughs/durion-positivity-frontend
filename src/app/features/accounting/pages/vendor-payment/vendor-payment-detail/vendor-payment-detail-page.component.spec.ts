@@ -1,9 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Subject, of, throwError } from 'rxjs';
+import { LocaleService } from '../../../../../core/services/locale.service';
 import { AccountingService } from '../../../services/accounting.service';
 import { VendorPaymentDetailPageComponent } from './vendor-payment-detail-page.component';
+import enUS from '../../../../../../assets/i18n/en-US.json';
 
 describe('VendorPaymentDetailPageComponent', () => {
   let fixture: ComponentFixture<VendorPaymentDetailPageComponent>;
@@ -15,7 +17,6 @@ describe('VendorPaymentDetailPageComponent', () => {
         paymentRef: 'ref-001',
         vendorName: 'Vendor A',
         grossAmount: 500,
-        netAmount: 500,
         status: 'SETTLED',
         gatewayTransactionId: 'txn-1',
         createdAt: '2024-01-01',
@@ -52,7 +53,7 @@ describe('VendorPaymentDetailPageComponent', () => {
         paymentRef: 'ref-001',
         vendorName: 'Vendor A',
         grossAmount: 500,
-        netAmount: 500,
+        paymentDate: '2024-01-02',
         status: 'SETTLED',
         gatewayTransactionId: 'txn-1',
         createdAt: '2024-01-01',
@@ -61,6 +62,53 @@ describe('VendorPaymentDetailPageComponent', () => {
     fixture.detectChanges();
     const el = fixture.nativeElement.querySelector('[data-testid="payment-detail"]');
     expect(el).toBeTruthy();
+  });
+
+  // ADR-0035 §8: assert the real en-US copy, not ngx-translate's missing-key echo.
+  function useEnUs(): void {
+    const translate = TestBed.inject(TranslateService);
+    translate.setTranslation('en-US', enUS);
+    translate.use('en-US');
+  }
+
+  it('shows the locale-formatted payment date and no net amount row', () => {
+    accountingServiceStub.getPayment.mockReturnValueOnce(
+      of({
+        paymentId: 'payment-1',
+        paymentRef: 'ref-001',
+        vendorName: 'Vendor A',
+        grossAmount: 500,
+        paymentDate: '2024-01-02',
+        status: 'SETTLED',
+      }),
+    );
+    useEnUs();
+    fixture.detectChanges();
+    const el: HTMLElement = fixture.nativeElement.querySelector('[data-testid="payment-detail"]');
+    expect(el.textContent).toContain(enUS.ACCOUNTING.VENDOR_PAYMENT_DETAIL.FIELD_PAYMENT_DATE);
+    // Date-only value renders as the same calendar day (no UTC shift), mediumDate in en-US.
+    expect(el.querySelector('[data-testid="payment-date"]')?.textContent?.trim()).toBe('Jan 2, 2024');
+    expect(el.textContent).not.toContain('Net Amount');
+  });
+
+  it('formats the payment date in the runtime-selected locale (fr-CA)', () => {
+    accountingServiceStub.getPayment.mockReturnValueOnce(
+      of({ paymentId: 'payment-1', grossAmount: 500, paymentDate: '2024-01-02', status: 'GL_POSTED' }),
+    );
+    TestBed.inject(LocaleService).currentLocale.set('fr-CA');
+    fixture.detectChanges();
+    const dd: HTMLElement = fixture.nativeElement.querySelector('[data-testid="payment-date"]');
+    expect(dd.textContent?.trim()).toBe('2 janv. 2024');
+  });
+
+  it('shows the not-available fallback when the payment has no payment date', () => {
+    accountingServiceStub.getPayment.mockReturnValueOnce(
+      of({ paymentId: 'payment-1', grossAmount: 500, status: 'GL_POSTED' }),
+    );
+    useEnUs();
+    fixture.detectChanges();
+    const dd: HTMLElement = fixture.nativeElement.querySelector('[data-testid="payment-date"]');
+    expect(dd.textContent?.trim()).toBe(enUS.COMMON.NOT_AVAILABLE);
   });
 
   it('renders error state when service errors with 500', () => {

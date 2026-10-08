@@ -60,6 +60,8 @@ describe('AccountingService', () => {
 
   const apPaymentsStub = {
     listApBills: vi.fn(),
+    executeApPayment: vi.fn(),
+    getApPayment: vi.fn(),
   };
 
   const accountingExportsStub = {
@@ -721,6 +723,51 @@ describe('AccountingService', () => {
         paidAmount: 150,
         latestEventId: 'evt-123',
       });
+    });
+  });
+
+  describe('AP payments (CAP:550 S42 SDK)', () => {
+    it('executePayment sends no netAmount and maps allocations to the SDK request', async () => {
+      apPaymentsStub.executeApPayment.mockReturnValueOnce(of({ paymentId: 'pay-1', status: 'GL_POSTED' }));
+
+      const result = await firstValueFrom(
+        service.executePayment({
+          vendorId: 'vendor-1',
+          grossAmount: 100,
+          currency: 'USD',
+          paymentRef: 'ref-1',
+          paymentMethod: 'ACH',
+          allocations: [{ vendorBillId: 'bill-1', amount: 100 }],
+        }),
+      );
+
+      // ADR-0035 §9: the complete request shape, intentionally undefined optionals included.
+      expect(apPaymentsStub.executeApPayment).toHaveBeenCalledWith({
+        vendorId: 'vendor-1',
+        grossAmount: 100,
+        feeAmount: undefined,
+        currency: 'USD',
+        paymentRef: 'ref-1',
+        paymentMethod: 'ACH',
+        paymentSource: undefined,
+        memo: undefined,
+        allocations: [{ vendorBillId: 'bill-1', appliedAmount: 100 }],
+      });
+      expect(apPaymentsStub.executeApPayment.mock.calls[0][0]).not.toHaveProperty('netAmount');
+      expect(result.paymentId).toBe('pay-1');
+      expect(result.status).toBe('GL_POSTED');
+    });
+
+    it('getPayment maps paymentDate and carries no netAmount', async () => {
+      apPaymentsStub.getApPayment.mockReturnValueOnce(
+        of({ paymentId: 'pay-1', grossAmount: 100, paymentDate: '2026-10-08', status: 'GL_POSTED' }),
+      );
+
+      const result = await firstValueFrom(service.getPayment('pay-1'));
+
+      expect(apPaymentsStub.getApPayment).toHaveBeenCalledWith('pay-1');
+      expect(result.paymentDate).toBe('2026-10-08');
+      expect(result).not.toHaveProperty('netAmount');
     });
   });
 });
