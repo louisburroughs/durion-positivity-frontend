@@ -3,7 +3,11 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
-import { ExceptionResolutionAction, PayableBillDetail } from '../../../models/payables.models';
+import {
+  EXCEPTION_REASON_MIN_LENGTH,
+  ExceptionResolutionAction,
+  PayableBillDetail,
+} from '../../../models/payables.models';
 import { PayablesService } from '../../../services/payables.service';
 import { toDatePipeInput } from '../../../utils/date-only.util';
 import { MoneyPipe } from '../../../../../shared/money.pipe';
@@ -73,6 +77,10 @@ export class VendorInvoiceDetailPageComponent {
     const trimmedReason = reason.trim();
     if (!trimmedReason) {
       this.resolveErrorKey.set('ACCOUNTING.PAYABLES.EXCEPTIONS.RESOLVE.ERROR.REASON_REQUIRED');
+      return;
+    }
+    if (trimmedReason.length < EXCEPTION_REASON_MIN_LENGTH) {
+      this.resolveErrorKey.set('ACCOUNTING.PAYABLES.EXCEPTIONS.RESOLVE.ERROR.REASON_TOO_SHORT');
       return;
     }
 

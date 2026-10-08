@@ -1,12 +1,11 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, defer } from 'rxjs';
+import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import {
-  CandidateSelectionRequest,
-  ExceptionResolutionRequest,
-  ExceptionResolutionRequestResolutionActionEnum,
   PageVendorBillListRow,
   VendorBillAPIService,
+  VendorBillExceptionResolutionRequest,
+  VendorBillExceptionResolutionRequestResolutionActionEnum,
   VendorBillListRow,
   VendorBillMatchCandidateResponse,
   VendorBillResponse,
@@ -19,8 +18,6 @@ import {
   PayableBillStatus,
   PayableMatchCandidate,
 } from '../models/payables.models';
-import { AuthService } from '../../../core/services/auth.service';
-import type { JwtClaims } from '../../../core/models/auth.models';
 
 /**
  * Payables (vendor-bills) reads and exception handling (#214).
@@ -31,16 +28,14 @@ import type { JwtClaims } from '../../../core/models/auth.models';
  * raw-invoice read on pos-supplier — every method here calls pos-accounting,
  * never a `/supplier/v1/**` path.
  *
- * ── operatorId ─────────────────────────────────────────────────────────────
- * `resolveException` and `selectMatchCandidate` both record an operator.
- * Resolved from the authenticated actor the same way
- * `AccountingService.toReprocessEventRequest` does, rather than asking the
- * operator to type their own id.
+ * ── Actor ──────────────────────────────────────────────────────────────────
+ * Since CAP:550 S12 the backend records the acting user from the
+ * authenticated request: neither `resolveException` nor
+ * `selectMatchCandidate` sends an `operatorId`.
  */
 @Injectable({ providedIn: 'root' })
 export class PayablesService {
   private readonly vendorBillSdk = inject(VendorBillAPIService);
-  private readonly authService = inject(AuthService);
 
   /** dueFrom/dueTo are ISO dates (YYYY-MM-DD); the window is server-capped at 366 days. */
   listBills(
@@ -66,26 +61,19 @@ export class PayablesService {
   }
 
   resolveException(billId: string, resolution: ExceptionResolution): Observable<PayableBillDetail> {
-    // `requireOperatorId()` runs inside `defer` so a missing operator claim
-    // surfaces as an Observable error (caught by the caller's `subscribe`
-    // error handler) rather than a synchronous throw that would escape the
-    // click handler before any subscription exists (ADR-0031).
-    return defer(() => {
-      const request: ExceptionResolutionRequest = {
-        resolutionAction: resolution.resolutionAction as ExceptionResolutionRequestResolutionActionEnum,
-        reason: resolution.reason,
-        operatorId: this.requireOperatorId(),
-      };
-      return this.vendorBillSdk.resolveVendorBillMatchException(billId, request);
-    }).pipe(map(view => this.toBillDetail(view)));
+    const request: VendorBillExceptionResolutionRequest = {
+      resolutionAction: resolution.resolutionAction as VendorBillExceptionResolutionRequestResolutionActionEnum,
+      reason: resolution.reason,
+    };
+    return this.vendorBillSdk
+      .resolveVendorBillMatchException(billId, request)
+      .pipe(map(view => this.toBillDetail(view)));
   }
 
   selectMatchCandidate(candidateId: string): Observable<PayableBillDetail> {
-    // Same defer-wrapped operator resolution as `resolveException` above.
-    return defer(() => {
-      const request: CandidateSelectionRequest = { operatorId: this.requireOperatorId() };
-      return this.vendorBillSdk.selectVendorBillMatchCandidate(candidateId, request);
-    }).pipe(map(view => this.toBillDetail(view)));
+    return this.vendorBillSdk
+      .selectVendorBillMatchCandidate(candidateId)
+      .pipe(map(view => this.toBillDetail(view)));
   }
 
   // ── Mapping (SDK view ⇄ domain model) ────────────────────────────────────
@@ -121,8 +109,8 @@ export class PayablesService {
       dueDate: view.dueDate ?? null,
       totalAmount: view.totalAmount,
       status: view.status as unknown as PayableBillStatus,
-      approvalJustification: view.approvalJustification ?? null,
-      rejectionReason: view.rejectionReason ?? null,
+      approvalJustification: view.approval?.approvalJustification ?? null,
+      rejectionReason: view.rejection?.reason ?? view.statusExplanation ?? null,
       journalEntryId: view.journalEntryId ?? null,
       paymentTransactionId: view.paymentTransactionId ?? null,
       originEventId: view.originEventId ?? null,
@@ -146,28 +134,5 @@ export class PayablesService {
       selected: view.selected ?? false,
       createdAt: view.createdAt ?? null,
     };
-  }
-
-  private requireOperatorId(): string {
-    const claims = this.authService.currentUserClaims();
-    const actor = claims?.sub
-      ?? this.getOptionalClaim(claims, 'preferred_username')
-      ?? this.getOptionalClaim(claims, 'email')
-      ?? this.getOptionalClaim(claims, 'name');
-
-    if (!actor) {
-      throw new Error('Unable to record a Payables decision without an authenticated operator identifier');
-    }
-
-    return actor;
-  }
-
-  private getOptionalClaim(claims: JwtClaims | null, key: string): string | undefined {
-    if (!claims) {
-      return undefined;
-    }
-
-    const value = (claims as unknown as Record<string, unknown>)[key];
-    return typeof value === 'string' ? value : undefined;
   }
 }

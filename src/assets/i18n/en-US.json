@@ -4288,6 +4288,8 @@
       "STATUS": {
         "PENDING_RECEIPT_MATCH": "Pending Receipt Match",
         "MATCH_EXCEPTION": "Match Exception",
+        "CURRENCY_HOLD": "Currency Hold",
+        "AWAITING_APPROVAL": "Awaiting Approval",
         "APPROVED": "Approved",
         "REJECTED": "Rejected",
         "PAID": "Paid",
@@ -4325,6 +4327,7 @@
           },
           "ERROR": {
             "REASON_REQUIRED": "A reason is required to resolve this exception.",
+            "REASON_TOO_SHORT": "The reason must be at least 10 characters long.",
             "SUBMIT": "Unable to resolve this exception."
           }
         },

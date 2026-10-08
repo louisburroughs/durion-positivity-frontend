@@ -104,6 +104,18 @@ describe('VendorInvoiceDetailPageComponent', () => {
       );
     });
 
+    it('does not submit a reason shorter than 10 characters, which the backend rejects (S12)', async () => {
+      mockService.getBillById.mockReturnValueOnce(of(billFixture));
+      const { component } = await setup('b1');
+
+      component.resolveException('ACCEPT', 'Too short');
+
+      expect(mockService.resolveException).not.toHaveBeenCalled();
+      expect(component.resolveErrorKey()).toBe(
+        'ACCOUNTING.PAYABLES.EXCEPTIONS.RESOLVE.ERROR.REASON_TOO_SHORT',
+      );
+    });
+
     it('calls the service and refreshes the bill on success', async () => {
       mockService.getBillById.mockReturnValueOnce(of(billFixture));
       const { component } = await setup('b1');
@@ -124,17 +136,17 @@ describe('VendorInvoiceDetailPageComponent', () => {
       const { component } = await setup('b1');
       mockService.resolveException.mockReturnValueOnce(throwError(() => new Error('fail')));
 
-      component.resolveException('VOID', 'Duplicate');
+      component.resolveException('VOID', 'Duplicate invoice');
 
       expect(component.resolveErrorKey()).toBe('ACCOUNTING.PAYABLES.EXCEPTIONS.RESOLVE.ERROR.SUBMIT');
     });
 
-    it('clears resolving and sets resolveErrorKey when the service errors on a missing operator claim (ADR-0031), without throwing synchronously', async () => {
+    it('clears resolving and sets resolveErrorKey when the service errors (ADR-0031), without throwing synchronously', async () => {
       mockService.getBillById.mockReturnValueOnce(of(billFixture));
       const { component } = await setup('b1');
-      mockService.resolveException.mockReturnValueOnce(throwError(() => new Error('no operator')));
+      mockService.resolveException.mockReturnValueOnce(throwError(() => new Error('fail')));
 
-      expect(() => component.resolveException('VOID', 'Duplicate')).not.toThrow();
+      expect(() => component.resolveException('VOID', 'Duplicate invoice')).not.toThrow();
 
       expect(component.resolving()).toBe(false);
       expect(component.resolveErrorKey()).toBe('ACCOUNTING.PAYABLES.EXCEPTIONS.RESOLVE.ERROR.SUBMIT');

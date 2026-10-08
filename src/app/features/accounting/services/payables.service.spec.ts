@@ -2,7 +2,6 @@ import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { VendorBillAPIService } from '@durion-sdk/accounting';
 import { PayablesService } from './payables.service';
-import { AuthService } from '../../../core/services/auth.service';
 
 describe('PayablesService', () => {
   let service: PayablesService;
@@ -15,16 +14,11 @@ describe('PayablesService', () => {
     selectVendorBillMatchCandidate: vi.fn(),
   };
 
-  const authServiceStub = {
-    currentUserClaims: vi.fn().mockReturnValue({ sub: 'operator-1', exp: 0 }),
-  };
-
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [
         PayablesService,
         { provide: VendorBillAPIService, useValue: vendorBillSdkStub },
-        { provide: AuthService, useValue: authServiceStub },
       ],
     });
     service = TestBed.inject(PayablesService);
@@ -116,6 +110,66 @@ describe('PayablesService', () => {
         createdBy: null,
       });
     });
+
+    it('reads the approval justification from the nested approval block (S12)', () => {
+      vendorBillSdkStub.getVendorBillById.mockReturnValueOnce(
+        of({
+          vendorBillId: 'b1',
+          vendorId: 'v1',
+          billNumber: 'BN-1',
+          totalAmount: 100,
+          status: 'APPROVED',
+          createdAt: '2026-01-15T00:00:00Z',
+          approval: { approvalJustification: 'Freight agreed by phone' },
+        }),
+      );
+
+      let result: { approvalJustification: string | null; rejectionReason: string | null } | undefined;
+      service.getBillById('b1').subscribe(value => (result = value));
+
+      expect(result?.approvalJustification).toBe('Freight agreed by phone');
+      expect(result?.rejectionReason).toBeNull();
+    });
+
+    it('prefers rejection.reason over statusExplanation for the rejection reason (S12)', () => {
+      vendorBillSdkStub.getVendorBillById.mockReturnValueOnce(
+        of({
+          vendorBillId: 'b1',
+          vendorId: 'v1',
+          billNumber: 'BN-1',
+          totalAmount: 100,
+          status: 'REJECTED',
+          createdAt: '2026-01-15T00:00:00Z',
+          rejection: { reason: 'Not our order', rejectedAt: '2026-01-16T00:00:00Z' },
+          statusExplanation: 'ignored when a rejection is present',
+        }),
+      );
+
+      let result: { rejectionReason: string | null } | undefined;
+      service.getBillById('b1').subscribe(value => (result = value));
+
+      expect(result?.rejectionReason).toBe('Not our order');
+    });
+
+    it('falls back to statusExplanation when there is no rejection block (S12)', () => {
+      vendorBillSdkStub.getVendorBillById.mockReturnValueOnce(
+        of({
+          vendorBillId: 'b1',
+          vendorId: 'v1',
+          billNumber: 'BN-1',
+          totalAmount: 100,
+          status: 'CURRENCY_HOLD',
+          createdAt: '2026-01-15T00:00:00Z',
+          statusExplanation: 'Bill currency EUR differs from the books currency',
+        }),
+      );
+
+      let result: { status: string; rejectionReason: string | null } | undefined;
+      service.getBillById('b1').subscribe(value => (result = value));
+
+      expect(result?.status).toBe('CURRENCY_HOLD');
+      expect(result?.rejectionReason).toBe('Bill currency EUR differs from the books currency');
+    });
   });
 
   describe('listMatchCandidates()', () => {
@@ -156,7 +210,7 @@ describe('PayablesService', () => {
   });
 
   describe('resolveException()', () => {
-    it('resolves the authenticated operator id and calls the SDK', () => {
+    it('calls the SDK with the action and reason, and no operatorId (S12)', () => {
       vendorBillSdkStub.resolveVendorBillMatchException.mockReturnValueOnce(
         of({
           vendorBillId: 'b1',
@@ -173,47 +227,28 @@ describe('PayablesService', () => {
       expect(vendorBillSdkStub.resolveVendorBillMatchException).toHaveBeenCalledWith('b1', {
         resolutionAction: 'ACCEPT',
         reason: 'Confirmed with vendor',
-        operatorId: 'operator-1',
       });
-    });
-
-    it('errors through the Observable, rather than sending a blank operatorId or throwing synchronously', () => {
-      authServiceStub.currentUserClaims.mockReturnValueOnce(null);
-
-      // Building the Observable must not throw synchronously (ADR-0031) —
-      // a missing operator claim can only surface once subscribed, so a
-      // caller's `subscribe({ error })` handler always runs.
-      let observable!: ReturnType<typeof service.resolveException>;
-      expect(() => {
-        observable = service.resolveException('b1', { resolutionAction: 'VOID', reason: 'Duplicate' });
-      }).not.toThrow();
-
-      let caught: unknown;
-      observable.subscribe({ error: err => (caught = err) });
-
-      expect(caught).toBeInstanceOf(Error);
-      expect(vendorBillSdkStub.resolveVendorBillMatchException).not.toHaveBeenCalled();
     });
   });
 
   describe('selectMatchCandidate()', () => {
-    it('resolves the authenticated operator id and calls the SDK', () => {
+    it('calls the SDK with the candidate id only, sending no request body (S12)', () => {
       vendorBillSdkStub.selectVendorBillMatchCandidate.mockReturnValueOnce(
         of({
           vendorBillId: 'b1',
           vendorId: 'v1',
           billNumber: 'BN-1',
           totalAmount: 100,
-          status: 'APPROVED',
+          status: 'AWAITING_APPROVAL',
           createdAt: '2026-01-15T00:00:00Z',
         }),
       );
 
-      service.selectMatchCandidate('c1').subscribe();
+      let result: { status: string } | undefined;
+      service.selectMatchCandidate('c1').subscribe(value => (result = value));
 
-      expect(vendorBillSdkStub.selectVendorBillMatchCandidate).toHaveBeenCalledWith('c1', {
-        operatorId: 'operator-1',
-      });
+      expect(vendorBillSdkStub.selectVendorBillMatchCandidate).toHaveBeenCalledWith('c1');
+      expect(result?.status).toBe('AWAITING_APPROVAL');
     });
   });
 });

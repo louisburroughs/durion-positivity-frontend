@@ -143,16 +143,25 @@ describe('VendorInvoicesExceptionsPageComponent', () => {
       );
     });
 
+    it('does not submit a reason shorter than 10 characters, which the backend rejects (S12)', () => {
+      component.resolveException('b1', 'ACCEPT', '  Too short  ');
+
+      expect(mockService.resolveException).not.toHaveBeenCalled();
+      expect(component.resolveErrorKey()).toBe(
+        'ACCOUNTING.PAYABLES.EXCEPTIONS.RESOLVE.ERROR.REASON_TOO_SHORT',
+      );
+    });
+
     it('calls the service and removes the row on success', () => {
       mockService.resolveException.mockReturnValueOnce(
         of({ billId: 'b1', status: 'APPROVED' }),
       );
 
-      component.resolveException('b1', 'ACCEPT', 'Confirmed');
+      component.resolveException('b1', 'ACCEPT', 'Confirmed with vendor');
 
       expect(mockService.resolveException).toHaveBeenCalledWith('b1', {
         resolutionAction: 'ACCEPT',
-        reason: 'Confirmed',
+        reason: 'Confirmed with vendor',
       });
       expect(component.items()).toEqual([]);
       expect(component.state()).toBe('empty');
@@ -161,16 +170,16 @@ describe('VendorInvoicesExceptionsPageComponent', () => {
     it('sets resolveErrorKey on failure without touching the item list', () => {
       mockService.resolveException.mockReturnValueOnce(throwError(() => new Error('fail')));
 
-      component.resolveException('b1', 'VOID', 'Duplicate');
+      component.resolveException('b1', 'VOID', 'Duplicate invoice');
 
       expect(component.resolveErrorKey()).toBe('ACCOUNTING.PAYABLES.EXCEPTIONS.RESOLVE.ERROR.SUBMIT');
       expect(component.items()).toHaveLength(1);
     });
 
-    it('clears resolvingBillId and sets resolveErrorKey when the service errors on a missing operator claim (ADR-0031), without throwing synchronously', () => {
-      mockService.resolveException.mockReturnValueOnce(throwError(() => new Error('no operator')));
+    it('clears resolvingBillId and sets resolveErrorKey when the service errors (ADR-0031), without throwing synchronously', () => {
+      mockService.resolveException.mockReturnValueOnce(throwError(() => new Error('fail')));
 
-      expect(() => component.resolveException('b1', 'ACCEPT', 'Confirmed')).not.toThrow();
+      expect(() => component.resolveException('b1', 'ACCEPT', 'Confirmed with vendor')).not.toThrow();
 
       expect(component.resolvingBillId()).toBeNull();
       expect(component.resolveErrorKey()).toBe('ACCOUNTING.PAYABLES.EXCEPTIONS.RESOLVE.ERROR.SUBMIT');
@@ -277,8 +286,8 @@ describe('VendorInvoicesExceptionsPageComponent', () => {
       expect(component.candidates()[0].resolved).toBe(false);
     });
 
-    it('clears selectingCandidateId and sets selectErrorKey when the service errors on a missing operator claim (ADR-0031), without throwing synchronously', () => {
-      mockService.selectMatchCandidate.mockReturnValueOnce(throwError(() => new Error('no operator')));
+    it('clears selectingCandidateId and sets selectErrorKey when the service errors (ADR-0031), without throwing synchronously', () => {
+      mockService.selectMatchCandidate.mockReturnValueOnce(throwError(() => new Error('fail')));
 
       expect(() => component.selectCandidate('c1')).not.toThrow();
 

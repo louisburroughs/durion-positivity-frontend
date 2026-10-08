@@ -4288,6 +4288,8 @@
       "STATUS": {
         "PENDING_RECEIPT_MATCH": "Pendiente de cotejo de recepción",
         "MATCH_EXCEPTION": "Excepción de cotejo",
+        "CURRENCY_HOLD": "Retenida por moneda",
+        "AWAITING_APPROVAL": "En espera de aprobación",
         "APPROVED": "Aprobada",
         "REJECTED": "Rechazada",
         "PAID": "Pagada",
@@ -4325,6 +4327,7 @@
           },
           "ERROR": {
             "REASON_REQUIRED": "Se requiere un motivo para resolver esta excepción.",
+            "REASON_TOO_SHORT": "El motivo debe tener al menos 10 caracteres.",
             "SUBMIT": "No se pudo resolver esta excepción."
           }
         },
