@@ -283,7 +283,11 @@ describe('CustomerListComponent', () => {
     await fixture.whenStable();
 
     expect(fixture.debugElement.query(By.css('[data-testid="retry"]'))).toBeNull();
-    expect(document.activeElement).toBe(fixture.debugElement.query(By.css('#search-results')).nativeElement);
+    const results = fixture.debugElement.query(By.css('#search-results')).nativeElement as HTMLElement;
+    expect(document.activeElement).toBe(results);
+    // Focus lands while the region holds only skeleton rows, so the region itself carries the name.
+    expect(results.tagName).toBe('SECTION');
+    expect(results.getAttribute('aria-label')).toBe(enUS.CRM.CUSTOMER_LIST.RESULTS_ARIA);
   });
 
   it('announces loading and empty results through a status region that stays mounted', () => {

@@ -1480,6 +1480,7 @@
       "EMPTY": "No accounts found matching your filters.",
       "FORBIDDEN": "You do not have permission to view accounts.",
       "TABLE_ARIA": "Customer directory",
+      "RESULTS_ARIA": "Customer results",
       "DBA": "DBA: {{dba}}",
       "PAGINATION_ARIA": "Customer directory pagination",
       "PREVIOUS": "Previous",

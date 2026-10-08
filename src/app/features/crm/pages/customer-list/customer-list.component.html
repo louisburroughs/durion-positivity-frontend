@@ -62,7 +62,9 @@
     }
   </p>
 
-  <div #resultsRegion id="search-results" class="results" tabindex="-1" [attr.aria-busy]="state() === 'loading'">
+  <!-- Named, because Retry hands focus here while it holds only skeleton rows (ADR-0029 §8.7). -->
+  <section #resultsRegion id="search-results" class="results" tabindex="-1"
+    [attr.aria-label]="'CRM.CUSTOMER_LIST.RESULTS_ARIA' | translate" [attr.aria-busy]="state() === 'loading'">
 
     @if (state() === 'loading') {
       <div class="card">
@@ -191,6 +193,6 @@
           [disabled]="!canNextPage()" data-testid="page-next">{{ 'CRM.CUSTOMER_LIST.NEXT' | translate }}</button>
       </nav>
     }
-  </div>
+  </section>
 
 </section>
