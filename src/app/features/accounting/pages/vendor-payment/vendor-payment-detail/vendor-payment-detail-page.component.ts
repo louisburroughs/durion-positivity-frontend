@@ -3,6 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { TranslatePipe } from '@ngx-translate/core';
+import { LocaleService } from '../../../../../core/services/locale.service';
 import { VendorPaymentDetail } from '../../../models/accounting.models';
 import { AccountingService } from '../../../services/accounting.service';
 import { toDatePipeInput } from '../../../utils/date-only.util';
@@ -20,6 +21,9 @@ export class VendorPaymentDetailPageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly accountingService = inject(AccountingService);
   private readonly destroyRef = inject(DestroyRef);
+
+  /** The user's runtime-selected locale; a bare DatePipe would use the bootstrap LOCALE_ID (ADR-0030). */
+  readonly locale = inject(LocaleService).currentLocale;
 
   readonly pageState = signal<PageState>('loading');
   readonly payment = signal<VendorPaymentDetail | null>(null);

@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Subject, of, throwError } from 'rxjs';
+import { LocaleService } from '../../../../../core/services/locale.service';
 import { AccountingService } from '../../../services/accounting.service';
 import { VendorPaymentDetailPageComponent } from './vendor-payment-detail-page.component';
 import enUS from '../../../../../../assets/i18n/en-US.json';
@@ -88,6 +89,16 @@ describe('VendorPaymentDetailPageComponent', () => {
     // Date-only value renders as the same calendar day (no UTC shift), mediumDate in en-US.
     expect(el.querySelector('[data-testid="payment-date"]')?.textContent?.trim()).toBe('Jan 2, 2024');
     expect(el.textContent).not.toContain('Net Amount');
+  });
+
+  it('formats the payment date in the runtime-selected locale (fr-CA)', () => {
+    accountingServiceStub.getPayment.mockReturnValueOnce(
+      of({ paymentId: 'payment-1', grossAmount: 500, paymentDate: '2024-01-02', status: 'GL_POSTED' }),
+    );
+    TestBed.inject(LocaleService).currentLocale.set('fr-CA');
+    fixture.detectChanges();
+    const dd: HTMLElement = fixture.nativeElement.querySelector('[data-testid="payment-date"]');
+    expect(dd.textContent?.trim()).toBe('2 janv. 2024');
   });
 
   it('shows the not-available fallback when the payment has no payment date', () => {

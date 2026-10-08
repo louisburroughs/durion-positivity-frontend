@@ -3795,9 +3795,7 @@
       "PAYMENT_METHOD": {
         "ACH": "ACH",
         "CHECK": "Cheque",
-        "WIRE": "Transferencia bancaria",
-        "CREDIT_CARD": "Tarjeta de crédito",
-        "OTHER": "Otro"
+        "WIRE": "Transferencia bancaria"
       },
       "FIELD_PAYMENT_REF": "Referencia de pago",
       "FIELD_ALLOCATIONS": "JSON de asignaciones",

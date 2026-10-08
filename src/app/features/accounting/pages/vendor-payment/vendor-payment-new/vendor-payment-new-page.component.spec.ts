@@ -47,6 +47,13 @@ describe('VendorPaymentNewPageComponent', () => {
     expect(form).toBeTruthy();
   });
 
+  it('offers only the payment methods the API accepts (ACH, CHECK, WIRE)', () => {
+    const options = Array.from(
+      fixture.nativeElement.querySelectorAll('select#payment-method option') as NodeListOf<HTMLOptionElement>,
+    ).map(o => o.value);
+    expect(options).toEqual(['ACH', 'CHECK', 'WIRE']);
+  });
+
   it('renders the vendor typeahead instead of a raw Vendor ID input (uuid-on-screen)', () => {
     const lookup = fixture.nativeElement.querySelector('app-vendor-lookup input#vendor-id');
     expect(lookup).toBeTruthy();

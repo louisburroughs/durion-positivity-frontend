@@ -412,7 +412,8 @@ export interface VendorPaymentRequest {
   feeAmount?: number;
   currency: string;
   paymentRef: string;
-  paymentMethod: 'ACH' | 'CHECK' | 'WIRE' | 'CREDIT_CARD' | 'OTHER';
+  /** CREDIT_CARD and OTHER are refused by the API since CAP:550 S42 (422 AP_PAYMENT_METHOD_NOT_SUPPORTED). */
+  paymentMethod: 'ACH' | 'CHECK' | 'WIRE';
   paymentSource?: string;
   memo?: string;
   allocations?: Array<{
