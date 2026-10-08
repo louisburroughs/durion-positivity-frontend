@@ -119,31 +119,41 @@ export class CustomerListComponent implements OnInit {
       this.sortDir.set('asc');
     }
     this.pageIndex.set(0);
-    this.load();
+    this.reload();
   }
 
   prevPage(): void {
     if (this.canPrevPage()) {
       this.pageIndex.update(i => i - 1);
-      this.load();
+      this.reload();
     }
   }
 
   nextPage(): void {
     if (this.canNextPage()) {
       this.pageIndex.update(i => i + 1);
-      this.load();
+      this.reload();
     }
   }
 
-  /**
-   * Re-reads the page that failed. The read swaps the error banner for the loading
-   * panel, taking the focused Retry button with it, so focus moves to the results
-   * region once that render lands (ADR-0029 §8.7).
-   */
+  /** Re-reads the page that failed. */
   retry(): void {
+    this.reload();
+  }
+
+  /**
+   * Loads from a control inside the results region. The read swaps that region's
+   * content for the loading panel, taking the focused sort, pager or Retry button
+   * with it, so focus moves to the region once that render lands (ADR-0029 §8.7).
+   */
+  private reload(): void {
+    const region = this.resultsRegion()?.nativeElement;
+    const active = this.document.activeElement;
+    const focusInResults = !!region && !!active && region.contains(active);
     this.load();
-    afterNextRender(() => this.focusResultsIfLost(), { injector: this.injector });
+    if (focusInResults) {
+      afterNextRender(() => this.focusResultsIfLost(), { injector: this.injector });
+    }
   }
 
   private focusResultsIfLost(): void {

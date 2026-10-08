@@ -290,6 +290,54 @@ describe('CustomerListComponent', () => {
     expect(results.getAttribute('aria-label')).toBe(enUS.CRM.CUSTOMER_LIST.RESULTS_ARIA);
   });
 
+  describe('when a sort or pager button is removed by the read it starts', () => {
+    const results = () => fixture.debugElement.query(By.css('#search-results')).nativeElement as HTMLElement;
+
+    beforeEach(() => {
+      const firstPage = Array.from({ length: 25 }, (_, i) => party(`p${i}`));
+      crmServiceStub.browseParties.mockReturnValue(of(partyPage(firstPage, 50)));
+      fixture.detectChanges();
+      crmServiceStub.browseParties.mockReturnValue(new Subject());
+    });
+
+    it('moves focus from a sort button to the results region', async () => {
+      const sortBtn = fixture.debugElement.query(By.css('.sort-btn')).nativeElement as HTMLButtonElement;
+      sortBtn.focus();
+
+      sortBtn.click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(fixture.debugElement.query(By.css('.sort-btn'))).toBeNull();
+      expect(document.activeElement).toBe(results());
+    });
+
+    it('moves focus from the Next button to the results region', async () => {
+      const next = fixture.debugElement.query(By.css('[data-testid="page-next"]')).nativeElement as HTMLButtonElement;
+      next.focus();
+
+      next.click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(fixture.debugElement.query(By.css('[data-testid="page-next"]'))).toBeNull();
+      expect(document.activeElement).toBe(results());
+    });
+  });
+
+  it('leaves focus in the filters when a filter change reloads the results', async () => {
+    fixture.detectChanges();
+    const name = fixture.debugElement.query(By.css('#filter-name')).nativeElement as HTMLInputElement;
+    name.focus();
+
+    component.filterForm.patchValue({ name: 'acme' });
+    await new Promise(r => setTimeout(r, 400));
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(document.activeElement).toBe(name);
+  });
+
   it('announces loading and empty results through a status region that stays mounted', () => {
     const pending = new Subject<ReturnType<typeof partyPage>>();
     crmServiceStub.browseParties.mockReturnValueOnce(pending);
