@@ -114,10 +114,10 @@ describe('CustomerListComponent', () => {
     const badges = fixture.debugElement.queryAll(By.css('.data-table tbody .badge'))
       .map(b => ({ text: b.nativeElement.textContent.trim(), cls: b.nativeElement.className }));
     expect(badges).toEqual([
-      { text: 'Active', cls: expect.stringContaining('badge--success') },
-      { text: 'Pending', cls: expect.stringContaining('badge--warning') },
-      { text: 'Suspended', cls: expect.stringContaining('badge--error') },
-      { text: 'Inactive', cls: expect.stringContaining('badge--neutral') },
+      { text: enUS.CRM.CUSTOMER_LIST.STATUS.ACTIVE, cls: expect.stringContaining('badge--success') },
+      { text: enUS.CRM.CUSTOMER_LIST.STATUS.PENDING, cls: expect.stringContaining('badge--warning') },
+      { text: enUS.CRM.CUSTOMER_LIST.STATUS.SUSPENDED, cls: expect.stringContaining('badge--error') },
+      { text: enUS.CRM.CUSTOMER_LIST.STATUS.INACTIVE, cls: expect.stringContaining('badge--neutral') },
       { text: 'ARCHIVED', cls: expect.stringContaining('badge--neutral') },
     ]);
   });
@@ -125,10 +125,16 @@ describe('CustomerListComponent', () => {
   it('labels every filter with visible text', () => {
     fixture.detectChanges();
 
-    for (const id of ['filter-name', 'filter-customer-number', 'filter-status', 'filter-party-type']) {
+    const labels = enUS.CRM.CUSTOMER_LIST;
+    for (const [id, text] of [
+      ['filter-name', labels.FILTER_NAME_LABEL],
+      ['filter-customer-number', labels.FILTER_CUSTOMER_NUMBER_LABEL],
+      ['filter-status', labels.FILTER_STATUS_LABEL],
+      ['filter-party-type', labels.FILTER_PARTY_TYPE_LABEL],
+    ]) {
       const label = fixture.debugElement.query(By.css(`label[for="${id}"]`)).nativeElement as HTMLElement;
       expect(label.classList.contains('sr-only')).toBe(false);
-      expect(label.textContent?.trim()).not.toBe('');
+      expect(label.textContent?.trim()).toBe(text);
     }
   });
 

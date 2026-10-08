@@ -48,8 +48,8 @@ guard three streams that must not cancel each other: bumping one only invalidate
 *that* stream. The comment at `dispatch-board-page.component.ts:188-196` explains why folding the clock
 path into `enrichmentSeq` would be wrong (a clock write would then discard an enrichment read's bays and
 roster). Guard sites: `dispatch-board-page.component.ts:610,1382,1396,1404,1787,1818,1851,1925-1926,1956,1968,2023,2037`.
-A smaller, single-counter version of the same idea is `customer-list.component.ts:52` (`loadSeq`), checked
-at `customer-list.component.ts:95,101` — reach for this shape first; add a second counter only when two
+A smaller, single-counter version of the same idea is `customer-list.component.ts:59` (`loadSeq`), checked
+at `customer-list.component.ts:102,108` — reach for this shape first; add a second counter only when two
 truly independent writers share one page, per the dispatch-board comment above.
 
 **Deferred-settlement sets for pending UI unblocked only by the request that owns it.**
