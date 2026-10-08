@@ -8,6 +8,9 @@
   color: var(--currentTextColor);
   width: min(34rem, calc(100vw - 2rem));
   max-height: calc(100vh - 2rem);
+  /* The page behind the modal is inert: a tall form scrolls inside the dialog (ADR-0029). */
+  overflow-y: auto;
+  overscroll-behavior: contain;
   box-sizing: border-box;
 }
 

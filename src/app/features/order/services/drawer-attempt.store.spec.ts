@@ -97,6 +97,22 @@ describe('DrawerAttemptStore (CAP:550 S22, item 6 amendment)', () => {
     expect(store.pendingFor(SESSION)).toBeNull();
   });
 
+  it('settle() releases an id and refuses any later hold of it; release() does not', () => {
+    const { store } = setup();
+    store.scopeTo(SESSION);
+    store.hold(attempt(store));
+    store.release('018f2a6e-0000-7000-8000-00000000r001');
+    store.hold(attempt(store));
+    expect(store.pendingFor(SESSION)).not.toBeNull();
+
+    store.settle('018f2a6e-0000-7000-8000-00000000r001');
+    expect(store.pendingFor(SESSION)).toBeNull();
+    store.hold(attempt(store));
+    expect(store.pendingFor(SESSION)).toBeNull();
+    store.hold(attempt(store, { requestId: 'another-id' }));
+    expect(store.pendingFor(SESSION)?.requestId).toBe('another-id');
+  });
+
   it('clear() drops everything', () => {
     const { store } = setup();
     store.scopeTo(SESSION);

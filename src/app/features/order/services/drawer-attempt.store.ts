@@ -2,6 +2,9 @@ import { Injectable, inject, signal } from '@angular/core';
 import { AuthService } from '../../../core/services/auth.service';
 import { PendingAttempt } from '../models/register-drawer.models';
 
+/** How many recorded ids are remembered against a late `hold`. */
+const MAX_RECORDED = 50;
+
 /**
  * The register's pending drawer movement (CAP:550 S22, story item 6 as amended on #467, §8.2): a
  * record whose outcome is unknown, held in memory only — never in browser storage (ADR-0065) — so
@@ -15,6 +18,12 @@ import { PendingAttempt } from '../models/register-drawer.models';
 export class DrawerAttemptStore {
   private readonly auth = inject(AuthService);
   private readonly held = signal<PendingAttempt | null>(null);
+  /**
+   * Ids confirmed recorded (a 2xx, or a movements read holding them). A late `hold` of one — say a
+   * retry torn down after a read already confirmed it — is refused, so a settled movement never
+   * comes back as "not confirmed yet" (ADR-0063 §4). Bounded; memory only.
+   */
+  private readonly recorded: string[] = [];
   /** The session the drawer page last resolved (null: none, or not yet). */
   private scopeSessionId: string | null = null;
 
@@ -46,16 +55,34 @@ export class DrawerAttemptStore {
 
   /** Keeps a record whose outcome is unknown; refused for another cashier or session. */
   hold(attempt: PendingAttempt): void {
-    if (attempt.identity !== this.identity() || attempt.sessionId !== this.scopeSessionId) {
+    if (
+      attempt.identity !== this.identity() ||
+      attempt.sessionId !== this.scopeSessionId ||
+      this.recorded.includes(attempt.requestId)
+    ) {
       return;
     }
     this.held.set(attempt);
   }
 
-  /** A definite answer for this `requestId` settles it. Another id leaves the held attempt alone. */
+  /**
+   * A definite refusal for this `requestId`: nothing was recorded under it. Another id leaves the
+   * held attempt alone. The id may be held again (the approval round trip resends it).
+   */
   release(requestId: string): void {
     if (this.held()?.requestId === requestId) {
       this.held.set(null);
+    }
+  }
+
+  /** This `requestId` was recorded: released, and never held again. */
+  settle(requestId: string): void {
+    this.release(requestId);
+    if (!this.recorded.includes(requestId)) {
+      this.recorded.push(requestId);
+      if (this.recorded.length > MAX_RECORDED) {
+        this.recorded.shift();
+      }
     }
   }
 

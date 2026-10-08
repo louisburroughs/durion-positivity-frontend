@@ -565,7 +565,7 @@ export class DrawerMovementDialogComponent implements OnInit {
           }
           this.sending = null;
           this.phase.set('idle');
-          this.attempts.release(requestId);
+          this.attempts.settle(requestId);
           this.setApproval(null);
           this.unfreeze();
           this.requestId = uuidv7();

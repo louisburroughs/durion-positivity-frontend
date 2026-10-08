@@ -169,6 +169,13 @@ describe('Register drawer a11y (rendered DOM)', () => {
     expect(document.activeElement).toBe(trigger);
   });
 
+  it('lets a tall dialog scroll inside itself, since the page behind it is inert (ADR-0029)', () => {
+    const h = renderDrawer();
+    fillPettyExpense(h);
+    const dialogElement = h.root.querySelector('dialog')!;
+    expect(getComputedStyle(dialogElement).overflowY).toBe('auto');
+  });
+
   it('keeps both live regions in the DOM in every state', () => {
     const h = renderDrawer({ session: null });
     expect(h.q('drawer-announcement')).not.toBeNull();

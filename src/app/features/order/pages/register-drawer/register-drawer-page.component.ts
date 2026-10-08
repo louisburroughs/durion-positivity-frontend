@@ -497,7 +497,8 @@ export class RegisterDrawerPageComponent {
     if (!attempt || !rows.some(row => row.requestId === attempt.requestId)) {
       return;
     }
-    this.attempts.release(attempt.requestId);
+    // Settled for good: a retry still in flight, torn down with the dialog, cannot re-hold it.
+    this.attempts.settle(attempt.requestId);
     if (this.dialogKind()) {
       this.closeDialogKeepingFocus();
     }

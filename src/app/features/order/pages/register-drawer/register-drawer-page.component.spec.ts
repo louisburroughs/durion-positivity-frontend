@@ -1151,6 +1151,29 @@ describe('RegisterDrawerPageComponent — a pending attempt (CAP:550 S22, item 6
     expect(text(h.q('drawer-announcement'))).toBe('Recorded: Petty expense, CA$12.50');
   });
 
+  it('stays settled when a movements read confirms it while the reopened retry is still in flight', () => {
+    const h = renderDrawer();
+    const first = unknownExpense(h);
+    click(h, 'drawer-cancel');
+    const retry$ = new Subject<DrawerMovement>();
+    h.mocks.recordMovement.mockReturnValueOnce(retry$);
+    click(h, 'drawer-pay-out');
+    click(h, 'drawer-record');
+    expect(retry$.observed).toBe(true);
+
+    const read$ = new Subject<DrawerMovement[]>();
+    h.mocks.movements.mockReturnValueOnce(read$);
+    h.component.retryMovements();
+    read$.next([{ ...pettyMovement, movementId: 'mv-9', requestId: first.requestId }]);
+    h.render();
+
+    expect(h.q('drawer-dialog')).toBeNull();
+    expect(retry$.observed).toBe(false);
+    expect(h.component.pendingAttempt()).toBeNull();
+    expect(h.q('drawer-pending')).toBeNull();
+    expect(text(h.q('drawer-announcement'))).toBe('Recorded: Petty expense, CA$12.50');
+  });
+
   it('rotates after a definite refusal of the retry', () => {
     const h = renderDrawer();
     const first = unknownExpense(h);
