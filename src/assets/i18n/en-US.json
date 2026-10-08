@@ -4364,6 +4364,7 @@
           "DUE_DATE": "Due Date",
           "APPROVAL_JUSTIFICATION": "Approval Justification",
           "REJECTION_REASON": "Rejection Reason",
+          "STATUS_EXPLANATION": "Status Explanation",
           "JOURNAL_ENTRY": "Journal Entry",
           "PAYMENT_TRANSACTION": "Payment Transaction",
           "ORIGIN_EVENT": "Origin Event",

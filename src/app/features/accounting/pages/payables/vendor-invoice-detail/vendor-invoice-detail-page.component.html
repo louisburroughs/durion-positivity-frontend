@@ -61,7 +61,7 @@
       }
       @if (bill()!.rejectionReason) {
       <div>
-        <dt>{{ 'ACCOUNTING.PAYABLES.DETAIL.FIELD.REJECTION_REASON' | translate }}</dt>
+        <dt>{{ rejectionReasonLabelKey(bill()!.status) | translate }}</dt>
         <dd>{{ bill()!.rejectionReason }}</dd>
       </div>
       }

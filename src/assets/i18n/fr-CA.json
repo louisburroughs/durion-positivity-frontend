@@ -4364,6 +4364,7 @@
           "DUE_DATE": "Date d'échéance",
           "APPROVAL_JUSTIFICATION": "Justification d'approbation",
           "REJECTION_REASON": "Motif de rejet",
+          "STATUS_EXPLANATION": "Explication du statut",
           "JOURNAL_ENTRY": "Écriture de journal",
           "PAYMENT_TRANSACTION": "Transaction de paiement",
           "ORIGIN_EVENT": "Événement d'origine",

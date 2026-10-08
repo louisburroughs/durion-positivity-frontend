@@ -7,6 +7,7 @@ import {
   EXCEPTION_REASON_MIN_LENGTH,
   ExceptionResolutionAction,
   PayableBillDetail,
+  PayableBillStatus,
 } from '../../../models/payables.models';
 import { PayablesService } from '../../../services/payables.service';
 import { toDatePipeInput } from '../../../utils/date-only.util';
@@ -104,6 +105,17 @@ export class VendorInvoiceDetailPageComponent {
 
   goBack(): void {
     this.router.navigate(['/app/accounting/payables/vendor-invoices']);
+  }
+
+  /**
+   * Heading for `rejectionReason`. That field carries `rejection.reason` for a
+   * REJECTED/VOIDED bill and the server's `statusExplanation` otherwise (e.g.
+   * MATCH_EXCEPTION, CURRENCY_HOLD), which must not read as a rejection.
+   */
+  rejectionReasonLabelKey(status: PayableBillStatus): string {
+    return status === 'REJECTED' || status === 'VOIDED'
+      ? 'ACCOUNTING.PAYABLES.DETAIL.FIELD.REJECTION_REASON'
+      : 'ACCOUNTING.PAYABLES.DETAIL.FIELD.STATUS_EXPLANATION';
   }
 
   /** Date-only `billDate`/`dueDate` prepared for `DatePipe` (ADR-0038). */

@@ -4364,6 +4364,7 @@
           "DUE_DATE": "Fecha de vencimiento",
           "APPROVAL_JUSTIFICATION": "Justificación de aprobación",
           "REJECTION_REASON": "Motivo de rechazo",
+          "STATUS_EXPLANATION": "Explicación del estado",
           "JOURNAL_ENTRY": "Asiento contable",
           "PAYMENT_TRANSACTION": "Transacción de pago",
           "ORIGIN_EVENT": "Evento de origen",
