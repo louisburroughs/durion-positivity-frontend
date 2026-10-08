@@ -5884,7 +5884,16 @@
       "SEARCH": {
         "LABEL": "Buscar productos",
         "ARIA": "Buscar productos",
-        "PLACEHOLDER": "Buscar por nombre o SKU…"
+        "PLACEHOLDER": "Buscar por nombre o descripción…"
+      },
+      "FILTER": {
+        "SKU": "SKU",
+        "BRAND": "Marca",
+        "CATEGORY": "Categoría",
+        "EXACT_HINT": "El SKU, la marca y la categoría deben coincidir exactamente; no se distinguen mayúsculas y minúsculas."
+      },
+      "RESULTS": {
+        "ARIA": "Resultados de productos"
       },
       "TABLE": {
         "SKU": "SKU",
@@ -5895,14 +5904,20 @@
         "EFFECTIVE_AT": "Fecha de vigencia"
       },
       "ACTION": {
-        "NEW_PRODUCT": "Nuevo producto"
+        "NEW_PRODUCT": "Nuevo producto",
+        "CLEAR_FILTERS": "Borrar filtros"
       },
       "STATE": {
-        "IDLE": "Ingresa un término para buscar productos.",
         "EMPTY": "No se encontraron productos."
       },
       "ERROR": {
         "LOAD": "Error al cargar los productos."
+      },
+      "PAGINATION": {
+        "ARIA": "Páginas de productos",
+        "PREVIOUS": "Página anterior",
+        "NEXT": "Página siguiente",
+        "PAGE": "Página {{page}}"
       }
     },
     "CATALOG": {

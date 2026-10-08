@@ -21,6 +21,25 @@ export interface ProductSummary {
   effectiveAt: string;
 }
 
+/**
+ * Catalog search filters. Every field is optional and a blank one is no filter, so an
+ * empty criteria object lists the whole catalog. `query` is a substring match on name
+ * and description; `sku`, `brand` and `category` are exact, case-insensitive matches.
+ */
+export interface ProductSearchCriteria {
+  query?: string;
+  sku?: string;
+  brand?: string;
+  category?: string;
+}
+
+/** One cursor-paged slice of catalog search results. */
+export interface ProductSearchPage {
+  items: ProductSummary[];
+  /** Opaque cursor that reads the following page; null on the last page. */
+  nextCursor: string | null;
+}
+
 export interface ServiceSummary {
   id: string;
   name: string;

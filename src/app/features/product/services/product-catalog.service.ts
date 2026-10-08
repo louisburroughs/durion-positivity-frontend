@@ -44,6 +44,8 @@ import {
   LifecycleStateTransition,
   Product,
   ProductLifecycle,
+  ProductSearchCriteria,
+  ProductSearchPage,
   ProductSummary,
   ReplacementProduct,
   ServiceSummary,
@@ -85,17 +87,35 @@ export class ProductCatalogService {
   }
 
   /**
-   * Search results enriched with lifecycle state, effective date, and active MSRP,
-   * resolved server-side in a single request via `detailed=true`. Rows without an
-   * active MSRP come back with null price fields.
+   * One page of search results enriched with lifecycle state, effective date, and
+   * active MSRP, resolved server-side in a single request via `detailed=true`. Rows
+   * without an active MSRP come back with null price fields.
+   *
+   * Blank criteria are left off the request, and the backend treats a missing filter
+   * as no filter — so empty criteria read the first page of the whole catalog. Pass
+   * the previous page's `nextCursor` to read the page after it.
    */
-  searchProductsDetailed(query: string): Observable<ProductSummary[]> {
+  searchProductsDetailed(
+    criteria: ProductSearchCriteria,
+    cursor?: string,
+    limit?: number,
+  ): Observable<ProductSearchPage> {
     return this.productsSdk
-      .searchCatalogProducts(query, undefined, undefined, undefined, undefined, undefined, undefined, true)
+      .searchCatalogProducts(
+        this.filterValue(criteria.query),
+        this.filterValue(criteria.brand),
+        this.filterValue(criteria.category),
+        undefined,
+        this.filterValue(criteria.sku),
+        cursor,
+        limit,
+        true,
+      )
       .pipe(
-        map((result: CatalogSearchResultDto) =>
-          (result.data ?? []).map(s => this.toProductSummary(s)),
-        ),
+        map((result: CatalogSearchResultDto) => ({
+          items: (result.data ?? []).map(s => this.toProductSummary(s)),
+          nextCursor: result.nextCursor ?? null,
+        })),
       );
   }
 
@@ -338,6 +358,12 @@ export class ProductCatalogService {
     return this.productsSdk.upsertLocationGuardrailPolicy(this.toGuardrailUpsertRequest(policy)).pipe(
       map((dto: LocationPriceOverrideResponseDto) => this.guardrailFromOverrideResponse(dto, policy)),
     );
+  }
+
+  /** A trimmed filter value, or undefined so the SDK leaves a blank one off the query string. */
+  private filterValue(value: string | undefined): string | undefined {
+    const trimmed = value?.trim();
+    return trimmed ? trimmed : undefined;
   }
 
   // =========================================================================

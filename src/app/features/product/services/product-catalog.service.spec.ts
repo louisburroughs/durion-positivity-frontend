@@ -10,7 +10,13 @@ import {
 } from '@durion-sdk/catalog';
 import type { CatalogSearchResultDto } from '@durion-sdk/catalog';
 import { ProductCatalogService } from './product-catalog.service';
-import type { Product, ProductSummary, LifecycleStateTransition } from '../models/product.models';
+import type {
+  Product,
+  ProductSearchCriteria,
+  ProductSearchPage,
+  ProductSummary,
+  LifecycleStateTransition,
+} from '../models/product.models';
 import type { GuardrailPolicy, LocationPriceOverride } from '../models/pricing.models';
 
 describe('ProductCatalogService', () => {
@@ -79,6 +85,8 @@ describe('ProductCatalogService', () => {
   // ── searchProductsDetailed() ──────────────────────────────────────────────────
 
   describe('searchProductsDetailed()', () => {
+    const NO_CRITERIA: ProductSearchCriteria = {};
+
     it('requests detailed=true and maps inline lifecycle + MSRP fields in a single call', () => {
       const searchResult: CatalogSearchResultDto = {
         data: [
@@ -97,23 +105,75 @@ describe('ProductCatalogService', () => {
       };
       productsSdkStub.searchCatalogProducts.mockReturnValueOnce(of(searchResult));
 
-      let result: ProductSummary[] | undefined;
-      service.searchProductsDetailed('widget').subscribe(r => (result = r));
+      let result: ProductSearchPage | undefined;
+      service.searchProductsDetailed({ query: 'widget' }).subscribe(r => (result = r));
 
-      // detailed flag is the 7th positional arg of the SDK searchProducts signature
+      // SDK order: q, brand, category, subcategory, sku, cursor, limit, detailed
       expect(productsSdkStub.searchCatalogProducts).toHaveBeenCalledWith(
         'widget', undefined, undefined, undefined, undefined, undefined, undefined, true,
       );
       // no per-row enrichment fan-out
       expect(productsSdkStub.getProductById).not.toHaveBeenCalled();
       expect(msrpSdkStub.getActiveProductMsrp).not.toHaveBeenCalled();
-      expect(result?.[0]).toMatchObject({
+      expect(result?.items[0]).toMatchObject({
         id: 'p1',
         lifecycleState: 'ACTIVE',
         effectiveAt: '2026-01-01T00:00:00Z',
         msrp: 9.99,
         msrpCurrency: 'USD',
       });
+    });
+
+    it('sends no filter at all for empty criteria, so the first page of the whole catalog comes back', () => {
+      productsSdkStub.searchCatalogProducts.mockReturnValueOnce(of({ data: [], limit: 25 }));
+
+      service.searchProductsDetailed(NO_CRITERIA, undefined, 25).subscribe();
+
+      expect(productsSdkStub.searchCatalogProducts).toHaveBeenCalledWith(
+        undefined, undefined, undefined, undefined, undefined, undefined, 25, true,
+      );
+    });
+
+    it('leaves blank filters off the request instead of sending an empty value', () => {
+      productsSdkStub.searchCatalogProducts.mockReturnValueOnce(of({ data: [], limit: 20 }));
+
+      service
+        .searchProductsDetailed({ query: '   ', sku: '', brand: ' ', category: '\t' })
+        .subscribe();
+
+      expect(productsSdkStub.searchCatalogProducts).toHaveBeenCalledWith(
+        undefined, undefined, undefined, undefined, undefined, undefined, undefined, true,
+      );
+    });
+
+    it('passes each trimmed filter, the cursor and the limit in their SDK positions', () => {
+      productsSdkStub.searchCatalogProducts.mockReturnValueOnce(of({ data: [], limit: 25 }));
+
+      service
+        .searchProductsDetailed(
+          { query: ' widget ', sku: ' SKU-001 ', brand: ' Acme ', category: ' Tires ' },
+          'Mg',
+          25,
+        )
+        .subscribe();
+
+      expect(productsSdkStub.searchCatalogProducts).toHaveBeenCalledWith(
+        'widget', 'Acme', 'Tires', undefined, 'SKU-001', 'Mg', 25, true,
+      );
+    });
+
+    it('returns the next page cursor, and null on the last page', () => {
+      productsSdkStub.searchCatalogProducts
+        .mockReturnValueOnce(of({ data: [], limit: 25, nextCursor: 'MQ' }))
+        .mockReturnValueOnce(of({ data: [], limit: 25 }));
+
+      let first: ProductSearchPage | undefined;
+      let last: ProductSearchPage | undefined;
+      service.searchProductsDetailed(NO_CRITERIA).subscribe(r => (first = r));
+      service.searchProductsDetailed(NO_CRITERIA, 'MQ').subscribe(r => (last = r));
+
+      expect(first?.nextCursor).toBe('MQ');
+      expect(last?.nextCursor).toBeNull();
     });
 
     it('maps a row with no active MSRP to a null price', () => {
@@ -131,10 +191,10 @@ describe('ProductCatalogService', () => {
       };
       productsSdkStub.searchCatalogProducts.mockReturnValueOnce(of(searchResult));
 
-      let result: ProductSummary[] | undefined;
-      service.searchProductsDetailed('widget').subscribe(r => (result = r));
+      let result: ProductSearchPage | undefined;
+      service.searchProductsDetailed({ query: 'widget' }).subscribe(r => (result = r));
 
-      expect(result?.[0]).toMatchObject({ lifecycleState: 'ACTIVE', msrp: null, msrpCurrency: 'USD' });
+      expect(result?.items[0]).toMatchObject({ lifecycleState: 'ACTIVE', msrp: null, msrpCurrency: 'USD' });
     });
 
     it('treats a blank or non-numeric MSRP amount as null, not $0', () => {
@@ -146,20 +206,20 @@ describe('ProductCatalogService', () => {
       };
       productsSdkStub.searchCatalogProducts.mockReturnValueOnce(of(searchResult));
 
-      let result: ProductSummary[] | undefined;
-      service.searchProductsDetailed('widget').subscribe(r => (result = r));
+      let result: ProductSearchPage | undefined;
+      service.searchProductsDetailed({ query: 'widget' }).subscribe(r => (result = r));
 
-      expect(result?.[0].msrp).toBeNull();
+      expect(result?.items[0].msrp).toBeNull();
     });
 
-    it('returns an empty array when search yields nothing', () => {
+    it('returns an empty page when search yields nothing', () => {
       const emptySearch: CatalogSearchResultDto = { data: [], limit: 20 };
       productsSdkStub.searchCatalogProducts.mockReturnValueOnce(of(emptySearch));
 
-      let result: ProductSummary[] | undefined;
-      service.searchProductsDetailed('widget').subscribe(r => (result = r));
+      let result: ProductSearchPage | undefined;
+      service.searchProductsDetailed({ query: 'widget' }).subscribe(r => (result = r));
 
-      expect(result).toEqual([]);
+      expect(result).toEqual({ items: [], nextCursor: null });
     });
   });
 
