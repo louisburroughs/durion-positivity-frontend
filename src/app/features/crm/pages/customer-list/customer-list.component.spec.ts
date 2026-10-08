@@ -3,7 +3,7 @@ import { Router, provideRouter } from '@angular/router';
 import { By } from '@angular/platform-browser';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import enUS from '../../../../../assets/i18n/en-US.json';
-import { of, throwError } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { CustomerListComponent } from './customer-list.component';
 import { CrmService } from '../../services/crm.service';
@@ -74,7 +74,7 @@ describe('CustomerListComponent', () => {
     const text = fixture.debugElement.query(By.css('.data-table tbody')).nativeElement.textContent;
     expect(text).toContain('CUST-000123');
     expect(text).toContain('+1-555-0142');
-    expect(text).toContain('ACTIVE');
+    expect(text).toContain(enUS.CRM.CUSTOMER_LIST.STATUS.ACTIVE);
     const headers = fixture.debugElement.queryAll(By.css('.data-table thead th'))
       .map(h => h.nativeElement.textContent.replace(/[↑↓↕]/g, '').trim());
     expect(headers).toEqual(expect.arrayContaining(['Customer #', 'Phone', 'Status']));
@@ -104,7 +104,41 @@ describe('CustomerListComponent', () => {
     expect(navigate.mock.calls[0][1]).toEqual(expect.objectContaining({ state: { customerNumber: 'CUST-000123' } }));
   });
 
-  it('renders the shared data table: a captioned table, underlined row links and a header that stays in view', () => {
+  it('renders status as a badge coloured by status, and an unlisted status as sent', () => {
+    const rows = ['ACTIVE', 'PENDING', 'SUSPENDED', 'INACTIVE', 'ARCHIVED']
+      .map((status, i) => ({ ...party(`p${i}`), status }));
+    crmServiceStub.browseParties.mockReturnValue(of(partyPage(rows, rows.length)));
+
+    fixture.detectChanges();
+
+    const badges = fixture.debugElement.queryAll(By.css('.data-table tbody .badge'))
+      .map(b => ({ text: b.nativeElement.textContent.trim(), cls: b.nativeElement.className }));
+    expect(badges).toEqual([
+      { text: enUS.CRM.CUSTOMER_LIST.STATUS.ACTIVE, cls: expect.stringContaining('badge--success') },
+      { text: enUS.CRM.CUSTOMER_LIST.STATUS.PENDING, cls: expect.stringContaining('badge--warning') },
+      { text: enUS.CRM.CUSTOMER_LIST.STATUS.SUSPENDED, cls: expect.stringContaining('badge--error') },
+      { text: enUS.CRM.CUSTOMER_LIST.STATUS.INACTIVE, cls: expect.stringContaining('badge--neutral') },
+      { text: 'ARCHIVED', cls: expect.stringContaining('badge--neutral') },
+    ]);
+  });
+
+  it('labels every filter with visible text', () => {
+    fixture.detectChanges();
+
+    const labels = enUS.CRM.CUSTOMER_LIST;
+    for (const [id, text] of [
+      ['filter-name', labels.FILTER_NAME_LABEL],
+      ['filter-customer-number', labels.FILTER_CUSTOMER_NUMBER_LABEL],
+      ['filter-status', labels.FILTER_STATUS_LABEL],
+      ['filter-party-type', labels.FILTER_PARTY_TYPE_LABEL],
+    ]) {
+      const label = fixture.debugElement.query(By.css(`label[for="${id}"]`)).nativeElement as HTMLElement;
+      expect(label.classList.contains('sr-only')).toBe(false);
+      expect(label.textContent?.trim()).toBe(text);
+    }
+  });
+
+  it('renders a captioned table, underlined row links and a header that stays in view', () => {
     const many = Array.from({ length: 40 }, (_, i) => party(`p${i}`));
     crmServiceStub.browseParties.mockReturnValue(of(partyPage(many, many.length)));
 
@@ -219,10 +253,120 @@ describe('CustomerListComponent', () => {
     expect(component.state()).toBe('error');
   });
 
+  it('retries the page that failed, not the first page', () => {
+    const firstPage = Array.from({ length: 25 }, (_, i) => party(`p${i}`));
+    crmServiceStub.browseParties.mockReturnValue(of(partyPage(firstPage, 50)));
+    fixture.detectChanges();
+
+    crmServiceStub.browseParties.mockReturnValueOnce(throwError(() => ({ status: 500 })));
+    component.nextPage();
+    fixture.detectChanges();
+    expect(component.state()).toBe('error');
+
+    fixture.debugElement.query(By.css('[data-testid="retry"]')).nativeElement.click();
+
+    expect(crmServiceStub.browseParties).toHaveBeenCalledTimes(3);
+    expect(crmServiceStub.browseParties).toHaveBeenLastCalledWith(expect.objectContaining({ page: 1 }));
+    expect(component.state()).toBe('ready');
+  });
+
+  it('moves focus to the results region when Retry is removed by the read it starts', async () => {
+    crmServiceStub.browseParties.mockReturnValueOnce(throwError(() => ({ status: 500 })));
+    fixture.detectChanges();
+    const retry = fixture.debugElement.query(By.css('[data-testid="retry"]')).nativeElement as HTMLButtonElement;
+    retry.focus();
+    expect(document.activeElement).toBe(retry);
+
+    crmServiceStub.browseParties.mockReturnValueOnce(new Subject());
+    retry.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(fixture.debugElement.query(By.css('[data-testid="retry"]'))).toBeNull();
+    const results = fixture.debugElement.query(By.css('#search-results')).nativeElement as HTMLElement;
+    expect(document.activeElement).toBe(results);
+    // Focus lands while the region holds only skeleton rows, so the region itself carries the name.
+    expect(results.tagName).toBe('SECTION');
+    expect(results.getAttribute('aria-label')).toBe(enUS.CRM.CUSTOMER_LIST.RESULTS_ARIA);
+  });
+
+  describe('when a sort or pager button is removed by the read it starts', () => {
+    const results = () => fixture.debugElement.query(By.css('#search-results')).nativeElement as HTMLElement;
+
+    beforeEach(() => {
+      const firstPage = Array.from({ length: 25 }, (_, i) => party(`p${i}`));
+      crmServiceStub.browseParties.mockReturnValue(of(partyPage(firstPage, 50)));
+      fixture.detectChanges();
+      crmServiceStub.browseParties.mockReturnValue(new Subject());
+    });
+
+    it('moves focus from a sort button to the results region', async () => {
+      const sortBtn = fixture.debugElement.query(By.css('.sort-btn')).nativeElement as HTMLButtonElement;
+      sortBtn.focus();
+
+      sortBtn.click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(fixture.debugElement.query(By.css('.sort-btn'))).toBeNull();
+      expect(document.activeElement).toBe(results());
+    });
+
+    it('moves focus from the Next button to the results region', async () => {
+      const next = fixture.debugElement.query(By.css('[data-testid="page-next"]')).nativeElement as HTMLButtonElement;
+      next.focus();
+
+      next.click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(fixture.debugElement.query(By.css('[data-testid="page-next"]'))).toBeNull();
+      expect(document.activeElement).toBe(results());
+    });
+  });
+
+  it('leaves focus in the filters when a filter change reloads the results', async () => {
+    fixture.detectChanges();
+    const name = fixture.debugElement.query(By.css('#filter-name')).nativeElement as HTMLInputElement;
+    name.focus();
+
+    component.filterForm.patchValue({ name: 'acme' });
+    await new Promise(r => setTimeout(r, 400));
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(document.activeElement).toBe(name);
+  });
+
+  it('announces loading and empty results through a status region that stays mounted', () => {
+    const pending = new Subject<ReturnType<typeof partyPage>>();
+    crmServiceStub.browseParties.mockReturnValueOnce(pending);
+    fixture.detectChanges();
+
+    const status = () => fixture.debugElement.query(By.css('[data-testid="results-status"]')).nativeElement as HTMLElement;
+    const region = status();
+    expect(region.getAttribute('role')).toBe('status');
+    expect(region.getAttribute('aria-live')).toBe('polite');
+    // Outside the aria-busy results region, which some screen readers keep silent.
+    expect(region.closest('#search-results')).toBeNull();
+    expect(region.textContent?.trim()).toBe(enUS.CRM.CUSTOMER_LIST.LOADING);
+
+    pending.next(partyPage([], 0));
+    fixture.detectChanges();
+
+    expect(status()).toBe(region);
+    expect(region.textContent?.trim()).toBe(enUS.CRM.CUSTOMER_LIST.EMPTY);
+  });
+
   it('surfaces access-denied on 403', () => {
     crmServiceStub.browseParties.mockReturnValueOnce(throwError(() => ({ status: 403 })));
     fixture.detectChanges();
     expect(component.state()).toBe('access-denied');
+
+    // An alert with the permission message and no Retry: re-reading cannot grant access.
+    const alert = fixture.debugElement.query(By.css('.error-banner[role="alert"]')).nativeElement as HTMLElement;
+    expect(alert.textContent).toContain(enUS.CRM.CUSTOMER_LIST.FORBIDDEN);
+    expect(fixture.debugElement.query(By.css('[data-testid="retry"]'))).toBeNull();
   });
 
   it('clearFilters resets the filter form', () => {

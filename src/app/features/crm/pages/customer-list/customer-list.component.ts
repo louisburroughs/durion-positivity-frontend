@@ -1,4 +1,7 @@
-import { Component, inject, signal, computed, OnInit, DestroyRef } from '@angular/core';
+import {
+  Component, inject, signal, computed, OnInit, DestroyRef, ElementRef, Injector, afterNextRender, viewChild,
+} from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { Router, RouterLink } from '@angular/router';
@@ -12,12 +15,15 @@ type PageState = 'loading' | 'empty' | 'ready' | 'error' | 'access-denied';
 type SortField = 'name' | 'customerNumber';
 type SortDir = 'asc' | 'desc';
 
+/** Statuses with a CRM.CUSTOMER_LIST.STATUS label; any other value is shown as sent. */
+const KNOWN_STATUSES: ReadonlySet<string> = new Set(['ACTIVE', 'PENDING', 'SUSPENDED', 'INACTIVE']);
+
 @Component({
   selector: 'app-customer-list',
   standalone: true,
   imports: [ReactiveFormsModule, RouterLink, TranslatePipe],
   templateUrl: './customer-list.component.html',
-  styleUrls: ['./customer-list.component.css', '../../../../shared/styles/data-table.css'],
+  styleUrl: './customer-list.component.css',
 })
 export class CustomerListComponent implements OnInit {
   private readonly translate = inject(TranslateService);
@@ -25,8 +31,15 @@ export class CustomerListComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly document = inject(DOCUMENT);
+  private readonly injector = inject(Injector);
 
   private static readonly PAGE_SIZE = 25;
+
+  private readonly resultsRegion = viewChild<ElementRef<HTMLElement>>('resultsRegion');
+
+  /** Placeholder rows shown while a page loads. */
+  readonly skeletonRows = [1, 2, 3, 4, 5, 6, 7, 8];
 
   readonly state = signal<PageState>('loading');
   readonly parties = signal<PartyDetail[]>([]);
@@ -106,20 +119,47 @@ export class CustomerListComponent implements OnInit {
       this.sortDir.set('asc');
     }
     this.pageIndex.set(0);
-    this.load();
+    this.reload();
   }
 
   prevPage(): void {
     if (this.canPrevPage()) {
       this.pageIndex.update(i => i - 1);
-      this.load();
+      this.reload();
     }
   }
 
   nextPage(): void {
     if (this.canNextPage()) {
       this.pageIndex.update(i => i + 1);
-      this.load();
+      this.reload();
+    }
+  }
+
+  /** Re-reads the page that failed. */
+  retry(): void {
+    this.reload();
+  }
+
+  /**
+   * Loads from a control inside the results region. The read swaps that region's
+   * content for the loading panel, taking the focused sort, pager or Retry button
+   * with it, so focus moves to the region once that render lands (ADR-0029 §8.7).
+   */
+  private reload(): void {
+    const region = this.resultsRegion()?.nativeElement;
+    const active = this.document.activeElement;
+    const focusInResults = !!region && !!active && region.contains(active);
+    this.load();
+    if (focusInResults) {
+      afterNextRender(() => this.focusResultsIfLost(), { injector: this.injector });
+    }
+  }
+
+  private focusResultsIfLost(): void {
+    const active = this.document.activeElement;
+    if (!active || active === this.document.body) {
+      this.resultsRegion()?.nativeElement.focus();
     }
   }
 
@@ -130,6 +170,10 @@ export class CustomerListComponent implements OnInit {
   private handleError(err: { status?: number; error?: { message?: string } }): void {
     this.state.set(err?.status === 403 ? 'access-denied' : 'error');
     this.error.set(err?.error?.message ?? this.translate.instant('CRM.CUSTOMER_LIST.ERROR.LOAD'));
+  }
+
+  isKnownStatus(status: string): boolean {
+    return KNOWN_STATUSES.has(status);
   }
 
   primaryContact(party: PartyDetail): PrimaryContact | undefined {

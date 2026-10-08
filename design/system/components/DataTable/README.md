@@ -2,7 +2,7 @@
 
 The list view for records: a `.table-wrap` (scrolls sideways on its own, `--radius-lg`, `--border-color` edge) around a `table.data-table`.
 
-**Include** `src/app/shared/styles/data-table.css` in the component's `styleUrls`, next to its own stylesheet, the way `listbox.css` is included; `crm/pages/customer-list` is the reference page. Keep only page-specific cells (status pills, empty markers, column widths) in the page stylesheet.
+**Include** `src/app/shared/styles/data-table.css` in the component's `styleUrls`, next to its own stylesheet, the way `listbox.css` is included. Keep only page-specific cells (status pills, empty markers, column widths) in the page stylesheet. The product list (`product/pages/catalog/product-list`) and the customer list (`crm/pages/customer-list`) don't use it: they share a table look of their own (in a card, zebra rows, sentence-case headers) kept in each page stylesheet, while following the markup contract below.
 
 **Headers** are `table-header` style: 0.8125rem semibold uppercase with 0.04em tracking in `--text-muted`, Cells pad `--space-3` by `--space-4` with a `--border-color` rule between rows; a row hover adds `--surface-hover`. Amounts and counts are right-aligned with `.num` (tabular numerals).
 
