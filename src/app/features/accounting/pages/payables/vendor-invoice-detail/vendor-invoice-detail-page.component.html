@@ -28,7 +28,8 @@
     </h1>
     <span class="badge"
       [class.badge--success]="bill()!.status === 'APPROVED' || bill()!.status === 'PAID'"
-      [class.badge--warning]="bill()!.status === 'MATCH_EXCEPTION' || bill()!.status === 'PENDING_RECEIPT_MATCH'"
+      [class.badge--warning]="bill()!.status === 'MATCH_EXCEPTION' || bill()!.status === 'PENDING_RECEIPT_MATCH'
+        || bill()!.status === 'CURRENCY_HOLD' || bill()!.status === 'AWAITING_APPROVAL'"
       [class.badge--error]="bill()!.status === 'REJECTED' || bill()!.status === 'VOIDED'">
       {{ 'ACCOUNTING.PAYABLES.STATUS.' + bill()!.status | translate }}
     </span>
@@ -60,7 +61,7 @@
       }
       @if (bill()!.rejectionReason) {
       <div>
-        <dt>{{ 'ACCOUNTING.PAYABLES.DETAIL.FIELD.REJECTION_REASON' | translate }}</dt>
+        <dt>{{ rejectionReasonLabelKey(bill()!.status) | translate }}</dt>
         <dd>{{ bill()!.rejectionReason }}</dd>
       </div>
       }

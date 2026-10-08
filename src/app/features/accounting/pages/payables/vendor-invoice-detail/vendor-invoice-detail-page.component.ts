@@ -3,7 +3,12 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
-import { ExceptionResolutionAction, PayableBillDetail } from '../../../models/payables.models';
+import {
+  EXCEPTION_REASON_MIN_LENGTH,
+  ExceptionResolutionAction,
+  PayableBillDetail,
+  PayableBillStatus,
+} from '../../../models/payables.models';
 import { PayablesService } from '../../../services/payables.service';
 import { toDatePipeInput } from '../../../utils/date-only.util';
 import { MoneyPipe } from '../../../../../shared/money.pipe';
@@ -75,6 +80,10 @@ export class VendorInvoiceDetailPageComponent {
       this.resolveErrorKey.set('ACCOUNTING.PAYABLES.EXCEPTIONS.RESOLVE.ERROR.REASON_REQUIRED');
       return;
     }
+    if (trimmedReason.length < EXCEPTION_REASON_MIN_LENGTH) {
+      this.resolveErrorKey.set('ACCOUNTING.PAYABLES.EXCEPTIONS.RESOLVE.ERROR.REASON_TOO_SHORT');
+      return;
+    }
 
     this.resolving.set(true);
     this.resolveErrorKey.set(null);
@@ -96,6 +105,17 @@ export class VendorInvoiceDetailPageComponent {
 
   goBack(): void {
     this.router.navigate(['/app/accounting/payables/vendor-invoices']);
+  }
+
+  /**
+   * Heading for `rejectionReason`. That field carries `rejection.reason` for a
+   * REJECTED/VOIDED bill and the server's `statusExplanation` otherwise (e.g.
+   * MATCH_EXCEPTION, CURRENCY_HOLD), which must not read as a rejection.
+   */
+  rejectionReasonLabelKey(status: PayableBillStatus): string {
+    return status === 'REJECTED' || status === 'VOIDED'
+      ? 'ACCOUNTING.PAYABLES.DETAIL.FIELD.REJECTION_REASON'
+      : 'ACCOUNTING.PAYABLES.DETAIL.FIELD.STATUS_EXPLANATION';
   }
 
   /** Date-only `billDate`/`dueDate` prepared for `DatePipe` (ADR-0038). */

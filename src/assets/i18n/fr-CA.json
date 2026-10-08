@@ -4288,6 +4288,8 @@
       "STATUS": {
         "PENDING_RECEIPT_MATCH": "En attente de rapprochement de réception",
         "MATCH_EXCEPTION": "Exception de rapprochement",
+        "CURRENCY_HOLD": "Retenue pour devise",
+        "AWAITING_APPROVAL": "En attente d'approbation",
         "APPROVED": "Approuvée",
         "REJECTED": "Rejetée",
         "PAID": "Payée",
@@ -4325,6 +4327,7 @@
           },
           "ERROR": {
             "REASON_REQUIRED": "Un motif est requis pour résoudre cette exception.",
+            "REASON_TOO_SHORT": "Le motif doit comporter au moins 10 caractères.",
             "SUBMIT": "Impossible de résoudre cette exception."
           }
         },
@@ -4361,6 +4364,7 @@
           "DUE_DATE": "Date d'échéance",
           "APPROVAL_JUSTIFICATION": "Justification d'approbation",
           "REJECTION_REASON": "Motif de rejet",
+          "STATUS_EXPLANATION": "Explication du statut",
           "JOURNAL_ENTRY": "Écriture de journal",
           "PAYMENT_TRANSACTION": "Transaction de paiement",
           "ORIGIN_EVENT": "Événement d'origine",

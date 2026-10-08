@@ -4,6 +4,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
+  EXCEPTION_REASON_MIN_LENGTH,
   ExceptionResolutionAction,
   PayableBillListRow,
   PayableMatchCandidate,
@@ -115,6 +116,10 @@ export class VendorInvoicesExceptionsPageComponent {
     const trimmedReason = reason.trim();
     if (!trimmedReason) {
       this.resolveErrorKey.set('ACCOUNTING.PAYABLES.EXCEPTIONS.RESOLVE.ERROR.REASON_REQUIRED');
+      return;
+    }
+    if (trimmedReason.length < EXCEPTION_REASON_MIN_LENGTH) {
+      this.resolveErrorKey.set('ACCOUNTING.PAYABLES.EXCEPTIONS.RESOLVE.ERROR.REASON_TOO_SHORT');
       return;
     }
 

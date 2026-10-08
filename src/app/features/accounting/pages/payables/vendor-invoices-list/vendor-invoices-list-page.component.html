@@ -20,6 +20,8 @@
           <option value="">{{ 'ACCOUNTING.PAYABLES.LIST.FILTERS.STATUS_ALL' | translate }}</option>
           <option value="PENDING_RECEIPT_MATCH">{{ 'ACCOUNTING.PAYABLES.STATUS.PENDING_RECEIPT_MATCH' | translate }}</option>
           <option value="MATCH_EXCEPTION">{{ 'ACCOUNTING.PAYABLES.STATUS.MATCH_EXCEPTION' | translate }}</option>
+          <option value="CURRENCY_HOLD">{{ 'ACCOUNTING.PAYABLES.STATUS.CURRENCY_HOLD' | translate }}</option>
+          <option value="AWAITING_APPROVAL">{{ 'ACCOUNTING.PAYABLES.STATUS.AWAITING_APPROVAL' | translate }}</option>
           <option value="APPROVED">{{ 'ACCOUNTING.PAYABLES.STATUS.APPROVED' | translate }}</option>
           <option value="REJECTED">{{ 'ACCOUNTING.PAYABLES.STATUS.REJECTED' | translate }}</option>
           <option value="PAID">{{ 'ACCOUNTING.PAYABLES.STATUS.PAID' | translate }}</option>
@@ -78,7 +80,8 @@
             <td>
               <span class="badge"
                 [class.badge--success]="row.status === 'APPROVED' || row.status === 'PAID'"
-                [class.badge--warning]="row.status === 'MATCH_EXCEPTION' || row.status === 'PENDING_RECEIPT_MATCH'"
+                [class.badge--warning]="row.status === 'MATCH_EXCEPTION' || row.status === 'PENDING_RECEIPT_MATCH'
+                  || row.status === 'CURRENCY_HOLD' || row.status === 'AWAITING_APPROVAL'"
                 [class.badge--error]="row.status === 'REJECTED' || row.status === 'VOIDED'">
                 {{ 'ACCOUNTING.PAYABLES.STATUS.' + row.status | translate }}
               </span>

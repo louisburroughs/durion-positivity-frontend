@@ -16,6 +16,8 @@
 export type PayableBillStatus =
   | 'PENDING_RECEIPT_MATCH'
   | 'MATCH_EXCEPTION'
+  | 'CURRENCY_HOLD'
+  | 'AWAITING_APPROVAL'
   | 'APPROVED'
   | 'REJECTED'
   | 'PAID'
@@ -48,7 +50,12 @@ export interface PayableBillDetail {
   readonly dueDate: string | null;
   readonly totalAmount: number;
   readonly status: PayableBillStatus;
+  /** From `approval.approvalJustification`. */
   readonly approvalJustification: string | null;
+  /**
+   * `rejection.reason` for a REJECTED/VOIDED bill, else the server's
+   * `statusExplanation` (MATCH_EXCEPTION/CURRENCY_HOLD).
+   */
   readonly rejectionReason: string | null;
   readonly journalEntryId: string | null;
   readonly paymentTransactionId: string | null;
@@ -60,6 +67,9 @@ export interface PayableBillDetail {
 }
 
 export type ExceptionResolutionAction = 'ACCEPT' | 'VOID' | 'CORRECT';
+
+/** The backend rejects a resolve-exception `reason` shorter than this with a 400. */
+export const EXCEPTION_REASON_MIN_LENGTH = 10;
 
 export interface ExceptionResolution {
   readonly resolutionAction: ExceptionResolutionAction;
