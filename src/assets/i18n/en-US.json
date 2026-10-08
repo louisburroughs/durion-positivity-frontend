@@ -5884,7 +5884,16 @@
       "SEARCH": {
         "LABEL": "Search products",
         "ARIA": "Search products",
-        "PLACEHOLDER": "Search by name or SKU…"
+        "PLACEHOLDER": "Search by name or description…"
+      },
+      "FILTER": {
+        "SKU": "SKU",
+        "BRAND": "Brand",
+        "CATEGORY": "Category",
+        "EXACT_HINT": "SKU, brand and category must match exactly; capitalization is ignored."
+      },
+      "RESULTS": {
+        "ARIA": "Product results"
       },
       "TABLE": {
         "SKU": "SKU",
@@ -5895,14 +5904,20 @@
         "EFFECTIVE_AT": "Effective date"
       },
       "ACTION": {
-        "NEW_PRODUCT": "New product"
+        "NEW_PRODUCT": "New product",
+        "CLEAR_FILTERS": "Clear filters"
       },
       "STATE": {
-        "IDLE": "Enter a search term to find products.",
         "EMPTY": "No products found."
       },
       "ERROR": {
         "LOAD": "Failed to load products."
+      },
+      "PAGINATION": {
+        "ARIA": "Product pages",
+        "PREVIOUS": "Previous page",
+        "NEXT": "Next page",
+        "PAGE": "Page {{page}}"
       }
     },
     "CATALOG": {
