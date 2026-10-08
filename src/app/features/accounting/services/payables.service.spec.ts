@@ -138,6 +138,8 @@ describe('PayablesService', () => {
           approval: {
             approvalJustification: 'Freight agreed by phone',
             requiredTier: VendorBillApprovalRequiredTierEnum.Clerk,
+            clerkLimit: 2500,
+            currencyCode: 'USD',
           },
         })),
       );
