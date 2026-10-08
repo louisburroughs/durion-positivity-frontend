@@ -3,7 +3,7 @@ import { Router, provideRouter } from '@angular/router';
 import { By } from '@angular/platform-browser';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import enUS from '../../../../../assets/i18n/en-US.json';
-import { of, throwError } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { CustomerListComponent } from './customer-list.component';
 import { CrmService } from '../../services/crm.service';
@@ -247,15 +247,57 @@ describe('CustomerListComponent', () => {
     expect(component.state()).toBe('error');
   });
 
-  it('retries the same page from the error banner', () => {
-    crmServiceStub.browseParties.mockReturnValueOnce(throwError(() => ({ status: 500 })));
+  it('retries the page that failed, not the first page', () => {
+    const firstPage = Array.from({ length: 25 }, (_, i) => party(`p${i}`));
+    crmServiceStub.browseParties.mockReturnValue(of(partyPage(firstPage, 50)));
     fixture.detectChanges();
+
+    crmServiceStub.browseParties.mockReturnValueOnce(throwError(() => ({ status: 500 })));
+    component.nextPage();
+    fixture.detectChanges();
+    expect(component.state()).toBe('error');
 
     fixture.debugElement.query(By.css('[data-testid="retry"]')).nativeElement.click();
 
-    expect(crmServiceStub.browseParties).toHaveBeenCalledTimes(2);
-    expect(crmServiceStub.browseParties).toHaveBeenLastCalledWith(expect.objectContaining({ page: 0 }));
-    expect(component.state()).toBe('empty');
+    expect(crmServiceStub.browseParties).toHaveBeenCalledTimes(3);
+    expect(crmServiceStub.browseParties).toHaveBeenLastCalledWith(expect.objectContaining({ page: 1 }));
+    expect(component.state()).toBe('ready');
+  });
+
+  it('moves focus to the results region when Retry is removed by the read it starts', async () => {
+    crmServiceStub.browseParties.mockReturnValueOnce(throwError(() => ({ status: 500 })));
+    fixture.detectChanges();
+    const retry = fixture.debugElement.query(By.css('[data-testid="retry"]')).nativeElement as HTMLButtonElement;
+    retry.focus();
+    expect(document.activeElement).toBe(retry);
+
+    crmServiceStub.browseParties.mockReturnValueOnce(new Subject());
+    retry.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(fixture.debugElement.query(By.css('[data-testid="retry"]'))).toBeNull();
+    expect(document.activeElement).toBe(fixture.debugElement.query(By.css('#search-results')).nativeElement);
+  });
+
+  it('announces loading and empty results through a status region that stays mounted', () => {
+    const pending = new Subject<ReturnType<typeof partyPage>>();
+    crmServiceStub.browseParties.mockReturnValueOnce(pending);
+    fixture.detectChanges();
+
+    const status = () => fixture.debugElement.query(By.css('[data-testid="results-status"]')).nativeElement as HTMLElement;
+    const region = status();
+    expect(region.getAttribute('role')).toBe('status');
+    expect(region.getAttribute('aria-live')).toBe('polite');
+    // Outside the aria-busy results region, which some screen readers keep silent.
+    expect(region.closest('#search-results')).toBeNull();
+    expect(region.textContent?.trim()).toBe(enUS.CRM.CUSTOMER_LIST.LOADING);
+
+    pending.next(partyPage([], 0));
+    fixture.detectChanges();
+
+    expect(status()).toBe(region);
+    expect(region.textContent?.trim()).toBe(enUS.CRM.CUSTOMER_LIST.EMPTY);
   });
 
   it('surfaces access-denied on 403', () => {

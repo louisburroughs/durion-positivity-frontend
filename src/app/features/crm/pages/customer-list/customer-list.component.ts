@@ -1,4 +1,7 @@
-import { Component, inject, signal, computed, OnInit, DestroyRef } from '@angular/core';
+import {
+  Component, inject, signal, computed, OnInit, DestroyRef, ElementRef, Injector, afterNextRender, viewChild,
+} from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { Router, RouterLink } from '@angular/router';
@@ -28,8 +31,12 @@ export class CustomerListComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly document = inject(DOCUMENT);
+  private readonly injector = inject(Injector);
 
   private static readonly PAGE_SIZE = 25;
+
+  private readonly resultsRegion = viewChild<ElementRef<HTMLElement>>('resultsRegion');
 
   /** Placeholder rows shown while a page loads. */
   readonly skeletonRows = [1, 2, 3, 4, 5, 6, 7, 8];
@@ -129,8 +136,21 @@ export class CustomerListComponent implements OnInit {
     }
   }
 
+  /**
+   * Re-reads the page that failed. The read swaps the error banner for the loading
+   * panel, taking the focused Retry button with it, so focus moves to the results
+   * region once that render lands (ADR-0029 §8.7).
+   */
   retry(): void {
     this.load();
+    afterNextRender(() => this.focusResultsIfLost(), { injector: this.injector });
+  }
+
+  private focusResultsIfLost(): void {
+    const active = this.document.activeElement;
+    if (!active || active === this.document.body) {
+      this.resultsRegion()?.nativeElement.focus();
+    }
   }
 
   clearFilters(): void {

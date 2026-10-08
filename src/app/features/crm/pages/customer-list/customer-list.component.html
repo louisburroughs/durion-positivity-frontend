@@ -52,12 +52,20 @@
     </div>
   </form>
 
-  <!-- Results (status messages announced via the pagination status live region below) -->
-  <div id="search-results" class="results" [attr.aria-busy]="state() === 'loading'">
+  <!-- Stays mounted, outside the busy results region, so loading and empty results are
+       announced (ADR-0029 §8.8); the page count is announced by the pager's live region. -->
+  <p class="sr-only" role="status" aria-live="polite" data-testid="results-status">
+    @if (state() === 'loading') {
+      {{ 'CRM.CUSTOMER_LIST.LOADING' | translate }}
+    } @else if (state() === 'empty') {
+      {{ 'CRM.CUSTOMER_LIST.EMPTY' | translate }}
+    }
+  </p>
+
+  <div #resultsRegion id="search-results" class="results" tabindex="-1" [attr.aria-busy]="state() === 'loading'">
 
     @if (state() === 'loading') {
       <div class="card">
-        <p class="sr-only">{{ 'CRM.CUSTOMER_LIST.LOADING' | translate }}</p>
         @for (_row of skeletonRows; track $index) {
           <div class="skeleton-row"></div>
         }
