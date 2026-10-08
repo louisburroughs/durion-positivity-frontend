@@ -730,7 +730,7 @@ describe('AccountingService', () => {
     it('executePayment sends no netAmount and maps allocations to the SDK request', async () => {
       apPaymentsStub.executeApPayment.mockReturnValueOnce(of({ paymentId: 'pay-1', status: 'GL_POSTED' }));
 
-      await firstValueFrom(
+      const result = await firstValueFrom(
         service.executePayment({
           vendorId: 'vendor-1',
           grossAmount: 100,
@@ -741,16 +741,21 @@ describe('AccountingService', () => {
         }),
       );
 
-      const sent = apPaymentsStub.executeApPayment.mock.calls[0][0];
-      expect(sent).not.toHaveProperty('netAmount');
-      expect(sent).toMatchObject({
+      // ADR-0035 §9: the complete request shape, intentionally undefined optionals included.
+      expect(apPaymentsStub.executeApPayment).toHaveBeenCalledWith({
         vendorId: 'vendor-1',
         grossAmount: 100,
+        feeAmount: undefined,
         currency: 'USD',
         paymentRef: 'ref-1',
         paymentMethod: 'ACH',
+        paymentSource: undefined,
+        memo: undefined,
         allocations: [{ vendorBillId: 'bill-1', appliedAmount: 100 }],
       });
+      expect(apPaymentsStub.executeApPayment.mock.calls[0][0]).not.toHaveProperty('netAmount');
+      expect(result.paymentId).toBe('pay-1');
+      expect(result.status).toBe('GL_POSTED');
     });
 
     it('getPayment maps paymentDate and carries no netAmount', async () => {

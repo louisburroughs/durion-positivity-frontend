@@ -32,7 +32,8 @@
       <dt>{{ 'ACCOUNTING.VENDOR_PAYMENT_DETAIL.FIELD_GROSS_AMOUNT' | translate }}</dt>
       <dd class="amount-field">{{ value.grossAmount }}</dd>
       <dt>{{ 'ACCOUNTING.VENDOR_PAYMENT_DETAIL.FIELD_PAYMENT_DATE' | translate }}</dt>
-      <dd data-testid="payment-date">{{ value.paymentDate }}</dd>
+      <dd data-testid="payment-date">{{ value.paymentDate ? (dateOnlyFor(value.paymentDate) | date:'mediumDate') :
+        ('COMMON.NOT_AVAILABLE' | translate) }}</dd>
       <dt>{{ 'ACCOUNTING.VENDOR_PAYMENT_DETAIL.FIELD_STATUS' | translate }}</dt>
       <dd><span class="status-badge">{{ value.status }}</span></dd>
       <dt>{{ 'ACCOUNTING.VENDOR_PAYMENT_DETAIL.FIELD_GATEWAY_TXN' | translate }}</dt>
