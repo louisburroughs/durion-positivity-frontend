@@ -1458,3 +1458,61 @@ describe('RegisterDrawerPageComponent — focus, reads and the manager step (CAP
   });
 });
 
+describe('RegisterDrawerPageComponent — float invariants (CAP:550 S22, AC 8, AW16)', () => {
+  const withoutManagerFlag = (options: DrawerOptions): DrawerOptions => ({
+    ...options,
+    reasons: options.reasons.map(option =>
+      option.reason === 'FLOAT_INCREASE' || option.reason === 'FLOAT_DECREASE'
+        ? { ...option, alwaysNeedsManager: false }
+        : option,
+    ),
+  });
+
+  it('asks for a manager before a float change even when the served flag says it is not needed', () => {
+    const h = renderDrawer({ options: withoutManagerFlag(drawerOptions) });
+    click(h, 'drawer-change-float');
+    click(h, 'drawer-reason-FLOAT_DECREASE');
+    type(h, 'drawer-amount', '20');
+    expect(text(recordButton(h))).toBe('Continue to manager approval');
+
+    click(h, 'drawer-record');
+    expect(h.mocks.recordMovement).not.toHaveBeenCalled();
+    expect(h.q('drawer-approval')).not.toBeNull();
+  });
+
+  it('shows the float note on a float decrease under Pay out even without the served flag', () => {
+    const h = renderDrawer({ options: withoutManagerFlag(drawerOptions) });
+    click(h, 'drawer-pay-out');
+    expect(text(h.q('drawer-manager-hint-FLOAT_DECREASE'))).toBe(
+      'Changing the float always needs a manager. It must match the float change accounting recorded.',
+    );
+  });
+
+  it('keeps a reopened float increase saying "puts … into" after the options drop that reason', () => {
+    const h = renderDrawer();
+    h.mocks.requestApproval.mockReturnValue(of(approval));
+    h.mocks.recordMovement.mockReturnValueOnce(throwError(() => refusal(504)));
+    click(h, 'drawer-change-float');
+    click(h, 'drawer-reason-FLOAT_INCREASE');
+    type(h, 'drawer-amount', '50');
+    click(h, 'drawer-record');
+    type(h, 'drawer-manager-username', 'manager-2');
+    type(h, 'drawer-manager-password', 'secret');
+    click(h, 'drawer-approve');
+    expect(dialog(h).outcomeUnknown()).toBe(true);
+    click(h, 'drawer-cancel');
+
+    h.mocks.options.mockReturnValue(
+      of({ ...drawerOptions, reasons: drawerOptions.reasons.filter(option => option.reason !== 'FLOAT_INCREASE') }),
+    );
+    h.component.onOptionsStale();
+    h.render();
+    click(h, 'drawer-change-float');
+
+    expect(dialog(h).reasonOption()).toBeNull();
+    expect(text(h.q('drawer-consequence'))).toBe(
+      "This puts CA$50.00 into the drawer as Float increase. Recorded movements can't be changed or deleted.",
+    );
+  });
+});
+

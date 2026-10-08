@@ -131,6 +131,17 @@ interface HeldApproval extends DrawerApproval {
   readonly boundTo: string;
 }
 
+/** The float reasons' fixed directions (§4.6): FLOAT_INCREASE puts cash in, FLOAT_DECREASE takes it out. */
+const FIXED_DIRECTION: Readonly<Partial<Record<DrawerReason, 'PAID_IN' | 'PAID_OUT'>>> = {
+  FLOAT_INCREASE: 'PAID_IN',
+  FLOAT_DECREASE: 'PAID_OUT',
+};
+
+/** A float change always needs a manager (AC 8, AW16), whatever the served flag; others follow it. */
+function alwaysNeedsManager(option: DrawerReasonOption): boolean {
+  return FLOAT_REASONS.includes(option.reason) || option.alwaysNeedsManager;
+}
+
 /** A short random suffix for the credential inputs' `name`/`id` (not a secret, never sent). */
 function newCredentialKey(): string {
   return uuidv4().replace(/-/g, '').slice(0, 12);
@@ -285,8 +296,15 @@ export class DrawerMovementDialogComponent implements OnInit {
     return new Set([...REQUIRED[reason], ...served]);
   });
   readonly detailsComplete = computed(() => this.draft() !== null);
-  /** The reason always needs a manager (a float change, AW16): the manager step comes before the first submit. */
-  readonly needsManagerFirst = computed(() => this.chosen()?.alwaysNeedsManager === true);
+  /**
+   * The reason always needs a manager: the manager step comes before the first submit. A float
+   * change always does (AC 8, AW16), whatever the served flag says; other reasons follow the flag.
+   */
+  readonly needsManagerFirst = computed(() => {
+    const chosen = this.chosen();
+    return !!chosen && alwaysNeedsManager(chosen);
+  });
+  readonly alwaysNeedsManager = alwaysNeedsManager;
 
   readonly titleKey = computed(() =>
     this.kind() === 'FLOAT' ? 'ORDER.DRAWER.DIALOG.TITLE_FLOAT' : 'ORDER.DRAWER.DIALOG.TITLE_PAY_OUT',
@@ -302,11 +320,12 @@ export class DrawerMovementDialogComponent implements OnInit {
       ? 'ORDER.DRAWER.DIALOG.CONTINUE_TO_MANAGER'
       : 'ORDER.DRAWER.DIALOG.RECORD';
   });
-  readonly consequenceKey = computed(() =>
-    this.reasonOption()?.direction === 'PAID_IN'
-      ? 'ORDER.DRAWER.DIALOG.CONSEQUENCE_IN'
-      : 'ORDER.DRAWER.DIALOG.CONSEQUENCE_OUT',
-  );
+  /** Float reasons have a fixed direction; others take the served one (never a guessed OUT for a float). */
+  readonly consequenceKey = computed(() => {
+    const reason = this.reason();
+    const direction = reason && FIXED_DIRECTION[reason] ? FIXED_DIRECTION[reason] : this.reasonOption()?.direction;
+    return direction === 'PAID_IN' ? 'ORDER.DRAWER.DIALOG.CONSEQUENCE_IN' : 'ORDER.DRAWER.DIALOG.CONSEQUENCE_OUT';
+  });
   readonly canSubmitDetails = computed(() => this.submitReady() && !this.busy());
   readonly canApprove = computed(() => this.approveReady() && !this.busy());
   /**

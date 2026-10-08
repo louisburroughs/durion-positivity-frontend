@@ -58,7 +58,7 @@
             [value]="option.reason"
             [checked]="reason() === option.reason"
             [attr.aria-describedby]="
-              kind() === 'PAY_OUT' && (option.alwaysNeedsManager || option.cashierLimit !== null)
+              kind() === 'PAY_OUT' && (alwaysNeedsManager(option) || option.cashierLimit !== null)
                 ? 'drawer-reason-hint-' + option.reason
                 : null
             "
@@ -68,7 +68,7 @@
           <label [for]="'drawer-reason-' + option.reason">{{ reasonLabelKey(option.reason) | translate }}</label>
         </div>
         @if (kind() === 'PAY_OUT') {
-        @if (option.alwaysNeedsManager) {
+        @if (alwaysNeedsManager(option)) {
         <p class="drawer-dialog__hint" [id]="'drawer-reason-hint-' + option.reason"
           [attr.data-testid]="'drawer-manager-hint-' + option.reason">
           {{ managerHintKey(option.reason) | translate }}

@@ -103,7 +103,7 @@
 
 .drawer__secondary {
   justify-self: start;
-  border: 1px solid var(--link-color);
+  border: 1px solid var(--input-border);
   background: transparent;
   color: var(--currentTextColor);
 }
