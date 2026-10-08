@@ -1234,6 +1234,18 @@ describe('RegisterDrawerPageComponent — a pending attempt (CAP:550 S22, item 6
     expect(store().pendingFor(SESSION_ID)?.requestId).toBe(first.requestId);
   });
 
+  it('keeps it when the retry meets a 429 that may never have reached pos-order', () => {
+    const h = renderDrawer();
+    const first = unknownExpense(h);
+    h.mocks.recordMovement.mockReturnValueOnce(throwError(() => refusal(429)));
+    click(h, 'drawer-record');
+
+    expect(h.component.pendingAttempt()?.requestId).toBe(first.requestId);
+    expect(dialog(h).currentRequestId()).toBe(first.requestId);
+    expect(text(h.q('drawer-dialog-alert'))).toBe('The drawer refused this request.');
+    expect(text(recordButton(h))).toBe('Retry');
+  });
+
   it('keeps the id through APPROVAL_REQUIRED on the retry and the approval round trip', () => {
     const h = renderDrawer();
     const first = unknownExpense(h);

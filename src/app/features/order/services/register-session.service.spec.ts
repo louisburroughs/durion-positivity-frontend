@@ -385,6 +385,9 @@ describe('settlesUnknownAttempt (item 6 amendment)', () => {
     ['FORBIDDEN', 403],
     ['SCOPE_DENIED', 403],
     ['REFUSED', 403],
+    ['REFUSED', 408],
+    ['REFUSED', 429],
+    ['REFUSED', 410],
     ['CONFLICT', 409],
   ] as const)('%s (%i), made before the replay check or unexplained, does not', (kind, status) => {
     expect(settlesUnknownAttempt(failure(kind, status))).toBe(false);

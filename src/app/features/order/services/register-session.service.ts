@@ -284,7 +284,9 @@ export function classifyDrawerError(error: unknown, operation: 'RECORD' | 'APPRO
  *   OPEN, IDEMPOTENCY_CONFLICT), and a same-payload 400, 404 or 422 (which the first attempt would
  *   have met too), proves the attempt is settled;
  * - a 403 (ORDER_FORBIDDEN, LOCATION_SCOPE_DENIED or unexplained) runs before the replay check and
- *   proves nothing, nor does an unexplained 409 or another unknown outcome.
+ *   proves nothing, nor does an unexplained 409, another unknown outcome, or any other unexplained
+ *   4xx (a 408 or a gateway's 429 may never have reached pos-order): only an unexplained 422 is
+ *   taken as a same-payload refusal.
  */
 export function settlesUnknownAttempt(failure: DrawerFailure): boolean {
   switch (failure.kind) {
@@ -294,7 +296,7 @@ export function settlesUnknownAttempt(failure: DrawerFailure): boolean {
     case 'CONFLICT':
       return false;
     case 'REFUSED':
-      return failure.status !== 403;
+      return failure.status === 422;
     default:
       return true;
   }
