@@ -32,9 +32,12 @@ Implements order-domain scaffolding for stories #254, #255, and #256.
     `requestId`, or a refusal pos-order makes after its replay check: `settlesUnknownAttempt`); a
     `tid|sub` or session change drops it (story item 6 as amended on #467). When the
     server answers `CASH_MOVEMENT_APPROVAL_REQUIRED` (or the reason always needs a manager, as a
-    float change does), the manager types their own username and password once; they go to S16's
-    step-up (`requestCashMovementApproval`) under the cashier's own session and are emptied as soon
-    as it answers. The single-use approval token lives only in the dialog; nothing signs anyone in
+    float change does), the manager types their own username and password once — in inputs outside
+    any `<form>`, with per-render random names, `autocomplete="new-password"`/`"off"` and
+    password-manager ignore hints (ADR-0065, owner decision on #467) — and they go to S16's step-up
+    (`requestCashMovementApproval`) under the cashier's own session; values and inputs are cleared
+    the moment it is sent. A manual save through the browser UI stays possible, so registers should
+    run with `PasswordManagerEnabled=false` by policy. The single-use approval token lives only in the dialog; nothing signs anyone in
     or out and nothing reaches browser storage (AW31). The cart and the drawer share
     `REGISTER_TERMINAL_ID`, and the cart header links to the drawer (**Drawer cash**).
   - `price-override` for override application and override history

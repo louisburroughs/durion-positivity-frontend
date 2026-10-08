@@ -9065,7 +9065,8 @@
         "USERNAME": "Usuario del gerente",
         "PASSWORD": "Contraseña del gerente",
         "APPROVE": "Aprobar",
-        "BACK": "Atrás"
+        "BACK": "Atrás",
+        "CHECKING": "Comprobando la aprobación del gerente…"
       },
       "PENDING": "{{reason}}, {{amount}}: aún sin confirmar. Abra Pagar desde la caja o Cambiar el fondo para reintentarlo; no se puede registrar dos veces."
     }

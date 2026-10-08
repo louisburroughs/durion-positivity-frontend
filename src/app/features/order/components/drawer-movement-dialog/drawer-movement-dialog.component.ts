@@ -18,7 +18,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
 import { CashMovementApprovalRequest, CashMovementRequest } from '@durion-sdk/order';
 import { Subscription } from 'rxjs';
-import { v7 as uuidv7 } from 'uuid';
+import { v4 as uuidv4, v7 as uuidv7 } from 'uuid';
 import { canAccess } from '../../../../core/security/route-access';
 import { ORDER_SECTION } from '../../../../core/security/route-permissions';
 import { AuthService } from '../../../../core/services/auth.service';
@@ -131,6 +131,11 @@ interface HeldApproval extends DrawerApproval {
   readonly boundTo: string;
 }
 
+/** A short random suffix for the credential inputs' `name`/`id` (not a secret, never sent). */
+function newCredentialKey(): string {
+  return uuidv4().replace(/-/g, '').slice(0, 12);
+}
+
 function inputValue(event: Event): string {
   return (event.target as HTMLInputElement | HTMLSelectElement | null)?.value ?? '';
 }
@@ -140,8 +145,9 @@ function inputValue(event: Event): string {
  * reasons the server allows now, takes its fields, and records the movement with a `requestId`
  * created when the dialog opens and reused for every retry and the approval round trip (§8.2).
  * When the server asks for a manager (or the reason always needs one, as a float change does), the
- * manager types their own username and password once; they go to S16's step-up under the
- * cashier's session and are emptied as soon as it answers. The single-use token it returns lives
+ * manager types their own username and password once, in inputs no password manager is meant to
+ * save or fill and that sit in no form; they go to S16's step-up under the cashier's session and
+ * are emptied, inputs and all, the moment it is sent. The single-use token it returns lives
  * only in this component until the movement is recorded or the dialog closes (AW31, ADR-0065).
  *
  * A record whose outcome is unknown is kept outside the dialog, in {@link DrawerAttemptStore}
@@ -194,6 +200,8 @@ export class DrawerMovementDialogComponent implements OnInit {
   private readonly usernameInput = viewChild<ElementRef<HTMLInputElement>>('usernameInput');
   private readonly primaryButton = viewChild<ElementRef<HTMLButtonElement>>('primaryButton');
   private readonly title = viewChild<ElementRef<HTMLElement>>('title');
+  private readonly checking = viewChild<ElementRef<HTMLElement>>('checking');
+  private readonly approveButton = viewChild<ElementRef<HTMLButtonElement>>('approveButton');
 
   // ── Form ─────────────────────────────────────────────────────────────────
   readonly reason = signal<DrawerReason | null>(null);
@@ -221,6 +229,11 @@ export class DrawerMovementDialogComponent implements OnInit {
   readonly frozen = signal<Draft | null>(null);
   /** A step-up token is held (the token itself never sits in a signal). */
   readonly approvalHeld = signal(false);
+  /**
+   * The credential inputs' random `name`/`id` suffix, new each time the manager step renders, so a
+   * password manager never sees a stable login field to fill or save (ADR-0065, owner decision #467).
+   */
+  readonly credentialKey = signal(newCredentialKey());
 
   /** The permission a refused write names (ADR-0040 §6a). */
   readonly cashMovementCode = ORDER_SECTION.cashMovement[0];
@@ -427,8 +440,7 @@ export class DrawerMovementDialogComponent implements OnInit {
   }
 
   /** Sends the manager's credentials to S16's step-up, then records with the token it returns. */
-  approve(event?: Event): void {
-    event?.preventDefault();
+  approve(): void {
     if (!this.canApprove()) {
       return;
     }
@@ -444,10 +456,19 @@ export class DrawerMovementDialogComponent implements OnInit {
       currencyCode: draft.currencyCode,
       ...(draft.categoryCode ? { categoryCode: draft.categoryCode } : {}),
     };
+    const approveHadFocus =
+      typeof document !== 'undefined' && document.activeElement === this.approveButton()?.nativeElement;
     const ticket = ++this.ticket;
+    // Sent: the credentials leave the signals now, and the inputs leave the DOM with them (the
+    // template swaps them for "Checking the manager's approval…") — before any answer (ADR-0065).
+    this.clearCredentials();
     this.phase.set('approving');
     this.failure.set(null);
     this.invalidFields.set(new Set());
+    if (!approveHadFocus) {
+      // Focus was not on Approve (a programmatic approve): land on the status that replaced the inputs.
+      setTimeout(() => this.checking()?.nativeElement.focus());
+    }
     this.inFlight = this.service
       .requestApproval(this.sessionId(), request)
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -456,7 +477,6 @@ export class DrawerMovementDialogComponent implements OnInit {
           if (ticket !== this.ticket) {
             return;
           }
-          this.clearCredentials();
           this.phase.set('idle');
           this.setApproval({ ...approval, boundTo: this.bindingOf(draft) });
           this.recordAfterApproval(draft);
@@ -465,7 +485,6 @@ export class DrawerMovementDialogComponent implements OnInit {
           if (ticket !== this.ticket) {
             return;
           }
-          this.clearCredentials();
           this.phase.set('idle');
           const failure = classifyDrawerError(error, 'APPROVE');
           if (failure.kind === 'INVALID') {
@@ -511,8 +530,11 @@ export class DrawerMovementDialogComponent implements OnInit {
    * left the offer (switched off), or the options are being read again (the token stays while valid).
    */
   private recordAfterApproval(draft: Draft): void {
-    if (!this.frozen() && this.chosen()?.reason !== draft.reason) {
+    if (!this.outcomeUnknown() && this.chosen()?.reason !== draft.reason) {
+      // Nothing was ever recorded under this id (only refused), so it may go with the movement.
       this.setApproval(null);
+      this.unfreeze();
+      this.requestId = uuidv7();
       this.showFailure({ key: FAILURE_KEYS['TYPE_NOT_ALLOWED'], reasonKey: reasonKey(draft.reason) });
       this.clearReason();
       return;
@@ -595,7 +617,11 @@ export class DrawerMovementDialogComponent implements OnInit {
           // A definite answer: the attempt is settled, nothing was recorded under this id.
           this.attempts.release(requestId);
           this.outcomeUnknown.set(false);
-          if (failure.kind !== 'APPROVAL_REQUIRED' && failure.kind !== 'APPROVAL_INVALID') {
+          if (failure.kind === 'APPROVAL_REQUIRED' || failure.kind === 'APPROVAL_INVALID') {
+            // The approval round trip resends this id: it stays bound to exactly this movement, so
+            // its fields lock until it is recorded or the dialog closes (one id, one payload).
+            this.frozen.set(draft);
+          } else {
             this.unfreeze();
             this.requestId = uuidv7();
           }
@@ -735,6 +761,7 @@ export class DrawerMovementDialogComponent implements OnInit {
   /** The manager step, with the refusal that sent the dialog back to it, if any. */
   private enterApproval(failure: DialogFailure | null = null): void {
     this.clearCredentials();
+    this.credentialKey.set(newCredentialKey());
     this.step.set('approval');
     this.failure.set(failure);
     setTimeout(() => {
@@ -779,6 +806,7 @@ export class DrawerMovementDialogComponent implements OnInit {
     }
     if (approval.expiresAt && Date.parse(approval.expiresAt) <= this.clock().getTime()) {
       this.setApproval(null); // expired: dropped, never held for later
+      this.clearCredentials();
       return null;
     }
     return approval.approvalToken;

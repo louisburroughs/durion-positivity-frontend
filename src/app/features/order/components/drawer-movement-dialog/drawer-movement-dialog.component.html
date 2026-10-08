@@ -185,7 +185,14 @@
       </div>
     </form>
     } @else {
-    <form class="drawer-dialog__form" (submit)="approve($event)" novalidate data-testid="drawer-approval">
+    <!--
+      The manager's credentials (ADR-0065, owner decision on #467): never inside a <form>, so there is
+      no submit a password manager could capture; Approve is a click handler. Per-render random
+      name/id, password-manager ignore hints, and the inputs leave the DOM the moment the step-up is
+      sent. A user can still save a password by hand through the browser UI: registers should run
+      with PasswordManagerEnabled=false.
+    -->
+    <div class="drawer-dialog__form" data-testid="drawer-approval">
       <p id="drawer-approval-intro" class="drawer-dialog__note">{{ 'ORDER.DRAWER.APPROVAL.INTRO' | translate }}</p>
       @if (reason(); as chosenReason) {
       @if (amount(); as typed) {
@@ -194,22 +201,34 @@
       </p>
       }
       }
-      <fieldset class="drawer-dialog__credentials" [disabled]="busy()" aria-describedby="drawer-approval-intro">
+      @if (busy()) {
+      <p #checking class="drawer-dialog__note" role="status" tabindex="-1" data-testid="drawer-approval-checking">
+        {{ 'ORDER.DRAWER.APPROVAL.CHECKING' | translate }}
+      </p>
+      } @else {
+      <fieldset class="drawer-dialog__credentials" aria-describedby="drawer-approval-intro" data-form-type="other">
         <legend>{{ 'ORDER.DRAWER.APPROVAL.LEGEND' | translate }}</legend>
         <div class="drawer-dialog__field">
-          <label for="drawer-manager-username">{{ 'ORDER.DRAWER.APPROVAL.USERNAME' | translate }}</label>
-          <input #usernameInput id="drawer-manager-username" class="drawer-dialog__input" type="text"
-            autocomplete="off" autocapitalize="none" spellcheck="false" required data-testid="drawer-manager-username"
+          <label [for]="'drawer-mgr-u-' + credentialKey()">{{ 'ORDER.DRAWER.APPROVAL.USERNAME' | translate }}</label>
+          <input #usernameInput class="drawer-dialog__input" type="text"
+            [id]="'drawer-mgr-u-' + credentialKey()" [name]="'drawer-mgr-u-' + credentialKey()"
+            autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" required
+            data-1p-ignore data-lpignore="true" data-bwignore data-form-type="other"
+            data-testid="drawer-manager-username"
             [attr.aria-invalid]="isInvalid('managerUsername') || null"
             [value]="managerUsername()" (input)="onUsername($event)" />
         </div>
         <div class="drawer-dialog__field">
-          <label for="drawer-manager-password">{{ 'ORDER.DRAWER.APPROVAL.PASSWORD' | translate }}</label>
-          <input id="drawer-manager-password" class="drawer-dialog__input" type="password" autocomplete="off" required
+          <label [for]="'drawer-mgr-p-' + credentialKey()">{{ 'ORDER.DRAWER.APPROVAL.PASSWORD' | translate }}</label>
+          <input class="drawer-dialog__input" type="password"
+            [id]="'drawer-mgr-p-' + credentialKey()" [name]="'drawer-mgr-p-' + credentialKey()"
+            autocomplete="new-password" required
+            data-1p-ignore data-lpignore="true" data-bwignore data-form-type="other"
             data-testid="drawer-manager-password"
             [attr.aria-invalid]="isInvalid('managerPassword') || null" [value]="managerPassword()" (input)="onPassword($event)" />
         </div>
       </fieldset>
+      }
       <div class="drawer-dialog__actions">
         <button type="button" class="drawer-dialog__secondary" data-testid="drawer-cancel" (click)="cancel()">
           {{ 'ORDER.DRAWER.DIALOG.CANCEL' | translate }}
@@ -220,13 +239,13 @@
         </button>
         @if (canRecord()) {
         <!-- aria-disabled while in flight, not disabled: the pressed button keeps focus (ADR-0029 §8.7). -->
-        <button type="submit" class="drawer-dialog__primary" data-testid="drawer-approve" [disabled]="!approveReady() && !busy()"
-          [attr.aria-disabled]="busy() || null">
+        <button #approveButton type="button" class="drawer-dialog__primary" data-testid="drawer-approve"
+          [disabled]="!approveReady() && !busy()" [attr.aria-disabled]="busy() || null" (click)="approve()">
           {{ 'ORDER.DRAWER.APPROVAL.APPROVE' | translate }}
         </button>
         }
       </div>
-    </form>
+    </div>
     }
   </div>
 </dialog>

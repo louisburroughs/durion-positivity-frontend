@@ -285,7 +285,7 @@ describe('RegisterDrawerPageComponent (CAP:550 S22)', () => {
 
       const password = h.q<HTMLInputElement>('drawer-manager-password')!;
       expect(password.type).toBe('password');
-      expect(password.getAttribute('autocomplete')).toBe('off');
+      expect(password.getAttribute('autocomplete')).toBe('new-password');
       type(h, 'drawer-manager-username', 'manager-2');
       type(h, 'drawer-manager-password', 'correct horse');
       click(h, 'drawer-approve');
@@ -313,7 +313,7 @@ describe('RegisterDrawerPageComponent (CAP:550 S22)', () => {
       expect(text(h.q('drawer-announcement'))).toBe('Recorded: Petty expense, CA$45.00');
     });
 
-    it('empties the password as soon as the step-up settles, before the record answers', () => {
+    it('empties the credentials and removes their inputs the moment the step-up is sent, keeping focus', () => {
       const h = renderDrawer();
       const record$ = new Subject<DrawerMovement>();
       h.mocks.recordMovement
@@ -325,16 +325,63 @@ describe('RegisterDrawerPageComponent (CAP:550 S22)', () => {
       click(h, 'drawer-record');
       type(h, 'drawer-manager-username', 'manager-2');
       type(h, 'drawer-manager-password', 'secret');
+      const approve = h.q<HTMLButtonElement>('drawer-approve')!;
+      approve.focus();
       click(h, 'drawer-approve');
-      expect(dialog(h).managerPassword()).toBe('secret');
+
+      // Sent, not yet answered (ADR-0065, owner decision on #467).
+      expect(h.mocks.requestApproval.mock.calls[0][1].managerPassword).toBe('secret');
+      expect(dialog(h).managerPassword()).toBe('');
+      expect(dialog(h).managerUsername()).toBe('');
+      expect(h.q('drawer-manager-password')).toBeNull();
+      expect(h.q('drawer-manager-username')).toBeNull();
+      expect(text(h.q('drawer-approval-checking'))).toBe("Checking the manager's approval…");
+      expect(h.q('drawer-approval-checking')!.getAttribute('role')).toBe('status');
+      expect(document.activeElement).toBe(approve);
 
       approve$.next(approval);
       approve$.complete();
       h.render();
-      expect(dialog(h).managerPassword()).toBe('');
-      expect(dialog(h).managerUsername()).toBe('');
       expect(dialog(h).holdsApproval()).toBe(true);
       expect(dialog(h).phase()).toBe('submitting');
+      expect(h.q('drawer-manager-password')).toBeNull();
+    });
+
+    it('keeps the manager credentials out of any form, with password-manager ignore hints and random names', () => {
+      const h = renderDrawer();
+      h.mocks.recordMovement.mockReturnValue(throwError(() => refusal(403, 'CASH_MOVEMENT_APPROVAL_REQUIRED')));
+      h.mocks.requestApproval.mockReturnValue(throwError(() => refusal(403, 'CASH_MOVEMENT_APPROVAL_DENIED')));
+      fillPettyExpense(h, '80');
+      click(h, 'drawer-record');
+
+      const username = h.q<HTMLInputElement>('drawer-manager-username')!;
+      const password = h.q<HTMLInputElement>('drawer-manager-password')!;
+      for (const input of [username, password]) {
+        expect(input.closest('form')).toBeNull();
+        for (const hint of ['data-1p-ignore', 'data-bwignore']) {
+          expect(input.hasAttribute(hint)).toBe(true);
+        }
+        expect(input.getAttribute('data-lpignore')).toBe('true');
+        expect(input.getAttribute('data-form-type')).toBe('other');
+        expect(input.name).toBe(input.id);
+        expect(h.root.querySelector(`label[for="${input.id}"]`)).not.toBeNull();
+      }
+      expect(h.q('drawer-approval')!.tagName).not.toBe('FORM');
+      expect(h.root.querySelector('[data-testid="drawer-approval"] form')).toBeNull();
+      expect(h.q('drawer-approve')!.getAttribute('type')).toBe('button');
+      expect(password.type).toBe('password');
+      expect(password.getAttribute('autocomplete')).toBe('new-password');
+      expect(username.getAttribute('autocomplete')).toBe('off');
+      expect(username.getAttribute('autocapitalize')).toBe('off');
+      expect(username.getAttribute('spellcheck')).toBe('false');
+      expect(password.id).toMatch(/^drawer-mgr-p-[0-9a-f]{12}$/);
+
+      // A new render of the manager step gets new names: no stable login field to remember.
+      const firstId = password.id;
+      type(h, 'drawer-manager-username', 'manager-2');
+      type(h, 'drawer-manager-password', 'wrong');
+      click(h, 'drawer-approve');
+      expect(h.q<HTMLInputElement>('drawer-manager-password')!.id).not.toBe(firstId);
     });
   });
 
@@ -729,6 +776,45 @@ describe('RegisterDrawerPageComponent (CAP:550 S22)', () => {
       expect(h.mocks.recordMovement).toHaveBeenCalledTimes(1);
       expect(dialog(h).holdsApproval()).toBe(false);
       expect(dialog(h).reason()).toBeNull();
+    });
+
+    it('locks the fields to the movement its requestId is bound to after APPROVAL_REQUIRED, even after Back', () => {
+      const h = renderDrawer();
+      h.mocks.recordMovement
+        .mockReturnValueOnce(throwError(() => refusal(403, 'CASH_MOVEMENT_APPROVAL_REQUIRED')))
+        .mockReturnValueOnce(new Subject<DrawerMovement>());
+      fillPettyExpense(h, '80');
+      click(h, 'drawer-record');
+      const first = h.mocks.recordMovement.mock.calls[0][1];
+      click(h, 'drawer-approval-back');
+
+      expect(h.q<HTMLInputElement>('drawer-amount')!.disabled).toBe(true);
+      expect(h.q<HTMLFieldSetElement>('drawer-reasons')!.disabled).toBe(true);
+      dialog(h).amountText.set('99'); // an edit that slipped past the lock never reaches the id
+      h.render();
+      click(h, 'drawer-record');
+      expect(h.mocks.recordMovement.mock.calls[1][1]).toEqual(first);
+    });
+
+    it('locks the fields on the approved-but-waiting path too', () => {
+      const h = renderDrawer();
+      h.mocks.recordMovement.mockReturnValueOnce(throwError(() => refusal(403, 'CASH_MOVEMENT_APPROVAL_REQUIRED')));
+      const approve$ = new Subject<typeof approval>();
+      h.mocks.requestApproval.mockReturnValue(approve$);
+      fillPettyExpense(h, '80');
+      click(h, 'drawer-record');
+      type(h, 'drawer-manager-username', 'manager-2');
+      type(h, 'drawer-manager-password', 'secret');
+      click(h, 'drawer-approve');
+      h.mocks.options.mockReturnValue(new Subject<DrawerOptions>());
+      h.component.onOptionsStale();
+      h.render();
+      approve$.next(approval);
+      approve$.complete();
+      h.render();
+
+      expect(text(h.q('drawer-dialog-alert'))).toContain('A manager approved this.');
+      expect(h.q<HTMLInputElement>('drawer-amount')!.disabled).toBe(true);
     });
 
     it('drops the approval token on a definitive 400 refusal', () => {

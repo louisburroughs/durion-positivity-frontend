@@ -227,6 +227,16 @@ describe('Register drawer a11y (rendered DOM)', () => {
         click(float, 'drawer-record');
         expectNamed(float, 'drawer-approve', 'ORDER.DRAWER.APPROVAL.APPROVE');
         expectNamed(float, 'drawer-approval-back', 'ORDER.DRAWER.APPROVAL.BACK');
+        // The credential inputs carry random ids (ADR-0065); each is still named by its visible label.
+        for (const [testId, key] of [
+          ['drawer-manager-username', 'ORDER.DRAWER.APPROVAL.USERNAME'],
+          ['drawer-manager-password', 'ORDER.DRAWER.APPROVAL.PASSWORD'],
+        ] as const) {
+          const input = float.q<HTMLInputElement>(testId)!;
+          expect(input.getAttribute('aria-label')).toBeNull();
+          expect(text(float.root.querySelector(`label[for="${input.id}"]`))).toBe(lookup(bundle, key));
+          expect(input.labels?.length).toBe(1);
+        }
         float.fixture.destroy();
         TestBed.resetTestingModule();
 

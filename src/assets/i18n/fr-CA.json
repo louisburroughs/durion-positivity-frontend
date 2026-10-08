@@ -9065,7 +9065,8 @@
         "USERNAME": "Nom d'utilisateur du gestionnaire",
         "PASSWORD": "Mot de passe du gestionnaire",
         "APPROVE": "Approuver",
-        "BACK": "Retour"
+        "BACK": "Retour",
+        "CHECKING": "Vérification de l'approbation du gestionnaire…"
       },
       "PENDING": "{{reason}}, {{amount}} : pas encore confirmé. Ouvrez Sortie de caisse ou Modifier le fonds de caisse pour réessayer; cela ne peut pas être enregistré deux fois."
     }

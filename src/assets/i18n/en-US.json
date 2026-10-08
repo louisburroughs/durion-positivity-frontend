@@ -9065,7 +9065,8 @@
         "USERNAME": "Manager's username",
         "PASSWORD": "Manager's password",
         "APPROVE": "Approve",
-        "BACK": "Back"
+        "BACK": "Back",
+        "CHECKING": "Checking the manager's approval…"
       },
       "PENDING": "{{reason}}, {{amount}}: not confirmed yet. Open Pay out or Change the float to retry it; it can't be recorded twice."
     }
