@@ -336,6 +336,19 @@ a.row-name:focus-visible {
   width: 1rem;
 }
 
+/* Forced colours drop box-shadow, so the underline and its focus cue become a real
+   border and outline there (ADR-0029 §8.11). */
+@media (forced-colors: active) {
+  .input-underline {
+    border-bottom: 1px solid CanvasText;
+  }
+
+  .input-underline:focus {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+}
+
 @media (max-width: 720px) {
   .filter-row {
     grid-template-columns: 1fr;

@@ -310,6 +310,11 @@ describe('CustomerListComponent', () => {
     crmServiceStub.browseParties.mockReturnValueOnce(throwError(() => ({ status: 403 })));
     fixture.detectChanges();
     expect(component.state()).toBe('access-denied');
+
+    // An alert with the permission message and no Retry: re-reading cannot grant access.
+    const alert = fixture.debugElement.query(By.css('.error-banner[role="alert"]')).nativeElement as HTMLElement;
+    expect(alert.textContent).toContain(enUS.CRM.CUSTOMER_LIST.FORBIDDEN);
+    expect(fixture.debugElement.query(By.css('[data-testid="retry"]'))).toBeNull();
   });
 
   it('clearFilters resets the filter form', () => {
