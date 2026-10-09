@@ -25,6 +25,7 @@ const vendorBillResponse = (overrides: Partial<VendorBillResponse> = {}): Vendor
   lines: [],
   openCandidates: [],
   reissues: [],
+  taxByType: [],
   ...overrides,
 });
 
