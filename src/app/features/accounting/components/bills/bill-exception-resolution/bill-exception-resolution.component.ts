@@ -10,7 +10,9 @@ import {
   BillDecisionRequest,
   BillDetail,
   BillPermissions,
+  BillRevealed,
   ExceptionResolutionAction,
+  NOTHING_REVEALED,
 } from '../../../models/payables.models';
 import { Copy, blockedCopy, findAction, offersResolveAndSend, reasonValid, taxOnResaleHeld, withParam } from '../../../utils/bill-display';
 import { BillDecisionFailure, POSTING_FIELDS } from '../../../utils/bill-errors';
@@ -89,6 +91,8 @@ export class BillExceptionResolutionComponent {
   readonly postingReady = input(true);
   /** …and for Resolve and send for approval, where the classification is only a proposal. */
   readonly sendReady = input(true);
+  /** Fields a refusal revealed on this bill; they stay until a decision succeeds (R2 item 2). */
+  readonly revealed = input<BillRevealed>(NOTHING_REVEALED);
 
   readonly decide = output<BillDecisionRequest>();
 
@@ -121,7 +125,7 @@ export class BillExceptionResolutionComponent {
   readonly asksTaxOnResale = computed(
     () =>
       this.choice() === 'ACCEPT' &&
-      (taxOnResaleHeld(this.bill()) || (this.failure()?.kind === 'RESOLVE' && this.failure()?.view.code === 'AP_BILL_TAX_ON_RESALE_GOODS')),
+      (taxOnResaleHeld(this.bill()) || this.revealed().taxOnResale.includes('RESOLVE')),
   );
   readonly reasonOk = computed(() => reasonValid(this.reason(), BILL_REASON_MIN, BILL_REASON_MAX));
   readonly taxOnResaleOk = computed(

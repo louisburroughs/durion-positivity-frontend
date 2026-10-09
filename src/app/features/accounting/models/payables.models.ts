@@ -364,3 +364,22 @@ export interface BillDecisionDone {
   readonly kind: BillDecisionKind;
   readonly seq: number;
 }
+
+/**
+ * Fields a refusal revealed on the bill on screen (review R2 item 2). They
+ * stay shown — with their input — until a decision succeeds or the bill or the
+ * identity changes, so Try again after a `LOCK_TIMEOUT` or a 503 resends the
+ * same body.
+ */
+export interface BillRevealed {
+  /** 422 `AP_BILL_UNCLASSIFIED`. */
+  readonly classification: boolean;
+  /** 422 `AP_BILL_TOTALS_UNRECONCILED`. */
+  readonly difference: boolean;
+  /** The decisions refused 422 `PERIOD_CLOSED` for a holder of `accounting:period:override`. */
+  readonly override: readonly BillDecisionKind[];
+  /** The decisions refused 422 `AP_BILL_TAX_ON_RESALE_GOODS`. */
+  readonly taxOnResale: readonly BillDecisionKind[];
+}
+
+export const NOTHING_REVEALED: BillRevealed = { classification: false, difference: false, override: [], taxOnResale: [] };

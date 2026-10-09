@@ -279,6 +279,7 @@
             [totals]="differenceVisible() ? totals() : null"
             [differenceRequired]="differenceVisible() && differenceRequired()"
             [proposedExpenseDifference]="proposedExpenseDifference()"
+            [unclassifiedRevealed]="revealed().classification"
             [showOverride]="overrideVisible()"
             [currency]="currency()"
             [showTerms]="showTerms()"
@@ -289,6 +290,7 @@
             [(overrideReason)]="overrideReason"
           />
           <app-bill-exception-resolution
+            [revealed]="revealed()"
             [postingReady]="postingReady()"
             [sendReady]="sendReady()"
             [bill]="b"
@@ -299,6 +301,7 @@
             (decide)="run($event)"
           />
           <app-bill-decision
+            [revealed]="revealed()"
             [postingReady]="postingReady()"
             [sendReady]="sendReady()"
             [bill]="b"

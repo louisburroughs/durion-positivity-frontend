@@ -99,6 +99,7 @@ describe('BillExceptionResolutionComponent (§5.2, AW6)', () => {
     choice('ACCEPT')!.click();
     fixture.detectChanges();
     expect(q('[data-testid="exception-resale"]')).toBeNull();
+    fixture.componentRef.setInput('revealed', { classification: false, difference: false, override: [], taxOnResale: ['RESOLVE'] });
     fixture.componentRef.setInput('failure', {
       kind: 'RESOLVE',
       view: { code: 'AP_BILL_TAX_ON_RESALE_GOODS', message: { key: 'ACCOUNTING.BILLS.ERROR.TAX_ON_RESALE_GOODS', params: {} }, field: 'taxOnResale', reread: true, notFound: false },

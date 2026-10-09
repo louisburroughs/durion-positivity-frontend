@@ -280,6 +280,7 @@ describe('BillDecisionComponent (§5.2 item 4, P4, P5)', () => {
       fixture.componentInstance.openDialog('VOID_APPROVED');
       fixture.detectChanges();
       type('[data-testid="void-reason"]', 'Billed twice by mistake');
+      fixture.componentRef.setInput('revealed', { classification: false, difference: false, override: ['VOID'], taxOnResale: [] });
       fixture.componentRef.setInput('failure', {
         kind: 'VOID',
         view: { code: 'PERIOD_CLOSED', message: { key: 'ACCOUNTING.BILLS.ERROR.PERIOD_CLOSED_OVERRIDE', params: {} }, field: 'override', reread: false, notFound: false },
@@ -301,6 +302,7 @@ describe('BillDecisionComponent (§5.2 item 4, P4, P5)', () => {
     it('shows the S43 override after a 422 AP_BILL_TAX_ON_RESALE_GOODS while the read shows no hold (review A6)', () => {
       render(awaitingBill());
       expect(q('[data-testid="approve-resale"]')).toBeNull();
+      fixture.componentRef.setInput('revealed', { classification: false, difference: false, override: [], taxOnResale: ['APPROVE'] });
       fixture.componentRef.setInput('failure', {
         kind: 'APPROVE',
         view: { code: 'AP_BILL_TAX_ON_RESALE_GOODS', message: { key: 'ACCOUNTING.BILLS.ERROR.TAX_ON_RESALE_GOODS', params: {} }, field: 'taxOnResale', reread: true, notFound: false },
@@ -322,5 +324,16 @@ describe('BillDecisionComponent (§5.2 item 4, P4, P5)', () => {
 
       expect(q('[data-testid="approve-error"]')).toBeNull();
     });
+  });
+
+  it('keeps a revealed field after the failure clears, so a retry resends it (R2 item 2)', () => {
+    render(awaitingBill());
+    fixture.componentRef.setInput('revealed', { classification: false, difference: false, override: [], taxOnResale: ['APPROVE'] });
+    fixture.componentRef.setInput('failure', null);
+    fixture.detectChanges();
+    type('[data-testid="approve-resale-reason"]', 'Resold at cost to a fleet customer');
+    fixture.componentInstance.approve();
+
+    expect(emitted).toEqual([{ kind: 'APPROVE', justification: null, taxOnResale: 'Resold at cost to a fleet customer' }]);
   });
 });

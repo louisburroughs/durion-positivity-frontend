@@ -11,7 +11,9 @@ import {
   BillDecisionRequest,
   BillDetail,
   BillPermissions,
+  BillRevealed,
   BillVoidKind,
+  NOTHING_REVEALED,
 } from '../../../models/payables.models';
 import { Copy, blockedCopy, findAction, offersResolveAndSend, reasonValid, taxOnResaleHeld, withParam } from '../../../utils/bill-display';
 import { BillDecisionFailure, POSTING_FIELDS } from '../../../utils/bill-errors';
@@ -77,6 +79,8 @@ export class BillDecisionComponent {
   readonly postingReady = input(true);
   /** …and for Send, where the classification is only a proposal. */
   readonly sendReady = input(true);
+  /** Fields a refusal revealed on this bill; they stay until a decision succeeds (R2 item 2). */
+  readonly revealed = input<BillRevealed>(NOTHING_REVEALED);
 
   readonly decide = output<BillDecisionRequest>();
 
@@ -128,13 +132,11 @@ export class BillDecisionComponent {
    * is accepted — also when the last Approve was refused for it and the read
    * (whose rules are cached) does not show the failing check yet (review A6).
    */
-  readonly resaleHeld = computed(
-    () => taxOnResaleHeld(this.bill()) || this.failure()?.view.code === 'AP_BILL_TAX_ON_RESALE_GOODS' && this.failure()?.kind === 'APPROVE',
-  );
+  readonly resaleHeld = computed(() => taxOnResaleHeld(this.bill()) || this.revealed().taxOnResale.includes('APPROVE'));
 
   /** A void refused 422 `PERIOD_CLOSED`, for a holder of `accounting:period:override`. */
   readonly voidOverrideShown = computed(
-    () => this.dialog() === 'VOID_APPROVED' && this.permissions().periodOverride && this.failure()?.kind === 'VOID' && this.failure()?.view.code === 'PERIOD_CLOSED',
+    () => this.dialog() === 'VOID_APPROVED' && this.permissions().periodOverride && this.revealed().override.includes('VOID'),
   );
 
   readonly sendValid = computed(() => reasonValid(this.sendNote(), BILL_REASON_MIN, BILL_REASON_MAX));

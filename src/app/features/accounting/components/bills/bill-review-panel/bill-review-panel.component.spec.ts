@@ -609,4 +609,109 @@ describe('BillReviewPanelComponent (§5.2 item 4, story items 5–6, 12)', () =>
       expect(headings.length).toBe(1);
     });
   });
+
+  describe('re-review R2', () => {
+    it('PERIOD_CLOSED → override reason → 409 LOCK_TIMEOUT → Try again still sends overrideJustification (item 2)', () => {
+      const panel = render([...CLERK, 'accounting:period:override'], awaitingBill());
+      payables.approve.mockReturnValueOnce(throwError(() => apiError(422, 'PERIOD_CLOSED')));
+      panel.run({ kind: 'APPROVE', justification: null, taxOnResale: null });
+      fixture.detectChanges();
+      panel.overrideReason.set('September closed before the invoice came');
+      payables.approve.mockReturnValueOnce(throwError(() => apiError(409, 'LOCK_TIMEOUT')));
+      panel.run({ kind: 'APPROVE', justification: null, taxOnResale: null });
+      fixture.detectChanges();
+
+      expect(q('[data-testid="override"]')).not.toBeNull();
+      panel.run({ kind: 'APPROVE', justification: null, taxOnResale: null });
+
+      expect(payables.approve).toHaveBeenCalledTimes(3);
+      expect(payables.approve.mock.calls[2][1]).toEqual(payables.approve.mock.calls[1][1]);
+      expect(payables.approve.mock.calls[2][1].posting.overrideJustification).toBe('September closed before the invoice came');
+    });
+
+    it('a classification revealed on a goods-receipt bill survives a 503 and is resent (item 2)', () => {
+      const panel = render(CLERK, awaitingBill());
+      payables.approve.mockReturnValueOnce(throwError(() => apiError(422, 'AP_BILL_UNCLASSIFIED')));
+      panel.run({ kind: 'APPROVE', justification: null, taxOnResale: null });
+      fixture.detectChanges();
+      q<HTMLInputElement>('[data-testid="classification-goods"]')!.click();
+      fixture.detectChanges();
+      payables.approve.mockReturnValueOnce(throwError(() => apiError(503, 'SERVICE_UNAVAILABLE')));
+      panel.run({ kind: 'APPROVE', justification: null, taxOnResale: null });
+      fixture.detectChanges();
+
+      expect(q('[data-testid="classification"]')).not.toBeNull();
+      panel.run({ kind: 'APPROVE', justification: null, taxOnResale: null });
+      expect(payables.approve.mock.calls[2][1].posting.classification).toBe('GOODS');
+    });
+
+    it('a void override revealed by PERIOD_CLOSED stays after LOCK_TIMEOUT (item 2)', () => {
+      const panel = render([...CLERK, 'accounting:period:override'], bill({ status: 'APPROVED', availableActions: [action('VOID_APPROVED')] }));
+      payables.voidBill.mockReturnValueOnce(throwError(() => apiError(422, 'PERIOD_CLOSED')));
+      panel.run({ kind: 'VOID', voidKind: 'VOID_APPROVED', reason: 'Billed twice by mistake', overrideJustification: null });
+      payables.voidBill.mockReturnValueOnce(throwError(() => apiError(409, 'LOCK_TIMEOUT')));
+      panel.run({ kind: 'VOID', voidKind: 'VOID_APPROVED', reason: 'Billed twice by mistake', overrideJustification: 'September is closed' });
+
+      expect(panel.revealed().override).toContain('VOID');
+      expect(panel.failure()?.view.code).toBe('LOCK_TIMEOUT');
+    });
+
+    it('success and another bill clear what was revealed (item 2)', () => {
+      const panel = render([...CLERK, 'accounting:period:override'], awaitingBill());
+      payables.approve.mockReturnValueOnce(throwError(() => apiError(422, 'PERIOD_CLOSED')));
+      panel.run({ kind: 'APPROVE', justification: null, taxOnResale: null });
+      expect(panel.revealed().override).toEqual(['APPROVE']);
+      fixture.componentRef.setInput('billId', 'bill-b');
+      fixture.detectChanges();
+
+      expect(panel.revealed().override).toEqual([]);
+    });
+
+    it('re-applies the served proposal after an in-place Send resets the choices (item 3)', () => {
+      const proposed = bill({
+        lines: [],
+        approval: approval({ proposedClassification: { debitClass: 'GOODS', expenseMappingKey: null } }),
+        checks: [check('TOTALS_ADD_UP', 'FAIL', { difference: '2.00' })],
+      });
+      const panel = render(CLERK, proposed);
+      panel.diffClass.set('FREIGHT');
+      panel.diffReason.set('Delivery charge on the invoice');
+      payables.getBill.mockReturnValue(
+        of(bill({ ...proposed, approval: approval({ proposedClassification: { debitClass: 'GOODS', expenseMappingKey: null }, proposedDifference: { differenceClass: 'FREIGHT', justification: 'Delivery charge on the invoice' } }) })),
+      );
+
+      panel.run({ kind: 'SUBMIT', justification: 'Shop rags and gloves' });
+      fixture.detectChanges();
+
+      expect(panel.postClass()).toBe('GOODS');
+      expect(panel.diffClass()).toBe('FREIGHT');
+      expect(panel.diffReason()).toBe('Delivery charge on the invoice');
+    });
+
+    it('without accounting:je:view, On the books shows as text with no entry link (item 5)', () => {
+      render(
+        CLERK,
+        bill({
+          status: 'APPROVED',
+          availableActions: [],
+          posting: {
+            journalEntryId: 'je-uuid-7',
+            journalEntryReference: 'JE-202610-14',
+            postingDate: '2026-10-03',
+            postingDateRule: 'BILL_DATE',
+            differenceClass: null,
+            differenceAmount: null,
+            roundingAdjustment: 0,
+            reversalReference: null,
+            currencyCode: 'USD',
+          },
+        }),
+      );
+
+      expect(q('[data-testid="panel-on-the-books"]')?.textContent).toContain('ACCOUNTING.BILLS.PANEL.ON_THE_BOOKS');
+      expect(q('[data-testid="panel-entry-link"]')).toBeNull();
+      expect(q('[data-testid="panel-month-closed"]')).toBeNull();
+      expect(host().textContent).not.toContain('je-uuid-7');
+    });
+  });
 });

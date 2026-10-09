@@ -70,6 +70,8 @@ export class BillPostingFieldsComponent {
   readonly failure = input<BillDecisionFailure | null>(null);
   /** A proposed difference the panel cannot send back (an `EXPENSE` class): shown as set. */
   readonly proposedExpenseDifference = input(false);
+  /** A 422 `AP_BILL_UNCLASSIFIED` revealed the field on this bill (kept across retries). */
+  readonly unclassifiedRevealed = input(false);
 
   readonly classification = model<'GOODS' | null>(null);
   readonly differenceClass = model<DifferenceChoice | null>(null);
@@ -88,7 +90,7 @@ export class BillPostingFieldsComponent {
   readonly showDifference = computed(() => !!this.totals() || this.differenceRequired());
   readonly expenseSet = computed(() => this.prefill()?.debitClass === 'EXPENSE');
   readonly field = computed(() => this.failure()?.view.field ?? null);
-  readonly unclassified = computed(() => this.failure()?.view.code === 'AP_BILL_UNCLASSIFIED');
+  readonly unclassified = computed(() => this.unclassifiedRevealed() || this.failure()?.view.code === 'AP_BILL_UNCLASSIFIED');
 
   constructor() {
     // 422 AP_BILL_UNCLASSIFIED reveals the field and moves focus to it (Q1 A).

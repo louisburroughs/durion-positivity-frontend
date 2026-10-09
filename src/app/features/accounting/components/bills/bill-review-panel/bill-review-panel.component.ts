@@ -33,7 +33,9 @@ import {
   BillDetail,
   BillPermissions,
   BillPostingInput,
+  BillRevealed,
   BillSelection,
+  NOTHING_REVEALED,
   NO_POSTING_INPUT,
   VendorDefaultClass,
 } from '../../../models/payables.models';
@@ -174,6 +176,8 @@ export class BillReviewPanelComponent {
   readonly diffClass = signal<DifferenceChoice | null>(null);
   readonly diffReason = signal('');
   readonly overrideReason = signal('');
+  /** Fields a refusal revealed on this bill; kept across retries (R2 item 2). */
+  readonly revealed = signal<BillRevealed>(NOTHING_REVEALED);
   /** The vendor's served default class, read only when the classification can show. */
   readonly vendorDefault = signal<VendorDefaultClass>(null);
 
@@ -239,13 +243,14 @@ export class BillReviewPanelComponent {
   });
 
   // ── Posting visibility and readiness (Q1, ruling row 8) ───────────────
-  private readonly lastCode = computed(() => this.failure()?.view.code ?? null);
   readonly classificationVisible = computed(
-    () => this.permissions().approve && classificationShown(this.bill(), this.lastCode()),
+    () =>
+      this.permissions().approve &&
+      classificationShown(this.bill(), this.revealed().classification ? 'AP_BILL_UNCLASSIFIED' : null),
   );
   readonly prefill = computed(() => classificationPrefill(this.bill(), this.vendorDefault()));
   readonly totals = computed(() => unreconciledTotals(this.bill()));
-  readonly differenceRequired = computed(() => this.lastCode() === 'AP_BILL_TOTALS_UNRECONCILED');
+  readonly differenceRequired = computed(() => this.revealed().difference);
   readonly differenceVisible = computed(
     () => this.permissions().approve && postingDecisionServed(this.bill()) && (!!this.totals() || this.differenceRequired()),
   );
@@ -254,8 +259,7 @@ export class BillReviewPanelComponent {
   readonly overrideVisible = computed(
     () =>
       this.permissions().periodOverride &&
-      this.lastCode() === 'PERIOD_CLOSED' &&
-      (this.failure()?.kind === 'APPROVE' || this.failure()?.kind === 'RESOLVE'),
+      (this.revealed().override.includes('APPROVE') || this.revealed().override.includes('RESOLVE')),
   );
   private readonly differenceOk = computed(
     () =>
@@ -342,6 +346,7 @@ export class BillReviewPanelComponent {
     this.vendorSeq++;
     this.vendorSubscription?.unsubscribe();
     this.vendorDefault.set(null);
+    this.revealed.set(NOTHING_REVEALED);
     this.resetPosting();
     this.focusAfterRead = false;
   }
@@ -351,6 +356,34 @@ export class BillReviewPanelComponent {
     this.diffClass.set(null);
     this.diffReason.set('');
     this.overrideReason.set('');
+  }
+
+  /**
+   * Fills the empty posting choices from what is served: the clerk's proposed
+   * class and difference, else the vendor's default class. Runs on every read,
+   * so a reset (after Send, or a re-read) gets them back; a choice already made
+   * is never overwritten (R2 item 3).
+   */
+  private applyServedPosting(bill: BillDetail): void {
+    const proposed = bill.approval?.proposedClassification?.debitClass;
+    if (this.postClass() === null && (proposed === 'GOODS' || (!proposed && this.vendorDefault() === 'GOODS'))) {
+      this.postClass.set('GOODS');
+    }
+    const difference = bill.approval?.proposedDifference;
+    if (this.diffClass() === null && difference && difference.differenceClass !== 'EXPENSE' && difference.differenceClass !== 'UNKNOWN') {
+      this.diffClass.set(difference.differenceClass);
+      if (!this.diffReason().trim()) this.diffReason.set(difference.justification ?? '');
+    }
+  }
+
+  /** Records which fields a refusal revealed, for the bill on screen. */
+  private reveal(kind: BillDecisionKind, code: string | null): void {
+    const current = this.revealed();
+    const add = (list: readonly BillDecisionKind[]): readonly BillDecisionKind[] => (list.includes(kind) ? list : [...list, kind]);
+    if (code === 'AP_BILL_UNCLASSIFIED') this.revealed.set({ ...current, classification: true });
+    if (code === 'AP_BILL_TOTALS_UNRECONCILED') this.revealed.set({ ...current, difference: true });
+    if (code === 'PERIOD_CLOSED' && this.permissions().periodOverride) this.revealed.set({ ...current, override: add(current.override) });
+    if (code === 'AP_BILL_TAX_ON_RESALE_GOODS') this.revealed.set({ ...current, taxOnResale: add(current.taxOnResale) });
   }
 
   /** Moves focus to the panel heading (phones: when a row is picked, §5.7). */
@@ -375,6 +408,7 @@ export class BillReviewPanelComponent {
         this.readFailure.set(null);
         this.readStatus.set('OK');
         if (first) this.prefillPosting(bill);
+        else this.applyServedPosting(bill);
         this.loaded.emit(bill);
         this.settleFocus();
       },
@@ -395,13 +429,8 @@ export class BillReviewPanelComponent {
    * else (read here, once per bill) the vendor's default class (Q1 A, B).
    */
   private prefillPosting(bill: BillDetail): void {
+    this.applyServedPosting(bill);
     const proposed = bill.approval?.proposedClassification?.debitClass;
-    if (proposed === 'GOODS') this.postClass.set('GOODS');
-    const difference = bill.approval?.proposedDifference;
-    if (difference && difference.differenceClass !== 'EXPENSE' && difference.differenceClass !== 'UNKNOWN') {
-      this.diffClass.set(difference.differenceClass);
-      this.diffReason.set(difference.justification ?? '');
-    }
     if (proposed || !classificationShown(bill, null)) return;
     const seq = ++this.vendorSeq;
     this.vendorSubscription?.unsubscribe();
@@ -463,7 +492,9 @@ export class BillReviewPanelComponent {
         this.done.set({ kind: request.kind, seq: ++this.doneSeq });
         const number = request.kind === 'SELECT' ? (request.billNumber ?? bill.billNumber) : bill.billNumber;
         this.announcement.set(copy(DONE_KEYS[request.kind], { number }));
+        this.revealed.set(NOTHING_REVEALED);
         this.resetPosting();
+        this.applyServedPosting(bill);
         this.focusAfterRead = true;
         this.read(billId);
       },
@@ -479,6 +510,7 @@ export class BillReviewPanelComponent {
         if (view.reread) this.changed.emit();
         if (!current()) return;
         this.inFlight.set(null);
+        this.reveal(request.kind, view.code);
         this.failure.set({ kind: request.kind, view });
         if (view.reread) this.read(billId);
       },
