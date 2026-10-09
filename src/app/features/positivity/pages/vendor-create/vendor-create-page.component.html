@@ -54,7 +54,7 @@
         </div>
       } @else if (checkState() === 'done') {
         @let matches = possibleMatches();
-        <div class="vendor-banner vendor-banner--info" data-testid="vendor-create-matches">
+        <div class="vendor-banner vendor-banner--info" tabindex="-1" data-testid="vendor-create-matches">
           @if (matches.length > 0) {
             <p>{{ 'POSITIVITY.VENDORS.CREATE.MATCHES' | translate }}</p>
             <ul>

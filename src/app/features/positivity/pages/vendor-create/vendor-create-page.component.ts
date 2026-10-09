@@ -12,7 +12,7 @@ import {
   untracked,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { EMPTY, Observable } from 'rxjs';
+import { EMPTY, Observable, throwError } from 'rxjs';
 import { expand, map, reduce } from 'rxjs/operators';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -46,8 +46,10 @@ type CheckState = 'idle' | 'checking' | 'done' | 'failed';
 
 /** The permission Add vendor's command enforces, named by a 403. */
 const WRITE_PERMISSION = POSITIVITY_SECTION.vendorWrite[0];
-/** The duplicate check reads at the largest page size the list accepts. */
+/** The duplicate check reads at the largest page size the list accepts… */
 const CHECK_PAGE_SIZE = 200;
+/** …and every page up to this bound; more than that and it cannot vouch for "no match". */
+export const MAX_CHECK_PAGES = 10;
 
 /** The paths this form renders a message for. */
 const RENDERED = (field: string): boolean => field === 'vendorNumber' || VENDOR_FIELD_PATH.test(field) || REMIT_FIELD_PATH.test(field);
@@ -238,8 +240,10 @@ export class VendorCreatePageComponent {
   /**
    * The create may have landed: read the vendors that could be it and keep the
    * exact matches — the typed number, or the legal or display name. The list is
-   * ordered by number and a new vendor takes the highest one, so when the
-   * matches span more than one page the last page is read too.
+   * ordered by `vendorNumber`, and a typed number (WALMART, V-999999) can sort
+   * anywhere among the server's `V-000123` numbers, so every page is read, up
+   * to `MAX_CHECK_PAGES`. A result past that bound fails the check rather than
+   * report a "no match" it did not see.
    */
   private checkForCreated(input: VendorCreateInput): void {
     const seq = ++this.checkSeq;
@@ -259,6 +263,8 @@ export class VendorCreatePageComponent {
           );
           this.possibleMatches.set(exact);
           this.checkState.set('done');
+          // Check again was the focused control and is gone now: land on the outcome (ADR-0029 §8.7).
+          this.focusAfterRender('[data-testid="vendor-create-matches"]');
         },
         error: () => {
           if (seq !== this.checkSeq) return;
@@ -270,14 +276,16 @@ export class VendorCreatePageComponent {
   }
 
   private readCandidates(q: string): Observable<Vendor[]> {
-    return this.service.listVendors(q, undefined, 0, CHECK_PAGE_SIZE).pipe(
-      expand((page: VendorPage) =>
-        page.page === 0 && page.totalPages > 1
-          ? this.service.listVendors(q, undefined, page.totalPages - 1, CHECK_PAGE_SIZE)
-          : EMPTY,
-      ),
-      map(page => page.items),
-      reduce((all: Vendor[], items) => [...all, ...items], []),
+    const read = (index: number): Observable<{ index: number; page: VendorPage }> =>
+      this.service.listVendors(q, undefined, index, CHECK_PAGE_SIZE).pipe(map(page => ({ index, page })));
+    return read(0).pipe(
+      expand(({ index, page }) => {
+        const next = index + 1;
+        if (page.items.length === 0 || next >= page.totalPages) return EMPTY;
+        return next < MAX_CHECK_PAGES ? read(next) : throwError(() => new Error('duplicate check exceeded its page bound'));
+      }),
+      map(({ page }) => page.items),
+      reduce((all: Vendor[], items) => [...all, ...items], [] as Vendor[]),
     );
   }
 

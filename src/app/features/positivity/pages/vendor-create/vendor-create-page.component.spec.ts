@@ -17,7 +17,7 @@ import {
   vendorProviders,
   vendorServiceMock,
 } from '../../vendors.spec-helper';
-import { VendorCreatePageComponent } from './vendor-create-page.component';
+import { MAX_CHECK_PAGES, VendorCreatePageComponent } from './vendor-create-page.component';
 
 const DRAFT = '/app/accounting/bills/drafts/0192a4c2-0000-7000-8000-000000000abc';
 
@@ -229,17 +229,34 @@ describe('VendorCreatePageComponent (#469 items 3–4)', () => {
     expect(q<HTMLButtonElement>('[data-testid="vendor-create-submit"]')!.disabled).toBe(false);
   });
 
-  it('reads the last page too when the matches span pages: a new vendor takes the highest number', async () => {
+  it('N1: reads every page, finding the new vendor on a middle page of 3', async () => {
+    const other = (id: string) => vendor({ vendorId: id, vendorNumber: `V-00000${id}`, displayName: 'Acme Tire Co', legalName: 'Acme Tire Co' });
     service.createVendor.mockReturnValue(throwError(() => httpError(504)));
     service.listVendors
-      .mockReturnValueOnce(of(vendorPage([vendor({ vendorId: 'a', displayName: 'Acme Tire Co', legalName: 'Acme Tire Co' })], { totalPages: 3, totalElements: 450 })))
-      .mockReturnValueOnce(of(vendorPage([vendor()], { page: 2, totalPages: 3, totalElements: 450 })));
+      .mockReturnValueOnce(of(vendorPage([other('1')], { page: 0, totalPages: 3, totalElements: 450 })))
+      .mockReturnValueOnce(of(vendorPage([vendor()], { page: 1, totalPages: 3, totalElements: 450 })))
+      .mockReturnValueOnce(of(vendorPage([other('3')], { page: 2, totalPages: 3, totalElements: 450 })));
     await setup();
     fillRequired();
     submit();
 
-    expect(service.listVendors).toHaveBeenLastCalledWith('Acme Tire', undefined, 2, 200);
+    expect(service.listVendors.mock.calls.map(call => call[2])).toEqual([0, 1, 2]);
     expect(q('[data-testid="vendor-create-matches"] a')?.getAttribute('href')).toBe(`/app/positivity/vendors/${VENDOR_ID}`);
+  });
+
+  it('N1: matches beyond the page bound fail the check rather than say "no match"', async () => {
+    service.createVendor.mockReturnValue(throwError(() => httpError(504)));
+    service.listVendors.mockImplementation((_q, _status, page) =>
+      of(vendorPage([vendor({ vendorId: `v-${page}`, displayName: 'Acme Tire Co', legalName: 'Acme Tire Co' })], { page, totalPages: MAX_CHECK_PAGES + 2 })),
+    );
+    await setup();
+    fillRequired();
+    submit();
+
+    expect(service.listVendors).toHaveBeenCalledTimes(MAX_CHECK_PAGES);
+    expect(q('[data-testid="vendor-create-check-failed"]')).toBeTruthy();
+    expect(q('[data-testid="vendor-create-matches"]')).toBeNull();
+    expect(q<HTMLButtonElement>('[data-testid="vendor-create-submit"]')!.disabled).toBe(true);
   });
 
   it('A1: a failed check never says "no match"; Add stays blocked until Check again succeeds', async () => {
@@ -259,9 +276,13 @@ describe('VendorCreatePageComponent (#469 items 3–4)', () => {
     fixture.componentInstance.submit();
     expect(service.createVendor).toHaveBeenCalledTimes(1);
 
+    q<HTMLButtonElement>('[data-testid="vendor-create-check-retry"]')!.focus();
     q<HTMLButtonElement>('[data-testid="vendor-create-check-retry"]')!.click();
     fixture.detectChanges();
+    await fixture.whenStable();
     expect(q('[data-testid="vendor-create-check-failed"]')).toBeNull();
+    // N2: Check again is gone; focus lands on the outcome, not <body>.
+    expect(document.activeElement).toBe(q('[data-testid="vendor-create-matches"]'));
     expect(q('[data-testid="vendor-create-matches"]')?.textContent).toContain(enUS.POSITIVITY.VENDORS.CREATE.NO_MATCHES);
     expect(q<HTMLButtonElement>('[data-testid="vendor-create-submit"]')!.disabled).toBe(false);
     el().remove();

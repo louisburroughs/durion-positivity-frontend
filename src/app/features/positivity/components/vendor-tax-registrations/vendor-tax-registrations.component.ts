@@ -25,9 +25,9 @@ import { VendorCopy, noteValid } from '../../utils/supplier-vendor.util';
 
 let nextId = 0;
 
-/** C0 controls and DEL, which the reveal endpoint refuses in a reason. */
+/** ISO controls — C0, DEL and C1 — which the reveal endpoint refuses in a reason (`Character::isISOControl`). */
 // eslint-disable-next-line no-control-regex
-const CONTROL_CHARACTER = /[\u0000-\u001f\u007f]/;
+const CONTROL_CHARACTER = /[\u0000-\u001f\u007f-\u009f]/;
 
 /**
  * A vendor's tax registrations, masked (backend #2621; ADR-0072 RESTRICTED):

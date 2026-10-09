@@ -126,6 +126,20 @@ describe('VendorTaxRegistrationsComponent (#2621; ADR-0072 RESTRICTED)', () => {
     expect(service.revealTaxRegistration).not.toHaveBeenCalled();
   });
 
+  it('N3: refuses a C1 control such as U+0085 (Character::isISOControl)', () => {
+    setup(true);
+    fixture.componentInstance.openReveal(EIN);
+    fixture.componentInstance.reason.set('Checking the\u0085W-9 form');
+    fixture.detectChanges();
+    expect(fixture.componentInstance.reasonValid()).toBe(false);
+    expect(q<HTMLButtonElement>('[data-testid="vendor-tax-reveal-confirm"]')!.disabled).toBe(true);
+    fixture.componentInstance.reveal();
+    expect(service.revealTaxRegistration).not.toHaveBeenCalled();
+
+    fixture.componentInstance.reason.set('Checking the W-9 form');
+    expect(fixture.componentInstance.reasonValid()).toBe(true);
+  });
+
   it('B1: a reason refused for containing the number is marked on the field', () => {
     service.revealTaxRegistration.mockReturnValue(
       throwError(() => httpError(400, 'VALIDATION_ERROR', { fieldErrors: [{ field: 'reason', message: 'contains the number' }] })),
