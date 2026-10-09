@@ -61,7 +61,7 @@ export class InventoryPurchaseOrderService {
 
   private toSdkCreatePurchaseOrderRequest(request: CreatePurchaseOrderRequest): SdkCreatePurchaseOrderRequest {
     return {
-      vendorId: request.supplierId,
+      vendorId: request.vendorId,
       poDate: request.scheduledDeliveryDate,
       currency: 'USD',
       expectedDeliveryDate: request.scheduledDeliveryDate,
@@ -75,12 +75,24 @@ export class InventoryPurchaseOrderService {
     };
   }
 
+  /**
+   * A revision replaces the header and every line, and overwrites `paymentTermsId`,
+   * `shipToLocationId` and `requestedBy` even when omitted — so the order's own
+   * values go back unchanged. `vendorId` is sent only when it changes the vendor:
+   * that is the DRAFT-only vendor change (S24, #2517; 409 past DRAFT).
+   */
   private toSdkRevisePurchaseOrderRequest(request: RevisePurchaseOrderRequest): SdkRevisePurchaseOrderRequest {
+    const current = request.current;
+    const vendorChange = request.vendorId && request.vendorId !== current.supplierId ? request.vendorId : undefined;
     return {
-      poDate: request.scheduledDeliveryDate ?? '',
-      expectedDeliveryDate: request.scheduledDeliveryDate,
+      poDate: current.poDate ?? '',
+      paymentTermsId: current.paymentTermsId,
+      shipToLocationId: current.shipToLocationId,
+      requestedBy: current.requestedBy,
+      expectedDeliveryDate: request.scheduledDeliveryDate || undefined,
       comment: request.notes,
-      revisionReason: '',
+      revisionReason: request.revisionReason,
+      ...(vendorChange ? { vendorId: vendorChange } : {}),
       lines: (request.lines ?? []).map((line, index) => ({
         lineNumber: index + 1,
         description: line.productSku,
@@ -107,6 +119,10 @@ export class InventoryPurchaseOrderService {
       openBalance: (dto.openBalanceMinor ?? 0) / 100,
       scheduledDeliveryDate: dto.expectedDeliveryDate ?? '',
       notes: dto.comment,
+      poDate: dto.poDate,
+      paymentTermsId: dto.paymentTermsId,
+      shipToLocationId: dto.shipToLocationId,
+      requestedBy: dto.requestedBy,
       lines: (dto.lines ?? []).map((line) => ({
         poLineId: line.lineId ?? '',
         productSku: line.skuId ?? '',

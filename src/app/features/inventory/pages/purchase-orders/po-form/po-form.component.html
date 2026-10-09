@@ -7,7 +7,7 @@
   </div>
 
   <header class="page-header">
-    <h1 id="po-form-title" class="page-title">
+    <h1 id="po-form-title" class="page-title" tabindex="-1">
       @if (editingPoId()) {
       {{ 'INVENTORY.PURCHASE_ORDERS.FORM.TITLE.EDIT' | translate }}
       } @else {
@@ -25,44 +25,147 @@
   </section>
   }
 
-  @if (state() === 'error') {
-  <section class="card state-card" role="alert">
+  @if (state() === 'error' && !formShown()) {
+  <section class="card state-card" role="alert" data-testid="po-form-load-error">
     <span class="material-symbols-outlined" aria-hidden="true">error</span>
-    <p>{{ errorKey() | translate }}</p>
+    <p>{{ errorKey() ?? '' | translate }}</p>
   </section>
   }
 
-  @if (state() === 'ready') {
+  @if (formShown() && state() !== 'loading') {
   <!-- PO header fields -->
   <section class="card">
     <h2>{{ 'INVENTORY.PURCHASE_ORDERS.FORM.HEADER.TITLE' | translate }}</h2>
     <div class="form-grid">
-      @if (!editingPoId()) {
-      <div class="field-group">
-        <label class="field-label" for="po-supplier">
-          {{ 'INVENTORY.PURCHASE_ORDERS.FORM.FIELD.SUPPLIER' | translate }}
-        </label>
-        <input id="po-supplier" type="text" class="input-underline" [value]="supplierId()"
-          (input)="supplierId.set($any($event.target).value)"
-          [attr.placeholder]="'INVENTORY.PURCHASE_ORDERS.FORM.FIELD.SUPPLIER_PLACEHOLDER' | translate" />
+      <div class="field-group field-group--full po-vendor" data-testid="po-vendor-field">
+        @if (pickerShown()) {
+        <label class="field-label" for="po-vendor">{{ 'INVENTORY.PURCHASE_ORDERS.FORM.VENDOR.LABEL' | translate }}</label>
+        <select id="po-vendor" class="input-underline" data-testid="po-vendor-select" required
+          [attr.aria-invalid]="vendorErrorKey() ? 'true' : null" [attr.aria-describedby]="vendorDescribedBy()"
+          (change)="chooseVendor($any($event.target).value)">
+          @if (!editingPoId()) {
+          <option value="" [selected]="vendorId() === ''">
+            {{ 'INVENTORY.PURCHASE_ORDERS.FORM.VENDOR.PLACEHOLDER' | translate }}
+          </option>
+          }
+          @for (choice of vendorChoices(); track choice.vendorId) {
+          <option [value]="choice.vendorId" [selected]="choice.vendorId === vendorId()">
+            {{ choice.key | translate: choice.params }}
+          </option>
+          }
+        </select>
+        @if (vendorList().truncated) {
+        <p class="po-hint" id="po-vendor-truncated" data-testid="po-vendor-truncated">
+          {{ 'INVENTORY.PURCHASE_ORDERS.FORM.VENDOR.TRUNCATED' | translate: { count: maxListed } }}
+        </p>
+        }
+        } @else {
+        <span class="field-label">{{ 'INVENTORY.PURCHASE_ORDERS.FORM.VENDOR.LABEL' | translate }}</span>
+        @if (editingPoId()) {
+        <p class="po-vendor__current" tabindex="-1" data-testid="po-vendor-current">
+          {{ currentVendorText().key | translate: currentVendorText().params }}
+        </p>
+        }
+        }
+
+        @if (editingPoId() && !vendorEditable()) {
+        <p class="po-hint" id="po-vendor-locked" data-testid="po-vendor-locked">
+          {{ 'INVENTORY.PURCHASE_ORDERS.FORM.VENDOR.LOCKED' | translate }}
+        </p>
+        }
+
+        @if (vendorPromptKey(); as promptKey) {
+        <p class="po-banner po-banner--warning" id="po-vendor-prompt" data-testid="po-vendor-prompt">
+          {{ promptKey | translate }}
+        </p>
+        }
+
+        <!-- One persistent polite live region for the list's loading, permission,
+             load-error and empty states (it survives every state change). -->
+        <div class="po-vendor__status" aria-live="polite" data-testid="po-vendor-status">
+          @if (vendorEditable() || editingPoId()) {
+          @switch (vendorList().state) {
+          @case ('loading') {
+          <p class="po-hint" tabindex="-1" data-testid="po-vendor-loading">
+            {{ 'INVENTORY.PURCHASE_ORDERS.FORM.VENDOR.LOADING' | translate }}
+          </p>
+          }
+          @case ('forbidden') {
+          @if (vendorEditable()) {
+          <p class="po-banner po-banner--info" tabindex="-1" data-testid="po-vendor-status-message">
+            {{ (editingPoId() ? 'INVENTORY.PURCHASE_ORDERS.FORM.VENDOR.FORBIDDEN_EDIT' :
+            'INVENTORY.PURCHASE_ORDERS.FORM.VENDOR.FORBIDDEN') | translate }}
+          </p>
+          }
+          }
+          @case ('error') {
+          <div class="po-banner po-banner--error" data-testid="po-vendor-load-error">
+            {{ (editingPoId() ? 'INVENTORY.PURCHASE_ORDERS.FORM.VENDOR.LOAD_ERROR_EDIT' :
+            'INVENTORY.PURCHASE_ORDERS.FORM.VENDOR.LOAD_ERROR') | translate }}
+            <button class="btn-secondary" type="button" data-testid="po-vendor-retry" (click)="retryVendors()">
+              {{ 'INVENTORY.PURCHASE_ORDERS.FORM.VENDOR.RETRY' | translate }}
+            </button>
+          </div>
+          }
+          @default {
+          @if (noVendors()) {
+          <p class="po-banner po-banner--warning" tabindex="-1" data-testid="po-vendor-status-message">
+            {{ 'INVENTORY.PURCHASE_ORDERS.FORM.VENDOR.EMPTY' | translate }}
+          </p>
+          }
+          }
+          }
+          }
+        </div>
+
+        @if (vendorErrorKey(); as key) {
+        <p class="po-field-error" id="po-vendor-error" data-testid="po-vendor-error">{{ key | translate }}</p>
+        }
       </div>
-      }
+
       <div class="field-group">
         <label class="field-label" for="po-delivery-date">
           {{ 'INVENTORY.PURCHASE_ORDERS.FORM.FIELD.DELIVERY_DATE' | translate }}
         </label>
         <input id="po-delivery-date" type="date" class="input-underline" [value]="scheduledDeliveryDate()"
+          [attr.aria-invalid]="fieldErrors().deliveryDate ? 'true' : null"
+          [attr.aria-describedby]="fieldErrors().deliveryDate ? 'po-delivery-date-error' : null"
           (input)="scheduledDeliveryDate.set($any($event.target).value)" />
+        @if (fieldErrors().deliveryDate; as key) {
+        <p class="po-field-error" id="po-delivery-date-error" data-testid="po-delivery-date-error">{{ key | translate }}</p>
+        }
       </div>
       <div class="field-group field-group--full">
         <label class="field-label" for="po-notes">
           {{ 'INVENTORY.PURCHASE_ORDERS.FORM.FIELD.NOTES' | translate }}
         </label>
         <textarea id="po-notes" class="input-underline textarea-field" rows="3" [value]="notes()"
+          [attr.aria-invalid]="fieldErrors().notes ? 'true' : null"
+          [attr.aria-describedby]="fieldErrors().notes ? 'po-notes-error' : null"
           (input)="notes.set($any($event.target).value)"
           [attr.placeholder]="'INVENTORY.PURCHASE_ORDERS.FORM.FIELD.NOTES_PLACEHOLDER' | translate">
           </textarea>
+        @if (fieldErrors().notes; as key) {
+        <p class="po-field-error" id="po-notes-error" data-testid="po-notes-error">{{ key | translate }}</p>
+        }
       </div>
+      @if (editingPoId()) {
+      <div class="field-group field-group--full">
+        <label class="field-label" for="po-revision-reason">
+          {{ 'INVENTORY.PURCHASE_ORDERS.FORM.REASON.LABEL' | translate }}
+        </label>
+        <textarea id="po-revision-reason" class="input-underline textarea-field" rows="2" required
+          data-testid="po-revision-reason" [value]="revisionReason()"
+          [attr.aria-invalid]="reasonErrorKey() ? 'true' : null"
+          [attr.aria-describedby]="reasonErrorKey() ? 'po-revision-reason-error' : null"
+          (input)="setRevisionReason($any($event.target).value)"></textarea>
+        @if (reasonErrorKey(); as key) {
+        <p class="po-field-error" id="po-revision-reason-error" data-testid="po-revision-reason-error">
+          {{ key | translate }}
+        </p>
+        }
+      </div>
+      }
     </div>
   </section>
 
@@ -76,10 +179,15 @@
       </button>
     </div>
 
+    @if (fieldErrors().lines; as key) {
+    <p class="po-field-error" id="po-lines-error" data-testid="po-lines-error">{{ key | translate }}</p>
+    }
+
     @if (lines().length > 0) {
     <div class="table-wrap">
       <table class="data-table lines-table" role="table"
-        aria-label="{{ 'INVENTORY.PURCHASE_ORDERS.FORM.LINES.TABLE.ARIA' | translate }}">
+        aria-label="{{ 'INVENTORY.PURCHASE_ORDERS.FORM.LINES.TABLE.ARIA' | translate }}"
+        [attr.aria-describedby]="fieldErrors().lines ? 'po-lines-error' : null">
         <thead>
           <tr role="row">
             <th scope="col" role="columnheader">{{ 'INVENTORY.PURCHASE_ORDERS.FORM.LINES.TABLE.HEADER.SKU' | translate
@@ -148,10 +256,48 @@
     }
   </section>
 
+  <!-- Command outcome: one persistent alert region, focused when it fills. -->
+  <div class="po-outcome" role="alert">
+    @if (state() === 'error' && errorKey(); as key) {
+    <div class="po-banner po-banner--error" tabindex="-1" data-testid="po-form-error">
+      <p class="po-banner__text">{{ key | translate: errorParams() }}</p>
+      @if (failureCode() === 'UNKNOWN_OUTCOME') {
+      @if (editingPoId()) {
+      <button class="btn-secondary" type="button" data-testid="po-read-again" (click)="readOrderAgain()">
+        {{ 'INVENTORY.PURCHASE_ORDERS.FORM.ACTION.READ_AGAIN' | translate }}
+      </button>
+      } @else {
+      <a class="po-link" routerLink="/app/inventory/purchase-orders" data-testid="po-go-to-list">
+        {{ 'INVENTORY.PURCHASE_ORDERS.FORM.ACTION.GO_TO_LIST' | translate }}
+      </a>
+      }
+      }
+    </div>
+    }
+  </div>
+
+  <!-- The consequence comes before the button that commits it. -->
+  <p class="po-consequence" id="po-consequence" data-testid="po-consequence">
+    @if (editingPoId()) {
+    {{ 'INVENTORY.PURCHASE_ORDERS.FORM.CONSEQUENCE.REVISE' | translate }}
+    @if (newVendor(); as vendor) {
+    {{ 'INVENTORY.PURCHASE_ORDERS.FORM.CONSEQUENCE.VENDOR_CHANGE' | translate: { number: vendor.vendorNumber, name:
+    vendor.displayName } }}
+    }
+    } @else {
+    {{ 'INVENTORY.PURCHASE_ORDERS.FORM.CONSEQUENCE.CREATE' | translate }}
+    }
+  </p>
+
+  @if (blockedKey(); as key) {
+  <p class="po-blocked" id="po-submit-blocked" data-testid="po-submit-blocked">{{ key | translate }}</p>
+  }
+
   <!-- Form actions -->
   <div class="action-bar">
-    <button class="btn-primary" type="button" (click)="submit()" [disabled]="submitting()"
-      [attr.aria-busy]="submitting()">
+    <button class="btn-primary" type="button" data-testid="po-submit" (click)="submit()"
+      [attr.aria-disabled]="blockedKey() || submitting() ? 'true' : null" [attr.aria-busy]="submitting()"
+      [attr.aria-describedby]="submitDescribedBy()">
       {{ 'INVENTORY.PURCHASE_ORDERS.FORM.ACTION.SUBMIT' | translate }}
     </button>
     <button class="btn-secondary" type="button" (click)="goBack()">

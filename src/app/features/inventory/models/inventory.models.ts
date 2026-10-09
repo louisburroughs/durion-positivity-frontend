@@ -277,6 +277,7 @@ export interface PurchaseOrderDetail {
   poId: string;
   poNumber: string;
   status: string;
+  /** The pos-supplier vendor id the order is placed with (`vendorId` on the wire). */
   supplierId: string;
   supplierName?: string;
   lineCount: number;
@@ -284,6 +285,14 @@ export interface PurchaseOrderDetail {
   scheduledDeliveryDate: string;
   notes?: string;
   lines: PurchaseOrderLine[];
+  /**
+   * Header values a revision replaces even when omitted (`revisePurchaseOrder`),
+   * kept so a revision sends them back unchanged (CAP:550, #514).
+   */
+  poDate?: string;
+  paymentTermsId?: string;
+  shipToLocationId?: string;
+  requestedBy?: string;
   /** @serverGenerated */
   readonly createdAt?: string;
   /** @serverGenerated */
@@ -315,7 +324,8 @@ export interface PurchaseOrderFilter {
 }
 
 export interface CreatePurchaseOrderRequest {
-  supplierId: string;
+  /** An ACTIVE pos-supplier vendor, chosen from the vendor picker (CAP:550, #514). */
+  vendorId: string;
   scheduledDeliveryDate: string;
   notes?: string;
   lines: CreatePurchaseOrderLine[];
@@ -327,7 +337,15 @@ export interface CreatePurchaseOrderLine {
   unitPrice: number;
 }
 
+/**
+ * A revision replaces the order's header and every line (`revisePurchaseOrder`).
+ * `vendorId` is sent only to change a DRAFT order's vendor; absent keeps it.
+ */
 export interface RevisePurchaseOrderRequest {
+  /** The order as read, whose header values the revision sends back unchanged. */
+  current: PurchaseOrderDetail;
+  vendorId?: string;
+  revisionReason: string;
   scheduledDeliveryDate?: string;
   notes?: string;
   lines?: CreatePurchaseOrderLine[];

@@ -8657,8 +8657,25 @@
       "FORM": {
         "ERROR": {
           "LOAD": "Impossible de charger le bon de commande pour modification.",
-          "CREATE": "Impossible de créer le bon de commande.",
-          "REVISE": "Impossible de réviser le bon de commande."
+          "VENDOR_INACTIVE": "Ce fournisseur est inactif et n’accepte aucun nouveau bon de commande : rien n’a été enregistré. Choisissez un fournisseur actif.",
+          "VENDOR_PENDING": "Ce fournisseur n’est pas encore disponible pour les bons de commande : rien n’a été enregistré. Réessayez dans un moment.",
+          "VENDOR_PENDING_AFTER": "Ce fournisseur n’est pas encore disponible pour les bons de commande : rien n’a été enregistré. Réessayez dans {{seconds}} secondes.",
+          "VENDOR_LOCKED": "Cette commande n’est plus un brouillon : son fournisseur ne peut pas être changé. Rien n’a été enregistré. Enregistrez de nouveau pour conserver vos autres modifications avec son fournisseur actuel.",
+          "NOT_FOUND": "Ce bon de commande n’existe plus. Rien n’a été enregistré.",
+          "VALIDATION": "La commande n’a pas été enregistrée. Vérifiez les champs signalés.",
+          "VALIDATION_UNNAMED": "La commande n’a pas été enregistrée, car certains de ses détails n’ont pas été acceptés. Vérifiez le fournisseur, la date de livraison, les notes et chaque ligne, puis réessayez.",
+          "LINES_REFUSED": "La commande n’a pas été enregistrée, car une ligne n’a pas été acceptée.",
+          "FORBIDDEN": "Vous n’avez pas l’autorisation de créer ou de modifier des bons de commande ({{permission}}). Rien n’a été enregistré.",
+          "UNKNOWN_CREATE": "Nous n’avons pas pu confirmer la création de la commande. Vérifiez la liste des bons de commande avant de soumettre de nouveau, pour ne pas créer la commande deux fois.",
+          "UNKNOWN_REVISE": "Nous n’avons pas pu confirmer l’enregistrement de vos modifications. Relisez la commande pour vérifier avant d’enregistrer de nouveau.",
+          "REFUSED": "La commande n’a pas été enregistrée (erreur {{status}}).",
+          "FIELD": {
+            "VENDOR": "Choisissez un fournisseur actif.",
+            "REASON": "Indiquez la raison de cette modification.",
+            "DELIVERY_DATE": "Entrez une date de livraison valide.",
+            "NOTES": "Vérifiez les notes.",
+            "LINES": "Vérifiez les lignes de la commande : chaque ligne doit avoir un SKU, une quantité supérieure à zéro et un prix unitaire supérieur à zéro."
+          }
         },
         "TITLE": {
           "NEW": "Nouveau bon de commande",
@@ -8668,8 +8685,6 @@
           "TITLE": "Détails de la commande"
         },
         "FIELD": {
-          "SUPPLIER": "Fournisseur",
-          "SUPPLIER_PLACEHOLDER": "Entrez le nom du fournisseur",
           "DELIVERY_DATE": "Date de livraison prévue",
           "NOTES": "Notes",
           "NOTES_PLACEHOLDER": "Notes optionnelles…"
@@ -8695,7 +8710,9 @@
           "EMPTY_HINT": "Ajoutez au moins une ligne pour passer la commande."
         },
         "ACTION": {
-          "SUBMIT": "Soumettre la commande"
+          "SUBMIT": "Soumettre la commande",
+          "READ_AGAIN": "Relire la commande",
+          "GO_TO_LIST": "Aller aux bons de commande"
         },
         "AVAILABILITY": {
           "TITLE": "Disponibilité du fournisseur",
@@ -8736,6 +8753,42 @@
           "STALE": "Obsolète",
           "FRESH": "À jour",
           "NO_SKU": "Saisissez un UGS pour cette ligne avant de vérifier la disponibilité."
+        },
+        "VENDOR": {
+          "LABEL": "Fournisseur",
+          "PLACEHOLDER": "Choisissez un fournisseur",
+          "OPTION": "{{number}} — {{name}}",
+          "OPTION_INACTIVE": "{{number}} — {{name}} (inactif)",
+          "CURRENT_MISSING": "Fournisseur actuel (absent de la liste des fournisseurs)",
+          "CURRENT_UNREAD": "Fournisseur actuel (détails indisponibles)",
+          "LOADING": "Chargement des fournisseurs…",
+          "TRUNCATED": "Seuls les {{count}} premiers fournisseurs actifs sont affichés.",
+          "FORBIDDEN": "Vous devez avoir l’autorisation de consulter les fournisseurs (supplier:vendor:read) pour en choisir un pour un nouveau bon de commande. Demandez cet accès à un administrateur.",
+          "FORBIDDEN_EDIT": "Vous devez avoir l’autorisation de consulter les fournisseurs (supplier:vendor:read) pour changer de fournisseur. La commande conserve son fournisseur actuel.",
+          "LOAD_ERROR": "La liste des fournisseurs n’a pas pu être chargée.",
+          "LOAD_ERROR_EDIT": "La liste des fournisseurs n’a pas pu être chargée. La commande conserve son fournisseur actuel, sauf si vous rechargez la liste et en choisissez un autre.",
+          "RETRY": "Recharger les fournisseurs",
+          "EMPTY": "Aucun fournisseur actif auprès de qui commander. Un fournisseur doit être ajouté avant de pouvoir créer un bon de commande.",
+          "REQUIRED": "Choisissez un fournisseur.",
+          "LOCKED": "Le fournisseur ne peut pas être changé, car cette commande n’est plus un brouillon.",
+          "PROMPT_INACTIVE": "Le fournisseur de cette commande est inactif : la commande ne peut être ni approuvée ni envoyée. Choisissez un fournisseur actif et enregistrez la commande.",
+          "PROMPT_MISSING": "Le fournisseur de cette commande est absent de la liste des fournisseurs : la commande ne peut être ni approuvée ni envoyée. Choisissez un fournisseur actif et enregistrez la commande."
+        },
+        "REASON": {
+          "LABEL": "Raison de cette modification",
+          "REQUIRED": "Indiquez la raison de cette modification."
+        },
+        "CONSEQUENCE": {
+          "CREATE": "La commande est enregistrée comme brouillon. Rien n’est envoyé au fournisseur tant que la commande n’est pas approuvée et envoyée.",
+          "REVISE": "L’enregistrement remplace les détails de cette commande et toutes ses lignes, et consigne votre raison.",
+          "VENDOR_CHANGE": "La commande sera passée auprès de {{number}} — {{name}} au lieu de son fournisseur actuel."
+        },
+        "BLOCKED": {
+          "NO_PERMISSION": "Vous devez avoir l’autorisation de créer et de modifier des bons de commande (order:purchase_order:create).",
+          "VENDOR_FORBIDDEN": "Vous ne pouvez pas soumettre une nouvelle commande sans l’autorisation de consulter les fournisseurs.",
+          "VENDOR_ERROR": "Rechargez la liste des fournisseurs avant de soumettre.",
+          "VENDOR_LOADING": "Attendez le chargement de la liste des fournisseurs avant de soumettre.",
+          "NO_VENDORS": "Aucun fournisseur actif ne peut recevoir cette commande."
         }
       }
     },

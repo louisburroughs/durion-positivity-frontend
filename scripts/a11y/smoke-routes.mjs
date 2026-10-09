@@ -62,6 +62,9 @@ const ROUTES = [
   // Vendor master (CAP:550 S30). Rendered-DOM axe coverage, both themes, lives in
   // src/app/features/positivity/pages/vendor-detail/vendor-pages.a11y.spec.ts.
   '/app/positivity/vendors',
+  // Purchase-order form with the active-vendor picker (CAP:550, #514). Rendered-DOM axe coverage,
+  // both themes, lives in src/app/features/inventory/pages/purchase-orders/po-form/po-form.a11y.spec.ts.
+  '/app/inventory/purchase-orders/new',
 ];
 
 const IMPACT_RANK = {

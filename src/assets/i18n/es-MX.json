@@ -8657,8 +8657,25 @@
       "FORM": {
         "ERROR": {
           "LOAD": "No se pudo cargar la orden de compra para editar.",
-          "CREATE": "No se pudo crear la orden de compra.",
-          "REVISE": "No se pudo revisar la orden de compra."
+          "VENDOR_INACTIVE": "Este proveedor está inactivo y no acepta nuevas órdenes de compra, así que no se guardó nada. Elija un proveedor activo.",
+          "VENDOR_PENDING": "Este proveedor aún no está disponible para órdenes de compra, así que no se guardó nada. Vuelva a intentarlo en un momento.",
+          "VENDOR_PENDING_AFTER": "Este proveedor aún no está disponible para órdenes de compra, así que no se guardó nada. Vuelva a intentarlo en {{seconds}} segundos.",
+          "VENDOR_LOCKED": "Esta orden ya no es un borrador, así que su proveedor no se puede cambiar. No se guardó nada. Guarde de nuevo para conservar sus otros cambios con su proveedor actual.",
+          "NOT_FOUND": "Esta orden de compra ya no existe. No se guardó nada.",
+          "VALIDATION": "La orden no se guardó. Revise los campos señalados.",
+          "VALIDATION_UNNAMED": "La orden no se guardó porque algunos de sus datos no se aceptaron. Revise el proveedor, la fecha de entrega, las notas y cada línea, y vuelva a intentarlo.",
+          "LINES_REFUSED": "La orden no se guardó porque una línea no se aceptó.",
+          "FORBIDDEN": "No tiene permiso para crear ni cambiar órdenes de compra ({{permission}}). No se guardó nada.",
+          "UNKNOWN_CREATE": "No pudimos confirmar si la orden se creó. Revise la lista de órdenes de compra antes de enviarla de nuevo, para no crear la orden dos veces.",
+          "UNKNOWN_REVISE": "No pudimos confirmar si sus cambios se guardaron. Vuelva a leer la orden para comprobarlo antes de guardar de nuevo.",
+          "REFUSED": "La orden no se guardó (error {{status}}).",
+          "FIELD": {
+            "VENDOR": "Elija un proveedor activo.",
+            "REASON": "Indique el motivo de este cambio.",
+            "DELIVERY_DATE": "Ingrese una fecha de entrega válida.",
+            "NOTES": "Revise las notas.",
+            "LINES": "Revise las líneas de la orden: cada línea necesita un SKU, una cantidad mayor que cero y un precio unitario mayor que cero."
+          }
         },
         "TITLE": {
           "NEW": "Nueva orden de compra",
@@ -8668,8 +8685,6 @@
           "TITLE": "Detalles del pedido"
         },
         "FIELD": {
-          "SUPPLIER": "Proveedor",
-          "SUPPLIER_PLACEHOLDER": "Ingrese el nombre del proveedor",
           "DELIVERY_DATE": "Fecha de entrega esperada",
           "NOTES": "Notas",
           "NOTES_PLACEHOLDER": "Notas opcionales…"
@@ -8695,7 +8710,9 @@
           "EMPTY_HINT": "Agregue al menos una línea para realizar este pedido."
         },
         "ACTION": {
-          "SUBMIT": "Enviar pedido"
+          "SUBMIT": "Enviar pedido",
+          "READ_AGAIN": "Volver a leer la orden",
+          "GO_TO_LIST": "Ir a órdenes de compra"
         },
         "AVAILABILITY": {
           "TITLE": "Disponibilidad del proveedor",
@@ -8736,6 +8753,42 @@
           "STALE": "Desactualizado",
           "FRESH": "Actualizado",
           "NO_SKU": "Ingrese un SKU en esta línea antes de verificar la disponibilidad."
+        },
+        "VENDOR": {
+          "LABEL": "Proveedor",
+          "PLACEHOLDER": "Elija un proveedor",
+          "OPTION": "{{number}} — {{name}}",
+          "OPTION_INACTIVE": "{{number}} — {{name}} (inactivo)",
+          "CURRENT_MISSING": "Proveedor actual (no está en la lista de proveedores)",
+          "CURRENT_UNREAD": "Proveedor actual (detalles no disponibles)",
+          "LOADING": "Cargando proveedores…",
+          "TRUNCATED": "Solo se muestran los primeros {{count}} proveedores activos.",
+          "FORBIDDEN": "Necesita permiso para ver proveedores (supplier:vendor:read) para elegir uno para una nueva orden de compra. Pida acceso a proveedores a un administrador.",
+          "FORBIDDEN_EDIT": "Necesita permiso para ver proveedores (supplier:vendor:read) para cambiar el proveedor. La orden conserva su proveedor actual.",
+          "LOAD_ERROR": "No se pudo cargar la lista de proveedores.",
+          "LOAD_ERROR_EDIT": "No se pudo cargar la lista de proveedores. La orden conserva su proveedor actual, a menos que vuelva a cargar la lista y elija otro.",
+          "RETRY": "Volver a cargar proveedores",
+          "EMPTY": "No hay proveedores activos a quienes pedir. Debe agregarse un proveedor antes de poder crear una orden de compra.",
+          "REQUIRED": "Elija un proveedor.",
+          "LOCKED": "El proveedor no se puede cambiar porque esta orden ya no es un borrador.",
+          "PROMPT_INACTIVE": "El proveedor de esta orden está inactivo, por lo que la orden no se puede aprobar ni enviar. Elija un proveedor activo y guarde la orden.",
+          "PROMPT_MISSING": "El proveedor de esta orden no está en la lista de proveedores, por lo que la orden no se puede aprobar ni enviar. Elija un proveedor activo y guarde la orden."
+        },
+        "REASON": {
+          "LABEL": "Motivo de este cambio",
+          "REQUIRED": "Indique el motivo de este cambio."
+        },
+        "CONSEQUENCE": {
+          "CREATE": "La orden se guarda como borrador. No se envía nada al proveedor hasta que la orden se apruebe y se envíe.",
+          "REVISE": "Al guardar se reemplazan los datos de esta orden y todas sus líneas, y se registra su motivo.",
+          "VENDOR_CHANGE": "La orden se hará con {{number}} — {{name}} en lugar de su proveedor actual."
+        },
+        "BLOCKED": {
+          "NO_PERMISSION": "Necesita permiso para crear y cambiar órdenes de compra (order:purchase_order:create).",
+          "VENDOR_FORBIDDEN": "No puede enviar una nueva orden sin permiso para ver proveedores.",
+          "VENDOR_ERROR": "Vuelva a cargar la lista de proveedores antes de enviar.",
+          "VENDOR_LOADING": "Espere a que se cargue la lista de proveedores antes de enviar.",
+          "NO_VENDORS": "No hay ningún proveedor activo con quien hacer esta orden."
         }
       }
     },

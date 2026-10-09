@@ -24,17 +24,14 @@
  * or logged here. S23's commands carry no idempotency key, so nothing here
  * retries a write.
  *
- * ── Paging ───────────────────────────────────────────────────────────────────
- * The list endpoint is paged (size 1..200). A picker that showed only the first
- * page would silently hide vendors, so every page is read — up to
- * `MAX_VENDOR_PAGES` pages — and the roster reports `truncated` when the tenant
- * has more than that, for the picker to say so.
+ * The picker's two reads (the paged ACTIVE roster and one vendor's status) are
+ * `SupplierVendorRosterService`'s, shared with the purchase-order form's picker
+ * (CAP:550, #514); this service delegates to it.
  */
 import { Injectable, inject } from '@angular/core';
-import { EMPTY, Observable } from 'rxjs';
-import { expand, map, reduce } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import {
-  PagedResponseVendorView,
   RemitChangeView,
   RemitChangeViewStatusEnum,
   RemitToDto,
@@ -45,6 +42,7 @@ import {
   VendorViewStatusEnum,
 } from '@durion-sdk/supplier';
 import { SupplierVendorOption, SupplierVendorRoster } from '../models/supplier-profile.models';
+import { SupplierVendorRosterService } from '../../../shared/supplier-vendors/services/supplier-vendor-roster.service';
 import {
   RemitChangeStatus,
   RemitTo,
@@ -60,45 +58,21 @@ import {
   VendorUpdateInput,
 } from '../models/supplier-vendor.models';
 
-/** Largest page the list endpoint accepts. */
-export const VENDOR_PAGE_SIZE = 200;
-/** Upper bound on pages read for one roster (2,000 vendors at the maximum page size). */
-export const MAX_VENDOR_PAGES = 10;
-
-interface PageResult {
-  readonly index: number;
-  readonly page: PagedResponseVendorView;
-}
+export { MAX_VENDOR_PAGES, VENDOR_PAGE_SIZE } from '../../../shared/supplier-vendors/services/supplier-vendor-roster.service';
 
 @Injectable({ providedIn: 'root' })
 export class SupplierVendorService {
   private readonly vendorsSdk = inject(SupplierVendorsService);
+  private readonly roster = inject(SupplierVendorRosterService);
 
   /** Every ACTIVE vendor of the caller's tenant, in vendor-number order, read up to the page bound. */
   listActiveVendors(): Observable<SupplierVendorRoster> {
-    const readPage = (index: number): Observable<PageResult> =>
-      this.vendorsSdk
-        .listSupplierVendors(undefined, VendorViewStatusEnum.Active, index, VENDOR_PAGE_SIZE)
-        .pipe(map(page => ({ index, page })));
-
-    return readPage(0).pipe(
-      expand(result => {
-        const next = result.index + 1;
-        return this.hasMore(result) && next < MAX_VENDOR_PAGES ? readPage(next) : EMPTY;
-      }),
-      reduce(
-        (roster: SupplierVendorRoster, result: PageResult) => ({
-          vendors: [...roster.vendors, ...(result.page.items ?? []).map(view => this.toOption(view))],
-          truncated: this.hasMore(result) && result.index + 1 >= MAX_VENDOR_PAGES,
-        }),
-        { vendors: [], truncated: false },
-      ),
-    );
+    return this.roster.listActiveVendors();
   }
 
   /** One vendor by id — used to learn whether a profile's current vendor is still active. */
   getVendor(vendorId: string): Observable<SupplierVendorOption> {
-    return this.vendorsSdk.getSupplierVendor(vendorId).pipe(map(view => this.toOption(view)));
+    return this.roster.getVendor(vendorId);
   }
 
   /** One page of vendors, optionally narrowed by `q` (number or name) and status. */
@@ -191,20 +165,6 @@ export class SupplierVendorService {
     );
   }
 
-  private hasMore(result: PageResult): boolean {
-    const totalPages = result.page.totalPages ?? 0;
-    const items = result.page.items ?? [];
-    return items.length > 0 && result.index + 1 < totalPages;
-  }
-
-  private toOption(view: VendorView): SupplierVendorOption {
-    return {
-      vendorId: view.vendorId ?? '',
-      vendorNumber: view.vendorNumber ?? '',
-      displayName: view.displayName ?? '',
-      active: view.status === VendorViewStatusEnum.Active,
-    };
-  }
 }
 
 function text(value: string | null | undefined): string | null {
