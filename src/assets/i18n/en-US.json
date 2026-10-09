@@ -6429,7 +6429,7 @@
         "COLUMN_TERM": "(input tax credit)",
         "WHY_SHARE": {
           "SUMMARY": "Why only part for some categories?",
-          "TEXT": "Some purchases, such as staff meals, let a shop claim back only part of the tax it paid. Your accountant sets each category’s share, and a receipt keeps the share in force when it was recorded."
+          "TEXT": "Some purchases let a shop claim back only part of the tax it paid. Your accountant sets each category’s share, and a receipt keeps the share in force when it was recorded."
         },
         "PANEL": {
           "HEADING": "Your tax registrations",
@@ -6438,14 +6438,14 @@
           "ACCOUNT": "Tax claimed back is recorded in {{account}}",
           "WHERE": {
             "SUMMARY": "Where does this come from?",
-            "TEXT": "Registrations are recorded when the shop is set up for each country it is registered in. This page shows them; it doesn’t change them."
+            "TEXT": "Your registrations decide what can be claimed back. Someone who manages your tax settings records them."
           }
         },
         "STEPS": {
           "HEADING": "What the cashier does at the drawer",
           "ONE": "Enter the receipt total and pick the category.",
-          "TWO": "Type the supplier’s name and the receipt number. From {{amount}}, also type the supplier’s tax registration number.",
-          "TWO_NO_AMOUNT": "Type the supplier’s name and the receipt number, and the supplier’s tax registration number when the receipt shows it.",
+          "TWO": "Type the supplier’s name and the receipt reference. From {{amount}}, also type the supplier’s tax registration number.",
+          "TWO_NO_AMOUNT": "Type the supplier’s name and the receipt reference, and the supplier’s tax registration number when the receipt shows it.",
           "THREE": "Copy each tax the register asks for, as printed on the receipt. Not sure? Leave it blank: nothing is claimed back, which is always safe."
         },
         "SHARE": {
@@ -6478,7 +6478,8 @@
             "FORBIDDEN": "You need the {{permission}} permission to make this change.",
             "UNKNOWN_OUTCOME": "We couldn’t confirm the change. Save again: it won’t be applied twice.",
             "OTHER": "Couldn’t save this change."
-          }
+          },
+          "STALE": "This share couldn’t be read again. Cancel and try again."
         }
       }
     }
@@ -9709,8 +9710,13 @@
           "NOT_OFFERED": "This tax can’t be stated for this category here today. The options were read again; check the figures.",
           "NUMBER_NOT_ACCEPTED": "The supplier’s number can’t be recorded here. Clear it and record again.",
           "PRECISION": "Use no more decimals than {{currency}} has. Nothing was recorded.",
-          "CHECK_UNAVAILABLE": "The supplier’s number couldn’t be checked just now, so nothing was recorded. Record again, or record without the number."
-        }
+          "CHECK_UNAVAILABLE": "The supplier’s number couldn’t be checked just now, so nothing was recorded. Record again, or record without the number.",
+          "NUMBER_MALFORMED": "The supplier’s number isn’t in a form that can be recorded. Check it against the receipt, or clear it.",
+          "INVALID": "This tax detail can’t be recorded as typed. Check it against the receipt."
+        },
+        "NUMBER_NEEDS_TAX": "Type the tax shown on the receipt to record the supplier’s number, or clear the number.",
+        "WITHOUT_NUMBER_CONSEQUENCE": "Without the number, the tax figures are kept but none of this receipt’s tax is claimed back. From {{amount}}, the number is needed to claim it.",
+        "WITHOUT_NUMBER_CONSEQUENCE_NO_AMOUNT": "Without the number, the tax figures are kept but none of this receipt’s tax is claimed back."
       }
     }
   },

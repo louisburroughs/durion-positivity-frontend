@@ -10,7 +10,7 @@
         </span>
         <span data-testid="tax-registration-since">
           {{ 'ACCOUNTING.APPROVAL_LIMITS.TAX_RECOVERY.PANEL.SINCE' | translate: {
-            date: regime.since ? (toDatePipeInput(regime.since) | date: 'mediumDate') : ('COMMON.EMPTY_VALUE' | translate)
+            date: regime.since ? (toDatePipeInput(regime.since) | date: 'mediumDate' : undefined : locale()) : ('COMMON.EMPTY_VALUE' | translate)
           } }}
         </span>
         @if (showTerms()) {

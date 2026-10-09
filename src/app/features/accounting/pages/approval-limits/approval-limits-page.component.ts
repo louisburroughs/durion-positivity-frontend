@@ -19,6 +19,7 @@ import { Observable, Subscription, catchError, forkJoin, map, of, share, take } 
 import { canAccess } from '../../../../core/security/route-access';
 import { ACCOUNTING_PAGE, ACCOUNTING_SECTION } from '../../../../core/security/route-permissions';
 import { AuthService } from '../../../../core/services/auth.service';
+import { LocaleService } from '../../../../core/services/locale.service';
 import { MoneyPipe } from '../../../../shared/money.pipe';
 import { DrawerCashSettingsComponent } from '../../components/drawer-cash-settings/drawer-cash-settings.component';
 import { HelpDisclosureComponent } from '../../components/help-disclosure/help-disclosure.component';
@@ -322,6 +323,8 @@ export class ApprovalLimitsPageComponent {
   private readonly drawerService = inject(DrawerPolicyService);
   private readonly categoriesService = inject(PettyExpenseCategoriesService);
   private readonly destroyRef = inject(DestroyRef);
+  /** The runtime locale for History's share percentages (review B6). */
+  readonly locale = inject(LocaleService).currentLocale;
 
   private readonly billsHeading = viewChild<ElementRef<HTMLElement>>('billsHeading');
   private readonly historyHeading = viewChild<ElementRef<HTMLElement>>('historyHeading');

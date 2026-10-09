@@ -130,7 +130,7 @@
                 @if (recoveryOn()) {
                   <td data-testid="tax-share-cell">
                     @if (shareCell(category.code); as share) {
-                      {{ share.key | translate: { percent: share.percent !== null ? (share.percent | number: '1.0-2') : '' } }}
+                      {{ share.key | translate: { percent: share.percent !== null ? (share.percent | number: '1.0-2' : locale()) : '' } }}
                     }
                   </td>
                 }
@@ -175,7 +175,7 @@
                         {{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.REMAP.OPEN' | translate }}<span class="sr-only"> {{ category.label }}</span>
                       </button>
                     }
-                    @if (canEdit() && recoveryOn()) {
+                    @if (canEdit() && recoveryOn() && servesShare(category.code)) {
                       <button
                         type="button"
                         class="link-button categories__action"
@@ -448,8 +448,21 @@
       }
 
       <p class="bill-consequence" data-testid="tax-share-consequence">{{ shareConsequenceKey() | translate: { category: open.label } }}</p>
+      <!-- A re-read in flight (after a 409 or 404) or a stale read: Save stays focusable, says why and refuses (review B2). -->
+      @if (!shareActionable()) {
+        <p class="pending-note" id="tax-share-stale" data-testid="tax-share-stale">
+          {{ (sharePending() ? 'ACCOUNTING.APPROVAL_LIMITS.TAX_RECOVERY.REFRESHING' : 'ACCOUNTING.APPROVAL_LIMITS.TAX_RECOVERY.SHARE.STALE') | translate }}
+        </p>
+      }
       <div class="bill-actions">
-        <button type="submit" class="btn btn--accent" data-testid="tax-share-save" [disabled]="shareBusy() || !shareValid()">
+        <button
+          type="submit"
+          class="btn btn--accent"
+          data-testid="tax-share-save"
+          [disabled]="shareBusy() || !shareValid()"
+          [attr.aria-disabled]="shareActionable() ? null : 'true'"
+          [attr.aria-describedby]="shareActionable() ? null : 'tax-share-stale'"
+        >
           {{ 'ACCOUNTING.APPROVAL_LIMITS.TAX_RECOVERY.SHARE.SAVE' | translate }}
         </button>
         <button type="button" class="btn btn--outline" data-testid="tax-share-cancel" [disabled]="shareBusy()" (click)="closeShare()">

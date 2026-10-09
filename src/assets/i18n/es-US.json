@@ -6429,7 +6429,7 @@
         "COLUMN_TERM": "(crédito fiscal por compras)",
         "WHY_SHARE": {
           "SUMMARY": "¿Por qué solo una parte en algunas categorías?",
-          "TEXT": "Algunas compras, como las comidas del personal, permiten recuperar solo una parte del impuesto pagado. Su contador fija la parte de cada categoría, y un recibo conserva la parte vigente cuando se registró."
+          "TEXT": "Algunas compras permiten recuperar solo una parte del impuesto pagado. Su contador fija la parte de cada categoría, y un recibo conserva la parte vigente cuando se registró."
         },
         "PANEL": {
           "HEADING": "Sus registros fiscales",
@@ -6438,14 +6438,14 @@
           "ACCOUNT": "El impuesto recuperado se registra en {{account}}",
           "WHERE": {
             "SUMMARY": "¿De dónde viene esto?",
-            "TEXT": "Los registros se anotan al configurar el taller para cada país en el que está registrado. Esta página los muestra; no los cambia."
+            "TEXT": "Sus registros deciden qué se puede recuperar. Una persona que administra su configuración fiscal los registra."
           }
         },
         "STEPS": {
           "HEADING": "Lo que hace el cajero en la caja",
           "ONE": "Ingresar el total del recibo y elegir la categoría.",
-          "TWO": "Escribir el nombre del proveedor y el número del recibo. A partir de {{amount}}, escribir también el número de registro fiscal del proveedor.",
-          "TWO_NO_AMOUNT": "Escribir el nombre del proveedor y el número del recibo, y el número de registro fiscal del proveedor cuando aparezca en el recibo.",
+          "TWO": "Escribir el nombre del proveedor y la referencia del recibo. A partir de {{amount}}, escribir también el número de registro fiscal del proveedor.",
+          "TWO_NO_AMOUNT": "Escribir el nombre del proveedor y la referencia del recibo, y el número de registro fiscal del proveedor cuando aparezca en el recibo.",
           "THREE": "Copiar cada impuesto que pida la caja, tal como aparece impreso en el recibo. ¿Tiene dudas? Déjelo en blanco: no se recupera nada, lo cual siempre es seguro."
         },
         "SHARE": {
@@ -6478,7 +6478,8 @@
             "FORBIDDEN": "Necesita el permiso {{permission}} para hacer este cambio.",
             "UNKNOWN_OUTCOME": "No pudimos confirmar el cambio. Guarde de nuevo: no se aplicará dos veces.",
             "OTHER": "No se pudo guardar este cambio."
-          }
+          },
+          "STALE": "No se pudo volver a leer esta parte. Cancele y vuelva a intentarlo."
         }
       }
     }
@@ -9709,8 +9710,13 @@
           "NOT_OFFERED": "Este impuesto no se puede indicar para esta categoría aquí hoy. Se volvieron a leer las opciones; revise las cifras.",
           "NUMBER_NOT_ACCEPTED": "El número del proveedor no se puede registrar aquí. Bórrelo y registre de nuevo.",
           "PRECISION": "No use más decimales de los que tiene {{currency}}. No se registró nada.",
-          "CHECK_UNAVAILABLE": "No se pudo verificar el número del proveedor en este momento, así que no se registró nada. Registre de nuevo, o registre sin el número."
-        }
+          "CHECK_UNAVAILABLE": "No se pudo verificar el número del proveedor en este momento, así que no se registró nada. Registre de nuevo, o registre sin el número.",
+          "NUMBER_MALFORMED": "El número del proveedor no tiene una forma que se pueda registrar. Compárelo con el recibo, o bórrelo.",
+          "INVALID": "Este dato fiscal no se puede registrar tal como se escribió. Compárelo con el recibo."
+        },
+        "NUMBER_NEEDS_TAX": "Escriba el impuesto que aparece en el recibo para registrar el número del proveedor, o borre el número.",
+        "WITHOUT_NUMBER_CONSEQUENCE": "Sin el número, se conservan las cifras de impuesto, pero no se recupera nada del impuesto de este recibo. A partir de {{amount}}, el número es necesario para recuperarlo.",
+        "WITHOUT_NUMBER_CONSEQUENCE_NO_AMOUNT": "Sin el número, se conservan las cifras de impuesto, pero no se recupera nada del impuesto de este recibo."
       }
     }
   },

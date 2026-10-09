@@ -3,6 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TranslateModule, TranslateService, TranslationObject } from '@ngx-translate/core';
 import { afterEach, describe, expect, it } from 'vitest';
 import enUS from '../../../../../assets/i18n/en-US.json';
+import { LocaleService } from '../../../../core/services/locale.service';
 import { RecoveryRegime } from '../../models/input-tax-recovery.models';
 import { TaxRegistrationsPanelComponent } from './tax-registrations-panel.component';
 
@@ -52,5 +53,18 @@ describe('TaxRegistrationsPanelComponent (CAP:550 S33 item 3)', () => {
     render([regime({ registrationNumber: null, since: null })], true);
 
     expect(rows()).toEqual(['ZZ_FED Number — Applies from — Tax claimed back is recorded in Tax Recoverable · 1250']);
+  });
+  it('formats the date in the user’s locale and says registrations are recorded by whoever manages tax settings (review B6, ruling)', () => {
+    render([regime()]);
+    const locale = TestBed.inject(LocaleService);
+    locale.currentLocale.set('fr-CA');
+    fixture.detectChanges();
+    const since = host().querySelector('[data-testid="tax-registration-since"]')!.textContent!.replace(/\s+/g, ' ').trim();
+    locale.currentLocale.set('en-US');
+
+    expect(since).toBe(`Applies from ${formatDate('2026-01-01T00:00:00', 'mediumDate', 'fr-CA')}`);
+    expect(host().querySelector('details')!.textContent!.replace(/\s+/g, ' ')).toContain(
+      'Your registrations decide what can be claimed back. Someone who manages your tax settings records them.',
+    );
   });
 });

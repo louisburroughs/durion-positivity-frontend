@@ -7,7 +7,7 @@ import { Observable, of, throwError } from 'rxjs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import enUS from '../../../../../assets/i18n/en-US.json';
 import { AuthService } from '../../../../core/services/auth.service';
-import { DrawerMovement, DrawerOptions, PendingAttempt } from '../../models/register-drawer.models';
+import { DrawerApproval, DrawerMovement, DrawerOptions, PendingAttempt } from '../../models/register-drawer.models';
 import { DrawerAttemptStore } from '../../services/drawer-attempt.store';
 import { RegisterSessionService } from '../../services/register-session.service';
 import { DRAWER_CLOCK, DrawerMovementDialogComponent } from './drawer-movement-dialog.component';
@@ -49,6 +49,7 @@ interface Harness {
   fixture: ComponentFixture<DrawerMovementDialogComponent>;
   component: DrawerMovementDialogComponent;
   record: ReturnType<typeof vi.fn<(sessionId: string, request: CashMovementRequest) => Observable<DrawerMovement>>>;
+  approve: ReturnType<typeof vi.fn<() => Observable<DrawerApproval>>>;
   optionsStale: ReturnType<typeof vi.fn>;
   q<T extends HTMLElement = HTMLElement>(testId: string): T | null;
   type(testId: string, value: string): void;
@@ -60,10 +61,11 @@ let rendered: ComponentFixture<DrawerMovementDialogComponent> | null = null;
 
 function renderDialog(served: DrawerOptions = options(), attempt: PendingAttempt | null = null): Harness {
   const record = vi.fn<(sessionId: string, request: CashMovementRequest) => Observable<DrawerMovement>>(() => of(recorded));
+  const approve = vi.fn<() => Observable<DrawerApproval>>(() => of({ approvalToken: 'approval-token-1', expiresAt: '2026-10-07T14:05:00Z' }));
   TestBed.configureTestingModule({
     imports: [DrawerMovementDialogComponent, TranslateModule.forRoot()],
     providers: [
-      { provide: RegisterSessionService, useValue: { recordMovement: record, requestApproval: vi.fn() } },
+      { provide: RegisterSessionService, useValue: { recordMovement: record, requestApproval: approve } },
       { provide: DRAWER_CLOCK, useValue: () => new Date('2026-10-07T14:00:00Z') },
       {
         provide: AuthService,
@@ -99,6 +101,7 @@ function renderDialog(served: DrawerOptions = options(), attempt: PendingAttempt
     fixture,
     component: fixture.componentInstance,
     record,
+    approve,
     optionsStale,
     q,
     type: (testId: string, value: string) => {
@@ -131,6 +134,28 @@ function fillMeals(h: Harness, category = 'MEALS'): void {
 function recordNow(h: Harness): void {
   h.q<HTMLButtonElement>('drawer-record')!.click();
   h.fixture.detectChanges();
+}
+
+/** Lets the dialog's deferred focus moves run. */
+async function settle(h: Harness): Promise<void> {
+  await new Promise(resolve => setTimeout(resolve));
+  h.fixture.detectChanges();
+}
+
+/**
+ * The server asks for a manager; the manager approves; the second record is refused with `second`.
+ * The step-up token is then held, unspent (S32d checks the stated tax before it uses the approval).
+ */
+async function approvedThenRefused(h: Harness, second: HttpErrorResponse): Promise<void> {
+  h.record.mockReturnValueOnce(throwError(() => refusal(403, 'CASH_MOVEMENT_APPROVAL_REQUIRED')));
+  h.record.mockReturnValueOnce(throwError(() => second));
+  recordNow(h);
+  await settle(h);
+  h.type('drawer-manager-username', 'manager-2');
+  h.type('drawer-manager-password', 'secret');
+  h.q<HTMLButtonElement>('drawer-approve')!.click();
+  h.fixture.detectChanges();
+  await settle(h);
 }
 
 describe('DrawerMovementDialogComponent — tax on a petty-expense receipt (CAP:550 S33 item 9, AC 11)', () => {
@@ -234,7 +259,7 @@ describe('DrawerMovementDialogComponent — tax on a petty-expense receipt (CAP:
     expect(text(h.q('drawer-dialog-alert'))).toBe('');
   });
 
-  it('a 422 TAX_AMOUNT_IMPLAUSIBLE on the sum sits at the tax group', () => {
+  it('a 422 TAX_AMOUNT_IMPLAUSIBLE on the sum sits at the tax group, describes every regime input and focuses the first (review B5)', async () => {
     const h = renderDialog();
     h.record.mockReturnValueOnce(throwError(() => refusal(422, 'TAX_AMOUNT_IMPLAUSIBLE', ['statedTaxes'])));
     fillMeals(h);
@@ -243,10 +268,121 @@ describe('DrawerMovementDialogComponent — tax on a petty-expense receipt (CAP:
     h.type('drawer-supplier-name', 'Corner Deli');
     recordNow(h);
 
+    await settle(h);
+
     expect(h.q('drawer-tax')!.getAttribute('aria-describedby')).toBe('drawer-tax-error');
     expect(text(h.q('drawer-tax')!.querySelector(':scope > [data-testid="drawer-tax-error"]'))).toBe(
       'That’s more tax than a receipt of this total can carry. Check the figure.',
     );
+    for (const regime of ['ZZ_FED', 'ZZ_REG']) {
+      expect(h.q(`drawer-tax-${regime}`)!.getAttribute('aria-describedby')).toBe('drawer-tax-hint drawer-tax-error');
+    }
+    expect(document.activeElement).toBe(h.q('drawer-tax-ZZ_FED'));
+  });
+
+  it('a typed zero states no tax: no format error, left out of statedTaxes (review A4)', () => {
+    const h = renderDialog();
+    fillMeals(h);
+    h.type('drawer-tax-ZZ_FED', '0.00');
+    h.type('drawer-tax-ZZ_REG', '2.25');
+    h.type('drawer-supplier-name', 'Corner Deli');
+
+    expect(h.q('drawer-tax-format-ZZ_FED')).toBeNull();
+    expect(h.q('drawer-tax-ZZ_FED')!.getAttribute('aria-invalid')).toBeNull();
+    recordNow(h);
+    expect(h.record.mock.calls[0][1].statedTaxes).toEqual([{ regime: 'ZZ_REG', amount: 2.25 }]);
+  });
+
+  it('a supplier number with no tax figure blocks Record with a message at the number; nothing is sent and the approval stays held (review A1)', async () => {
+    const h = renderDialog();
+    fillMeals(h);
+    h.type('drawer-tax-ZZ_FED', '40.00');
+    h.type('drawer-supplier-name', 'Corner Deli');
+    h.type('drawer-supplier-number', '123456789RT0001');
+    await approvedThenRefused(h, refusal(422, 'TAX_AMOUNT_IMPLAUSIBLE', ['statedTaxes[0].amount']));
+    expect(h.component.holdsApproval()).toBe(true);
+    expect(h.record).toHaveBeenCalledTimes(2);
+
+    h.type('drawer-tax-ZZ_FED', '');
+    const number = h.q('drawer-supplier-number')!;
+    expect(text(h.q('drawer-number-needs-tax'))).toBe('Type the tax shown on the receipt to record the supplier’s number, or clear the number.');
+    expect(number.getAttribute('aria-invalid')).toBe('true');
+    expect(number.getAttribute('aria-describedby')).toContain('drawer-number-needs-tax');
+    expect(h.q<HTMLButtonElement>('drawer-record')!.disabled).toBe(true);
+    h.component.submitDetails();
+
+    expect(h.record).toHaveBeenCalledTimes(2);
+    expect(h.component.holdsApproval()).toBe(true);
+    h.type('drawer-supplier-number', '');
+    expect(h.q('drawer-number-needs-tax')).toBeNull();
+    expect(h.q<HTMLButtonElement>('drawer-record')!.disabled).toBe(false);
+  });
+
+  it('a 400 naming only tax fields sits at the field, takes focus and keeps the unspent approval (review A2)', async () => {
+    const h = renderDialog();
+    fillMeals(h);
+    h.type('drawer-tax-ZZ_FED', '1.50');
+    h.type('drawer-supplier-name', 'Corner Deli');
+    h.type('drawer-supplier-number', '12 34');
+    await approvedThenRefused(h, refusal(400, 'REGISTER_SESSION_INVALID_ARGUMENT', ['supplierRegistrationNumber']));
+
+    const number = h.q('drawer-supplier-number')!;
+    expect(text(number.parentElement!.querySelector('[data-testid="drawer-tax-error"]'))).toBe(
+      'The supplier’s number isn’t in a form that can be recorded. Check it against the receipt, or clear it.',
+    );
+    expect(number.getAttribute('aria-invalid')).toBe('true');
+    expect(number.getAttribute('aria-describedby')).toBe('drawer-supplier-number-hint drawer-tax-error');
+    expect(document.activeElement).toBe(number);
+    expect(h.component.holdsApproval()).toBe(true);
+    expect(text(h.q('drawer-dialog-alert'))).toBe('');
+  });
+
+  it('a 400 naming a regime’s figure with another field stays on the general path and lists the figure by its own label (review B9)', () => {
+    const h = renderDialog();
+    h.record.mockReturnValueOnce(throwError(() => refusal(400, 'REGISTER_SESSION_INVALID_ARGUMENT', ['statedTaxes[0].amount', 'note'])));
+    fillMeals(h);
+    h.type('drawer-tax-ZZ_FED', '1.50');
+    h.type('drawer-supplier-name', 'Corner Deli');
+    recordNow(h);
+
+    expect(h.q('drawer-tax-ZZ_FED')!.getAttribute('aria-invalid')).toBe('true');
+    expect(Array.from(h.q('drawer-dialog-alert')!.querySelectorAll('li')).map(item => text(item))).toEqual(['ZZ_FED shown on the receipt', 'Note']);
+  });
+
+  it('when the options re-read removes the named regime the message and focus move to the group; with no regime left, to the alert (review A3/B4)', async () => {
+    const h = renderDialog();
+    h.record.mockReturnValueOnce(throwError(() => refusal(422, 'TAX_REGIME_NOT_OFFERED', ['statedTaxes[0].regime'])));
+    fillMeals(h);
+    h.type('drawer-tax-ZZ_REG', '2.25');
+    h.type('drawer-supplier-name', 'Corner Deli');
+    recordNow(h);
+    await settle(h);
+    expect(document.activeElement).toBe(h.q('drawer-tax-ZZ_REG'));
+
+    const served = options();
+    h.fixture.componentRef.setInput('options', {
+      ...served,
+      categories: served.categories.map(category => (category.code === 'MEALS' ? { ...category, offeredRegimes: ['ZZ_FED'] } : category)),
+    });
+    h.fixture.detectChanges();
+    await settle(h);
+
+    const message = 'This tax can’t be stated for this category here today. The options were read again; check the figures.';
+    expect(h.q('drawer-tax-ZZ_REG')).toBeNull();
+    expect(text(h.q('drawer-tax')!.querySelector(':scope > [data-testid="drawer-tax-error"]'))).toBe(message);
+    expect(h.q('drawer-tax-ZZ_FED')!.getAttribute('aria-describedby')).toBe('drawer-tax-hint drawer-tax-error');
+    expect(document.activeElement).toBe(h.q('drawer-tax-ZZ_FED'));
+
+    h.fixture.componentRef.setInput('options', {
+      ...served,
+      categories: served.categories.map(category => (category.code === 'MEALS' ? { ...category, offeredRegimes: [] } : category)),
+    });
+    h.fixture.detectChanges();
+    await settle(h);
+
+    expect(h.q('drawer-tax')).toBeNull();
+    expect(text(h.q('drawer-dialog-alert')!.querySelector('[data-testid="drawer-tax-error"]'))).toBe(message);
+    expect(document.activeElement).toBe(h.q('drawer-dialog-alert'));
   });
 
   it('a 503 TAX_CHECK_UNAVAILABLE says nothing was recorded; Record without the number resends without it under a new requestId', () => {
@@ -262,6 +398,12 @@ describe('DrawerMovementDialogComponent — tax on a petty-expense receipt (CAP:
       'The supplier’s number couldn’t be checked just now, so nothing was recorded. Record again, or record without the number.',
     );
     expect(h.q('drawer-supplier-number')!.getAttribute('aria-describedby')).toBe('drawer-supplier-number-hint drawer-tax-error');
+    // The consequence comes before the button that commits (P4, review B3).
+    const consequence = h.q('drawer-without-number-consequence')!;
+    expect(text(consequence)).toBe(
+      'Without the number, the tax figures are kept but none of this receipt’s tax is claimed back. From CA$100.00, the number is needed to claim it.',
+    );
+    expect(consequence.compareDocumentPosition(h.q('drawer-record-without-number')!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 
     h.q<HTMLButtonElement>('drawer-record-without-number')!.click();
     h.fixture.detectChanges();
@@ -304,17 +446,18 @@ describe('DrawerMovementDialogComponent — tax on a petty-expense receipt (CAP:
     expect(h.q('drawer-record-without-number')).toBeNull();
   });
 
-  it('a 400 naming a tax field lists it and marks the regime’s input', () => {
-    const h = renderDialog();
-    h.record.mockReturnValueOnce(throwError(() => refusal(400, 'REGISTER_SESSION_INVALID_ARGUMENT', ['statedTaxes[0].amount', 'supplierName'])));
+  it('without an evidence rule the Record-without-the-number consequence names no amount', () => {
+    const h = renderDialog(options({ evidenceRule: null }));
+    h.record.mockReturnValueOnce(throwError(() => refusal(503, 'TAX_CHECK_UNAVAILABLE')));
     fillMeals(h);
     h.type('drawer-tax-ZZ_FED', '1.50');
     h.type('drawer-supplier-name', 'Corner Deli');
+    h.type('drawer-supplier-number', '123456789RT0001');
     recordNow(h);
 
-    expect(h.q('drawer-tax-ZZ_FED')!.getAttribute('aria-invalid')).toBe('true');
-    expect(h.q('drawer-supplier-name')!.getAttribute('aria-invalid')).toBe('true');
-    expect(Array.from(h.q('drawer-dialog-alert')!.querySelectorAll('li')).map(item => text(item))).toEqual(['Tax on the receipt', 'Supplier’s name']);
+    expect(text(h.q('drawer-without-number-consequence'))).toBe(
+      'Without the number, the tax figures are kept but none of this receipt’s tax is claimed back.',
+    );
   });
 
   it('a movement whose outcome is unknown reopens with its tax figures, supplier and number, frozen, and retries as it was', () => {

@@ -383,8 +383,8 @@
                         {{ 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.FROM_TO' | translate: {
                           old: entry.row.oldTaxRecoverable === null
                             ? ('COMMON.EMPTY_VALUE' | translate)
-                            : (shareCopy({ taxRecoverable: entry.row.oldTaxRecoverable, recoverablePercent: entry.row.oldRecoverablePercent }).key | translate: { percent: (entry.row.oldRecoverablePercent | number: '1.0-2') ?? '' }),
-                          new: (shareCopy({ taxRecoverable: entry.row.newTaxRecoverable, recoverablePercent: entry.row.newRecoverablePercent }).key | translate: { percent: (entry.row.newRecoverablePercent | number: '1.0-2') ?? '' })
+                            : (shareCopy({ taxRecoverable: entry.row.oldTaxRecoverable, recoverablePercent: entry.row.oldRecoverablePercent }).key | translate: { percent: (entry.row.oldRecoverablePercent | number: '1.0-2' : locale()) ?? '' }),
+                          new: (shareCopy({ taxRecoverable: entry.row.newTaxRecoverable, recoverablePercent: entry.row.newRecoverablePercent }).key | translate: { percent: (entry.row.newRecoverablePercent | number: '1.0-2' : locale()) ?? '' })
                         } }}
                       }
                       @case ('CATEGORIES') {

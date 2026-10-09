@@ -10,15 +10,19 @@
 
     <!-- Kept in the DOM so every refusal is announced (ADR-0029 §8.8). -->
     <div #alert class="drawer-dialog__alert" role="alert" tabindex="-1" data-testid="drawer-dialog-alert"
-      [class.drawer-dialog__alert--shown]="!!failure()">
+      [class.drawer-dialog__alert--shown]="!!failure() || taxErrorAnchor() === 'alert'">
+      <!-- A tax refusal whose field left the form after an options re-read (review A3/B4). -->
+      @if (taxErrorAnchor() === 'alert') {
+      <p id="drawer-tax-error" data-testid="drawer-tax-error">{{ taxFailure()!.key | translate: { currency: currencyCode() } }}</p>
+      }
       @if (failure(); as f) {
       <p>
         {{ f.key | translate: { reason: (f.reasonKey ? (f.reasonKey | translate) : ''), permission: cashMovementCode } }}
       </p>
       @if (f.fieldKeys?.length) {
       <ul>
-        @for (fieldKey of f.fieldKeys; track fieldKey) {
-        <li>{{ fieldKey | translate }}</li>
+        @for (field of f.fieldKeys; track $index) {
+        <li>{{ field.key | translate: field.params }}</li>
         }
       </ul>
       }
@@ -182,9 +186,14 @@
             <label for="drawer-supplier-number">{{ 'ORDER.DRAWER.TAX.SUPPLIER_NUMBER' | translate }}</label>
             <input id="drawer-supplier-number" class="drawer-dialog__input" type="text" autocomplete="off" spellcheck="false"
               data-testid="drawer-supplier-number" [value]="supplierNumber()" [disabled]="fieldsLocked()"
-              [attr.aria-invalid]="isInvalid('supplierRegistrationNumber') || null"
+              [attr.aria-invalid]="isInvalid('supplierRegistrationNumber') || numberWithoutTax() || null"
               [attr.aria-describedby]="describedBy('supplierRegistrationNumber', 'drawer-supplier-number-hint')"
               (input)="onSupplierNumber($event)" />
+            @if (numberWithoutTax()) {
+            <p id="drawer-number-needs-tax" class="drawer-dialog__field-error" data-testid="drawer-number-needs-tax">
+              {{ 'ORDER.DRAWER.TAX.NUMBER_NEEDS_TAX' | translate }}
+            </p>
+            }
             <p id="drawer-supplier-number-hint" class="drawer-dialog__hint" data-testid="drawer-supplier-number-hint">
               @if (evidenceRule(); as rule) {
               {{ 'ORDER.DRAWER.TAX.SUPPLIER_NUMBER_HINT' | translate: { amount: (rule.threshold | money: rule.currencyCode) } }}
@@ -195,6 +204,14 @@
             @if (taxErrorAnchor() === 'supplierRegistrationNumber') {
             <p id="drawer-tax-error" class="drawer-dialog__field-error" data-testid="drawer-tax-error">{{ taxFailure()!.key | translate: { currency: currencyCode() } }}</p>
             @if (taxFailure()?.withoutNumber && !fieldsLocked()) {
+            <!-- The consequence before the commit (P4, review B3). -->
+            <p class="drawer-dialog__consequence" data-testid="drawer-without-number-consequence">
+              @if (evidenceRule(); as rule) {
+              {{ 'ORDER.DRAWER.TAX.WITHOUT_NUMBER_CONSEQUENCE' | translate: { amount: (rule.threshold | money: rule.currencyCode) } }}
+              } @else {
+              {{ 'ORDER.DRAWER.TAX.WITHOUT_NUMBER_CONSEQUENCE_NO_AMOUNT' | translate }}
+              }
+            </p>
             <button type="button" class="drawer-dialog__secondary" data-testid="drawer-record-without-number" (click)="recordWithoutNumber()">
               {{ 'ORDER.DRAWER.TAX.RECORD_WITHOUT_NUMBER' | translate }}
             </button>

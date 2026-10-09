@@ -20,6 +20,7 @@ import { Observable, Subscription } from 'rxjs';
 import { canAccess } from '../../../../core/security/route-access';
 import { ACCOUNTING_SECTION } from '../../../../core/security/route-permissions';
 import { AuthService } from '../../../../core/services/auth.service';
+import { LocaleService } from '../../../../core/services/locale.service';
 import { ModalDialogDirective } from '../../../../shared/modal-dialog.directive';
 import { MoneyPipe } from '../../../../shared/money.pipe';
 import { RegionStatus } from '../../models/accounting-home.models';
@@ -172,6 +173,8 @@ export class PettyExpenseCategoriesComponent {
   private readonly injector = inject(Injector);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly preferences = inject(AccountingPreferencesService);
+  /** The runtime locale for numbers (a bare pipe would use the bootstrap LOCALE_ID, review B6). */
+  readonly locale = inject(LocaleService).currentLocale;
 
   /** The page's category read: null until one answers. */
   readonly categories = input<readonly PettyExpenseCategory[] | null>(null);
@@ -602,6 +605,14 @@ export class PettyExpenseCategoriesComponent {
   }
 
   // ── Change share (S33) ────────────────────────────────────────────────
+  /** Whether the recovery read serves this row: Change share exists only for those (review B1). */
+  servesShare(code: string): boolean {
+    return this.sharesByCode().has(code);
+  }
+
+  /** A read the open Change share depends on is in flight. */
+  readonly sharePending = computed(() => this.status() === 'PENDING' || this.recoveryStatus() === 'PENDING');
+
   /** The column's copy for a category row. */
   shareCell(code: string): ShareCopy {
     return shareCopy(this.sharesByCode().get(code));

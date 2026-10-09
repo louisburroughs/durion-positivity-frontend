@@ -6429,7 +6429,7 @@
         "COLUMN_TERM": "(crédit de taxe sur les intrants)",
         "WHY_SHARE": {
           "SUMMARY": "Pourquoi seulement une partie pour certaines catégories?",
-          "TEXT": "Certains achats, comme les repas du personnel, ne permettent de récupérer qu’une partie des taxes payées. Votre comptable fixe la part de chaque catégorie, et un reçu garde la part en vigueur au moment de son enregistrement."
+          "TEXT": "Certains achats ne permettent de récupérer qu’une partie des taxes payées. Votre comptable fixe la part de chaque catégorie, et un reçu garde la part en vigueur au moment de son enregistrement."
         },
         "PANEL": {
           "HEADING": "Vos inscriptions aux taxes",
@@ -6438,14 +6438,14 @@
           "ACCOUNT": "Les taxes récupérées sont inscrites dans {{account}}",
           "WHERE": {
             "SUMMARY": "D’où viennent ces renseignements?",
-            "TEXT": "Les inscriptions sont enregistrées lors de la configuration de l’atelier pour chaque pays où il est inscrit. Cette page les affiche; elle ne les modifie pas."
+            "TEXT": "Vos inscriptions déterminent ce qui peut être récupéré. Une personne qui gère vos paramètres fiscaux les enregistre."
           }
         },
         "STEPS": {
           "HEADING": "Ce que fait le caissier à la caisse",
           "ONE": "Saisir le total du reçu et choisir la catégorie.",
-          "TWO": "Saisir le nom du fournisseur et le numéro du reçu. À partir de {{amount}}, saisir aussi le numéro d’inscription aux taxes du fournisseur.",
-          "TWO_NO_AMOUNT": "Saisir le nom du fournisseur et le numéro du reçu, ainsi que le numéro d’inscription aux taxes du fournisseur lorsqu’il figure sur le reçu.",
+          "TWO": "Saisir le nom du fournisseur et la référence du reçu. À partir de {{amount}}, saisir aussi le numéro d’inscription aux taxes du fournisseur.",
+          "TWO_NO_AMOUNT": "Saisir le nom du fournisseur et la référence du reçu, ainsi que le numéro d’inscription aux taxes du fournisseur lorsqu’il figure sur le reçu.",
           "THREE": "Recopier chaque taxe demandée par la caisse, telle qu’imprimée sur le reçu. En cas de doute, laisser vide : rien n’est récupéré, ce qui est toujours sans risque."
         },
         "SHARE": {
@@ -6478,7 +6478,8 @@
             "FORBIDDEN": "Vous avez besoin de l’autorisation {{permission}} pour faire ce changement.",
             "UNKNOWN_OUTCOME": "Nous n’avons pas pu confirmer le changement. Enregistrez de nouveau : il ne sera pas appliqué deux fois.",
             "OTHER": "Impossible d’enregistrer ce changement."
-          }
+          },
+          "STALE": "Cette part n’a pas pu être relue. Annulez et réessayez."
         }
       }
     }
@@ -9709,8 +9710,13 @@
           "NOT_OFFERED": "Cette taxe ne peut pas être indiquée pour cette catégorie ici aujourd’hui. Les options ont été relues; vérifiez les montants.",
           "NUMBER_NOT_ACCEPTED": "Le numéro du fournisseur ne peut pas être enregistré ici. Effacez-le et enregistrez de nouveau.",
           "PRECISION": "N’utilisez pas plus de décimales que {{currency}} n’en comporte. Rien n’a été enregistré.",
-          "CHECK_UNAVAILABLE": "Le numéro du fournisseur n’a pas pu être vérifié pour le moment; rien n’a été enregistré. Enregistrez de nouveau, ou enregistrez sans le numéro."
-        }
+          "CHECK_UNAVAILABLE": "Le numéro du fournisseur n’a pas pu être vérifié pour le moment; rien n’a été enregistré. Enregistrez de nouveau, ou enregistrez sans le numéro.",
+          "NUMBER_MALFORMED": "Le numéro du fournisseur n’est pas sous une forme qui peut être enregistrée. Vérifiez-le sur le reçu, ou effacez-le.",
+          "INVALID": "Ce renseignement fiscal ne peut pas être enregistré tel quel. Vérifiez-le sur le reçu."
+        },
+        "NUMBER_NEEDS_TAX": "Saisissez la taxe indiquée sur le reçu pour enregistrer le numéro du fournisseur, ou effacez le numéro.",
+        "WITHOUT_NUMBER_CONSEQUENCE": "Sans le numéro, les montants de taxe sont conservés, mais aucune taxe de ce reçu n’est récupérée. À partir de {{amount}}, le numéro est requis pour la récupérer.",
+        "WITHOUT_NUMBER_CONSEQUENCE_NO_AMOUNT": "Sans le numéro, les montants de taxe sont conservés, mais aucune taxe de ce reçu n’est récupérée."
       }
     }
   },

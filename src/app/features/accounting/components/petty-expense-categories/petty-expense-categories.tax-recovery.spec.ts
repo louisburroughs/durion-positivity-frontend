@@ -199,7 +199,7 @@ describe('PettyExpenseCategoriesComponent — tax recovery (CAP:550 S33, §4.7, 
       const steps = all('[data-testid="tax-step"]').map(step => step.textContent!.replace(/\s+/g, ' ').trim());
       expect(steps).toEqual([
         'Enter the receipt total and pick the category.',
-        `Type the supplier’s name and the receipt number. From CA$100.00, also type the supplier’s tax registration number.`,
+        `Type the supplier’s name and the receipt reference. From CA$100.00, also type the supplier’s tax registration number.`,
         'Copy each tax the register asks for, as printed on the receipt. Not sure? Leave it blank: nothing is claimed back, which is always safe.',
       ]);
     });
@@ -253,7 +253,7 @@ describe('PettyExpenseCategoriesComponent — tax recovery (CAP:550 S33, §4.7, 
       render([VIEW], recoveryRead({ evidence: null }));
 
       expect(all('[data-testid="tax-step"]')[1].textContent!.replace(/\s+/g, ' ').trim()).toBe(
-        'Type the supplier’s name and the receipt number, and the supplier’s tax registration number when the receipt shows it.',
+        'Type the supplier’s name and the receipt reference, and the supplier’s tax registration number when the receipt shows it.',
       );
     });
   });
@@ -300,6 +300,17 @@ describe('PettyExpenseCategoriesComponent — tax recovery (CAP:550 S33, §4.7, 
   });
 
   describe('Change share gates (AC 5, P5, ADR-0040 §6a)', () => {
+    it('is offered only on rows the recovery read serves (review B1)', () => {
+      const component = render([VIEW, EDIT]);
+
+      const row = (code: string): Element => host().querySelector(`[data-testid="category-row"][data-code="${code}"]`)!;
+      expect(row('STAFF_MEALS').querySelector('[data-testid="tax-share-open"]')).not.toBeNull();
+      expect(row('PARKING').querySelector('[data-testid="tax-share-open"]')).toBeNull();
+      expect(row('PARKING').querySelector('[data-testid="category-rename"]')).not.toBeNull();
+      component.openShare(ROWS[4]);
+      expect(component.shareDialog()).toBeNull();
+    });
+
     it('without accounting:mapping-key:edit no change control exists and the handlers refuse', () => {
       const component = render([VIEW]);
 
@@ -437,6 +448,31 @@ describe('PettyExpenseCategoriesComponent — tax recovery (CAP:550 S33, §4.7, 
       expect(service.setTaxShare.mock.calls[1][1].requestId).not.toBe(service.setTaxShare.mock.calls[0][1].requestId);
     });
 
+    it('while the re-read after a 409 is pending, Save says so in the dialog, is aria-disabled and sends nothing (review B2)', () => {
+      service.setTaxShare.mockReturnValueOnce(throwError(() => apiError(409, 'OPTIMISTIC_LOCK')));
+      render([VIEW, EDIT]);
+      openShare();
+      click('[data-testid="tax-share-ALL"]');
+      type('[data-testid="tax-share-reason"]', WHY);
+      click('[data-testid="tax-share-save"]');
+      fixture.componentRef.setInput('status', 'PENDING');
+      fixture.componentRef.setInput('recoveryStatus', 'PENDING');
+      fixture.detectChanges();
+
+      const save = q<HTMLButtonElement>('[data-testid="tax-share-save"]')!;
+      expect(text('[data-testid="tax-share-stale"]')).toBe('Refreshing the tax details…');
+      expect(save.disabled).toBe(false);
+      expect(save.getAttribute('aria-disabled')).toBe('true');
+      expect(save.getAttribute('aria-describedby')).toBe('tax-share-stale');
+      click('[data-testid="tax-share-save"]');
+      expect(service.setTaxShare).toHaveBeenCalledTimes(1);
+
+      fixture.componentRef.setInput('recoveryStatus', 'FAILED');
+      fixture.componentRef.setInput('status', 'OK');
+      fixture.detectChanges();
+      expect(text('[data-testid="tax-share-stale"]')).toBe('This share couldn’t be read again. Cancel and try again.');
+    });
+
     it('success closes the dialog, announces it, asks for the re-read, and returns focus to the row’s Change share once both reads land', async () => {
       const component = render([VIEW, EDIT]);
       openShare();
@@ -539,8 +575,22 @@ describe('PettyExpenseCategoriesComponent — tax recovery (CAP:550 S33, §4.7, 
       locale.currentLocale.set('en-US');
 
       expect(step).toBe(
-        `Saisir le nom du fournisseur et le numéro du reçu. À partir de ${formatCurrency(100, 'fr-CA', '$', 'CAD').replace(/\s+/g, ' ')}, saisir aussi le numéro d’inscription aux taxes du fournisseur.`,
+        `Saisir le nom du fournisseur et la référence du reçu. À partir de ${formatCurrency(100, 'fr-CA', '$', 'CAD').replace(/\s+/g, ' ')}, saisir aussi le numéro d’inscription aux taxes du fournisseur.`,
       );
+    });
+
+    it('fr-CA formats a served percentage in the user’s locale (review B6)', () => {
+      render([VIEW], recoveryRead({ categories: [share({ code: 'FUEL', label: 'Fuel', recoverablePercent: 33.33 })] }), { english: false });
+      const translate = TestBed.inject(TranslateService);
+      translate.setTranslation('fr-CA', frCA as TranslationObject);
+      translate.use('fr-CA');
+      const locale = TestBed.inject(LocaleService);
+      locale.currentLocale.set('fr-CA');
+      fixture.detectChanges();
+      const value = cell('FUEL').replace(/\s+/g, ' ');
+      locale.currentLocale.set('en-US');
+
+      expect(value).toBe('33,33 %');
     });
 
     it('no bundle carries a threshold literal: the amount is always the served one', () => {

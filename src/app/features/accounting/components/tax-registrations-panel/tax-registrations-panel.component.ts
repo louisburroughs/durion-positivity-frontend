@@ -1,6 +1,7 @@
 import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
+import { LocaleService } from '../../../../core/services/locale.service';
 import { RecoveryRegime } from '../../models/input-tax-recovery.models';
 import { toDatePipeInput } from '../../utils/date-only.util';
 import { HelpDisclosureComponent } from '../help-disclosure/help-disclosure.component';
@@ -32,6 +33,8 @@ export class TaxRegistrationsPanelComponent {
 
   readonly shown = computed(() => this.regimes().filter(regime => regime.enabled === true));
   readonly toDatePipeInput = toDatePipeInput;
+  /** The runtime locale for the date (a bare pipe would use the bootstrap LOCALE_ID, review B6). */
+  readonly locale = inject(LocaleService).currentLocale;
 
   accountText(regime: RecoveryRegime): string | null {
     const text = [regime.accountName, regime.accountCode].filter(Boolean).join(' · ');
