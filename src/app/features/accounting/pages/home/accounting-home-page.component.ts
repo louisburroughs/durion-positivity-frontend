@@ -191,7 +191,7 @@ export class AccountingHomePageComponent {
   readonly canApproveReconciliation = computed(() =>
     canAccess(this.auth, { permissions: ACCOUNTING_SECTION.reconciliationApprove }),
   );
-  readonly canOpenBills = computed(() => canAccess(this.auth, { permissions: ACCOUNTING_PAGE.vendorInvoices }));
+  readonly canOpenBills = computed(() => canAccess(this.auth, { permissions: ACCOUNTING_PAGE.bills }));
   /**
    * "Who owes what" on the Money owed lane opens Your books on that tab (CAP:550 S5). Gated on the
    * tab's own read (`generateAgedReceivables`), not the page's any-of gate, which `accounting:je:view` alone passes.

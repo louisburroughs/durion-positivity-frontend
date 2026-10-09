@@ -1,0 +1,129 @@
+.limits {
+  max-width: 64rem;
+  /* The page carries the theme's own surface, so its contrast never depends on the body's colour transition. */
+  background: var(--themeBackground);
+  color: var(--currentTextColor);
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.limits h2 {
+  margin: 0;
+}
+
+.limits p {
+  margin: 0;
+}
+
+.limits .btn {
+  min-height: 2.75rem;
+}
+
+.limits__jump ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.limits__jump a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  color: var(--link-color);
+}
+
+.limits__scroll:focus-visible,
+.limits__jump a:focus-visible,
+.limits__heading:focus-visible,
+.limits__who-summary:focus-visible {
+  outline: 2px solid var(--input-focus-border);
+  outline-offset: 2px;
+}
+
+.limits__section {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--cardBackground);
+}
+
+.limits__heading {
+  font-size: 1.125rem;
+}
+
+.limits__fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: var(--space-4);
+}
+
+.limits__fields input {
+  min-height: 2.75rem;
+}
+
+.limits__means ul,
+.limits__rules {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding-inline-start: 1.25rem;
+}
+
+.limits__who {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.limits__who-summary {
+  display: flex;
+  align-items: center;
+  min-height: 2.75rem;
+  font-weight: 600;
+  color: var(--link-color);
+  cursor: pointer;
+}
+
+.limits__who-body {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.limits__scroll {
+  overflow-x: auto;
+}
+
+.limits caption {
+  text-align: start;
+  font-weight: 600;
+  padding-block-end: var(--space-2);
+}
+
+.limits__setting {
+  display: block;
+  font-weight: 600;
+}
+
+.limits__reason {
+  overflow-wrap: anywhere;
+}
+
+.limits__error,
+.limits__paging {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.limits__roles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}

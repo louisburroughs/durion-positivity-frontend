@@ -1,0 +1,219 @@
+.bills {
+  max-width: 80rem;
+  /* The page carries the theme's own surface, so its contrast never depends on the body's colour transition. */
+  background: var(--themeBackground);
+  color: var(--currentTextColor);
+  /* One track that may shrink below its content's min-content, so nothing widens the page at phone width. */
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.bills h2 {
+  margin: 0;
+}
+
+/* ── Header ─────────────────────────────────────────────────────────── */
+.bills__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.bills__title-block {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.bills .btn {
+  min-height: 2.75rem;
+  text-decoration: none;
+}
+
+.bills__section-heading {
+  font-size: 1.125rem;
+}
+
+.bills__section-heading:focus-visible,
+.bills__step:focus-visible,
+.bill-item:focus-visible {
+  outline: 2px solid var(--input-focus-border);
+  outline-offset: 2px;
+}
+
+/* ── How a bill moves ───────────────────────────────────────────────── */
+.bills__steps-section {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.bills__steps-section p {
+  margin: 0;
+}
+
+.bills__steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bills__step {
+  display: grid;
+  gap: 0.125rem;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: var(--space-3);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--cardBackground);
+  color: var(--currentTextColor);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.bills__step:hover,
+.bill-item:hover {
+  background: var(--surface-hover);
+}
+
+/* Pressed: border weight and fill, never colour alone (ADR-0039). */
+.bills__step[aria-pressed='true'],
+.bill-item[aria-pressed='true'] {
+  border: 2px solid var(--link-color);
+  background: var(--surface-inset);
+}
+
+.bills__step-label {
+  font-weight: 700;
+}
+
+.bills__step-hint {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+/* Proportional numerals in hero figures (§5.7). */
+.bills__step-count {
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-variant-numeric: proportional-nums;
+}
+
+.bills__error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* ── List and panel ─────────────────────────────────────────────────── */
+.bills__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.bills__list-column,
+.bills__panel-column {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.bills__panel-column {
+  padding: var(--space-4);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--cardBackground);
+}
+
+.bills__list {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bills__row {
+  display: grid;
+  gap: var(--space-1);
+}
+
+/* A selection button per bill (aria-pressed); ≥ 44px (§5.7). */
+.bill-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-1) var(--space-3);
+  align-items: start;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: var(--space-3);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--cardBackground);
+  color: var(--currentTextColor);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.bill-item__text {
+  display: grid;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.bill-item__vendor {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.bill-item__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+}
+
+.bill-item__amount {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}
+
+.bill-item__status {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.bills__pay {
+  justify-self: start;
+}
+
+.bills__paging {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.reference {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+}
+
+@media (width <= 767px) {
+  .bills__layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

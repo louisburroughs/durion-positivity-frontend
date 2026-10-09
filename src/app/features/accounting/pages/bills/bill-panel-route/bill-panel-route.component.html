@@ -1,0 +1,5 @@
+@if (billId(); as id) {
+  <app-bill-review-panel [billId]="id" (changed)="link.billChanged()" (loaded)="onLoaded()" (moved)="link.openMatched($event)" />
+} @else {
+  <p class="bill-panel-route__empty" data-testid="panel-empty">{{ 'ACCOUNTING.BILLS.PANEL.EMPTY' | translate }}</p>
+}

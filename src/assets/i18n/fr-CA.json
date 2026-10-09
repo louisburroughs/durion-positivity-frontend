@@ -3804,7 +3804,20 @@
       "ERROR": "Impossible de soumettre le paiement au fournisseur.",
       "RESULT_TITLE": "Résultat du paiement au fournisseur",
       "RESULT_PAYMENT_ID": "ID de paiement",
-      "RESULT_STATUS": "Status"
+      "RESULT_STATUS": "Status",
+      "SELF_APPROVED": "Vous avez approuvé {{bills}}; une autre personne doit les payer.",
+      "SELF_APPROVED_UNNAMED": "Vous avez approuvé des factures que ce paiement réglerait; une autre personne doit les payer.",
+      "REFUSAL": {
+        "METHOD": "Ce mode de paiement n’est pas accepté. Payez par TEF, chèque ou virement.",
+        "VENDOR_INACTIVE": "Ce fournisseur est inactif; ses factures ne peuvent donc pas être payées.",
+        "VENDOR_ON_AP_HOLD": "Ce fournisseur est bloqué pour paiement; ses factures restent approuvées jusqu’à la levée du blocage.",
+        "DETAILS_CHANGED": "Les coordonnées de paiement du fournisseur ont changé après l’approbation de {{bills}}. Une personne qui approuve les factures doit confirmer les nouvelles coordonnées avant leur paiement.",
+        "DETAILS_CHANGED_UNNAMED": "Les coordonnées de paiement du fournisseur ont changé après l’approbation de ses factures. Une personne qui approuve les factures doit confirmer les nouvelles coordonnées avant leur paiement.",
+        "REPLICATION_PENDING": "Ce fournisseur est encore en cours de configuration. Réessayez dans un instant.",
+        "REPLICATION_PENDING_AFTER": "Ce fournisseur est encore en cours de configuration. Réessayez dans {{seconds}} secondes.",
+        "LOCK_TIMEOUT": "Quelqu’un d’autre travaille sur ces factures en ce moment. Réessayez.",
+        "PAY_FROM": "Cet atelier a plus d’un compte de paiement. Le choix d’un compte n’est pas encore offert sur cette page; ce paiement ne peut donc pas être fait ici."
+      }
     },
     "VENDOR_PAYMENT_LIST": {
       "OVERLINE": "Comptes fournisseurs",
@@ -3945,10 +3958,6 @@
         "PAYABLES_LIST": {
           "TITLE": "Factures fournisseurs",
           "DESCRIPTION": "Parcourez les factures fournisseurs par date d'échéance et par statut."
-        },
-        "PAYABLES_EXCEPTIONS": {
-          "TITLE": "Exceptions de factures fournisseurs",
-          "DESCRIPTION": "Résolvez les factures mises en attente par un écart de rapprochement ou un rapprochement de facture ambigu."
         },
         "PAYABLES_DETAIL": {
           "TITLE": "Détail de facture fournisseur",
@@ -4250,124 +4259,6 @@
         "TOTAL_LABOR_OVERHEAD": {
           "LABEL": "Total de la main-d'œuvre et des frais généraux",
           "DEFINITION": "Total général : Total de la main-d'œuvre + Total des frais généraux."
-        }
-      }
-    },
-    "PAYABLES": {
-      "LIST": {
-        "TITLE": "Factures fournisseurs",
-        "SUBTITLE": "Factures fournisseurs rapprochées de la marchandise reçue, tous statuts de cycle de vie confondus.",
-        "FILTERS": {
-          "ARIA": "Filtres des factures fournisseurs",
-          "DUE_FROM": "Échéance à partir de",
-          "DUE_TO": "Échéance jusqu'à",
-          "STATUS": "Statut",
-          "STATUS_ALL": "Tous les statuts",
-          "APPLY": "Appliquer les filtres"
-        },
-        "EMPTY": "Aucune facture fournisseur n'échoit dans cette période.",
-        "ERROR": {
-          "LOAD": "Impossible de charger les factures fournisseurs."
-        },
-        "TABLE": {
-          "ARIA": "Factures fournisseurs",
-          "BILL_ID": "Facture",
-          "VENDOR": "Fournisseur",
-          "AMOUNT": "Montant",
-          "DUE_DATE": "Date d'échéance",
-          "STATUS": "Statut"
-        },
-        "PAGINATION": {
-          "ARIA": "Pages des factures fournisseurs",
-          "PREVIOUS": "Précédent",
-          "NEXT": "Suivant",
-          "STATUS": "Page {{page}} sur {{totalPages}} ({{totalElements}} au total)"
-        }
-      },
-      "STATUS": {
-        "PENDING_RECEIPT_MATCH": "En attente de rapprochement de réception",
-        "MATCH_EXCEPTION": "Exception de rapprochement",
-        "CURRENCY_HOLD": "Retenue pour devise",
-        "AWAITING_APPROVAL": "En attente d'approbation",
-        "APPROVED": "Approuvée",
-        "REJECTED": "Rejetée",
-        "PAID": "Payée",
-        "VOIDED": "Annulée"
-      },
-      "EXCEPTIONS": {
-        "TITLE": "Exceptions de factures fournisseurs",
-        "SUBTITLE": "Factures mises en attente par le rapprochement à trois voies : un écart de quantité ou de prix, un score de confiance moyen, ou un rapprochement ambigu.",
-        "EMPTY": "Aucune facture fournisseur n'est actuellement en exception de rapprochement.",
-        "ERROR": {
-          "LOAD": "Impossible de charger les exceptions de factures fournisseurs."
-        },
-        "TABLE": {
-          "ARIA": "Exceptions de factures fournisseurs",
-          "VENDOR": "Fournisseur"
-        },
-        "PAGINATION": {
-          "ARIA": "Pages des factures fournisseurs",
-          "PREVIOUS": "Précédent",
-          "NEXT": "Suivant",
-          "STATUS": "Page {{page}} sur {{totalPages}} ({{totalElements}} au total)"
-        },
-        "RESOLVE": {
-          "TITLE": "Résoudre l'exception",
-          "FIELD": {
-            "ACTION": "Résolution",
-            "REASON": "Motif",
-            "REASON_PLACEHOLDER": "Expliquez la résolution pour la piste d'audit"
-          },
-          "ACTION": {
-            "ACCEPT": "Accepter malgré l'écart",
-            "VOID": "Annuler",
-            "CORRECT": "Retourner pour correction",
-            "SUBMIT": "Résoudre"
-          },
-          "ERROR": {
-            "REASON_REQUIRED": "Un motif est requis pour résoudre cette exception.",
-            "REASON_TOO_SHORT": "Le motif doit comporter au moins 10 caractères.",
-            "SUBMIT": "Impossible de résoudre cette exception."
-          }
-        },
-        "CANDIDATES": {
-          "TITLE": "Candidats de rapprochement ambigu",
-          "HINT": "Un rapprochement de facture ambigu met en attente plusieurs factures candidates notées pour un événement de facture déclencheur. Recherchez-les par l'ID de cet événement.",
-          "FIELD": {
-            "INVOICE_EVENT_ID": "ID de l'événement de facture",
-            "INVOICE_EVENT_ID_PLACEHOLDER": "Entrez l'ID de l'événement de facture"
-          },
-          "ACTION": {
-            "LOOKUP": "Rechercher les candidats",
-            "SELECT": "Sélectionner cette facture"
-          },
-          "EMPTY": "Aucun candidat non résolu n'existe pour cet événement de facture.",
-          "ERROR": {
-            "LOAD": "Impossible de charger les candidats de rapprochement.",
-            "SELECT": "Impossible de sélectionner ce candidat."
-          },
-          "SCORE": "Score de correspondance",
-          "RESOLVED": "Résolu"
-        }
-      },
-      "DETAIL": {
-        "TITLE": "Facture fournisseur",
-        "ERROR": {
-          "MISSING_BILL_ID": "Aucune facture n'a été spécifiée.",
-          "LOAD": "Impossible de charger cette facture fournisseur."
-        },
-        "FIELD": {
-          "VENDOR": "Fournisseur",
-          "AMOUNT": "Montant",
-          "BILL_DATE": "Date de facture",
-          "DUE_DATE": "Date d'échéance",
-          "APPROVAL_JUSTIFICATION": "Justification d'approbation",
-          "REJECTION_REASON": "Motif de rejet",
-          "STATUS_EXPLANATION": "Explication du statut",
-          "JOURNAL_ENTRY": "Écriture de journal",
-          "PAYMENT_TRANSACTION": "Transaction de paiement",
-          "ORIGIN_EVENT": "Événement d'origine",
-          "CREATED_AT": "Créée"
         }
       }
     },
@@ -5874,6 +5765,457 @@
         "ON_ACCOUNT": "Sur compte",
         "OTHER": "Autre",
         "UNKNOWN": "Inconnu"
+      }
+    },
+    "BILLS": {
+      "OVERLINE": "Comptabilité",
+      "TITLE": "Factures à payer",
+      "STANDFIRST": "Vérifiez chaque facture par rapport à ce qui est arrivé, envoyez-la pour approbation et voyez ce qui est approuvé pour paiement.",
+      "APPROVAL_LIMITS": "Limites d'approbation",
+      "STEPS": {
+        "HEADING": "Le parcours d’une facture",
+        "CHECK": "Vérifier",
+        "CHECK_HINT": "À vérifier",
+        "APPROVE": "Approuver",
+        "APPROVE_HINT": "Envoyées pour approbation",
+        "PAY": "Payer",
+        "PAY_HINT": "Approuvées pour paiement",
+        "DONE": "Terminé",
+        "DONE_HINT": "Payées ce mois-ci",
+        "AS_OF": "Nombres au {{time}}",
+        "FAILED": "Impossible de charger les nombres."
+      },
+      "HELP": {
+        "STEPS": {
+          "TEXT": "Chaque facture passe par quatre étapes : quelqu’un la vérifie par rapport à la livraison, une personne autorisée pour ce montant l’approuve, une autre personne la paie, puis elle est terminée.",
+          "EXAMPLE": "Par exemple : un commis vérifie une facture de pièces, un contrôleur l’approuve et un directeur général la paie."
+        }
+      },
+      "REGION": {
+        "LOADING": "Chargement…",
+        "REFRESH_FAILED": "Impossible d’actualiser. Affichage des dernières données.",
+        "DENIED": "Il vous faut l’autorisation {{permission}} pour voir ceci."
+      },
+      "LIST": {
+        "HEADING_LOADING": "Factures",
+        "HEADING_CHECK": "À vérifier",
+        "HEADING_APPROVE": "Envoyées pour approbation",
+        "HEADING_PAY": "Approuvées pour paiement",
+        "HEADING_DONE": "Payées ce mois-ci",
+        "EMPTY_CHECK": "Aucune facture à vérifier",
+        "EMPTY_APPROVE": "Aucune facture n’attend d’approbation",
+        "EMPTY_PAY": "Aucune facture approuvée n’attend de paiement",
+        "EMPTY_DONE": "Aucune facture payée ce mois-ci",
+        "PAGING": "Pages de factures",
+        "PREVIOUS": "Page précédente",
+        "NEXT": "Page suivante",
+        "PAGE": "Page {{page}} sur {{pages}}"
+      },
+      "CHANNEL": {
+        "SUPPLIER_CONNECTION": "Connexion fournisseur",
+        "GOODS_RECEIPT": "Réception de marchandises",
+        "UNKNOWN": "Inconnu"
+      },
+      "STATUS": {
+        "WAITING_DELIVERY": "En attente de la livraison",
+        "WAITING_INVOICE": "En attente de la facture",
+        "NO_MATCH": "Ne correspond pas à la livraison",
+        "PICK_MATCH": "Choisir une correspondance",
+        "CURRENCY_HOLD": "En attente : devise étrangère",
+        "AWAITING_APPROVAL": "Envoyée pour approbation",
+        "APPROVED": "Approuvée · à payer",
+        "REJECTED": "Refusée",
+        "PAID": "Payée",
+        "VOIDED": "Annulée",
+        "UNKNOWN": "Inconnu"
+      },
+      "TERM": {
+        "PENDING_RECEIPT_MATCH": "rapprochement de réception en attente",
+        "MATCH_EXCEPTION": "exception de rapprochement",
+        "CURRENCY_HOLD": "blocage de devise",
+        "AWAITING_APPROVAL": "en attente d’approbation",
+        "APPROVED": "compte fournisseur approuvé",
+        "REJECTED": "refusée",
+        "PAID": "payée",
+        "VOIDED": "annulée"
+      },
+      "PANEL": {
+        "EMPTY": "Choisissez une facture dans la liste pour la vérifier.",
+        "HEADING": "Facture {{number}}",
+        "LOADING_HEADING": "Facture",
+        "LOADING": "Chargement de la facture…",
+        "REFRESHING": "Mise à jour de la facture…",
+        "LOAD_FAILED": "Impossible de charger cette facture.",
+        "BACK_TO_LIST": "Retour aux factures à payer",
+        "WHY_HELD": "Pourquoi elle est retenue : {{explanation}}",
+        "REJECTION": "Motif donné : {{reason}}",
+        "CHANNEL": "Provenance",
+        "VENDOR": "Fournisseur",
+        "INVOICE_NUMBER": "Numéro de facture",
+        "BILL_DATE": "Date de la facture",
+        "TOTAL": "Total",
+        "DUE_DATE": "Date d’échéance",
+        "NO_DUE_DATE": "Pas encore d’échéance",
+        "RESALE_OVERRIDE_BILL": "La taxe sur des biens destinés à la revente a été acceptée pour cette facture : {{reason}}",
+        "RESALE_OVERRIDE_VENDOR": "La taxe sur des biens destinés à la revente est acceptée par le réglage de ce fournisseur.",
+        "ON_THE_BOOKS": "Dans les livres : {{reference}} le {{date}}",
+        "MONTH_WAS_CLOSED": "(le mois de la facture était fermé)",
+        "POSTED_DIFFERENCE": "Écart comptabilisé en {{cls}} : {{amount}}.",
+        "ROUNDING": "Ajustement d’arrondi : {{amount}}.",
+        "APPROVED_AUTOMATICALLY": "Approuvée : Automatique",
+        "SENT_AUTOMATICALLY": "Envoyée pour approbation : Automatique"
+      },
+      "CHECKS": {
+        "HEADING": "Vérifications",
+        "NONE": "Aucune vérification fournie pour cette facture.",
+        "OUTCOME": {
+          "PASS": "Réussie",
+          "FAIL": "À examiner",
+          "NOT_APPLICABLE": "Sans objet",
+          "UNKNOWN": "Inconnu"
+        }
+      },
+      "CHECK": {
+        "MATCHED_TO_DELIVERY": {
+          "PASS": "Correspond à la livraison.",
+          "PASS_MEDIUM": "Correspond à la livraison, avec un score moyen.",
+          "FAIL": "Ne correspond pas à la livraison.",
+          "FAIL_PICK_A_MATCH": "Cette facture peut correspondre à plusieurs livraisons : choisissez-en une.",
+          "FAIL_INVOICE_NOT_MATCHED": "La facture du fournisseur n’a pas encore été rapprochée de cette livraison.",
+          "FAIL_NO_DELIVERY_RECORDED": "Aucune livraison n’est enregistrée pour cette facture.",
+          "NOT_APPLICABLE": "Non rapprochée d’une livraison."
+        },
+        "WITHIN_PRICE_TOLERANCE": {
+          "PASS": "Les prix respectent la tolérance par rapport à la livraison.",
+          "FAIL": "Les prix s’écartent de la livraison au-delà de la tolérance.",
+          "NOT_APPLICABLE": "Les prix sont vérifiés une fois la facture rapprochée."
+        },
+        "TOTALS_ADD_UP": {
+          "PASS": "Les totaux du fournisseur concordent.",
+          "FAIL": "Les totaux du fournisseur ne concordent pas : écart de {{difference}}.",
+          "NOT_APPLICABLE": "Le fournisseur n’a indiqué aucun total d’en-tête à vérifier."
+        },
+        "WITHIN_CLERK_LIMIT": {
+          "PASS": "Sous la limite de commis de {{limit}}.",
+          "FAIL": "Au-delà de la limite de commis de {{limit}}.",
+          "NOT_APPLICABLE": "La limite de commis ne s’applique qu’aux factures en vérification."
+        },
+        "OPEN_DELIVERIES_FROM_VENDOR": {
+          "PASS": "Aucune livraison de ce fournisseur n’attend de facture.",
+          "FAIL": "Ce fournisseur a {{count}} livraisons en attente de facture : {{bills}}.",
+          "NOT_APPLICABLE": "Les livraisons ouvertes ne sont vérifiées que pour les factures de marchandises."
+        },
+        "VENDOR_AP_HOLD": {
+          "PASS": "Ce fournisseur n’est pas bloqué pour paiement.",
+          "FAIL": "Ce fournisseur est bloqué pour paiement : {{reason}}. La facture peut être approuvée; elle n’est payée qu’après la levée du blocage.",
+          "NOT_APPLICABLE": "Les blocages de paiement ne s’appliquent pas à cette facture."
+        },
+        "TAX_ON_RESALE_GOODS": {
+          "FAIL": "Le fournisseur a facturé {{tax}} de taxe sur des biens que vous revendez. Vos règles fiscales retiennent ces factures : indiquez pourquoi vous l’acceptez lors de l’approbation.",
+          "PASS_VENDOR_SETTING": "La taxe sur des biens destinés à la revente est acceptée par le réglage de ce fournisseur.",
+          "PASS_BILL": "La taxe sur des biens destinés à la revente a été acceptée pour cette facture.",
+          "NOT_APPLICABLE": "Aucune taxe sur des biens destinés à la revente à vérifier.",
+          "RULES_UNAVAILABLE": "Vos règles fiscales n’ont pas pu être lues pour l’instant; elles seront vérifiées de nouveau lors de l’approbation."
+        },
+        "UNKNOWN": "Vérification inconnue."
+      },
+      "LINES": {
+        "HEADING": "Lignes",
+        "CAPTION": "Ce qui a été reçu et ce qui a été facturé",
+        "ITEM": "Article",
+        "RECEIVED": "Reçu",
+        "BILLED": "Facturé",
+        "PRICE_EACH": "Prix unitaire",
+        "AMOUNT": "Montant",
+        "NO_DESCRIPTION": "Ligne {{number}}",
+        "NONE": "Cette facture est arrivée sans détail de lignes",
+        "SUBTOTAL": "Sous-total",
+        "TAX": "Taxes",
+        "TOTAL": "Total"
+      },
+      "MATCH": {
+        "HEADING": "Score de correspondance",
+        "SCORE": "Score : {{score}} sur 100",
+        "STRONG": "70 ou plus est un bon score",
+        "NONE": "Non rapprochée d’une livraison",
+        "AMOUNT": "Montant",
+        "PRODUCTS": "Produits",
+        "DATE": "Date",
+        "PURCHASE_ORDER": "Bon de commande",
+        "POINTS": "{{points}} sur {{max}}",
+        "HELP": {
+          "SUMMARY": "Qu’est-ce qu’un score de correspondance?",
+          "TEXT": "Nous comparons la facture du fournisseur à ce qui a été livré : le montant (jusqu’à 40 points), les produits (30), la date (20) et le bon de commande (5). 70 ou plus est une bonne correspondance.",
+          "EXAMPLE": "Par exemple : le bon montant et les bons produits, mais une date tardive, donnent 40 + 30 + 10 = 80."
+        }
+      },
+      "ROUTING": {
+        "HEADING": "Qui approuve",
+        "CLERK": "Sous la limite de commis de {{limit}} : un commis peut l’approuver.",
+        "OVER_LIMIT": "Au-delà de la limite de commis de {{limit}} : un contrôleur ou un directeur général approuve.",
+        "NO_CLERK": "Chaque facture doit être approuvée par un contrôleur ou un directeur général.",
+        "TERM_CLERK": "niveau d’approbation commis",
+        "TERM_OVER_LIMIT": "niveau d’approbation hors limite",
+        "HELP": {
+          "SUMMARY": "Pourquoi ne puis-je pas approuver ma propre facture?",
+          "TEXT": "La personne qui saisit une facture ne peut pas aussi l’approuver, et celle qui l’approuve ne peut pas aussi la payer. Une deuxième personne repère les erreurs et protège l’argent.",
+          "EXAMPLE": "Par exemple : vous téléversez une facture de fournitures et l’envoyez pour approbation; votre contrôleur l’approuve et le directeur général la paie."
+        }
+      },
+      "DECISION": {
+        "HEADING": "Décider",
+        "SEND": "Envoyer pour approbation",
+        "SEND_NOTE_LABEL": "À quoi cela servait-il?",
+        "SEND_REASON_LABEL": "Pourquoi l’envoyer pour approbation?",
+        "SEND_CONSEQUENCE": "Elle sera transmise à une personne qui peut approuver ce montant.",
+        "APPROVE": "Approuver la facture",
+        "APPROVE_REASON_OPTIONAL": "Pourquoi l’approuver? (facultatif)",
+        "APPROVE_REASON_REQUIRED": "Pourquoi l’approuver?",
+        "APPROVE_CONSEQUENCE": "L’approbation inscrit {{amount}} dus à {{vendor}} dans les livres. Une facture approuvée ne peut plus être modifiée; une erreur se corrige par une note de crédit. Une autre personne la paie.",
+        "REJECT": "Refuser la facture",
+        "REJECT_TITLE": "Refuser la facture {{number}}?",
+        "REJECT_REASON_LABEL": "Pourquoi la refuser?",
+        "REJECT_CONSEQUENCE": "Un refus est définitif.",
+        "REASON_HINT": "Au moins {{min}} caractères.",
+        "RESALE_LABEL": "Pourquoi accepter la taxe sur des biens destinés à la revente?",
+        "RESALE_HINT": "Le fournisseur a facturé une taxe sur des biens que vous revendez, ce que vos règles fiscales retiennent. Indiquez pourquoi vous l’acceptez pour cette facture : de {{min}} à {{max}} caractères.",
+        "BLOCKED": {
+          "AP_APPROVAL_LIMIT_EXCEEDED": "Au-delà de la limite de commis de {{limit}} : un contrôleur ou un directeur général approuve.",
+          "AP_APPROVAL_LIMIT_EXCEEDED_NO_LIMIT": "Au-delà de la limite de commis : un contrôleur ou un directeur général approuve.",
+          "AP_BILL_SELF_APPROVAL": "Vous ne pouvez pas approuver une facture que vous avez créée.",
+          "UNKNOWN": "Vous ne pouvez pas prendre cette décision pour cette facture."
+        },
+        "VOID": "Annuler la facture",
+        "VOID_TITLE": "Annuler la facture {{number}}?",
+        "VOID_REASON_LABEL": "Pourquoi l’annuler?",
+        "VOID_APPROVED_CONSEQUENCE": "L’annulation retire cette facture des livres aujourd’hui. Seules les factures sans paiement peuvent être annulées.",
+        "VOID_UNMATCHED_CONSEQUENCE": "L’annulation supprime cette facture d’attente. Rien n’a été comptabilisé, donc rien n’est contrepassé."
+      },
+      "EXCEPTION": {
+        "HEADING": "Ne correspond pas à la livraison",
+        "LEGEND": "Que voulez-vous faire?",
+        "ACCEPT": "Accepter tel que facturé",
+        "ACCEPT_HINT": "Approuve la facture telle que le fournisseur l’a facturée.",
+        "CORRECT": "Corriger la facture",
+        "CORRECT_HINT": "Remet la facture telle qu’elle a été reçue, en attente d’une facture correspondante.",
+        "CORRECT_CONSEQUENCE": "La facture retourne en attente de la facture du fournisseur; ce qui a été facturé est annulé.",
+        "VOID": "Annuler la facture",
+        "VOID_HINT": "Annule la facture. Rien n’a été comptabilisé, donc rien n’est contrepassé.",
+        "VOID_CONSEQUENCE": "Une annulation est définitive.",
+        "WHY": "Pourquoi?",
+        "RESOLVE": "Régler la facture",
+        "RESOLVE_AND_SEND": "Régler et envoyer pour approbation"
+      },
+      "CANDIDATES": {
+        "HEADING": "Choisir une correspondance",
+        "INTRO": "Cette facture peut correspondre à plusieurs livraisons. Comparez-les et choisissez-en une.",
+        "CAPTION": "Livraisons auxquelles cette facture peut correspondre",
+        "BILL": "Facture",
+        "TOTAL": "Total",
+        "SCORE": "Score",
+        "PICK": "Choisir la facture {{number}}",
+        "NO_NUMBER": "Facture sans numéro",
+        "NOTE": "Rapprochement seulement — elle doit encore être approuvée"
+      },
+      "DUE_DATE": {
+        "ADD": "Ajouter l’échéance du fournisseur",
+        "CHANGE": "Modifier l’échéance",
+        "LABEL": "Échéance sur la facture du fournisseur",
+        "REASON_LABEL": "Pourquoi? (facultatif)",
+        "REASON_HINT": "Si vous donnez un motif, au moins {{min}} caractères.",
+        "SAVE": "Enregistrer l’échéance",
+        "CONSEQUENCE": "L’échéance est enregistrée à votre nom et remplace toute estimation; elle détermine quand cette facture est payée."
+      },
+      "PAY": {
+        "REVIEW_AND_PAY": "Vérifier et payer",
+        "FOR_BILL": "facture {{number}}",
+        "NOTE": "Vous ne pouvez pas payer une facture que vous avez approuvée."
+      },
+      "DONE": {
+        "SENT": "La facture {{number}} a été envoyée pour approbation.",
+        "APPROVED": "La facture {{number}} a été approuvée.",
+        "REJECTED": "La facture {{number}} a été refusée.",
+        "RESOLVED": "La facture {{number}} a été réglée.",
+        "MATCHED": "La facture {{number}} a été rapprochée. Elle doit encore être approuvée.",
+        "DUE_DATE": "L’échéance de la facture {{number}} a été enregistrée.",
+        "VOIDED": "La facture {{number}} a été annulée.",
+        "MATCHED_OTHER": "La facture {{number}} est rapprochée de la facture du fournisseur et attend maintenant l’approbation."
+      },
+      "ERROR": {
+        "LIST_LOAD": "Impossible de charger les factures.",
+        "CHANGED": "Cette facture a changé — affichage de son état actuel.",
+        "LIMIT_EXCEEDED": "Cette facture dépasse la limite de commis de {{limit}} : un contrôleur ou un directeur général approuve.",
+        "LIMIT_EXCEEDED_NO_LIMIT": "Cette facture dépasse la limite de commis : un contrôleur ou un directeur général approuve.",
+        "SELF_APPROVAL": "Vous ne pouvez pas approuver une facture que vous avez créée.",
+        "JUSTIFICATION_REQUIRED": "Indiquez un motif d’au moins {{min}} caractères.",
+        "OVERRIDE_TOO_LONG": "Le motif d’acceptation de la taxe sur des biens destinés à la revente peut compter au plus 1000 caractères.",
+        "DUE_DATE_INVALID": "Saisissez l’échéance telle qu’elle figure sur la facture du fournisseur.",
+        "VALIDATION": "Vérifiez le champ signalé.",
+        "FORBIDDEN": "Il vous faut l’autorisation {{permission}} pour faire ceci.",
+        "NOT_FOUND": "Cette facture n’existe plus.",
+        "TAX_ON_RESALE_GOODS": "Cette facture comporte une taxe sur des biens destinés à la revente. Indiquez pourquoi vous l’acceptez pour cette facture.",
+        "TAX_JURISDICTION_NOT_CONFIGURED": "Votre pays fiscal ou votre lieu d’achat n’est pas configuré pour la taxe de cette facture. Demandez à la personne qui gère vos réglages fiscaux de le corriger; réessayer n’y changera rien.",
+        "CURRENCY_NOT_SUPPORTED": "Le service fiscal ne peut pas travailler dans votre devise comptable pour cette facture. Demandez à la personne qui gère vos réglages fiscaux de le corriger; réessayer n’y changera rien.",
+        "TAX_CAPABILITY_UNSUPPORTED": "Votre fournisseur fiscal ne peut pas calculer la taxe de cette facture. Demandez à la personne qui gère vos réglages fiscaux de le corriger; réessayer n’y changera rien.",
+        "SERVICE_UNAVAILABLE": "Le service fiscal n’a pas répondu; rien n’a été enregistré. Réessayez dans un instant.",
+        "SERVICE_UNAVAILABLE_AFTER": "Le service fiscal n’a pas répondu; rien n’a été enregistré. Réessayez dans {{seconds}} secondes.",
+        "UNKNOWN_OUTCOME": "Impossible de confirmer cette décision. Affichage de l’état actuel de la facture.",
+        "OTHER": "Impossible d’enregistrer cette décision.",
+        "AWAITING_INVOICE": "Cette livraison attend encore la facture du fournisseur.",
+        "NOT_VOIDABLE": "Une partie de cette facture est payée; demandez une note de crédit au fournisseur.",
+        "LOCK_TIMEOUT": "Quelqu’un d’autre travaille sur cette facture en ce moment. Réessayez.",
+        "UNCLASSIFIED": "Choisissez à quoi sert cette facture.",
+        "TOTALS_UNRECONCILED": "Indiquez où va l’écart.",
+        "PERIOD_CLOSED": "Le mois où cette facture est comptabilisée est fermé. Une personne autorisée à comptabiliser dans un mois fermé doit approuver cette facture.",
+        "PERIOD_CLOSED_OVERRIDE": "Le mois où cette facture est comptabilisée est fermé. Pour la comptabiliser quand même, donnez un motif de dérogation et réessayez.",
+        "PERIOD_HARD_LOCKED": "Le mois où cette facture est comptabilisée est verrouillé définitivement. Rien ne peut y être comptabilisé.",
+        "GL_MAPPING_NOT_CONFIGURED": "Cette facture ne peut pas être comptabilisée tant que vos comptes ne sont pas configurés pour elle. Demandez à la personne qui gère votre plan comptable.",
+        "ZERO_TOTAL": "Une facture de 0,00 ne peut pas être approuvée.",
+        "FIGURES_DONT_ADD_UP": "Les chiffres du fournisseur ne correspondent pas au montant facturé. Corrigez la facture ou refusez-la.",
+        "VENDOR_INACTIVE": "Ce fournisseur est inactif; ses factures ne peuvent donc pas être payées.",
+        "VENDOR_REPLICATION_PENDING": "Ce fournisseur est encore en cours de configuration. Réessayez dans un instant.",
+        "VENDOR_REPLICATION_PENDING_AFTER": "Ce fournisseur est encore en cours de configuration. Réessayez dans {{seconds}} secondes."
+      },
+      "POSTING": {
+        "CLASSIFICATION": {
+          "LEGEND": "À quoi sert cette facture?",
+          "GOODS": "Stock pour les étagères",
+          "EXPENSE_PROPOSAL": "Une dépense, selon la proposition du commis",
+          "EXPENSE_VENDOR": "Une dépense, selon le réglage par défaut de ce fournisseur",
+          "FROM_PROPOSAL": "Selon la proposition du commis",
+          "FROM_VENDOR": "Réglage par défaut de ce fournisseur",
+          "EXPENSE_LATER": "Si cette facture concerne du stock, choisissez Stock pour les étagères. Les catégories de dépenses ne peuvent pas encore être choisies sur cette page; une facture de dépense reste donc dans Approuver pour l’instant.",
+          "HINT": "Obligatoire pour approuver une facture arrivée sans détail de lignes."
+        },
+        "DIFFERENCE": {
+          "LEGEND": "Les totaux du fournisseur ne concordent pas",
+          "FIGURES": "Net {{net}} + taxes {{tax}} n’égale pas le total {{total}}. Écart : {{difference}}.",
+          "WHERE": "Où va l’écart?",
+          "FREIGHT": "Transport",
+          "GOODS": "Stock",
+          "PRICE_DIFFERENCE": "Écart de prix",
+          "WHY": "Pourquoi va-t-il là?",
+          "SAY_WHERE": "Indiquez où vont les {{difference}}.",
+          "EXPENSE_PROPOSAL": "Une dépense, selon la proposition du commis."
+        },
+        "OVERRIDE_LABEL": "Motif de dérogation",
+        "OVERRIDE_HINT": "Pourquoi comptabiliser dans un mois fermé : au moins {{min}} caractères."
+      }
+    },
+    "APPROVAL_LIMITS": {
+      "OVERLINE": "Comptabilité",
+      "TITLE": "Limites d'approbation",
+      "STANDFIRST": "Qui peut approuver quelles factures, et ce qui est approuvé sans intervention.",
+      "NAV": {
+        "ARIA": "Sur cette page",
+        "BILLS": "Factures",
+        "HISTORY": "Historique"
+      },
+      "LOADING": "Chargement…",
+      "LOAD_FAILED": "Impossible de charger les limites d’approbation.",
+      "DENIED": "Il vous faut l’autorisation {{permission}} pour voir ou modifier ces limites.",
+      "BILLS": {
+        "HEADING": "Factures",
+        "CURRENCY": "Montants en {{currency}}, taxes comprises.",
+        "CLERK_LABEL": "Limite d’approbation des commis",
+        "CLERK_HINT": "Un commis peut approuver les factures jusqu’à ce total. 0 signifie que chaque facture doit être approuvée par un contrôleur ou un directeur général.",
+        "AUTO_LABEL": "Limite d’approbation automatique",
+        "AUTO_HINT": "Les bonnes correspondances jusqu’à ce total sont approuvées sans intervention. 0 désactive cette option. Elle ne peut pas dépasser la limite des commis.",
+        "ERROR": {
+          "AMOUNT": "Saisissez un montant de 0 ou plus, avec au plus deux décimales.",
+          "AUTO_ABOVE_CLERK": "Ne peut pas dépasser la limite des commis"
+        },
+        "MEANS": {
+          "HEADING": "Ce que cela signifie",
+          "CLERK": "Factures jusqu’à {{clerk}} (taxes comprises) : un commis peut les approuver. Au-delà : un contrôleur ou un directeur général approuve.",
+          "NO_CLERK": "Chaque facture doit être approuvée par un contrôleur ou un directeur général",
+          "AUTO": "Les bonnes correspondances jusqu’à {{auto}} sont approuvées automatiquement",
+          "NO_AUTO": "Rien n’est approuvé automatiquement"
+        },
+        "WHO": {
+          "SUMMARY": "Qui peut faire quoi",
+          "CAPTION": "Chaque action et l’autorisation qu’elle exige",
+          "APPROVE_ANY": "Approuver tout montant",
+          "REJECT": "Refuser ou annuler",
+          "PAY": "Payer",
+          "SET_LIMITS": "Modifier ces limites",
+          "ACTION": "Action",
+          "PERMISSION": "Autorisation",
+          "SEND_AND_APPROVE": "Envoyer pour approbation et approuver jusqu’à la limite des commis",
+          "NOTE": "Votre administrateur décide quels rôles détiennent chaque autorisation."
+        },
+        "RULES": {
+          "HEADING": "Toujours en vigueur",
+          "OWN_BILL": "Vous ne pouvez pas approuver une facture que vous avez créée.",
+          "OWN_PAYMENT": "Vous ne pouvez pas payer une facture que vous avez approuvée.",
+          "FOREIGN": "Les factures en devise étrangère ne sont jamais approuvées.",
+          "LOCKED": "Une facture approuvée ne peut plus être modifiée.",
+          "SWITCHED_OFF": "Désactivée pour votre entreprise.",
+          "READ_ONLY": "Ces règles sont affichées à titre indicatif; elles ne se modifient pas sur cette page."
+        },
+        "HELP": {
+          "TEXT": "La limite des commis détermine qui approuve une facture : un commis jusqu’à cette limite, un contrôleur ou un directeur général au-delà. La limite automatique laisse passer sans intervention les bonnes correspondances avec la livraison.",
+          "EXAMPLE": "Par exemple : avec une limite des commis de 2 500,00 et une limite automatique de 500,00, une facture de 300,00 qui correspond à sa livraison est approuvée d’elle-même, une facture de 1 200,00 va à un commis et une facture de 4 000,00 à un contrôleur."
+        }
+      },
+      "SAVE": {
+        "HEADING": "Enregistrer vos modifications",
+        "REASON_LABEL": "Pourquoi faites-vous ce changement?",
+        "REASON_HINT": "Au moins {{min}} caractères.",
+        "CONSEQUENCE": "Les nouvelles limites s’appliquent à la prochaine décision; les factures déjà approuvées ne changent pas.",
+        "SAVE": "Enregistrer",
+        "SAVING": "Enregistrement…",
+        "UNDO": "Annuler les modifications",
+        "SAVED": "Vos modifications ont été enregistrées.",
+        "UNDONE": "Vos modifications ont été annulées.",
+        "NO_CHANGES": "Rien à enregistrer pour l’instant.",
+        "ERROR": {
+          "JUSTIFICATION_REQUIRED": "Indiquez un motif d’au moins {{min}} caractères.",
+          "VALIDATION": "Vérifiez les champs signalés.",
+          "PRECISION": "Ce montant a plus de décimales que {{currency}} ne le permet.",
+          "CURRENCY": "Les limites doivent être dans votre devise comptable, {{currency}}.",
+          "FORBIDDEN": "Il vous faut l’autorisation {{permission}} pour modifier ces limites.",
+          "UNKNOWN_OUTCOME": "Impossible de confirmer l’enregistrement. Appuyez de nouveau sur Enregistrer : il ne sera pas appliqué deux fois.",
+          "OTHER": "Impossible d’enregistrer vos modifications."
+        }
+      },
+      "HISTORY": {
+        "HEADING": "Historique",
+        "CAPTION": "Modifications des limites d’approbation, les plus récentes d’abord",
+        "DATE": "Date",
+        "CHANGED_BY": "Modifié par",
+        "CHANGE": "Modification",
+        "REASON": "Motif",
+        "EMPTY": "Aucune modification pour l’instant.",
+        "LOAD_FAILED": "Impossible de charger l’historique.",
+        "FROM_TO": "{{old}} → {{new}}",
+        "ON": "Activé",
+        "OFF": "Désactivé",
+        "PAGING": "Pages de l’historique",
+        "PREVIOUS": "Page précédente",
+        "NEXT": "Page suivante",
+        "PAGE": "Page {{page}} sur {{pages}}",
+        "SETTING": {
+          "AP_CLERK_APPROVAL_LIMIT": "Limite d’approbation des commis",
+          "AP_AUTO_APPROVAL_LIMIT": "Limite d’approbation automatique",
+          "AP_ALLOW_CREATOR_APPROVAL": "Les créateurs peuvent approuver leurs propres factures",
+          "AP_ALLOW_APPROVER_PAYMENT": "Les approbateurs peuvent payer les factures qu’ils ont approuvées",
+          "AP_DEFAULT_TERMS": "Conditions de paiement par défaut",
+          "UNKNOWN": "Réglage inconnu"
+        },
+        "ROLE": {
+          "ACCOUNTING_CLERK": "Commis comptable",
+          "CONTROLLER": "Contrôleur",
+          "GENERAL_MANAGER": "Directeur général",
+          "ADMIN": "Administrateur",
+          "SYSTEM_ADMINISTRATOR": "Administrateur système",
+          "UNKNOWN": "Autre rôle"
+        },
+        "TERMS": {
+          "DUE_ON_RECEIPT": "Payable à réception",
+          "NET": "Net {{days}} jours",
+          "UNKNOWN": "Inconnu"
+        }
       }
     }
   },
@@ -9559,7 +9901,6 @@
       "ESTIMATE_LIST": "Liste des devis",
       "EVENTS": "Événements",
       "EVENT_SUBMISSION": "Soumission d'événements",
-      "EXCEPTIONS": "Exceptions",
       "EXCHANGES": "Échanges",
       "EXECUTE": "Exécuter",
       "EXPORT": "Exporter",
@@ -9631,7 +9972,6 @@
       "UNMATCHED": "Sans correspondance",
       "VEHICLE_FITMENT": "Compatibilité du véhicule",
       "VEHICLE_INVENTORY": "Inventaire des véhicules",
-      "VENDOR_INVOICES": "Factures des fournisseurs",
       "VENDOR_PAYMENTS": "Paiements aux fournisseurs",
       "VOID_REFUND": "Annuler le remboursement",
       "WIP_STATUS": "État des travaux en cours",
@@ -9647,7 +9987,9 @@
       "BOOKS": "Vos livres",
       "ENTRIES": "Écritures de journal",
       "PAYMENTS": "Paiements",
-      "DRAWER": "Tiroir"
+      "DRAWER": "Tiroir",
+      "BILLS_TO_PAY": "Factures à payer",
+      "APPROVAL_LIMITS": "Limites d'approbation"
     }
   },
   "POSITIVITY": {

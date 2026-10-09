@@ -56,8 +56,7 @@ const RESOLVE_ROLES: readonly string[] = ['ROLE_ADMIN'];
  * row already carries an embedded (truncated to 20) candidate list.
  *
  * ── Mutation error handling follows the inline-mutation pattern ──────────
- * Per ADR-0031's inline-mutation exclusion (also documented on
- * `vendor-invoices-exceptions-page.component.ts`): a resolve failure clears
+ * Per ADR-0031's inline-mutation exclusion: a resolve failure clears
  * `busyAction` and sets `resolveErrorKey` inline; it never touches this
  * page's `state`/`errorKey` (which track the candidates load only).
  */

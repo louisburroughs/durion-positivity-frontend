@@ -256,6 +256,9 @@ const LABEL_OVERRIDES = {
   // `periods` alone would share SITEMAP.LABEL.PERIODS with the pay-period page at
   // /app/people/timekeeping/periods, whose translation says "Pay periods".
   '/app/accounting/periods': 'Accounting Periods',
+  // `bills` alone reads as a bare noun; the page is Bills to pay (CAP:550 S14, §5.2).
+  '/app/accounting/bills': 'Bills to Pay',
+  '/app/accounting/bills/:billId': 'Bills to Pay',
 };
 
 /**

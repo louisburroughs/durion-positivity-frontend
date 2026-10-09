@@ -204,14 +204,12 @@ export const ACCOUNTING_LANDING_CONFIG: LandingPageConfig = {
       ],
     },
     /**
-     * Payables — vendor bills read end to end through pos-accounting's
-     * vendor-bills API (#214). PR #202 retired the prior supplier-backed
-     * surface because pos-supplier has no raw-invoice read
-     * (#1637/#1638 owner decision); this is a move to the real contract, not
-     * a restoration of the old one. `idMode` keeps the guided card a plain
+     * Payables — Bills to pay (CAP:550 S14), read end to end through
+     * pos-accounting's vendor-bills API. The old list, exceptions and detail
+     * pages are redirects now; `bills` lists every stage and `bills/:billId`
+     * opens one bill's review panel. `idMode` keeps the guided card a plain
      * identifier input: the `invoice` kind's typeahead searches billing
-     * invoices, a different record from a vendor bill, and would return
-     * confidently wrong matches.
+     * invoices, a different record from a vendor bill.
      */
     {
       titleKey: 'ACCOUNTING.LANDING.SECTION.PAYABLES.TITLE',
@@ -225,17 +223,8 @@ export const ACCOUNTING_LANDING_CONFIG: LandingPageConfig = {
           titleKey: 'ACCOUNTING.LANDING.CARD.PAYABLES_LIST.TITLE',
           descriptionKey: 'ACCOUNTING.LANDING.CARD.PAYABLES_LIST.DESCRIPTION',
           ctaKey: 'ACCOUNTING.LANDING.ACTION.OPEN_PAGE',
-          route: '/app/accounting/payables/vendor-invoices',
-          permissions: ACCOUNTING_PAGE.vendorInvoices,
-        },
-        {
-          kind: 'direct',
-          icon: 'report_problem',
-          titleKey: 'ACCOUNTING.LANDING.CARD.PAYABLES_EXCEPTIONS.TITLE',
-          descriptionKey: 'ACCOUNTING.LANDING.CARD.PAYABLES_EXCEPTIONS.DESCRIPTION',
-          ctaKey: 'ACCOUNTING.LANDING.ACTION.OPEN_PAGE',
-          route: '/app/accounting/payables/vendor-invoices/exceptions',
-          permissions: ACCOUNTING_PAGE.vendorInvoices,
+          route: '/app/accounting/bills',
+          permissions: ACCOUNTING_PAGE.bills,
         },
         {
           kind: 'guided',
@@ -243,8 +232,8 @@ export const ACCOUNTING_LANDING_CONFIG: LandingPageConfig = {
           titleKey: 'ACCOUNTING.LANDING.CARD.PAYABLES_DETAIL.TITLE',
           descriptionKey: 'ACCOUNTING.LANDING.CARD.PAYABLES_DETAIL.DESCRIPTION',
           ctaKey: 'ACCOUNTING.LANDING.ACTION.OPEN_VENDOR_BILL',
-          buildCommands: (id: string) => ['/app', 'accounting', 'payables', 'vendor-invoices', id],
-          permissions: ACCOUNTING_PAGE.vendorInvoiceDetail,
+          buildCommands: (id: string) => ['/app', 'accounting', 'bills', id],
+          permissions: ACCOUNTING_PAGE.bills,
         },
       ],
     },

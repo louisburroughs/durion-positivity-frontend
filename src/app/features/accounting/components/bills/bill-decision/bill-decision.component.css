@@ -1,0 +1,18 @@
+.bill-decision {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.bill-decision__block {
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-color);
+}
+
+.bill-decision__block:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.bill-decision .hint-text {
+  margin: 0;
+}

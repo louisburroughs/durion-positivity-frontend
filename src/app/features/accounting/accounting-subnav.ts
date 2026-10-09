@@ -17,11 +17,10 @@ export interface AccountingSubnavEntry {
  * the session can open its route (`canAccess`), so it carries the route's own
  * gate — `accounting-subnav.spec.ts` fails when the two disagree.
  *
- * Adding a page (S14 Bills to pay): add
- * its route to `ACCOUNTING_ROUTES` first, then its entry here at its §5.0
- * position (Home · Bills to pay · Customer payments · Bank · Your books ·
- * Month-end) with the route's permissions, and its label keys to all six
- * locale bundles under `ACCOUNTING.SHELL.NAV`. Repointing Bills to pay (S14)
+ * Adding a page: add its route to `ACCOUNTING_ROUTES` first, then its entry
+ * here at its §5.0 position (Home · Bills to pay · Customer payments · Bank ·
+ * Your books · Month-end) with the route's permissions, and its label keys to
+ * all six locale bundles under `ACCOUNTING.SHELL.NAV`. Repointing an entry
  * changes `route` and `permissions` together.
  */
 export const ACCOUNTING_SUBNAV: readonly AccountingSubnavEntry[] = [
@@ -29,8 +28,8 @@ export const ACCOUNTING_SUBNAV: readonly AccountingSubnavEntry[] = [
   {
     labelKey: 'ACCOUNTING.SHELL.NAV.BILLS',
     termKey: 'ACCOUNTING.SHELL.NAV.BILLS_TERM',
-    route: 'payables/vendor-invoices',
-    permissions: ACCOUNTING_PAGE.vendorInvoices,
+    route: 'bills',
+    permissions: ACCOUNTING_PAGE.bills,
   },
   {
     labelKey: 'ACCOUNTING.SHELL.NAV.CUSTOMER_PAYMENTS',

@@ -3804,7 +3804,20 @@
       "ERROR": "Unable to submit vendor payment.",
       "RESULT_TITLE": "Vendor Payment Result",
       "RESULT_PAYMENT_ID": "Payment ID",
-      "RESULT_STATUS": "Status"
+      "RESULT_STATUS": "Status",
+      "SELF_APPROVED": "You approved {{bills}}; someone else must pay them.",
+      "SELF_APPROVED_UNNAMED": "You approved bills this payment would pay; someone else must pay them.",
+      "REFUSAL": {
+        "METHOD": "This payment method isn’t accepted. Pay by ACH, check or wire.",
+        "VENDOR_INACTIVE": "This vendor is inactive, so its bills can’t be paid.",
+        "VENDOR_ON_AP_HOLD": "This vendor is on hold for payment; its bills stay approved until the hold is released.",
+        "DETAILS_CHANGED": "The vendor’s payment details changed after {{bills}} were approved. Someone who approves bills must confirm the new details before they’re paid.",
+        "DETAILS_CHANGED_UNNAMED": "The vendor’s payment details changed after its bills were approved. Someone who approves bills must confirm the new details before they’re paid.",
+        "REPLICATION_PENDING": "This vendor is still being set up. Try again in a moment.",
+        "REPLICATION_PENDING_AFTER": "This vendor is still being set up. Try again in {{seconds}} seconds.",
+        "LOCK_TIMEOUT": "Someone else is working on these bills right now. Try again.",
+        "PAY_FROM": "This shop has more than one account to pay from. Choosing one on this page isn’t available yet, so this payment can’t be made here."
+      }
     },
     "VENDOR_PAYMENT_LIST": {
       "OVERLINE": "Accounts Payable",
@@ -3945,10 +3958,6 @@
         "PAYABLES_LIST": {
           "TITLE": "Vendor Invoices",
           "DESCRIPTION": "Browse vendor bills by due date and status."
-        },
-        "PAYABLES_EXCEPTIONS": {
-          "TITLE": "Vendor Invoice Exceptions",
-          "DESCRIPTION": "Resolve bills parked by a match discrepancy or an ambiguous invoice match."
         },
         "PAYABLES_DETAIL": {
           "TITLE": "Vendor Bill Detail",
@@ -4250,124 +4259,6 @@
         "TOTAL_LABOR_OVERHEAD": {
           "LABEL": "Total Labor & Overhead",
           "DEFINITION": "Grand total: Total Labor + Total Overhead."
-        }
-      }
-    },
-    "PAYABLES": {
-      "LIST": {
-        "TITLE": "Vendor Invoices",
-        "SUBTITLE": "Vendor bills matched against goods received, across every lifecycle status.",
-        "FILTERS": {
-          "ARIA": "Vendor invoice filters",
-          "DUE_FROM": "Due From",
-          "DUE_TO": "Due To",
-          "STATUS": "Status",
-          "STATUS_ALL": "All Statuses",
-          "APPLY": "Apply Filters"
-        },
-        "EMPTY": "No vendor bills are due in this window.",
-        "ERROR": {
-          "LOAD": "Unable to load vendor invoices."
-        },
-        "TABLE": {
-          "ARIA": "Vendor invoices",
-          "BILL_ID": "Bill",
-          "VENDOR": "Vendor",
-          "AMOUNT": "Amount",
-          "DUE_DATE": "Due Date",
-          "STATUS": "Status"
-        },
-        "PAGINATION": {
-          "ARIA": "Vendor invoice pages",
-          "PREVIOUS": "Previous",
-          "NEXT": "Next",
-          "STATUS": "Page {{page}} of {{totalPages}} ({{totalElements}} total)"
-        }
-      },
-      "STATUS": {
-        "PENDING_RECEIPT_MATCH": "Pending Receipt Match",
-        "MATCH_EXCEPTION": "Match Exception",
-        "CURRENCY_HOLD": "Currency Hold",
-        "AWAITING_APPROVAL": "Awaiting Approval",
-        "APPROVED": "Approved",
-        "REJECTED": "Rejected",
-        "PAID": "Paid",
-        "VOIDED": "Voided"
-      },
-      "EXCEPTIONS": {
-        "TITLE": "Vendor Invoice Exceptions",
-        "SUBTITLE": "Bills parked by the three-way match: a quantity or price discrepancy, a medium-confidence score, or an ambiguous match.",
-        "EMPTY": "No vendor bills are currently in a match exception.",
-        "ERROR": {
-          "LOAD": "Unable to load vendor invoice exceptions."
-        },
-        "TABLE": {
-          "ARIA": "Vendor invoice exceptions",
-          "VENDOR": "Vendor"
-        },
-        "PAGINATION": {
-          "ARIA": "Vendor invoice pages",
-          "PREVIOUS": "Previous",
-          "NEXT": "Next",
-          "STATUS": "Page {{page}} of {{totalPages}} ({{totalElements}} total)"
-        },
-        "RESOLVE": {
-          "TITLE": "Resolve Exception",
-          "FIELD": {
-            "ACTION": "Resolution",
-            "REASON": "Reason",
-            "REASON_PLACEHOLDER": "Explain the resolution for the audit trail"
-          },
-          "ACTION": {
-            "ACCEPT": "Accept Despite Discrepancy",
-            "VOID": "Void",
-            "CORRECT": "Send Back for Correction",
-            "SUBMIT": "Resolve"
-          },
-          "ERROR": {
-            "REASON_REQUIRED": "A reason is required to resolve this exception.",
-            "REASON_TOO_SHORT": "The reason must be at least 10 characters long.",
-            "SUBMIT": "Unable to resolve this exception."
-          }
-        },
-        "CANDIDATES": {
-          "TITLE": "Ambiguous Match Candidates",
-          "HINT": "An ambiguous invoice match parks several scored candidate bills for one triggering invoice event. Look them up by that event's id.",
-          "FIELD": {
-            "INVOICE_EVENT_ID": "Invoice Event ID",
-            "INVOICE_EVENT_ID_PLACEHOLDER": "Enter the invoice event ID"
-          },
-          "ACTION": {
-            "LOOKUP": "Look Up Candidates",
-            "SELECT": "Select This Bill"
-          },
-          "EMPTY": "No unresolved candidates exist for that invoice event.",
-          "ERROR": {
-            "LOAD": "Unable to load match candidates.",
-            "SELECT": "Unable to select this candidate."
-          },
-          "SCORE": "Match Score",
-          "RESOLVED": "Resolved"
-        }
-      },
-      "DETAIL": {
-        "TITLE": "Vendor Bill",
-        "ERROR": {
-          "MISSING_BILL_ID": "No bill was specified.",
-          "LOAD": "Unable to load this vendor bill."
-        },
-        "FIELD": {
-          "VENDOR": "Vendor",
-          "AMOUNT": "Amount",
-          "BILL_DATE": "Bill Date",
-          "DUE_DATE": "Due Date",
-          "APPROVAL_JUSTIFICATION": "Approval Justification",
-          "REJECTION_REASON": "Rejection Reason",
-          "STATUS_EXPLANATION": "Status Explanation",
-          "JOURNAL_ENTRY": "Journal Entry",
-          "PAYMENT_TRANSACTION": "Payment Transaction",
-          "ORIGIN_EVENT": "Origin Event",
-          "CREATED_AT": "Created"
         }
       }
     },
@@ -5874,6 +5765,457 @@
         "ON_ACCOUNT": "On account",
         "OTHER": "Other",
         "UNKNOWN": "Unknown"
+      }
+    },
+    "BILLS": {
+      "OVERLINE": "Accounting",
+      "TITLE": "Bills to pay",
+      "STANDFIRST": "Check each bill against what arrived, send it for approval and see what is approved to pay.",
+      "APPROVAL_LIMITS": "Approval limits",
+      "STEPS": {
+        "HEADING": "How a bill moves",
+        "CHECK": "Check",
+        "CHECK_HINT": "Needs your review",
+        "APPROVE": "Approve",
+        "APPROVE_HINT": "Sent for approval",
+        "PAY": "Pay",
+        "PAY_HINT": "Approved to pay",
+        "DONE": "Done",
+        "DONE_HINT": "Paid this month",
+        "AS_OF": "Counts as of {{time}}",
+        "FAILED": "Couldn't load the counts."
+      },
+      "HELP": {
+        "STEPS": {
+          "TEXT": "Every bill passes four steps: someone checks it against the delivery, someone who may approve its amount approves it, someone else pays it, and it is done.",
+          "EXAMPLE": "For example: a clerk checks a parts bill, a controller approves it, and a general manager pays it."
+        }
+      },
+      "REGION": {
+        "LOADING": "Loading…",
+        "REFRESH_FAILED": "Couldn't refresh. Showing what we had.",
+        "DENIED": "You need the {{permission}} permission to see this."
+      },
+      "LIST": {
+        "HEADING_LOADING": "Bills",
+        "HEADING_CHECK": "Needs your review",
+        "HEADING_APPROVE": "Sent for approval",
+        "HEADING_PAY": "Approved to pay",
+        "HEADING_DONE": "Paid this month",
+        "EMPTY_CHECK": "No bills need your review",
+        "EMPTY_APPROVE": "No bills are waiting for approval",
+        "EMPTY_PAY": "No approved bills are waiting to be paid",
+        "EMPTY_DONE": "No bills were paid this month",
+        "PAGING": "Pages of bills",
+        "PREVIOUS": "Previous page",
+        "NEXT": "Next page",
+        "PAGE": "Page {{page}} of {{pages}}"
+      },
+      "CHANNEL": {
+        "SUPPLIER_CONNECTION": "Supplier connection",
+        "GOODS_RECEIPT": "Goods receipt",
+        "UNKNOWN": "Unknown"
+      },
+      "STATUS": {
+        "WAITING_DELIVERY": "Waiting on delivery",
+        "WAITING_INVOICE": "Waiting on the invoice",
+        "NO_MATCH": "Doesn't match delivery",
+        "PICK_MATCH": "Pick a match",
+        "CURRENCY_HOLD": "On hold: foreign currency",
+        "AWAITING_APPROVAL": "Sent for approval",
+        "APPROVED": "Approved · to pay",
+        "REJECTED": "Rejected",
+        "PAID": "Paid",
+        "VOIDED": "Voided",
+        "UNKNOWN": "Unknown"
+      },
+      "TERM": {
+        "PENDING_RECEIPT_MATCH": "pending receipt match",
+        "MATCH_EXCEPTION": "match exception",
+        "CURRENCY_HOLD": "currency hold",
+        "AWAITING_APPROVAL": "awaiting approval",
+        "APPROVED": "approved payable",
+        "REJECTED": "rejected",
+        "PAID": "paid",
+        "VOIDED": "voided"
+      },
+      "PANEL": {
+        "EMPTY": "Pick a bill from the list to review it.",
+        "HEADING": "Bill {{number}}",
+        "LOADING_HEADING": "Bill",
+        "LOADING": "Loading the bill…",
+        "REFRESHING": "Updating this bill…",
+        "LOAD_FAILED": "Couldn't load this bill.",
+        "BACK_TO_LIST": "Back to Bills to pay",
+        "WHY_HELD": "Why it’s held: {{explanation}}",
+        "REJECTION": "Reason given: {{reason}}",
+        "CHANNEL": "Came from",
+        "VENDOR": "Vendor",
+        "INVOICE_NUMBER": "Invoice number",
+        "BILL_DATE": "Bill date",
+        "TOTAL": "Total",
+        "DUE_DATE": "Due date",
+        "NO_DUE_DATE": "No due date yet",
+        "RESALE_OVERRIDE_BILL": "Tax on goods for resale was accepted for this bill: {{reason}}",
+        "RESALE_OVERRIDE_VENDOR": "Tax on goods for resale is accepted by this vendor’s setting.",
+        "ON_THE_BOOKS": "On the books: {{reference}} on {{date}}",
+        "MONTH_WAS_CLOSED": "(the bill’s month was closed)",
+        "POSTED_DIFFERENCE": "Difference posted as {{cls}}: {{amount}}.",
+        "ROUNDING": "Rounding adjustment: {{amount}}.",
+        "APPROVED_AUTOMATICALLY": "Approved: Automatic",
+        "SENT_AUTOMATICALLY": "Sent for approval: Automatic"
+      },
+      "CHECKS": {
+        "HEADING": "Checks",
+        "NONE": "No checks were served for this bill.",
+        "OUTCOME": {
+          "PASS": "Passed",
+          "FAIL": "Needs attention",
+          "NOT_APPLICABLE": "Doesn’t apply",
+          "UNKNOWN": "Unknown"
+        }
+      },
+      "CHECK": {
+        "MATCHED_TO_DELIVERY": {
+          "PASS": "Matches the delivery.",
+          "PASS_MEDIUM": "Matches the delivery, with a medium score.",
+          "FAIL": "Doesn’t match the delivery.",
+          "FAIL_PICK_A_MATCH": "This invoice could match more than one delivery: pick one.",
+          "FAIL_INVOICE_NOT_MATCHED": "The vendor’s invoice hasn’t been matched to this delivery yet.",
+          "FAIL_NO_DELIVERY_RECORDED": "No delivery is recorded for this bill.",
+          "NOT_APPLICABLE": "Not matched to a delivery."
+        },
+        "WITHIN_PRICE_TOLERANCE": {
+          "PASS": "Prices are within tolerance of the delivery.",
+          "FAIL": "Prices differ from the delivery by more than the tolerance.",
+          "NOT_APPLICABLE": "Prices are checked once the invoice is matched."
+        },
+        "TOTALS_ADD_UP": {
+          "PASS": "The vendor’s totals add up.",
+          "FAIL": "The vendor’s totals don’t add up: off by {{difference}}.",
+          "NOT_APPLICABLE": "The vendor stated no header totals to check."
+        },
+        "WITHIN_CLERK_LIMIT": {
+          "PASS": "Within the {{limit}} clerk limit.",
+          "FAIL": "Over the {{limit}} clerk limit.",
+          "NOT_APPLICABLE": "The clerk limit applies only while a bill is in review."
+        },
+        "OPEN_DELIVERIES_FROM_VENDOR": {
+          "PASS": "No deliveries from this vendor are waiting for an invoice.",
+          "FAIL": "This vendor has {{count}} deliveries waiting for an invoice: {{bills}}.",
+          "NOT_APPLICABLE": "Open deliveries are checked on goods bills only."
+        },
+        "VENDOR_AP_HOLD": {
+          "PASS": "This vendor isn’t on hold for payment.",
+          "FAIL": "This vendor is on hold for payment: {{reason}}. The bill can still be approved; it isn’t paid until the hold is released.",
+          "NOT_APPLICABLE": "Payment holds don’t apply to this bill."
+        },
+        "TAX_ON_RESALE_GOODS": {
+          "FAIL": "The vendor charged {{tax}} tax on goods you resell. Your tax rules hold such bills: say why you accept it when you approve.",
+          "PASS_VENDOR_SETTING": "Tax on goods for resale is accepted by this vendor’s setting.",
+          "PASS_BILL": "Tax on goods for resale was accepted for this bill.",
+          "NOT_APPLICABLE": "No tax on goods for resale to check.",
+          "RULES_UNAVAILABLE": "Your tax rules couldn’t be read just now; they are checked again when you approve."
+        },
+        "UNKNOWN": "Unknown check."
+      },
+      "LINES": {
+        "HEADING": "Lines",
+        "CAPTION": "What was received and what was billed",
+        "ITEM": "Item",
+        "RECEIVED": "Received",
+        "BILLED": "Billed",
+        "PRICE_EACH": "Price each",
+        "AMOUNT": "Amount",
+        "NO_DESCRIPTION": "Line {{number}}",
+        "NONE": "This bill came without line detail",
+        "SUBTOTAL": "Subtotal",
+        "TAX": "Tax",
+        "TOTAL": "Total"
+      },
+      "MATCH": {
+        "HEADING": "Match score",
+        "SCORE": "Score: {{score}} of 100",
+        "STRONG": "70 or more is strong",
+        "NONE": "Not matched to a delivery",
+        "AMOUNT": "Amount",
+        "PRODUCTS": "Products",
+        "DATE": "Date",
+        "PURCHASE_ORDER": "Purchase order",
+        "POINTS": "{{points}} of {{max}}",
+        "HELP": {
+          "SUMMARY": "What’s a match score?",
+          "TEXT": "We compare the vendor’s invoice with what was delivered: the amount (up to 40 points), the products (30), the date (20) and the purchase order (5). 70 or more is a strong match.",
+          "EXAMPLE": "For example: the right amount and products but a late date score 40 + 30 + 10 = 80."
+        }
+      },
+      "ROUTING": {
+        "HEADING": "Who approves",
+        "CLERK": "Within the {{limit}} clerk limit: a clerk can approve it.",
+        "OVER_LIMIT": "Over the {{limit}} clerk limit: a controller or general manager approves.",
+        "NO_CLERK": "Every bill needs a controller or general manager.",
+        "TERM_CLERK": "clerk approval tier",
+        "TERM_OVER_LIMIT": "over-limit approval tier",
+        "HELP": {
+          "SUMMARY": "Why can’t I approve my own bill?",
+          "TEXT": "The person who enters a bill can’t also approve it, and the person who approves a bill can’t also pay it. A second person catches mistakes and keeps the money safe.",
+          "EXAMPLE": "For example: you upload a supplies bill and send it for approval; your controller approves it and the general manager pays it."
+        }
+      },
+      "DECISION": {
+        "HEADING": "Decide",
+        "SEND": "Send for approval",
+        "SEND_NOTE_LABEL": "What was this for?",
+        "SEND_REASON_LABEL": "Why send it for approval?",
+        "SEND_CONSEQUENCE": "It goes to someone who can approve this amount.",
+        "APPROVE": "Approve bill",
+        "APPROVE_REASON_OPTIONAL": "Why approve it? (optional)",
+        "APPROVE_REASON_REQUIRED": "Why approve it?",
+        "APPROVE_CONSEQUENCE": "Approving puts {{amount}} owed to {{vendor}} on the books. Approved bills can’t be edited; a mistake is fixed with a credit note. Someone else pays it.",
+        "REJECT": "Reject bill",
+        "REJECT_TITLE": "Reject bill {{number}}?",
+        "REJECT_REASON_LABEL": "Why reject it?",
+        "REJECT_CONSEQUENCE": "Rejecting can’t be undone.",
+        "REASON_HINT": "At least {{min}} characters.",
+        "RESALE_LABEL": "Why accept tax on goods for resale?",
+        "RESALE_HINT": "The vendor charged tax on goods you resell, which your tax rules hold. Say why you accept it for this bill: {{min}} to {{max}} characters.",
+        "BLOCKED": {
+          "AP_APPROVAL_LIMIT_EXCEEDED": "Over the {{limit}} clerk limit: a controller or general manager approves.",
+          "AP_APPROVAL_LIMIT_EXCEEDED_NO_LIMIT": "Over the clerk limit: a controller or general manager approves.",
+          "AP_BILL_SELF_APPROVAL": "You can’t approve a bill you created.",
+          "UNKNOWN": "You can’t take this decision on this bill."
+        },
+        "VOID": "Void the bill",
+        "VOID_TITLE": "Void bill {{number}}?",
+        "VOID_REASON_LABEL": "Why void it?",
+        "VOID_APPROVED_CONSEQUENCE": "Voiding takes this bill off the books today. Only bills with nothing paid can be voided.",
+        "VOID_UNMATCHED_CONSEQUENCE": "Voiding removes this placeholder. Nothing was posted, so nothing is reversed."
+      },
+      "EXCEPTION": {
+        "HEADING": "Doesn’t match delivery",
+        "LEGEND": "What do you want to do?",
+        "ACCEPT": "Accept as billed",
+        "ACCEPT_HINT": "Approves the bill as the vendor billed it.",
+        "CORRECT": "Correct the bill",
+        "CORRECT_HINT": "Puts the bill back as it was received, to wait for a matching invoice.",
+        "CORRECT_CONSEQUENCE": "The bill goes back to waiting on the vendor’s invoice; what was billed is undone.",
+        "VOID": "Void the bill",
+        "VOID_HINT": "Voids the bill. Nothing was posted, so nothing is reversed.",
+        "VOID_CONSEQUENCE": "Voiding can’t be undone.",
+        "WHY": "Why?",
+        "RESOLVE": "Resolve bill",
+        "RESOLVE_AND_SEND": "Resolve and send for approval"
+      },
+      "CANDIDATES": {
+        "HEADING": "Pick a match",
+        "INTRO": "This invoice could match more than one delivery. Compare them and pick one.",
+        "CAPTION": "Deliveries this invoice could match",
+        "BILL": "Bill",
+        "TOTAL": "Total",
+        "SCORE": "Score",
+        "PICK": "Pick bill {{number}}",
+        "NO_NUMBER": "Bill without a number",
+        "NOTE": "Matching only — it still needs approval"
+      },
+      "DUE_DATE": {
+        "ADD": "Add the vendor’s due date",
+        "CHANGE": "Change the due date",
+        "LABEL": "Due date on the vendor’s bill",
+        "REASON_LABEL": "Why? (optional)",
+        "REASON_HINT": "If you give a reason, at least {{min}} characters.",
+        "SAVE": "Save due date",
+        "CONSEQUENCE": "The due date is recorded with your name and replaces any estimate; it decides when this bill is paid."
+      },
+      "PAY": {
+        "REVIEW_AND_PAY": "Review and pay",
+        "FOR_BILL": "bill {{number}}",
+        "NOTE": "You can’t pay a bill you approved."
+      },
+      "DONE": {
+        "SENT": "Bill {{number}} was sent for approval.",
+        "APPROVED": "Bill {{number}} was approved.",
+        "REJECTED": "Bill {{number}} was rejected.",
+        "RESOLVED": "Bill {{number}} was resolved.",
+        "MATCHED": "Bill {{number}} was matched. It still needs approval.",
+        "DUE_DATE": "The due date of bill {{number}} was saved.",
+        "VOIDED": "Bill {{number}} was voided.",
+        "MATCHED_OTHER": "Bill {{number}} is matched to the vendor’s invoice and now waits for approval."
+      },
+      "ERROR": {
+        "LIST_LOAD": "Couldn’t load the bills.",
+        "CHANGED": "This bill changed — showing its current state.",
+        "LIMIT_EXCEEDED": "This bill is over the {{limit}} clerk limit: a controller or general manager approves.",
+        "LIMIT_EXCEEDED_NO_LIMIT": "This bill is over the clerk limit: a controller or general manager approves.",
+        "SELF_APPROVAL": "You can’t approve a bill you created.",
+        "JUSTIFICATION_REQUIRED": "Give a reason of at least {{min}} characters.",
+        "OVERRIDE_TOO_LONG": "The reason for accepting tax on goods for resale can be at most 1000 characters.",
+        "DUE_DATE_INVALID": "Enter the due date as the vendor’s bill states it.",
+        "VALIDATION": "Check the highlighted field.",
+        "FORBIDDEN": "You need the {{permission}} permission to do this.",
+        "NOT_FOUND": "This bill no longer exists.",
+        "TAX_ON_RESALE_GOODS": "This bill charges tax on goods for resale. Say why you accept it for this bill.",
+        "TAX_JURISDICTION_NOT_CONFIGURED": "Your tax country or place of purchase isn’t set up for this bill’s tax. Ask whoever manages your tax settings to fix it; trying again won’t help.",
+        "CURRENCY_NOT_SUPPORTED": "The tax service can’t work in your ledger currency for this bill. Ask whoever manages your tax settings to fix it; trying again won’t help.",
+        "TAX_CAPABILITY_UNSUPPORTED": "Your tax provider can’t work out this bill’s tax. Ask whoever manages your tax settings to fix it; trying again won’t help.",
+        "SERVICE_UNAVAILABLE": "The tax service didn’t answer, so nothing was saved. Try again in a moment.",
+        "SERVICE_UNAVAILABLE_AFTER": "The tax service didn’t answer, so nothing was saved. Try again in {{seconds}} seconds.",
+        "UNKNOWN_OUTCOME": "We couldn’t confirm this decision. Showing the bill’s current state.",
+        "OTHER": "Couldn’t save this decision.",
+        "AWAITING_INVOICE": "This delivery is still waiting for the vendor’s invoice.",
+        "NOT_VOIDABLE": "Part of this bill is paid; ask the vendor for a credit note.",
+        "LOCK_TIMEOUT": "Someone else is working on this bill right now. Try again.",
+        "UNCLASSIFIED": "Choose what this bill is for.",
+        "TOTALS_UNRECONCILED": "Say where the difference goes.",
+        "PERIOD_CLOSED": "The month this bill posts in is closed. Someone who can post to a closed month must approve this bill.",
+        "PERIOD_CLOSED_OVERRIDE": "The month this bill posts in is closed. To post it there anyway, give an override reason and try again.",
+        "PERIOD_HARD_LOCKED": "The month this bill posts in is locked for good. Nothing can be posted there.",
+        "GL_MAPPING_NOT_CONFIGURED": "This bill can’t be posted until your accounts are set up for it. Ask whoever manages your chart of accounts.",
+        "ZERO_TOTAL": "A bill of 0.00 can’t be approved.",
+        "FIGURES_DONT_ADD_UP": "The vendor’s figures don’t add up to what was billed. Correct the bill or reject it.",
+        "VENDOR_INACTIVE": "This vendor is inactive, so its bills can’t be paid.",
+        "VENDOR_REPLICATION_PENDING": "This vendor is still being set up. Try again in a moment.",
+        "VENDOR_REPLICATION_PENDING_AFTER": "This vendor is still being set up. Try again in {{seconds}} seconds."
+      },
+      "POSTING": {
+        "CLASSIFICATION": {
+          "LEGEND": "What is this bill for?",
+          "GOODS": "Stock for the shelves",
+          "EXPENSE_PROPOSAL": "An expense, set by the clerk’s proposal",
+          "EXPENSE_VENDOR": "An expense, set by this vendor’s default",
+          "FROM_PROPOSAL": "From the clerk’s proposal",
+          "FROM_VENDOR": "This vendor’s default",
+          "EXPENSE_LATER": "If this bill is for stock, choose Stock for the shelves. Expense categories can’t be chosen on this page yet, so an expense bill stays in Approve for now.",
+          "HINT": "Required to approve a bill that came without line detail."
+        },
+        "DIFFERENCE": {
+          "LEGEND": "The vendor’s totals don’t add up",
+          "FIGURES": "Net {{net}} + tax {{tax}} doesn’t equal the total {{total}}. Difference: {{difference}}.",
+          "WHERE": "Where does the difference go?",
+          "FREIGHT": "Freight",
+          "GOODS": "Stock",
+          "PRICE_DIFFERENCE": "Price difference",
+          "WHY": "Why does it go there?",
+          "SAY_WHERE": "Say where the {{difference}} goes.",
+          "EXPENSE_PROPOSAL": "An expense, from the clerk’s proposal."
+        },
+        "OVERRIDE_LABEL": "Override reason",
+        "OVERRIDE_HINT": "Why it posts into a closed month: at least {{min}} characters."
+      }
+    },
+    "APPROVAL_LIMITS": {
+      "OVERLINE": "Accounting",
+      "TITLE": "Approval limits",
+      "STANDFIRST": "Who can approve which bills, and what is approved without a person.",
+      "NAV": {
+        "ARIA": "On this page",
+        "BILLS": "Bills",
+        "HISTORY": "History"
+      },
+      "LOADING": "Loading…",
+      "LOAD_FAILED": "Couldn’t load the approval limits.",
+      "DENIED": "You need the {{permission}} permission to see or change these limits.",
+      "BILLS": {
+        "HEADING": "Bills",
+        "CURRENCY": "Amounts in {{currency}}, including tax.",
+        "CLERK_LABEL": "Clerk approval limit",
+        "CLERK_HINT": "A clerk can approve bills up to this total. 0 means every bill needs a controller or general manager.",
+        "AUTO_LABEL": "Automatic approval limit",
+        "AUTO_HINT": "Strong matches up to this total are approved without a person. 0 turns this off. It can’t be more than the clerk limit.",
+        "ERROR": {
+          "AMOUNT": "Enter an amount of 0 or more, with at most two decimals.",
+          "AUTO_ABOVE_CLERK": "Can’t be more than the clerk limit"
+        },
+        "MEANS": {
+          "HEADING": "What this means",
+          "CLERK": "Bills up to {{clerk}} (including tax): a clerk can approve them. Above that: a controller or general manager approves.",
+          "NO_CLERK": "Every bill needs a controller or general manager",
+          "AUTO": "Strong matches up to {{auto}} are approved automatically",
+          "NO_AUTO": "Nothing is approved automatically"
+        },
+        "WHO": {
+          "SUMMARY": "Who can do what",
+          "CAPTION": "Each action and the permission it needs",
+          "APPROVE_ANY": "Approve any amount",
+          "REJECT": "Reject or void",
+          "PAY": "Pay",
+          "SET_LIMITS": "Change these limits",
+          "ACTION": "Action",
+          "PERMISSION": "Permission",
+          "SEND_AND_APPROVE": "Send for approval, and approve up to the clerk limit",
+          "NOTE": "Your administrator decides which roles hold each permission."
+        },
+        "RULES": {
+          "HEADING": "Always on",
+          "OWN_BILL": "You can’t approve a bill you created.",
+          "OWN_PAYMENT": "You can’t pay a bill you approved.",
+          "FOREIGN": "Foreign-currency bills are never approved.",
+          "LOCKED": "Approved bills can’t be edited.",
+          "SWITCHED_OFF": "Switched off for your business.",
+          "READ_ONLY": "These rules are shown here for reference; they aren’t changed on this page."
+        },
+        "HELP": {
+          "TEXT": "The clerk limit decides who approves a bill: a clerk up to it, a controller or general manager above it. The automatic limit lets strong delivery matches through without anyone.",
+          "EXAMPLE": "For example: with a clerk limit of 2,500.00 and an automatic limit of 500.00, a 300.00 bill that matches its delivery is approved on its own, a 1,200.00 bill goes to a clerk and a 4,000.00 bill to a controller."
+        }
+      },
+      "SAVE": {
+        "HEADING": "Save your changes",
+        "REASON_LABEL": "Why are you changing this?",
+        "REASON_HINT": "At least {{min}} characters.",
+        "CONSEQUENCE": "New limits apply to the next decision; bills already approved don’t change.",
+        "SAVE": "Save",
+        "SAVING": "Saving…",
+        "UNDO": "Undo changes",
+        "SAVED": "Your changes were saved.",
+        "UNDONE": "Your changes were undone.",
+        "NO_CHANGES": "Nothing to save yet.",
+        "ERROR": {
+          "JUSTIFICATION_REQUIRED": "Give a reason of at least {{min}} characters.",
+          "VALIDATION": "Check the highlighted fields.",
+          "PRECISION": "That amount has more decimals than {{currency}} allows.",
+          "CURRENCY": "The limits must be in your ledger currency, {{currency}}.",
+          "FORBIDDEN": "You need the {{permission}} permission to change these limits.",
+          "UNKNOWN_OUTCOME": "We couldn’t confirm the save. Press Save again: it won’t be applied twice.",
+          "OTHER": "Couldn’t save your changes."
+        }
+      },
+      "HISTORY": {
+        "HEADING": "History",
+        "CAPTION": "Changes to the approval limits, newest first",
+        "DATE": "Date",
+        "CHANGED_BY": "Changed by",
+        "CHANGE": "Change",
+        "REASON": "Reason",
+        "EMPTY": "No changes yet.",
+        "LOAD_FAILED": "Couldn’t load the history.",
+        "FROM_TO": "{{old}} → {{new}}",
+        "ON": "On",
+        "OFF": "Off",
+        "PAGING": "Pages of history",
+        "PREVIOUS": "Previous page",
+        "NEXT": "Next page",
+        "PAGE": "Page {{page}} of {{pages}}",
+        "SETTING": {
+          "AP_CLERK_APPROVAL_LIMIT": "Clerk approval limit",
+          "AP_AUTO_APPROVAL_LIMIT": "Automatic approval limit",
+          "AP_ALLOW_CREATOR_APPROVAL": "Creators may approve their own bills",
+          "AP_ALLOW_APPROVER_PAYMENT": "Approvers may pay the bills they approved",
+          "AP_DEFAULT_TERMS": "Default payment terms",
+          "UNKNOWN": "Unknown setting"
+        },
+        "ROLE": {
+          "ACCOUNTING_CLERK": "Accounting clerk",
+          "CONTROLLER": "Controller",
+          "GENERAL_MANAGER": "General manager",
+          "ADMIN": "Administrator",
+          "SYSTEM_ADMINISTRATOR": "System administrator",
+          "UNKNOWN": "Another role"
+        },
+        "TERMS": {
+          "DUE_ON_RECEIPT": "Due on receipt",
+          "NET": "Net {{days}} days",
+          "UNKNOWN": "Unknown"
+        }
       }
     }
   },
@@ -9559,7 +9901,6 @@
       "ESTIMATE_LIST": "Estimate List",
       "EVENTS": "Events",
       "EVENT_SUBMISSION": "Event Submission",
-      "EXCEPTIONS": "Exceptions",
       "EXCHANGES": "Exchanges",
       "EXECUTE": "Execute",
       "EXPORT": "Export",
@@ -9631,7 +9972,6 @@
       "UNMATCHED": "Unmatched",
       "VEHICLE_FITMENT": "Vehicle Fitment",
       "VEHICLE_INVENTORY": "Vehicle Inventory",
-      "VENDOR_INVOICES": "Vendor Invoices",
       "VENDOR_PAYMENTS": "Vendor Payments",
       "VOID_REFUND": "Void Refund",
       "WIP_STATUS": "Wip Status",
@@ -9647,7 +9987,9 @@
       "BOOKS": "Your books",
       "ENTRIES": "Journal entries",
       "PAYMENTS": "Payments",
-      "DRAWER": "Drawer"
+      "DRAWER": "Drawer",
+      "BILLS_TO_PAY": "Bills to pay",
+      "APPROVAL_LIMITS": "Approval limits"
     }
   },
   "POSITIVITY": {

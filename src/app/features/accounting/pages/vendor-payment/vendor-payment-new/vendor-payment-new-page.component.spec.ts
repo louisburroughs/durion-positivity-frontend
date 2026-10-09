@@ -1,9 +1,12 @@
+import { HttpErrorResponse, HttpHeaders } from '@angular/common/http';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService, TranslationObject } from '@ngx-translate/core';
+import enUS from '../../../../../../assets/i18n/en-US.json';
 import { of, throwError } from 'rxjs';
 import { AccountingService } from '../../../services/accounting.service';
-import { VendorPaymentNewPageComponent } from './vendor-payment-new-page.component';
+import { VendorPaymentNewPageComponent, paymentRefusal, selfApprovedBills } from './vendor-payment-new-page.component';
 
 describe('VendorPaymentNewPageComponent', () => {
   let fixture: ComponentFixture<VendorPaymentNewPageComponent>;
@@ -160,6 +163,106 @@ describe('VendorPaymentNewPageComponent', () => {
     component.submit();
     fixture.detectChanges();
     expect(component.state()).toBe('forbidden');
+  });
+
+  it('announces the bills a 403 AP_PAYMENT_SELF_APPROVED_BILL names in a role="alert" (CAP:550 S14, AC 9)', () => {
+    const translate = TestBed.inject(TranslateService);
+    translate.setTranslation('en-US', enUS as TranslationObject);
+    translate.use('en-US');
+    accountingServiceStub.executePayment.mockReturnValueOnce(
+      throwError(
+        () =>
+          new HttpErrorResponse({
+            status: 403,
+            error: {
+              code: 'AP_PAYMENT_SELF_APPROVED_BILL',
+              fieldErrors: [
+                { field: 'selfApprovedBillNumbers', message: 'INV-4471' },
+                { field: 'selfApprovedBillNumbers', message: 'INV-5520' },
+              ],
+            },
+          }),
+      ),
+    );
+    component.form.patchValue({ vendorId: 'vendor-1', grossAmount: 100, currency: 'USD', paymentMethod: 'ACH', paymentRef: 'ref-001' });
+    component.submit();
+    fixture.detectChanges();
+
+    expect(component.state()).toBe('self-approved');
+    const alert = (fixture.nativeElement as HTMLElement).querySelector('[data-testid="self-approved-alert"]')!;
+    expect(alert.getAttribute('role')).toBe('alert');
+    expect(component.selfApproved()).toBe('INV-4471, INV-5520');
+    // Both bill numbers reach the alert through the real en-US sentence (review B7).
+    expect(alert.textContent?.trim()).toBe('You approved INV-4471, INV-5520; someone else must pay them.');
+    // The form stays, so the payment can leave those bills out.
+    expect((fixture.nativeElement as HTMLElement).querySelector('form')).not.toBeNull();
+  });
+
+  it.each([
+    [422, 'AP_PAYMENT_METHOD_NOT_SUPPORTED', [], {}, 'ACCOUNTING.VENDOR_PAYMENT_NEW.REFUSAL.METHOD', {}],
+    [422, 'VENDOR_INACTIVE', [], {}, 'ACCOUNTING.VENDOR_PAYMENT_NEW.REFUSAL.VENDOR_INACTIVE', {}],
+    [503, 'VENDOR_REPLICATION_PENDING', [], { 'Retry-After': '15' }, 'ACCOUNTING.VENDOR_PAYMENT_NEW.REFUSAL.REPLICATION_PENDING_AFTER', { seconds: 15 }],
+    [409, 'LOCK_TIMEOUT', [], {}, 'ACCOUNTING.VENDOR_PAYMENT_NEW.REFUSAL.LOCK_TIMEOUT', {}],
+    [400, 'VALIDATION_ERROR', [{ field: 'bankAccountId', message: 'required' }], {}, 'ACCOUNTING.VENDOR_PAYMENT_NEW.REFUSAL.PAY_FROM', {}],
+  ])('classifies %s %s by code (ruling rows 10–13)', (status, code, fieldErrors, headers, key, params) => {
+    accountingServiceStub.executePayment.mockReturnValueOnce(
+      throwError(() => new HttpErrorResponse({ status, error: { code, fieldErrors }, headers: new HttpHeaders(headers) })),
+    );
+    component.form.patchValue({ vendorId: 'vendor-1', grossAmount: 100, currency: 'USD', paymentMethod: 'ACH', paymentRef: 'ref-001' });
+    component.submit();
+    fixture.detectChanges();
+
+    expect(component.state()).toBe('refused');
+    expect(component.refusal()).toEqual({ key, params });
+    expect((fixture.nativeElement as HTMLElement).querySelector('[data-testid="payment-refusal"]')?.getAttribute('role')).toBe('alert');
+  });
+
+  it('names the bills of a 409 VENDOR_PAYMENT_DETAILS_CHANGED from the fieldError fields, as the backend builds them (row 13)', () => {
+    const translate = TestBed.inject(TranslateService);
+    translate.setTranslation('en-US', enUS as TranslationObject);
+    translate.use('en-US');
+    accountingServiceStub.executePayment.mockReturnValueOnce(
+      throwError(
+        () =>
+          new HttpErrorResponse({
+            status: 409,
+            error: {
+              code: 'VENDOR_PAYMENT_DETAILS_CHANGED',
+              fieldErrors: [
+                { field: 'INV-1', message: 'approved at remit-to version 1; vendor V-100 is now at version 2' },
+                { field: 'INV-2', message: 'approved at remit-to version none; vendor V-100 is now at version 2' },
+              ],
+            },
+          }),
+      ),
+    );
+    component.form.patchValue({ vendorId: 'vendor-1', grossAmount: 100, currency: 'USD', paymentMethod: 'ACH', paymentRef: 'ref-001' });
+    component.submit();
+    fixture.detectChanges();
+
+    expect(component.refusal()).toEqual({ key: 'ACCOUNTING.VENDOR_PAYMENT_NEW.REFUSAL.DETAILS_CHANGED', params: { bills: 'INV-1, INV-2' } });
+    const alert = (fixture.nativeElement as HTMLElement).querySelector('[data-testid="payment-refusal"]')!;
+    expect(alert.textContent?.trim()).toBe(
+      'The vendor’s payment details changed after INV-1, INV-2 were approved. Someone who approves bills must confirm the new details before they’re paid.',
+    );
+    expect(alert.textContent).not.toContain('remit-to version');
+  });
+
+  it('never classifies VENDOR_REPLICATION_PENDING as an outcome that may have landed', () => {
+    expect(paymentRefusal(new HttpErrorResponse({ status: 503, error: { code: 'VENDOR_REPLICATION_PENDING' } }))?.key).toBe(
+      'ACCOUNTING.VENDOR_PAYMENT_NEW.REFUSAL.REPLICATION_PENDING',
+    );
+  });
+
+  it('keeps today’s handling for any other 403 (classified by code, not status)', () => {
+    accountingServiceStub.executePayment.mockReturnValueOnce(
+      throwError(() => new HttpErrorResponse({ status: 403, error: { code: 'FORBIDDEN' } })),
+    );
+    component.form.patchValue({ vendorId: 'vendor-1', grossAmount: 100, currency: 'USD', paymentMethod: 'ACH', paymentRef: 'ref-001' });
+    component.submit();
+
+    expect(component.state()).toBe('forbidden');
+    expect(selfApprovedBills({ error: { code: 'FORBIDDEN' } })).toBeNull();
   });
 
   it('sets state to conflict when executePayment errors with 409', () => {

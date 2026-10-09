@@ -1,0 +1,122 @@
+/*
+ * Shared by the Bills to pay components and pages (CAP:550 S14). The global
+ * .btn / .badge / .modal styles are component-scoped to other pages, so these
+ * pieces define their own, on the theme tokens of src/styles.css (both themes).
+ */
+
+:host {
+  display: block;
+}
+
+/* Status badge: text and colour together, never colour alone (§5.7, ADR-0039). */
+.bill-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.15rem 0.5rem;
+  border: 1px solid currentcolor;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: var(--status-neutral-bg);
+  color: var(--status-neutral-fg);
+}
+
+.bill-badge--info {
+  background: var(--status-info-bg);
+  color: var(--status-info-fg);
+}
+
+.bill-badge--warning {
+  background: var(--status-warning-bg);
+  color: var(--status-warning-fg);
+}
+
+.bill-badge--success {
+  background: var(--status-success-bg);
+  color: var(--status-success-fg);
+}
+
+.bill-badge--danger {
+  background: var(--status-error-bg);
+  color: var(--status-error-fg);
+}
+
+/* The accountant's term, shown with Show accounting terms on (P1). */
+.bill-term {
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-weight: 400;
+}
+
+.bill-icon {
+  font-size: 1.125rem;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+/* Every committing control is ≥ 44px tall (§5.7). */
+.bill-actions .btn,
+.bill-primary {
+  min-height: 2.75rem;
+}
+
+.bill-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.btn[aria-disabled='true'],
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.btn:focus-visible,
+.bill-focus:focus-visible {
+  outline: 2px solid var(--input-focus-border);
+  outline-offset: 2px;
+}
+
+/* The sentence that says what a committing button does, placed before it (P4). */
+.bill-consequence {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.bill-error {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--status-error-bg);
+  color: var(--status-error-fg);
+  font-size: 0.875rem;
+}
+
+.bill-form {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.bill-form textarea {
+  min-height: 4.5rem;
+  resize: vertical;
+}
+
+.bill-form [aria-invalid='true'] {
+  border-color: var(--status-error-fg);
+}
+
+.bill-subheading {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.bill-numeric {
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+  white-space: nowrap;
+}

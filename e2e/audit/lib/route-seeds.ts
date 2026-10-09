@@ -52,8 +52,8 @@ export const APP_SEEDS: readonly string[] = [
   '/app/accounting/credit-memos/new',
   '/app/accounting/vendor-payments',
   '/app/accounting/vendor-payments/new',
-  '/app/accounting/payables/vendor-invoices',
-  '/app/accounting/payables/vendor-invoices/exceptions',
+  '/app/accounting/bills',
+  '/app/accounting/settings/approval-limits',
   '/app/accounting/reports/labor-overhead',
 
   // Billing
@@ -172,7 +172,7 @@ export const PARAM_TEMPLATES: readonly ParamRouteTemplate[] = [
   { template: '/app/accounting/posting-rules/:ruleSetId', params: { ruleSetId: ['ruleSetId@accounting', 'postingRuleSetId@accounting'] } },
   { template: '/app/accounting/credit-memos/:memoId', params: { memoId: ['memoId@accounting', 'creditMemoId@accounting'] } },
   { template: '/app/accounting/vendor-payments/:paymentId', params: { paymentId: ['paymentId@accounting', 'vendorPaymentId@accounting'] } },
-  { template: '/app/accounting/payables/vendor-invoices/:billId', params: { billId: ['billId@accounting', 'vendorBillId@accounting'] } },
+  { template: '/app/accounting/bills/:billId', params: { billId: ['billId@accounting', 'vendorBillId@accounting'] } },
   { template: '/app/accounting/invoices/:invoiceId/payment-status', params: { invoiceId: ['invoiceId@invoice', 'invoiceId@accounting'] } },
 
   // Billing — invoice views take ids from the invoice service only.

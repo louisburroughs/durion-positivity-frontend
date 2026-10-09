@@ -1,0 +1,77 @@
+<div class="bill-due-date" data-testid="bill-due-date">
+  <p class="bill-due-date__value" data-testid="due-date-value">
+    @if (bill().dueDate; as due) {
+      {{ toDate(due) | date: 'mediumDate' }}
+    } @else {
+      {{ 'ACCOUNTING.BILLS.PANEL.NO_DUE_DATE' | translate }}
+    }
+  </p>
+  @if (action(); as served) {
+    @if (!editing()) {
+      <button
+        type="button"
+        class="link-button"
+        data-testid="due-date-open"
+        [disabled]="served.allowed && busy()"
+        [attr.aria-disabled]="served.allowed ? null : 'true'"
+        [attr.aria-describedby]="served.allowed ? null : id + '-blocked'"
+        (click)="open()"
+      >
+        {{ (bill().dueDate ? 'ACCOUNTING.BILLS.DUE_DATE.CHANGE' : 'ACCOUNTING.BILLS.DUE_DATE.ADD') | translate }}
+      </button>
+      @if (!served.allowed) {
+        <p class="hint-text" [id]="id + '-blocked'" data-testid="due-date-blocked">
+          @if (blocked(served); as reason) {
+            @if (reason.money; as m) {
+              {{ reason.key | translate: withParam(reason.params, m.param, (m.value | money: m.currency)) }}
+            } @else {
+              {{ reason.key | translate: reason.params }}
+            }
+          }
+        </p>
+      }
+    } @else {
+      <form class="bill-form bill-due-date__form" (submit)="$event.preventDefault(); save()" data-testid="due-date-form">
+        <div class="form-field">
+          <label [for]="id + '-date'">{{ 'ACCOUNTING.BILLS.DUE_DATE.LABEL' | translate }}</label>
+          <input
+            type="date"
+            [id]="id + '-date'"
+            data-testid="due-date-input"
+            [value]="dueDate()"
+            (input)="dueDate.set(text($event))"
+            [attr.aria-invalid]="ownFailure()?.view?.field === 'dueDate' ? 'true' : null"
+            [attr.aria-describedby]="ownFailure() ? id + '-error' : null"
+          />
+        </div>
+        <div class="form-field">
+          <label [for]="id + '-reason'">{{ 'ACCOUNTING.BILLS.DUE_DATE.REASON_LABEL' | translate }}</label>
+          <textarea
+            [id]="id + '-reason'"
+            data-testid="due-date-reason"
+            [value]="reason()"
+            (input)="reason.set(text($event))"
+            [attr.maxlength]="max"
+            [attr.aria-invalid]="ownFailure()?.view?.field === 'reason' ? 'true' : null"
+            [attr.aria-describedby]="id + '-reason-hint' + (ownFailure() && ownFailure()?.view?.field !== 'dueDate' ? ' ' + id + '-error' : '')"
+          ></textarea>
+          <p class="hint-text" [id]="id + '-reason-hint'">{{ 'ACCOUNTING.BILLS.DUE_DATE.REASON_HINT' | translate: { min: min } }}</p>
+        </div>
+        @if (ownFailure(); as failure) {
+          <p class="bill-error" role="alert" [id]="id + '-error'" data-testid="due-date-error">
+            {{ failure.view.message.key | translate: failure.view.message.params }}
+          </p>
+        }
+        <p class="bill-consequence" data-testid="due-date-consequence">{{ 'ACCOUNTING.BILLS.DUE_DATE.CONSEQUENCE' | translate }}</p>
+        <div class="bill-actions">
+          <button type="submit" class="btn btn--accent" data-testid="due-date-save" [disabled]="busy() || !dateOk() || !reasonOk()">
+            {{ 'ACCOUNTING.BILLS.DUE_DATE.SAVE' | translate }}
+          </button>
+          <button type="button" class="btn btn--outline" data-testid="due-date-cancel" [disabled]="busy()" (click)="close()">
+            {{ 'COMMON.CANCEL' | translate }}
+          </button>
+        </div>
+      </form>
+    }
+  }
+</div>
