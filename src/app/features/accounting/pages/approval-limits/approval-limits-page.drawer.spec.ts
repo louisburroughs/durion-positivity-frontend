@@ -386,6 +386,22 @@ describe('ApprovalLimitsPageComponent — Drawer cash, categories and the merged
       );
     });
 
+    it.each([504, 0])('drawer saved, bill outcome unknown (%s): the alert says the bill limits couldn\'t be confirmed (B3)', status => {
+      bills.updatePolicy.mockReturnValueOnce(throwError(() => new HttpErrorResponse({ status })));
+      const page = render([BILLS, DRAWER], true);
+      type('[data-testid="clerk-limit"]', '3000');
+      type('[data-testid="drawer-tolerance"]', '3');
+      type('[data-testid="save-reason"]', REASON);
+      saveButton().click();
+      fixture.detectChanges();
+
+      expect(sentence('[data-testid="save-error"]')).toBe(
+        'Drawer cash limits were saved. Bill limits couldn’t be confirmed: We couldn’t confirm the save. Press Save again: it won’t be applied twice. Your bill changes are still here.',
+      );
+      expect(page.drawerDirty()).toBe(false);
+      expect(page.billsDirty()).toBe(true);
+    });
+
     it('drawer saved, bill failed: the bill alert names both and the drawer baseline is the served one', () => {
       bills.updatePolicy.mockReturnValueOnce(throwError(() => apiError(422, 'CURRENCY_NOT_SUPPORTED')));
       const page = render([BILLS, DRAWER], true);
