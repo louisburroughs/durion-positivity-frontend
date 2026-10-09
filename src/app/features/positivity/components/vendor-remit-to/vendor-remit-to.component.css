@@ -1,0 +1,8 @@
+:host {
+	display: block;
+}
+
+h4 {
+	margin: 0 0 var(--space-1);
+	font-size: 0.9375rem;
+}

@@ -1,0 +1,146 @@
+<main class="vendor-page" aria-labelledby="vendor-list-title">
+  <header class="vendor-page__header">
+    <div>
+      <h1 class="vendor-page__title" id="vendor-list-title" tabindex="-1">{{ 'POSITIVITY.VENDORS.TITLE' | translate }}</h1>
+      <p class="vendor-page__subtitle">{{ 'POSITIVITY.VENDORS.SUBTITLE' | translate }}</p>
+    </div>
+    @if (canWrite()) {
+      <a class="vendor-btn vendor-btn--primary" data-testid="vendor-add" [routerLink]="['/app', 'positivity', 'vendors', 'new']">
+        {{ 'POSITIVITY.VENDORS.ADD' | translate }}
+      </a>
+    }
+  </header>
+
+  <section class="vendor-section" aria-labelledby="vendor-list-filters">
+    <h2 class="sr-only" id="vendor-list-filters">{{ 'POSITIVITY.VENDORS.FILTERS' | translate }}</h2>
+    <form class="vendor-actions" role="search" (submit)="search($event)">
+      <div class="vendor-field">
+        <label for="vendor-search">{{ 'POSITIVITY.VENDORS.SEARCH_LABEL' | translate }}</label>
+        <input
+          id="vendor-search"
+          type="search"
+          data-testid="vendor-search"
+          autocomplete="off"
+          [value]="query()"
+          (input)="query.set(text($event))"
+          aria-describedby="vendor-search-hint"
+        />
+        <p class="vendor-hint" id="vendor-search-hint">{{ 'POSITIVITY.VENDORS.SEARCH_HINT' | translate }}</p>
+      </div>
+      <button type="submit" class="vendor-btn vendor-btn--secondary" data-testid="vendor-search-submit">
+        {{ 'COMMON.SEARCH' | translate }}
+      </button>
+    </form>
+    <div class="vendor-actions" role="group" aria-labelledby="vendor-status-label">
+      <span id="vendor-status-label">{{ 'POSITIVITY.VENDORS.STATUS_LABEL' | translate }}</span>
+      @for (filter of filters; track filter) {
+        <button
+          type="button"
+          class="vendor-btn vendor-btn--secondary"
+          [attr.data-testid]="'vendor-filter-' + filter"
+          [attr.aria-pressed]="status() === filter ? 'true' : 'false'"
+          (click)="setStatus(filter)"
+        >
+          {{ filterKey(filter) | translate }}
+        </button>
+      }
+    </div>
+  </section>
+
+  <div aria-live="polite" class="sr-only" data-testid="vendor-list-status">
+    @if (state() === 'loading') {
+      {{ 'POSITIVITY.VENDORS.LOADING' | translate }}
+    }
+  </div>
+
+  @if (state() === 'error' && errorKey(); as error) {
+    <div class="vendor-banner vendor-banner--error" role="alert" data-testid="vendor-list-error">
+      {{ error.key | translate: error.params }}
+      <button type="button" class="vendor-btn vendor-btn--secondary" (click)="load()">{{ 'COMMON.RETRY' | translate }}</button>
+    </div>
+  }
+
+  @if (result(); as page) {
+    @if (rows().length === 0) {
+      <p class="vendor-banner" data-testid="vendor-list-empty">
+        {{ 'POSITIVITY.VENDORS.EMPTY' | translate }}
+        @if (canWrite()) {
+          <a class="vendor-link" data-testid="vendor-add-first" [routerLink]="['/app', 'positivity', 'vendors', 'new']">
+            {{ 'POSITIVITY.VENDORS.EMPTY_ADD' | translate }}
+          </a>
+        }
+      </p>
+    } @else {
+      <div class="vendor-table-wrap">
+        <table class="vendor-table" data-testid="vendor-table">
+          <caption>{{ 'POSITIVITY.VENDORS.TABLE_CAPTION' | translate: { count: page.totalElements } }}</caption>
+          <thead>
+            <tr>
+              <th scope="col">{{ 'POSITIVITY.VENDORS.COLUMN.NUMBER' | translate }}</th>
+              <th scope="col">{{ 'POSITIVITY.VENDORS.COLUMN.NAME' | translate }}</th>
+              <th scope="col">{{ 'POSITIVITY.VENDORS.COLUMN.STATUS' | translate }}</th>
+              <th scope="col">{{ 'POSITIVITY.VENDORS.COLUMN.TERMS' | translate }}</th>
+              <th scope="col">{{ 'POSITIVITY.VENDORS.COLUMN.CURRENCY' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (vendor of rows(); track vendor.vendorId) {
+              <tr data-testid="vendor-row">
+                <td class="vendor-mono">
+                  <a class="vendor-link" data-testid="vendor-row-link" [routerLink]="['/app', 'positivity', 'vendors', vendor.vendorId]">
+                    {{ vendor.vendorNumber || ('COMMON.NOT_AVAILABLE' | translate) }}
+                  </a>
+                </td>
+                <td data-testid="vendor-row-name">
+                  {{ vendor.displayName || ('COMMON.NOT_AVAILABLE' | translate) }}
+                  @if (vendor.legalName && vendor.legalName !== vendor.displayName) {
+                    <br /><span class="vendor-muted" data-testid="vendor-row-legal">{{ vendor.legalName }}</span>
+                  }
+                </td>
+                <td>
+                  <span
+                    class="vendor-badge"
+                    [class.vendor-badge--active]="vendor.status === 'ACTIVE'"
+                    [class.vendor-badge--inactive]="vendor.status === 'INACTIVE'"
+                    data-testid="vendor-row-status"
+                  >
+                    {{ 'POSITIVITY.VENDORS.STATUS.' + vendor.status | translate }}
+                  </span>
+                </td>
+                <td data-testid="vendor-row-terms">
+                  @if (termsCopy(vendor.paymentTerms); as terms) {
+                    {{ terms.key | translate: terms.params }}
+                  }
+                </td>
+                <td class="vendor-mono">{{ vendor.currency || ('COMMON.NOT_AVAILABLE' | translate) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <nav class="vendor-actions" [attr.aria-label]="'POSITIVITY.VENDORS.PAGING_LABEL' | translate">
+        <button
+          type="button"
+          class="vendor-btn vendor-btn--secondary"
+          data-testid="vendor-page-previous"
+          [disabled]="!hasPrevious() || state() === 'loading'"
+          (click)="previousPage()"
+        >
+          {{ 'POSITIVITY.VENDORS.PREVIOUS' | translate }}
+        </button>
+        <span data-testid="vendor-page-label">
+          {{ 'POSITIVITY.VENDORS.PAGE_OF' | translate: { page: page.page + 1, pages: page.totalPages || 1 } }}
+        </span>
+        <button
+          type="button"
+          class="vendor-btn vendor-btn--secondary"
+          data-testid="vendor-page-next"
+          [disabled]="!hasNext() || state() === 'loading'"
+          (click)="nextPage()"
+        >
+          {{ 'POSITIVITY.VENDORS.NEXT' | translate }}
+        </button>
+      </nav>
+    }
+  }
+</main>

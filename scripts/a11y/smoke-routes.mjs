@@ -59,6 +59,9 @@ const ROUTES = [
   // they are the ones worth scanning as the domain grows.
   '/app/positivity',
   '/app/positivity/exchanges',
+  // Vendor master (CAP:550 S30). Rendered-DOM axe coverage, both themes, lives in
+  // src/app/features/positivity/pages/vendor-detail/vendor-pages.a11y.spec.ts.
+  '/app/positivity/vendors',
 ];
 
 const IMPACT_RANK = {

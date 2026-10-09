@@ -168,6 +168,7 @@
       "ADMIN": "Administration",
       "SITEMAP": "Plan du site",
       "SUPPLIER": "Connectivité des fournisseurs",
+      "VENDORS": "Fournisseurs",
       "PLATFORM": "Plateforme"
     },
     "HEADER": {
@@ -9989,7 +9990,8 @@
       "PAYMENTS": "Paiements",
       "DRAWER": "Tiroir",
       "BILLS_TO_PAY": "Factures à payer",
-      "APPROVAL_LIMITS": "Limites d'approbation"
+      "APPROVAL_LIMITS": "Limites d'approbation",
+      "VENDORS": "Fournisseurs"
     }
   },
   "POSITIVITY": {
@@ -10137,7 +10139,10 @@
         "EMPTY": "Aucun fournisseur actif. Un fournisseur doit être ajouté avant de pouvoir créer un profil.",
         "NOT_REPORTED": "Non indiqué",
         "EMPTY_EDIT": "Aucun fournisseur actif à choisir.",
-        "FORBIDDEN_CHOOSE": "Vous n’avez pas l’autorisation de consulter les fournisseurs; vous ne pouvez donc pas en choisir un. Demandez l’accès aux fournisseurs à un administrateur."
+        "FORBIDDEN_CHOOSE": "Vous n’avez pas l’autorisation de consulter les fournisseurs; vous ne pouvez donc pas en choisir un. Demandez l’accès aux fournisseurs à un administrateur.",
+        "BELONGS_TO": "Appartient à",
+        "FILTERED": "Connexions d’un seul fournisseur affichées.",
+        "SHOW_ALL": "Afficher tous les profils"
       },
       "WRITE_FORBIDDEN": "Vous pouvez consulter les profils fournisseurs, mais pas les modifier. Demandez à un administrateur l’accès en écriture aux profils fournisseurs."
     },
@@ -10712,6 +10717,225 @@
       "ERROR": {
         "LOAD_SUMMARY": "Le résumé de la dernière photo des stocks n'a pas pu être chargé.",
         "LOAD_LINES": "Les lignes de la photo des stocks n'ont pas pu être chargées."
+      }
+    },
+    "VENDORS": {
+      "TITLE": "Fournisseurs",
+      "SUBTITLE": "Tous ceux à qui l’atelier achète ou paie : distributeurs, propriétaires et services publics. Les achats, les factures et les paiements utilisent tous cette liste.",
+      "ADD": "Ajouter un fournisseur",
+      "BACK_TO_LIST": "Retour aux fournisseurs",
+      "FILTERS": "Trouver un fournisseur",
+      "SEARCH_LABEL": "Rechercher des fournisseurs",
+      "SEARCH_HINT": "Numéro, nom ou raison sociale du fournisseur.",
+      "STATUS_LABEL": "Afficher",
+      "FILTER": {
+        "ACTIVE": "Actifs",
+        "INACTIVE": "Inactifs",
+        "ALL": "Tous"
+      },
+      "STATUS": {
+        "ACTIVE": "Actif",
+        "INACTIVE": "Inactif"
+      },
+      "LOADING": "Chargement des fournisseurs…",
+      "EMPTY": "Aucun fournisseur ne correspond.",
+      "EMPTY_ADD": "Ajoutez le premier.",
+      "TABLE_CAPTION": "Fournisseurs ({{count}})",
+      "COLUMN": {
+        "NUMBER": "Numéro de fournisseur",
+        "NAME": "Nom",
+        "STATUS": "Statut",
+        "TERMS": "Conditions de paiement",
+        "CURRENCY": "Devise"
+      },
+      "PAGING_LABEL": "Pages des fournisseurs",
+      "PREVIOUS": "Page précédente",
+      "NEXT": "Page suivante",
+      "PAGE_OF": "Page {{page}} sur {{pages}}",
+      "OPTION": "{{number}} · {{name}}",
+      "NOTE_HINT": "Au moins {{min}} caractères.",
+      "TERMS": {
+        "DUE_ON_RECEIPT": "Payable à réception",
+        "NET": "Net {{days}}"
+      },
+      "FORM": {
+        "NUMBER": "Numéro de fournisseur (facultatif)",
+        "NUMBER_HINT": "Laissez vide et nous le numéroterons (V-000123). Majuscules, chiffres et traits d’union, jusqu’à {{max}}.",
+        "LEGAL_NAME": "Raison sociale",
+        "DISPLAY_NAME": "Nom affiché",
+        "DISPLAY_NAME_HINT": "Le nom que l’on voit sur les factures, les commandes et les paiements.",
+        "TERMS": "Conditions de paiement",
+        "TERMS_NET": "Net, un nombre de jours",
+        "NET_DAYS": "Jours pour payer",
+        "NET_DAYS_HINT": "Un nombre entier de {{min}} à {{max}}.",
+        "CURRENCY": "Devise",
+        "CURRENCY_HINT": "Code de trois lettres, comme USD ou CAD.",
+        "REQUIRED": "Remplissez ce champ."
+      },
+      "TAX": {
+        "LEGEND": "Inscriptions fiscales",
+        "HINT": "Ajoutez chaque inscription du fournisseur. Les numéros sont conservés de façon sécurisée et affichés masqués.",
+        "SCHEME": "Régime de l’inscription {{index}}",
+        "SCHEME_HINT": "Par exemple EIN, TPS ou TVA.",
+        "REGION": "Région de l’inscription {{index}} (facultatif)",
+        "NUMBER": "Numéro de l’inscription {{index}}",
+        "NUMBER_NEW_HINT": "Saisissez le numéro tel qu’il a été délivré.",
+        "NUMBER_RETYPE_HINT": "Vous avez changé le régime ou la région : saisissez de nouveau le numéro.",
+        "NUMBER_KEEP_HINT": "Laissez vide pour garder le numéro se terminant par {{last4}}.",
+        "NUMBER_KEEP_ON_FILE_HINT": "Laissez vide pour garder le numéro au dossier.",
+        "NUMBER_REQUIRED": "Saisissez le numéro d’inscription.",
+        "ADD": "Ajouter une inscription",
+        "REMOVE": "Retirer l’inscription {{index}}",
+        "NONE": "Aucune inscription fiscale.",
+        "SCHEME_REGION": "{{scheme}} ({{region}})",
+        "MASKED": "•••• {{last4}}",
+        "ON_FILE": "au dossier",
+        "REVEAL": "Afficher le numéro {{scheme}}",
+        "REVEAL_TITLE": "Afficher le numéro {{scheme}}",
+        "REVEAL_REASON": "Pourquoi avez-vous besoin du numéro complet?",
+        "REVEAL_REASON_HINT": "De {{min}} à {{max}} caractères. N’écrivez pas le numéro lui-même.",
+        "REVEAL_CONSEQUENCE": "Votre nom, vos rôles et votre raison sont enregistrés avant que le numéro soit affiché.",
+        "REVEAL_CONFIRM": "Afficher",
+        "REVEALED_LABEL": "Numéro complet :",
+        "REVEALED_HINT": "Le numéro disparaît quand vous fermez cette fenêtre. Ne le copiez pas là où il n’est pas nécessaire."
+      },
+      "REMIT": {
+        "TITLE": "Adresse de paiement",
+        "OPTIONAL_LEGEND": "Adresse de paiement (facultatif)",
+        "OPTIONAL_HINT": "Où le fournisseur est payé. Une adresse postale seulement : aucune coordonnée bancaire n’est conservée sur un fournisseur.",
+        "VERSION": "Version {{version}}",
+        "VERSION_SINCE": "Version {{version}} · en vigueur depuis {{when}}",
+        "NONE": "Pas encore d’adresse de paiement.",
+        "EMAIL": "Courriel de remise : {{email}}",
+        "REQUEST": "Demander un changement",
+        "REQUEST_TITLE": "Demander un changement d’adresse de paiement pour {{number}}",
+        "REQUEST_REASON": "Pourquoi change-t-elle?",
+        "REQUEST_CONSEQUENCE": "La nouvelle adresse n’est utilisée qu’après l’approbation d’une autre personne.",
+        "REQUEST_SUBMIT": "Demander le changement",
+        "REQUESTED": "Changement demandé. Une autre personne doit l’approuver avant qu’il soit utilisé.",
+        "PENDING_TITLE": "Changement en attente d’approbation",
+        "CURRENT": "Adresse actuelle",
+        "PROPOSED": "Adresse proposée",
+        "REQUESTED_BY": "Demandé par",
+        "REQUESTED_AT": "Demandé le",
+        "DECIDED_BY": "Décidé par",
+        "REASON": "Raison",
+        "VERIFICATION_LABEL": "Comment l’avez-vous vérifié? Par exemple, vous avez appelé le fournisseur à un numéro que vous aviez déjà",
+        "VERIFICATION_HINT": "Au moins {{min}} caractères.",
+        "APPROVE": "Approuver",
+        "APPROVE_CONSEQUENCE": "Les paiements iront à la nouvelle adresse. Les factures approuvées avant le changement demandent une seconde confirmation avant d’être payées.",
+        "APPROVED": "Changement approuvé. Les paiements vont maintenant à la nouvelle adresse.",
+        "SELF_APPROVAL": "Vous ne pouvez pas approuver un changement que vous avez demandé",
+        "REJECT": "Refuser",
+        "REJECT_TITLE": "Refuser le changement d’adresse de paiement pour {{number}}",
+        "REJECT_NOTE": "Pourquoi le refusez-vous?",
+        "REJECT_CONSEQUENCE": "Le fournisseur garde son adresse actuelle.",
+        "REJECTED": "Changement refusé. Le fournisseur garde son adresse actuelle.",
+        "HISTORY_TITLE": "Historique de l’adresse de paiement",
+        "HISTORY_EMPTY": "Aucun changement d’adresse de paiement pour l’instant.",
+        "NOTES": "Notes",
+        "REASON_NOTE": "Raison : {{note}}",
+        "DECISION_NOTE": "Décision : {{note}}",
+        "VERSIONS": "Versions",
+        "VERSION_RANGE": "{{from}} → {{to}}",
+        "VERSION_FROM": "Depuis {{from}}",
+        "STATUS": {
+          "PENDING": "En attente d’approbation",
+          "APPROVED": "Approuvé",
+          "REJECTED": "Refusé"
+        },
+        "FIELD": {
+          "PAYEE": "Nom du bénéficiaire",
+          "LINE1": "Adresse, ligne 1",
+          "LINE2": "Adresse, ligne 2",
+          "CITY": "Ville",
+          "REGION": "État, province ou région",
+          "POSTAL_CODE": "Code postal",
+          "COUNTRY": "Pays (deux lettres)",
+          "EMAIL": "Courriel de remise"
+        }
+      },
+      "CREATE": {
+        "TITLE": "Ajouter un fournisseur",
+        "SUBTITLE": "Ajoutez une partie à qui l’atelier achète ou paie.",
+        "FORBIDDEN": "Vous n’avez pas la permission d’ajouter des fournisseurs. Demandez à quelqu’un qui l’a.",
+        "CONSEQUENCE": "Les achats, les factures et les paiements utiliseront tous ce fournisseur. La personne qui ajoute un fournisseur ne peut pas approuver sa première facture.",
+        "ADDED": "Fournisseur {{number}} ajouté. Il peut falloir un moment avant qu’il apparaisse dans les factures, les bons de commande et les paiements.",
+        "UNCONFIRMED": "Nous n’avons pas pu confirmer l’ajout du fournisseur. Vérifiez les fournisseurs ci-dessous avant de l’ajouter de nouveau.",
+        "CHECKING": "Vérification de l’ajout du fournisseur…",
+        "MATCHES": "Ces fournisseurs correspondent à ce que vous avez saisi. Si l’un d’eux est le vôtre, ouvrez-le plutôt que de l’ajouter de nouveau.",
+        "NO_MATCHES": "Aucun fournisseur correspondant n’a été trouvé. Vous pouvez essayer de l’ajouter de nouveau."
+      },
+      "DETAIL": {
+        "TITLE": "{{number}} · {{name}}",
+        "TITLE_LOADING": "Fournisseur",
+        "IDENTITY": "Détails",
+        "STATUS_CHANGED": "depuis le {{when}}",
+        "STATUS_REASON": "Raison : {{reason}}"
+      },
+      "EDIT": {
+        "TITLE": "Modifier le fournisseur",
+        "HINT": "Le numéro de fournisseur ne change jamais. L’adresse de paiement change par Demander un changement; le statut par Désactiver ou Réactiver.",
+        "SAVED": "Fournisseur enregistré."
+      },
+      "STATUS_DIALOG": {
+        "DEACTIVATE": "Désactiver",
+        "REACTIVATE": "Réactiver",
+        "DEACTIVATE_TITLE": "Désactiver le fournisseur {{number}}",
+        "REACTIVATE_TITLE": "Réactiver le fournisseur {{number}}",
+        "REASON": "Raison",
+        "DEACTIVATE_CONSEQUENCE": "Les nouvelles factures, les paiements et les bons de commande pour ce fournisseur seront refusés. Ses factures ouvertes peuvent encore être approuvées, mais elles ne sont pas payées tant que le fournisseur est inactif.",
+        "REACTIVATE_CONSEQUENCE": "Les factures, les paiements et les bons de commande pour ce fournisseur seront de nouveau acceptés.",
+        "DEACTIVATED": "Fournisseur désactivé.",
+        "REACTIVATED": "Fournisseur réactivé."
+      },
+      "CONNECTIONS": {
+        "TITLE": "Connexions",
+        "LOADING": "Chargement des connexions…",
+        "ERROR": "Les connexions du fournisseur n’ont pas pu être chargées.",
+        "EMPTY": "Ce fournisseur n’a aucune connexion fournisseur.",
+        "ENABLED": "Activée",
+        "DISABLED": "Désactivée"
+      },
+      "ERROR": {
+        "LOAD_LIST": "Les fournisseurs n’ont pas pu être chargés.",
+        "LOAD_DETAIL": "Ce fournisseur n’a pas pu être chargé.",
+        "LOAD_CHANGES": "Les changements d’adresse de paiement n’ont pas pu être chargés; ils ne peuvent donc pas être demandés ni décidés pour le moment.",
+        "CREATE": "Le fournisseur n’a pas pu être ajouté.",
+        "SAVE": "Le fournisseur n’a pas pu être enregistré.",
+        "STATUS_CHANGE": "Le statut du fournisseur n’a pas pu être changé.",
+        "REMIT_REQUEST": "Le changement d’adresse de paiement n’a pas pu être demandé.",
+        "REMIT_DECIDE": "Le changement d’adresse de paiement n’a pas pu être décidé.",
+        "REVEAL": "Le numéro n’a pas pu être affiché.",
+        "NOT_FOUND": "Ce fournisseur n’existe pas.",
+        "VALIDATION": "Certains champs demandent votre attention. Vérifiez-les et réessayez.",
+        "NUMBER_TAKEN": "{{number}} est déjà utilisé. Laissez le champ vide pour une numérotation automatique.",
+        "STALE": "Quelqu’un d’autre a modifié ce fournisseur. Vérifiez et enregistrez de nouveau.",
+        "REMIT_PENDING": "Un changement d’adresse de paiement attend déjà l’approbation. Il est affiché ci-dessous.",
+        "REMIT_NOT_PENDING": "Quelqu’un a déjà décidé de ce changement. La décision est affichée ci-dessous.",
+        "INACTIVE": "Ce fournisseur est inactif.",
+        "TAX_REGISTRATION_NOT_FOUND": "Cette inscription n’existe plus. Le fournisseur a été relu.",
+        "TAX_ID_UNREADABLE": "Le numéro conservé ne peut pas être lu. La tentative a été enregistrée; avisez un administrateur.",
+        "FORBIDDEN": "Vous n’avez pas la permission de voir ceci.",
+        "FORBIDDEN_WRITE": "Vous n’avez pas la permission de faire ceci. Il faut {{permission}}.",
+        "RETRYABLE": "Nous n’avons pas pu confirmer le changement; le fournisseur a donc été relu. Vérifiez-le avant de réessayer.",
+        "STATUS": "Une erreur s’est produite (HTTP {{status}}).",
+        "FIELD": {
+          "INVALID": "Cette valeur a été refusée.",
+          "LEGAL_NAME": "Saisissez la raison sociale.",
+          "DISPLAY_NAME": "Saisissez le nom affiché.",
+          "VENDOR_NUMBER": "Utilisez des majuscules, des chiffres et des traits d’union, jusqu’à 30.",
+          "PAYMENT_TERMS": "Choisissez Payable à réception, ou Net avec 1 à 120 jours.",
+          "CURRENCY": "Saisissez un code de devise de trois lettres, comme USD.",
+          "NOTE": "Écrivez au moins 10 caractères.",
+          "EMAIL": "Saisissez une adresse courriel valide.",
+          "COUNTRY": "Saisissez un code de pays de deux lettres, comme US ou CA.",
+          "REMIT_TO": "Vérifiez cette partie de l’adresse.",
+          "TAX_NUMBER": "Vérifiez le numéro d’inscription.",
+          "TAX_SCHEME": "Vérifiez le régime.",
+          "TAX_REGION": "Vérifiez la région.",
+          "TAX_REGISTRATION": "Cette inscription ne peut pas être conservée. Retirez-la et ajoutez-la de nouveau."
+        }
       }
     }
   },

@@ -1,3 +1,4 @@
+import { computed } from '@angular/core';
 import { describe, expect, it } from 'vitest';
 import { Route } from '@angular/router';
 
@@ -5,7 +6,10 @@ import { routes } from './app.routes';
 import { authGuard } from './core/guards/auth.guard';
 import { rolesChildGuard } from './core/guards/roles.guard';
 import { PERMISSION_BY_BIT } from './core/security/permission-catalog';
-import { SECURITY_PAGE } from './core/security/route-permissions';
+import { RouteAccessRequirement, canAccess } from './core/security/route-access';
+import { AuthService } from './core/services/auth.service';
+import { POSITIVITY_PAGE, SECURITY_PAGE } from './core/security/route-permissions';
+import { VENDOR_ROUTES } from './features/positivity/vendors.routes';
 import { NAV_REGISTRY } from './features/shell/services/navigation-registry.service';
 
 describe('app route topology', () => {
@@ -81,6 +85,50 @@ describe('/app route access', () => {
     expect(page).toBeTruthy();
     expect(declaredPermissions(page!)).toEqual(SECURITY_PAGE.permissions);
     expect(declaredRoles(page!)).toEqual([]);
+  });
+
+  it('gates /app/positivity/vendors on supplier:vendor:read, before and outside the ROLE_ADMIN positivity group (CAP:550 S30)', () => {
+    const vendors = children.find(child => child.path === 'positivity/vendors');
+    const positivityIndex = children.findIndex(child => child.path === 'positivity');
+
+    expect(vendors).toBeTruthy();
+    expect(declaredPermissions(vendors!)).toEqual(['supplier:vendor:read']);
+    expect(declaredRoles(vendors!)).toEqual([]);
+    expect(children.indexOf(vendors!)).toBeLessThan(positivityIndex);
+    expect(declaredRoles(children[positivityIndex])).toEqual(['ROLE_ADMIN']);
+  });
+
+  it('AC 1: a clerk with vendor read and write but no ROLE_ADMIN opens vendors and vendors/new, while /app/positivity refuses', () => {
+    const granted = new Set(['supplier:vendor:read', 'supplier:vendor:write']);
+    const clerk: Pick<AuthService, 'permissionsKnown' | 'hasAnyPermission' | 'hasPermission' | 'hasAnyRole'> = {
+      permissionsKnown: computed(() => true),
+      hasAnyPermission: (codes: readonly string[]) => codes.some(code => granted.has(code)),
+      hasPermission: (code: string) => granted.has(code),
+      hasAnyRole: () => false,
+    };
+    const allows = (route: Route | undefined): boolean =>
+      canAccess(clerk as AuthService, (route?.data ?? {}) as RouteAccessRequirement);
+
+    const mount = children.find(child => child.path === 'positivity/vendors');
+    const positivity = children.find(child => child.path === 'positivity');
+    expect(allows(mount) && allows(VENDOR_ROUTES.find(route => route.path === ''))).toBe(true);
+    expect(allows(mount) && allows(VENDOR_ROUTES.find(route => route.path === 'new'))).toBe(true);
+    expect(allows(positivity)).toBe(false);
+
+    granted.delete('supplier:vendor:write');
+    expect(allows(mount) && allows(VENDOR_ROUTES.find(route => route.path === 'new'))).toBe(false);
+  });
+
+  it('additionally gates vendors/new on supplier:vendor:write; list and detail admit on the mount', () => {
+    const create = VENDOR_ROUTES.find(route => route.path === 'new');
+    const detail = VENDOR_ROUTES.find(route => route.path === ':vendorId');
+    const list = VENDOR_ROUTES.find(route => route.path === '');
+
+    expect(declaredPermissions(create!)).toEqual(POSITIVITY_PAGE.vendorCreate);
+    expect(POSITIVITY_PAGE.vendorCreate).toEqual(['supplier:vendor:write']);
+    expect(declaredPermissions(detail!)).toEqual([]);
+    expect(declaredPermissions(list!)).toEqual([]);
+    expect(VENDOR_ROUTES.indexOf(create!)).toBeLessThan(VENDOR_ROUTES.indexOf(detail!));
   });
 
   it('aliases the plan-named /app/admin/tenants onto the platform area', () => {

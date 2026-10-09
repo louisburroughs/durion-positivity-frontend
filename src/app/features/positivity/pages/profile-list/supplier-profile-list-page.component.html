@@ -24,6 +24,15 @@
     </div>
   </header>
 
+  @if (vendorFilter()) {
+    <p class="pos-banner pos-banner--info" data-testid="profiles-vendor-filter">
+      {{ 'POSITIVITY.PROFILES.VENDOR.FILTERED' | translate }}
+      <a [routerLink]="['/app', 'positivity']" data-testid="profiles-vendor-filter-clear">
+        {{ 'POSITIVITY.PROFILES.VENDOR.SHOW_ALL' | translate }}
+      </a>
+    </p>
+  }
+
   @if (!canWrite()) {
     <p class="pos-banner pos-banner--info" id="profiles-write-reason">
       {{ 'POSITIVITY.PROFILES.WRITE_FORBIDDEN' | translate }}

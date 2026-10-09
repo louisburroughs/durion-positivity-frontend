@@ -1,0 +1,74 @@
+<section [attr.aria-labelledby]="id + '-title'" data-testid="vendor-tax">
+  <h3 class="vendor-section__title" [id]="id + '-title'">{{ 'POSITIVITY.VENDORS.TAX.LEGEND' | translate }}</h3>
+  @if (registrations().length === 0) {
+    <p data-testid="vendor-tax-none">{{ 'POSITIVITY.VENDORS.TAX.NONE' | translate }}</p>
+  } @else {
+    <ul class="vendor-tax-list">
+      @for (registration of registrations(); track registration.registrationId) {
+        <li class="vendor-actions" data-testid="vendor-tax-item">
+          <span data-testid="vendor-tax-masked">
+            @if (registration.region) {
+              {{ 'POSITIVITY.VENDORS.TAX.SCHEME_REGION' | translate: { scheme: registration.scheme, region: registration.region } }}
+            } @else {
+              {{ registration.scheme }}
+            }
+            <span class="vendor-mono">
+              @if (registration.last4) {
+                {{ 'POSITIVITY.VENDORS.TAX.MASKED' | translate: { last4: registration.last4 } }}
+              } @else {
+                {{ 'POSITIVITY.VENDORS.TAX.ON_FILE' | translate }}
+              }
+            </span>
+          </span>
+          @if (canReveal()) {
+            <button type="button" class="vendor-btn vendor-btn--secondary" data-testid="vendor-tax-reveal" [disabled]="busy()" (click)="openReveal(registration)">
+              {{ 'POSITIVITY.VENDORS.TAX.REVEAL' | translate: { scheme: registration.scheme } }}
+            </button>
+          }
+        </li>
+      }
+    </ul>
+  }
+</section>
+
+@if (target(); as registration) {
+  <dialog appModalDialog class="vendor-dialog" [attr.aria-labelledby]="id + '-dialog-title'" data-testid="vendor-tax-dialog" (modalCancel)="closeReveal()">
+    <form novalidate (submit)="reveal($event)">
+      <h2 class="vendor-dialog__title" [id]="id + '-dialog-title'">{{ 'POSITIVITY.VENDORS.TAX.REVEAL_TITLE' | translate: { scheme: registration.scheme } }}</h2>
+      @if (revealed(); as shown) {
+        <p data-testid="vendor-tax-revealed">
+          {{ 'POSITIVITY.VENDORS.TAX.REVEALED_LABEL' | translate }}
+          <span class="vendor-mono" data-testid="vendor-tax-revealed-number">{{ shown.number }}</span>
+        </p>
+        <p class="vendor-hint">{{ 'POSITIVITY.VENDORS.TAX.REVEALED_HINT' | translate }}</p>
+      } @else {
+        <div class="vendor-field">
+          <label [for]="id + '-reason'">{{ 'POSITIVITY.VENDORS.TAX.REVEAL_REASON' | translate }}</label>
+          <textarea
+            [id]="id + '-reason'"
+            data-testid="vendor-tax-reveal-reason"
+            [attr.maxlength]="reasonMax"
+            [value]="reason()"
+            (input)="reason.set(text($event))"
+            [attr.aria-describedby]="id + '-reason-hint'"
+          ></textarea>
+          <p class="vendor-hint" [id]="id + '-reason-hint'">{{ 'POSITIVITY.VENDORS.TAX.REVEAL_REASON_HINT' | translate: { min: reasonMin, max: reasonMax } }}</p>
+        </div>
+        @if (error(); as message) {
+          <p class="vendor-error" role="alert" data-testid="vendor-tax-reveal-error">{{ message.key | translate: message.params }}</p>
+        }
+        <p class="vendor-consequence">{{ 'POSITIVITY.VENDORS.TAX.REVEAL_CONSEQUENCE' | translate }}</p>
+      }
+      <div class="vendor-actions">
+        @if (!revealed()) {
+          <button type="submit" class="vendor-btn vendor-btn--primary" data-testid="vendor-tax-reveal-confirm" [disabled]="busy() || !reasonValid()">
+            {{ 'POSITIVITY.VENDORS.TAX.REVEAL_CONFIRM' | translate }}
+          </button>
+        }
+        <button type="button" class="vendor-btn vendor-btn--secondary" data-testid="vendor-tax-reveal-close" [disabled]="busy()" (click)="closeReveal()">
+          {{ 'COMMON.CLOSE' | translate }}
+        </button>
+      </div>
+    </form>
+  </dialog>
+}

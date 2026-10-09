@@ -168,6 +168,7 @@
       "ADMIN": "Admin",
       "SITEMAP": "Site Map",
       "SUPPLIER": "Supplier Connectivity",
+      "VENDORS": "Vendors",
       "PLATFORM": "Platform"
     },
     "HEADER": {
@@ -9989,7 +9990,8 @@
       "PAYMENTS": "Payments",
       "DRAWER": "Drawer",
       "BILLS_TO_PAY": "Bills to pay",
-      "APPROVAL_LIMITS": "Approval limits"
+      "APPROVAL_LIMITS": "Approval limits",
+      "VENDORS": "Vendors"
     }
   },
   "POSITIVITY": {
@@ -10137,7 +10139,10 @@
         "EMPTY": "There are no active vendors. A vendor must be added before a supplier profile can be created.",
         "NOT_REPORTED": "Not reported",
         "EMPTY_EDIT": "There are no active vendors to choose from.",
-        "FORBIDDEN_CHOOSE": "You do not have permission to view vendors, so you cannot choose a vendor. Ask an administrator for vendor access."
+        "FORBIDDEN_CHOOSE": "You do not have permission to view vendors, so you cannot choose a vendor. Ask an administrator for vendor access.",
+        "BELONGS_TO": "Belongs to",
+        "FILTERED": "Showing one vendor's connections.",
+        "SHOW_ALL": "Show all profiles"
       },
       "WRITE_FORBIDDEN": "You can view supplier profiles but not change them. Ask an administrator for supplier profile write access."
     },
@@ -10712,6 +10717,225 @@
       "ERROR": {
         "LOAD_SUMMARY": "The latest stock-snapshot summary could not be loaded.",
         "LOAD_LINES": "The stock-snapshot lines could not be loaded."
+      }
+    },
+    "VENDORS": {
+      "TITLE": "Vendors",
+      "SUBTITLE": "Everyone the shop buys from or pays: distributors, landlords and utilities. Purchasing, bills and payments all use this list.",
+      "ADD": "Add vendor",
+      "BACK_TO_LIST": "Back to vendors",
+      "FILTERS": "Find a vendor",
+      "SEARCH_LABEL": "Search vendors",
+      "SEARCH_HINT": "Vendor number, name or legal name.",
+      "STATUS_LABEL": "Show",
+      "FILTER": {
+        "ACTIVE": "Active",
+        "INACTIVE": "Inactive",
+        "ALL": "All"
+      },
+      "STATUS": {
+        "ACTIVE": "Active",
+        "INACTIVE": "Inactive"
+      },
+      "LOADING": "Loading vendors…",
+      "EMPTY": "No vendors match.",
+      "EMPTY_ADD": "Add the first one.",
+      "TABLE_CAPTION": "Vendors ({{count}})",
+      "COLUMN": {
+        "NUMBER": "Vendor number",
+        "NAME": "Name",
+        "STATUS": "Status",
+        "TERMS": "Payment terms",
+        "CURRENCY": "Currency"
+      },
+      "PAGING_LABEL": "Vendor pages",
+      "PREVIOUS": "Previous page",
+      "NEXT": "Next page",
+      "PAGE_OF": "Page {{page}} of {{pages}}",
+      "OPTION": "{{number}} · {{name}}",
+      "NOTE_HINT": "At least {{min}} characters.",
+      "TERMS": {
+        "DUE_ON_RECEIPT": "Due on receipt",
+        "NET": "Net {{days}}"
+      },
+      "FORM": {
+        "NUMBER": "Vendor number (optional)",
+        "NUMBER_HINT": "Leave blank and we'll number it (V-000123). Capital letters, digits and hyphens, up to {{max}}.",
+        "LEGAL_NAME": "Legal name",
+        "DISPLAY_NAME": "Display name",
+        "DISPLAY_NAME_HINT": "The name people see on bills, orders and payments.",
+        "TERMS": "Payment terms",
+        "TERMS_NET": "Net, a number of days",
+        "NET_DAYS": "Days to pay",
+        "NET_DAYS_HINT": "A whole number from {{min}} to {{max}}.",
+        "CURRENCY": "Currency",
+        "CURRENCY_HINT": "Three-letter code, such as USD or CAD.",
+        "REQUIRED": "Fill this in."
+      },
+      "TAX": {
+        "LEGEND": "Tax registrations",
+        "HINT": "Add each registration the vendor holds. Numbers are stored securely and shown masked.",
+        "SCHEME": "Scheme for registration {{index}}",
+        "SCHEME_HINT": "For example EIN, GST or VAT.",
+        "REGION": "Region for registration {{index}} (optional)",
+        "NUMBER": "Number for registration {{index}}",
+        "NUMBER_NEW_HINT": "Type the number as issued.",
+        "NUMBER_RETYPE_HINT": "You changed the scheme or region, so type the number again.",
+        "NUMBER_KEEP_HINT": "Leave blank to keep the number ending {{last4}}.",
+        "NUMBER_KEEP_ON_FILE_HINT": "Leave blank to keep the number on file.",
+        "NUMBER_REQUIRED": "Type the registration number.",
+        "ADD": "Add a registration",
+        "REMOVE": "Remove registration {{index}}",
+        "NONE": "No tax registrations.",
+        "SCHEME_REGION": "{{scheme}} ({{region}})",
+        "MASKED": "•••• {{last4}}",
+        "ON_FILE": "on file",
+        "REVEAL": "Reveal the {{scheme}} number",
+        "REVEAL_TITLE": "Reveal the {{scheme}} number",
+        "REVEAL_REASON": "Why do you need the full number?",
+        "REVEAL_REASON_HINT": "{{min}} to {{max}} characters. Don't type the number itself.",
+        "REVEAL_CONSEQUENCE": "Your name, roles and reason are recorded before the number is shown.",
+        "REVEAL_CONFIRM": "Reveal",
+        "REVEALED_LABEL": "Full number:",
+        "REVEALED_HINT": "The number disappears when you close this dialog. Don't copy it anywhere it isn't needed."
+      },
+      "REMIT": {
+        "TITLE": "Remit-to",
+        "OPTIONAL_LEGEND": "Remit-to address (optional)",
+        "OPTIONAL_HINT": "Where the vendor is paid. A postal address only: bank details are never kept on a vendor.",
+        "VERSION": "Version {{version}}",
+        "VERSION_SINCE": "Version {{version}} · in force since {{when}}",
+        "NONE": "No remit-to address yet.",
+        "EMAIL": "Remittance email: {{email}}",
+        "REQUEST": "Request a change",
+        "REQUEST_TITLE": "Request a remit-to change for {{number}}",
+        "REQUEST_REASON": "Why is it changing?",
+        "REQUEST_CONSEQUENCE": "The new address is used only after someone else approves it.",
+        "REQUEST_SUBMIT": "Request the change",
+        "REQUESTED": "Change requested. Someone else must approve it before it is used.",
+        "PENDING_TITLE": "Change waiting for approval",
+        "CURRENT": "Current address",
+        "PROPOSED": "Proposed address",
+        "REQUESTED_BY": "Requested by",
+        "REQUESTED_AT": "Requested",
+        "DECIDED_BY": "Decided by",
+        "REASON": "Reason",
+        "VERIFICATION_LABEL": "How did you check this? For example, you called the vendor on a number you already had",
+        "VERIFICATION_HINT": "At least {{min}} characters.",
+        "APPROVE": "Approve",
+        "APPROVE_CONSEQUENCE": "Payments will go to the new address. Bills approved before the change need a second confirmation before they are paid.",
+        "APPROVED": "Change approved. Payments now go to the new address.",
+        "SELF_APPROVAL": "You can't approve a change you requested",
+        "REJECT": "Reject",
+        "REJECT_TITLE": "Reject the remit-to change for {{number}}",
+        "REJECT_NOTE": "Why are you rejecting it?",
+        "REJECT_CONSEQUENCE": "The vendor keeps its current address.",
+        "REJECTED": "Change rejected. The vendor keeps its current address.",
+        "HISTORY_TITLE": "Remit-to history",
+        "HISTORY_EMPTY": "No remit-to changes yet.",
+        "NOTES": "Notes",
+        "REASON_NOTE": "Reason: {{note}}",
+        "DECISION_NOTE": "Decision: {{note}}",
+        "VERSIONS": "Versions",
+        "VERSION_RANGE": "{{from}} → {{to}}",
+        "VERSION_FROM": "From {{from}}",
+        "STATUS": {
+          "PENDING": "Waiting for approval",
+          "APPROVED": "Approved",
+          "REJECTED": "Rejected"
+        },
+        "FIELD": {
+          "PAYEE": "Payee name",
+          "LINE1": "Address line 1",
+          "LINE2": "Address line 2",
+          "CITY": "City",
+          "REGION": "State, province or region",
+          "POSTAL_CODE": "Postal or ZIP code",
+          "COUNTRY": "Country (two letters)",
+          "EMAIL": "Remittance email"
+        }
+      },
+      "CREATE": {
+        "TITLE": "Add vendor",
+        "SUBTITLE": "Add a party the shop buys from or pays.",
+        "FORBIDDEN": "You don't have permission to add vendors. Ask someone who can.",
+        "CONSEQUENCE": "Purchasing, bills and payments will all use this vendor. Whoever adds a vendor can't approve its first bill.",
+        "ADDED": "Vendor {{number}} added. It can take a moment to appear in bills, purchase orders and payments.",
+        "UNCONFIRMED": "We couldn't confirm the vendor was added. Check the vendors below before adding it again.",
+        "CHECKING": "Checking whether the vendor was added…",
+        "MATCHES": "These vendors match what you typed. If one is yours, open it instead of adding it again.",
+        "NO_MATCHES": "No matching vendor was found. You can try adding it again."
+      },
+      "DETAIL": {
+        "TITLE": "{{number}} · {{name}}",
+        "TITLE_LOADING": "Vendor",
+        "IDENTITY": "Details",
+        "STATUS_CHANGED": "since {{when}}",
+        "STATUS_REASON": "Reason: {{reason}}"
+      },
+      "EDIT": {
+        "TITLE": "Edit vendor",
+        "HINT": "The vendor number never changes. The remit-to changes through Request a change; the status through Deactivate or Reactivate.",
+        "SAVED": "Vendor saved."
+      },
+      "STATUS_DIALOG": {
+        "DEACTIVATE": "Deactivate",
+        "REACTIVATE": "Reactivate",
+        "DEACTIVATE_TITLE": "Deactivate vendor {{number}}",
+        "REACTIVATE_TITLE": "Reactivate vendor {{number}}",
+        "REASON": "Reason",
+        "DEACTIVATE_CONSEQUENCE": "New bills, payments and purchase orders for this vendor will be refused. Its open bills can still be approved, but they aren't paid while the vendor is inactive.",
+        "REACTIVATE_CONSEQUENCE": "Bills, payments and purchase orders for this vendor will be accepted again.",
+        "DEACTIVATED": "Vendor deactivated.",
+        "REACTIVATED": "Vendor reactivated."
+      },
+      "CONNECTIONS": {
+        "TITLE": "Connections",
+        "LOADING": "Loading connections…",
+        "ERROR": "The vendor's connections could not be loaded.",
+        "EMPTY": "This vendor has no supplier connections.",
+        "ENABLED": "On",
+        "DISABLED": "Off"
+      },
+      "ERROR": {
+        "LOAD_LIST": "The vendors could not be loaded.",
+        "LOAD_DETAIL": "This vendor could not be loaded.",
+        "LOAD_CHANGES": "The remit-to changes could not be loaded, so they can't be requested or decided right now.",
+        "CREATE": "The vendor could not be added.",
+        "SAVE": "The vendor could not be saved.",
+        "STATUS_CHANGE": "The vendor's status could not be changed.",
+        "REMIT_REQUEST": "The remit-to change could not be requested.",
+        "REMIT_DECIDE": "The remit-to change could not be decided.",
+        "REVEAL": "The number could not be revealed.",
+        "NOT_FOUND": "This vendor doesn't exist.",
+        "VALIDATION": "Some fields need attention. Check them and try again.",
+        "NUMBER_TAKEN": "{{number}} is already used. Leave it blank to number automatically.",
+        "STALE": "Someone else changed this vendor. Check and save again.",
+        "REMIT_PENDING": "A remit-to change is already waiting for approval. It is shown below.",
+        "REMIT_NOT_PENDING": "Someone already decided this change. The decision is shown below.",
+        "INACTIVE": "This vendor is inactive.",
+        "TAX_REGISTRATION_NOT_FOUND": "That registration no longer exists. The vendor was read again.",
+        "TAX_ID_UNREADABLE": "The stored number can't be read. The attempt was recorded; tell an administrator.",
+        "FORBIDDEN": "You don't have permission to see this.",
+        "FORBIDDEN_WRITE": "You don't have permission to do this. It needs {{permission}}.",
+        "RETRYABLE": "We couldn't confirm the change, so the vendor was read again. Check it before trying again.",
+        "STATUS": "Something went wrong (HTTP {{status}}).",
+        "FIELD": {
+          "INVALID": "This value was refused.",
+          "LEGAL_NAME": "Enter the legal name.",
+          "DISPLAY_NAME": "Enter the display name.",
+          "VENDOR_NUMBER": "Use capital letters, digits and hyphens, up to 30.",
+          "PAYMENT_TERMS": "Choose Due on receipt, or Net with 1 to 120 days.",
+          "CURRENCY": "Enter a three-letter currency code, such as USD.",
+          "NOTE": "Write at least 10 characters.",
+          "EMAIL": "Enter a valid email address.",
+          "COUNTRY": "Enter a two-letter country code, such as US or CA.",
+          "REMIT_TO": "Check this part of the address.",
+          "TAX_NUMBER": "Check the registration number.",
+          "TAX_SCHEME": "Check the scheme.",
+          "TAX_REGION": "Check the region.",
+          "TAX_REGISTRATION": "That registration can't be kept. Remove it and add it again."
+        }
       }
     }
   },
