@@ -82,7 +82,7 @@ export function classifyPolicyError(error: unknown, currency: string, permission
 }
 
 /** How a history value renders: an amount through `| money`, a switch as On / Off, anything else as served text. */
-export type HistoryValueKind = 'money' | 'switch' | 'text';
+export type HistoryValueKind = 'money' | 'switch' | 'terms' | 'text';
 
 const SETTING_KEYS: Readonly<Record<ApPolicySetting, string>> = {
   AP_CLERK_APPROVAL_LIMIT: 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.SETTING.AP_CLERK_APPROVAL_LIMIT',
@@ -93,9 +93,44 @@ const SETTING_KEYS: Readonly<Record<ApPolicySetting, string>> = {
   UNKNOWN: 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.SETTING.UNKNOWN',
 };
 
+/** Role codes the history names, through translated labels; any other reads "Another role" (review B5, Q4). */
+const ROLE_KEYS: Readonly<Record<string, string>> = {
+  ACCOUNTING_CLERK: 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.ROLE.ACCOUNTING_CLERK',
+  CONTROLLER: 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.ROLE.CONTROLLER',
+  GENERAL_MANAGER: 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.ROLE.GENERAL_MANAGER',
+  ADMIN: 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.ROLE.ADMIN',
+  SYSTEM_ADMINISTRATOR: 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.ROLE.SYSTEM_ADMINISTRATOR',
+};
+
+export function roleKey(code: string): string {
+  return ROLE_KEYS[code.replace(/^ROLE_/, '')] ?? 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.ROLE.UNKNOWN';
+}
+
+/** Payment terms as served (`DUE_ON_RECEIPT`, `NET<n>`) through translated copy; anything else "Unknown". */
+export function termsCopy(value: string | null): { readonly key: string; readonly params: Readonly<Record<string, unknown>> } {
+  if (value === 'DUE_ON_RECEIPT') return { key: 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.TERMS.DUE_ON_RECEIPT', params: {} };
+  const net = value ? /^NET(\d{1,3})$/.exec(value) : null;
+  if (net) return { key: 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.TERMS.NET', params: { days: Number(net[1]) } };
+  return { key: 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.TERMS.UNKNOWN', params: {} };
+}
+
+/**
+ * Who can do what (Accounting ruling Q3 on #464): each action and the
+ * permission its endpoint enforces, mirroring the ADR-0040 §6a gates. Which
+ * roles hold each permission is tenant data, served later (S14b).
+ */
+export const ACTION_PERMISSIONS: readonly { readonly labelKey: string; readonly code: string }[] = [
+  { labelKey: 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.SEND_AND_APPROVE', code: 'accounting:ap:approve' },
+  { labelKey: 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.APPROVE_ANY', code: 'accounting:ap:approve_over_limit' },
+  { labelKey: 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.REJECT', code: ACCOUNTING_SECTION.apReject[0] },
+  { labelKey: 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.PAY', code: ACCOUNTING_SECTION.apPay[0] },
+  { labelKey: 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.SET_LIMITS', code: ACCOUNTING_SECTION.apPolicyManage[0] },
+];
+
 function valueKind(setting: ApPolicySetting): HistoryValueKind {
   if (setting === 'AP_CLERK_APPROVAL_LIMIT' || setting === 'AP_AUTO_APPROVAL_LIMIT') return 'money';
   if (setting === 'AP_ALLOW_CREATOR_APPROVAL' || setting === 'AP_ALLOW_APPROVER_PAYMENT') return 'switch';
+  if (setting === 'AP_DEFAULT_TERMS') return 'terms';
   return 'text';
 }
 
@@ -201,13 +236,22 @@ export class ApprovalLimitsPageComponent {
       this.reasonValid() &&
       !this.saving(),
   );
-  /** One key per intent: made on the first change after a confirmed save, reused on retry (§8.2). */
-  private requestId: string | null = null;
+  /**
+   * The key last sent, bound to the payload it was sent with (review A1): a
+   * retry of the identical payload reuses it (the server never applies it
+   * twice); any edit gets a new one, because the server answers a known key
+   * with the current policy and ignores the body. Dropped after a confirmed
+   * success or Undo (§8.2).
+   */
+  private sent: { readonly requestId: string; readonly payload: string } | null = null;
   private saveSubscription: Subscription | null = null;
   private saveToken = 0;
 
   readonly settingKeys = SETTING_KEYS;
   readonly valueKind = valueKind;
+  readonly roleKey = roleKey;
+  readonly termsCopy = termsCopy;
+  readonly actionPermissions = ACTION_PERMISSIONS;
   readonly rowKey = (row: ApPolicyHistoryRow, index: number): string => `${row.changedAt}|${row.setting}|${index}`;
 
   private trackedIdentity = this.identity();
@@ -243,9 +287,9 @@ export class ApprovalLimitsPageComponent {
     return `${part(this.auth.tenantId())}|${part(this.auth.currentUserClaims()?.sub)}`;
   }
 
-  /** The intent's key, for tests and the PR evidence; never shown. */
+  /** The key last sent and not yet confirmed, for tests and the PR evidence; never shown. */
   currentRequestId(): string | null {
-    return this.requestId;
+    return this.sent?.requestId ?? null;
   }
 
   // ── Loading ───────────────────────────────────────────────────────────
@@ -270,7 +314,7 @@ export class ApprovalLimitsPageComponent {
   private onPolicySettled(ok: boolean): void {
     if (ok) {
       // A first read (or one after Undo) fills the fields; typed values are never overwritten.
-      if (this.requestId === null && !this.billsDirtyAgainstText()) this.resetBills(this.policy.data());
+      if (this.sent === null && !this.billsDirtyAgainstText()) this.resetBills(this.policy.data());
       this.state.set('ready');
       this.errorKey.set(null);
       return;
@@ -294,26 +338,20 @@ export class ApprovalLimitsPageComponent {
     this.autoText.set(policy ? String(policy.autoApprovalLimit) : '');
     this.reason.set('');
     this.saveError.set(null);
-    this.requestId = null;
+    this.sent = null;
   }
 
   // ── Editing ───────────────────────────────────────────────────────────
   setClerk(value: string): void {
     this.clerkText.set(value);
-    this.markIntent();
   }
 
   setAuto(value: string): void {
     this.autoText.set(value);
-    this.markIntent();
   }
 
   setReason(value: string): void {
     this.reason.set(value);
-  }
-
-  private markIntent(): void {
-    if (this.billsDirty() && this.requestId === null) this.requestId = uuidV7();
   }
 
   /** Undo changes: back to the last confirmed values; the key rotates (§8.2). */
@@ -329,19 +367,15 @@ export class ApprovalLimitsPageComponent {
     const clerk = this.clerk();
     const auto = this.auto();
     if (!base || clerk === null || auto === null || !this.canSave()) return;
-    if (this.requestId === null) this.requestId = uuidV7();
-    const requestId = this.requestId;
+    const body = { clerkApprovalLimit: clerk, autoApprovalLimit: auto, currencyCode: base.currencyCode, justification: this.reason().trim() };
+    const payload = JSON.stringify(body);
+    const requestId = this.sent?.payload === payload ? this.sent.requestId : uuidV7();
+    this.sent = { requestId, payload };
     const token = ++this.saveToken;
     this.saving.set(true);
     this.saveError.set(null);
     this.saveSubscription = this.service
-      .updatePolicy({
-        clerkApprovalLimit: clerk,
-        autoApprovalLimit: auto,
-        currencyCode: base.currencyCode,
-        justification: this.reason().trim(),
-        requestId,
-      })
+      .updatePolicy({ ...body, requestId })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (read: ApPolicyRead) => {

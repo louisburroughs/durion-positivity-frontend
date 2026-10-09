@@ -17,7 +17,7 @@ const response = (overrides: Partial<ApApprovalPolicyResponse> = {}): ApApproval
   history: [
     {
       changedAt: '2026-10-05T15:00:00Z',
-      changedBy: 'Dana Reyes',
+      changedBy: 'controller.cfo',
       changedByRoles: ['CONTROLLER'],
       setting: 'AP_CLERK_APPROVAL_LIMIT',
       oldValue: '1000.00',
@@ -26,7 +26,7 @@ const response = (overrides: Partial<ApApprovalPolicyResponse> = {}): ApApproval
     },
     {
       changedAt: '2026-10-04T15:00:00Z',
-      changedBy: 'Dana Reyes',
+      changedBy: 'controller.cfo',
       changedByRoles: ['CONTROLLER'],
       setting: 'AP_SOMETHING_NEW',
       newValue: 'x',
@@ -68,7 +68,7 @@ describe('ApApprovalPolicyService', () => {
       });
       expect(read.history.rows[0]).toEqual({
         changedAt: '2026-10-05T15:00:00Z',
-        changedBy: 'Dana Reyes',
+        changedBy: 'controller.cfo',
         changedByRoles: ['CONTROLLER'],
         setting: 'AP_CLERK_APPROVAL_LIMIT',
         oldValue: '1000.00',

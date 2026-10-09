@@ -9,7 +9,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { ApApprovalPolicy, ApPolicyBillsUpdate, ApPolicyHistoryRow, ApPolicyRead } from '../../models/ap-approval-policy.models';
 import { ApApprovalPolicyService } from '../../services/ap-approval-policy.service';
 import { apiError, authMock } from '../bills/bills-page.spec-helper';
-import { ApprovalLimitsPageComponent, classifyPolicyError } from './approval-limits-page.component';
+import { ApprovalLimitsPageComponent, classifyPolicyError, roleKey, termsCopy } from './approval-limits-page.component';
 
 const MANAGE = ['accounting:ap_approval_policy:manage'];
 
@@ -26,7 +26,7 @@ const policy = (overrides: Partial<ApApprovalPolicy> = {}): ApApprovalPolicy => 
 
 const row = (overrides: Partial<ApPolicyHistoryRow> = {}): ApPolicyHistoryRow => ({
   changedAt: '2026-10-05T15:00:00Z',
-  changedBy: 'Dana Reyes',
+  changedBy: 'controller.cfo',
   changedByRoles: ['CONTROLLER'],
   setting: 'AP_CLERK_APPROVAL_LIMIT',
   oldValue: '1000.00',
@@ -142,6 +142,21 @@ describe('ApprovalLimitsPageComponent (§5.5, §9.5)', () => {
       expect(q('[data-testid="means-auto"]')?.textContent).toContain('ACCOUNTING.APPROVAL_LIMITS.BILLS.MEANS.NO_AUTO');
     });
 
+    it('shows Who can do what as action → permission, with no static role table (Q3)', () => {
+      render();
+
+      const rows = Array.from(host().querySelectorAll('[data-testid="who-row"] td')).map(cell => cell.textContent?.trim());
+      expect(rows).toEqual([
+        'accounting:ap:approve',
+        'accounting:ap:approve_over_limit',
+        'accounting:ap:reject',
+        'accounting:ap:pay',
+        'accounting:ap_approval_policy:manage',
+      ]);
+      expect(q('[data-testid="who-note"]')?.textContent).toContain('ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.NOTE');
+      expect(host().textContent).not.toContain('ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.CONTROLLER');
+    });
+
     it('names a rule the tenant switched off, read-only', () => {
       service.getPolicy.mockReturnValue(of(read({ allowCreatorApproval: true })));
       render();
@@ -157,18 +172,17 @@ describe('ApprovalLimitsPageComponent (§5.5, §9.5)', () => {
       const page = render();
       type('[data-testid="clerk-limit"]', '3000');
       type('[data-testid="save-reason"]', 'Busier season, more parts');
-      const requestId = page.currentRequestId();
-      expect(requestId).toMatch(/^[0-9a-f-]{36}$/);
       q<HTMLButtonElement>('[data-testid="save"]')!.click();
       fixture.detectChanges();
 
       expect(service.updatePolicy).toHaveBeenCalledTimes(1);
-      expect(service.updatePolicy).toHaveBeenCalledWith({
+      const sent = service.updatePolicy.mock.calls[0][0];
+      expect(sent).toEqual({
         clerkApprovalLimit: 3000,
         autoApprovalLimit: 500,
         currencyCode: 'USD',
         justification: 'Busier season, more parts',
-        requestId,
+        requestId: expect.stringMatching(/^[0-9a-f-]{36}$/),
       });
       expect(page.baseline()?.clerkApprovalLimit).toBe(3000);
       expect(page.billsDirty()).toBe(false);
@@ -176,16 +190,21 @@ describe('ApprovalLimitsPageComponent (§5.5, §9.5)', () => {
       expect(q('[data-testid="announcement"]')?.textContent).toContain('ACCOUNTING.APPROVAL_LIMITS.SAVE.SAVED');
     });
 
-    it('a retry after an unknown outcome reuses the same requestId (AC 10)', () => {
-      const page = render();
+    function failOnceThenSave(): void {
       type('[data-testid="clerk-limit"]', '3000');
       type('[data-testid="save-reason"]', 'Busier season, more parts');
       service.updatePolicy.mockReturnValueOnce(throwError(() => new HttpErrorResponse({ status: 504 })));
       q<HTMLButtonElement>('[data-testid="save"]')!.click();
       fixture.detectChanges();
+    }
+
+    it('a retry of the identical payload after an unknown outcome reuses the same requestId (AC 10, review A1)', () => {
+      const page = render();
+      failOnceThenSave();
       const first = service.updatePolicy.mock.calls[0][0].requestId;
 
       expect(q('[data-testid="save-error"]')?.textContent).toContain('ACCOUNTING.APPROVAL_LIMITS.SAVE.ERROR.UNKNOWN_OUTCOME');
+      expect(page.currentRequestId()).toBe(first);
       q<HTMLButtonElement>('[data-testid="save"]')!.click();
       fixture.detectChanges();
 
@@ -193,17 +212,27 @@ describe('ApprovalLimitsPageComponent (§5.5, §9.5)', () => {
       expect(page.currentRequestId()).toBeNull();
     });
 
-    it('rotates the requestId after Undo changes', () => {
+    it('an edited payload after an unknown outcome gets a new requestId, so the edit is never dropped (review A1)', () => {
+      render();
+      failOnceThenSave();
+      const first = service.updatePolicy.mock.calls[0][0].requestId;
+      type('[data-testid="clerk-limit"]', '3600');
+      q<HTMLButtonElement>('[data-testid="save"]')!.click();
+      fixture.detectChanges();
+
+      const second = service.updatePolicy.mock.calls[1][0];
+      expect(second.clerkApprovalLimit).toBe(3600);
+      expect(second.requestId).not.toBe(first);
+    });
+
+    it('drops the key on Undo changes', () => {
       const page = render();
-      type('[data-testid="clerk-limit"]', '3000');
-      const first = page.currentRequestId();
+      failOnceThenSave();
       q<HTMLButtonElement>('[data-testid="undo"]')!.click();
       fixture.detectChanges();
 
       expect(q<HTMLInputElement>('[data-testid="clerk-limit"]')!.value).toBe('2500');
       expect(page.currentRequestId()).toBeNull();
-      type('[data-testid="clerk-limit"]', '3100');
-      expect(page.currentRequestId()).not.toBe(first);
     });
 
     it('disables Save while a request is in flight', () => {
@@ -228,7 +257,11 @@ describe('ApprovalLimitsPageComponent (§5.5, §9.5)', () => {
       q<HTMLButtonElement>('[data-testid="save"]')!.click();
       fixture.detectChanges();
 
-      expect(q('[data-testid="auto-limit"]')!.getAttribute('aria-invalid')).toBe('true');
+      const auto = q('[data-testid="auto-limit"]')!;
+      expect(auto.getAttribute('aria-invalid')).toBe('true');
+      // The field names the error it is marked for (review B4).
+      expect(auto.getAttribute('aria-describedby')).toContain('limits-save-error');
+      expect(q('[data-testid="save-error"]')?.id).toBe('limits-save-error');
       expect(q('[data-testid="save-error"]')?.getAttribute('role')).toBe('alert');
     });
 
@@ -250,13 +283,13 @@ describe('ApprovalLimitsPageComponent (§5.5, §9.5)', () => {
   });
 
   describe('History (AC 11)', () => {
-    it('lists three served rows in the served order with name, roles, old → new and the reason as text', () => {
+    it('lists three served rows in the served order with translated roles, old → new and the reason as text (AC 11, Q4)', () => {
       service.getPolicy.mockReturnValue(
         of(
           read({}, [
             row({ changedAt: '2026-10-05T15:00:00Z', justification: '<b>Clerks</b> handle routine parts' }),
-            row({ changedAt: '2026-10-04T15:00:00Z', setting: 'AP_ALLOW_CREATOR_APPROVAL', oldValue: 'false', newValue: 'true', changedByRoles: ['GENERAL_MANAGER', 'ADMIN'] }),
-            row({ changedAt: '2026-10-03T15:00:00Z', setting: 'AP_DEFAULT_TERMS', oldValue: null, newValue: 'NET45' }),
+            row({ changedAt: '2026-10-04T15:00:00Z', setting: 'AP_ALLOW_CREATOR_APPROVAL', oldValue: 'false', newValue: 'true', changedByRoles: ['GENERAL_MANAGER', 'ROLE_NEW_ROLE'] }),
+            row({ changedAt: '2026-10-03T15:00:00Z', setting: 'AP_DEFAULT_TERMS', oldValue: 'DUE_ON_RECEIPT', newValue: 'NET45' }),
           ]),
         ),
       );
@@ -264,14 +297,29 @@ describe('ApprovalLimitsPageComponent (§5.5, §9.5)', () => {
 
       const rows = Array.from(host().querySelectorAll('[data-testid="history-row"]'));
       expect(rows.length).toBe(3);
-      expect(rows[0].querySelector('[data-testid="history-who"]')?.textContent).toContain('Dana Reyes');
-      expect(rows[0].querySelector('[data-testid="history-who"]')?.textContent).toContain('CONTROLLER');
+      // The username is an account identifier and is never rendered (Q4).
+      expect(host().textContent).not.toContain('controller.cfo');
+      const who = (index: number): string[] =>
+        Array.from(rows[index].querySelectorAll('[data-testid="history-who"] li')).map(item => item.textContent?.trim() ?? '');
+      expect(who(0)).toEqual(['ACCOUNTING.APPROVAL_LIMITS.HISTORY.ROLE.CONTROLLER']);
+      expect(who(1)).toEqual(['ACCOUNTING.APPROVAL_LIMITS.HISTORY.ROLE.GENERAL_MANAGER', 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.ROLE.UNKNOWN']);
+      expect(host().textContent).not.toContain('GENERAL_MANAGER,');
       expect(rows[0].querySelector('[data-testid="history-change"]')?.textContent).toContain('ACCOUNTING.APPROVAL_LIMITS.HISTORY.SETTING.AP_CLERK_APPROVAL_LIMIT');
+      // Terms codes are translated, never shown raw (review B5).
+      expect(rows[2].querySelector('[data-testid="history-change"]')?.textContent).not.toContain('NET45');
       // Rendered as text, never markup (ADR-0065).
       expect(rows[0].querySelector('[data-testid="history-reason"]')?.textContent).toBe('<b>Clerks</b> handle routine parts');
       expect(rows[0].querySelector('[data-testid="history-reason"] b')).toBeNull();
-      expect(rows[1].querySelector('[data-testid="history-who"]')?.textContent).toContain('GENERAL_MANAGER, ADMIN');
       expect(host().querySelector('[data-testid="history-table"] caption')).not.toBeNull();
+    });
+
+    it('translates role and terms codes with an Unknown fallback (review B5)', () => {
+      expect(roleKey('ACCOUNTING_CLERK')).toBe('ACCOUNTING.APPROVAL_LIMITS.HISTORY.ROLE.ACCOUNTING_CLERK');
+      expect(roleKey('ROLE_CONTROLLER')).toBe('ACCOUNTING.APPROVAL_LIMITS.HISTORY.ROLE.CONTROLLER');
+      expect(roleKey('SOMETHING_NEW')).toBe('ACCOUNTING.APPROVAL_LIMITS.HISTORY.ROLE.UNKNOWN');
+      expect(termsCopy('NET45')).toEqual({ key: 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.TERMS.NET', params: { days: 45 } });
+      expect(termsCopy('DUE_ON_RECEIPT').key).toBe('ACCOUNTING.APPROVAL_LIMITS.HISTORY.TERMS.DUE_ON_RECEIPT');
+      expect(termsCopy('EOM').key).toBe('ACCOUNTING.APPROVAL_LIMITS.HISTORY.TERMS.UNKNOWN');
     });
 
     it('keeps its own read status: a failed history page shows its Retry while the Bills section stays', () => {

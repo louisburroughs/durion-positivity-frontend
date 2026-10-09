@@ -71,7 +71,7 @@
               [value]="clerkText()"
               (input)="setClerk(text($event))"
               [attr.aria-invalid]="clerkInvalid() || fieldError('clerkApprovalLimit') ? 'true' : null"
-              [attr.aria-describedby]="'limits-clerk-hint' + (clerkInvalid() ? ' limits-clerk-error' : '')"
+              [attr.aria-describedby]="'limits-clerk-hint' + (clerkInvalid() ? ' limits-clerk-error' : '') + (fieldError('clerkApprovalLimit') ? ' limits-save-error' : '')"
             />
             <p class="hint-text" id="limits-clerk-hint">{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.CLERK_HINT' | translate }}</p>
             @if (clerkInvalid()) {
@@ -89,7 +89,7 @@
               [value]="autoText()"
               (input)="setAuto(text($event))"
               [attr.aria-invalid]="autoInvalid() || autoAboveClerk() || fieldError('autoApprovalLimit') ? 'true' : null"
-              [attr.aria-describedby]="'limits-auto-hint' + (autoInvalid() || autoAboveClerk() ? ' limits-auto-error' : '')"
+              [attr.aria-describedby]="'limits-auto-hint' + (autoInvalid() || autoAboveClerk() ? ' limits-auto-error' : '') + (fieldError('autoApprovalLimit') ? ' limits-save-error' : '')"
             />
             <p class="hint-text" id="limits-auto-hint">{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.AUTO_HINT' | translate }}</p>
             @if (autoInvalid()) {
@@ -128,46 +128,25 @@
           <summary class="limits__who-summary">{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.SUMMARY' | translate }}</summary>
           <div class="limits__who-body">
             <div class="limits__scroll" tabindex="0" role="region" aria-labelledby="limits-who-caption">
-              <table class="ledger-table">
+              <table class="ledger-table" data-testid="who-table">
                 <caption id="limits-who-caption">{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.CAPTION' | translate }}</caption>
                 <thead>
                   <tr>
-                    <th scope="col">{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.ROLE' | translate }}</th>
-                    <th scope="col">{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.APPROVE_UP_TO' | translate }}</th>
-                    <th scope="col">{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.APPROVE_ANY' | translate }}</th>
-                    <th scope="col">{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.REJECT' | translate }}</th>
-                    <th scope="col">{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.PAY' | translate }}</th>
-                    <th scope="col">{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.SET_LIMITS' | translate }}</th>
+                    <th scope="col">{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.ACTION' | translate }}</th>
+                    <th scope="col">{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.PERMISSION' | translate }}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <th scope="row">{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.CLERK' | translate }}</th>
-                    <td>{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.YES' | translate }}</td>
-                    <td>{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.NO' | translate }}</td>
-                    <td>{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.YES' | translate }}</td>
-                    <td>{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.NO' | translate }}</td>
-                    <td>{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.NO' | translate }}</td>
-                  </tr>
-                  <tr>
-                    <th scope="row">{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.CONTROLLER' | translate }}</th>
-                    <td>{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.YES' | translate }}</td>
-                    <td>{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.YES' | translate }}</td>
-                    <td>{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.YES' | translate }}</td>
-                    <td>{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.YES' | translate }}</td>
-                    <td>{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.YES' | translate }}</td>
-                  </tr>
-                  <tr>
-                    <th scope="row">{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.GENERAL_MANAGER' | translate }}</th>
-                    <td>{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.YES' | translate }}</td>
-                    <td>{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.YES' | translate }}</td>
-                    <td>{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.YES' | translate }}</td>
-                    <td>{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.YES' | translate }}</td>
-                    <td>{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.YES' | translate }}</td>
-                  </tr>
+                  @for (entry of actionPermissions; track entry.code) {
+                    <tr data-testid="who-row">
+                      <th scope="row">{{ entry.labelKey | translate }}</th>
+                      <td class="reference">{{ entry.code }}</td>
+                    </tr>
+                  }
                 </tbody>
               </table>
             </div>
+            <p class="hint-text" data-testid="who-note">{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.NOTE' | translate }}</p>
             <h3 class="bill-subheading">{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.RULES.HEADING' | translate }}</h3>
             <ul class="limits__rules" data-testid="always-on-rules">
               <li data-testid="rule-own-bill">
@@ -262,10 +241,16 @@
                   @for (row of data.rows; track rowKey(row, $index)) {
                     <tr data-testid="history-row">
                       <td>{{ row.changedAt | date: 'medium' }}</td>
+                      <!-- The username is an account identifier and is never shown (Q4); display names arrive with S14b. -->
                       <td data-testid="history-who">
-                        {{ row.changedBy }}
                         @if (row.changedByRoles.length) {
-                          <span class="bill-term">{{ row.changedByRoles.join(', ') }}</span>
+                          <ul class="limits__roles">
+                            @for (role of row.changedByRoles; track $index) {
+                              <li>{{ roleKey(role) | translate }}</li>
+                            }
+                          </ul>
+                        } @else {
+                          {{ 'COMMON.NOT_AVAILABLE' | translate }}
                         }
                       </td>
                       <td data-testid="history-change">
@@ -281,6 +266,12 @@
                             {{ 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.FROM_TO' | translate: {
                               old: row.oldValue === null ? ('COMMON.EMPTY_VALUE' | translate) : ((row.oldValue === 'true' ? 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.ON' : 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.OFF') | translate),
                               new: ((row.newValue === 'true' ? 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.ON' : 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.OFF') | translate)
+                            } }}
+                          }
+                          @case ('terms') {
+                            {{ 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.FROM_TO' | translate: {
+                              old: row.oldValue === null ? ('COMMON.EMPTY_VALUE' | translate) : (termsCopy(row.oldValue).key | translate: termsCopy(row.oldValue).params),
+                              new: (termsCopy(row.newValue).key | translate: termsCopy(row.newValue).params)
                             } }}
                           }
                           @default {
