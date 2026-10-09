@@ -49,22 +49,22 @@ describe('NavigationRegistryService', () => {
 
   describe('visibleNavItems()', () => {
     describe('when the token carries no perm_bits claim', () => {
-      it('returns 10 non-role-gated items when the session holds no role', () => {
+      it('returns 11 non-role-gated items when the session holds no role', () => {
         const items: NavItem[] = service.visibleNavItems();
 
-        expect(items).toHaveLength(10);
+        expect(items).toHaveLength(11);
 
         const keys = items.map(i => i.key);
         expect(keys).not.toContain('SHELL.NAV.ADMIN');
         expect(keys).not.toContain('SHELL.NAV.SECURITY');
       });
 
-      it('returns all 14 items when user has ROLE_ADMIN', () => {
+      it('returns all 15 items when user has ROLE_ADMIN', () => {
         roleSignal.set(['ROLE_ADMIN']);
 
         const items: NavItem[] = service.visibleNavItems();
 
-        expect(items).toHaveLength(14);
+        expect(items).toHaveLength(15);
 
         const keys = items.map(i => i.key);
         expect(keys).toContain('SHELL.NAV.ADMIN');
@@ -84,15 +84,15 @@ describe('NavigationRegistryService', () => {
       });
 
       it('recomputes reactively when the underlying role signal changes', () => {
-        expect(service.visibleNavItems()).toHaveLength(10);
+        expect(service.visibleNavItems()).toHaveLength(11);
 
         roleSignal.set(['ROLE_ADMIN']);
 
-        expect(service.visibleNavItems()).toHaveLength(14);
+        expect(service.visibleNavItems()).toHaveLength(15);
 
         roleSignal.set([]);
 
-        expect(service.visibleNavItems()).toHaveLength(10);
+        expect(service.visibleNavItems()).toHaveLength(11);
       });
     });
 
@@ -150,6 +150,23 @@ describe('NavigationRegistryService', () => {
       expect(item?.route).toBe('/app/positivity');
       expect(item?.group).toBe('admin');
       expect(item?.roles).toEqual(['ROLE_ADMIN']);
+    });
+
+    it('offers Vendors on supplier:vendor:read alone, without ROLE_ADMIN (CAP:550 S30, AC 1)', () => {
+      permissionSignal.set(['supplier:vendor:read']);
+
+      const keys = service.visibleNavItems().map(i => i.key);
+      const item = service.visibleNavItems().find(i => i.key === 'SHELL.NAV.VENDORS');
+      expect(item?.route).toBe('/app/positivity/vendors');
+      expect(item?.group).toBe('main');
+      expect(item?.roles).toBeUndefined();
+      expect(keys).not.toContain('SHELL.NAV.SUPPLIER');
+    });
+
+    it('does not offer Vendors to a session without supplier:vendor:read', () => {
+      permissionSignal.set(['supplier:profile:read']);
+
+      expect(service.visibleNavItems().map(i => i.key)).not.toContain('SHELL.NAV.VENDORS');
     });
 
     it('points the product nav item at the product landing page', () => {

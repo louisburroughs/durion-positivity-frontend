@@ -94,9 +94,16 @@
 
     <dl class="profile-detail__settings">
       <div class="profile-detail__setting">
-        <dt>{{ 'POSITIVITY.PROFILES.VENDOR.LABEL' | translate }}</dt>
+        <dt>{{ 'POSITIVITY.PROFILES.VENDOR.BELONGS_TO' | translate }}</dt>
         <dd data-testid="profile-vendor">
-          @if (current.vendorNumber || current.vendorDisplayName) {
+          @if ((current.vendorNumber || current.vendorDisplayName) && current.vendorId && canOpenVendor()) {
+            <a data-testid="profile-vendor-link" [routerLink]="['/app', 'positivity', 'vendors', current.vendorId]">
+              {{
+                'POSITIVITY.PROFILES.VENDOR.OPTION'
+                  | translate: { number: current.vendorNumber, name: current.vendorDisplayName }
+              }}
+            </a>
+          } @else if (current.vendorNumber || current.vendorDisplayName) {
             {{
               'POSITIVITY.PROFILES.VENDOR.OPTION'
                 | translate: { number: current.vendorNumber, name: current.vendorDisplayName }

@@ -1,0 +1,201 @@
+<main class="vendor-page" aria-labelledby="vendor-detail-title">
+  <header class="vendor-page__header">
+    <div>
+      <h1 class="vendor-page__title" id="vendor-detail-title" tabindex="-1" data-testid="vendor-detail-title">
+        @if (vendor(); as current) {
+          {{ 'POSITIVITY.VENDORS.DETAIL.TITLE' | translate: { number: current.vendorNumber, name: current.displayName } }}
+        } @else {
+          {{ 'POSITIVITY.VENDORS.DETAIL.TITLE_LOADING' | translate }}
+        }
+      </h1>
+    </div>
+    <a class="vendor-link" [routerLink]="['/app', 'positivity', 'vendors']">{{ 'POSITIVITY.VENDORS.BACK_TO_LIST' | translate }}</a>
+  </header>
+
+  <div aria-live="polite" class="sr-only" data-testid="vendor-detail-status">
+    @if (state() === 'loading') {
+      {{ 'POSITIVITY.VENDORS.LOADING' | translate }}
+    }
+  </div>
+
+  <div role="status" aria-live="polite" data-testid="vendor-notice">
+    @if (notice(); as message) {
+      <p class="vendor-banner vendor-banner--info" tabindex="-1" data-testid="vendor-notice-text">{{ message.key | translate: message.params }}</p>
+    }
+  </div>
+
+  @if (state() === 'error' && errorKey(); as error) {
+    <div class="vendor-banner vendor-banner--error" role="alert" data-testid="vendor-detail-error">
+      {{ error.key | translate: error.params }}
+      <button type="button" class="vendor-btn vendor-btn--secondary" (click)="reload()">{{ 'COMMON.RETRY' | translate }}</button>
+    </div>
+  }
+
+  @if (vendor(); as current) {
+    <section class="vendor-section" aria-labelledby="vendor-identity-title" data-testid="vendor-identity">
+      <div class="vendor-page__header">
+        <h2 class="vendor-section__title" id="vendor-identity-title">{{ 'POSITIVITY.VENDORS.DETAIL.IDENTITY' | translate }}</h2>
+        @if (canWrite()) {
+          <div class="vendor-actions">
+            @if (!editOpen()) {
+              <button
+                type="button"
+                class="vendor-btn vendor-btn--secondary"
+                data-testid="vendor-edit"
+                [attr.aria-disabled]="vendorReady() ? null : 'true'"
+                [attr.aria-describedby]="vendorReady() ? null : 'vendor-reading-reason'"
+                (click)="openEdit()"
+              >
+                {{ 'COMMON.EDIT' | translate }}
+              </button>
+            }
+            <button
+              type="button"
+              class="vendor-btn vendor-btn--secondary"
+              data-testid="vendor-status-action"
+              [attr.aria-disabled]="vendorReady() ? null : 'true'"
+              [attr.aria-describedby]="vendorReady() ? null : 'vendor-reading-reason'"
+              (click)="openStatusDialog()"
+            >
+              {{ (current.status === 'ACTIVE' ? 'POSITIVITY.VENDORS.STATUS_DIALOG.DEACTIVATE' : 'POSITIVITY.VENDORS.STATUS_DIALOG.REACTIVATE') | translate }}
+            </button>
+          </div>
+        }
+      </div>
+      @if (!vendorReady()) {
+        <p class="vendor-hint" id="vendor-reading-reason" data-testid="vendor-reading-reason">{{ 'POSITIVITY.VENDORS.DETAIL.READING' | translate }}</p>
+      }
+
+      @if (editOpen()) {
+        <form class="vendor-section" data-testid="vendor-edit-form" novalidate (submit)="saveEdit($event)">
+          <h3 class="vendor-section__title" id="vendor-edit-title" tabindex="-1">{{ 'POSITIVITY.VENDORS.EDIT.TITLE' | translate }}</h3>
+          <p class="vendor-hint">{{ 'POSITIVITY.VENDORS.EDIT.HINT' | translate }}</p>
+          <app-vendor-fields idPrefix="vendor-edit" [group]="editForm()" [fieldErrors]="editFieldErrors()" [submitted]="editSubmitted()" />
+          @if (editError(); as error) {
+            <p class="vendor-banner vendor-banner--error" role="alert" tabindex="-1" data-testid="vendor-edit-error">{{ error.key | translate: error.params }}</p>
+          }
+          <p class="vendor-consequence" data-testid="vendor-edit-consequence">{{ 'POSITIVITY.VENDORS.EDIT.CONSEQUENCE' | translate }}</p>
+          <div class="vendor-actions">
+            <button
+              type="submit"
+              class="vendor-btn vendor-btn--primary"
+              data-testid="vendor-edit-save"
+              [disabled]="saving()"
+              [attr.aria-disabled]="vendorReady() ? null : 'true'"
+              [attr.aria-describedby]="vendorReady() ? null : 'vendor-reading-reason'"
+            >
+              {{ 'COMMON.SAVE' | translate }}
+            </button>
+            <button type="button" class="vendor-btn vendor-btn--secondary" data-testid="vendor-edit-cancel" [disabled]="saving()" (click)="cancelEdit()">
+              {{ 'COMMON.CANCEL' | translate }}
+            </button>
+          </div>
+        </form>
+      } @else {
+        <dl class="vendor-dl">
+          <dt>{{ 'POSITIVITY.VENDORS.COLUMN.NUMBER' | translate }}</dt>
+          <dd class="vendor-mono" data-testid="vendor-number-value">{{ current.vendorNumber || ('COMMON.NOT_AVAILABLE' | translate) }}</dd>
+          <dt>{{ 'POSITIVITY.VENDORS.FORM.LEGAL_NAME' | translate }}</dt>
+          <dd data-testid="vendor-legal-name-value">{{ current.legalName || ('COMMON.NOT_AVAILABLE' | translate) }}</dd>
+          <dt>{{ 'POSITIVITY.VENDORS.FORM.DISPLAY_NAME' | translate }}</dt>
+          <dd data-testid="vendor-display-name-value">{{ current.displayName || ('COMMON.NOT_AVAILABLE' | translate) }}</dd>
+          <dt>{{ 'POSITIVITY.VENDORS.FORM.TERMS' | translate }}</dt>
+          <dd data-testid="vendor-terms-value">
+            @if (termsCopy(current.paymentTerms); as terms) {
+              {{ terms.key | translate: terms.params }}
+            }
+          </dd>
+          <dt>{{ 'POSITIVITY.VENDORS.FORM.CURRENCY' | translate }}</dt>
+          <dd class="vendor-mono">{{ current.currency || ('COMMON.NOT_AVAILABLE' | translate) }}</dd>
+          <dt>{{ 'POSITIVITY.VENDORS.COLUMN.STATUS' | translate }}</dt>
+          <dd>
+            <span
+              class="vendor-badge"
+              [class.vendor-badge--active]="current.status === 'ACTIVE'"
+              [class.vendor-badge--inactive]="current.status === 'INACTIVE'"
+              data-testid="vendor-status-badge"
+            >
+              {{ 'POSITIVITY.VENDORS.STATUS.' + current.status | translate }}
+            </span>
+            @if (current.statusChangedAt) {
+              <span class="vendor-muted" data-testid="vendor-status-changed">
+                {{ 'POSITIVITY.VENDORS.DETAIL.STATUS_CHANGED' | translate: { when: (current.statusChangedAt | date: 'medium') } }}
+              </span>
+            }
+            @if (current.statusReason) {
+              <br /><span data-testid="vendor-status-reason">{{ 'POSITIVITY.VENDORS.DETAIL.STATUS_REASON' | translate: { reason: current.statusReason } }}</span>
+            }
+          </dd>
+        </dl>
+        <app-vendor-tax-registrations
+          [vendorId]="current.vendorId"
+          [registrations]="current.taxRegistrations"
+          [canReveal]="canReveal()"
+          (reread)="onRevealReread($event)"
+        />
+      }
+    </section>
+
+    <app-vendor-remit-to
+      [vendor]="current"
+      [changes]="changes()"
+      [changesRead]="changesRead()"
+      [vendorReady]="vendorReady()"
+      [canWrite]="canWrite()"
+      [canApprove]="canApprove()"
+      [subject]="subject()"
+      (changed)="onRemitChanged($event)"
+      (retryChanges)="reload()"
+    />
+
+    @if (canReadProfiles()) {
+      <app-vendor-connections [vendorId]="current.vendorId" />
+    }
+  }
+</main>
+
+@if (statusDialog(); as mode) {
+  <dialog
+    appModalDialog
+    class="vendor-dialog"
+    aria-labelledby="vendor-status-dialog-title"
+    data-testid="vendor-status-dialog"
+    (modalCancel)="closeStatusDialog()"
+  >
+    <form novalidate (submit)="confirmStatus($event)">
+      <h2 class="vendor-dialog__title" id="vendor-status-dialog-title">
+        {{ (mode === 'DEACTIVATE' ? 'POSITIVITY.VENDORS.STATUS_DIALOG.DEACTIVATE_TITLE' : 'POSITIVITY.VENDORS.STATUS_DIALOG.REACTIVATE_TITLE') | translate: { number: vendor()?.vendorNumber ?? '' } }}
+      </h2>
+      <div class="vendor-field">
+        <label for="vendor-status-reason">{{ 'POSITIVITY.VENDORS.STATUS_DIALOG.REASON' | translate }}</label>
+        <textarea
+          id="vendor-status-reason"
+          data-testid="vendor-status-reason-input"
+          [attr.maxlength]="noteMax"
+          [value]="statusReason()"
+          (input)="statusReason.set(text($event))"
+          [attr.aria-invalid]="statusReasonError() ? 'true' : null"
+          [attr.aria-describedby]="'vendor-status-reason-hint' + (statusReasonError() ? ' vendor-status-reason-error' : '')"
+        ></textarea>
+        <p class="vendor-hint" id="vendor-status-reason-hint">{{ 'POSITIVITY.VENDORS.NOTE_HINT' | translate: { min: noteMin, max: noteMax } }}</p>
+        @if (statusReasonError(); as key) {
+          <p class="vendor-error" id="vendor-status-reason-error" data-testid="vendor-status-reason-error">{{ key | translate }}</p>
+        }
+      </div>
+      @if (statusError(); as error) {
+        <p class="vendor-error" role="alert" tabindex="-1" data-testid="vendor-status-error">{{ error.key | translate: error.params }}</p>
+      }
+      <p class="vendor-consequence" data-testid="vendor-status-consequence">
+        {{ (mode === 'DEACTIVATE' ? 'POSITIVITY.VENDORS.STATUS_DIALOG.DEACTIVATE_CONSEQUENCE' : 'POSITIVITY.VENDORS.STATUS_DIALOG.REACTIVATE_CONSEQUENCE') | translate }}
+      </p>
+      <div class="vendor-actions">
+        <button type="submit" class="vendor-btn vendor-btn--primary" data-testid="vendor-status-confirm" [disabled]="statusBusy() || !statusReasonValid()">
+          {{ (mode === 'DEACTIVATE' ? 'POSITIVITY.VENDORS.STATUS_DIALOG.DEACTIVATE' : 'POSITIVITY.VENDORS.STATUS_DIALOG.REACTIVATE') | translate }}
+        </button>
+        <button type="button" class="vendor-btn vendor-btn--secondary" data-testid="vendor-status-cancel" [disabled]="statusBusy()" (click)="closeStatusDialog()">
+          {{ 'COMMON.CANCEL' | translate }}
+        </button>
+      </div>
+    </form>
+  </dialog>
+}

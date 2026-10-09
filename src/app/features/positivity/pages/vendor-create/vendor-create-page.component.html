@@ -1,0 +1,86 @@
+<main class="vendor-page" aria-labelledby="vendor-create-title">
+  <header class="vendor-page__header">
+    <div>
+      <h1 class="vendor-page__title" id="vendor-create-title" tabindex="-1">{{ 'POSITIVITY.VENDORS.CREATE.TITLE' | translate }}</h1>
+      <p class="vendor-page__subtitle">{{ 'POSITIVITY.VENDORS.CREATE.SUBTITLE' | translate }}</p>
+    </div>
+    <a class="vendor-link" [routerLink]="['/app', 'positivity', 'vendors']">{{ 'POSITIVITY.VENDORS.BACK_TO_LIST' | translate }}</a>
+  </header>
+
+  @if (!canWrite()) {
+    <p class="vendor-banner vendor-banner--info" data-testid="vendor-create-forbidden">{{ 'POSITIVITY.VENDORS.CREATE.FORBIDDEN' | translate }}</p>
+  } @else {
+    <form class="vendor-section" data-testid="vendor-create-form" novalidate (submit)="submit($event)">
+      <div class="vendor-field">
+        <label for="vendor-number">{{ 'POSITIVITY.VENDORS.FORM.NUMBER' | translate }}</label>
+        <input
+          id="vendor-number"
+          type="text"
+          class="vendor-mono"
+          data-testid="vendor-number"
+          autocomplete="off"
+          spellcheck="false"
+          [attr.maxlength]="numberMax"
+          [formControl]="vendorNumber"
+          [attr.aria-invalid]="numberError() ? 'true' : null"
+          [attr.aria-describedby]="'vendor-number-hint' + (numberError() ? ' vendor-number-error' : '')"
+        />
+        <p class="vendor-hint" id="vendor-number-hint">{{ 'POSITIVITY.VENDORS.FORM.NUMBER_HINT' | translate: { max: numberMax } }}</p>
+        @if (numberError(); as error) {
+          <p class="vendor-error" id="vendor-number-error" data-testid="vendor-number-error">{{ error.key | translate: error.params }}</p>
+        }
+      </div>
+
+      <app-vendor-fields idPrefix="vendor-create" [group]="fields()" [fieldErrors]="fieldErrors()" [submitted]="submitted()" />
+
+      <fieldset class="vendor-fieldset" data-testid="vendor-create-remit">
+        <legend>{{ 'POSITIVITY.VENDORS.REMIT.OPTIONAL_LEGEND' | translate }}</legend>
+        <p class="vendor-hint">{{ 'POSITIVITY.VENDORS.REMIT.OPTIONAL_HINT' | translate }}</p>
+        <app-vendor-remit-to-fields idPrefix="vendor-create-remit" [group]="remitTo()" [fieldErrors]="fieldErrors()" />
+      </fieldset>
+
+      @if (state() === 'error' && errorKey(); as error) {
+        <p class="vendor-banner vendor-banner--error" role="alert" tabindex="-1" data-testid="vendor-create-error">{{ error.key | translate: error.params }}</p>
+      }
+
+      @if (checkState() === 'checking') {
+        <p class="vendor-hint" aria-live="polite" data-testid="vendor-create-checking">{{ 'POSITIVITY.VENDORS.CREATE.CHECKING' | translate }}</p>
+      } @else if (checkState() === 'failed') {
+        <div class="vendor-banner vendor-banner--error" role="alert" tabindex="-1" data-testid="vendor-create-check-failed">
+          <p>{{ 'POSITIVITY.VENDORS.CREATE.CHECK_FAILED' | translate }}</p>
+          <button type="button" class="vendor-btn vendor-btn--secondary" data-testid="vendor-create-check-retry" (click)="retryCheck()">
+            {{ 'POSITIVITY.VENDORS.CREATE.CHECK_RETRY' | translate }}
+          </button>
+        </div>
+      } @else if (checkState() === 'done') {
+        @let matches = possibleMatches();
+        <div class="vendor-banner vendor-banner--info" tabindex="-1" data-testid="vendor-create-matches">
+          @if (matches.length > 0) {
+            <p>{{ 'POSITIVITY.VENDORS.CREATE.MATCHES' | translate }}</p>
+            <ul>
+              @for (match of matches; track match.vendorId) {
+                <li>
+                  <a class="vendor-link" [routerLink]="['/app', 'positivity', 'vendors', match.vendorId]">
+                    {{ 'POSITIVITY.VENDORS.OPTION' | translate: { number: match.vendorNumber, name: match.displayName } }}
+                  </a>
+                </li>
+              }
+            </ul>
+          } @else {
+            <p>{{ 'POSITIVITY.VENDORS.CREATE.NO_MATCHES' | translate }}</p>
+          }
+        </div>
+      }
+
+      <p class="vendor-consequence" data-testid="vendor-create-consequence">{{ 'POSITIVITY.VENDORS.CREATE.CONSEQUENCE' | translate }}</p>
+      <div class="vendor-actions">
+        <button type="submit" class="vendor-btn vendor-btn--primary" data-testid="vendor-create-submit" [disabled]="addBlocked()">
+          {{ 'POSITIVITY.VENDORS.ADD' | translate }}
+        </button>
+        <button type="button" class="vendor-btn vendor-btn--secondary" data-testid="vendor-create-cancel" [disabled]="saving()" (click)="cancel()">
+          {{ 'COMMON.CANCEL' | translate }}
+        </button>
+      </div>
+    </form>
+  }
+</main>

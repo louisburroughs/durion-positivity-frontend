@@ -11,6 +11,7 @@ import {
   ORDER_PERMISSIONS,
   PEOPLE_PERMISSIONS,
   PLATFORM_PERMISSIONS,
+  POSITIVITY_PAGE,
   PRODUCT_PERMISSIONS,
   SECURITY_PAGE,
   SHOPMGMT_PERMISSIONS,
@@ -187,6 +188,16 @@ export const routes: Routes = [
         data: { permissions: BULK_IMPORT_PERMISSIONS },
         loadChildren: () =>
           import('./features/bulk-import/bulk-import.routes').then(m => m.BULK_IMPORT_ROUTES),
+      },
+      // The vendor master (CAP:550 S30): permission-gated, declared before the
+      // ROLE_ADMIN 'positivity' group so that gate never applies to it — clerks
+      // and general managers add vendors from Bills to pay. Same precedent as
+      // 'security/inventory-permissions' above.
+      {
+        path: 'positivity/vendors',
+        data: { permissions: POSITIVITY_PAGE.vendors },
+        loadChildren: () =>
+          import('./features/positivity/vendors.routes').then(m => m.VENDOR_ROUTES),
       },
       {
         path: 'positivity',

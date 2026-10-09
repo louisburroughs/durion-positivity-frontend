@@ -1,0 +1,20 @@
+<div class="vendor-grid">
+  @for (field of fields; track field.name) {
+    <div class="vendor-field">
+      <label [for]="idPrefix() + '-' + field.name">{{ field.label | translate }}</label>
+      <input
+        [type]="field.type"
+        [id]="idPrefix() + '-' + field.name"
+        [attr.data-testid]="'remit-' + field.name"
+        [attr.autocomplete]="field.autocomplete"
+        [attr.maxlength]="field.name === 'countryCode' ? 2 : null"
+        [formControl]="group().controls[field.name]"
+        [attr.aria-invalid]="error(field.name) ? 'true' : null"
+        [attr.aria-describedby]="error(field.name) ? idPrefix() + '-' + field.name + '-error' : null"
+      />
+      @if (error(field.name); as key) {
+        <p class="vendor-error" [id]="idPrefix() + '-' + field.name + '-error'">{{ key | translate }}</p>
+      }
+    </div>
+  }
+</div>

@@ -16,6 +16,7 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
+import { canAccess } from '../../../../core/security/route-access';
 import { POSITIVITY_PAGE } from '../../../../core/security/route-permissions';
 import { AuthService } from '../../../../core/services/auth.service';
 import { distinctUntilChanged, map } from 'rxjs';
@@ -153,6 +154,9 @@ export class SupplierProfileDetailPageComponent {
   readonly canWrite = computed(
     () => !this.auth.permissionsKnown() || this.auth.hasAnyPermission(POSITIVITY_PAGE.profileWrite),
   );
+
+  /** The vendor page admits on `supplier:vendor:read` (CAP:550 S30); without it the vendor is plain text. */
+  readonly canOpenVendor = computed(() => canAccess(this.auth, { permissions: POSITIVITY_PAGE.vendors }));
 
   /** Why the write controls are disabled, if they are. */
   readonly writeBlockedReasonId = computed(() =>

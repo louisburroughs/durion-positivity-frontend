@@ -1,0 +1,8 @@
+/* Page-specific layout; shared vendor treatments live in ../../vendors-shared.css. */
+:host {
+	display: block;
+}
+
+form[role='search'] {
+	align-items: flex-end;
+}

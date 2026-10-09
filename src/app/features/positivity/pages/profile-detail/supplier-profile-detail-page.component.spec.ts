@@ -386,6 +386,35 @@ describe('SupplierProfileDetailPageComponent', () => {
     expect(vendor?.textContent).toContain('POSITIVITY.PROFILES.VENDOR.OPTION');
   });
 
+  it('links "Belongs to" to the vendor page for a holder of supplier:vendor:read (CAP:550 S30)', async () => {
+    await setup();
+    const link = (fixture.nativeElement as HTMLElement).querySelector('[data-testid="profile-vendor-link"]');
+
+    expect(link?.getAttribute('href')).toBe(`/app/positivity/vendors/${ACME.vendorId}`);
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('POSITIVITY.PROFILES.VENDOR.BELONGS_TO');
+  });
+
+  it('AC 9: a YAML profile shows its vendor read-only with no way to change it (CAP:550 S30)', async () => {
+    await setup(yamlProfile);
+    component.openEdit();
+    fixture.detectChanges();
+    const host = fixture.nativeElement as HTMLElement;
+
+    expect(host.querySelector('[data-testid="profile-vendor"]')?.textContent).toContain('POSITIVITY.PROFILES.VENDOR.OPTION');
+    expect(component.editOpen()).toBe(false);
+    expect(host.querySelector('#edit-vendor')).toBeNull();
+  });
+
+  it('names the vendor as plain text without supplier:vendor:read', async () => {
+    const auth = new AuthStub();
+    auth.permissions.set(new Set(['supplier:profile:read', 'supplier:profile:write']));
+    await setup(undefined, auth);
+    const vendor = (fixture.nativeElement as HTMLElement).querySelector('[data-testid="profile-vendor"]');
+
+    expect(vendor?.querySelector('a')).toBeNull();
+    expect(vendor?.textContent).toContain('POSITIVITY.PROFILES.VENDOR.OPTION');
+  });
+
   it('edit pre-selects the profile’s vendor and saves it unchanged (AC2)', async () => {
     await setup();
     component.openEdit();

@@ -13,7 +13,8 @@ import {
 } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { distinctUntilChanged, map } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
 import { POSITIVITY_PAGE } from '../../../../core/security/route-permissions';
@@ -67,6 +68,7 @@ export class SupplierProfileListPageComponent {
   private readonly document = inject(DOCUMENT);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly injector = inject(Injector);
+  private readonly route = inject(ActivatedRoute);
 
   /**
    * Monotonic per-writer sequences (ADR-0063): a list or create callback
@@ -89,6 +91,12 @@ export class SupplierProfileListPageComponent {
   readonly fieldDetails = signal<Record<string, string>>({});
   readonly createOpen = signal(false);
   readonly saving = signal(false);
+  /**
+   * `?vendorId=` (CAP:550 S30): only that vendor's connections, as the vendor
+   * page's Connections section reads them. The id is used for the read only and
+   * never rendered (P8).
+   */
+  readonly vendorFilter = signal<string | null>(null);
 
   /**
    * `supplier:profile:write` (ADR-0040 §6a). The page is admitted on the read
@@ -120,7 +128,16 @@ export class SupplierProfileListPageComponent {
         this.load();
       });
     });
-    this.load();
+    this.route.queryParamMap
+      .pipe(
+        map(params => params.get('vendorId')?.trim() || null),
+        distinctUntilChanged(),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(vendorId => {
+        this.vendorFilter.set(vendorId);
+        this.load();
+      });
   }
 
   fieldError(field: string): string | null {
@@ -144,7 +161,7 @@ export class SupplierProfileListPageComponent {
     this.errorKey.set(null);
 
     this.service
-      .listProfiles()
+      .listProfiles(this.vendorFilter() ?? undefined)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: profiles => {

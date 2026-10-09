@@ -9,6 +9,7 @@ import {
   LOCATION_PERMISSIONS,
   PEOPLE_PERMISSIONS,
   PLATFORM_PERMISSIONS,
+  POSITIVITY_PAGE,
   PRODUCT_PERMISSIONS,
   SHOPMGMT_PERMISSIONS,
   WORKEXEC_PERMISSIONS,
@@ -34,6 +35,9 @@ export const NAV_REGISTRY: NavItem[] = [
   { key: 'SHELL.NAV.INVENTORY', icon: 'inventory_2', route: '/app/inventory', permissions: INVENTORY_PERMISSIONS, order: 8, group: 'main' },
   { key: 'SHELL.NAV.PRODUCT', icon: 'category', route: '/app/product', permissions: PRODUCT_PERMISSIONS, order: 9, group: 'main' },
   { key: 'SHELL.NAV.LOCATION', icon: 'location_city', route: '/app/location', permissions: LOCATION_PERMISSIONS, order: 10, group: 'main' },
+  // The vendor master (CAP:550 S30): permission-gated like its route, outside
+  // the ROLE_ADMIN supplier-connectivity entry below.
+  { key: 'SHELL.NAV.VENDORS', icon: 'local_shipping', route: '/app/positivity/vendors', permissions: POSITIVITY_PAGE.vendors, order: 10.5, group: 'main' },
   { key: 'SHELL.NAV.SECURITY', icon: 'shield', route: '/app/security', roles: ['ROLE_ADMIN'], order: 11, group: 'admin' },
   { key: 'SHELL.NAV.ADMIN', icon: 'admin_panel_settings', route: '/app/admin', roles: ['ROLE_ADMIN'], order: 12, group: 'admin' },
   { key: 'SHELL.NAV.SITEMAP', icon: 'account_tree', route: '/app/sitemap', roles: ['ROLE_ADMIN'], order: 13, group: 'admin' },

@@ -1,0 +1,36 @@
+<section class="vendor-section" [attr.aria-labelledby]="id + '-title'" data-testid="vendor-connections">
+  <h2 class="vendor-section__title" [id]="id + '-title'">{{ 'POSITIVITY.VENDORS.CONNECTIONS.TITLE' | translate }}</h2>
+  @switch (read()) {
+    @case ('PENDING') {
+      <p class="vendor-hint" aria-live="polite">{{ 'POSITIVITY.VENDORS.CONNECTIONS.LOADING' | translate }}</p>
+    }
+    @case ('FAILED') {
+      <div class="vendor-banner vendor-banner--error" role="alert" data-testid="vendor-connections-error">
+        {{ 'POSITIVITY.VENDORS.CONNECTIONS.ERROR' | translate }}
+        <button type="button" class="vendor-btn vendor-btn--secondary" (click)="reload()">{{ 'COMMON.RETRY' | translate }}</button>
+      </div>
+    }
+    @default {
+      @if (profiles().length === 0) {
+        <p data-testid="vendor-connections-empty">{{ 'POSITIVITY.VENDORS.CONNECTIONS.EMPTY' | translate }}</p>
+      } @else {
+        <ul class="vendor-tax-list">
+          @for (profile of profiles(); track profile.vendorProfileId) {
+            <li data-testid="vendor-connection">
+              @if (canOpenProfiles()) {
+                <a class="vendor-link" data-testid="vendor-connection-link" [routerLink]="['/app', 'positivity', 'profiles', profile.vendorProfileId]">
+                  {{ profile.displayName || profile.supplierRef }}
+                </a>
+              } @else {
+                <span data-testid="vendor-connection-name">{{ profile.displayName || profile.supplierRef }}</span>
+              }
+              <span class="vendor-muted">
+                {{ (profile.enabled ? 'POSITIVITY.VENDORS.CONNECTIONS.ENABLED' : 'POSITIVITY.VENDORS.CONNECTIONS.DISABLED') | translate }}
+              </span>
+            </li>
+          }
+        </ul>
+      }
+    }
+  }
+</section>

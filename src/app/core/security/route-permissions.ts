@@ -868,6 +868,29 @@ export const POSITIVITY_PAGE = {
   profileWrite: ['supplier:profile:write'],
   exchangeAudit: ['supplier:audit:read'],
   manualReview: ['supplier:transmission:read'],
+  /**
+   * `/app/positivity/vendors` (CAP:550 S30): the vendor master, mounted as a
+   * permission-gated sibling of the `ROLE_ADMIN` positivity group so clerks and
+   * general managers reach it. `vendorCreate` additionally gates `vendors/new`.
+   */
+  vendors: ['supplier:vendor:read'],
+  vendorCreate: ['supplier:vendor:write'],
+} as const satisfies Record<string, readonly string[]>;
+
+/**
+ * Write gates inside the vendor pages (ADR-0040 §6a, CAP:550 S30). Each control
+ * and its handler gate on its own code; the page's `supplier:vendor:read`
+ * admission never enables one.
+ *  - `vendorWrite`: create, edit, deactivate / reactivate, request a remit-to change.
+ *  - `vendorRemitApprove`: approve or reject a pending remit-to change.
+ *  - `vendorTaxIdReveal`: reveal one tax-registration number (backend #2621; ADMIN, CONTROLLER).
+ *  - `profileRead`: the vendor's Connections (its supplier profiles).
+ */
+export const POSITIVITY_SECTION = {
+  vendorWrite: ['supplier:vendor:write'],
+  vendorRemitApprove: ['supplier:vendor_remit:approve'],
+  vendorTaxIdReveal: ['supplier:vendor_tax_id:reveal'],
+  profileRead: ['supplier:profile:read'],
 } as const satisfies Record<string, readonly string[]>;
 
 /** `/app/bulk-import/*` — the job console; both pages are the same status read. */

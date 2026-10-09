@@ -1,8 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
-import { provideRouter } from '@angular/router';
+import { ActivatedRoute, ParamMap, convertToParamMap, provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
-import { Subject, of, throwError } from 'rxjs';
+import { BehaviorSubject, Subject, of, throwError } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SupplierProfileListPageComponent } from './supplier-profile-list-page.component';
 import { SupplierProfileService } from '../../services/supplier-profile.service';
@@ -399,5 +399,46 @@ describe('SupplierProfileListPageComponent', () => {
     fixture.detectChanges();
 
     expect(component.profiles()).toEqual([yamlProfile]);
+  });
+});
+
+describe('SupplierProfileListPageComponent ?vendorId= (CAP:550 S30)', () => {
+  let fixture: ComponentFixture<SupplierProfileListPageComponent>;
+  let listProfiles: ReturnType<typeof vi.fn>;
+  let query: BehaviorSubject<ParamMap>;
+
+  async function setup(params: Record<string, string>): Promise<void> {
+    listProfiles = vi.fn().mockReturnValue(of([adminProfile]));
+    query = new BehaviorSubject(convertToParamMap(params));
+    TestBed.resetTestingModule();
+    await TestBed.configureTestingModule({
+      imports: [SupplierProfileListPageComponent, TranslateModule.forRoot()],
+      providers: [
+        provideRouter([]),
+        { provide: ActivatedRoute, useValue: { queryParamMap: query } },
+        { provide: SupplierProfileService, useValue: { listProfiles, createProfile: vi.fn() } },
+        ...vendorPickerProviders(vendorServiceStub(), new AuthStub()),
+      ],
+    }).compileComponents();
+    fixture = TestBed.createComponent(SupplierProfileListPageComponent);
+    fixture.detectChanges();
+  }
+
+  it('reads only that vendor’s profiles and says so, without rendering the id', async () => {
+    await setup({ vendorId: ACME.vendorId });
+
+    expect(listProfiles).toHaveBeenCalledWith(ACME.vendorId);
+    const banner = (fixture.nativeElement as HTMLElement).querySelector('[data-testid="profiles-vendor-filter"]');
+    expect(banner?.textContent).toContain('POSITIVITY.PROFILES.VENDOR.FILTERED');
+    expect((fixture.nativeElement as HTMLElement).textContent).not.toContain(ACME.vendorId);
+  });
+
+  it('reads every profile without the parameter, and again when it changes', async () => {
+    await setup({});
+    expect(listProfiles).toHaveBeenLastCalledWith(undefined);
+    expect((fixture.nativeElement as HTMLElement).querySelector('[data-testid="profiles-vendor-filter"]')).toBeNull();
+
+    query.next(convertToParamMap({ vendorId: ACME.vendorId }));
+    expect(listProfiles).toHaveBeenLastCalledWith(ACME.vendorId);
   });
 });

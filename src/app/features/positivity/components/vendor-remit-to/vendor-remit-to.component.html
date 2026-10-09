@@ -1,0 +1,247 @@
+<section class="vendor-section" [attr.aria-labelledby]="id + '-title'" data-testid="vendor-remit">
+  <div class="vendor-page__header">
+    <h2 class="vendor-section__title" [id]="id + '-title'">{{ 'POSITIVITY.VENDORS.REMIT.TITLE' | translate }}</h2>
+    @if (requestVisible()) {
+      <button type="button" class="vendor-btn vendor-btn--secondary" data-testid="remit-request" [disabled]="busy()" (click)="openRequest()">
+        {{ 'POSITIVITY.VENDORS.REMIT.REQUEST' | translate }}
+      </button>
+    }
+  </div>
+
+  <p class="vendor-hint" data-testid="remit-version">
+    @if (vendor().remitToChangedAt) {
+      {{ 'POSITIVITY.VENDORS.REMIT.VERSION_SINCE' | translate: { version: vendor().remitToVersion, when: (vendor().remitToChangedAt | date: 'medium') } }}
+    } @else {
+      {{ 'POSITIVITY.VENDORS.REMIT.VERSION' | translate: { version: vendor().remitToVersion } }}
+    }
+  </p>
+  @if (lines(vendor().remitTo); as current) {
+    @if (current.length > 0) {
+      <address class="vendor-address" data-testid="remit-current">@for (line of current; track $index) {<span>{{ line }}</span><br />}</address>
+      @if (vendor().remitTo?.remittanceEmail; as email) {
+        <p data-testid="remit-current-email">{{ 'POSITIVITY.VENDORS.REMIT.EMAIL' | translate: { email: email } }}</p>
+      }
+    } @else {
+      <p data-testid="remit-none">{{ 'POSITIVITY.VENDORS.REMIT.NONE' | translate }}</p>
+    }
+  }
+
+  @if (changesRead() === 'FAILED') {
+    <div class="vendor-banner vendor-banner--error" role="alert" data-testid="remit-changes-error">
+      {{ 'POSITIVITY.VENDORS.ERROR.LOAD_CHANGES' | translate }}
+      <button type="button" class="vendor-btn vendor-btn--secondary" (click)="retryChanges.emit()">{{ 'COMMON.RETRY' | translate }}</button>
+    </div>
+  }
+
+  @if (pending(); as change) {
+    <section class="vendor-section" [attr.aria-labelledby]="id + '-pending-title'" data-testid="remit-pending">
+      <h3 class="vendor-section__title" [id]="id + '-pending-title'">
+        <span class="vendor-badge vendor-badge--pending">{{ 'POSITIVITY.VENDORS.REMIT.STATUS.PENDING' | translate }}</span>
+        {{ 'POSITIVITY.VENDORS.REMIT.PENDING_TITLE' | translate }}
+      </h3>
+      <div class="vendor-grid">
+        <div>
+          <h4>{{ 'POSITIVITY.VENDORS.REMIT.CURRENT' | translate }}</h4>
+          <address class="vendor-address" data-testid="remit-pending-old">@for (line of lines(vendor().remitTo); track $index) {<span>{{ line }}</span><br />} @empty { {{ 'POSITIVITY.VENDORS.REMIT.NONE' | translate }} }</address>
+          @if (vendor().remitTo?.remittanceEmail; as email) {
+            <p>{{ 'POSITIVITY.VENDORS.REMIT.EMAIL' | translate: { email: email } }}</p>
+          }
+        </div>
+        <div>
+          <h4>{{ 'POSITIVITY.VENDORS.REMIT.PROPOSED' | translate }}</h4>
+          <address class="vendor-address" data-testid="remit-pending-new">@for (line of lines(change.proposedRemitTo); track $index) {<span>{{ line }}</span><br />} @empty { {{ 'COMMON.NOT_AVAILABLE' | translate }} }</address>
+          @if (change.proposedRemitTo?.remittanceEmail; as email) {
+            <p>{{ 'POSITIVITY.VENDORS.REMIT.EMAIL' | translate: { email: email } }}</p>
+          }
+        </div>
+      </div>
+      <dl class="vendor-dl">
+        <dt>{{ 'POSITIVITY.VENDORS.REMIT.REQUESTED_BY' | translate }}</dt>
+        <dd data-testid="remit-pending-requester">{{ actor(change.requestedBy) ?? ('COMMON.NOT_AVAILABLE' | translate) }}</dd>
+        <dt>{{ 'POSITIVITY.VENDORS.REMIT.REQUESTED_AT' | translate }}</dt>
+        <dd>{{ change.requestedAt ? (change.requestedAt | date: 'medium') : ('COMMON.NOT_AVAILABLE' | translate) }}</dd>
+        <dt>{{ 'POSITIVITY.VENDORS.REMIT.REASON' | translate }}</dt>
+        <dd data-testid="remit-pending-reason">{{ change.reason ?? ('COMMON.NOT_AVAILABLE' | translate) }}</dd>
+      </dl>
+
+      @if (decideVisible()) {
+        <form class="vendor-section" data-testid="remit-approve-block" novalidate (submit)="approve($event)">
+          @if (approveAllowed()) {
+            <div class="vendor-field">
+              <label [for]="id + '-verification'">{{ 'POSITIVITY.VENDORS.REMIT.VERIFICATION_LABEL' | translate }}</label>
+              <textarea
+                [id]="id + '-verification'"
+                data-testid="remit-verification"
+                [attr.maxlength]="noteMax"
+                [value]="verificationNote()"
+                (input)="verificationNote.set(text($event))"
+                [attr.aria-invalid]="verificationError() ? 'true' : null"
+                [attr.aria-describedby]="id + '-verification-hint' + (verificationError() ? ' ' + id + '-verification-error' : '')"
+              ></textarea>
+              <p class="vendor-hint" [id]="id + '-verification-hint'">{{ 'POSITIVITY.VENDORS.NOTE_HINT' | translate: { min: noteMin, max: noteMax } }}</p>
+              @if (verificationError(); as key) {
+                <p class="vendor-error" [id]="id + '-verification-error'" data-testid="remit-verification-error">{{ key | translate }}</p>
+              }
+            </div>
+          }
+          @if (approveError(); as error) {
+            <p class="vendor-error" role="alert" tabindex="-1" data-testid="remit-approve-error">{{ error.key | translate: error.params }}</p>
+          }
+          <p class="vendor-consequence" data-testid="remit-approve-consequence">{{ 'POSITIVITY.VENDORS.REMIT.APPROVE_CONSEQUENCE' | translate }}</p>
+          <div class="vendor-actions">
+            <button
+              type="submit"
+              class="vendor-btn vendor-btn--primary"
+              data-testid="remit-approve"
+              [disabled]="approveAllowed() && (busy() || !approveValid())"
+              [attr.aria-disabled]="approveAllowed() ? null : 'true'"
+              [attr.aria-describedby]="approveAllowed() ? null : id + '-approve-blocked'"
+            >
+              {{ 'POSITIVITY.VENDORS.REMIT.APPROVE' | translate }}
+            </button>
+            <button type="button" class="vendor-btn vendor-btn--secondary" data-testid="remit-reject" [disabled]="busy()" (click)="openReject()">
+              {{ 'POSITIVITY.VENDORS.REMIT.REJECT' | translate }}
+            </button>
+          </div>
+          @if (!approveAllowed()) {
+            <p class="vendor-hint" [id]="id + '-approve-blocked'" data-testid="remit-approve-blocked">{{ 'POSITIVITY.VENDORS.REMIT.SELF_APPROVAL' | translate }}</p>
+          }
+        </form>
+      }
+    </section>
+  }
+
+  <section [attr.aria-labelledby]="id + '-history-title'" data-testid="remit-history">
+    <h3 class="vendor-section__title" [id]="id + '-history-title'">{{ 'POSITIVITY.VENDORS.REMIT.HISTORY_TITLE' | translate }}</h3>
+    @if (history().length === 0) {
+      @if (changesRead() === 'OK') {
+        <p data-testid="remit-history-empty">{{ 'POSITIVITY.VENDORS.REMIT.HISTORY_EMPTY' | translate }}</p>
+      }
+    } @else {
+      <div class="vendor-table-wrap">
+        <table class="vendor-table">
+          <caption class="sr-only">{{ 'POSITIVITY.VENDORS.REMIT.HISTORY_TITLE' | translate }}</caption>
+          <thead>
+            <tr>
+              <th scope="col">{{ 'POSITIVITY.VENDORS.REMIT.REQUESTED_AT' | translate }}</th>
+              <th scope="col">{{ 'POSITIVITY.VENDORS.COLUMN.STATUS' | translate }}</th>
+              <th scope="col">{{ 'POSITIVITY.VENDORS.REMIT.PROPOSED' | translate }}</th>
+              <th scope="col">{{ 'POSITIVITY.VENDORS.REMIT.REQUESTED_BY' | translate }}</th>
+              <th scope="col">{{ 'POSITIVITY.VENDORS.REMIT.DECIDED_BY' | translate }}</th>
+              <th scope="col">{{ 'POSITIVITY.VENDORS.REMIT.NOTES' | translate }}</th>
+              <th scope="col">{{ 'POSITIVITY.VENDORS.REMIT.VERSIONS' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (change of history(); track change.changeId) {
+              <tr data-testid="remit-history-row">
+                <td>{{ change.requestedAt ? (change.requestedAt | date: 'medium') : ('COMMON.NOT_AVAILABLE' | translate) }}</td>
+                <td>{{ 'POSITIVITY.VENDORS.REMIT.STATUS.' + change.status | translate }}</td>
+                <td>
+                  <address class="vendor-address">@for (line of lines(change.proposedRemitTo); track $index) {<span>{{ line }}</span><br />}</address>
+                </td>
+                <td>{{ actor(change.requestedBy) ?? ('COMMON.NOT_AVAILABLE' | translate) }}</td>
+                <td>
+                  {{ actor(change.decidedBy) ?? ('COMMON.NOT_AVAILABLE' | translate) }}
+                  @if (change.decidedAt) {
+                    <br /><span class="vendor-muted">{{ change.decidedAt | date: 'medium' }}</span>
+                  }
+                </td>
+                <td>
+                  @if (change.reason) {
+                    <span>{{ 'POSITIVITY.VENDORS.REMIT.REASON_NOTE' | translate: { note: change.reason } }}</span>
+                  }
+                  @if (change.decisionNote) {
+                    <br /><span>{{ 'POSITIVITY.VENDORS.REMIT.DECISION_NOTE' | translate: { note: change.decisionNote } }}</span>
+                  }
+                </td>
+                <td class="vendor-mono">
+                  @if (change.fromVersion !== null && change.toVersion !== null) {
+                    {{ 'POSITIVITY.VENDORS.REMIT.VERSION_RANGE' | translate: { from: change.fromVersion, to: change.toVersion } }}
+                  } @else if (change.fromVersion !== null) {
+                    {{ 'POSITIVITY.VENDORS.REMIT.VERSION_FROM' | translate: { from: change.fromVersion } }}
+                  } @else {
+                    {{ 'COMMON.NOT_AVAILABLE' | translate }}
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+</section>
+
+@if (requestOpen()) {
+  <dialog appModalDialog class="vendor-dialog" [attr.aria-labelledby]="id + '-request-title'" data-testid="remit-request-dialog" (modalCancel)="closeRequest()">
+    <form novalidate (submit)="submitRequest($event)">
+      <h2 class="vendor-dialog__title" [id]="id + '-request-title'">{{ 'POSITIVITY.VENDORS.REMIT.REQUEST_TITLE' | translate: { number: vendor().vendorNumber } }}</h2>
+      <app-vendor-remit-to-fields [idPrefix]="id + '-request'" [group]="requestForm()" [fieldErrors]="requestFieldErrors()" />
+      <div class="vendor-field">
+        <label [for]="id + '-request-reason'">{{ 'POSITIVITY.VENDORS.REMIT.REQUEST_REASON' | translate }}</label>
+        <textarea
+          [id]="id + '-request-reason'"
+          data-testid="remit-request-reason"
+          [attr.maxlength]="noteMax"
+          [value]="requestReason()"
+          (input)="requestReason.set(text($event))"
+          [attr.aria-invalid]="requestFieldErrors()['reason'] ? 'true' : null"
+          [attr.aria-describedby]="id + '-request-reason-hint' + (requestFieldErrors()['reason'] ? ' ' + id + '-request-reason-error' : '')"
+        ></textarea>
+        <p class="vendor-hint" [id]="id + '-request-reason-hint'">{{ 'POSITIVITY.VENDORS.NOTE_HINT' | translate: { min: noteMin, max: noteMax } }}</p>
+        @if (requestFieldErrors()['reason']; as key) {
+          <p class="vendor-error" [id]="id + '-request-reason-error'" data-testid="remit-request-reason-error">{{ key | translate }}</p>
+        }
+      </div>
+      @if (requestError(); as error) {
+        <p class="vendor-error" role="alert" tabindex="-1" data-testid="remit-request-error">{{ error.key | translate: error.params }}</p>
+      }
+      <p class="vendor-consequence" data-testid="remit-request-consequence">{{ 'POSITIVITY.VENDORS.REMIT.REQUEST_CONSEQUENCE' | translate }}</p>
+      <div class="vendor-actions">
+        <button type="submit" class="vendor-btn vendor-btn--primary" data-testid="remit-request-submit" [disabled]="busy() || !requestValid()">
+          {{ 'POSITIVITY.VENDORS.REMIT.REQUEST_SUBMIT' | translate }}
+        </button>
+        <button type="button" class="vendor-btn vendor-btn--secondary" data-testid="remit-request-cancel" [disabled]="busy()" (click)="closeRequest()">
+          {{ 'COMMON.CANCEL' | translate }}
+        </button>
+      </div>
+    </form>
+  </dialog>
+}
+
+@if (rejectOpen()) {
+  <dialog appModalDialog class="vendor-dialog" [attr.aria-labelledby]="id + '-reject-title'" data-testid="remit-reject-dialog" (modalCancel)="closeReject()">
+    <form novalidate (submit)="confirmReject($event)">
+      <h2 class="vendor-dialog__title" [id]="id + '-reject-title'">{{ 'POSITIVITY.VENDORS.REMIT.REJECT_TITLE' | translate: { number: vendor().vendorNumber } }}</h2>
+      <div class="vendor-field">
+        <label [for]="id + '-reject-note'">{{ 'POSITIVITY.VENDORS.REMIT.REJECT_NOTE' | translate }}</label>
+        <textarea
+          [id]="id + '-reject-note'"
+          data-testid="remit-reject-note"
+          [attr.maxlength]="noteMax"
+          [value]="rejectNote()"
+          (input)="rejectNote.set(text($event))"
+          [attr.aria-invalid]="rejectNoteError() ? 'true' : null"
+          [attr.aria-describedby]="id + '-reject-hint' + (rejectNoteError() ? ' ' + id + '-reject-note-error' : '')"
+        ></textarea>
+        <p class="vendor-hint" [id]="id + '-reject-hint'">{{ 'POSITIVITY.VENDORS.NOTE_HINT' | translate: { min: noteMin, max: noteMax } }}</p>
+        @if (rejectNoteError(); as key) {
+          <p class="vendor-error" [id]="id + '-reject-note-error'" data-testid="remit-reject-note-error">{{ key | translate }}</p>
+        }
+      </div>
+      @if (rejectError(); as error) {
+        <p class="vendor-error" role="alert" tabindex="-1" data-testid="remit-reject-error">{{ error.key | translate: error.params }}</p>
+      }
+      <p class="vendor-consequence">{{ 'POSITIVITY.VENDORS.REMIT.REJECT_CONSEQUENCE' | translate }}</p>
+      <div class="vendor-actions">
+        <button type="submit" class="vendor-btn vendor-btn--primary" data-testid="remit-reject-confirm" [disabled]="busy() || !rejectValid()">
+          {{ 'POSITIVITY.VENDORS.REMIT.REJECT' | translate }}
+        </button>
+        <button type="button" class="vendor-btn vendor-btn--secondary" data-testid="remit-reject-cancel" [disabled]="busy()" (click)="closeReject()">
+          {{ 'COMMON.CANCEL' | translate }}
+        </button>
+      </div>
+    </form>
+  </dialog>
+}
