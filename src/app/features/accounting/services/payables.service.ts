@@ -5,6 +5,13 @@ import {
   PageVendorBillStageRow,
   VendorBillAPIService,
   VendorBillApproveRequest,
+  VendorBillClassification,
+  VendorBillClassificationDebitClassEnum,
+  VendorBillDifference,
+  VendorBillDifferenceClassEnum,
+  VendorBillPosting,
+  VendorBillSubmitRequest,
+  VendorDirectoryAPIService,
   VendorBillAvailableAction,
   VendorBillCheck,
   VendorBillDueDateRequest,
@@ -27,13 +34,24 @@ import {
   BillApproveCommand,
   BillCandidate,
   BillChannel,
+  BillClassification,
+  BillDifference,
   BillCheck,
   BillDetail,
   BillDueDateCommand,
   BillInputTaxRecovery,
   BillLine,
   BillMatch,
+  BillPosting,
+  BillPostingInput,
   BillResolveCommand,
+  BillSelection,
+  BillSubmitCommand,
+  BillVoidCommand,
+  DebitClass,
+  DifferenceClass,
+  PostingDateRule,
+  VendorDefaultClass,
   BillStage,
   BillStageCounts,
   BillStagePage,
@@ -74,6 +92,11 @@ const ACTIONS: readonly BillActionCode[] = [
 ];
 const OUTCOMES: readonly CheckOutcome[] = ['PASS', 'FAIL', 'NOT_APPLICABLE'];
 const CONFIDENCES: readonly MatchConfidence[] = ['HIGH_CONFIDENCE', 'MEDIUM_CONFIDENCE', 'AMBIGUOUS', 'NO_MATCH'];
+const DEBIT_CLASSES: readonly DebitClass[] = ['GOODS', 'EXPENSE', 'RECEIPT_MATCHED', 'PRICE_ALLOWANCE'];
+const DIFFERENCE_CLASSES: readonly DifferenceClass[] = ['FREIGHT', 'GOODS', 'PRICE_DIFFERENCE', 'EXPENSE'];
+const POSTING_DATE_RULES: readonly PostingDateRule[] = ['BILL_DATE', 'APPROVAL_DATE_BILL_PERIOD_NOT_OPEN', 'APPROVAL_DATE_BILL_DATE_FUTURE'];
+/** The actor the server records for an automatic decision (S12, S13). */
+const SYSTEM_ACTOR = 'SYSTEM';
 
 /** A served enum value this build knows, else `UNKNOWN` (§8.2: never hard-code, never drop). */
 function known<T extends string>(values: readonly T[], value: string | null | undefined): T | 'UNKNOWN' {
@@ -102,6 +125,7 @@ const amount = (value: number | null | undefined): number | null => (typeof valu
 @Injectable({ providedIn: 'root' })
 export class PayablesService {
   private readonly sdk = inject(VendorBillAPIService);
+  private readonly vendors = inject(VendorDirectoryAPIService);
 
   getStageCounts(): Observable<BillStageCounts> {
     return this.sdk.getVendorBillStageCounts().pipe(map(toStageCounts));
@@ -116,14 +140,20 @@ export class PayablesService {
     return this.sdk.getVendorBillById(billId).pipe(map(toBillDetail));
   }
 
-  /** Send for approval: from `PENDING_RECEIPT_MATCH` "without a delivery match", from `MATCH_EXCEPTION` resolving it. */
-  submitForApproval(billId: string, justification: string): Observable<void> {
-    return this.sdk.submitVendorBillForApproval(billId, { justification }).pipe(map(() => undefined));
+  /**
+   * Send for approval: from `PENDING_RECEIPT_MATCH` "without a delivery
+   * match", from `MATCH_EXCEPTION` resolving it. A classification or
+   * difference is a proposal the approver may change (Q1).
+   */
+  submitForApproval(billId: string, command: BillSubmitCommand): Observable<void> {
+    const request: VendorBillSubmitRequest = { justification: command.justification, ...postingFields(command.posting, false) };
+    return this.sdk.submitVendorBillForApproval(billId, request).pipe(map(() => undefined));
   }
 
   /**
    * Approve bill. S32d's `taxByType` is never sent (omitted, the bill keeps
-   * what it states; entering it is S33's), nor a classification or difference.
+   * what it states; entering it is S33's). Classification, difference and the
+   * period override go only when the panel shows and fills them.
    */
   approve(billId: string, command: BillApproveCommand): Observable<void> {
     const request: VendorBillApproveRequest = {
@@ -131,6 +161,7 @@ export class PayablesService {
       ...(command.taxOnResaleOverrideJustification
         ? { taxOnResaleOverrideJustification: command.taxOnResaleOverrideJustification }
         : {}),
+      ...postingFields(command.posting, true),
     };
     return this.sdk.approveVendorBill(billId, request).pipe(map(() => undefined));
   }
@@ -139,21 +170,48 @@ export class PayablesService {
     return this.sdk.rejectVendorBill(billId, { reason }).pipe(map(() => undefined));
   }
 
-  /** Accept as billed, Correct the bill or Void the bill. The override reason goes with `ACCEPT` only. */
+  /** Void an approved bill (reversed today, AW42) or a goods-receipt placeholder (posts nothing, AW45). */
+  voidBill(billId: string, command: BillVoidCommand): Observable<void> {
+    return this.sdk
+      .voidVendorBill(billId, {
+        reason: command.reason,
+        ...(command.overrideJustification ? { overrideJustification: command.overrideJustification } : {}),
+      })
+      .pipe(map(() => undefined));
+  }
+
+  /** Accept as billed, Correct the bill or Void the bill. The override reason and posting choices go with `ACCEPT` only. */
   resolveException(billId: string, command: BillResolveCommand): Observable<void> {
+    const accept = command.resolutionAction === 'ACCEPT';
     const request: VendorBillExceptionResolutionRequest = {
       resolutionAction: command.resolutionAction as VendorBillExceptionResolutionRequestResolutionActionEnum,
       reason: command.reason,
-      ...(command.resolutionAction === 'ACCEPT' && command.taxOnResaleOverrideJustification
+      ...(accept && command.taxOnResaleOverrideJustification
         ? { taxOnResaleOverrideJustification: command.taxOnResaleOverrideJustification }
         : {}),
+      ...(accept ? postingFields(command.posting, true) : {}),
     };
     return this.sdk.resolveVendorBillMatchException(billId, request).pipe(map(() => undefined));
   }
 
-  /** Matching only: the chosen bill moves to `AWAITING_APPROVAL`. No body. */
-  selectMatchCandidate(candidateId: string): Observable<void> {
-    return this.sdk.selectVendorBillMatchCandidate(candidateId).pipe(map(() => undefined));
+  /**
+   * Matching only: the chosen bill moves to `AWAITING_APPROVAL`. No body.
+   * Answers with the chosen bill, which may be another than the one shown (Q5).
+   */
+  selectMatchCandidate(candidateId: string): Observable<BillSelection> {
+    return this.sdk
+      .selectVendorBillMatchCandidate(candidateId)
+      .pipe(map(view => ({ billId: view.vendorBillId, billNumber: view.billNumber })));
+  }
+
+  /** The vendor's served AP default class, pre-filling "What is this bill for?" (`accounting:ap:view`). */
+  getVendorDefaultClass(vendorId: string): Observable<VendorDefaultClass> {
+    return this.vendors.getVendorById(vendorId).pipe(
+      map(vendor => {
+        const value = vendor.apSettings?.defaultDebitClass;
+        return value === 'GOODS' || value === 'EXPENSE' ? value : null;
+      }),
+    );
   }
 
   setDueDate(billId: string, command: BillDueDateCommand): Observable<void> {
@@ -207,6 +265,7 @@ function toStageRow(row: VendorBillStageRow): BillStageRow {
 function toBillDetail(view: VendorBillResponse): BillDetail {
   return {
     billId: view.vendorBillId,
+    vendorId: view.vendorId,
     billNumber: view.billNumber,
     vendorName: text(view.vendorName),
     channel: known(CHANNELS, view.channel),
@@ -228,6 +287,12 @@ function toBillDetail(view: VendorBillResponse): BillDetail {
           submissionJustification: text(view.approval.submissionJustification),
           approvedAt: text(view.approval.approvedAt),
           approvalJustification: text(view.approval.approvalJustification),
+          approvedAutomatically: view.approval.approvedByKind === 'SYSTEM',
+          submittedAutomatically: view.approval.submittedBy === SYSTEM_ACTOR,
+          proposedClassification: view.approval.proposedClassification
+            ? toClassification(view.approval.proposedClassification)
+            : null,
+          proposedDifference: view.approval.proposedDifference ? toDifference(view.approval.proposedDifference) : null,
         }
       : null,
     rejection: view.rejection
@@ -246,6 +311,53 @@ function toBillDetail(view: VendorBillResponse): BillDetail {
           justification: text(view.taxOnResaleOverride.justification),
         }
       : null,
+    posting: view.posting ? toPosting(view.posting) : null,
+  };
+}
+
+/** The request fields for the posting choices; the override only where the command posts. */
+function postingFields(
+  posting: BillPostingInput,
+  posts: boolean,
+): { classification?: VendorBillClassification; difference?: VendorBillDifference; overrideJustification?: string } {
+  return {
+    ...(posting.classification
+      ? { classification: { debitClass: posting.classification as VendorBillClassificationDebitClassEnum } }
+      : {}),
+    ...(posting.difference
+      ? {
+          difference: {
+            class: posting.difference.differenceClass as VendorBillDifferenceClassEnum,
+            justification: posting.difference.justification,
+          },
+        }
+      : {}),
+    ...(posts && posting.overrideJustification ? { overrideJustification: posting.overrideJustification } : {}),
+  };
+}
+
+function toClassification(classification: VendorBillClassification): BillClassification {
+  return {
+    debitClass: known(DEBIT_CLASSES, classification.debitClass),
+    expenseMappingKey: text(classification.expenseMappingKey),
+  };
+}
+
+function toDifference(difference: VendorBillDifference): BillDifference {
+  return { differenceClass: known(DIFFERENCE_CLASSES, difference.class), justification: text(difference.justification) };
+}
+
+function toPosting(posting: VendorBillPosting): BillPosting {
+  return {
+    journalEntryId: posting.journalEntryId,
+    journalEntryReference: text(posting.journalEntryReference),
+    postingDate: posting.postingDate,
+    postingDateRule: known(POSTING_DATE_RULES, posting.postingDateRule),
+    differenceClass: posting.differenceClass ? known(DIFFERENCE_CLASSES, posting.differenceClass) : null,
+    differenceAmount: amount(posting.differenceAmount),
+    roundingAdjustment: posting.roundingAdjustment,
+    reversalReference: text(posting.reversalReference),
+    currencyCode: text(posting.currencyCode),
   };
 }
 

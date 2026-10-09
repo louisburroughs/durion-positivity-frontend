@@ -1,4 +1,4 @@
-@if (submitAction() || approveAction() || rejectAction()) {
+@if (submitAction() || approveAction() || rejectAction() || voidApprovedAction() || voidUnmatchedAction()) {
   <div class="bill-decision" data-testid="bill-decision">
     <!-- Send for approval (SUBMIT_FOR_APPROVAL) -->
     @if (submitAction(); as action) {
@@ -34,7 +34,7 @@
             type="submit"
             class="btn btn--accent"
             data-testid="send"
-            [disabled]="action.allowed && (busy() || !sendValid())"
+            [disabled]="action.allowed && (busy() || !sendValid() || !sendReady())"
             [attr.aria-disabled]="action.allowed ? null : 'true'"
             [attr.aria-describedby]="action.allowed ? null : id + '-send-blocked'"
           >
@@ -99,13 +99,18 @@
             }
           </p>
         }
-        <p class="bill-consequence">{{ 'ACCOUNTING.BILLS.DECISION.APPROVE_CONSEQUENCE' | translate }}</p>
+        <p class="bill-consequence" data-testid="approve-consequence">
+          {{ 'ACCOUNTING.BILLS.DECISION.APPROVE_CONSEQUENCE' | translate: {
+            amount: (approveConsequence().amount | money: approveConsequence().currency),
+            vendor: approveConsequence().vendor ?? ('COMMON.EMPTY_VALUE' | translate)
+          } }}
+        </p>
         <div class="bill-actions">
           <button
             type="submit"
             class="btn btn--accent"
             data-testid="approve"
-            [disabled]="action.allowed && (busy() || !approveReasonValid() || !taxOnResaleValid())"
+            [disabled]="action.allowed && (busy() || !approveReasonValid() || !taxOnResaleValid() || !postingReady())"
             [attr.aria-disabled]="action.allowed ? null : 'true'"
             [attr.aria-describedby]="action.allowed ? null : id + '-approve-blocked'"
           >
@@ -126,65 +131,99 @@
       </form>
     }
 
-    <!-- Reject bill (REJECT) -->
-    @if (rejectAction(); as action) {
-      <div class="bill-decision__block" data-testid="reject-block">
-        <p class="bill-consequence">{{ 'ACCOUNTING.BILLS.DECISION.REJECT_CONSEQUENCE' | translate }}</p>
-        <div class="bill-actions">
-          <button
-            type="button"
-            class="btn btn--outline"
-            data-testid="reject"
-            [disabled]="action.allowed && busy()"
-            [attr.aria-disabled]="action.allowed ? null : 'true'"
-            [attr.aria-describedby]="action.allowed ? null : id + '-reject-blocked'"
-            (click)="openReject()"
-          >
-            {{ 'ACCOUNTING.BILLS.DECISION.REJECT' | translate }}
-          </button>
-          @if (!action.allowed) {
-            <p class="hint-text" [id]="id + '-reject-blocked'" data-testid="reject-blocked">
-              @if (blocked(action); as reason) {
-                {{ reason.key | translate: reason.params }}
-              }
-            </p>
-          }
+    <!-- Reject bill (REJECT), Void the bill (VOID_APPROVED, VOID_UNMATCHED) -->
+    @for (entry of reasonActions(); track entry.mode) {
+      @if (entry.action; as action) {
+        <div class="bill-decision__block" [attr.data-testid]="entry.testid + '-block'">
+          <p class="bill-consequence">{{ entry.consequenceKey | translate }}</p>
+          <div class="bill-actions">
+            <button
+              type="button"
+              class="btn btn--outline"
+              [attr.data-testid]="entry.testid"
+              [disabled]="action.allowed && busy()"
+              [attr.aria-disabled]="action.allowed ? null : 'true'"
+              [attr.aria-describedby]="action.allowed ? null : id + '-' + entry.testid + '-blocked'"
+              (click)="openDialog(entry.mode)"
+            >
+              {{ entry.labelKey | translate }}
+            </button>
+            @if (!action.allowed) {
+              <p class="hint-text" [id]="id + '-' + entry.testid + '-blocked'" [attr.data-testid]="entry.testid + '-blocked'">
+                @if (blocked(action); as reason) {
+                  {{ reason.key | translate: reason.params }}
+                }
+              </p>
+            }
+          </div>
         </div>
-      </div>
+      }
     }
   </div>
 }
 
-@if (rejectOpen()) {
-  <dialog appModalDialog class="confirm-panel" [attr.aria-labelledby]="id + '-reject-title'" (modalCancel)="closeReject()" data-testid="reject-dialog">
-    <form class="bill-form" (submit)="$event.preventDefault(); confirmReject()">
-      <h2 class="confirm-heading" [id]="id + '-reject-title'">
-        {{ 'ACCOUNTING.BILLS.DECISION.REJECT_TITLE' | translate: { number: bill().billNumber } }}
+@if (dialog(); as mode) {
+  <dialog
+    appModalDialog
+    class="confirm-panel"
+    [attr.aria-labelledby]="id + '-dialog-title'"
+    (modalCancel)="closeDialog()"
+    [attr.data-testid]="mode === 'REJECT' ? 'reject-dialog' : 'void-dialog'"
+  >
+    <form class="bill-form" (submit)="$event.preventDefault(); confirmDialog()">
+      <h2 class="confirm-heading" [id]="id + '-dialog-title'">
+        {{ dialogKeys[mode].title | translate: { number: bill().billNumber } }}
       </h2>
       <div class="form-field">
-        <label [for]="id + '-reject-reason'">{{ 'ACCOUNTING.BILLS.DECISION.REJECT_REASON_LABEL' | translate }}</label>
+        <label [for]="id + '-dialog-reason'">{{ dialogKeys[mode].label | translate }}</label>
         <textarea
-          [id]="id + '-reject-reason'"
-          data-testid="reject-reason"
-          [value]="rejectReason()"
-          (input)="rejectReason.set(text($event))"
+          [id]="id + '-dialog-reason'"
+          [attr.data-testid]="mode === 'REJECT' ? 'reject-reason' : 'void-reason'"
+          [value]="dialogReason()"
+          (input)="dialogReason.set(text($event))"
           [attr.maxlength]="max"
-          [attr.aria-invalid]="rejectFailure()?.view?.field === 'reason' ? 'true' : null"
-          [attr.aria-describedby]="id + '-reject-hint' + (rejectFailure() ? ' ' + id + '-reject-error' : '')"
+          [attr.aria-invalid]="dialogFailure()?.view?.field === 'reason' ? 'true' : null"
+          [attr.aria-describedby]="id + '-dialog-hint' + (dialogFailure() && dialogFailure()?.view?.field !== 'override' ? ' ' + id + '-dialog-error' : '')"
         ></textarea>
-        <p class="hint-text" [id]="id + '-reject-hint'">{{ 'ACCOUNTING.BILLS.DECISION.REASON_HINT' | translate: { min: min } }}</p>
+        <p class="hint-text" [id]="id + '-dialog-hint'">{{ 'ACCOUNTING.BILLS.DECISION.REASON_HINT' | translate: { min: min } }}</p>
       </div>
-      @if (rejectFailure(); as failure) {
-        <p class="bill-error dialog-error" role="alert" [id]="id + '-reject-error'" data-testid="reject-error">
+      @if (voidOverrideShown()) {
+        <div class="form-field" data-testid="void-override">
+          <label [for]="id + '-dialog-override'">{{ 'ACCOUNTING.BILLS.POSTING.OVERRIDE_LABEL' | translate }}</label>
+          <textarea
+            [id]="id + '-dialog-override'"
+            data-testid="void-override-reason"
+            [value]="dialogOverride()"
+            (input)="dialogOverride.set(text($event))"
+            [attr.maxlength]="max"
+            [attr.aria-invalid]="dialogFailure()?.view?.field === 'override' ? 'true' : null"
+            [attr.aria-describedby]="id + '-dialog-override-hint' + (dialogFailure()?.view?.field === 'override' ? ' ' + id + '-dialog-error' : '')"
+          ></textarea>
+          <p class="hint-text" [id]="id + '-dialog-override-hint'">{{ 'ACCOUNTING.BILLS.POSTING.OVERRIDE_HINT' | translate: { min: min } }}</p>
+        </div>
+      }
+      @if (dialogFailure(); as failure) {
+        <p class="bill-error dialog-error" role="alert" [id]="id + '-dialog-error'" [attr.data-testid]="mode === 'REJECT' ? 'reject-error' : 'void-error'">
           {{ failure.view.message.key | translate: failure.view.message.params }}
         </p>
       }
-      <p class="bill-consequence">{{ 'ACCOUNTING.BILLS.DECISION.REJECT_CONSEQUENCE' | translate }}</p>
+      <p class="bill-consequence">{{ dialogKeys[mode].consequence | translate }}</p>
       <div class="bill-actions">
-        <button type="submit" class="btn btn--accent" data-testid="reject-confirm" [disabled]="busy() || !rejectValid()">
-          {{ 'ACCOUNTING.BILLS.DECISION.REJECT' | translate }}
+        <button
+          type="submit"
+          class="btn btn--accent"
+          [attr.data-testid]="mode === 'REJECT' ? 'reject-confirm' : 'void-confirm'"
+          [disabled]="busy() || !dialogValid()"
+        >
+          {{ dialogKeys[mode].confirm | translate }}
         </button>
-        <button type="button" class="btn btn--outline" data-testid="reject-cancel" [disabled]="busy()" (click)="closeReject()">
+        <button
+          type="button"
+          class="btn btn--outline"
+          [attr.data-testid]="mode === 'REJECT' ? 'reject-cancel' : 'void-cancel'"
+          [disabled]="busy()"
+          (click)="closeDialog()"
+        >
           {{ 'COMMON.CANCEL' | translate }}
         </button>
       </div>

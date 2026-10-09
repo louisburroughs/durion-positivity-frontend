@@ -7,17 +7,44 @@ import {
   BILL_REASON_MIN,
   BillAction,
   BillDecisionDone,
+  BillDecisionKind,
   BillDecisionRequest,
   BillDetail,
   BillPermissions,
+  BillVoidKind,
 } from '../../../models/payables.models';
 import { Copy, blockedCopy, findAction, offersResolveAndSend, reasonValid, taxOnResaleHeld, withParam } from '../../../utils/bill-display';
-import { BillDecisionFailure } from '../../../utils/bill-errors';
+import { BillDecisionFailure, POSTING_FIELDS } from '../../../utils/bill-errors';
+
+/** The decisions that open a reason dialog: Reject, and the two voids (AW42, AW45). */
+export type ReasonDialogMode = 'REJECT' | BillVoidKind;
+
+const DIALOG_KEYS: Readonly<Record<ReasonDialogMode, { readonly title: string; readonly label: string; readonly consequence: string; readonly confirm: string }>> = {
+  REJECT: {
+    title: 'ACCOUNTING.BILLS.DECISION.REJECT_TITLE',
+    label: 'ACCOUNTING.BILLS.DECISION.REJECT_REASON_LABEL',
+    consequence: 'ACCOUNTING.BILLS.DECISION.REJECT_CONSEQUENCE',
+    confirm: 'ACCOUNTING.BILLS.DECISION.REJECT',
+  },
+  VOID_APPROVED: {
+    title: 'ACCOUNTING.BILLS.DECISION.VOID_TITLE',
+    label: 'ACCOUNTING.BILLS.DECISION.VOID_REASON_LABEL',
+    consequence: 'ACCOUNTING.BILLS.DECISION.VOID_APPROVED_CONSEQUENCE',
+    confirm: 'ACCOUNTING.BILLS.DECISION.VOID',
+  },
+  VOID_UNMATCHED: {
+    title: 'ACCOUNTING.BILLS.DECISION.VOID_TITLE',
+    label: 'ACCOUNTING.BILLS.DECISION.VOID_REASON_LABEL',
+    consequence: 'ACCOUNTING.BILLS.DECISION.VOID_UNMATCHED_CONSEQUENCE',
+    confirm: 'ACCOUNTING.BILLS.DECISION.VOID',
+  },
+};
 
 let nextId = 0;
 
 /**
- * Send for approval, Approve bill and Reject bill (§5.2 item 4; story item 6).
+ * Send for approval, Approve bill, Reject bill and the two voids (§5.2 item 4;
+ * story item 6; Accounting ruling rows 4–6 on #464).
  *
  * Each control renders only when the session holds its write code
  * (`permissions`) and the bill serves the action (`availableActions`); a
@@ -26,8 +53,10 @@ let nextId = 0;
  * sentence (P4). The handlers re-check both before asking the panel, which
  * re-checks again before it calls the server (ADR-0040 §6a).
  *
- * Reject opens a native `dialog[appModalDialog]`; its errors show inside it
- * without losing the reason, and focus returns to Reject bill on close.
+ * Reject and void open a native `dialog[appModalDialog]`; their errors show
+ * inside it without losing the reason, and focus returns to the trigger on
+ * close. A void refused 422 `PERIOD_CLOSED` asks a holder of
+ * `accounting:period:override` for an override reason and resends.
  */
 @Component({
   selector: 'app-bill-decision',
@@ -44,6 +73,10 @@ export class BillDecisionComponent {
   readonly busy = input(false);
   readonly failure = input<BillDecisionFailure | null>(null);
   readonly done = input<BillDecisionDone | null>(null);
+  /** The panel's posting choices (classification, difference, override) are complete for Approve. */
+  readonly postingReady = input(true);
+  /** …and for Send, where the classification is only a proposal. */
+  readonly sendReady = input(true);
 
   readonly decide = output<BillDecisionRequest>();
 
@@ -51,23 +84,58 @@ export class BillDecisionComponent {
   readonly min = BILL_REASON_MIN;
   readonly max = BILL_REASON_MAX;
   readonly withParam = withParam;
+  readonly dialogKeys = DIALOG_KEYS;
 
   readonly sendNote = signal('');
   readonly approveReason = signal('');
   readonly taxOnResale = signal('');
-  readonly rejectOpen = signal(false);
-  readonly rejectReason = signal('');
+  readonly dialog = signal<ReasonDialogMode | null>(null);
+  readonly dialogReason = signal('');
+  readonly dialogOverride = signal('');
 
   readonly submitAction = computed(() =>
     this.permissions().approve && !offersResolveAndSend(this.bill()) ? findAction(this.bill(), 'SUBMIT_FOR_APPROVAL') : null,
   );
   readonly approveAction = computed(() => (this.permissions().approve ? findAction(this.bill(), 'APPROVE') : null));
   readonly rejectAction = computed(() => (this.permissions().reject ? findAction(this.bill(), 'REJECT') : null));
+  readonly voidApprovedAction = computed(() => (this.permissions().reject ? findAction(this.bill(), 'VOID_APPROVED') : null));
+  readonly voidUnmatchedAction = computed(() => (this.permissions().reject ? findAction(this.bill(), 'VOID_UNMATCHED') : null));
+
+  /** Reject and the two voids, each with its served action (or null when not offered). */
+  readonly reasonActions = computed(() =>
+    (
+      [
+        { mode: 'REJECT', action: this.rejectAction(), testid: 'reject', labelKey: 'ACCOUNTING.BILLS.DECISION.REJECT' },
+        { mode: 'VOID_APPROVED', action: this.voidApprovedAction(), testid: 'void-approved', labelKey: 'ACCOUNTING.BILLS.DECISION.VOID' },
+        { mode: 'VOID_UNMATCHED', action: this.voidUnmatchedAction(), testid: 'void-unmatched', labelKey: 'ACCOUNTING.BILLS.DECISION.VOID' },
+      ] as const
+    ).map(entry => ({ ...entry, consequenceKey: DIALOG_KEYS[entry.mode].consequence })),
+  );
 
   /** From `PENDING_RECEIPT_MATCH` the bill goes without a delivery match: "What was this for?" (AW8). */
   readonly withoutMatch = computed(() => this.bill().status === 'PENDING_RECEIPT_MATCH');
-  /** S43: the hold for tax on goods for resale applies, so Approve asks why it is accepted. */
-  readonly resaleHeld = computed(() => taxOnResaleHeld(this.bill()));
+
+  /** The failure of one of this block's decisions, unless it names a posting field (that block shows it). */
+  readonly sendFailure = computed(() => this.failureOf('SUBMIT'));
+  readonly approveFailure = computed(() => this.failureOf('APPROVE'));
+  readonly dialogFailure = computed(() => {
+    const mode = this.dialog();
+    return mode === 'REJECT' ? this.failureOf('REJECT') : mode ? this.failureOf('VOID') : null;
+  });
+
+  /**
+   * S43: the hold for tax on goods for resale applies, so Approve asks why it
+   * is accepted — also when the last Approve was refused for it and the read
+   * (whose rules are cached) does not show the failing check yet (review A6).
+   */
+  readonly resaleHeld = computed(
+    () => taxOnResaleHeld(this.bill()) || this.failure()?.view.code === 'AP_BILL_TAX_ON_RESALE_GOODS' && this.failure()?.kind === 'APPROVE',
+  );
+
+  /** A void refused 422 `PERIOD_CLOSED`, for a holder of `accounting:period:override`. */
+  readonly voidOverrideShown = computed(
+    () => this.dialog() === 'VOID_APPROVED' && this.permissions().periodOverride && this.failure()?.kind === 'VOID' && this.failure()?.view.code === 'PERIOD_CLOSED',
+  );
 
   readonly sendValid = computed(() => reasonValid(this.sendNote(), BILL_REASON_MIN, BILL_REASON_MAX));
   readonly approveReasonValid = computed(() => {
@@ -79,15 +147,17 @@ export class BillDecisionComponent {
   readonly taxOnResaleValid = computed(
     () => !this.resaleHeld() || reasonValid(this.taxOnResale(), BILL_REASON_MIN, BILL_REASON_MAX),
   );
-  readonly rejectValid = computed(() => reasonValid(this.rejectReason(), BILL_REASON_MIN, BILL_REASON_MAX));
+  readonly dialogValid = computed(
+    () =>
+      reasonValid(this.dialogReason(), BILL_REASON_MIN, BILL_REASON_MAX) &&
+      (!this.voidOverrideShown() || reasonValid(this.dialogOverride(), BILL_REASON_MIN, BILL_REASON_MAX)),
+  );
 
-  /** The failure of one of this block's decisions, if that is what was refused last. */
-  readonly sendFailure = computed(() => this.failureOf('SUBMIT'));
-  readonly approveFailure = computed(() => this.failureOf('APPROVE'));
-  readonly rejectFailure = computed(() => this.failureOf('REJECT'));
+  /** "Approving puts {amount} owed to {vendor} on the books." (ruling row 4) */
+  readonly approveConsequence = computed(() => ({ amount: this.bill().totalAmount, currency: this.bill().currency, vendor: this.bill().vendorName }));
 
   constructor() {
-    // A confirmed decision clears its own input; Reject also closes its dialog.
+    // A confirmed decision clears its own input; Reject and the voids also close their dialog.
     effect(() => {
       const done = this.done();
       if (!done) return;
@@ -97,9 +167,10 @@ export class BillDecisionComponent {
           this.approveReason.set('');
           this.taxOnResale.set('');
         }
-        if (done.kind === 'REJECT') {
-          this.rejectOpen.set(false);
-          this.rejectReason.set('');
+        if (done.kind === 'REJECT' || done.kind === 'VOID') {
+          this.dialog.set(null);
+          this.dialogReason.set('');
+          this.dialogOverride.set('');
         }
       });
     });
@@ -111,13 +182,13 @@ export class BillDecisionComponent {
 
   send(): void {
     const action = this.submitAction();
-    if (!action?.allowed || this.busy() || !this.sendValid()) return;
+    if (!action?.allowed || this.busy() || !this.sendValid() || !this.sendReady()) return;
     this.decide.emit({ kind: 'SUBMIT', justification: this.sendNote().trim() });
   }
 
   approve(): void {
     const action = this.approveAction();
-    if (!action?.allowed || this.busy() || !this.approveReasonValid() || !this.taxOnResaleValid()) return;
+    if (!action?.allowed || this.busy() || !this.approveReasonValid() || !this.taxOnResaleValid() || !this.postingReady()) return;
     this.decide.emit({
       kind: 'APPROVE',
       justification: this.approveReason().trim() || null,
@@ -125,32 +196,55 @@ export class BillDecisionComponent {
     });
   }
 
+  openDialog(mode: ReasonDialogMode): void {
+    if (!this.dialogAction(mode)?.allowed || this.busy()) return;
+    this.dialogReason.set('');
+    this.dialogOverride.set('');
+    this.dialog.set(mode);
+  }
+
+  /** Back-compat entry for Reject (tests and the template). */
   openReject(): void {
-    const action = this.rejectAction();
-    if (!action?.allowed || this.busy()) return;
-    this.rejectReason.set('');
-    this.rejectOpen.set(true);
+    this.openDialog('REJECT');
   }
 
-  /** Esc or Cancel; `ModalDialogDirective` returns focus to Reject bill. */
-  closeReject(): void {
+  /** Esc or Cancel; `ModalDialogDirective` returns focus to the control that opened it. */
+  closeDialog(): void {
     if (this.busy()) return;
-    this.rejectOpen.set(false);
-    this.rejectReason.set('');
+    this.dialog.set(null);
+    this.dialogReason.set('');
+    this.dialogOverride.set('');
   }
 
-  confirmReject(): void {
-    const action = this.rejectAction();
-    if (!action?.allowed || this.busy() || !this.rejectValid()) return;
-    this.decide.emit({ kind: 'REJECT', reason: this.rejectReason().trim() });
+  confirmDialog(): void {
+    const mode = this.dialog();
+    if (!mode || !this.dialogAction(mode)?.allowed || this.busy() || !this.dialogValid()) return;
+    const reason = this.dialogReason().trim();
+    if (mode === 'REJECT') {
+      this.decide.emit({ kind: 'REJECT', reason });
+      return;
+    }
+    this.decide.emit({
+      kind: 'VOID',
+      voidKind: mode,
+      reason,
+      overrideJustification: this.voidOverrideShown() ? this.dialogOverride().trim() : null,
+    });
   }
 
   text(event: Event): string {
     return (event.target as HTMLInputElement | HTMLTextAreaElement).value;
   }
 
-  private failureOf(kind: BillDecisionFailure['kind']): BillDecisionFailure | null {
+  private dialogAction(mode: ReasonDialogMode): BillAction | null {
+    if (mode === 'REJECT') return this.rejectAction();
+    return mode === 'VOID_APPROVED' ? this.voidApprovedAction() : this.voidUnmatchedAction();
+  }
+
+  private failureOf(kind: BillDecisionKind): BillDecisionFailure | null {
     const failure = this.failure();
-    return failure?.kind === kind ? failure : null;
+    if (failure?.kind !== kind) return null;
+    // The void dialog shows its own override field; the other decisions leave posting fields to that block.
+    return kind !== 'VOID' && POSTING_FIELDS.includes(failure.view.field) ? null : failure;
   }
 }

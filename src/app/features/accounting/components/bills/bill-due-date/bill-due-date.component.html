@@ -12,11 +12,24 @@
         type="button"
         class="link-button"
         data-testid="due-date-open"
-        [disabled]="!served.allowed || busy()"
+        [disabled]="served.allowed && busy()"
+        [attr.aria-disabled]="served.allowed ? null : 'true'"
+        [attr.aria-describedby]="served.allowed ? null : id + '-blocked'"
         (click)="open()"
       >
         {{ (bill().dueDate ? 'ACCOUNTING.BILLS.DUE_DATE.CHANGE' : 'ACCOUNTING.BILLS.DUE_DATE.ADD') | translate }}
       </button>
+      @if (!served.allowed) {
+        <p class="hint-text" [id]="id + '-blocked'" data-testid="due-date-blocked">
+          @if (blocked(served); as reason) {
+            @if (reason.money; as m) {
+              {{ reason.key | translate: withParam(reason.params, m.param, (m.value | money: m.currency)) }}
+            } @else {
+              {{ reason.key | translate: reason.params }}
+            }
+          }
+        </p>
+      }
     } @else {
       <form class="bill-form bill-due-date__form" (submit)="$event.preventDefault(); save()" data-testid="due-date-form">
         <div class="form-field">
@@ -40,7 +53,7 @@
             (input)="reason.set(text($event))"
             [attr.maxlength]="max"
             [attr.aria-invalid]="ownFailure()?.view?.field === 'reason' ? 'true' : null"
-            [attr.aria-describedby]="id + '-reason-hint'"
+            [attr.aria-describedby]="id + '-reason-hint' + (ownFailure() && ownFailure()?.view?.field !== 'dueDate' ? ' ' + id + '-error' : '')"
           ></textarea>
           <p class="hint-text" [id]="id + '-reason-hint'">{{ 'ACCOUNTING.BILLS.DUE_DATE.REASON_HINT' | translate: { min: min } }}</p>
         </div>
@@ -49,6 +62,7 @@
             {{ failure.view.message.key | translate: failure.view.message.params }}
           </p>
         }
+        <p class="bill-consequence" data-testid="due-date-consequence">{{ 'ACCOUNTING.BILLS.DUE_DATE.CONSEQUENCE' | translate }}</p>
         <div class="bill-actions">
           <button type="submit" class="btn btn--accent" data-testid="due-date-save" [disabled]="busy() || !dateOk() || !reasonOk()">
             {{ 'ACCOUNTING.BILLS.DUE_DATE.SAVE' | translate }}

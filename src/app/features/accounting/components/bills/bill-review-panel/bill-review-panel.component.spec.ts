@@ -5,7 +5,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { Subject, of, throwError } from 'rxjs';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { AuthService } from '../../../../../core/services/auth.service';
-import { BillDetail } from '../../../models/payables.models';
+import { BillDetail, NO_POSTING_INPUT, VendorDefaultClass } from '../../../models/payables.models';
 import {
   APPROVE_ONLY,
   CLERK,
@@ -15,9 +15,11 @@ import {
   VIEW_ONLY,
   action,
   apiError,
+  approval,
   authMock,
   awaitingBill,
   bill,
+  check,
   exceptionBill,
   payablesMock,
   pending,
@@ -31,17 +33,20 @@ describe('BillReviewPanelComponent (§5.2 item 4, story items 5–6, 12)', () =>
   let payables: PayablesMock;
   let changed: number;
   const showTerms = signal(false);
+  let tenant = signal<string | null>(null);
+  let nextVendorDefault: VendorDefaultClass = null;
   const host = (): HTMLElement => fixture.nativeElement as HTMLElement;
   const q = <T extends HTMLElement>(selector: string): T | null => host().querySelector<T>(selector);
 
   function render(held: readonly string[] | null, detail: BillDetail = bill(), billId = detail.billId): BillReviewPanelComponent {
     payables = payablesMock(detail);
+    payables.getVendorDefaultClass.mockReturnValue(of(nextVendorDefault));
     TestBed.configureTestingModule({
       imports: [BillReviewPanelComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
         { provide: PayablesService, useValue: payables },
-        { provide: AuthService, useValue: authMock(held, { tenantId: signal<string | null>(null) }).service },
+        { provide: AuthService, useValue: authMock(held, { tenantId: tenant }).service },
         { provide: AccountingPreferencesService, useValue: { showTerms } },
       ],
     });
@@ -53,7 +58,11 @@ describe('BillReviewPanelComponent (§5.2 item 4, story items 5–6, 12)', () =>
     return fixture.componentInstance;
   }
 
-  beforeEach(() => showTerms.set(false));
+  beforeEach(() => {
+    showTerms.set(false);
+    tenant = signal<string | null>(null);
+    nextVendorDefault = null;
+  });
 
   describe('reading the bill', () => {
     it('reads straight from its id and shows header, details, checks and totals', () => {
@@ -103,7 +112,7 @@ describe('BillReviewPanelComponent (§5.2 item 4, story items 5–6, 12)', () =>
     });
 
     it('notes the routing from the served tier and limit', () => {
-      render(CLERK, awaitingBill({ approval: { requiredTier: 'OVER_LIMIT', clerkLimit: 1000, currencyCode: 'USD', submittedAt: null, submissionJustification: null, approvalJustification: null } }));
+      render(CLERK, awaitingBill({ approval: approval({ requiredTier: 'OVER_LIMIT', clerkLimit: 1000 }) }));
 
       expect(q('[data-testid="panel-routing"]')?.textContent).toContain('ACCOUNTING.BILLS.ROUTING.OVER_LIMIT');
       expect(q('[data-testid="panel-routing"] app-help-disclosure')).not.toBeNull();
@@ -161,7 +170,7 @@ describe('BillReviewPanelComponent (§5.2 item 4, story items 5–6, 12)', () =>
       panel.run({ kind: 'SUBMIT', justification: 'Shop rags and gloves' });
       fixture.detectChanges();
 
-      expect(payables.submitForApproval).toHaveBeenCalledWith('bill-1', 'Shop rags and gloves');
+      expect(payables.submitForApproval).toHaveBeenCalledWith('bill-1', { justification: 'Shop rags and gloves', posting: NO_POSTING_INPUT });
       expect(payables.getBill).toHaveBeenCalledTimes(2);
       expect(changed).toBe(1);
       expect(q('[data-testid="panel-status"]')?.textContent).toContain('ACCOUNTING.BILLS.STATUS.AWAITING_APPROVAL');
@@ -254,8 +263,10 @@ describe('BillReviewPanelComponent (§5.2 item 4, story items 5–6, 12)', () =>
         action('ACCEPT_EXCEPTION'),
         action('CORRECT_EXCEPTION'),
         action('VOID_EXCEPTION'),
+        action('SELECT_CANDIDATE'),
         action('SET_DUE_DATE'),
       ],
+      openCandidates: [{ candidateId: 'cand-1', billNumber: 'REC-1001', billTotal: 1200, currencyCode: 'USD', score: 74, points: null }],
     });
 
     function attempt(panel: BillReviewPanelComponent): Record<string, boolean> {
@@ -263,12 +274,20 @@ describe('BillReviewPanelComponent (§5.2 item 4, story items 5–6, 12)', () =>
       panel.run({ kind: 'APPROVE', justification: null, taxOnResale: null });
       panel.run({ kind: 'REJECT', reason: 'Long enough reason' });
       panel.run({ kind: 'RESOLVE', action: 'VOID', reason: 'Long enough reason', taxOnResale: null });
+      panel.run({ kind: 'RESOLVE', action: 'ACCEPT', reason: 'Long enough reason', taxOnResale: null });
+      panel.run({ kind: 'RESOLVE', action: 'CORRECT', reason: 'Long enough reason', taxOnResale: null });
+      panel.run({ kind: 'SELECT', candidateId: 'cand-1', billNumber: 'REC-1001' });
       panel.run({ kind: 'DUE_DATE', dueDate: '2026-11-01', justification: null });
+      const resolved = (action: string): boolean =>
+        payables.resolveException.mock.calls.some(([, command]) => command.resolutionAction === action);
       return {
         submit: payables.submitForApproval.mock.calls.length > 0,
         approve: payables.approve.mock.calls.length > 0,
         reject: payables.reject.mock.calls.length > 0,
-        voidException: payables.resolveException.mock.calls.length > 0,
+        voidException: resolved('VOID'),
+        accept: resolved('ACCEPT'),
+        correct: resolved('CORRECT'),
+        select: payables.selectMatchCandidate.mock.calls.length > 0,
         dueDate: payables.setDueDate.mock.calls.length > 0,
       };
     }
@@ -279,17 +298,20 @@ describe('BillReviewPanelComponent (§5.2 item 4, story items 5–6, 12)', () =>
         approve: !!q('[data-testid="approve"]'),
         reject: !!q('[data-testid="reject"]'),
         voidException: !!q('[data-choice="VOID"]'),
+        accept: !!q('[data-choice="ACCEPT"]'),
+        correct: !!q('[data-choice="CORRECT"]'),
+        select: !!q('[data-testid="candidate-pick"]'),
         dueDate: !!q('[data-testid="due-date-open"]'),
       };
     }
 
     // Every call resolves synchronously with `of`, so each run settles before the next one.
     it.each([
-      ['accounting:ap:view only', VIEW_ONLY, { submit: false, approve: false, reject: false, voidException: false, dueDate: false }],
-      ['accounting:ap:approve', APPROVE_ONLY, { submit: true, approve: true, reject: false, voidException: false, dueDate: true }],
-      ['accounting:ap:approve_over_limit', OVER_LIMIT, { submit: true, approve: true, reject: false, voidException: false, dueDate: false }],
-      ['accounting:ap:reject', REJECT_ONLY, { submit: false, approve: false, reject: true, voidException: true, dueDate: false }],
-      ['unknown perm_bits (canAccess fallback)', null, { submit: true, approve: true, reject: true, voidException: true, dueDate: true }],
+      ['accounting:ap:view only', VIEW_ONLY, { submit: false, approve: false, reject: false, voidException: false, accept: false, correct: false, select: false, dueDate: false }],
+      ['accounting:ap:approve', APPROVE_ONLY, { submit: true, approve: true, reject: false, voidException: false, accept: true, correct: true, select: true, dueDate: true }],
+      ['accounting:ap:approve_over_limit', OVER_LIMIT, { submit: true, approve: true, reject: false, voidException: false, accept: true, correct: true, select: true, dueDate: false }],
+      ['accounting:ap:reject', REJECT_ONLY, { submit: false, approve: false, reject: true, voidException: true, accept: false, correct: false, select: false, dueDate: false }],
+      ['unknown perm_bits (canAccess fallback)', null, { submit: true, approve: true, reject: true, voidException: true, accept: true, correct: true, select: true, dueDate: true }],
     ] as const)('%s', (_name, held, expected) => {
       const panel = render(held, everything);
       const shown = controls();
@@ -310,8 +332,281 @@ describe('BillReviewPanelComponent (§5.2 item 4, story items 5–6, 12)', () =>
     it('the retired accounting:ap:view alone never enables a write (negative test on the read code)', () => {
       const panel = render(['accounting:ap:view', 'accounting:analytics:view'], everything);
 
-      expect(controls()).toEqual({ submit: false, approve: false, reject: false, voidException: false, dueDate: false });
-      expect(attempt(panel)).toEqual({ submit: false, approve: false, reject: false, voidException: false, dueDate: false });
+      const none = { submit: false, approve: false, reject: false, voidException: false, accept: false, correct: false, select: false, dueDate: false };
+      expect(controls()).toEqual(none);
+      expect(attempt(panel)).toEqual(none);
+    });
+  });
+
+  describe('review A2, A5 and ruling Q5', () => {
+    it('drops the bill and a read in flight when the tenant or person changes, then reads again (A2)', () => {
+      const panel = render(CLERK);
+      const slow = pending<BillDetail>();
+      payables.getBill.mockReturnValue(slow);
+      panel.retry();
+      const again = pending<BillDetail>();
+      payables.getBill.mockReturnValue(again);
+      tenant.set('tenant-b');
+      fixture.detectChanges();
+
+      expect(panel.bill()).toBeNull();
+      slow.next(bill({ vendorName: 'Tenant A Vendor' }));
+      fixture.detectChanges();
+      expect(panel.bill()).toBeNull();
+      expect(host().textContent).not.toContain('Tenant A Vendor');
+      again.next(bill({ vendorName: 'Tenant B Vendor' }));
+      fixture.detectChanges();
+      expect(panel.bill()?.vendorName).toBe('Tenant B Vendor');
+    });
+
+    it('a decision sent before the identity change settles silently (A2)', () => {
+      const panel = render(CLERK, awaitingBill());
+      const decision = new Subject<void>();
+      payables.approve.mockReturnValue(decision);
+      panel.run({ kind: 'APPROVE', justification: null, taxOnResale: null });
+      tenant.set('tenant-b');
+      fixture.detectChanges();
+      decision.next();
+      decision.complete();
+
+      expect(changed).toBe(0);
+      expect(panel.announcement()).toBeNull();
+    });
+
+    it('a decision still in flight when another bill is picked settles and re-reads the list and counts (A5)', () => {
+      const panel = render(CLERK, awaitingBill());
+      const decision = new Subject<void>();
+      payables.approve.mockReturnValue(decision);
+      panel.run({ kind: 'APPROVE', justification: null, taxOnResale: null });
+      payables.getBill.mockReturnValue(of(awaitingBill({ billId: 'bill-b', billNumber: 'INV-B' })));
+      fixture.componentRef.setInput('billId', 'bill-b');
+      fixture.detectChanges();
+      expect(panel.inFlight()).toBeNull();
+      decision.next();
+      decision.complete();
+      fixture.detectChanges();
+
+      expect(changed).toBe(1);
+      // Only panel-local updates are skipped: B shows no announcement for A.
+      expect(panel.bill()?.billNumber).toBe('INV-B');
+      expect(panel.announcement()).toBeNull();
+    });
+
+    it('a candidate that matched another bill emits moved and changed, and paints nothing under this bill (Q5, AC 7)', () => {
+      const ambiguous = exceptionBill({
+        openCandidates: [{ candidateId: 'cand-9', billNumber: 'REC-9', billTotal: 1200, currencyCode: 'USD', score: 74, points: null }],
+        availableActions: [action('SELECT_CANDIDATE')],
+      });
+      const panel = render(CLERK, ambiguous);
+      const moved: unknown[] = [];
+      panel.moved.subscribe(selection => moved.push(selection));
+      payables.selectMatchCandidate.mockReturnValue(of({ billId: 'bill-9', billNumber: 'REC-9' }));
+
+      panel.run({ kind: 'SELECT', candidateId: 'cand-9', billNumber: 'REC-9' });
+
+      expect(moved).toEqual([{ billId: 'bill-9', billNumber: 'REC-9' }]);
+      expect(changed).toBe(1);
+      expect(panel.inFlight()).toBeNull();
+      expect(payables.getBill).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('posting choices (ruling Q1, rows 7–10)', () => {
+    const edi = (overrides: Partial<BillDetail> = {}): BillDetail => awaitingBill({ lines: [], ...overrides });
+
+    it('an EDI bill with no lines, proposal or default requires Stock on Approve, and sends {debitClass: GOODS} (AC a)', () => {
+      const panel = render(CLERK, edi());
+      expect(payables.getVendorDefaultClass).toHaveBeenCalledWith('vendor-uuid-1');
+      expect(q('[data-testid="classification"]')).not.toBeNull();
+      expect(q<HTMLButtonElement>('[data-testid="approve"]')!.disabled).toBe(true);
+      panel.run({ kind: 'APPROVE', justification: null, taxOnResale: null });
+      expect(payables.approve).not.toHaveBeenCalled();
+
+      q<HTMLInputElement>('[data-testid="classification-goods"]')!.click();
+      fixture.detectChanges();
+      q<HTMLButtonElement>('[data-testid="approve"]')!.click();
+
+      expect(payables.approve).toHaveBeenCalledWith('bill-1', {
+        justification: null,
+        taxOnResaleOverrideJustification: null,
+        posting: { classification: 'GOODS', difference: null, overrideJustification: null },
+      });
+    });
+
+    it('a 422 AP_BILL_UNCLASSIFIED marks the field, keeps the input and reads nothing again (AC a)', () => {
+      const panel = render(CLERK, edi());
+      panel.postClass.set('GOODS');
+      payables.approve.mockReturnValue(throwError(() => apiError(422, 'AP_BILL_UNCLASSIFIED')));
+      panel.run({ kind: 'APPROVE', justification: null, taxOnResale: null });
+      fixture.detectChanges();
+
+      expect(q('[data-testid="classification-error"]')?.textContent).toContain('ACCOUNTING.BILLS.ERROR.UNCLASSIFIED');
+      expect(panel.postClass()).toBe('GOODS');
+      expect(payables.getBill).toHaveBeenCalledTimes(1);
+    });
+
+    it('reveals the field on a goods-receipt bill when Approve answers AP_BILL_UNCLASSIFIED', () => {
+      const panel = render(CLERK, awaitingBill());
+      expect(q('[data-testid="classification"]')).toBeNull();
+      payables.approve.mockReturnValue(throwError(() => apiError(422, 'AP_BILL_UNCLASSIFIED')));
+      panel.run({ kind: 'APPROVE', justification: null, taxOnResale: null });
+      fixture.detectChanges();
+
+      expect(q('[data-testid="classification"]')).not.toBeNull();
+    });
+
+    it('pre-fills Stock from the vendor’s default and labels it', () => {
+      nextVendorDefault = 'GOODS';
+      const panel = render(CLERK, edi());
+
+      expect(panel.postClass()).toBe('GOODS');
+      expect(q('[data-testid="classification-note"]')?.textContent).toContain('ACCOUNTING.BILLS.POSTING.CLASSIFICATION.FROM_VENDOR');
+    });
+
+    it('an EXPENSE vendor default approves without sending a classification (Q1 C)', () => {
+      nextVendorDefault = 'EXPENSE';
+      const panel = render(CLERK, edi());
+
+      expect(q('[data-testid="classification-expense"]')?.textContent).toContain('ACCOUNTING.BILLS.POSTING.CLASSIFICATION.EXPENSE_VENDOR');
+      panel.run({ kind: 'APPROVE', justification: null, taxOnResale: null });
+      expect(payables.approve.mock.calls[0][1].posting.classification).toBeNull();
+    });
+
+    it('an EXPENSE proposal approves without sending a classification, labelled as the proposal (AC c)', () => {
+      const panel = render(
+        CLERK,
+        edi({ approval: approval({ proposedClassification: { debitClass: 'EXPENSE', expenseMappingKey: 'EXPENSE_SHOP_SUPPLIES' } }) }),
+      );
+      expect(payables.getVendorDefaultClass).not.toHaveBeenCalled();
+      expect(q('[data-testid="classification-expense"]')?.textContent).toContain('ACCOUNTING.BILLS.POSTING.CLASSIFICATION.EXPENSE_PROPOSAL');
+
+      panel.run({ kind: 'APPROVE', justification: null, taxOnResale: null });
+
+      expect(payables.approve.mock.calls[0][1].posting).toEqual({ classification: null, difference: null, overrideJustification: null });
+    });
+
+    it('a GOODS proposal pre-fills Stock (AC c)', () => {
+      const panel = render(CLERK, edi({ approval: approval({ proposedClassification: { debitClass: 'GOODS', expenseMappingKey: null } }) }));
+
+      expect(panel.postClass()).toBe('GOODS');
+      expect(q('[data-testid="classification-note"]')?.textContent).toContain('ACCOUNTING.BILLS.POSTING.CLASSIFICATION.FROM_PROPOSAL');
+    });
+
+    it('a failing TOTALS_ADD_UP needs where the difference goes and why, and sends it (AC b)', () => {
+      const unreconciled = awaitingBill({ checks: [check('TOTALS_ADD_UP', 'FAIL', { difference: '2.00', netAmount: '100.00', taxAmount: '13.00', totalAmount: '115.00' })] });
+      const panel = render(CLERK, unreconciled);
+      expect(q('[data-testid="difference"]')).not.toBeNull();
+      expect(panel.postingReady()).toBe(false);
+      panel.diffClass.set('FREIGHT');
+      panel.diffReason.set('Delivery charge on the invoice');
+      fixture.detectChanges();
+
+      panel.run({ kind: 'APPROVE', justification: null, taxOnResale: null });
+
+      expect(payables.approve.mock.calls[0][1].posting.difference).toEqual({ differenceClass: 'FREIGHT', justification: 'Delivery charge on the invoice' });
+    });
+
+    it('a proposed difference pre-fills the group (AC c)', () => {
+      const panel = render(
+        CLERK,
+        awaitingBill({
+          checks: [check('TOTALS_ADD_UP', 'FAIL', { difference: '2.00' })],
+          approval: approval({ proposedDifference: { differenceClass: 'PRICE_DIFFERENCE', justification: 'Price rise agreed' } }),
+        }),
+      );
+
+      expect(panel.diffClass()).toBe('PRICE_DIFFERENCE');
+      expect(panel.diffReason()).toBe('Price rise agreed');
+    });
+
+    it('PERIOD_CLOSED: a holder of accounting:period:override gives a reason and the approve is resent with it (row 8)', () => {
+      const panel = render([...CLERK, 'accounting:period:override'], awaitingBill());
+      payables.approve.mockReturnValueOnce(throwError(() => apiError(422, 'PERIOD_CLOSED')));
+      panel.run({ kind: 'APPROVE', justification: null, taxOnResale: null });
+      fixture.detectChanges();
+
+      expect(q('[data-testid="override"]')).not.toBeNull();
+      expect(q<HTMLButtonElement>('[data-testid="approve"]')!.disabled).toBe(true);
+      panel.overrideReason.set('September closed before the invoice came');
+      fixture.detectChanges();
+      panel.run({ kind: 'APPROVE', justification: null, taxOnResale: null });
+
+      expect(payables.approve.mock.calls[1][1].posting.overrideJustification).toBe('September closed before the invoice came');
+    });
+
+    it('PERIOD_CLOSED for anyone else says who can approve, with no override field (row 8)', () => {
+      const panel = render(CLERK, awaitingBill());
+      payables.approve.mockReturnValue(throwError(() => apiError(422, 'PERIOD_CLOSED')));
+      panel.run({ kind: 'APPROVE', justification: null, taxOnResale: null });
+      fixture.detectChanges();
+
+      expect(q('[data-testid="override"]')).toBeNull();
+      expect(q('[data-testid="approve-error"]')?.textContent).toContain('ACCOUNTING.BILLS.ERROR.PERIOD_CLOSED');
+    });
+
+    it('LOCK_TIMEOUT keeps the input and the bill as read; the same request can be sent again (row 10)', () => {
+      const panel = render(CLERK, awaitingBill());
+      payables.approve.mockReturnValueOnce(throwError(() => apiError(409, 'LOCK_TIMEOUT')));
+      panel.run({ kind: 'APPROVE', justification: 'Matches the signed PO', taxOnResale: null });
+      fixture.detectChanges();
+
+      expect(q('[data-testid="approve-error"]')?.textContent).toContain('ACCOUNTING.BILLS.ERROR.LOCK_TIMEOUT');
+      expect(payables.getBill).toHaveBeenCalledTimes(1);
+      expect(changed).toBe(0);
+      panel.run({ kind: 'APPROVE', justification: 'Matches the signed PO', taxOnResale: null });
+      expect(payables.approve.mock.calls[1]).toEqual(payables.approve.mock.calls[0]);
+    });
+
+    it('voids an approved bill through the panel with the served action and accounting:ap:reject (row 5)', () => {
+      const panel = render(CLERK, bill({ status: 'APPROVED', availableActions: [action('VOID_APPROVED')] }));
+
+      panel.run({ kind: 'VOID', voidKind: 'VOID_APPROVED', reason: 'Billed twice by mistake', overrideJustification: null });
+
+      expect(payables.voidBill).toHaveBeenCalledWith('bill-1', { reason: 'Billed twice by mistake', overrideJustification: null });
+      panel.run({ kind: 'VOID', voidKind: 'VOID_UNMATCHED', reason: 'Billed twice by mistake', overrideJustification: null });
+      expect(payables.voidBill).toHaveBeenCalledTimes(1);
+    });
+
+    it('shows On the books with the entry link and the closed-month note, never the entry id (row 7)', () => {
+      showTerms.set(true);
+      render(
+        [...CLERK, 'accounting:je:view'],
+        bill({
+          status: 'APPROVED',
+          availableActions: [],
+          posting: {
+            journalEntryId: 'je-uuid-7',
+            journalEntryReference: 'JE-202610-14',
+            postingDate: '2026-10-03',
+            postingDateRule: 'APPROVAL_DATE_BILL_PERIOD_NOT_OPEN',
+            differenceClass: 'FREIGHT',
+            differenceAmount: 2,
+            roundingAdjustment: 0.01,
+            reversalReference: null,
+            currencyCode: 'USD',
+          },
+        }),
+      );
+
+      const books = q('[data-testid="panel-on-the-books"]')!;
+      expect(books.textContent).toContain('ACCOUNTING.BILLS.PANEL.ON_THE_BOOKS');
+      expect(q('[data-testid="panel-entry-link"]')?.getAttribute('href')).toBe('/app/accounting/books/entries/je-uuid-7');
+      expect(q('[data-testid="panel-month-closed"]')).not.toBeNull();
+      expect(host().textContent).not.toContain('je-uuid-7');
+      expect(q('[data-testid="panel-posting-terms"]')?.textContent).toContain('ACCOUNTING.BILLS.PANEL.POSTED_DIFFERENCE');
+    });
+
+    it('labels an automatic approval "Automatic" and never shows an actor username (Q4)', () => {
+      render(CLERK, bill({ status: 'APPROVED', availableActions: [], approval: approval({ approvedAutomatically: true }) }));
+
+      expect(q('[data-testid="panel-approved-automatically"]')?.textContent).toContain('ACCOUNTING.BILLS.PANEL.APPROVED_AUTOMATICALLY');
+    });
+
+    it('keeps one Match score heading (review B3)', () => {
+      render(CLERK, awaitingBill());
+
+      const headings = Array.from(host().querySelectorAll('h2, h3')).filter(heading => heading.textContent?.includes('ACCOUNTING.BILLS.MATCH.HEADING'));
+      expect(headings.length).toBe(1);
     });
   });
 });

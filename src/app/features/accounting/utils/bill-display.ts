@@ -300,3 +300,39 @@ export function reasonValid(value: string, min: number, max: number): boolean {
   const length = value.trim().length;
   return length >= min && length <= max;
 }
+
+/** The decisions that carry the posting choices: Send, Approve and Accept as billed (Q1). */
+const POSTING_DECISIONS: readonly BillActionCode[] = ['SUBMIT_FOR_APPROVAL', 'APPROVE', 'ACCEPT_EXCEPTION'];
+
+/** The bill serves one of the decisions that carry a classification or a difference. */
+export function postingDecisionServed(bill: BillDetail | null): boolean {
+  return !!bill && POSTING_DECISIONS.some(code => !!findAction(bill, code));
+}
+
+/**
+ * "What is this bill for?" shows beside Send, Approve and Accept when the bill
+ * serves no lines (an EDI bill with header totals only), and is revealed when
+ * a decision answered 422 `AP_BILL_UNCLASSIFIED` (Q1 A).
+ */
+export function classificationShown(bill: BillDetail | null, lastFailureCode: string | null): boolean {
+  if (!postingDecisionServed(bill)) return false;
+  return bill!.lines.length === 0 || lastFailureCode === 'AP_BILL_UNCLASSIFIED';
+}
+
+/** Where a pre-filled class comes from, in the server's order: the proposal, then the vendor's default. */
+export interface ClassificationPrefill {
+  readonly source: 'PROPOSAL' | 'VENDOR';
+  readonly debitClass: 'GOODS' | 'EXPENSE';
+}
+
+export function classificationPrefill(bill: BillDetail | null, vendorDefault: 'GOODS' | 'EXPENSE' | null): ClassificationPrefill | null {
+  const proposed = bill?.approval?.proposedClassification?.debitClass;
+  if (proposed === 'GOODS' || proposed === 'EXPENSE') return { source: 'PROPOSAL', debitClass: proposed };
+  if (vendorDefault) return { source: 'VENDOR', debitClass: vendorDefault };
+  return null;
+}
+
+/** The served `TOTALS_ADD_UP` FAIL, whose args are quoted (never computed), or null (Q1 B). */
+export function unreconciledTotals(bill: BillDetail | null): BillCheck | null {
+  return bill?.checks.find(check => check.code === 'TOTALS_ADD_UP' && check.outcome === 'FAIL') ?? null;
+}

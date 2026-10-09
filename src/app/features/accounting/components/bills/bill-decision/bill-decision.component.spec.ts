@@ -146,7 +146,7 @@ describe('BillDecisionComponent (§5.2 item 4, P4, P5)', () => {
       type('[data-testid="reject-reason"]', 'Not our order at all');
       fixture.componentRef.setInput('failure', {
         kind: 'REJECT',
-        view: { message: { key: 'ACCOUNTING.BILLS.ERROR.JUSTIFICATION_REQUIRED', params: { min: 10 } }, field: 'reason', reread: false, notFound: false },
+        view: { code: 'JUSTIFICATION_REQUIRED', message: { key: 'ACCOUNTING.BILLS.ERROR.JUSTIFICATION_REQUIRED', params: { min: 10 } }, field: 'reason', reread: false, notFound: false },
       });
       fixture.detectChanges();
 
@@ -196,11 +196,11 @@ describe('BillDecisionComponent (§5.2 item 4, P4, P5)', () => {
       fixture.componentInstance.approve();
       fixture.componentInstance.openReject();
       expect(emitted).toEqual([]);
-      expect(fixture.componentInstance.rejectOpen()).toBe(false);
+      expect(fixture.componentInstance.dialog()).toBeNull();
     });
 
     it('shows Reject but not Approve to a session holding only accounting:ap:reject', () => {
-      render(awaitingBill(), { approve: false, reject: true, setDueDate: false });
+      render(awaitingBill(), { approve: false, reject: true, setDueDate: false, periodOverride: false });
 
       expect(q('[data-testid="approve"]')).toBeNull();
       expect(q('[data-testid="reject"]')).not.toBeNull();
@@ -219,6 +219,108 @@ describe('BillDecisionComponent (§5.2 item 4, P4, P5)', () => {
       expect(q<HTMLButtonElement>('[data-testid="approve"]')!.disabled).toBe(true);
       fixture.componentInstance.approve();
       expect(emitted).toEqual([]);
+    });
+  });
+
+  describe('ruling rows 4–6 and review A6', () => {
+    it('states what approving puts on the books: the served total and vendor, before the button (row 4)', () => {
+      render(awaitingBill());
+
+      const consequence = q('[data-testid="approve-consequence"]')!;
+      expect(consequence.textContent).toContain('ACCOUNTING.BILLS.DECISION.APPROVE_CONSEQUENCE');
+      expect(consequence.compareDocumentPosition(q('[data-testid="approve"]')!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
+
+    it('holds Approve until the posting choices are complete', () => {
+      fixture.componentRef.setInput('postingReady', false);
+      render(awaitingBill());
+
+      expect(q<HTMLButtonElement>('[data-testid="approve"]')!.disabled).toBe(true);
+      fixture.componentInstance.approve();
+      expect(emitted).toEqual([]);
+    });
+
+    it('voids an approved bill through a dialog with a 10-character reason (row 5)', () => {
+      render(bill({ status: 'APPROVED', availableActions: [action('VOID_APPROVED')] }));
+      document.body.appendChild(host());
+
+      expect(q('[data-testid="void-approved-block"] .bill-consequence')?.textContent).toContain('ACCOUNTING.BILLS.DECISION.VOID_APPROVED_CONSEQUENCE');
+      q<HTMLButtonElement>('[data-testid="void-approved"]')!.click();
+      fixture.detectChanges();
+      expect(q<HTMLDialogElement>('dialog[data-testid="void-dialog"]')?.matches(':modal')).toBe(true);
+      type('[data-testid="void-reason"]', 'Billed twice by mistake');
+      q<HTMLButtonElement>('[data-testid="void-confirm"]')!.click();
+
+      expect(emitted).toEqual([{ kind: 'VOID', voidKind: 'VOID_APPROVED', reason: 'Billed twice by mistake', overrideJustification: null }]);
+      host().remove();
+    });
+
+    it('voids a goods-receipt placeholder with its own consequence (row 6)', () => {
+      render(bill({ channel: 'GOODS_RECEIPT', availableActions: [action('VOID_UNMATCHED')] }));
+
+      expect(q('[data-testid="void-unmatched-block"] .bill-consequence')?.textContent).toContain('ACCOUNTING.BILLS.DECISION.VOID_UNMATCHED_CONSEQUENCE');
+      fixture.componentInstance.openDialog('VOID_UNMATCHED');
+      fixture.detectChanges();
+      type('[data-testid="void-reason"]', 'No invoice will come for it');
+      fixture.componentInstance.confirmDialog();
+
+      expect(emitted).toEqual([{ kind: 'VOID', voidKind: 'VOID_UNMATCHED', reason: 'No invoice will come for it', overrideJustification: null }]);
+    });
+
+    it('hides the voids without accounting:ap:reject, and the handler refuses', () => {
+      render(bill({ status: 'APPROVED', availableActions: [action('VOID_APPROVED')] }), { ...ALL_PERMISSIONS, reject: false });
+
+      expect(q('[data-testid="void-approved"]')).toBeNull();
+      fixture.componentInstance.openDialog('VOID_APPROVED');
+      expect(fixture.componentInstance.dialog()).toBeNull();
+    });
+
+    it('asks a holder of accounting:period:override for an override reason after a void is refused PERIOD_CLOSED (row 8)', () => {
+      render(bill({ status: 'APPROVED', availableActions: [action('VOID_APPROVED')] }));
+      fixture.componentInstance.openDialog('VOID_APPROVED');
+      fixture.detectChanges();
+      type('[data-testid="void-reason"]', 'Billed twice by mistake');
+      fixture.componentRef.setInput('failure', {
+        kind: 'VOID',
+        view: { code: 'PERIOD_CLOSED', message: { key: 'ACCOUNTING.BILLS.ERROR.PERIOD_CLOSED_OVERRIDE', params: {} }, field: 'override', reread: false, notFound: false },
+      });
+      fixture.detectChanges();
+
+      const override = q<HTMLTextAreaElement>('[data-testid="void-override-reason"]')!;
+      expect(override.getAttribute('aria-invalid')).toBe('true');
+      expect(override.getAttribute('aria-describedby')).toContain(q('[data-testid="void-error"]')!.id);
+      expect(q<HTMLButtonElement>('[data-testid="void-confirm"]')!.disabled).toBe(true);
+      type('[data-testid="void-override-reason"]', 'September closed before the vendor credit');
+      fixture.componentInstance.confirmDialog();
+
+      expect(emitted).toEqual([
+        { kind: 'VOID', voidKind: 'VOID_APPROVED', reason: 'Billed twice by mistake', overrideJustification: 'September closed before the vendor credit' },
+      ]);
+    });
+
+    it('shows the S43 override after a 422 AP_BILL_TAX_ON_RESALE_GOODS while the read shows no hold (review A6)', () => {
+      render(awaitingBill());
+      expect(q('[data-testid="approve-resale"]')).toBeNull();
+      fixture.componentRef.setInput('failure', {
+        kind: 'APPROVE',
+        view: { code: 'AP_BILL_TAX_ON_RESALE_GOODS', message: { key: 'ACCOUNTING.BILLS.ERROR.TAX_ON_RESALE_GOODS', params: {} }, field: 'taxOnResale', reread: true, notFound: false },
+      });
+      fixture.detectChanges();
+
+      const field = q('[data-testid="approve-resale-reason"]')!;
+      expect(field.getAttribute('aria-invalid')).toBe('true');
+      expect(field.getAttribute('aria-describedby')).toContain(q('[data-testid="approve-error"]')!.id);
+    });
+
+    it('leaves a posting-field refusal to the posting block (no duplicate alert)', () => {
+      render(awaitingBill());
+      fixture.componentRef.setInput('failure', {
+        kind: 'APPROVE',
+        view: { code: 'AP_BILL_UNCLASSIFIED', message: { key: 'ACCOUNTING.BILLS.ERROR.UNCLASSIFIED', params: {} }, field: 'classification', reread: false, notFound: false },
+      });
+      fixture.detectChanges();
+
+      expect(q('[data-testid="approve-error"]')).toBeNull();
     });
   });
 });

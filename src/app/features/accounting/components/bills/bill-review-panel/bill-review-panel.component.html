@@ -118,6 +118,44 @@
           </p>
         }
 
+        <!-- On the books (ruling row 7): the served posting, never an id -->
+        @if (b.posting; as posting) {
+          <p class="bill-panel__books" data-testid="panel-on-the-books">
+            @if (canOpenEntry()) {
+              <a [routerLink]="['/app/accounting/books/entries', posting.journalEntryId]" data-testid="panel-entry-link">
+                {{ 'ACCOUNTING.BILLS.PANEL.ON_THE_BOOKS' | translate: {
+                  reference: posting.journalEntryReference ?? notAvailable,
+                  date: (toDate(posting.postingDate) | date: 'mediumDate')
+                } }}
+              </a>
+            } @else {
+              {{ 'ACCOUNTING.BILLS.PANEL.ON_THE_BOOKS' | translate: {
+                reference: posting.journalEntryReference ?? notAvailable,
+                date: (toDate(posting.postingDate) | date: 'mediumDate')
+              } }}
+            }
+            @if (postingDateNote()) {
+              <span data-testid="panel-month-closed">{{ 'ACCOUNTING.BILLS.PANEL.MONTH_WAS_CLOSED' | translate }}</span>
+            }
+          </p>
+          @if (showTerms()) {
+            <p class="bill-term" data-testid="panel-posting-terms">
+              @if (posting.differenceClass && posting.differenceAmount !== null) {
+                {{ 'ACCOUNTING.BILLS.PANEL.POSTED_DIFFERENCE' | translate: {
+                  cls: posting.differenceClass,
+                  amount: (posting.differenceAmount | money: posting.currencyCode ?? currency())
+                } }}
+              }
+              {{ 'ACCOUNTING.BILLS.PANEL.ROUNDING' | translate: { amount: (posting.roundingAdjustment | money: posting.currencyCode ?? currency()) } }}
+            </p>
+          }
+        }
+        @if (b.approval?.approvedAutomatically) {
+          <p class="hint-text" data-testid="panel-approved-automatically">{{ 'ACCOUNTING.BILLS.PANEL.APPROVED_AUTOMATICALLY' | translate }}</p>
+        } @else if (b.approval?.submittedAutomatically) {
+          <p class="hint-text" data-testid="panel-sent-automatically">{{ 'ACCOUNTING.BILLS.PANEL.SENT_AUTOMATICALLY' | translate }}</p>
+        }
+
         <!-- Checks -->
         <section class="bill-panel__section" [attr.aria-labelledby]="id + '-checks'">
           <h3 [id]="id + '-checks'" class="bill-subheading">{{ 'ACCOUNTING.BILLS.CHECKS.HEADING' | translate }}</h3>
@@ -197,11 +235,10 @@
           </dl>
         </section>
 
-        <!-- Match score (P3) -->
-        <section class="bill-panel__section" [attr.aria-labelledby]="id + '-match'">
-          <h3 [id]="id + '-match'" class="sr-only">{{ 'ACCOUNTING.BILLS.MATCH.HEADING' | translate }}</h3>
+        <!-- Match score (P3): the component carries its own heading -->
+        <div class="bill-panel__section">
           <app-match-score [score]="b.match?.score ?? null" [points]="b.match?.points ?? null" />
-        </section>
+        </div>
 
         <!-- Routing note (AW6) -->
         @if (routing(); as note) {
@@ -236,7 +273,24 @@
             [failure]="failure()"
             (decide)="run($event)"
           />
+          <app-bill-posting-fields
+            [showClassification]="classificationVisible()"
+            [prefill]="prefill()"
+            [totals]="differenceVisible() ? totals() : null"
+            [differenceRequired]="differenceVisible() && differenceRequired()"
+            [proposedExpenseDifference]="proposedExpenseDifference()"
+            [showOverride]="overrideVisible()"
+            [currency]="currency()"
+            [showTerms]="showTerms()"
+            [failure]="failure()"
+            [(classification)]="postClass"
+            [(differenceClass)]="diffClass"
+            [(differenceReason)]="diffReason"
+            [(overrideReason)]="overrideReason"
+          />
           <app-bill-exception-resolution
+            [postingReady]="postingReady()"
+            [sendReady]="sendReady()"
             [bill]="b"
             [permissions]="permissions()"
             [busy]="busy()"
@@ -245,6 +299,8 @@
             (decide)="run($event)"
           />
           <app-bill-decision
+            [postingReady]="postingReady()"
+            [sendReady]="sendReady()"
             [bill]="b"
             [permissions]="permissions()"
             [busy]="busy()"

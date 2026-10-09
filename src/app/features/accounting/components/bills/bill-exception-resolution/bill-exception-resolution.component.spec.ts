@@ -52,7 +52,7 @@ describe('BillExceptionResolutionComponent (§5.2, AW6)', () => {
   });
 
   it('shows only served choices: Void needs accounting:ap:reject, Accept and Correct the approve codes', () => {
-    render(exceptionBill(), { approve: false, reject: true, setDueDate: false });
+    render(exceptionBill(), { approve: false, reject: true, setDueDate: false, periodOverride: false });
 
     expect(choice('ACCEPT')).toBeNull();
     expect(choice('CORRECT')).toBeNull();
@@ -70,7 +70,16 @@ describe('BillExceptionResolutionComponent (§5.2, AW6)', () => {
       }),
     );
 
-    expect(choice('ACCEPT')!.disabled).toBe(true);
+    // Blocked but focusable, its reason described (review B1); choosing it does nothing.
+    const accept = choice('ACCEPT')!;
+    expect(accept.disabled).toBe(false);
+    expect(accept.getAttribute('aria-disabled')).toBe('true');
+    const hint = host().querySelector(`#${accept.getAttribute('aria-describedby')}`);
+    expect(hint?.textContent).toContain('ACCOUNTING.BILLS.DECISION.BLOCKED.AP_APPROVAL_LIMIT_EXCEEDED');
+    accept.click();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.choice()).toBeNull();
+    expect(accept.checked).toBe(false);
     const send = q<HTMLButtonElement>('[data-testid="resolve-and-send"]')!;
     expect(send.disabled).toBe(true);
     type('[data-testid="exception-why"]', 'Price rise agreed with vendor');
@@ -83,6 +92,36 @@ describe('BillExceptionResolutionComponent (§5.2, AW6)', () => {
     render();
 
     expect(q('[data-testid="resolve-and-send"]')).toBeNull();
+  });
+
+  it('shows the override field after a 422 AP_BILL_TAX_ON_RESALE_GOODS even when the read still shows no hold (review A6)', () => {
+    render();
+    choice('ACCEPT')!.click();
+    fixture.detectChanges();
+    expect(q('[data-testid="exception-resale"]')).toBeNull();
+    fixture.componentRef.setInput('failure', {
+      kind: 'RESOLVE',
+      view: { code: 'AP_BILL_TAX_ON_RESALE_GOODS', message: { key: 'ACCOUNTING.BILLS.ERROR.TAX_ON_RESALE_GOODS', params: {} }, field: 'taxOnResale', reread: true, notFound: false },
+    });
+    fixture.detectChanges();
+
+    expect(q('[data-testid="exception-resale"]')).not.toBeNull();
+    const field = q('[data-testid="exception-resale-reason"]')!;
+    expect(field.getAttribute('aria-describedby')).toContain(q('[data-testid="exception-error"]')!.id);
+  });
+
+  it('holds Accept as billed until the posting choices are complete, but not Correct', () => {
+    fixture.componentRef.setInput('postingReady', false);
+    render();
+    choice('ACCEPT')!.click();
+    fixture.detectChanges();
+    type('[data-testid="exception-why"]', 'Price rise agreed with vendor');
+    expect(q<HTMLButtonElement>('[data-testid="resolve"]')!.disabled).toBe(true);
+    fixture.componentInstance.resolve();
+    expect(emitted).toEqual([]);
+    choice('CORRECT')!.click();
+    fixture.detectChanges();
+    expect(q<HTMLButtonElement>('[data-testid="resolve"]')!.disabled).toBe(false);
   });
 
   it('asks why tax on goods for resale is accepted with ACCEPT under the S43 hold', () => {
@@ -114,7 +153,7 @@ describe('BillExceptionResolutionComponent (§5.2, AW6)', () => {
     type('[data-testid="exception-why"]', 'Duplicate of INV-5519');
     fixture.componentRef.setInput('failure', {
       kind: 'RESOLVE',
-      view: { message: { key: 'ACCOUNTING.BILLS.ERROR.JUSTIFICATION_REQUIRED', params: { min: 10 } }, field: 'reason', reread: false, notFound: false },
+      view: { code: 'JUSTIFICATION_REQUIRED', message: { key: 'ACCOUNTING.BILLS.ERROR.JUSTIFICATION_REQUIRED', params: { min: 10 } }, field: 'reason', reread: false, notFound: false },
     });
     fixture.detectChanges();
 

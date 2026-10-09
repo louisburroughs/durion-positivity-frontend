@@ -13,7 +13,7 @@ import {
   ExceptionResolutionAction,
 } from '../../../models/payables.models';
 import { Copy, blockedCopy, findAction, offersResolveAndSend, reasonValid, taxOnResaleHeld, withParam } from '../../../utils/bill-display';
-import { BillDecisionFailure } from '../../../utils/bill-errors';
+import { BillDecisionFailure, POSTING_FIELDS } from '../../../utils/bill-errors';
 
 interface ResolutionChoice {
   readonly value: ExceptionResolutionAction;
@@ -85,6 +85,10 @@ export class BillExceptionResolutionComponent {
   readonly busy = input(false);
   readonly failure = input<BillDecisionFailure | null>(null);
   readonly done = input<BillDecisionDone | null>(null);
+  /** The panel's posting choices are complete for Accept as billed (an approval). */
+  readonly postingReady = input(true);
+  /** …and for Resolve and send for approval, where the classification is only a proposal. */
+  readonly sendReady = input(true);
 
   readonly decide = output<BillDecisionRequest>();
 
@@ -113,18 +117,33 @@ export class BillExceptionResolutionComponent {
   );
 
   readonly selected = computed(() => this.choices().find(choice => choice.value === this.choice()) ?? null);
-  readonly asksTaxOnResale = computed(() => this.choice() === 'ACCEPT' && taxOnResaleHeld(this.bill()));
+  /** S43, also after the last Accept was refused for it while the read does not show the check yet (review A6). */
+  readonly asksTaxOnResale = computed(
+    () =>
+      this.choice() === 'ACCEPT' &&
+      (taxOnResaleHeld(this.bill()) || (this.failure()?.kind === 'RESOLVE' && this.failure()?.view.code === 'AP_BILL_TAX_ON_RESALE_GOODS')),
+  );
   readonly reasonOk = computed(() => reasonValid(this.reason(), BILL_REASON_MIN, BILL_REASON_MAX));
   readonly taxOnResaleOk = computed(
     () => !this.asksTaxOnResale() || reasonValid(this.taxOnResale(), BILL_REASON_MIN, BILL_REASON_MAX),
   );
   readonly canResolve = computed(
-    () => !!this.selected()?.action.allowed && this.reasonOk() && this.taxOnResaleOk() && !this.busy(),
+    () =>
+      !!this.selected()?.action.allowed &&
+      this.reasonOk() &&
+      this.taxOnResaleOk() &&
+      !this.busy() &&
+      (this.choice() !== 'ACCEPT' || this.postingReady()),
   );
 
+  /** "Approving puts {amount} owed to {vendor} on the books." — Accept as billed is an approval. */
+  readonly consequenceParams = computed(() => ({ amount: this.bill().totalAmount, currency: this.bill().currency, vendor: this.bill().vendorName }));
+
+  /** This block's refusal, unless it names a posting field (the posting block shows it). */
   readonly ownFailure = computed(() => {
     const failure = this.failure();
-    return failure && (failure.kind === 'RESOLVE' || failure.kind === 'RESOLVE_AND_SEND') ? failure : null;
+    if (!failure || (failure.kind !== 'RESOLVE' && failure.kind !== 'RESOLVE_AND_SEND')) return null;
+    return POSTING_FIELDS.includes(failure.view.field) ? null : failure;
   });
 
   constructor() {
@@ -143,15 +162,20 @@ export class BillExceptionResolutionComponent {
     return blockedCopy(action, this.bill());
   }
 
-  pick(value: ExceptionResolutionAction): void {
+  /** A blocked choice stays focusable (`aria-disabled`, its reason described) but is never taken (review B1). */
+  pick(value: ExceptionResolutionAction, event?: Event): void {
     const choice = this.choices().find(entry => entry.value === value);
-    if (!choice?.action.allowed) return;
+    if (!choice?.action.allowed) {
+      if (event?.target instanceof HTMLInputElement) event.target.checked = this.choice() === value;
+      return;
+    }
     this.choice.set(value);
   }
 
   resolve(): void {
     const choice = this.selected();
     if (!choice?.action.allowed || this.busy() || !this.reasonOk() || !this.taxOnResaleOk()) return;
+    if (choice.value === 'ACCEPT' && !this.postingReady()) return;
     this.decide.emit({
       kind: 'RESOLVE',
       action: choice.value,
@@ -161,7 +185,7 @@ export class BillExceptionResolutionComponent {
   }
 
   sendForApproval(): void {
-    if (!this.resolveAndSend() || this.busy() || !this.reasonOk()) return;
+    if (!this.resolveAndSend() || this.busy() || !this.reasonOk() || !this.sendReady()) return;
     this.decide.emit({ kind: 'RESOLVE_AND_SEND', reason: this.reason().trim() });
   }
 

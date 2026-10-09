@@ -74,4 +74,41 @@ describe('BillDueDateComponent (AW11)', () => {
 
     expect(fixture.componentInstance.editing()).toBe(false);
   });
+
+  it('keeps a served-but-blocked control focusable, aria-disabled, with its reason described (review B1)', () => {
+    render(ALL_PERMISSIONS, bill({ availableActions: [action('SET_DUE_DATE', { allowed: false, blockedReason: 'LATER_RULE' })] }));
+
+    const open = q<HTMLButtonElement>('[data-testid="due-date-open"]')!;
+    expect(open.disabled).toBe(false);
+    expect(open.getAttribute('aria-disabled')).toBe('true');
+    const hint = q('[data-testid="due-date-blocked"]')!;
+    expect(open.getAttribute('aria-describedby')).toBe(hint.id);
+    expect(hint.textContent).toContain('ACCOUNTING.BILLS.DECISION.BLOCKED.UNKNOWN');
+    open.click();
+    expect(fixture.componentInstance.editing()).toBe(false);
+  });
+
+  it('says what saving does before Save (review B2)', () => {
+    render();
+    fixture.componentInstance.open();
+    fixture.detectChanges();
+
+    const consequence = q('[data-testid="due-date-consequence"]')!;
+    expect(consequence.textContent).toContain('ACCOUNTING.BILLS.DUE_DATE.CONSEQUENCE');
+    expect(consequence.compareDocumentPosition(q('[data-testid="due-date-save"]')!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('links a server refusal on the reason to the field (review B4)', () => {
+    render();
+    fixture.componentInstance.open();
+    fixture.componentRef.setInput('failure', {
+      kind: 'DUE_DATE',
+      view: { code: 'JUSTIFICATION_REQUIRED', message: { key: 'ACCOUNTING.BILLS.ERROR.JUSTIFICATION_REQUIRED', params: { min: 10 } }, field: 'reason', reread: false, notFound: false },
+    });
+    fixture.detectChanges();
+
+    const reason = q('[data-testid="due-date-reason"]')!;
+    expect(reason.getAttribute('aria-invalid')).toBe('true');
+    expect(reason.getAttribute('aria-describedby')).toContain(q('[data-testid="due-date-error"]')!.id);
+  });
 });

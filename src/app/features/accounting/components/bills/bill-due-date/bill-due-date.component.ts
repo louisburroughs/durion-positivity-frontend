@@ -1,16 +1,18 @@
 import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, effect, input, output, signal, untracked } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
+import { MoneyPipe } from '../../../../../shared/money.pipe';
 import {
   BILL_REASON_MAX,
   BILL_REASON_MIN,
   BillDecisionDone,
   BillDecisionRequest,
+  BillAction,
   BillDetail,
   BillPermissions,
 } from '../../../models/payables.models';
 import { toDatePipeInput } from '../../../utils/date-only.util';
-import { findAction, reasonValid } from '../../../utils/bill-display';
+import { Copy, blockedCopy, findAction, reasonValid, withParam } from '../../../utils/bill-display';
 import { BillDecisionFailure } from '../../../utils/bill-errors';
 
 const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
@@ -27,7 +29,7 @@ let nextId = 0;
 @Component({
   selector: 'app-bill-due-date',
   standalone: true,
-  imports: [DatePipe, TranslatePipe],
+  imports: [DatePipe, MoneyPipe, TranslatePipe],
   templateUrl: './bill-due-date.component.html',
   styleUrls: ['../../../bank-reconciliation-shared.css', '../bills-shared.css', './bill-due-date.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -45,6 +47,7 @@ export class BillDueDateComponent {
   readonly min = BILL_REASON_MIN;
   readonly max = BILL_REASON_MAX;
   readonly toDate = toDatePipeInput;
+  readonly withParam = withParam;
 
   readonly editing = signal(false);
   readonly dueDate = signal('');
@@ -61,6 +64,11 @@ export class BillDueDateComponent {
       if (done?.kind !== 'DUE_DATE') return;
       untracked(() => this.close());
     });
+  }
+
+  /** A served-but-blocked due date stays focusable with its translated reason (P5, review B1). */
+  blocked(action: BillAction): Copy {
+    return blockedCopy(action, this.bill());
   }
 
   open(): void {

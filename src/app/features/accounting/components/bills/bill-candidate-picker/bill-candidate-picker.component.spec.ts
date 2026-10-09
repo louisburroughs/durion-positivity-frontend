@@ -39,7 +39,11 @@ describe('BillCandidatePickerComponent (§7.1, ADR-0064)', () => {
     expect(host().textContent).not.toContain('cand-uuid');
     expect(host().querySelectorAll('app-match-score').length).toBe(2);
     expect(host().querySelector('caption')).not.toBeNull();
-    expect(host().textContent).toContain('ACCOUNTING.BILLS.CANDIDATES.NOTE');
+    // The consequence note comes before every Pick button (review B2).
+    const note = host().querySelector('[data-testid="candidate-note"]')!;
+    expect(note.textContent).toContain('ACCOUNTING.BILLS.CANDIDATES.NOTE');
+    expect(note.compareDocumentPosition(host().querySelector('table')!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(host().querySelector('[data-testid="candidate-pick"]')!.getAttribute('aria-describedby')).toBe(note.id);
   });
 
   it('picking emits the candidate id for the command, matching only', () => {
@@ -63,6 +67,11 @@ describe('BillCandidatePickerComponent (§7.1, ADR-0064)', () => {
 
     const pick = host().querySelector('[data-testid="candidate-pick"]') as HTMLButtonElement;
     expect(pick.getAttribute('aria-disabled')).toBe('true');
+    expect(pick.disabled).toBe(false);
+    // The translated reason is rendered and linked (review B1).
+    const blocked = host().querySelector('[data-testid="candidate-blocked"]')!;
+    expect(blocked.textContent).toContain('ACCOUNTING.BILLS.DECISION.BLOCKED.UNKNOWN');
+    expect(pick.getAttribute('aria-describedby')).toContain(blocked.id);
     pick.click();
     expect(emitted).toEqual([]);
   });

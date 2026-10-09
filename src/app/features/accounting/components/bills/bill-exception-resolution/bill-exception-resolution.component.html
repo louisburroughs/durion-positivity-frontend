@@ -13,9 +13,9 @@
                 [name]="id + '-choice'"
                 [value]="entry.value"
                 [checked]="choice() === entry.value"
-                [disabled]="!entry.action.allowed"
+                [attr.aria-disabled]="entry.action.allowed ? null : 'true'"
                 [attr.aria-describedby]="id + '-' + entry.value + '-hint'"
-                (change)="pick(entry.value)"
+                (change)="pick(entry.value, $event)"
                 data-testid="exception-choice"
               />
               <label [for]="id + '-' + entry.value">{{ entry.labelKey | translate }}</label>
@@ -79,7 +79,12 @@
 
       @if (choices().length) {
         @if (selected(); as current) {
-          <p class="bill-consequence" data-testid="exception-consequence">{{ current.consequenceKey | translate }}</p>
+          <p class="bill-consequence" data-testid="exception-consequence">
+            {{ current.consequenceKey | translate: {
+              amount: (consequenceParams().amount | money: consequenceParams().currency),
+              vendor: consequenceParams().vendor ?? ('COMMON.EMPTY_VALUE' | translate)
+            } }}
+          </p>
         }
         <div class="bill-actions">
           <button type="submit" class="btn btn--accent" data-testid="resolve" [disabled]="!canResolve()">
@@ -95,7 +100,7 @@
             type="button"
             class="btn btn--outline"
             data-testid="resolve-and-send"
-            [disabled]="busy() || !reasonOk()"
+            [disabled]="busy() || !reasonOk() || !sendReady()"
             (click)="sendForApproval()"
           >
             {{ 'ACCOUNTING.BILLS.EXCEPTION.RESOLVE_AND_SEND' | translate }}

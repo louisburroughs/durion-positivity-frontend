@@ -162,6 +162,46 @@ export interface BillApproval {
   /** @serverGenerated — only on an approved bill. */
   readonly approvedAt?: string | null;
   readonly approvalJustification: string | null;
+  /** The system approved it (a strong delivery match within the automatic limit); renders "Automatic". */
+  readonly approvedAutomatically: boolean;
+  /** The system sent it (a HIGH match); renders "Automatic". No actor username is ever kept here (Q4). */
+  readonly submittedAutomatically: boolean;
+  /** What the person who sent it proposed the bill is for. */
+  readonly proposedClassification: BillClassification | null;
+  /** Where the person who sent it proposed an unreconciled difference posts. */
+  readonly proposedDifference: BillDifference | null;
+}
+
+/** What a bill without stored lines posts as (AW39). `EXPENSE` cannot be chosen on this page yet (S14b). */
+export type DebitClass = 'GOODS' | 'EXPENSE' | 'RECEIPT_MATCHED' | 'PRICE_ALLOWANCE' | 'UNKNOWN';
+
+export interface BillClassification {
+  readonly debitClass: DebitClass;
+  readonly expenseMappingKey: string | null;
+}
+
+/** Where an unreconciled difference posts (AW47). `EXPENSE` cannot be chosen on this page yet (S14b). */
+export type DifferenceClass = 'FREIGHT' | 'GOODS' | 'PRICE_DIFFERENCE' | 'EXPENSE' | 'UNKNOWN';
+
+export interface BillDifference {
+  readonly differenceClass: DifferenceClass;
+  readonly justification: string | null;
+}
+
+export type PostingDateRule = 'BILL_DATE' | 'APPROVAL_DATE_BILL_PERIOD_NOT_OPEN' | 'APPROVAL_DATE_BILL_DATE_FUTURE' | 'UNKNOWN';
+
+/** The approval's journal entry (AW37–AW42), served once the bill is approved. */
+export interface BillPosting {
+  /** For the journal-entry route only; never rendered (P8). */
+  readonly journalEntryId: string;
+  readonly journalEntryReference: string | null;
+  readonly postingDate: string;
+  readonly postingDateRule: PostingDateRule;
+  readonly differenceClass: DifferenceClass | null;
+  readonly differenceAmount: number | null;
+  readonly roundingAdjustment: number;
+  readonly reversalReference: string | null;
+  readonly currencyCode: string | null;
 }
 
 export interface BillRejection {
@@ -197,6 +237,8 @@ export interface BillTaxOnResaleOverride {
 /** `GET /vendor-bills/{billId}`: one bill as the review panel reads it. */
 export interface BillDetail {
   readonly billId: string;
+  /** For the vendor's AP defaults read only; never rendered. */
+  readonly vendorId: string;
   readonly billNumber: string;
   readonly vendorName: string | null;
   readonly channel: BillChannel;
@@ -223,13 +265,26 @@ export interface BillDetail {
   readonly taxByType: readonly BillTaxByType[];
   readonly inputTaxRecovery: readonly BillInputTaxRecovery[];
   readonly taxOnResaleOverride: BillTaxOnResaleOverride | null;
+  readonly posting: BillPosting | null;
 }
+
+/** The posting choices a decision carries (Q1): sent only when the field is shown and chosen. */
+export interface BillPostingInput {
+  /** `GOODS` when "Stock for the shelves" is chosen; null sends no classification. */
+  readonly classification: 'GOODS' | null;
+  readonly difference: { readonly differenceClass: 'FREIGHT' | 'GOODS' | 'PRICE_DIFFERENCE'; readonly justification: string } | null;
+  /** To post into a CLOSED period, with `accounting:period:override`. */
+  readonly overrideJustification: string | null;
+}
+
+export const NO_POSTING_INPUT: BillPostingInput = { classification: null, difference: null, overrideJustification: null };
 
 /** Approve bill: the justification is optional unless served as required. */
 export interface BillApproveCommand {
   readonly justification: string | null;
   /** S43: why tax on goods for resale is accepted for this bill (10–1000 characters). */
   readonly taxOnResaleOverrideJustification: string | null;
+  readonly posting: BillPostingInput;
 }
 
 export interface BillResolveCommand {
@@ -237,7 +292,33 @@ export interface BillResolveCommand {
   readonly reason: string;
   /** S43, `ACCEPT` only. */
   readonly taxOnResaleOverrideJustification: string | null;
+  /** `ACCEPT` only (classification, difference, period override). */
+  readonly posting: BillPostingInput;
 }
+
+export interface BillSubmitCommand {
+  readonly justification: string;
+  /** Classification and difference, as a proposal; never a period override (submit posts nothing). */
+  readonly posting: BillPostingInput;
+}
+
+export interface BillVoidCommand {
+  readonly reason: string;
+  /** An approved bill only: to reverse into a CLOSED period, with `accounting:period:override`. */
+  readonly overrideJustification: string | null;
+}
+
+/** The bill a candidate selection matched: the chosen bill, which may not be the one shown (Q5). */
+export interface BillSelection {
+  readonly billId: string;
+  readonly billNumber: string;
+}
+
+/** The vendor's served AP default class, for the classification pre-fill (`getVendorById`). */
+export type VendorDefaultClass = 'GOODS' | 'EXPENSE' | null;
+
+/** Which void a dialog runs: an approved bill's, or a goods-receipt placeholder's (AW42, AW45). */
+export type BillVoidKind = 'VOID_APPROVED' | 'VOID_UNMATCHED';
 
 export interface BillDueDateCommand {
   /** `YYYY-MM-DD`. */
@@ -253,6 +334,7 @@ export type BillDecisionRequest =
   | { readonly kind: 'SUBMIT'; readonly justification: string }
   | { readonly kind: 'APPROVE'; readonly justification: string | null; readonly taxOnResale: string | null }
   | { readonly kind: 'REJECT'; readonly reason: string }
+  | { readonly kind: 'VOID'; readonly voidKind: BillVoidKind; readonly reason: string; readonly overrideJustification: string | null }
   | {
       readonly kind: 'RESOLVE';
       readonly action: ExceptionResolutionAction;
@@ -273,6 +355,8 @@ export interface BillPermissions {
   readonly reject: boolean;
   /** `accounting:ap:approve`: the due date. */
   readonly setDueDate: boolean;
+  /** `accounting:period:override`: post or reverse into a closed month with a reason. */
+  readonly periodOverride: boolean;
 }
 
 /** A decision that succeeded; `seq` tells a repeat of the same kind apart. */
