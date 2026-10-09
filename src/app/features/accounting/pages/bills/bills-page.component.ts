@@ -23,10 +23,10 @@ import { MaterialSymbolPipe } from '../../../../shared/material-symbol.pipe';
 import { MoneyPipe } from '../../../../shared/money.pipe';
 import { HelpDisclosureComponent } from '../../components/help-disclosure/help-disclosure.component';
 import { HomePageState } from '../../models/accounting-home.models';
-import { BILL_STAGES, BillStage, BillStageCounts, BillStagePage, BillStageRow } from '../../models/payables.models';
+import { BILL_STAGES, BillSelection, BillStage, BillStageCounts, BillStagePage, BillStageRow } from '../../models/payables.models';
 import { AccountingPreferencesService } from '../../services/accounting-preferences.service';
 import { PayablesService } from '../../services/payables.service';
-import { CHANNEL_ICONS, CHANNEL_KEYS, STAGE_KEYS, statusLabelKey, statusTermKey, statusTone } from '../../utils/bill-display';
+import { CHANNEL_ICONS, CHANNEL_KEYS, Copy, STAGE_KEYS, copy, statusLabelKey, statusTermKey, statusTone } from '../../utils/bill-display';
 import { HomeRegion } from '../../utils/home-region';
 import { BillsPageLink } from './bills-page-link';
 
@@ -101,6 +101,9 @@ export class BillsPageComponent implements BillsPageLink {
   readonly listData = computed(() =>
     this.canSee() && !this.list.denied() && this.list.dataKey() === this.listKey() ? this.list.data() : null,
   );
+
+  /** The page's polite announcement, outside the routed panel so a navigation never drops it (ADR-0029 §8.8). */
+  readonly announcement = signal<Copy | null>(null);
 
   private readonly selected = signal<string | null>(null);
   readonly selectedBillId = this.selected.asReadonly();
@@ -252,6 +255,13 @@ export class BillsPageComponent implements BillsPageLink {
     if (!this.canSee()) return;
     if (!this.counts.denied()) this.loadCounts();
     if (!this.list.denied()) this.loadList();
+  }
+
+  /** Q5: the selection matched another bill; the step stays as chosen. */
+  openMatched(selection: BillSelection): void {
+    if (!this.canSee()) return;
+    this.announcement.set(copy('ACCOUNTING.BILLS.DONE.MATCHED_OTHER', { number: selection.billNumber }));
+    void this.router.navigate(['/app/accounting/bills', selection.billId]);
   }
 
   takePanelFocus(): boolean {

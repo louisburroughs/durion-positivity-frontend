@@ -15,6 +15,7 @@ class FakeLink extends BillsPageLink {
   private readonly current = signal<string | null>(null);
   readonly selectedBillId: Signal<string | null> = this.current.asReadonly();
   readonly billChanged = vi.fn();
+  readonly openMatched = vi.fn();
   focusOwed = false;
   select(billId: string | null): void {
     this.current.set(billId);
@@ -70,6 +71,16 @@ describe('BillPanelRouteComponent (bills, bills/:billId)', () => {
     panel.changed.emit();
 
     expect(link.billChanged).toHaveBeenCalledTimes(1);
+  });
+
+  it('hands a selection that matched another bill to the page (Q5)', () => {
+    const { link } = render('bill-1');
+    const fixture = TestBed.createComponent(BillPanelRouteComponent);
+    fixture.detectChanges();
+    const panel = fixture.debugElement.children[0].componentInstance as { moved: { emit: (value: unknown) => void } };
+    panel.moved.emit({ billId: 'bill-9', billNumber: 'REC-9' });
+
+    expect(link.openMatched).toHaveBeenCalledWith({ billId: 'bill-9', billNumber: 'REC-9' });
   });
 
   it('moves focus to the panel heading once loaded when a row was picked on a phone (§5.7)', async () => {

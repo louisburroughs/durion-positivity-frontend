@@ -17,8 +17,10 @@ import {
   VIEW_ONLY,
   apiError,
   authMock,
+  action,
   awaitingBill,
   bill,
+  exceptionBill,
   counts,
   payablesMock,
   pending,
@@ -240,10 +242,37 @@ describe('BillsPageComponent (§5.2, §8.1)', () => {
       q<HTMLButtonElement>('[data-testid="send"]')!.click();
       harness.detectChanges();
 
-      expect(mock.submitForApproval).toHaveBeenCalledWith('bill-1', 'Shop rags and gloves');
+      expect(mock.submitForApproval).toHaveBeenCalledWith('bill-1', { justification: 'Shop rags and gloves', posting: { classification: null, difference: null, overrideJustification: null } });
       expect(mock.getStageCounts.mock.calls.length).toBe(before.counts + 1);
       expect(mock.listByStage.mock.calls.length).toBe(before.list + 1);
       expect(all('[data-testid="stage-count"]').map(cell => cell.textContent?.trim()).slice(0, 2)).toEqual(['2', '3']);
+    });
+
+    it('Pick a match on another bill opens bills/{chosen}, announces it, re-reads counts and list, and keeps the step (Q5, AC 7)', async () => {
+      const ambiguous = exceptionBill({
+        billId: 'bill-1',
+        openCandidates: [{ candidateId: 'cand-9', billNumber: 'REC-9', billTotal: 1200, currencyCode: 'USD', score: 74, points: null }],
+        availableActions: [action('SELECT_CANDIDATE')],
+      });
+      const mock = payablesMock(ambiguous);
+      mock.selectMatchCandidate.mockReturnValue(of({ billId: 'bill-9', billNumber: 'REC-9' }));
+      await open(CLERK, '/app/accounting/bills/bill-1', mock);
+      step('PAY').click();
+      harness.detectChanges();
+      const before = { counts: mock.getStageCounts.mock.calls.length, list: mock.listByStage.mock.calls.length };
+      mock.getBill.mockReturnValue(of(awaitingBill({ billId: 'bill-9', billNumber: 'REC-9' })));
+
+      q<HTMLButtonElement>('[data-testid="candidate-pick"]')!.click();
+      await harness.fixture.whenStable();
+      harness.detectChanges();
+
+      expect(TestBed.inject(Router).url).toBe('/app/accounting/bills/bill-9');
+      expect(q('[data-testid="page-announcement"]')?.textContent).toContain('ACCOUNTING.BILLS.DONE.MATCHED_OTHER');
+      expect(mock.getStageCounts.mock.calls.length).toBe(before.counts + 1);
+      expect(mock.listByStage).toHaveBeenLastCalledWith('PAY', 0);
+      expect(mock.listByStage.mock.calls.length).toBe(before.list + 1);
+      expect(step('PAY').getAttribute('aria-pressed')).toBe('true');
+      expect(mock.getBill).toHaveBeenLastCalledWith('bill-9');
     });
 
     it('a list re-read that lands after another step was chosen is ignored (ADR-0063)', async () => {

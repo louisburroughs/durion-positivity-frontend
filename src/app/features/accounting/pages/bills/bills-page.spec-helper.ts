@@ -13,7 +13,11 @@ import {
   BillDueDateCommand,
   BillPermissions,
   BillResolveCommand,
+  BillSelection,
   BillStage,
+  BillSubmitCommand,
+  BillVoidCommand,
+  VendorDefaultClass,
   BillStageCounts,
   BillStagePage,
   BillStageRow,
@@ -43,8 +47,8 @@ export const CONTROLLER = [
   'accounting:ap_approval_policy:manage',
 ];
 
-export const ALL_PERMISSIONS: BillPermissions = { approve: true, reject: true, setDueDate: true };
-export const NO_PERMISSIONS: BillPermissions = { approve: false, reject: false, setDueDate: false };
+export const ALL_PERMISSIONS: BillPermissions = { approve: true, reject: true, setDueDate: true, periodOverride: true };
+export const NO_PERMISSIONS: BillPermissions = { approve: false, reject: false, setDueDate: false, periodOverride: false };
 
 export const action = (code: BillActionCode, overrides: Partial<BillAction> = {}): BillAction => ({
   action: code,
@@ -63,6 +67,7 @@ export const check = (code: string, outcome: BillCheck['outcome'], args: Record<
 /** An EDI bill waiting on its delivery, no due date, no lines (AC 4). */
 export const bill = (overrides: Partial<BillDetail> = {}): BillDetail => ({
   billId: 'bill-1',
+  vendorId: 'vendor-uuid-1',
   billNumber: 'INV-4471',
   vendorName: 'Northside Parts',
   channel: 'SUPPLIER_CONNECTION',
@@ -82,6 +87,10 @@ export const bill = (overrides: Partial<BillDetail> = {}): BillDetail => ({
     submittedAt: null,
     submissionJustification: null,
     approvalJustification: null,
+    approvedAutomatically: false,
+    submittedAutomatically: false,
+    proposedClassification: null,
+    proposedDifference: null,
   },
   rejection: null,
   match: null,
@@ -92,13 +101,42 @@ export const bill = (overrides: Partial<BillDetail> = {}): BillDetail => ({
   taxByType: [],
   inputTaxRecovery: [],
   taxOnResaleOverride: null,
+  posting: null,
   ...overrides,
 });
+
+/** A served approval block with overrides (typed, ADR-0032). */
+export const approval = (overrides: Partial<NonNullable<BillDetail['approval']>> = {}): NonNullable<BillDetail['approval']> => ({
+  requiredTier: 'CLERK',
+  clerkLimit: 2500,
+  currencyCode: 'USD',
+  submittedAt: null,
+  submissionJustification: null,
+  approvalJustification: null,
+  approvedAutomatically: false,
+  submittedAutomatically: false,
+  proposedClassification: null,
+  proposedDifference: null,
+  ...overrides,
+});
+
+/** A goods-receipt line, so the classification field stays hidden. */
+export const LINE: BillDetail['lines'][number] = {
+  lineNumber: 1,
+  description: 'Brake pads',
+  inventoryItem: true,
+  receivedQuantity: 4,
+  receivedUnitPrice: 20,
+  billedQuantity: 4,
+  billedUnitPrice: 21,
+  currencyCode: 'USD',
+};
 
 /** A bill sent for approval: Approve and Reject served. */
 export const awaitingBill = (overrides: Partial<BillDetail> = {}): BillDetail =>
   bill({
     status: 'AWAITING_APPROVAL',
+    lines: [LINE],
     availableActions: [action('APPROVE'), action('REJECT'), action('SET_DUE_DATE')],
     ...overrides,
   });
@@ -111,6 +149,7 @@ export const exceptionBill = (overrides: Partial<BillDetail> = {}): BillDetail =
     channel: 'GOODS_RECEIPT',
     status: 'MATCH_EXCEPTION',
     statusExplanation: 'Line 2 billed 12, received 10',
+    lines: [LINE],
     availableActions: [
       action('ACCEPT_EXCEPTION'),
       action('CORRECT_EXCEPTION'),
@@ -173,11 +212,13 @@ export interface PayablesMock {
   getStageCounts: ReturnType<typeof vi.fn<() => Observable<BillStageCounts>>>;
   listByStage: ReturnType<typeof vi.fn<(stage: BillStage, page?: number, size?: number) => Observable<BillStagePage>>>;
   getBill: ReturnType<typeof vi.fn<(billId: string) => Observable<BillDetail>>>;
-  submitForApproval: ReturnType<typeof vi.fn<(billId: string, justification: string) => Observable<void>>>;
+  submitForApproval: ReturnType<typeof vi.fn<(billId: string, command: BillSubmitCommand) => Observable<void>>>;
   approve: ReturnType<typeof vi.fn<(billId: string, command: BillApproveCommand) => Observable<void>>>;
   reject: ReturnType<typeof vi.fn<(billId: string, reason: string) => Observable<void>>>;
+  voidBill: ReturnType<typeof vi.fn<(billId: string, command: BillVoidCommand) => Observable<void>>>;
+  getVendorDefaultClass: ReturnType<typeof vi.fn<(vendorId: string) => Observable<VendorDefaultClass>>>;
   resolveException: ReturnType<typeof vi.fn<(billId: string, command: BillResolveCommand) => Observable<void>>>;
-  selectMatchCandidate: ReturnType<typeof vi.fn<(candidateId: string) => Observable<void>>>;
+  selectMatchCandidate: ReturnType<typeof vi.fn<(candidateId: string) => Observable<BillSelection>>>;
   setDueDate: ReturnType<typeof vi.fn<(billId: string, command: BillDueDateCommand) => Observable<void>>>;
 }
 
@@ -189,8 +230,10 @@ export function payablesMock(detail: BillDetail = bill()): PayablesMock {
     submitForApproval: vi.fn(() => of(undefined)),
     approve: vi.fn(() => of(undefined)),
     reject: vi.fn(() => of(undefined)),
+    voidBill: vi.fn(() => of(undefined)),
+    getVendorDefaultClass: vi.fn(() => of<VendorDefaultClass>(null)),
     resolveException: vi.fn(() => of(undefined)),
-    selectMatchCandidate: vi.fn(() => of(undefined)),
+    selectMatchCandidate: vi.fn(() => of<BillSelection>({ billId: detail.billId, billNumber: detail.billNumber })),
     setDueDate: vi.fn(() => of(undefined)),
   };
 }

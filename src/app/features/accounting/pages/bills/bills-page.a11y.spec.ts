@@ -54,7 +54,7 @@ describe('Bills to pay a11y (rendered DOM)', () => {
     document.body.querySelectorAll('[data-a11y-host]').forEach(node => node.remove());
   });
 
-  function configure(): void {
+  function configure(detail = reviewBill): void {
     TestBed.configureTestingModule({
       imports: [TranslateModule.forRoot()],
       providers: [
@@ -68,7 +68,7 @@ describe('Bills to pay a11y (rendered DOM)', () => {
             ],
           },
         ]),
-        { provide: PayablesService, useValue: payablesMock(reviewBill) },
+        { provide: PayablesService, useValue: payablesMock(detail) },
         { provide: AuthService, useValue: authMock(CONTROLLER, { tenantId: signal<string | null>(null) }).service },
         { provide: AccountingPreferencesService, useValue: { showTerms: signal(true) } },
       ],
@@ -78,8 +78,8 @@ describe('Bills to pay a11y (rendered DOM)', () => {
     translate.use('en-US');
   }
 
-  async function renderBills(url = '/app/accounting/bills/bill-1'): Promise<RouterTestingHarness> {
-    configure();
+  async function renderBills(url = '/app/accounting/bills/bill-1', detail = reviewBill): Promise<RouterTestingHarness> {
+    configure(detail);
     const harness = await RouterTestingHarness.create();
     await harness.navigateByUrl(url);
     harness.detectChanges();
@@ -112,6 +112,23 @@ describe('Bills to pay a11y (rendered DOM)', () => {
       await harness.fixture.whenStable();
 
       expect(host.querySelector('dialog')?.matches(':modal')).toBe(true);
+      expect(await seriousViolations(host)).toEqual([]);
+    });
+  }
+
+  for (const theme of THEMES) {
+    it(`reports no serious violation with the posting choices shown (${theme} theme)`, async () => {
+      document.documentElement.setAttribute('data-theme', theme);
+      const edi = awaitingBill({
+        lines: [],
+        checks: [check('TOTALS_ADD_UP', 'FAIL', { netAmount: '100.00', taxAmount: '13.00', totalAmount: '115.00', difference: '2.00' })],
+        availableActions: [action('APPROVE'), action('REJECT')],
+      });
+      const harness = await renderBills('/app/accounting/bills/bill-1', edi);
+      const host = harness.fixture.nativeElement as HTMLElement;
+
+      expect(host.querySelector('[data-testid="classification"]')).not.toBeNull();
+      expect(host.querySelector('[data-testid="difference"]')).not.toBeNull();
       expect(await seriousViolations(host)).toEqual([]);
     });
   }
@@ -152,7 +169,7 @@ describe('Approval limits a11y (rendered DOM)', () => {
     policy: { clerkApprovalLimit: 2500, autoApprovalLimit: 500, currencyCode: 'USD', allowCreatorApproval: true, allowApproverPayment: false, defaultTerms: 'NET30', asOf: '2026-10-06T10:00:00Z' },
     history: {
       rows: [
-        { changedAt: '2026-10-05T15:00:00Z', changedBy: 'Dana Reyes', changedByRoles: ['CONTROLLER'], setting: 'AP_CLERK_APPROVAL_LIMIT', oldValue: '1000.00', newValue: '2500.00', justification: 'Clerks handle routine parts orders' },
+        { changedAt: '2026-10-05T15:00:00Z', changedBy: 'controller.cfo', changedByRoles: ['CONTROLLER'], setting: 'AP_CLERK_APPROVAL_LIMIT', oldValue: '1000.00', newValue: '2500.00', justification: 'Clerks handle routine parts orders' },
       ],
       page: 0,
       size: 20,
