@@ -1,10 +1,12 @@
-import { HttpErrorResponse } from '@angular/common/http';
+import { HttpErrorResponse, HttpHeaders } from '@angular/common/http';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService, TranslationObject } from '@ngx-translate/core';
+import enUS from '../../../../../../assets/i18n/en-US.json';
 import { of, throwError } from 'rxjs';
 import { AccountingService } from '../../../services/accounting.service';
-import { VendorPaymentNewPageComponent, selfApprovedBills } from './vendor-payment-new-page.component';
+import { VendorPaymentNewPageComponent, paymentRefusal, selfApprovedBills } from './vendor-payment-new-page.component';
 
 describe('VendorPaymentNewPageComponent', () => {
   let fixture: ComponentFixture<VendorPaymentNewPageComponent>;
@@ -164,6 +166,9 @@ describe('VendorPaymentNewPageComponent', () => {
   });
 
   it('announces the bills a 403 AP_PAYMENT_SELF_APPROVED_BILL names in a role="alert" (CAP:550 S14, AC 9)', () => {
+    const translate = TestBed.inject(TranslateService);
+    translate.setTranslation('en-US', enUS as TranslationObject);
+    translate.use('en-US');
     accountingServiceStub.executePayment.mockReturnValueOnce(
       throwError(
         () =>
@@ -187,9 +192,36 @@ describe('VendorPaymentNewPageComponent', () => {
     const alert = (fixture.nativeElement as HTMLElement).querySelector('[data-testid="self-approved-alert"]')!;
     expect(alert.getAttribute('role')).toBe('alert');
     expect(component.selfApproved()).toBe('INV-4471, INV-5520');
-    expect(alert.textContent).toContain('ACCOUNTING.VENDOR_PAYMENT_NEW.SELF_APPROVED');
+    // Both bill numbers reach the alert through the real en-US sentence (review B7).
+    expect(alert.textContent?.trim()).toBe('You approved INV-4471, INV-5520; someone else must pay them.');
     // The form stays, so the payment can leave those bills out.
     expect((fixture.nativeElement as HTMLElement).querySelector('form')).not.toBeNull();
+  });
+
+  it.each([
+    [422, 'AP_PAYMENT_METHOD_NOT_SUPPORTED', [], {}, 'ACCOUNTING.VENDOR_PAYMENT_NEW.REFUSAL.METHOD', {}],
+    [422, 'VENDOR_INACTIVE', [], {}, 'ACCOUNTING.VENDOR_PAYMENT_NEW.REFUSAL.VENDOR_INACTIVE', {}],
+    [409, 'VENDOR_PAYMENT_DETAILS_CHANGED', [{ field: 'bills', message: 'INV-1' }, { field: 'bills', message: 'INV-2' }], {}, 'ACCOUNTING.VENDOR_PAYMENT_NEW.REFUSAL.DETAILS_CHANGED', { bills: 'INV-1, INV-2' }],
+    [503, 'VENDOR_REPLICATION_PENDING', [], { 'Retry-After': '15' }, 'ACCOUNTING.VENDOR_PAYMENT_NEW.REFUSAL.REPLICATION_PENDING_AFTER', { seconds: 15 }],
+    [409, 'LOCK_TIMEOUT', [], {}, 'ACCOUNTING.VENDOR_PAYMENT_NEW.REFUSAL.LOCK_TIMEOUT', {}],
+    [400, 'VALIDATION_ERROR', [{ field: 'bankAccountId', message: 'required' }], {}, 'ACCOUNTING.VENDOR_PAYMENT_NEW.REFUSAL.PAY_FROM', {}],
+  ])('classifies %s %s by code (ruling rows 10–13)', (status, code, fieldErrors, headers, key, params) => {
+    accountingServiceStub.executePayment.mockReturnValueOnce(
+      throwError(() => new HttpErrorResponse({ status, error: { code, fieldErrors }, headers: new HttpHeaders(headers) })),
+    );
+    component.form.patchValue({ vendorId: 'vendor-1', grossAmount: 100, currency: 'USD', paymentMethod: 'ACH', paymentRef: 'ref-001' });
+    component.submit();
+    fixture.detectChanges();
+
+    expect(component.state()).toBe('refused');
+    expect(component.refusal()).toEqual({ key, params });
+    expect((fixture.nativeElement as HTMLElement).querySelector('[data-testid="payment-refusal"]')?.getAttribute('role')).toBe('alert');
+  });
+
+  it('never classifies VENDOR_REPLICATION_PENDING as an outcome that may have landed', () => {
+    expect(paymentRefusal(new HttpErrorResponse({ status: 503, error: { code: 'VENDOR_REPLICATION_PENDING' } }))?.key).toBe(
+      'ACCOUNTING.VENDOR_PAYMENT_NEW.REFUSAL.REPLICATION_PENDING',
+    );
   });
 
   it('keeps today’s handling for any other 403 (classified by code, not status)', () => {

@@ -69,6 +69,9 @@
     @if (state() === 'error' || state() === 'conflict') {
     <p class="error-text" role="alert">{{ 'ACCOUNTING.VENDOR_PAYMENT_NEW.ERROR' | translate }}</p>
     }
+    @if (state() === 'refused') {
+    <p class="error-text" role="alert" data-testid="payment-refusal">{{ (refusal()?.key ?? '') | translate: (refusal()?.params ?? {}) }}</p>
+    }
     @if (state() === 'self-approved') {
     <p class="error-text" role="alert" data-testid="self-approved-alert">
       @if (selfApproved(); as bills) {
