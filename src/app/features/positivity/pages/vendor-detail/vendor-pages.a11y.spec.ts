@@ -41,7 +41,8 @@ describe('Vendor pages a11y (rendered DOM)', () => {
   });
 
   async function render(url: string): Promise<{ harness: RouterTestingHarness; host: HTMLElement }> {
-    const service = vendorServiceMock(vendor(), [change({ requestedBy: 'clerk.a' })]);
+    // The stub signs in as clerk.b, who requested the pending change: the self-approval state renders (review B8).
+    const service = vendorServiceMock(vendor(), [change({ requestedBy: 'clerk.b' })]);
     service.listVendors.mockReturnValue(of(vendorPage([vendor(), vendor({ vendorId: 'v-2', vendorNumber: 'V-000124', status: 'INACTIVE' })])));
     TestBed.configureTestingModule({
       imports: [TranslateModule.forRoot()],
@@ -92,6 +93,8 @@ describe('Vendor pages a11y (rendered DOM)', () => {
       const { host } = await render(`/app/positivity/vendors/${VENDOR_ID}`);
 
       expect(host.querySelector('[data-testid="remit-pending"]')).not.toBeNull();
+      expect(host.querySelector('[data-testid="remit-approve-blocked"]')).not.toBeNull();
+      expect(host.querySelector('[data-testid="remit-approve"]')?.getAttribute('aria-disabled')).toBe('true');
       expect(await seriousViolations(host)).toEqual([]);
     });
 
@@ -103,6 +106,36 @@ describe('Vendor pages a11y (rendered DOM)', () => {
       await harness.fixture.whenStable();
 
       expect(host.querySelector('dialog')?.matches(':modal')).toBe(true);
+      expect(await seriousViolations(host)).toEqual([]);
+    });
+  }
+
+  for (const theme of THEMES) {
+    it(`detail: no serious violation in the status dialog (${theme} theme)`, async () => {
+      document.documentElement.setAttribute('data-theme', theme);
+      const { harness, host } = await render(`/app/positivity/vendors/${VENDOR_ID}`);
+      (host.querySelector('[data-testid="vendor-status-action"]') as HTMLButtonElement).click();
+      harness.detectChanges();
+      await harness.fixture.whenStable();
+
+      expect(host.querySelector('[data-testid="vendor-status-dialog"]')?.matches(':modal')).toBe(true);
+      expect(await seriousViolations(host)).toEqual([]);
+    });
+
+    it(`detail: no serious violation in the reveal dialog showing a number (${theme} theme)`, async () => {
+      document.documentElement.setAttribute('data-theme', theme);
+      const { harness, host } = await render(`/app/positivity/vendors/${VENDOR_ID}`);
+      (host.querySelector('[data-testid="vendor-tax-reveal"]') as HTMLButtonElement).click();
+      harness.detectChanges();
+      const reason = host.querySelector('[data-testid="vendor-tax-reveal-reason"]') as HTMLInputElement;
+      reason.value = 'Checking the W-9 form';
+      reason.dispatchEvent(new Event('input'));
+      harness.detectChanges();
+      (host.querySelector('[data-testid="vendor-tax-reveal-confirm"]') as HTMLButtonElement).click();
+      harness.detectChanges();
+      await harness.fixture.whenStable();
+
+      expect(host.querySelector('[data-testid="vendor-tax-revealed-number"]')).not.toBeNull();
       expect(await seriousViolations(host)).toEqual([]);
     });
   }

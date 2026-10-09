@@ -47,6 +47,12 @@ describe('Vendor copy (en-US)', () => {
     ['POSITIVITY.VENDORS.EMPTY_ADD', 'Add the first one.'],
     ['POSITIVITY.VENDORS.TAX.MASKED', '•••• {{last4}}'],
     ['POSITIVITY.VENDORS.TAX.ON_FILE', 'on file'],
+    ['POSITIVITY.VENDORS.CREATE.CHECK_FAILED', "We couldn't check whether the vendor was added. Search the vendor list before adding it again."],
+    ['POSITIVITY.VENDORS.ERROR.STALE_STATUS', "Someone else changed this vendor's status. Check it before trying again."],
+    [
+      'POSITIVITY.VENDORS.EDIT.CONSEQUENCE',
+      'Bills, purchase orders and payments entered from now on use these details, including payment terms and currency. It can take a moment for them to reach those pages.',
+    ],
   ])('%s', (key, expected) => {
     expect(at(enUS, key)).toBe(expected);
   });
@@ -67,6 +73,10 @@ describe('Vendor keys exist and are translated in every hand-maintained bundle',
     'POSITIVITY.VENDORS.STATUS_DIALOG.DEACTIVATE_CONSEQUENCE',
     'POSITIVITY.VENDORS.TAX.REVEAL_CONSEQUENCE',
     'POSITIVITY.PROFILES.VENDOR.BELONGS_TO',
+    'POSITIVITY.VENDORS.CREATE.CHECK_FAILED',
+    'POSITIVITY.VENDORS.ERROR.STALE_STATUS',
+    'POSITIVITY.VENDORS.EDIT.CONSEQUENCE',
+    'POSITIVITY.VENDORS.ERROR.FIELD.REVEAL_REASON',
   ];
 
   it.each(Object.entries(BUNDLES))('%s', (locale, bundle) => {

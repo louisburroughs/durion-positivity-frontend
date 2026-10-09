@@ -10753,7 +10753,7 @@
       "NEXT": "Next page",
       "PAGE_OF": "Page {{page}} of {{pages}}",
       "OPTION": "{{number}} · {{name}}",
-      "NOTE_HINT": "At least {{min}} characters.",
+      "NOTE_HINT": "{{min}} to {{max}} characters.",
       "TERMS": {
         "DUE_ON_RECEIPT": "Due on receipt",
         "NET": "Net {{days}}"
@@ -10793,7 +10793,7 @@
         "REVEAL": "Reveal the {{scheme}} number",
         "REVEAL_TITLE": "Reveal the {{scheme}} number",
         "REVEAL_REASON": "Why do you need the full number?",
-        "REVEAL_REASON_HINT": "{{min}} to {{max}} characters. Don't type the number itself.",
+        "REVEAL_REASON_HINT": "{{min}} to {{max}} characters on one line. Don't type the number itself.",
         "REVEAL_CONSEQUENCE": "Your name, roles and reason are recorded before the number is shown.",
         "REVEAL_CONFIRM": "Reveal",
         "REVEALED_LABEL": "Full number:",
@@ -10821,7 +10821,6 @@
         "DECIDED_BY": "Decided by",
         "REASON": "Reason",
         "VERIFICATION_LABEL": "How did you check this? For example, you called the vendor on a number you already had",
-        "VERIFICATION_HINT": "At least {{min}} characters.",
         "APPROVE": "Approve",
         "APPROVE_CONSEQUENCE": "Payments will go to the new address. Bills approved before the change need a second confirmation before they are paid.",
         "APPROVED": "Change approved. Payments now go to the new address.",
@@ -10864,19 +10863,23 @@
         "UNCONFIRMED": "We couldn't confirm the vendor was added. Check the vendors below before adding it again.",
         "CHECKING": "Checking whether the vendor was added…",
         "MATCHES": "These vendors match what you typed. If one is yours, open it instead of adding it again.",
-        "NO_MATCHES": "No matching vendor was found. You can try adding it again."
+        "NO_MATCHES": "No matching vendor was found. You can try adding it again.",
+        "CHECK_FAILED": "We couldn't check whether the vendor was added. Search the vendor list before adding it again.",
+        "CHECK_RETRY": "Check again"
       },
       "DETAIL": {
         "TITLE": "{{number}} · {{name}}",
         "TITLE_LOADING": "Vendor",
         "IDENTITY": "Details",
         "STATUS_CHANGED": "since {{when}}",
-        "STATUS_REASON": "Reason: {{reason}}"
+        "STATUS_REASON": "Reason: {{reason}}",
+        "READING": "Reading the vendor again…"
       },
       "EDIT": {
         "TITLE": "Edit vendor",
         "HINT": "The vendor number never changes. The remit-to changes through Request a change; the status through Deactivate or Reactivate.",
-        "SAVED": "Vendor saved."
+        "SAVED": "Vendor saved.",
+        "CONSEQUENCE": "Bills, purchase orders and payments entered from now on use these details, including payment terms and currency. It can take a moment for them to reach those pages."
       },
       "STATUS_DIALOG": {
         "DEACTIVATE": "Deactivate",
@@ -10934,8 +10937,11 @@
           "TAX_NUMBER": "Check the registration number.",
           "TAX_SCHEME": "Check the scheme.",
           "TAX_REGION": "Check the region.",
-          "TAX_REGISTRATION": "That registration can't be kept. Remove it and add it again."
-        }
+          "TAX_REGISTRATION": "That registration can't be kept. Remove it and add it again.",
+          "REVEAL_REASON": "Don't include the number in the reason. Use 10 to 500 characters on one line."
+        },
+        "STALE_STATUS": "Someone else changed this vendor's status. Check it before trying again.",
+        "REVEAL_RETRYABLE": "The number couldn't be revealed, and nothing is shown. Try again."
       }
     }
   },

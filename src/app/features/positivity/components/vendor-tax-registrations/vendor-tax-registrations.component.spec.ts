@@ -97,4 +97,78 @@ describe('VendorTaxRegistrationsComponent (#2621; ADR-0072 RESTRICTED)', () => {
     expect(q('[data-testid="vendor-tax-reveal-error"]')?.textContent?.trim()).toBe(enUS.POSITIVITY.VENDORS.ERROR.TAX_ID_UNREADABLE);
     expect(fixture.componentInstance.revealed()).toBeNull();
   });
+
+  it('B12: names the region in the Reveal button and dialog title', () => {
+    setup(true);
+    const buttons = all('[data-testid="vendor-tax-reveal"]').map(node => node.textContent?.trim());
+    expect(buttons).toEqual(['Reveal the EIN number', 'Reveal the GST (ON) number']);
+    fixture.componentInstance.openReveal(SHORT);
+    fixture.detectChanges();
+    expect(q(`#${fixture.componentInstance.id}-dialog-title`)?.textContent?.trim()).toBe('Reveal the GST (ON) number');
+  });
+
+  it('B5: the reason is one line of 10–500 characters; control characters are refused and the hint says so', () => {
+    setup(true);
+    fixture.componentInstance.openReveal(EIN);
+    fixture.detectChanges();
+    const input = q<HTMLInputElement>('[data-testid="vendor-tax-reveal-reason"]')!;
+    expect(input.tagName).toBe('INPUT');
+    expect(input.getAttribute('maxlength')).toBe('500');
+    expect(q(`#${fixture.componentInstance.id}-reason-hint`)?.textContent?.trim()).toBe(
+      "10 to 500 characters on one line. Don't type the number itself.",
+    );
+
+    fixture.componentInstance.reason.set('Checking the\tW-9 form');
+    fixture.detectChanges();
+    expect(q<HTMLButtonElement>('[data-testid="vendor-tax-reveal-confirm"]')!.disabled).toBe(true);
+    expect(input.getAttribute('aria-invalid')).toBe('true');
+    fixture.componentInstance.reveal();
+    expect(service.revealTaxRegistration).not.toHaveBeenCalled();
+  });
+
+  it('B1: a reason refused for containing the number is marked on the field', () => {
+    service.revealTaxRegistration.mockReturnValue(
+      throwError(() => httpError(400, 'VALIDATION_ERROR', { fieldErrors: [{ field: 'reason', message: 'contains the number' }] })),
+    );
+    setup(true);
+    fixture.componentInstance.openReveal(EIN);
+    fixture.componentInstance.reason.set('Number is 12-3456789');
+    fixture.componentInstance.reveal();
+    fixture.detectChanges();
+
+    expect(q('[data-testid="vendor-tax-reveal-reason"]')?.getAttribute('aria-invalid')).toBe('true');
+    expect(q('[data-testid="vendor-tax-reveal-reason-error"]')?.textContent?.trim()).toBe(
+      "Don't include the number in the reason. Use 10 to 500 characters on one line.",
+    );
+  });
+
+  it('A3/B6: a registration that is gone closes the dialog and asks the page to read again', () => {
+    service.revealTaxRegistration.mockReturnValue(throwError(() => httpError(404, 'SUPPLIER_VENDOR_TAX_REGISTRATION_NOT_FOUND')));
+    setup(true);
+    const emitted: unknown[] = [];
+    fixture.componentInstance.reread.subscribe(value => emitted.push(value));
+    fixture.componentInstance.openReveal(EIN);
+    fixture.componentInstance.reason.set('Checking the W-9 form');
+    fixture.componentInstance.reveal();
+    fixture.detectChanges();
+
+    expect(q('[data-testid="vendor-tax-dialog"]')).toBeNull();
+    expect(emitted).toEqual([{ key: 'POSITIVITY.VENDORS.ERROR.TAX_REGISTRATION_NOT_FOUND' }]);
+  });
+
+  it('A3/B6: a timeout keeps the dialog open with reveal-specific copy and no re-read', () => {
+    service.revealTaxRegistration.mockReturnValue(throwError(() => httpError(504)));
+    setup(true);
+    const emitted: unknown[] = [];
+    fixture.componentInstance.reread.subscribe(value => emitted.push(value));
+    fixture.componentInstance.openReveal(EIN);
+    fixture.componentInstance.reason.set('Checking the W-9 form');
+    fixture.componentInstance.reveal();
+    fixture.detectChanges();
+
+    expect(q('[data-testid="vendor-tax-reveal-error"]')?.textContent?.trim()).toBe(
+      "The number couldn't be revealed, and nothing is shown. Try again.",
+    );
+    expect(emitted).toEqual([]);
+  });
 });

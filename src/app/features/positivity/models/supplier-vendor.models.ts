@@ -18,6 +18,8 @@ export type VendorStatusFilter = VendorStatus | 'ALL';
 
 /** Reasons, notes and verification notes: at least this many characters once trimmed (S23). */
 export const VENDOR_NOTE_MIN = 10;
+/** …and at most this many (S23 `VendorFields.MAX_NOTE_LENGTH`). */
+export const VENDOR_NOTE_MAX = 1000;
 /** Upper bound the reveal endpoint accepts for its reason (#2621). */
 export const VENDOR_REVEAL_REASON_MAX = 500;
 /** Net terms run from 1 to 120 days (`NET1` … `NET120`). */

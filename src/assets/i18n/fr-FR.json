@@ -10753,7 +10753,7 @@
       "NEXT": "Page suivante",
       "PAGE_OF": "Page {{page}} sur {{pages}}",
       "OPTION": "{{number}} · {{name}}",
-      "NOTE_HINT": "Au moins {{min}} caractères.",
+      "NOTE_HINT": "De {{min}} à {{max}} caractères.",
       "TERMS": {
         "DUE_ON_RECEIPT": "Payable à réception",
         "NET": "Net {{days}}"
@@ -10793,7 +10793,7 @@
         "REVEAL": "Afficher le numéro {{scheme}}",
         "REVEAL_TITLE": "Afficher le numéro {{scheme}}",
         "REVEAL_REASON": "Pourquoi avez-vous besoin du numéro complet?",
-        "REVEAL_REASON_HINT": "De {{min}} à {{max}} caractères. N’écrivez pas le numéro lui-même.",
+        "REVEAL_REASON_HINT": "De {{min}} à {{max}} caractères sur une seule ligne. N’écrivez pas le numéro lui-même.",
         "REVEAL_CONSEQUENCE": "Votre nom, vos rôles et votre raison sont enregistrés avant que le numéro soit affiché.",
         "REVEAL_CONFIRM": "Afficher",
         "REVEALED_LABEL": "Numéro complet :",
@@ -10821,7 +10821,6 @@
         "DECIDED_BY": "Décidé par",
         "REASON": "Raison",
         "VERIFICATION_LABEL": "Comment l’avez-vous vérifié? Par exemple, vous avez appelé le fournisseur à un numéro que vous aviez déjà",
-        "VERIFICATION_HINT": "Au moins {{min}} caractères.",
         "APPROVE": "Approuver",
         "APPROVE_CONSEQUENCE": "Les paiements iront à la nouvelle adresse. Les factures approuvées avant le changement demandent une seconde confirmation avant d’être payées.",
         "APPROVED": "Changement approuvé. Les paiements vont maintenant à la nouvelle adresse.",
@@ -10864,19 +10863,23 @@
         "UNCONFIRMED": "Nous n’avons pas pu confirmer l’ajout du fournisseur. Vérifiez les fournisseurs ci-dessous avant de l’ajouter de nouveau.",
         "CHECKING": "Vérification de l’ajout du fournisseur…",
         "MATCHES": "Ces fournisseurs correspondent à ce que vous avez saisi. Si l’un d’eux est le vôtre, ouvrez-le plutôt que de l’ajouter de nouveau.",
-        "NO_MATCHES": "Aucun fournisseur correspondant n’a été trouvé. Vous pouvez essayer de l’ajouter de nouveau."
+        "NO_MATCHES": "Aucun fournisseur correspondant n’a été trouvé. Vous pouvez essayer de l’ajouter de nouveau.",
+        "CHECK_FAILED": "Nous n’avons pas pu vérifier si le fournisseur a été ajouté. Cherchez-le dans la liste des fournisseurs avant de l’ajouter de nouveau.",
+        "CHECK_RETRY": "Vérifier de nouveau"
       },
       "DETAIL": {
         "TITLE": "{{number}} · {{name}}",
         "TITLE_LOADING": "Fournisseur",
         "IDENTITY": "Détails",
         "STATUS_CHANGED": "depuis le {{when}}",
-        "STATUS_REASON": "Raison : {{reason}}"
+        "STATUS_REASON": "Raison : {{reason}}",
+        "READING": "Nouvelle lecture du fournisseur…"
       },
       "EDIT": {
         "TITLE": "Modifier le fournisseur",
         "HINT": "Le numéro de fournisseur ne change jamais. L’adresse de paiement change par Demander un changement; le statut par Désactiver ou Réactiver.",
-        "SAVED": "Fournisseur enregistré."
+        "SAVED": "Fournisseur enregistré.",
+        "CONSEQUENCE": "Les factures, les bons de commande et les paiements saisis à partir de maintenant utilisent ces renseignements, y compris les conditions de paiement et la devise. Il peut falloir un moment pour qu’ils parviennent à ces pages."
       },
       "STATUS_DIALOG": {
         "DEACTIVATE": "Désactiver",
@@ -10934,8 +10937,11 @@
           "TAX_NUMBER": "Vérifiez le numéro d’inscription.",
           "TAX_SCHEME": "Vérifiez le régime.",
           "TAX_REGION": "Vérifiez la région.",
-          "TAX_REGISTRATION": "Cette inscription ne peut pas être conservée. Retirez-la et ajoutez-la de nouveau."
-        }
+          "TAX_REGISTRATION": "Cette inscription ne peut pas être conservée. Retirez-la et ajoutez-la de nouveau.",
+          "REVEAL_REASON": "N’incluez pas le numéro dans la raison. Utilisez de 10 à 500 caractères sur une seule ligne."
+        },
+        "STALE_STATUS": "Quelqu’un d’autre a changé le statut de ce fournisseur. Vérifiez-le avant de réessayer.",
+        "REVEAL_RETRYABLE": "Le numéro n’a pas pu être affiché, et rien n’est montré. Réessayez."
       }
     }
   },

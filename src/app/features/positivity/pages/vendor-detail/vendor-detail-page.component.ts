@@ -1,5 +1,17 @@
 import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal, untracked } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  ElementRef,
+  Injector,
+  afterNextRender,
+  computed,
+  effect,
+  inject,
+  signal,
+  untracked,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
@@ -12,9 +24,9 @@ import { VendorFieldsComponent } from '../../components/vendor-fields/vendor-fie
 import { VendorFieldsGroup, registrationsOf, termsOf, vendorFieldsGroup } from '../../components/vendor-fields/vendor-form';
 import { VendorRemitToComponent } from '../../components/vendor-remit-to/vendor-remit-to.component';
 import { VendorTaxRegistrationsComponent } from '../../components/vendor-tax-registrations/vendor-tax-registrations.component';
-import { RemitToChange, VENDOR_NOTE_MIN, Vendor } from '../../models/supplier-vendor.models';
+import { RemitToChange, VENDOR_NOTE_MAX, VENDOR_NOTE_MIN, Vendor } from '../../models/supplier-vendor.models';
 import { SupplierVendorService } from '../../services/supplier-vendor.service';
-import { VendorFailure, classifyVendorError } from '../../utils/supplier-vendor-error.util';
+import { VENDOR_FIELD_PATH, VendorFailure, classifyVendorError } from '../../utils/supplier-vendor-error.util';
 import { VendorCopy, noteValid, paymentTermsCopy } from '../../utils/supplier-vendor.util';
 import { supplierIdentityKey } from '../../utils/supplier-identity.util';
 
@@ -58,6 +70,8 @@ export class VendorDetailPageComponent {
   private readonly service = inject(SupplierVendorService);
   private readonly auth = inject(AuthService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly injector = inject(Injector);
 
   private readonly identity = computed(() => supplierIdentityKey(this.auth.tenantId(), this.auth.currentUserClaims()?.sub));
   private trackedIdentity = this.identity();
@@ -69,6 +83,7 @@ export class VendorDetailPageComponent {
   private statusSeq = 0;
 
   readonly noteMin = VENDOR_NOTE_MIN;
+  readonly noteMax = VENDOR_NOTE_MAX;
   readonly termsCopy = paymentTermsCopy;
 
   readonly vendorId = signal<string | null>(null);
@@ -91,6 +106,8 @@ export class VendorDetailPageComponent {
   readonly statusReason = signal('');
   readonly statusBusy = signal(false);
   readonly statusError = signal<VendorCopy | null>(null);
+  /** The server refused the reason itself (`reason` field error), shown on the textarea. */
+  readonly statusReasonError = signal<string | null>(null);
 
   private readonly granted = (codes: readonly string[]) => () =>
     !this.auth.permissionsKnown() || this.auth.hasAnyPermission(codes);
@@ -108,7 +125,7 @@ export class VendorDetailPageComponent {
 
   /** Writes need the vendor read to be current and settled. */
   readonly vendorReady = computed(() => this.state() === 'ready' && this.vendor() !== null);
-  readonly statusReasonValid = computed(() => noteValid(this.statusReason()));
+  readonly statusReasonValid = computed(() => noteValid(this.statusReason(), VENDOR_NOTE_MIN, VENDOR_NOTE_MAX));
 
   constructor() {
     this.route.paramMap
@@ -148,11 +165,14 @@ export class VendorDetailPageComponent {
     this.editFieldErrors.set({});
     this.editError.set(null);
     this.editOpen.set(true);
+    // The Edit button is replaced by the form: land on its heading (ADR-0029 §8.7).
+    this.focusAfterRender('#vendor-edit-title');
   }
 
   cancelEdit(): void {
     if (this.saving()) return;
     this.editOpen.set(false);
+    this.focusAfterRender('[data-testid="vendor-edit"]');
   }
 
   saveEdit(event?: Event): void {
@@ -189,14 +209,23 @@ export class VendorDetailPageComponent {
           this.vendor.set(updated);
           this.editOpen.set(false);
           this.notice.set({ key: 'POSITIVITY.VENDORS.EDIT.SAVED' });
+          this.focusAfterRender('[data-testid="vendor-edit"]');
         },
         error: (err: unknown) => {
           if (seq !== this.saveSeq) return;
           this.saving.set(false);
-          const failure = classifyVendorError(err, 'POSITIVITY.VENDORS.ERROR.SAVE', WRITE_PERMISSION);
+          const failure = classifyVendorError(err, 'POSITIVITY.VENDORS.ERROR.SAVE', {
+            writePermission: WRITE_PERMISSION,
+            renders: field => VENDOR_FIELD_PATH.test(field),
+            retryableKey: 'POSITIVITY.VENDORS.ERROR.RETRYABLE',
+          });
           this.editError.set(failure.message);
           this.editFieldErrors.set(failure.fieldErrors);
-          if (failure.reread) this.rereadAfter(failure, vendorId);
+          if (failure.reread) {
+            this.rereadAfter(failure, vendorId);
+          } else {
+            this.focusAfterRender('[data-testid="vendor-edit-error"]');
+          }
         },
       });
   }
@@ -208,14 +237,17 @@ export class VendorDetailPageComponent {
     if (!this.canWrite() || !this.vendorReady() || !vendor) return;
     this.statusReason.set('');
     this.statusError.set(null);
+    this.statusReasonError.set(null);
     this.statusDialog.set(vendor.status === 'ACTIVE' ? 'DEACTIVATE' : 'REACTIVATE');
   }
 
+  /** Esc or Cancel; `ModalDialogDirective` returns focus to the control that opened it. */
   closeStatusDialog(): void {
     if (this.statusBusy()) return;
     this.statusDialog.set(null);
     this.statusReason.set('');
     this.statusError.set(null);
+    this.statusReasonError.set(null);
   }
 
   confirmStatus(event?: Event): void {
@@ -227,6 +259,7 @@ export class VendorDetailPageComponent {
     const seq = ++this.statusSeq;
     this.statusBusy.set(true);
     this.statusError.set(null);
+    this.statusReasonError.set(null);
     this.notice.set(null);
     const call =
       mode === 'DEACTIVATE' ? this.service.deactivateVendor(vendorId, reason) : this.service.reactivateVendor(vendorId, reason);
@@ -238,17 +271,25 @@ export class VendorDetailPageComponent {
         this.statusDialog.set(null);
         this.statusReason.set('');
         this.notice.set({ key: mode === 'DEACTIVATE' ? 'POSITIVITY.VENDORS.STATUS_DIALOG.DEACTIVATED' : 'POSITIVITY.VENDORS.STATUS_DIALOG.REACTIVATED' });
+        // The dialog returns focus to its opener, which stays (relabelled Reactivate / Deactivate).
       },
       error: (err: unknown) => {
         if (seq !== this.statusSeq) return;
         this.statusBusy.set(false);
-        const failure = classifyVendorError(err, 'POSITIVITY.VENDORS.ERROR.STATUS_CHANGE', WRITE_PERMISSION);
+        const failure = classifyVendorError(err, 'POSITIVITY.VENDORS.ERROR.STATUS_CHANGE', {
+          writePermission: WRITE_PERMISSION,
+          renders: field => field === 'reason',
+          retryableKey: 'POSITIVITY.VENDORS.ERROR.RETRYABLE',
+          staleKey: 'POSITIVITY.VENDORS.ERROR.STALE_STATUS',
+        });
         if (failure.reread) {
           this.statusDialog.set(null);
           this.rereadAfter(failure, vendorId);
           return;
         }
         this.statusError.set(failure.message);
+        this.statusReasonError.set(failure.fieldErrors['reason'] ?? null);
+        this.focusAfterRender('[data-testid="vendor-status-error"]');
       },
     });
   }
@@ -257,10 +298,16 @@ export class VendorDetailPageComponent {
     return (event.target as HTMLTextAreaElement).value;
   }
 
-  /** The remit-to section's write moved the server on: read everything again. */
+  /** The remit-to section's write moved the server on: say so, read everything again, and land on the notice. */
   onRemitChanged(notice: VendorCopy | null): void {
     this.notice.set(notice);
     this.reload();
+    this.focusNotice();
+  }
+
+  /** The reveal found the registration gone: say so and read the vendor again. */
+  onRevealReread(notice: VendorCopy): void {
+    this.onRemitChanged(notice);
   }
 
   // ── Reads ────────────────────────────────────────────────────────────────
@@ -314,11 +361,14 @@ export class VendorDetailPageComponent {
       // so the person checks and saves again.
       this.rereadIntoEdit(vendorId);
       this.loadChanges(vendorId);
+      this.focusAfterRender('[data-testid="vendor-edit-error"]');
       return;
     }
     this.notice.set(failure.message);
     this.editOpen.set(false);
     this.reload();
+    // The control that acted is gone or disabled during the re-read: land on the notice.
+    this.focusNotice();
   }
 
   private rereadIntoEdit(vendorId: string): void {
@@ -363,5 +413,25 @@ export class VendorDetailPageComponent {
     this.state.set('idle');
     this.errorKey.set(null);
     this.reload();
+  }
+
+  private focusNotice(): void {
+    this.focusAfterRender('[data-testid="vendor-notice-text"]', '#vendor-detail-title');
+  }
+
+  /** After the next render, focus the first of `selectors` present in this page (ADR-0029 §8.7). */
+  private focusAfterRender(...selectors: string[]): void {
+    afterNextRender(
+      () => {
+        for (const selector of selectors) {
+          const element = this.host.nativeElement.querySelector<HTMLElement>(selector);
+          if (element) {
+            element.focus();
+            return;
+          }
+        }
+      },
+      { injector: this.injector },
+    );
   }
 }

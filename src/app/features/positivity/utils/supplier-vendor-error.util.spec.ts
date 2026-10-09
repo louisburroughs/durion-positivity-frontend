@@ -1,6 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { describe, expect, it } from 'vitest';
-import { classifyVendorError } from './supplier-vendor-error.util';
+import { REMIT_FIELD_PATH, VENDOR_FIELD_PATH, classifyVendorError } from './supplier-vendor-error.util';
 
 const err = (status: number, body: unknown = null) => new HttpErrorResponse({ status, error: body });
 const FALLBACK = 'POSITIVITY.VENDORS.ERROR.SAVE';
@@ -58,7 +58,7 @@ describe('classifyVendorError (story "Codes classified")', () => {
   });
 
   it('a 403 names the write permission when given one', () => {
-    expect(classifyVendorError(err(403), FALLBACK, 'supplier:vendor:write').message).toEqual({
+    expect(classifyVendorError(err(403), FALLBACK, { writePermission: 'supplier:vendor:write' }).message).toEqual({
       key: 'POSITIVITY.VENDORS.ERROR.FORBIDDEN_WRITE',
       params: { permission: 'supplier:vendor:write' },
     });
@@ -68,6 +68,56 @@ describe('classifyVendorError (story "Codes classified")', () => {
   it('a timeout or 5xx re-reads before a retry is offered', () => {
     expect(classifyVendorError(err(0), FALLBACK)).toMatchObject({ code: 'RETRYABLE', reread: true });
     expect(classifyVendorError(err(504), FALLBACK)).toMatchObject({ code: 'RETRYABLE', reread: true });
+  });
+
+  it('a read’s timeout uses its own message, never the write "couldn’t confirm" copy (review A3)', () => {
+    expect(classifyVendorError(err(503), 'POSITIVITY.VENDORS.ERROR.LOAD_LIST').message).toEqual({ key: 'POSITIVITY.VENDORS.ERROR.LOAD_LIST' });
+    expect(classifyVendorError(err(503), FALLBACK, { retryableKey: 'POSITIVITY.VENDORS.ERROR.RETRYABLE' }).message).toEqual({
+      key: 'POSITIVITY.VENDORS.ERROR.RETRYABLE',
+    });
+  });
+
+  it('a surface can name its own stale message (status dialog, review B10)', () => {
+    expect(
+      classifyVendorError(err(409, { code: 'CONFLICT' }), FALLBACK, { staleKey: 'POSITIVITY.VENDORS.ERROR.STALE_STATUS' }).message,
+    ).toEqual({ key: 'POSITIVITY.VENDORS.ERROR.STALE_STATUS' });
+  });
+
+  describe('only paths the surface renders count (review B1)', () => {
+    const dialog = { renders: (field: string) => field === 'reason' };
+
+    it('VALIDATION_ERROR on reason marks the reason', () => {
+      const failure = classifyVendorError(err(400, { code: 'VALIDATION_ERROR', fieldErrors: [{ field: 'reason', message: 'x' }] }), FALLBACK, dialog);
+      expect(failure.message.key).toBe('POSITIVITY.VENDORS.ERROR.VALIDATION');
+      expect(failure.fieldErrors).toEqual({ reason: 'POSITIVITY.VENDORS.ERROR.FIELD.NOTE' });
+    });
+
+    it('JUSTIFICATION_REQUIRED marks the reason, with a surface override', () => {
+      const failure = classifyVendorError(err(400, { code: 'JUSTIFICATION_REQUIRED' }), FALLBACK, {
+        ...dialog,
+        fieldKeys: { reason: 'POSITIVITY.VENDORS.ERROR.FIELD.REVEAL_REASON' },
+      });
+      expect(failure.fieldErrors).toEqual({ reason: 'POSITIVITY.VENDORS.ERROR.FIELD.REVEAL_REASON' });
+    });
+
+    it('taxRegistrations[0].registrationId counts where the vendor fields render it', () => {
+      const failure = classifyVendorError(
+        err(400, { code: 'VALIDATION_ERROR', fieldErrors: [{ field: 'taxRegistrations[0].registrationId', message: 'x' }] }),
+        FALLBACK,
+        { renders: field => VENDOR_FIELD_PATH.test(field) },
+      );
+      expect(failure.fieldErrors).toEqual({ 'taxRegistrations[0].registrationId': 'POSITIVITY.VENDORS.ERROR.FIELD.TAX_REGISTRATION' });
+    });
+
+    it('an unrendered or unknown path falls back to the surface’s own message, with nothing marked', () => {
+      const failure = classifyVendorError(
+        err(400, { code: 'VALIDATION_ERROR', fieldErrors: [{ field: 'mystery', message: 'x' }, { field: 'legalName', message: 'x' }] }),
+        FALLBACK,
+        { renders: field => field === 'reason' || REMIT_FIELD_PATH.test(field) },
+      );
+      expect(failure.message).toEqual({ key: FALLBACK });
+      expect(failure.fieldErrors).toEqual({});
+    });
   });
 
   it('an unknown code falls back to the HTTP status', () => {

@@ -10753,7 +10753,7 @@
       "NEXT": "Página siguiente",
       "PAGE_OF": "Página {{page}} de {{pages}}",
       "OPTION": "{{number}} · {{name}}",
-      "NOTE_HINT": "Al menos {{min}} caracteres.",
+      "NOTE_HINT": "De {{min}} a {{max}} caracteres.",
       "TERMS": {
         "DUE_ON_RECEIPT": "Pago al recibir",
         "NET": "Neto {{days}}"
@@ -10793,7 +10793,7 @@
         "REVEAL": "Mostrar el número {{scheme}}",
         "REVEAL_TITLE": "Mostrar el número {{scheme}}",
         "REVEAL_REASON": "¿Por qué necesita el número completo?",
-        "REVEAL_REASON_HINT": "De {{min}} a {{max}} caracteres. No escriba el número.",
+        "REVEAL_REASON_HINT": "De {{min}} a {{max}} caracteres en una sola línea. No escriba el número.",
         "REVEAL_CONSEQUENCE": "Su nombre, sus roles y su motivo se registran antes de mostrar el número.",
         "REVEAL_CONFIRM": "Mostrar",
         "REVEALED_LABEL": "Número completo:",
@@ -10821,7 +10821,6 @@
         "DECIDED_BY": "Decidido por",
         "REASON": "Motivo",
         "VERIFICATION_LABEL": "¿Cómo lo verificó? Por ejemplo, llamó al proveedor a un número que ya tenía",
-        "VERIFICATION_HINT": "Al menos {{min}} caracteres.",
         "APPROVE": "Aprobar",
         "APPROVE_CONSEQUENCE": "Los pagos irán a la nueva dirección. Las facturas aprobadas antes del cambio necesitan una segunda confirmación antes de pagarse.",
         "APPROVED": "Cambio aprobado. Los pagos ahora van a la nueva dirección.",
@@ -10864,19 +10863,23 @@
         "UNCONFIRMED": "No pudimos confirmar que el proveedor se agregó. Revise los proveedores de abajo antes de agregarlo otra vez.",
         "CHECKING": "Comprobando si el proveedor se agregó…",
         "MATCHES": "Estos proveedores coinciden con lo que escribió. Si uno es el suyo, ábralo en lugar de agregarlo otra vez.",
-        "NO_MATCHES": "No se encontró ningún proveedor que coincida. Puede intentar agregarlo otra vez."
+        "NO_MATCHES": "No se encontró ningún proveedor que coincida. Puede intentar agregarlo otra vez.",
+        "CHECK_FAILED": "No pudimos comprobar si el proveedor se agregó. Búsquelo en la lista de proveedores antes de agregarlo otra vez.",
+        "CHECK_RETRY": "Comprobar otra vez"
       },
       "DETAIL": {
         "TITLE": "{{number}} · {{name}}",
         "TITLE_LOADING": "Proveedor",
         "IDENTITY": "Detalles",
         "STATUS_CHANGED": "desde {{when}}",
-        "STATUS_REASON": "Motivo: {{reason}}"
+        "STATUS_REASON": "Motivo: {{reason}}",
+        "READING": "Volviendo a leer el proveedor…"
       },
       "EDIT": {
         "TITLE": "Editar proveedor",
         "HINT": "El número de proveedor nunca cambia. La dirección de pago cambia con Solicitar un cambio; el estado con Desactivar o Reactivar.",
-        "SAVED": "Proveedor guardado."
+        "SAVED": "Proveedor guardado.",
+        "CONSEQUENCE": "Las facturas, las órdenes de compra y los pagos que se registren a partir de ahora usan estos datos, incluidas las condiciones de pago y la moneda. Puede tardar un momento en llegar a esas páginas."
       },
       "STATUS_DIALOG": {
         "DEACTIVATE": "Desactivar",
@@ -10934,8 +10937,11 @@
           "TAX_NUMBER": "Revise el número de registro.",
           "TAX_SCHEME": "Revise el esquema.",
           "TAX_REGION": "Revise la región.",
-          "TAX_REGISTRATION": "Ese registro no se puede conservar. Quítelo y agréguelo otra vez."
-        }
+          "TAX_REGISTRATION": "Ese registro no se puede conservar. Quítelo y agréguelo otra vez.",
+          "REVEAL_REASON": "No incluya el número en el motivo. Use de 10 a 500 caracteres en una sola línea."
+        },
+        "STALE_STATUS": "Otra persona cambió el estado de este proveedor. Revíselo antes de intentarlo de nuevo.",
+        "REVEAL_RETRYABLE": "No se pudo mostrar el número y no se muestra nada. Intente de nuevo."
       }
     }
   },

@@ -1,3 +1,4 @@
+import { formatDate } from '@angular/common';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, ParamMap, convertToParamMap, provideRouter } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -68,6 +69,7 @@ describe('VendorDetailPageComponent (#469 item 5)', () => {
     expect(q('[data-testid="vendor-terms-value"]')?.textContent?.trim()).toBe('Net 30');
     expect(q('[data-testid="vendor-status-badge"]')?.textContent?.trim()).toBe('Active');
     expect(q('[data-testid="vendor-tax-masked"]')?.textContent?.replace(/\s+/g, ' ').trim()).toBe('EIN •••• 6789');
+    expect(q('[data-testid="remit-current-email"]')?.textContent?.trim()).toBe('Remittance email: ap@acme.example');
   });
 
   it('AC 10: no UUID as text, no bank field, and markup in a legal name renders as text', async () => {
@@ -86,7 +88,9 @@ describe('VendorDetailPageComponent (#469 item 5)', () => {
       of(vendor({ status: 'INACTIVE', statusChangedAt: '2026-10-02T10:00:00Z', statusReason: 'Stopped trading with them' })),
     );
     await setup();
-    expect(q('[data-testid="vendor-status-changed"]')).toBeTruthy();
+    expect(q('[data-testid="vendor-status-changed"]')?.textContent?.trim()).toBe(
+      `since ${formatDate('2026-10-02T10:00:00Z', 'medium', 'en-US')}`,
+    );
     expect(q('[data-testid="vendor-status-reason"]')?.textContent).toContain('Stopped trading with them');
     expect(q('[data-testid="vendor-status-action"]')?.textContent?.trim()).toBe('Reactivate');
   });
@@ -140,6 +144,25 @@ describe('VendorDetailPageComponent (#469 item 5)', () => {
       });
       expect(q('[data-testid="vendor-edit-form"]')).toBeNull();
       expect(q('[data-testid="vendor-edit-form"] [data-testid="vendor-number"]')).toBeNull();
+    });
+
+    it('B4: the consequence precedes Save', async () => {
+      await setup();
+      click('[data-testid="vendor-edit"]');
+      const consequence = q('[data-testid="vendor-edit-consequence"]')!;
+      expect(consequence.textContent?.trim()).toBe(
+        'Bills, purchase orders and payments entered from now on use these details, including payment terms and currency. It can take a moment for them to reach those pages.',
+      );
+      expect(consequence.compareDocumentPosition(q('[data-testid="vendor-edit-save"]')!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
+
+    it('B7: saveEdit() refuses a valid form once the write permission is revoked', async () => {
+      await setup();
+      click('[data-testid="vendor-edit"]');
+      expect(fixture.componentInstance.editForm().valid).toBe(true);
+      auth.grant('supplier:vendor:read');
+      fixture.componentInstance.saveEdit();
+      expect(service.updateVendor).not.toHaveBeenCalled();
     });
 
     it('never pre-fills a stored tax-registration number', async () => {
@@ -210,7 +233,146 @@ describe('VendorDetailPageComponent (#469 item 5)', () => {
 
       expect(q('[data-testid="vendor-status-dialog"]')).toBeNull();
       expect(service.getVendorDetail).toHaveBeenCalledTimes(2);
-      expect(q('[data-testid="vendor-notice"]')?.textContent?.trim()).toBe('Someone else changed this vendor. Check and save again.');
+      expect(q('[data-testid="vendor-notice"]')?.textContent?.trim()).toBe(
+        "Someone else changed this vendor's status. Check it before trying again.",
+      );
+    });
+
+    it('B10/B3: a 409 says the status changed and lands focus on the notice', async () => {
+      service.deactivateVendor.mockReturnValue(throwError(() => httpError(409, 'CONFLICT')));
+      await setup();
+      document.body.appendChild(el());
+      q<HTMLButtonElement>('[data-testid="vendor-status-action"]')!.focus();
+      click('[data-testid="vendor-status-action"]');
+      type(q('[data-testid="vendor-status-reason-input"]'), 'Stopped trading with them');
+      fixture.detectChanges();
+      click('[data-testid="vendor-status-confirm"]');
+      await fixture.whenStable();
+
+      expect(document.activeElement).toBe(q('[data-testid="vendor-notice-text"]'));
+      el().remove();
+    });
+
+    it('a success returns focus to the (relabelled) opener', async () => {
+      await setup();
+      document.body.appendChild(el());
+      const opener = q<HTMLButtonElement>('[data-testid="vendor-status-action"]')!;
+      opener.focus();
+      click('[data-testid="vendor-status-action"]');
+      type(q('[data-testid="vendor-status-reason-input"]'), 'Stopped trading with them');
+      fixture.detectChanges();
+      click('[data-testid="vendor-status-confirm"]');
+      await fixture.whenStable();
+
+      expect(document.activeElement).toBe(q('[data-testid="vendor-status-action"]'));
+      expect(q('[data-testid="vendor-status-action"]')?.textContent?.trim()).toBe('Reactivate');
+      el().remove();
+    });
+
+    it('B1: a reason the server refuses is marked on the textarea', async () => {
+      service.deactivateVendor.mockReturnValue(
+        throwError(() => httpError(400, 'VALIDATION_ERROR', { fieldErrors: [{ field: 'reason', message: 'too long' }] })),
+      );
+      await setup();
+      click('[data-testid="vendor-status-action"]');
+      type(q('[data-testid="vendor-status-reason-input"]'), 'Stopped trading with them');
+      fixture.detectChanges();
+      click('[data-testid="vendor-status-confirm"]');
+
+      const textarea = q('[data-testid="vendor-status-reason-input"]')!;
+      expect(textarea.getAttribute('aria-invalid')).toBe('true');
+      expect(textarea.getAttribute('aria-describedby')).toContain('vendor-status-reason-error');
+      expect(q('#vendor-status-reason-error')?.textContent?.trim()).toBe('Write at least 10 characters.');
+      expect(q('[data-testid="vendor-status-error"]')?.textContent?.trim()).toBe(
+        'Some fields need attention. Check them and try again.',
+      );
+    });
+
+    it('B5/B9: the reason allows up to 1000 characters and the hint and title say so in full', async () => {
+      await setup();
+      click('[data-testid="vendor-status-action"]');
+      expect(q('[data-testid="vendor-status-reason-input"]')?.getAttribute('maxlength')).toBe('1000');
+      expect(q('#vendor-status-reason-hint')?.textContent?.trim()).toBe('10 to 1000 characters.');
+      expect(q('#vendor-status-dialog-title')?.textContent?.trim()).toBe('Deactivate vendor V-000123');
+    });
+
+    it('B7: confirmStatus() refuses a valid reason once the write permission is revoked', async () => {
+      await setup();
+      click('[data-testid="vendor-status-action"]');
+      type(q('[data-testid="vendor-status-reason-input"]'), 'Stopped trading with them');
+      fixture.detectChanges();
+      auth.grant('supplier:vendor:read');
+      fixture.componentInstance.confirmStatus();
+      expect(service.deactivateVendor).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('B3: focus (ADR-0029 §8.7)', () => {
+    it('Edit lands on the form heading; Cancel returns to Edit', async () => {
+      await setup();
+      document.body.appendChild(el());
+      q<HTMLButtonElement>('[data-testid="vendor-edit"]')!.focus();
+      click('[data-testid="vendor-edit"]');
+      await fixture.whenStable();
+      expect(document.activeElement).toBe(q('#vendor-edit-title'));
+
+      click('[data-testid="vendor-edit-cancel"]');
+      await fixture.whenStable();
+      expect(document.activeElement).toBe(q('[data-testid="vendor-edit"]'));
+      el().remove();
+    });
+
+    it('Save returns to Edit', async () => {
+      await setup();
+      document.body.appendChild(el());
+      click('[data-testid="vendor-edit"]');
+      click('[data-testid="vendor-edit-save"]');
+      await fixture.whenStable();
+      expect(document.activeElement).toBe(q('[data-testid="vendor-edit"]'));
+      el().remove();
+    });
+
+    it('a stale Save keeps the form and lands on its message', async () => {
+      service.updateVendor.mockReturnValue(throwError(() => httpError(409, 'CONFLICT')));
+      await setup();
+      document.body.appendChild(el());
+      click('[data-testid="vendor-edit"]');
+      click('[data-testid="vendor-edit-save"]');
+      await fixture.whenStable();
+      expect(document.activeElement).toBe(q('[data-testid="vendor-edit-error"]'));
+      el().remove();
+    });
+
+    it('a remit-to decision that removes its controls lands on the notice', async () => {
+      service.listRemitChanges.mockReturnValue(of([change({ requestedBy: 'clerk.a' })]));
+      await setup();
+      document.body.appendChild(el());
+      service.listRemitChanges.mockReturnValue(of([change({ status: 'APPROVED' })]));
+      type(q('[data-testid="remit-verification"]'), 'Called them on the number on file');
+      fixture.detectChanges();
+      q<HTMLButtonElement>('[data-testid="remit-approve"]')!.focus();
+      click('[data-testid="remit-approve"]');
+      await fixture.whenStable();
+
+      expect(q('[data-testid="remit-approve"]')).toBeNull();
+      expect(document.activeElement).toBe(q('[data-testid="vendor-notice-text"]'));
+      el().remove();
+    });
+
+    it('during a re-read Edit stays focusable, aria-disabled with the reason, and refuses', async () => {
+      await setup();
+      const pending = new Subject<Vendor>();
+      service.getVendorDetail.mockReturnValue(pending);
+      fixture.componentInstance.reload();
+      fixture.detectChanges();
+
+      const edit = q<HTMLButtonElement>('[data-testid="vendor-edit"]')!;
+      expect(edit.disabled).toBe(false);
+      expect(edit.getAttribute('aria-disabled')).toBe('true');
+      expect(edit.getAttribute('aria-describedby')).toBe('vendor-reading-reason');
+      expect(q('#vendor-reading-reason')?.textContent?.trim()).toBe('Reading the vendor again…');
+      edit.click();
+      expect(fixture.componentInstance.editOpen()).toBe(false);
     });
   });
 
@@ -291,6 +453,27 @@ describe('VendorDetailPageComponent (#469 item 5)', () => {
     expect(q('[data-testid="remit-version"]')?.textContent).toContain('Version 2');
     expect(q('[data-testid="remit-pending"]')).toBeNull();
     expect(q('[data-testid="vendor-notice"]')?.textContent?.trim()).toBe('Change approved. Payments now go to the new address.');
+  });
+
+  it('A3/B6: a reveal whose registration is gone closes, says so and reads the vendor again', async () => {
+    service.revealTaxRegistration.mockReturnValue(throwError(() => httpError(404, 'SUPPLIER_VENDOR_TAX_REGISTRATION_NOT_FOUND')));
+    await setup();
+    click('[data-testid="vendor-tax-reveal"]');
+    type(q('[data-testid="vendor-tax-reveal-reason"]'), 'Checking the W-9 form');
+    fixture.detectChanges();
+    click('[data-testid="vendor-tax-reveal-confirm"]');
+
+    expect(q('[data-testid="vendor-tax-dialog"]')).toBeNull();
+    expect(service.getVendorDetail).toHaveBeenCalledTimes(2);
+    expect(q('[data-testid="vendor-notice"]')?.textContent?.trim()).toBe(
+      'That registration no longer exists. The vendor was read again.',
+    );
+  });
+
+  it('A3: a failed vendor read says the vendor could not be loaded, not that a change was unconfirmed', async () => {
+    service.getVendorDetail.mockReturnValue(throwError(() => httpError(503)));
+    await setup();
+    expect(q('[data-testid="vendor-detail-error"]')?.textContent).toContain('This vendor could not be loaded.');
   });
 
   it('a pending change is shown with Approve and Reject; Request a change is hidden (AC 6)', async () => {

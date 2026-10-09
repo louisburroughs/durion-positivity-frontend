@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { Subject, throwError } from 'rxjs';
+import { Subject, of, throwError } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import enUS from '../../../../../assets/i18n/en-US.json';
 import { Vendor, VendorCreateInput } from '../../models/supplier-vendor.models';
@@ -187,6 +187,16 @@ describe('VendorCreatePageComponent (#469 items 3–4)', () => {
     expect(fixture.componentInstance.state()).toBe('error');
   });
 
+  it('B9: a 403 names the write permission in full', async () => {
+    service.createVendor.mockReturnValue(throwError(() => httpError(403)));
+    await setup();
+    fillRequired();
+    submit();
+    expect(q('[data-testid="vendor-create-error"]')?.textContent?.trim()).toBe(
+      "You don't have permission to do this. It needs supplier:vendor:write.",
+    );
+  });
+
   it('one submit in flight (§8.2)', async () => {
     const pending = new Subject<Vendor>();
     service.createVendor.mockReturnValue(pending);
@@ -199,7 +209,7 @@ describe('VendorCreatePageComponent (#469 items 3–4)', () => {
     expect(q<HTMLButtonElement>('[data-testid="vendor-create-submit"]')!.disabled).toBe(true);
   });
 
-  it('a timeout re-reads matching vendors before Add vendor is offered again', async () => {
+  it('a timeout re-reads matching vendors before Add vendor is offered again, keeping exact matches only', async () => {
     const check = new Subject<ReturnType<typeof vendorPage>>();
     service.createVendor.mockReturnValue(throwError(() => httpError(504)));
     service.listVendors.mockReturnValue(check);
@@ -207,19 +217,96 @@ describe('VendorCreatePageComponent (#469 items 3–4)', () => {
     fillRequired();
     submit();
 
-    expect(service.listVendors).toHaveBeenCalledWith('Acme Tire', undefined, 0, 10);
+    expect(service.listVendors).toHaveBeenCalledWith('Acme Tire', undefined, 0, 200);
+    expect(q('[data-testid="vendor-create-error"]')?.textContent?.trim()).toBe(enUS.POSITIVITY.VENDORS.CREATE.UNCONFIRMED);
     expect(q<HTMLButtonElement>('[data-testid="vendor-create-submit"]')!.disabled).toBe(true);
 
-    check.next(vendorPage([vendor()]));
+    check.next(vendorPage([vendor(), vendor({ vendorId: 'other', vendorNumber: 'V-000009', displayName: 'Acme Tire & Wheel', legalName: 'Acme Tire & Wheel Inc' })]));
+    check.complete();
     fixture.detectChanges();
-    expect(q('[data-testid="vendor-create-matches"] a')?.getAttribute('href')).toBe(`/app/positivity/vendors/${VENDOR_ID}`);
+    const links = [...el().querySelectorAll('[data-testid="vendor-create-matches"] a')];
+    expect(links.map(link => link.getAttribute('href'))).toEqual([`/app/positivity/vendors/${VENDOR_ID}`]);
     expect(q<HTMLButtonElement>('[data-testid="vendor-create-submit"]')!.disabled).toBe(false);
   });
 
-  it('without supplier:vendor:write the form is absent and submit() refuses (ADR-0040 §6a)', async () => {
+  it('reads the last page too when the matches span pages: a new vendor takes the highest number', async () => {
+    service.createVendor.mockReturnValue(throwError(() => httpError(504)));
+    service.listVendors
+      .mockReturnValueOnce(of(vendorPage([vendor({ vendorId: 'a', displayName: 'Acme Tire Co', legalName: 'Acme Tire Co' })], { totalPages: 3, totalElements: 450 })))
+      .mockReturnValueOnce(of(vendorPage([vendor()], { page: 2, totalPages: 3, totalElements: 450 })));
+    await setup();
+    fillRequired();
+    submit();
+
+    expect(service.listVendors).toHaveBeenLastCalledWith('Acme Tire', undefined, 2, 200);
+    expect(q('[data-testid="vendor-create-matches"] a')?.getAttribute('href')).toBe(`/app/positivity/vendors/${VENDOR_ID}`);
+  });
+
+  it('A1: a failed check never says "no match"; Add stays blocked until Check again succeeds', async () => {
+    service.createVendor.mockReturnValue(throwError(() => httpError(504)));
+    service.listVendors.mockReturnValueOnce(throwError(() => httpError(503))).mockReturnValueOnce(of(vendorPage([])));
+    await setup();
+    document.body.appendChild(el());
+    fillRequired();
+    submit();
+    await fixture.whenStable();
+
+    const failed = q('[data-testid="vendor-create-check-failed"]');
+    expect(failed?.textContent).toContain(enUS.POSITIVITY.VENDORS.CREATE.CHECK_FAILED);
+    expect(el().textContent).not.toContain(enUS.POSITIVITY.VENDORS.CREATE.NO_MATCHES);
+    expect(q<HTMLButtonElement>('[data-testid="vendor-create-submit"]')!.disabled).toBe(true);
+    expect(document.activeElement).toBe(failed);
+    fixture.componentInstance.submit();
+    expect(service.createVendor).toHaveBeenCalledTimes(1);
+
+    q<HTMLButtonElement>('[data-testid="vendor-create-check-retry"]')!.click();
+    fixture.detectChanges();
+    expect(q('[data-testid="vendor-create-check-failed"]')).toBeNull();
+    expect(q('[data-testid="vendor-create-matches"]')?.textContent).toContain(enUS.POSITIVITY.VENDORS.CREATE.NO_MATCHES);
+    expect(q<HTMLButtonElement>('[data-testid="vendor-create-submit"]')!.disabled).toBe(false);
+    el().remove();
+  });
+
+  it('A2: a tid|sub change drops everything typed, including tax numbers', async () => {
+    service.createVendor.mockReturnValue(throwError(() => httpError(409, 'SUPPLIER_VENDOR_NUMBER_TAKEN')));
+    await setup();
+    fillRequired();
+    type(q('[data-testid="vendor-number"]'), 'V-000123');
+    q<HTMLButtonElement>('[data-testid="vendor-tax-add"]')!.click();
+    fixture.detectChanges();
+    type(q('[data-testid="vendor-tax-scheme"]'), 'EIN');
+    type(q('[data-testid="vendor-tax-number"]'), '12-3456789');
+    type(q('[data-testid="remit-payeeName"]'), 'Acme Tire Ltd');
+    submit();
+    expect(q('[data-testid="vendor-number-error"]')).toBeTruthy();
+
+    auth.claims.set({ sub: 'someone.else' });
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const page = fixture.componentInstance;
+    expect(page.vendorNumber.value).toBe('');
+    expect(page.fields().getRawValue().legalName).toBe('');
+    expect(page.fields().controls.taxRegistrations.length).toBe(0);
+    expect(page.remitTo().getRawValue().payeeName).toBe('');
+    expect(page.submitted()).toBe(false);
+    expect(page.takenNumber()).toBeNull();
+    expect(q('[data-testid="vendor-tax-number"]')).toBeNull();
+    expect(q<HTMLInputElement>('[data-testid="vendor-legal-name"]')?.value).toBe('');
+    expect(el().textContent).not.toContain('12-3456789');
+  });
+
+  it('without supplier:vendor:write the form is absent', async () => {
     auth.grant('supplier:vendor:read');
     await setup();
     expect(q('[data-testid="vendor-create-form"]')).toBeNull();
+  });
+
+  it('B7: submit() refuses a valid form once the write permission is revoked (ADR-0040 §6a)', async () => {
+    await setup();
+    fillRequired();
+    auth.grant('supplier:vendor:read');
     fixture.componentInstance.submit();
     expect(service.createVendor).not.toHaveBeenCalled();
   });

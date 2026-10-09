@@ -81,25 +81,69 @@ function failure(code: VendorFailureCode, message: VendorCopy, reread = false, f
   return { code, message, fieldErrors, reread };
 }
 
+/** The vendor fields Add vendor and Edit render (`app-vendor-fields`). */
+export const VENDOR_FIELD_PATH = /^(legalName|displayName|defaultPaymentTerms|defaultCurrency|taxRegistrations\[\d+\]\.(number|scheme|region|registrationId))$/;
+/** The remit-to fields Add vendor and Request a change render (`app-vendor-remit-to-fields`). */
+export const REMIT_FIELD_PATH = /^remitTo\.(payeeName|addressLine1|addressLine2|city|region|postalCode|countryCode|remittanceEmail)$/;
+
+/** How one surface classifies a failure. */
+export interface VendorErrorOptions {
+  /** The permission the operation enforces, named by a `403` (story "Codes classified"). Writes only. */
+  readonly writePermission?: string;
+  /**
+   * The payload paths this surface renders a message for. A field error on any
+   * other path is dropped, and when none is left the surface's own message
+   * shows — never "some fields need attention" with nothing marked (review B1).
+   */
+  readonly renders?: (field: string) => boolean;
+  /** Per-path message overrides for this surface (e.g. the reveal reason). */
+  readonly fieldKeys?: Readonly<Record<string, string>>;
+  /**
+   * The message for a timeout or 5xx. Defaults to `fallbackKey`, so a read never
+   * claims a change could not be confirmed; writes pass their own copy.
+   */
+  readonly retryableKey?: string;
+  /** The message for a stale 409 `CONFLICT` (Edit's and the status dialog's differ). */
+  readonly staleKey?: string;
+}
+
+/** Keep only the field errors the surface renders, with its overrides applied. */
+function renderedOnly(fieldErrors: Record<string, string>, options: VendorErrorOptions): Record<string, string> {
+  const rendered: Record<string, string> = {};
+  for (const [field, key] of Object.entries(fieldErrors)) {
+    if (options.renders && !options.renders(field)) continue;
+    rendered[field] = options.fieldKeys?.[field] ?? key;
+  }
+  return rendered;
+}
+
+/** A field-level failure: the generic "check the fields" only when one is actually marked. */
+function fieldFailure(code: VendorFailureCode, fieldErrors: Record<string, string>, fallbackKey: string, options: VendorErrorOptions): VendorFailure {
+  const rendered = renderedOnly(fieldErrors, options);
+  const marked = Object.keys(rendered).length > 0;
+  return failure(code, { key: marked ? `${ERROR}.VALIDATION` : fallbackKey }, false, rendered);
+}
+
 /**
  * Classify a vendor-command or vendor-read failure.
  *
- * @param error            the caught error
- * @param fallbackKey      the surface's own message for an unclassified failure
- * @param writePermission  the permission the operation enforces, named by a `403` (story "Codes classified")
+ * @param error        the caught error
+ * @param fallbackKey  the surface's own message for an unclassified failure
+ * @param options      what the surface renders and names; see `VendorErrorOptions`
  */
-export function classifyVendorError(error: unknown, fallbackKey: string, writePermission?: string): VendorFailure {
+export function classifyVendorError(error: unknown, fallbackKey: string, options: VendorErrorOptions = {}): VendorFailure {
   if (!(error instanceof HttpErrorResponse)) {
     return failure('UNKNOWN', { key: fallbackKey });
   }
+  const staleKey = options.staleKey ?? `${ERROR}.STALE`;
 
   switch (envelopeCode(error)) {
     case 'SUPPLIER_VENDOR_NOT_FOUND':
       return failure('NOT_FOUND', { key: `${ERROR}.NOT_FOUND` });
     case 'SUPPLIER_VENDOR_NUMBER_TAKEN':
-      return failure('NUMBER_TAKEN', { key: `${ERROR}.VALIDATION` }, false, { vendorNumber: `${ERROR}.NUMBER_TAKEN` });
+      return fieldFailure('NUMBER_TAKEN', { vendorNumber: `${ERROR}.NUMBER_TAKEN` }, fallbackKey, options);
     case 'CONFLICT':
-      return failure('STALE', { key: `${ERROR}.STALE` }, true);
+      return failure('STALE', { key: staleKey }, true);
     case 'SUPPLIER_VENDOR_REMIT_CHANGE_PENDING':
       return failure('REMIT_PENDING', { key: `${ERROR}.REMIT_PENDING` }, true);
     case 'SUPPLIER_VENDOR_REMIT_CHANGE_NOT_PENDING':
@@ -109,7 +153,7 @@ export function classifyVendorError(error: unknown, fallbackKey: string, writePe
     case 'SUPPLIER_VENDOR_INACTIVE':
       return failure('INACTIVE', { key: `${ERROR}.INACTIVE` }, true);
     case 'JUSTIFICATION_REQUIRED':
-      return failure('JUSTIFICATION_REQUIRED', { key: `${ERROR}.VALIDATION` }, false, { reason: `${ERROR}.FIELD.NOTE` });
+      return fieldFailure('JUSTIFICATION_REQUIRED', { reason: `${ERROR}.FIELD.NOTE` }, fallbackKey, options);
     case 'SUPPLIER_VENDOR_TAX_REGISTRATION_NOT_FOUND':
       return failure('TAX_REGISTRATION_NOT_FOUND', { key: `${ERROR}.TAX_REGISTRATION_NOT_FOUND` }, true);
     case 'SUPPLIER_VENDOR_TAX_ID_UNREADABLE':
@@ -124,17 +168,16 @@ export function classifyVendorError(error: unknown, fallbackKey: string, writePe
     case 'validation': {
       const fieldErrors: Record<string, string> = {};
       for (const field of Object.keys(outcome.fieldErrors)) fieldErrors[field] = fieldKey(field);
-      const hasFields = Object.keys(fieldErrors).length > 0;
-      return failure('VALIDATION', { key: hasFields ? `${ERROR}.VALIDATION` : fallbackKey }, false, fieldErrors);
+      return fieldFailure('VALIDATION', fieldErrors, fallbackKey, options);
     }
     case 'forbidden':
-      return writePermission
-        ? failure('FORBIDDEN', { key: `${ERROR}.FORBIDDEN_WRITE`, params: { permission: writePermission } })
+      return options.writePermission
+        ? failure('FORBIDDEN', { key: `${ERROR}.FORBIDDEN_WRITE`, params: { permission: options.writePermission } })
         : failure('FORBIDDEN', { key: `${ERROR}.FORBIDDEN` });
     case 'conflict':
-      return failure('STALE', { key: `${ERROR}.STALE` }, true);
+      return failure('STALE', { key: staleKey }, true);
     case 'retryable':
-      return failure('RETRYABLE', { key: `${ERROR}.RETRYABLE` }, true);
+      return failure('RETRYABLE', { key: options.retryableKey ?? fallbackKey }, true);
     default:
       return error.status === 404
         ? failure('NOT_FOUND', { key: `${ERROR}.NOT_FOUND` })

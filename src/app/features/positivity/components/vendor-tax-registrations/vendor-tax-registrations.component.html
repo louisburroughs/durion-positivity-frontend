@@ -22,7 +22,15 @@
           </span>
           @if (canReveal()) {
             <button type="button" class="vendor-btn vendor-btn--secondary" data-testid="vendor-tax-reveal" [disabled]="busy()" (click)="openReveal(registration)">
-              {{ 'POSITIVITY.VENDORS.TAX.REVEAL' | translate: { scheme: registration.scheme } }}
+              {{
+                'POSITIVITY.VENDORS.TAX.REVEAL'
+                  | translate
+                    : {
+                        scheme: registration.region
+                          ? ('POSITIVITY.VENDORS.TAX.SCHEME_REGION' | translate: { scheme: registration.scheme, region: registration.region })
+                          : registration.scheme,
+                      }
+              }}
             </button>
           }
         </li>
@@ -34,7 +42,15 @@
 @if (target(); as registration) {
   <dialog appModalDialog class="vendor-dialog" [attr.aria-labelledby]="id + '-dialog-title'" data-testid="vendor-tax-dialog" (modalCancel)="closeReveal()">
     <form novalidate (submit)="reveal($event)">
-      <h2 class="vendor-dialog__title" [id]="id + '-dialog-title'">{{ 'POSITIVITY.VENDORS.TAX.REVEAL_TITLE' | translate: { scheme: registration.scheme } }}</h2>
+      <h2 class="vendor-dialog__title" [id]="id + '-dialog-title'">{{
+          'POSITIVITY.VENDORS.TAX.REVEAL_TITLE'
+            | translate
+              : {
+                  scheme: registration.region
+                    ? ('POSITIVITY.VENDORS.TAX.SCHEME_REGION' | translate: { scheme: registration.scheme, region: registration.region })
+                    : registration.scheme,
+                }
+        }}</h2>
       @if (revealed(); as shown) {
         <p data-testid="vendor-tax-revealed">
           {{ 'POSITIVITY.VENDORS.TAX.REVEALED_LABEL' | translate }}
@@ -44,18 +60,25 @@
       } @else {
         <div class="vendor-field">
           <label [for]="id + '-reason'">{{ 'POSITIVITY.VENDORS.TAX.REVEAL_REASON' | translate }}</label>
-          <textarea
+          <input
+            type="text"
+            autocomplete="off"
+            spellcheck="false"
             [id]="id + '-reason'"
             data-testid="vendor-tax-reveal-reason"
             [attr.maxlength]="reasonMax"
             [value]="reason()"
             (input)="reason.set(text($event))"
-            [attr.aria-describedby]="id + '-reason-hint'"
-          ></textarea>
+            [attr.aria-invalid]="reasonError() || reasonHasControl() ? 'true' : null"
+            [attr.aria-describedby]="id + '-reason-hint' + (reasonError() ? ' ' + id + '-reason-error' : '')"
+          />
           <p class="vendor-hint" [id]="id + '-reason-hint'">{{ 'POSITIVITY.VENDORS.TAX.REVEAL_REASON_HINT' | translate: { min: reasonMin, max: reasonMax } }}</p>
+          @if (reasonError(); as key) {
+            <p class="vendor-error" [id]="id + '-reason-error'" data-testid="vendor-tax-reveal-reason-error">{{ key | translate }}</p>
+          }
         </div>
         @if (error(); as message) {
-          <p class="vendor-error" role="alert" data-testid="vendor-tax-reveal-error">{{ message.key | translate: message.params }}</p>
+          <p class="vendor-error" role="alert" tabindex="-1" [id]="id + '-error'" data-testid="vendor-tax-reveal-error">{{ message.key | translate: message.params }}</p>
         }
         <p class="vendor-consequence">{{ 'POSITIVITY.VENDORS.TAX.REVEAL_CONSEQUENCE' | translate }}</p>
       }

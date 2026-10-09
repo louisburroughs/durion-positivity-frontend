@@ -243,6 +243,93 @@ describe('VendorRemitToComponent (#469 item 5; §4.9 "a second person")', () => 
     expect(fixture.componentInstance.busy()).toBe(false);
   });
 
+  describe('B7: handlers refuse a valid form once the permission is revoked (ADR-0040 §6a)', () => {
+    it('submitRequest()', () => {
+      setup([]);
+      click('[data-testid="remit-request"]');
+      type(q('[data-testid="remit-request-reason"]'), 'Vendor moved offices');
+      fixture.detectChanges();
+      expect(fixture.componentInstance.requestValid()).toBe(true);
+      fixture.componentRef.setInput('canWrite', false);
+      fixture.componentInstance.submitRequest();
+      expect(service.requestRemitChange).not.toHaveBeenCalled();
+    });
+
+    it('confirmReject()', () => {
+      setup([change()]);
+      click('[data-testid="remit-reject"]');
+      type(q('[data-testid="remit-reject-note"]'), 'Could not verify by phone');
+      fixture.detectChanges();
+      expect(fixture.componentInstance.rejectValid()).toBe(true);
+      fixture.componentRef.setInput('canApprove', false);
+      fixture.componentInstance.confirmReject();
+      expect(service.rejectRemitChange).not.toHaveBeenCalled();
+    });
+
+    it('approve()', () => {
+      setup([change()]);
+      type(q('[data-testid="remit-verification"]'), 'Called them on file');
+      fixture.detectChanges();
+      fixture.componentRef.setInput('canApprove', false);
+      fixture.componentInstance.approve();
+      expect(service.approveRemitChange).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('B1/B5: notes', () => {
+    it('cap at 1000 characters and say "10 to 1000 characters."', () => {
+      setup([change()]);
+      expect(q('[data-testid="remit-verification"]')?.getAttribute('maxlength')).toBe('1000');
+      expect(q(`#${fixture.componentInstance.id}-verification-hint`)?.textContent?.trim()).toBe('10 to 1000 characters.');
+      click('[data-testid="remit-reject"]');
+      expect(q('[data-testid="remit-reject-note"]')?.getAttribute('maxlength')).toBe('1000');
+      expect(q(`#${fixture.componentInstance.id}-reject-title`)?.textContent?.trim()).toBe('Reject the remit-to change for V-000123');
+    });
+
+    it('a refused verification note is marked on its textarea', () => {
+      service.approveRemitChange.mockReturnValue(
+        throwError(() => httpError(400, 'VALIDATION_ERROR', { fieldErrors: [{ field: 'verificationNote', message: 'x' }] })),
+      );
+      setup([change()]);
+      type(q('[data-testid="remit-verification"]'), 'Called them on file');
+      fixture.detectChanges();
+      click('[data-testid="remit-approve"]');
+
+      expect(q('[data-testid="remit-verification"]')?.getAttribute('aria-invalid')).toBe('true');
+      expect(q('[data-testid="remit-verification-error"]')?.textContent?.trim()).toBe('Write at least 10 characters.');
+    });
+
+    it('a refused reject note is marked on its textarea', () => {
+      service.rejectRemitChange.mockReturnValue(throwError(() => httpError(400, 'VALIDATION_ERROR', { fieldErrors: [{ field: 'note', message: 'x' }] })));
+      setup([change()]);
+      click('[data-testid="remit-reject"]');
+      type(q('[data-testid="remit-reject-note"]'), 'Could not verify by phone');
+      fixture.detectChanges();
+      click('[data-testid="remit-reject-confirm"]');
+
+      expect(q('[data-testid="remit-reject-note"]')?.getAttribute('aria-invalid')).toBe('true');
+      expect(q('[data-testid="remit-reject-note-error"]')).toBeTruthy();
+    });
+
+    it('a refused request reason is marked; an unrendered path shows the surface message', () => {
+      service.requestRemitChange
+        .mockReturnValueOnce(throwError(() => httpError(400, 'VALIDATION_ERROR', { fieldErrors: [{ field: 'reason', message: 'x' }] })))
+        .mockReturnValueOnce(throwError(() => httpError(400, 'VALIDATION_ERROR', { fieldErrors: [{ field: 'mystery', message: 'x' }] })));
+      setup([]);
+      click('[data-testid="remit-request"]');
+      expect(q(`#${fixture.componentInstance.id}-request-title`)?.textContent?.trim()).toBe('Request a remit-to change for V-000123');
+      type(q('[data-testid="remit-request-reason"]'), 'Vendor moved offices');
+      fixture.detectChanges();
+      click('[data-testid="remit-request-submit"]');
+      expect(q('[data-testid="remit-request-reason"]')?.getAttribute('aria-invalid')).toBe('true');
+      expect(q('[data-testid="remit-request-reason-error"]')).toBeTruthy();
+
+      click('[data-testid="remit-request-submit"]');
+      expect(q('[data-testid="remit-request-reason-error"]')).toBeNull();
+      expect(q('[data-testid="remit-request-error"]')?.textContent?.trim()).toBe('The remit-to change could not be requested.');
+    });
+  });
+
   it('lists the history with requester, decider, notes and versions', () => {
     setup([
       change({ status: 'APPROVED', decidedBy: 'controller.b', decidedAt: '2026-10-08T10:00:00Z', decisionNote: 'Called the vendor', toVersion: 2 }),

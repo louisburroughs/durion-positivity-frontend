@@ -1,15 +1,29 @@
 import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  ElementRef,
+  Injector,
+  afterNextRender,
+  computed,
+  effect,
+  inject,
+  input,
+  output,
+  signal,
+  untracked,
+} from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { switchMap } from 'rxjs/operators';
 import { TranslatePipe } from '@ngx-translate/core';
 import { ModalDialogDirective } from '../../../../shared/modal-dialog.directive';
 import { POSITIVITY_SECTION } from '../../../../core/security/route-permissions';
-import { RemitToChange, VENDOR_NOTE_MIN, Vendor } from '../../models/supplier-vendor.models';
+import { RemitToChange, VENDOR_NOTE_MAX, VENDOR_NOTE_MIN, Vendor } from '../../models/supplier-vendor.models';
 import { SupplierVendorService } from '../../services/supplier-vendor.service';
 import { RemitToGroup, remitToGroup, remitToValues } from '../vendor-fields/vendor-form';
 import { VendorRemitToFieldsComponent } from '../vendor-fields/vendor-remit-to-fields.component';
-import { classifyVendorError } from '../../utils/supplier-vendor-error.util';
+import { REMIT_FIELD_PATH, classifyVendorError } from '../../utils/supplier-vendor-error.util';
 import { VendorCopy, compactRemitTo, displayActor, noteValid, remitToLines } from '../../utils/supplier-vendor.util';
 
 type ReadStatus = 'PENDING' | 'OK' | 'FAILED';
@@ -42,6 +56,8 @@ let nextId = 0;
 export class VendorRemitToComponent {
   private readonly service = inject(SupplierVendorService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly injector = inject(Injector);
 
   readonly vendor = input.required<Vendor>();
   readonly changes = input.required<readonly RemitToChange[]>();
@@ -58,6 +74,7 @@ export class VendorRemitToComponent {
 
   readonly id = `vendor-remit-${++nextId}`;
   readonly noteMin = VENDOR_NOTE_MIN;
+  readonly noteMax = VENDOR_NOTE_MAX;
   readonly lines = remitToLines;
   readonly actor = displayActor;
 
@@ -73,6 +90,9 @@ export class VendorRemitToComponent {
   readonly requestReason = signal('');
   readonly requestError = signal<VendorCopy | null>(null);
   readonly requestFieldErrors = signal<Readonly<Record<string, string>>>({});
+  /** Server field errors on the notes, shown on their textareas (review B1). */
+  readonly verificationError = signal<string | null>(null);
+  readonly rejectNoteError = signal<string | null>(null);
   /** Bumped on the request form's value changes so OnPush validity re-reads. */
   private readonly requestRevision = signal(0);
 
@@ -100,10 +120,10 @@ export class VendorRemitToComponent {
 
   readonly requestValid = computed(() => {
     this.requestRevision();
-    return noteValid(this.requestReason()) && compactRemitTo(remitToValues(this.requestForm())) !== null;
+    return noteValid(this.requestReason(), VENDOR_NOTE_MIN, VENDOR_NOTE_MAX) && compactRemitTo(remitToValues(this.requestForm())) !== null;
   });
-  readonly approveValid = computed(() => noteValid(this.verificationNote()));
-  readonly rejectValid = computed(() => noteValid(this.rejectNote()));
+  readonly approveValid = computed(() => noteValid(this.verificationNote(), VENDOR_NOTE_MIN, VENDOR_NOTE_MAX));
+  readonly rejectValid = computed(() => noteValid(this.rejectNote(), VENDOR_NOTE_MIN, VENDOR_NOTE_MAX));
 
   constructor() {
     toObservable(this.requestForm)
@@ -134,6 +154,8 @@ export class VendorRemitToComponent {
         this.rejectOpen.set(false);
         this.rejectNote.set('');
         this.rejectError.set(null);
+        this.verificationError.set(null);
+        this.rejectNoteError.set(null);
       });
     });
   }
@@ -192,7 +214,11 @@ export class VendorRemitToComponent {
         error: (err: unknown) => {
           if (seq !== this.requestSeq) return;
           this.requestBusy.set(false);
-          const failure = classifyVendorError(err, 'POSITIVITY.VENDORS.ERROR.REMIT_REQUEST', POSITIVITY_SECTION.vendorWrite[0]);
+          const failure = classifyVendorError(err, 'POSITIVITY.VENDORS.ERROR.REMIT_REQUEST', {
+            writePermission: POSITIVITY_SECTION.vendorWrite[0],
+            renders: field => field === 'reason' || REMIT_FIELD_PATH.test(field),
+            retryableKey: 'POSITIVITY.VENDORS.ERROR.RETRYABLE',
+          });
           if (failure.reread) {
             // AC 6: a change is already pending — close, and the re-read shows it.
             this.requestOpen.set(false);
@@ -201,6 +227,7 @@ export class VendorRemitToComponent {
           }
           this.requestError.set(failure.message);
           this.requestFieldErrors.set(failure.fieldErrors);
+          this.focusAfterRender('[data-testid="remit-request-error"]');
         },
       });
   }
@@ -218,6 +245,7 @@ export class VendorRemitToComponent {
     if (!this.decideVisible() || this.busy()) return;
     this.rejectNote.set('');
     this.rejectError.set(null);
+    this.rejectNoteError.set(null);
     this.rejectOpen.set(true);
   }
 
@@ -243,6 +271,8 @@ export class VendorRemitToComponent {
     this.decideBusy.set(true);
     this.approveError.set(null);
     this.rejectError.set(null);
+    this.verificationError.set(null);
+    this.rejectNoteError.set(null);
     const call =
       kind === 'APPROVE'
         ? this.service.approveRemitChange(vendorId, pending.changeId, note)
@@ -258,15 +288,27 @@ export class VendorRemitToComponent {
       error: (err: unknown) => {
         if (seq !== this.decideSeq) return;
         this.decideBusy.set(false);
-        const failure = classifyVendorError(err, 'POSITIVITY.VENDORS.ERROR.REMIT_DECIDE', POSITIVITY_SECTION.vendorRemitApprove[0]);
+        const noteField = kind === 'APPROVE' ? 'verificationNote' : 'note';
+        const failure = classifyVendorError(err, 'POSITIVITY.VENDORS.ERROR.REMIT_DECIDE', {
+          writePermission: POSITIVITY_SECTION.vendorRemitApprove[0],
+          renders: field => field === noteField,
+          retryableKey: 'POSITIVITY.VENDORS.ERROR.RETRYABLE',
+        });
         if (failure.reread) {
           // Someone else decided it first: close, and the re-read shows the decision.
           this.rejectOpen.set(false);
           this.changed.emit(failure.message);
           return;
         }
-        if (kind === 'APPROVE') this.approveError.set(failure.message);
-        else this.rejectError.set(failure.message);
+        if (kind === 'APPROVE') {
+          this.approveError.set(failure.message);
+          this.verificationError.set(failure.fieldErrors[noteField] ?? null);
+          this.focusAfterRender('[data-testid="remit-approve-error"]');
+        } else {
+          this.rejectError.set(failure.message);
+          this.rejectNoteError.set(failure.fieldErrors[noteField] ?? null);
+          this.focusAfterRender('[data-testid="remit-reject-error"]');
+        }
       },
     });
   }
@@ -284,5 +326,12 @@ export class VendorRemitToComponent {
     this.rejectOpen.set(false);
     this.rejectNote.set('');
     this.rejectError.set(null);
+    this.verificationError.set(null);
+    this.rejectNoteError.set(null);
+  }
+
+  /** After the next render, focus `selector` in this section (ADR-0029 §8.7). */
+  private focusAfterRender(selector: string): void {
+    afterNextRender(() => this.host.nativeElement.querySelector<HTMLElement>(selector)?.focus(), { injector: this.injector });
   }
 }

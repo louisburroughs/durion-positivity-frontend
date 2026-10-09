@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import enUS from '../../../../../assets/i18n/en-US.json';
 import { describe, expect, it } from 'vitest';
 import { vendor } from '../../vendors.spec-helper';
 import { VendorFieldsComponent } from './vendor-fields.component';
@@ -12,9 +13,14 @@ describe('VendorFieldsComponent', () => {
   const el = (): HTMLElement => fixture.nativeElement as HTMLElement;
   const q = <T extends Element = HTMLElement>(selector: string) => el().querySelector(selector) as T | null;
 
-  function setup(form: VendorFieldsGroup, fieldErrors: Record<string, string> = {}, submitted = false): void {
+  function setup(form: VendorFieldsGroup, fieldErrors: Record<string, string> = {}, submitted = false, english = false): void {
     group = form;
     TestBed.configureTestingModule({ imports: [VendorFieldsComponent, TranslateModule.forRoot()] });
+    if (english) {
+      const translate = TestBed.inject(TranslateService);
+      translate.setTranslation('en-US', enUS);
+      translate.use('en-US');
+    }
     fixture = TestBed.createComponent(VendorFieldsComponent);
     fixture.componentRef.setInput('group', form);
     fixture.componentRef.setInput('idPrefix', 'test');
@@ -72,5 +78,31 @@ describe('VendorFieldsComponent', () => {
     expect(q('#test-currency')?.getAttribute('aria-invalid')).toBe('true');
     expect(q('#test-currency-error')?.textContent?.trim()).toBe('POSITIVITY.VENDORS.ERROR.FIELD.CURRENCY');
     expect(q('#test-tax-number-0')?.getAttribute('aria-invalid')).toBe('true');
+  });
+
+  it('B9: row labels, hints and Remove render as full sentences', () => {
+    setup(vendorFieldsGroup(vendor()), {}, false, true);
+    expect(q('label[for="test-tax-scheme-0"]')?.textContent?.trim()).toBe('Scheme for registration 1');
+    expect(q('label[for="test-tax-number-0"]')?.textContent?.trim()).toBe('Number for registration 1');
+    expect(q('[data-testid="vendor-tax-remove"]')?.textContent?.trim()).toBe('Remove registration 1');
+    expect(q('[data-testid="vendor-tax-number-hint"]')?.textContent?.trim()).toBe('Leave blank to keep the number ending 6789.');
+    group.controls.termsKind.setValue('NET');
+    fixture.detectChanges();
+    expect(q('#test-net-days-hint')?.textContent?.trim()).toBe('A whole number from 1 to 120.');
+  });
+
+  it('B1: a refused registrationId is shown on its row and linked from the scheme', () => {
+    setup(vendorFieldsGroup(vendor()), { 'taxRegistrations[0].registrationId': 'POSITIVITY.VENDORS.ERROR.FIELD.TAX_REGISTRATION' }, false, true);
+    const error = q('[data-testid="vendor-tax-row-error"]');
+    expect(error?.textContent?.trim()).toBe("That registration can't be kept. Remove it and add it again.");
+    expect(q('#test-tax-scheme-0')?.getAttribute('aria-describedby')).toContain(error!.id);
+    expect(q('#test-tax-scheme-0')?.getAttribute('aria-invalid')).toBe('true');
+  });
+
+  it('B11: a terms error under Due on receipt is linked from the fieldset', () => {
+    setup(vendorFieldsGroup(vendor({ paymentTerms: 'DUE_ON_RECEIPT' })), { defaultPaymentTerms: 'POSITIVITY.VENDORS.ERROR.FIELD.PAYMENT_TERMS' });
+    const error = q('[data-testid="vendor-terms-error"]');
+    expect(error?.id).toBe('test-terms-error');
+    expect(q('[data-testid="vendor-terms"]')?.getAttribute('aria-describedby')).toBe('test-terms-error');
   });
 });

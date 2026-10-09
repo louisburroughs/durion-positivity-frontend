@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import enUS from '../../../../../assets/i18n/en-US.json';
 import { Subject, of, throwError } from 'rxjs';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { VendorPage } from '../../models/supplier-vendor.models';
@@ -24,11 +25,16 @@ describe('VendorListPageComponent (#469 item 2)', () => {
   const el = (): HTMLElement => fixture.nativeElement as HTMLElement;
   const q = <T extends Element = HTMLElement>(selector: string) => el().querySelector<T & Element>(selector) as T | null;
 
-  async function setup(): Promise<void> {
+  async function setup(english = false): Promise<void> {
     TestBed.configureTestingModule({
       imports: [VendorListPageComponent, TranslateModule.forRoot()],
       providers: [provideRouter([]), ...vendorProviders(service, auth)],
     });
+    if (english) {
+      const translate = TestBed.inject(TranslateService);
+      translate.setTranslation('en-US', enUS);
+      translate.use('en-US');
+    }
     fixture = TestBed.createComponent(VendorListPageComponent);
     fixture.detectChanges();
     await fixture.whenStable();
@@ -82,6 +88,21 @@ describe('VendorListPageComponent (#469 item 2)', () => {
 
     q<HTMLButtonElement>('[data-testid="vendor-filter-INACTIVE"]')!.click();
     expect(service.listVendors).toHaveBeenLastCalledWith('acme', 'INACTIVE', 0, 50);
+  });
+
+  it('B9: caption, page label and terms render as full sentences', async () => {
+    service.listVendors.mockReturnValue(of(vendorPage([vendor()], { totalPages: 3, totalElements: 120 })));
+    await setup(true);
+    expect(q('table caption')?.textContent?.trim()).toBe('Vendors (120)');
+    expect(q('[data-testid="vendor-page-label"]')?.textContent?.trim()).toBe('Page 1 of 3');
+    expect(q('[data-testid="vendor-row-terms"]')?.textContent?.trim()).toBe('Net 30');
+  });
+
+  it('A3: a 503 on the list says the vendors could not be loaded', async () => {
+    service.listVendors.mockReturnValue(throwError(() => httpError(503)));
+    await setup(true);
+    expect(q('[data-testid="vendor-list-error"]')?.textContent).toContain('The vendors could not be loaded.');
+    expect(q('[data-testid="vendor-list-error"]')?.textContent).not.toContain("couldn't confirm");
   });
 
   it('pages on the server', async () => {

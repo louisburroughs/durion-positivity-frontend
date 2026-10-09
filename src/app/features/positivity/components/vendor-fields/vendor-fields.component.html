@@ -50,8 +50,12 @@
           data-testid="vendor-tax-scheme"
           autocomplete="off"
           [formControl]="row.controls.scheme"
-          [attr.aria-invalid]="showSchemeRequired(row) || serverError('taxRegistrations[' + i + '].scheme') ? 'true' : null"
-          [attr.aria-describedby]="id('tax-scheme-hint-' + i) + (showSchemeRequired(row) || serverError('taxRegistrations[' + i + '].scheme') ? ' ' + id('tax-scheme-error-' + i) : '')"
+          [attr.aria-invalid]="showSchemeRequired(row) || serverError('taxRegistrations[' + i + '].scheme') || serverError('taxRegistrations[' + i + '].registrationId') ? 'true' : null"
+          [attr.aria-describedby]="
+            id('tax-scheme-hint-' + i) +
+            (showSchemeRequired(row) || serverError('taxRegistrations[' + i + '].scheme') ? ' ' + id('tax-scheme-error-' + i) : '') +
+            (serverError('taxRegistrations[' + i + '].registrationId') ? ' ' + id('tax-row-error-' + i) : '')
+          "
         />
         <p class="vendor-hint" [id]="id('tax-scheme-hint-' + i)">{{ 'POSITIVITY.VENDORS.TAX.SCHEME_HINT' | translate }}</p>
         @if (serverError('taxRegistrations[' + i + '].scheme'); as key) {
@@ -105,6 +109,9 @@
           <p class="vendor-error" [id]="id('tax-number-error-' + i)">{{ 'POSITIVITY.VENDORS.TAX.NUMBER_REQUIRED' | translate }}</p>
         }
       </div>
+      @if (serverError('taxRegistrations[' + i + '].registrationId'); as key) {
+        <p class="vendor-error" [id]="id('tax-row-error-' + i)" data-testid="vendor-tax-row-error">{{ key | translate }}</p>
+      }
       <div class="vendor-actions">
         <button type="button" class="vendor-btn vendor-btn--secondary" data-testid="vendor-tax-remove" (click)="removeRegistration(i)">
           {{ 'POSITIVITY.VENDORS.TAX.REMOVE' | translate: { index: i + 1 } }}
@@ -120,7 +127,11 @@
 </fieldset>
 
 <div class="vendor-grid">
-  <fieldset class="vendor-fieldset" data-testid="vendor-terms">
+  <fieldset
+    class="vendor-fieldset"
+    data-testid="vendor-terms"
+    [attr.aria-describedby]="!isNet() && serverError('defaultPaymentTerms') ? id('terms-error') : null"
+  >
     <legend>{{ 'POSITIVITY.VENDORS.FORM.TERMS' | translate }}</legend>
     <label class="vendor-choice">
       <input type="radio" value="DUE_ON_RECEIPT" data-testid="vendor-terms-due" [formControl]="group().controls.termsKind" />
@@ -152,7 +163,7 @@
         }
       </div>
     } @else if (serverError('defaultPaymentTerms'); as key) {
-      <p class="vendor-error">{{ key | translate }}</p>
+      <p class="vendor-error" [id]="id('terms-error')" data-testid="vendor-terms-error">{{ key | translate }}</p>
     }
   </fieldset>
 
