@@ -70,6 +70,13 @@
   min-width: 1.5rem;
 }
 
+/* A write blocked by a stale read stays focusable and names its reason (aria-describedby). */
+.btn[aria-disabled='true'],
+.categories__action[aria-disabled='true'] {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 .categories__error {
   display: flex;
   flex-wrap: wrap;

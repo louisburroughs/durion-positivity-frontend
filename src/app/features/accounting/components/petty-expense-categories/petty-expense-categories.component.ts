@@ -41,6 +41,11 @@ interface CategoryDialog {
   readonly mode: CategoryDialogMode;
   readonly code: string | null;
   readonly label: string;
+  /** The category version read when the dialog opened (or refreshed by a re-read); sent with a rename. */
+  readonly version: number | null;
+  /** The label and examples the fields were filled from, to tell untouched fields from edited ones. */
+  readonly baseLabel: string;
+  readonly baseExamples: string;
 }
 
 const DIALOG_KEYS: Readonly<Record<CategoryDialogMode, { readonly title: string; readonly confirm: string; readonly done: string }>> = {
@@ -160,6 +165,8 @@ export class PettyExpenseCategoriesComponent {
   private accountsSubscription: Subscription | null = null;
   /** Where focus goes once the re-read after a success lands. */
   private pendingFocus: { readonly code: string | null; readonly mode: CategoryDialogMode } | null = null;
+  /** A refusal said the category moved: the next re-read refreshes the open dialog's untouched fields. */
+  private refreshOnReread = false;
   private trackedIdentity = this.identity();
 
   readonly chosenAccount = computed(() => this.accounts().find(option => option.glAccountId === this.accountId()) ?? null);
@@ -172,6 +179,13 @@ export class PettyExpenseCategoriesComponent {
   readonly examplesValid = computed(() => this.examples().trim().length <= CATEGORY_EXAMPLES_MAX);
   readonly accountValid = computed(() => this.accountsStatus() === 'OK' && this.chosenAccount() !== null);
   readonly dateValid = computed(() => DATE_ONLY.test(this.effectiveFrom()));
+  /** The open dialog's category as last read. */
+  readonly dialogCategory = computed(() => {
+    const code = this.dialog()?.code;
+    return code ? (this.categories()?.find(row => row.code === code) ?? null) : null;
+  });
+  /** A stale read blocks every write; the controls stay focusable and say why (ADR-0029 §8). */
+  readonly blockedReasonId = computed(() => (this.actionable() ? null : this.status() === 'FAILED' ? 'categories-error-text' : 'categories-stale-text'));
 
   readonly dialogValid = computed(() => {
     const open = this.dialog();
@@ -182,7 +196,8 @@ export class PettyExpenseCategoriesComponent {
       case 'RELABEL':
         return this.labelValid() && this.examplesValid();
       case 'DEACTIVATE':
-        return true;
+        // Only an active category can be turned off; a re-read that shows it off blocks the confirm.
+        return this.dialogCategory()?.status === 'ACTIVE';
       case 'REMAP':
         return this.accountValid() && this.dateValid();
     }
@@ -217,6 +232,21 @@ export class PettyExpenseCategoriesComponent {
       this.pendingFocus = null;
       afterNextRender({ write: () => this.settleFocus(target) }, { injector: this.injector });
     });
+    // After a refusal that re-reads, the open dialog takes the re-read row's version and its untouched fields (ADR-0063 §1–2).
+    effect(() => {
+      const categories = this.categories();
+      if (!this.refreshOnReread || this.status() !== 'OK' || categories === null) return;
+      untracked(() => {
+        this.refreshOnReread = false;
+        const open = this.dialog();
+        const row = open?.code ? categories.find(category => category.code === open.code) : null;
+        if (!open || !row) return;
+        const examples = row.examples ?? '';
+        if (this.label() === open.baseLabel) this.label.set(row.label);
+        if (this.examples() === open.baseExamples) this.examples.set(examples);
+        this.dialog.set({ ...open, label: row.label, version: row.version, baseLabel: row.label, baseExamples: examples });
+      });
+    });
   }
 
   private identity(): string {
@@ -227,7 +257,9 @@ export class PettyExpenseCategoriesComponent {
   private settleFocus(target: { readonly code: string | null; readonly mode: CategoryDialogMode }): void {
     const selector = target.code === null ? '[data-focus-key="CREATE"]' : `[data-focus-key="${CSS.escape(`${target.code}|${target.mode}`)}"]`;
     const control = this.host.nativeElement.querySelector<HTMLElement>(selector);
-    (control ?? this.heading()?.nativeElement)?.focus();
+    // A control that is gone, disabled or blocked by a stale read is no place for focus: the heading is.
+    const usable = control && !(control as HTMLButtonElement).disabled && control.getAttribute('aria-disabled') !== 'true';
+    (usable ? control : this.heading()?.nativeElement)?.focus();
   }
 
   /** The key the open dialog would send next, for tests and the PR evidence; never shown. */
@@ -271,7 +303,14 @@ export class PettyExpenseCategoriesComponent {
     this.examples.set(mode === 'RELABEL' ? (category?.examples ?? '') : '');
     this.effectiveFrom.set(this.today());
     this.requestId = uuidV7();
-    this.dialog.set({ mode, code: category?.code ?? null, label: category?.label ?? '' });
+    this.dialog.set({
+      mode,
+      code: category?.code ?? null,
+      label: category?.label ?? '',
+      version: category?.version ?? null,
+      baseLabel: this.label(),
+      baseExamples: this.examples(),
+    });
     if (mode === 'CREATE' || mode === 'REMAP') this.loadAccounts();
   }
 
@@ -297,6 +336,7 @@ export class PettyExpenseCategoriesComponent {
     this.accountsStatus.set('PENDING');
     this.requestId = null;
     this.sentPayload = null;
+    this.refreshOnReread = false;
   }
 
   loadAccounts(): void {
@@ -324,8 +364,9 @@ export class PettyExpenseCategoriesComponent {
     if (!open || this.busy() || !this.allowed(open.mode) || !this.actionable() || !this.dialogValid()) return;
     const category = open.code === null ? null : (this.categories()?.find(row => row.code === open.code) ?? null);
     if (open.mode !== 'CREATE' && !category) return;
+    if (open.mode === 'DEACTIVATE' && category?.status !== 'ACTIVE') return;
     const justification = this.reason().trim();
-    const payload = this.payload(open.mode, category, justification);
+    const payload = this.payload(open, justification);
     const body = JSON.stringify(payload);
     if (this.sentPayload !== null && this.sentPayload !== body) this.requestId = uuidV7();
     const requestId = this.requestId ?? uuidV7();
@@ -352,18 +393,21 @@ export class PettyExpenseCategoriesComponent {
           this.sentPayload = null;
         }
         this.failure.set(failure);
-        if (failure.reread) this.changed.emit();
+        if (failure.reread) {
+          this.refreshOnReread = true;
+          this.changed.emit();
+        }
       },
     });
   }
 
-  private payload(mode: CategoryDialogMode, category: PettyExpenseCategory | null, justification: string): Record<string, unknown> {
+  private payload(open: CategoryDialog, justification: string): Record<string, unknown> {
     const examples = this.examples().trim() || null;
-    switch (mode) {
+    switch (open.mode) {
       case 'CREATE':
         return { code: this.code().trim(), label: this.label().trim(), examples, glAccountId: this.accountId(), justification };
       case 'RELABEL':
-        return { label: this.label().trim(), examples, version: category?.version ?? null, justification };
+        return { label: this.label().trim(), examples, version: open.version, justification };
       case 'DEACTIVATE':
         return { justification };
       case 'REMAP':
@@ -418,12 +462,19 @@ export class PettyExpenseCategoriesComponent {
   }
 
   fieldMarked(field: CategoryField): boolean {
-    return this.failure()?.field === field;
+    return !!this.failure()?.fields.includes(field);
   }
+
+  /** The code is typed and not 1–40 capital letters, digits or underscores. */
+  readonly codeMalformed = computed(() => this.code().trim() !== '' && !this.codeValid());
 
   /** `aria-describedby` for a dialog field: its hint, plus the error when the refusal names it. */
   describedBy(field: CategoryField, hintId: string | null): string | null {
-    const ids = [hintId, this.fieldMarked(field) ? 'category-dialog-error' : null].filter(Boolean);
+    const ids = [
+      hintId,
+      field === 'code' && this.codeMalformed() ? 'category-code-error' : null,
+      this.fieldMarked(field) ? 'category-dialog-error' : null,
+    ].filter(Boolean);
     return ids.length ? ids.join(' ') : null;
   }
 

@@ -10,12 +10,15 @@
     }
   </p>
 
+  @if (status() === 'PENDING' && categories() !== null) {
+    <p class="pending-note" id="categories-stale-text" data-testid="categories-refreshing">{{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.REFRESHING' | translate }}</p>
+  }
   @if (status() === 'PENDING' && categories() === null) {
     <p class="pending-note" data-testid="categories-loading">{{ 'ACCOUNTING.APPROVAL_LIMITS.LOADING' | translate }}</p>
   }
   @if (status() === 'FAILED') {
     <div class="categories__error" data-testid="categories-error">
-      <p class="field-error">{{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.LOAD_FAILED' | translate }}</p>
+      <p class="field-error" id="categories-error-text">{{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.LOAD_FAILED' | translate }}</p>
       <button type="button" class="btn btn--outline" (click)="retry.emit()">{{ 'COMMON.RETRY' | translate }}</button>
     </div>
   }
@@ -28,7 +31,8 @@
           class="btn btn--accent"
           data-testid="category-add"
           data-focus-key="CREATE"
-          [disabled]="!actionable()"
+          [attr.aria-disabled]="actionable() ? null : 'true'"
+          [attr.aria-describedby]="blockedReasonId()"
           (click)="open('CREATE')"
         >
           {{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.CREATE.OPEN' | translate }}
@@ -102,7 +106,8 @@
                         class="link-button categories__action"
                         data-testid="category-rename"
                         [attr.data-focus-key]="category.code + '|RELABEL'"
-                        [disabled]="!actionable()"
+                        [attr.aria-disabled]="actionable() ? null : 'true'"
+                        [attr.aria-describedby]="blockedReasonId()"
                         (click)="open('RELABEL', category)"
                       >
                         {{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.RELABEL.OPEN' | translate }}<span class="sr-only"> {{ category.label }}</span>
@@ -114,7 +119,8 @@
                         class="link-button categories__action"
                         data-testid="category-deactivate"
                         [attr.data-focus-key]="category.code + '|DEACTIVATE'"
-                        [disabled]="!actionable()"
+                        [attr.aria-disabled]="actionable() ? null : 'true'"
+                        [attr.aria-describedby]="blockedReasonId()"
                         (click)="open('DEACTIVATE', category)"
                       >
                         {{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.DEACTIVATE.OPEN' | translate }}<span class="sr-only"> {{ category.label }}</span>
@@ -126,7 +132,8 @@
                         class="link-button categories__action"
                         data-testid="category-remap"
                         [attr.data-focus-key]="category.code + '|REMAP'"
-                        [disabled]="!actionable()"
+                        [attr.aria-disabled]="actionable() ? null : 'true'"
+                        [attr.aria-describedby]="blockedReasonId()"
                         (click)="open('REMAP', category)"
                       >
                         {{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.REMAP.OPEN' | translate }}<span class="sr-only"> {{ category.label }}</span>
@@ -178,10 +185,13 @@
             data-testid="category-code"
             [value]="code()"
             (input)="code.set(text($event))"
-            [attr.aria-invalid]="(code() && !codeValid()) || fieldMarked('code') ? 'true' : null"
+            [attr.aria-invalid]="codeMalformed() || fieldMarked('code') ? 'true' : null"
             [attr.aria-describedby]="describedBy('code', 'category-code-hint')"
           />
           <p class="hint-text" id="category-code-hint">{{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.FIELD.CODE_HINT' | translate }}</p>
+          @if (codeMalformed()) {
+            <p class="field-error" id="category-code-error" data-testid="category-code-error">{{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.FIELD.CODE_FORMAT' | translate }}</p>
+          }
         </div>
       }
 

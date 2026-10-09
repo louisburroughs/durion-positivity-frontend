@@ -6179,13 +6179,17 @@
           "FORBIDDEN": "Il vous faut l’autorisation {{permission}} pour modifier ces limites.",
           "UNKNOWN_OUTCOME": "Impossible de confirmer l’enregistrement. Appuyez de nouveau sur Enregistrer : il ne sera pas appliqué deux fois.",
           "OTHER": "Impossible d’enregistrer vos modifications.",
-          "DRAWER_CONFLICT": "Quelqu’un d’autre a modifié les limites de l’argent du tiroir. Les plus récentes ont été chargées et vos changements gardés; vérifiez-les et enregistrez de nouveau."
+          "DRAWER_CONFLICT": "Quelqu’un d’autre a modifié les limites de l’argent du tiroir. Les plus récentes ont été chargées et vos changements gardés; vérifiez-les et enregistrez de nouveau.",
+          "VALIDATION_UNNAMED": "Ces valeurs n’ont pas été acceptées. Vérifiez chaque montant et la raison, puis réessayez."
         },
         "DRAWER_FAILED": "Les limites de l’argent du tiroir n’ont pas été enregistrées : {{reason}}",
         "PARTIAL": {
           "BILLS_FAILED": "Les limites de l’argent du tiroir ont été enregistrées. Les limites des factures n’ont pas été enregistrées : {{reason}} Vos changements aux factures sont toujours là.",
-          "DRAWER_FAILED": "Les limites des factures ont été enregistrées. Les limites de l’argent du tiroir n’ont pas été enregistrées : {{reason}} Vos changements au tiroir sont toujours là."
-        }
+          "DRAWER_FAILED": "Les limites des factures ont été enregistrées. Les limites de l’argent du tiroir n’ont pas été enregistrées : {{reason}} Vos changements au tiroir sont toujours là.",
+          "DRAWER_UNCONFIRMED": "Les limites des factures ont été enregistrées. Impossible de confirmer les limites de l’argent du tiroir : {{reason}} Vos changements au tiroir sont toujours là.",
+          "BILLS_UNCONFIRMED": "Les limites de l’argent du tiroir ont été enregistrées. Impossible de confirmer les limites des factures : {{reason}} Vos changements aux factures sont toujours là."
+        },
+        "DRAWER_UNCONFIRMED": "Impossible de confirmer les limites de l’argent du tiroir : {{reason}}"
       },
       "HISTORY": {
         "HEADING": "Historique",
@@ -6374,7 +6378,8 @@
           "ACCOUNTS_FAILED": "Impossible de charger les comptes.",
           "FROM": "À partir du",
           "REASON": "Pourquoi?",
-          "REASON_HINT": "Au moins {{min}} caractères."
+          "REASON_HINT": "Au moins {{min}} caractères.",
+          "CODE_FORMAT": "Utilisez seulement des majuscules, des chiffres et des traits de soulignement, jusqu’à 40 caractères."
         },
         "ERROR": {
           "VALIDATION": "Vérifiez les champs en surbrillance.",
@@ -6389,8 +6394,10 @@
           "IDEMPOTENCY": "Ce changement ne correspond pas à votre tentative précédente. Réessayez.",
           "FORBIDDEN": "Il vous faut l’autorisation {{permission}} pour faire ce changement.",
           "UNKNOWN_OUTCOME": "Impossible de confirmer le changement. Appuyez de nouveau : il ne sera pas appliqué deux fois.",
-          "OTHER": "Impossible d’enregistrer ce changement."
-        }
+          "OTHER": "Impossible d’enregistrer ce changement.",
+          "VALIDATION_UNNAMED": "Ce changement n’a pas été accepté. Vérifiez chaque champ et la raison, puis réessayez."
+        },
+        "REFRESHING": "Actualisation des catégories… Les changements seront possibles une fois le chargement terminé."
       }
     }
   },

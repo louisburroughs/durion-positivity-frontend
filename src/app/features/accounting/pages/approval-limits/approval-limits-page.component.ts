@@ -37,7 +37,7 @@ import { PettyExpenseCategory, PettyExpenseCategoryChange, PettyExpenseChangeTyp
 import { ApApprovalPolicyService } from '../../services/ap-approval-policy.service';
 import { DrawerPolicyService } from '../../services/drawer-policy.service';
 import { PettyExpenseCategoriesService } from '../../services/petty-expense-categories.service';
-import { DrawerDraft, DrawerField, draftFrom, drawerDirty, drawerValid, parseAmount, toDrawerUpdate } from '../../utils/drawer-draft';
+import { DrawerDraft, DrawerField, draftFrom, drawerDirty, drawerValid, parseAmount, rebaseDraft, toDrawerUpdate } from '../../utils/drawer-draft';
 import { HomeRegion } from '../../utils/home-region';
 import { uuidV7 } from '../../utils/uuid-v7.util';
 
@@ -67,7 +67,8 @@ export function classifyPolicyError(error: unknown, currency: string, permission
     case 'JUSTIFICATION_REQUIRED':
       return { key: 'ACCOUNTING.APPROVAL_LIMITS.SAVE.ERROR.JUSTIFICATION_REQUIRED', params: { min: POLICY_REASON_MIN }, fields: ['justification'] };
     case 'VALIDATION_ERROR':
-      return { key: 'ACCOUNTING.APPROVAL_LIMITS.SAVE.ERROR.VALIDATION', params: {}, fields: named };
+      // "Check the highlighted fields" only when the refusal names one (ADR-0017 fieldErrors).
+      return { key: `ACCOUNTING.APPROVAL_LIMITS.SAVE.ERROR.${named.length ? 'VALIDATION' : 'VALIDATION_UNNAMED'}`, params: {}, fields: named };
     case 'AMOUNT_PRECISION_EXCEEDS_CURRENCY':
       return {
         key: 'ACCOUNTING.APPROVAL_LIMITS.SAVE.ERROR.PRECISION',
@@ -118,7 +119,7 @@ export function classifyDrawerError(error: unknown, currency: string, permission
     : [];
   switch (code) {
     case 'VALIDATION_ERROR':
-      return view('VALIDATION', named);
+      return view(named.length ? 'VALIDATION' : 'VALIDATION_UNNAMED', named);
     case 'SESSION_POLICY_CONFLICT':
       return view('DRAWER_CONFLICT', [], {}, true);
     case 'AMOUNT_PRECISION_EXCEEDS_CURRENCY':
@@ -179,6 +180,37 @@ export function mergeHistory(rows: readonly MergedHistoryRow[]): MergedHistoryRo
     .map((row, index) => ({ row, index, time: at(row.changedAt) }))
     .sort((a, b) => (b.time === a.time ? a.index - b.index : b.time > a.time ? 1 : -1))
     .map(entry => entry.row);
+}
+
+const instant = (value: string | undefined): number => {
+  const time = value === undefined ? Number.NaN : Date.parse(value);
+  return Number.isNaN(time) ? Number.NEGATIVE_INFINITY : time;
+};
+
+/**
+ * The drawer and category rows bill page `page` shows (Accounting ruling Q1 on
+ * #466): those with `oldest(page) ≤ changedAt < oldest(page − 1)`; page 0 has
+ * no upper bound and the last page no lower bound, so each row appears on
+ * exactly one page and the pages read newest first across them. Without a
+ * paged bill source every row shows.
+ */
+export function historyWindow(
+  rows: readonly MergedHistoryRow[],
+  bills: ApPolicyHistoryPage | null,
+  page: number,
+  oldestByPage: Readonly<Record<number, string>>,
+): MergedHistoryRow[] {
+  if (!bills) return [...rows];
+  const pages = Math.max(1, Math.ceil(bills.total / Math.max(1, bills.size)));
+  if (pages <= 1) return [...rows];
+  const last = page >= pages - 1;
+  const oldestHere = bills.rows.length ? bills.rows[bills.rows.length - 1].changedAt : undefined;
+  const lower = last || oldestHere === undefined ? Number.NEGATIVE_INFINITY : instant(oldestHere);
+  const upper = page === 0 || oldestByPage[page - 1] === undefined ? Number.POSITIVE_INFINITY : instant(oldestByPage[page - 1]);
+  return rows.filter(row => {
+    const at = instant(row.changedAt);
+    return at >= lower && at < upper;
+  });
 }
 
 /** Role codes the history names, through translated labels; any other reads "Another role" (review B5, Q4). */
@@ -305,6 +337,14 @@ export class ApprovalLimitsPageComponent {
   readonly manageCode = ACCOUNTING_SECTION.apPolicyManage[0];
   readonly drawerCode = ACCOUNTING_SECTION.drawerPolicy[0];
   readonly pageCodes = ACCOUNTING_PAGE.approvalLimits.join(', ');
+  /** The codes a section is read with: Bills, Drawer cash and the category list. */
+  readonly readCodes = [ACCOUNTING_SECTION.apPolicyManage[0], ACCOUNTING_SECTION.drawerPolicy[0], ACCOUNTING_SECTION.categoryView[0]].join(', ');
+  /**
+   * Admitted by §8.1's gate (e.g. `accounting:mapping-key:edit` alone) but able
+   * to read no section: the page says which codes read one instead of showing
+   * an empty page.
+   */
+  readonly nothingReadable = computed(() => this.canSeePage() && !this.canManage() && !this.canDrawer() && !this.canCategories());
   readonly reasonMin = POLICY_REASON_MIN;
 
   // ── Regions ────────────────────────────────────────────────────────────
@@ -416,16 +456,19 @@ export class ApprovalLimitsPageComponent {
     if (this.categoriesShown()) sources.push({ source: 'CATEGORIES', status: this.categories.status() });
     return sources;
   });
+  /** The oldest bill row's instant of each bill page, remembered as each page arrives (Accounting ruling Q1 on #466). */
+  private readonly oldestByPage = signal<Readonly<Record<number, string>>>({});
   readonly historyRows = computed(() => {
-    const rows: MergedHistoryRow[] = [];
-    for (const row of this.historyData()?.rows ?? []) rows.push({ source: 'BILLS', changedAt: row.changedAt, row });
+    const bills = this.historyData();
+    const others: MergedHistoryRow[] = [];
     if (this.canDrawer() && !this.drawer.denied()) {
-      for (const row of this.drawer.data()?.history ?? []) rows.push({ source: 'DRAWER', changedAt: row.changedAt, row });
+      for (const row of this.drawer.data()?.history ?? []) others.push({ source: 'DRAWER', changedAt: row.changedAt, row });
     }
     for (const category of this.categoryRows() ?? []) {
-      for (const row of category.history) rows.push({ source: 'CATEGORIES', changedAt: row.changedAt, row, category: category.label });
+      for (const row of category.history) others.push({ source: 'CATEGORIES', changedAt: row.changedAt, row, category: category.label });
     }
-    return mergeHistory(rows);
+    const billRows: MergedHistoryRow[] = (bills?.rows ?? []).map(row => ({ source: 'BILLS', changedAt: row.changedAt, row }));
+    return mergeHistory([...billRows, ...historyWindow(others, bills, this.historyPage(), this.oldestByPage())]);
   });
   readonly historyPending = computed(() => this.historySources().some(source => source.status === 'PENDING'));
   readonly historyAllOk = computed(() => this.historySources().length > 0 && this.historySources().every(source => source.status === 'OK'));
@@ -441,6 +484,14 @@ export class ApprovalLimitsPageComponent {
       this.saveToken++;
       this.saveSubscription?.unsubscribe();
     });
+    // Remember each bill page's oldest instant as it arrives; the next page's window starts below it.
+    effect(() => {
+      const data = this.historyData();
+      const page = this.historyPage();
+      if (!data || !data.rows.length) return;
+      const oldest = data.rows[data.rows.length - 1].changedAt;
+      untracked(() => this.oldestByPage.update(known => (known[page] === oldest ? known : { ...known, [page]: oldest })));
+    });
     // ADR-0063 §7: another tenant or person invalidates every read in flight and clears the page.
     effect(() => {
       const identity = this.identity();
@@ -455,6 +506,7 @@ export class ApprovalLimitsPageComponent {
         this.drawer.reset();
         this.categories.reset();
         this.historyPage.set(0);
+        this.oldestByPage.set({});
         this.resetBills(null);
         this.resetDrawer(null);
         this.partialSaved.set(null);
@@ -529,15 +581,17 @@ export class ApprovalLimitsPageComponent {
     this.errorKey.set('ACCOUNTING.APPROVAL_LIMITS.LOAD_FAILED');
   }
 
-  /** A drawer read fills a clean (or first) draft; an edited draft is kept over a re-read. */
+  /**
+   * A drawer read fills a first draft; over a re-read (after a 409) the draft is
+   * rebased field by field: untouched fields take the new served values, edited
+   * ones keep what was typed, so Save never writes back someone else's change.
+   */
   private onDrawerSettled(ok: boolean): void {
     const served = this.drawer.data()?.policy ?? null;
     if (!ok || !served) return;
     const draft = this.drawerDraft();
     const source = this.drawerDraftSource;
-    if (draft === null || source === null || !drawerDirty(draft, source)) {
-      this.drawerDraft.set(draftFrom(served));
-    }
+    this.drawerDraft.set(draft === null || source === null ? draftFrom(served) : rebaseDraft(draft, source, served));
     this.drawerDraftSource = served;
   }
 
@@ -681,6 +735,20 @@ export class ApprovalLimitsPageComponent {
 
   drawerFieldError(field: DrawerField): boolean {
     return !!this.drawerSaveError()?.fields.includes(field);
+  }
+
+  /** The drawer leg's message: "couldn't be confirmed" for an unknown outcome, "weren't saved" for a refusal. */
+  drawerMessageKey(failure: DrawerSaveError): string {
+    const unconfirmed = failure.key.endsWith('UNKNOWN_OUTCOME');
+    if (this.partialSaved() === 'BILLS') {
+      return `ACCOUNTING.APPROVAL_LIMITS.SAVE.PARTIAL.${unconfirmed ? 'DRAWER_UNCONFIRMED' : 'DRAWER_FAILED'}`;
+    }
+    return `ACCOUNTING.APPROVAL_LIMITS.SAVE.${unconfirmed ? 'DRAWER_UNCONFIRMED' : 'DRAWER_FAILED'}`;
+  }
+
+  /** The bill leg's message in a mixed outcome. */
+  billsPartialKey(failure: PolicySaveError): string {
+    return `ACCOUNTING.APPROVAL_LIMITS.SAVE.PARTIAL.${failure.key.endsWith('UNKNOWN_OUTCOME') ? 'BILLS_UNCONFIRMED' : 'BILLS_FAILED'}`;
   }
 
   reasonDescribedBy(): string {

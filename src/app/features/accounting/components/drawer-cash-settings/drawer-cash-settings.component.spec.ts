@@ -1,8 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService, TranslationObject } from '@ngx-translate/core';
+import enUS from '../../../../../assets/i18n/en-US.json';
 import { describe, expect, it } from 'vitest';
 import { DrawerPolicy } from '../../models/drawer-policy.models';
-import { DrawerDraft, draftFrom, drawerDirty, drawerValid, limitProblem, toDrawerUpdate, toleranceProblem } from '../../utils/drawer-draft';
+import { DrawerDraft, draftFrom, drawerDirty, drawerValid, limitProblem, rebaseDraft, toDrawerUpdate, toleranceProblem } from '../../utils/drawer-draft';
 import { DrawerCashSettingsComponent } from './drawer-cash-settings.component';
 
 const policy = (overrides: Partial<DrawerPolicy> = {}): DrawerPolicy => ({
@@ -23,8 +24,13 @@ describe('DrawerCashSettingsComponent (§4.6, §5.5, §5.6)', () => {
   const host = (): HTMLElement => fixture.nativeElement as HTMLElement;
   const q = <T extends HTMLElement>(selector: string): T | null => host().querySelector<T>(selector);
 
-  function render(served: DrawerPolicy = policy(), draft: DrawerDraft = draftFrom(served)): DrawerCashSettingsComponent {
+  function render(served: DrawerPolicy = policy(), draft: DrawerDraft = draftFrom(served), english = false): DrawerCashSettingsComponent {
     TestBed.configureTestingModule({ imports: [DrawerCashSettingsComponent, TranslateModule.forRoot()] });
+    if (english) {
+      const translate = TestBed.inject(TranslateService);
+      translate.setTranslation('en-US', enUS as TranslationObject);
+      translate.use('en-US');
+    }
     fixture = TestBed.createComponent(DrawerCashSettingsComponent);
     fixture.componentRef.setInput('policy', served);
     fixture.componentRef.setInput('draft', draft);
@@ -105,6 +111,24 @@ describe('DrawerCashSettingsComponent (§4.6, §5.5, §5.6)', () => {
     expect(q('[data-testid="drawer-how-counted"]')?.tagName).toBe('DETAILS');
   });
 
+  it('quotes the typed limit and tolerance in the rendered sentences (en-US)', () => {
+    render(policy(), { ...draftFrom(policy()), pettyExpense: { allowed: true, limitText: '75.5' }, toleranceText: '3' }, true);
+    const text = (selector: string): string => q(selector)?.textContent?.replace(/\s+/g, ' ').trim() ?? '';
+
+    expect(text('[data-testid="drawer-means-PETTY_EXPENSE"]')).toBe(
+      'Petty expenses up to $75.50 in one drawer session: the cashier records them; beyond that a manager approves at the register with their own sign-in.',
+    );
+    expect(text('[data-testid="drawer-means-VENDOR_COD"]')).toBe('Cashiers can’t pay vendors cash on delivery from the drawer.');
+    expect(text('[data-testid="drawer-means-tolerance"]')).toBe('A closing count off by more than $3.00 needs a manager to approve the close.');
+  });
+
+  it('shows the rendered required and amount errors (en-US)', () => {
+    render(policy(), { ...draftFrom(policy()), vendorCod: { allowed: true, limitText: '' }, toleranceText: '5.123' }, true);
+
+    expect(q('[data-testid="drawer-limit-error-VENDOR_COD"]')?.textContent?.trim()).toBe('Enter an amount.');
+    expect(q('[data-testid="drawer-tolerance-error"]')?.textContent?.trim()).toBe('Enter an amount of 0 or more, with at most two decimals.');
+  });
+
   it('marks the tolerance invalid with aria-invalid and an aria-describedby message', () => {
     render();
     const tolerance = q<HTMLInputElement>('[data-testid="drawer-tolerance"]')!;
@@ -164,6 +188,32 @@ describe('drawer-draft (format only; the server decides)', () => {
       vendorCod: { allowed: true, cashierLimit: 200 },
       overShortTolerance: 5,
       justification: 'Vendors deliver Saturdays',
+    });
+  });
+
+  it('never clears a kept limit: an off type with unreadable or empty text sends the served limit (A5)', () => {
+    const served = policy();
+    for (const limitText of ['abc', '', '1.234']) {
+      const off: DrawerDraft = { ...draftFrom(served), pettyExpense: { allowed: false, limitText } };
+      expect(drawerValid(off, served)).toBe(true);
+      expect(toDrawerUpdate(off, served, 'Petty cash paused')?.pettyExpense).toEqual({ allowed: false, cashierLimit: 50 });
+    }
+    // A readable kept amount is sent as typed.
+    const kept: DrawerDraft = { ...draftFrom(served), pettyExpense: { allowed: false, limitText: '60' } };
+    expect(toDrawerUpdate(kept, served, 'Petty cash paused')?.pettyExpense).toEqual({ allowed: false, cashierLimit: 60 });
+  });
+
+  it('rebases an edited draft field by field onto a newer served policy (A1)', () => {
+    const before = policy();
+    const after = policy({ version: 5, overShortTolerance: 3, types: policy().types.map(row => (row.type === 'VENDOR_COD' ? { ...row, cashierLimit: 100 } : row)) });
+    const edited: DrawerDraft = { ...draftFrom(before), pettyExpense: { allowed: true, limitText: '75' } };
+
+    const rebased = rebaseDraft(edited, before, after);
+
+    expect(rebased).toEqual({
+      pettyExpense: { allowed: true, limitText: '75' },
+      vendorCod: { allowed: false, limitText: '100' },
+      toleranceText: '3',
     });
   });
 

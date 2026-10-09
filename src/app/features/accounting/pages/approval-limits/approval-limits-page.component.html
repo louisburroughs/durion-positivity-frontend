@@ -16,6 +16,10 @@
     <p class="state-panel state-panel--error" role="alert" data-testid="page-denied">
       {{ 'ACCOUNTING.APPROVAL_LIMITS.DENIED_ANY' | translate: { permissions: pageCodes } }}
     </p>
+  } @else if (nothingReadable()) {
+    <p class="state-panel state-panel--error" role="alert" data-testid="page-nothing-readable">
+      {{ 'ACCOUNTING.APPROVAL_LIMITS.DENIED_ANY' | translate: { permissions: readCodes } }}
+    </p>
   } @else {
     <nav class="limits__jump" [attr.aria-label]="'ACCOUNTING.APPROVAL_LIMITS.NAV.ARIA' | translate">
       <ul>
@@ -231,7 +235,7 @@
           @if (saveError(); as failure) {
             <p class="bill-error" role="alert" id="limits-save-error" data-testid="save-error">
               @if (partialSaved() === 'DRAWER') {
-                {{ 'ACCOUNTING.APPROVAL_LIMITS.SAVE.PARTIAL.BILLS_FAILED' | translate: { reason: (failure.key | translate: failure.params) } }}
+                {{ billsPartialKey(failure) | translate: { reason: (failure.key | translate: failure.params) } }}
               } @else {
                 {{ failure.key | translate: failure.params }}
               }
@@ -239,11 +243,7 @@
           }
           @if (drawerSaveError(); as failure) {
             <p class="bill-error" role="alert" id="limits-drawer-save-error" data-testid="drawer-save-error">
-              @if (partialSaved() === 'BILLS') {
-                {{ 'ACCOUNTING.APPROVAL_LIMITS.SAVE.PARTIAL.DRAWER_FAILED' | translate: { reason: (failure.key | translate: failure.params) } }}
-              } @else {
-                {{ 'ACCOUNTING.APPROVAL_LIMITS.SAVE.DRAWER_FAILED' | translate: { reason: (failure.key | translate: failure.params) } }}
-              }
+              {{ drawerMessageKey(failure) | translate: { reason: (failure.key | translate: failure.params) } }}
             </p>
           }
           @if (!anyDirty()) {

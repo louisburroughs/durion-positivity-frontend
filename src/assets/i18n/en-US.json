@@ -6179,13 +6179,17 @@
           "FORBIDDEN": "You need the {{permission}} permission to change these limits.",
           "UNKNOWN_OUTCOME": "We couldn’t confirm the save. Press Save again: it won’t be applied twice.",
           "OTHER": "Couldn’t save your changes.",
-          "DRAWER_CONFLICT": "Someone else changed the drawer cash limits. The latest were loaded and your changes kept; check them and save again."
+          "DRAWER_CONFLICT": "Someone else changed the drawer cash limits. The latest were loaded and your changes kept; check them and save again.",
+          "VALIDATION_UNNAMED": "These values weren’t accepted. Check each amount and the reason, then try again."
         },
         "DRAWER_FAILED": "Drawer cash limits weren’t saved: {{reason}}",
         "PARTIAL": {
           "BILLS_FAILED": "Drawer cash limits were saved. Bill limits weren’t saved: {{reason}} Your bill changes are still here.",
-          "DRAWER_FAILED": "Bill limits were saved. Drawer cash limits weren’t saved: {{reason}} Your drawer changes are still here."
-        }
+          "DRAWER_FAILED": "Bill limits were saved. Drawer cash limits weren’t saved: {{reason}} Your drawer changes are still here.",
+          "DRAWER_UNCONFIRMED": "Bill limits were saved. Drawer cash limits couldn’t be confirmed: {{reason}} Your drawer changes are still here.",
+          "BILLS_UNCONFIRMED": "Drawer cash limits were saved. Bill limits couldn’t be confirmed: {{reason}} Your bill changes are still here."
+        },
+        "DRAWER_UNCONFIRMED": "Drawer cash limits couldn’t be confirmed: {{reason}}"
       },
       "HISTORY": {
         "HEADING": "History",
@@ -6374,7 +6378,8 @@
           "ACCOUNTS_FAILED": "Accounts couldn’t be loaded.",
           "FROM": "Starting on",
           "REASON": "Why?",
-          "REASON_HINT": "At least {{min}} characters."
+          "REASON_HINT": "At least {{min}} characters.",
+          "CODE_FORMAT": "Use only capital letters, digits and underscores, up to 40 characters."
         },
         "ERROR": {
           "VALIDATION": "Check the highlighted fields.",
@@ -6389,8 +6394,10 @@
           "IDEMPOTENCY": "This change couldn’t be matched to your earlier attempt. Try again.",
           "FORBIDDEN": "You need the {{permission}} permission to make this change.",
           "UNKNOWN_OUTCOME": "We couldn’t confirm the change. Press again: it won’t be applied twice.",
-          "OTHER": "Couldn’t save this change."
-        }
+          "OTHER": "Couldn’t save this change.",
+          "VALIDATION_UNNAMED": "This change wasn’t accepted. Check each field and the reason, then try again."
+        },
+        "REFRESHING": "Refreshing the categories… Changes can be made once they’re loaded."
       }
     }
   },

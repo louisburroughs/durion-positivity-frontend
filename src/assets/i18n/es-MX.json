@@ -6179,13 +6179,17 @@
           "FORBIDDEN": "Necesita el permiso {{permission}} para cambiar estos límites.",
           "UNKNOWN_OUTCOME": "No pudimos confirmar el guardado. Pulse Guardar de nuevo: no se aplicará dos veces.",
           "OTHER": "No se pudieron guardar sus cambios.",
-          "DRAWER_CONFLICT": "Otra persona cambió los límites del efectivo de la caja. Se cargaron los más recientes y se conservaron sus cambios; revíselos y guarde de nuevo."
+          "DRAWER_CONFLICT": "Otra persona cambió los límites del efectivo de la caja. Se cargaron los más recientes y se conservaron sus cambios; revíselos y guarde de nuevo.",
+          "VALIDATION_UNNAMED": "Estos valores no se aceptaron. Revise cada monto y el motivo, e intente de nuevo."
         },
         "DRAWER_FAILED": "No se guardaron los límites del efectivo de la caja: {{reason}}",
         "PARTIAL": {
           "BILLS_FAILED": "Se guardaron los límites del efectivo de la caja. No se guardaron los límites de facturas: {{reason}} Sus cambios a las facturas siguen aquí.",
-          "DRAWER_FAILED": "Se guardaron los límites de facturas. No se guardaron los límites del efectivo de la caja: {{reason}} Sus cambios a la caja siguen aquí."
-        }
+          "DRAWER_FAILED": "Se guardaron los límites de facturas. No se guardaron los límites del efectivo de la caja: {{reason}} Sus cambios a la caja siguen aquí.",
+          "DRAWER_UNCONFIRMED": "Se guardaron los límites de facturas. No se pudieron confirmar los límites del efectivo de la caja: {{reason}} Sus cambios a la caja siguen aquí.",
+          "BILLS_UNCONFIRMED": "Se guardaron los límites del efectivo de la caja. No se pudieron confirmar los límites de facturas: {{reason}} Sus cambios a las facturas siguen aquí."
+        },
+        "DRAWER_UNCONFIRMED": "No se pudieron confirmar los límites del efectivo de la caja: {{reason}}"
       },
       "HISTORY": {
         "HEADING": "Historial",
@@ -6374,7 +6378,8 @@
           "ACCOUNTS_FAILED": "No se pudieron cargar las cuentas.",
           "FROM": "A partir del",
           "REASON": "¿Por qué?",
-          "REASON_HINT": "Al menos {{min}} caracteres."
+          "REASON_HINT": "Al menos {{min}} caracteres.",
+          "CODE_FORMAT": "Use solo mayúsculas, dígitos y guiones bajos, hasta 40 caracteres."
         },
         "ERROR": {
           "VALIDATION": "Revise los campos marcados.",
@@ -6389,8 +6394,10 @@
           "IDEMPOTENCY": "Este cambio no coincide con su intento anterior. Intente de nuevo.",
           "FORBIDDEN": "Necesita el permiso {{permission}} para hacer este cambio.",
           "UNKNOWN_OUTCOME": "No pudimos confirmar el cambio. Pulse de nuevo: no se aplicará dos veces.",
-          "OTHER": "No se pudo guardar este cambio."
-        }
+          "OTHER": "No se pudo guardar este cambio.",
+          "VALIDATION_UNNAMED": "Este cambio no se aceptó. Revise cada campo y el motivo, e intente de nuevo."
+        },
+        "REFRESHING": "Actualizando las categorías… Podrá hacer cambios cuando terminen de cargarse."
       }
     }
   },

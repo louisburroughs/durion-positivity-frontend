@@ -69,9 +69,15 @@ export function drawerValid(draft: DrawerDraft, policy: DrawerPolicy): boolean {
   return typesValid && toleranceProblem(draft.toleranceText) === null;
 }
 
-/** The setting a draft type would send: the typed amount, or the kept one while off (never rounded). */
-function typeSetting(draft: DrawerTypeDraft): { allowed: boolean; cashierLimit: number | null } {
-  return { allowed: draft.allowed, cashierLimit: draft.limitText.trim() ? parseAmount(draft.limitText) : null };
+/**
+ * The setting a draft type would send, never rounded. While on, the typed amount
+ * (validated as required). While off, the kept amount when it reads as one,
+ * otherwise the served limit: a switched-off type never clears its stored limit.
+ */
+function typeSetting(draft: DrawerTypeDraft, row: DrawerTypePolicy): { allowed: boolean; cashierLimit: number | null } {
+  const typed = parseAmount(draft.limitText);
+  if (draft.allowed) return { allowed: true, cashierLimit: typed };
+  return { allowed: false, cashierLimit: typed ?? row.cashierLimit };
 }
 
 /** True when the draft differs from the served policy. */
@@ -79,7 +85,7 @@ export function drawerDirty(draft: DrawerDraft, policy: DrawerPolicy): boolean {
   const changed = (type: ConfigurableDrawerType): boolean => {
     const row = configurableRow(policy, type);
     if (!row) return false;
-    const typed = typeSetting(draft[DRAWER_TYPE_KEY[type]]);
+    const typed = typeSetting(draft[DRAWER_TYPE_KEY[type]], row);
     return typed.allowed !== row.allowed || typed.cashierLimit !== row.cashierLimit;
   };
   return changed('PETTY_EXPENSE') || changed('VENDOR_COD') || parseAmount(draft.toleranceText) !== policy.overShortTolerance;
@@ -92,14 +98,42 @@ export function drawerDirty(draft: DrawerDraft, policy: DrawerPolicy): boolean {
  */
 export function toDrawerUpdate(draft: DrawerDraft, policy: DrawerPolicy, justification: string): DrawerPolicyUpdate | null {
   const tolerance = parseAmount(draft.toleranceText);
-  if (!configurableRow(policy, 'PETTY_EXPENSE') || !configurableRow(policy, 'VENDOR_COD')) return null;
-  if (tolerance === null || !drawerValid(draft, policy)) return null;
+  const petty = configurableRow(policy, 'PETTY_EXPENSE');
+  const cod = configurableRow(policy, 'VENDOR_COD');
+  if (!petty || !cod || tolerance === null || !drawerValid(draft, policy)) return null;
   return {
     version: policy.version,
     currencyCode: policy.currencyCode,
-    pettyExpense: typeSetting(draft.pettyExpense),
-    vendorCod: typeSetting(draft.vendorCod),
+    pettyExpense: typeSetting(draft.pettyExpense, petty),
+    vendorCod: typeSetting(draft.vendorCod, cod),
     overShortTolerance: tolerance,
     justification,
+  };
+}
+
+/**
+ * Rebases an edited draft onto a newer served policy, field by field (after a
+ * 409 re-read): a field still holding the value it was filled from takes the
+ * new served value; a field the person changed keeps what they typed. A full
+ * replacement then never writes back a value someone else just changed.
+ */
+export function rebaseDraft(draft: DrawerDraft, from: DrawerPolicy, to: DrawerPolicy): DrawerDraft {
+  const fresh = draftFrom(to);
+  const type = (kind: ConfigurableDrawerType): DrawerTypeDraft => {
+    const key = DRAWER_TYPE_KEY[kind];
+    const typed = draft[key];
+    const before = configurableRow(from, kind);
+    if (!before) return fresh[key];
+    const limitUntouched = typed.limitText.trim() ? parseAmount(typed.limitText) === before.cashierLimit : before.cashierLimit === null;
+    return {
+      allowed: typed.allowed === before.allowed ? fresh[key].allowed : typed.allowed,
+      limitText: limitUntouched ? fresh[key].limitText : typed.limitText,
+    };
+  };
+  const toleranceUntouched = parseAmount(draft.toleranceText) === from.overShortTolerance;
+  return {
+    pettyExpense: type('PETTY_EXPENSE'),
+    vendorCod: type('VENDOR_COD'),
+    toleranceText: toleranceUntouched ? fresh.toleranceText : draft.toleranceText,
   };
 }

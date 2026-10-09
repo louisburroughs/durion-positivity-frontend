@@ -1,9 +1,11 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { TranslateModule } from '@ngx-translate/core';
+import { formatDate } from '@angular/common';
+import { TranslateModule, TranslateService, TranslationObject } from '@ngx-translate/core';
 import { Observable, Subject, of, throwError } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import enUS from '../../../../../assets/i18n/en-US.json';
 import { JwtClaims } from '../../../../core/models/auth.models';
 import { AuthService } from '../../../../core/services/auth.service';
 import {
@@ -70,7 +72,7 @@ describe('PettyExpenseCategoriesComponent (§4.6, §5.5, P4, P5)', () => {
     fixture.detectChanges();
   };
 
-  function render(held: readonly string[] | null, rows: PettyExpenseCategory[] = [category()]): PettyExpenseCategoriesComponent {
+  function render(held: readonly string[] | null, rows: PettyExpenseCategory[] = [category()], english = false): PettyExpenseCategoriesComponent {
     tenant = signal<string | null>('tenant-a');
     auth = authMock(held, { tenantId: tenant });
     TestBed.configureTestingModule({
@@ -80,6 +82,11 @@ describe('PettyExpenseCategoriesComponent (§4.6, §5.5, P4, P5)', () => {
         { provide: AuthService, useValue: auth.service },
       ],
     });
+    if (english) {
+      const translate = TestBed.inject(TranslateService);
+      translate.setTranslation('en-US', enUS as TranslationObject);
+      translate.use('en-US');
+    }
     fixture = TestBed.createComponent(PettyExpenseCategoriesComponent);
     document.body.appendChild(fixture.nativeElement as HTMLElement);
     fixture.componentRef.setInput('categories', rows);
@@ -96,6 +103,15 @@ describe('PettyExpenseCategoriesComponent (§4.6, §5.5, P4, P5)', () => {
     fixture.detectChanges();
     fixture.componentRef.setInput('categories', rows);
     fixture.componentRef.setInput('status', 'OK');
+    fixture.detectChanges();
+    await fixture.whenStable();
+  }
+
+  /** A re-read that fails: the page keeps the last rows and flips the status (ADR-0064 §2). */
+  async function failedReread(): Promise<void> {
+    fixture.componentRef.setInput('status', 'PENDING');
+    fixture.detectChanges();
+    fixture.componentRef.setInput('status', 'FAILED');
     fixture.detectChanges();
     await fixture.whenStable();
   }
@@ -127,6 +143,29 @@ describe('PettyExpenseCategoriesComponent (§4.6, §5.5, P4, P5)', () => {
       }
       component.submit();
       expect(service.relabel).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ['CREATE', 'category-add', 'create'],
+      ['RELABEL', 'category-rename', 'relabel'],
+      ['DEACTIVATE', 'category-deactivate', 'deactivate'],
+      ['REMAP', 'category-remap', 'remap'],
+    ] as const)('submit() refuses a %s dialog once its permission is revoked (ADR-0040 §6a.4)', (mode, trigger, method) => {
+      const component = render([...ALL, REMAP]);
+      click(`[data-testid="${trigger}"]`);
+      expect(component.dialog()?.mode).toBe(mode);
+      if (mode === 'CREATE') {
+        type('[data-testid="category-code"]', 'STAFF_MEALS');
+        type('[data-testid="category-label"]', 'Staff meals');
+      }
+      if (mode === 'CREATE' || mode === 'REMAP') type('[data-testid="category-account-picker"]', 'gl-6375-uuid');
+      type('[data-testid="category-reason"]', WHY);
+      expect(component.dialogValid()).toBe(true);
+
+      auth.held.set([VIEW]);
+      component.submit();
+
+      expect(service[method]).not.toHaveBeenCalled();
     });
 
     it('with accounting:mapping-key:edit only, only Rename is offered', () => {
@@ -205,6 +244,27 @@ describe('PettyExpenseCategoriesComponent (§4.6, §5.5, P4, P5)', () => {
     });
   });
 
+  describe('stale read (ADR-0029 §8, ADR-0064)', () => {
+    it('after a failed re-read the actions stay focusable, are aria-disabled with the reason, and focus falls back to the heading', async () => {
+      const component = render(ALL);
+      click('[data-testid="category-rename"]');
+      type('[data-testid="category-reason"]', WHY);
+      click('[data-testid="category-confirm"]');
+      expect(changed).toBe(1);
+
+      await failedReread();
+
+      const rename = q<HTMLButtonElement>('[data-testid="category-rename"]')!;
+      expect(rename.disabled).toBe(false);
+      expect(rename.getAttribute('aria-disabled')).toBe('true');
+      expect(rename.getAttribute('aria-describedby')).toBe('categories-error-text');
+      expect(q('#categories-error-text')?.textContent).toContain('ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.LOAD_FAILED');
+      expect(document.activeElement?.id).toBe('approval-limits-categories');
+      rename.click();
+      expect(component.dialog()).toBeNull();
+    });
+  });
+
   describe('Rename (AC 9)', () => {
     it('sends the new label, examples, version and reason with a requestId, never the code as a change or an actor', async () => {
       const component = render(ALL);
@@ -228,6 +288,40 @@ describe('PettyExpenseCategoriesComponent (§4.6, §5.5, P4, P5)', () => {
 
       await reread([category({ label: 'Shop consumables' })]);
       expect(document.activeElement?.getAttribute('data-testid')).toBe('category-rename');
+    });
+
+    it('after a VERSION_CONFLICT the re-read refreshes the version and the untouched examples; the typed label is kept', async () => {
+      service.relabel.mockReturnValueOnce(throwError(() => apiError(409, 'VERSION_CONFLICT')));
+      render(ALL);
+      click('[data-testid="category-rename"]');
+      type('[data-testid="category-label"]', 'Shop consumables');
+      type('[data-testid="category-reason"]', WHY);
+      click('[data-testid="category-confirm"]');
+      expect(service.relabel.mock.calls[0][1].version).toBe(2);
+
+      // Someone else changed the examples meanwhile.
+      await reread([category({ examples: 'Rags, gloves, zip ties', version: 3 })]);
+      expect(q<HTMLTextAreaElement>('[data-testid="category-examples"]')!.value).toBe('Rags, gloves, zip ties');
+      expect(q<HTMLInputElement>('[data-testid="category-label"]')!.value).toBe('Shop consumables');
+      click('[data-testid="category-confirm"]');
+
+      const resent = service.relabel.mock.calls[1][1];
+      expect(resent.version).toBe(3);
+      expect(resent.examples).toBe('Rags, gloves, zip ties');
+      expect(resent.label).toBe('Shop consumables');
+    });
+
+    it('a rename sends the version read when the dialog opened, even if a later read moved it (refused, never overwrites)', () => {
+      render(ALL);
+      click('[data-testid="category-rename"]');
+      type('[data-testid="category-label"]', 'Shop consumables');
+      type('[data-testid="category-reason"]', WHY);
+      // Another person's change lands through an unrelated re-read while the dialog is open.
+      fixture.componentRef.setInput('categories', [category({ examples: 'Rags, gloves, zip ties', version: 3 })]);
+      fixture.detectChanges();
+      click('[data-testid="category-confirm"]');
+
+      expect(service.relabel.mock.calls[0][1]).toMatchObject({ version: 2, examples: 'Rags, gloves' });
     });
 
     it('a VERSION_CONFLICT re-reads and explains in the dialog, keeping the input', () => {
@@ -264,6 +358,19 @@ describe('PettyExpenseCategoriesComponent (§4.6, §5.5, P4, P5)', () => {
       expect(q('[data-testid="category-status"]')?.textContent).toContain('ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.STATUS.OFF');
       expect(q('[data-testid="category-deactivate"]')).toBeNull();
       expect(document.activeElement?.id).toBe('approval-limits-categories');
+    });
+
+    it('once a re-read shows the category off, Turn off refuses at the confirm and in submit()', async () => {
+      service.deactivate.mockReturnValueOnce(throwError(() => apiError(409, 'PETTY_EXPENSE_CATEGORY_INACTIVE')));
+      const component = render(ALL);
+      click('[data-testid="category-deactivate"]');
+      type('[data-testid="category-reason"]', WHY);
+      click('[data-testid="category-confirm"]');
+      await reread([category({ status: 'INACTIVE' })]);
+
+      expect(q<HTMLButtonElement>('[data-testid="category-confirm"]')!.disabled).toBe(true);
+      component.submit();
+      expect(service.deactivate).toHaveBeenCalledTimes(1);
     });
 
     it('an already-inactive refusal re-reads and explains', () => {
@@ -303,6 +410,16 @@ describe('PettyExpenseCategoriesComponent (§4.6, §5.5, P4, P5)', () => {
       });
     });
 
+    it('states the consequence with the chosen account and the starting day (en-US)', () => {
+      render(ALL, [category()], true);
+      openRemap();
+      const day = localDay(new Date());
+
+      expect(q('[data-testid="category-consequence"]')?.textContent?.replace(/\s+/g, ' ').trim()).toBe(
+        `Payouts recorded from ${formatDate(`${day}T00:00:00`, 'mediumDate', 'en-US')} go to Cleaning & Janitorial Supplies 6375; earlier ones stay where they are.`,
+      );
+    });
+
     it('shows a 400 for overlapping dates in the dialog, on the date field', () => {
       service.remap.mockReturnValueOnce(throwError(() => apiError(400, 'PETTY_EXPENSE_MAPPING_OVERLAP')));
       render(ALL);
@@ -337,6 +454,19 @@ describe('PettyExpenseCategoriesComponent (§4.6, §5.5, P4, P5)', () => {
       expect(q('[data-testid="category-accounts-failed"]')?.textContent).toContain('ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.FIELD.ACCOUNTS_FAILED');
       expect(q<HTMLSelectElement>('[data-testid="category-account-picker"]')!.disabled).toBe(true);
       expect(q<HTMLButtonElement>('[data-testid="category-confirm"]')!.disabled).toBe(true);
+    });
+  });
+
+  describe('unnamed refusal (ADR-0017)', () => {
+    it('a VALIDATION_ERROR without fieldErrors says so and marks no field', () => {
+      service.relabel.mockReturnValueOnce(throwError(() => apiError(400, 'VALIDATION_ERROR')));
+      render(ALL);
+      click('[data-testid="category-rename"]');
+      type('[data-testid="category-reason"]', WHY);
+      click('[data-testid="category-confirm"]');
+
+      expect(q('[data-testid="category-dialog-error"]')?.textContent).toContain('ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.ERROR.VALIDATION_UNNAMED');
+      expect(document.querySelector('[data-testid="category-dialog-RELABEL"] [aria-invalid="true"]')).toBeNull();
     });
   });
 
@@ -399,12 +529,16 @@ describe('PettyExpenseCategoriesComponent (§4.6, §5.5, P4, P5)', () => {
       expect(code.value).toBe('STAFF_MEALS');
     });
 
-    it('refuses a code that is not capital letters, digits and underscores', () => {
+    it('refuses a code that is not capital letters, digits and underscores, with a linked message', () => {
       render(ALL);
       fillCreate();
       type('[data-testid="category-code"]', 'staff meals');
 
-      expect(q('[data-testid="category-code"]')!.getAttribute('aria-invalid')).toBe('true');
+      const code = q('[data-testid="category-code"]')!;
+      expect(code.getAttribute('aria-invalid')).toBe('true');
+      expect(q('[data-testid="category-code-error"]')?.textContent).toContain('ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.FIELD.CODE_FORMAT');
+      expect(code.getAttribute('aria-describedby')).toContain('category-code-error');
+      expect(q('#category-code-error')).not.toBeNull();
       expect(q<HTMLButtonElement>('[data-testid="category-confirm"]')!.disabled).toBe(true);
     });
 
@@ -445,21 +579,32 @@ describe('PettyExpenseCategoriesComponent (§4.6, §5.5, P4, P5)', () => {
 
 describe('classifyCategoryError', () => {
   it.each([
-    [apiError(400, 'VALIDATION_ERROR', [{ field: 'justification', message: 'x' }]), 'VALIDATION', 'justification', false],
-    [apiError(409, 'PETTY_EXPENSE_CATEGORY_EXISTS'), 'EXISTS', 'code', false],
-    [apiError(422, 'PETTY_EXPENSE_CATEGORY_NOT_ALLOWED'), 'NOT_ALLOWED', 'code', false],
-    [apiError(422, 'PETTY_EXPENSE_ACCOUNT_NOT_ELIGIBLE'), 'ACCOUNT_NOT_ELIGIBLE', 'glAccountId', false],
-    [apiError(422, 'PETTY_EXPENSE_ACCOUNT_CHANGE_BACKDATED'), 'BACKDATED', 'effectiveFrom', false],
-    [apiError(400, 'PETTY_EXPENSE_MAPPING_OVERLAP'), 'OVERLAP', 'effectiveFrom', false],
-    [apiError(404, 'PETTY_EXPENSE_CATEGORY_NOT_FOUND'), 'NOT_FOUND', null, true],
-    [apiError(409, 'VERSION_CONFLICT'), 'VERSION_CONFLICT', null, true],
-    [apiError(409, 'PETTY_EXPENSE_CATEGORY_INACTIVE'), 'INACTIVE', null, true],
-    [new HttpErrorResponse({ status: 503 }), 'UNKNOWN_OUTCOME', null, false],
-    [apiError(422, 'SOMETHING_NEW'), 'OTHER', null, false],
-  ])('classifies %#', (error, key, field, reread) => {
+    [apiError(400, 'VALIDATION_ERROR', [{ field: 'justification', message: 'x' }]), 'VALIDATION', ['justification'], false],
+    [
+      apiError(400, 'VALIDATION_ERROR', [
+        { field: 'label', message: 'x' },
+        { field: 'examples', message: 'y' },
+        { field: 'label', message: 'z' },
+      ]),
+      'VALIDATION',
+      ['label', 'examples'],
+      false,
+    ],
+    [apiError(400, 'VALIDATION_ERROR'), 'VALIDATION_UNNAMED', [], false],
+    [apiError(409, 'PETTY_EXPENSE_CATEGORY_EXISTS'), 'EXISTS', ['code'], false],
+    [apiError(422, 'PETTY_EXPENSE_CATEGORY_NOT_ALLOWED'), 'NOT_ALLOWED', ['code'], false],
+    [apiError(422, 'PETTY_EXPENSE_ACCOUNT_NOT_ELIGIBLE'), 'ACCOUNT_NOT_ELIGIBLE', ['glAccountId'], false],
+    [apiError(422, 'PETTY_EXPENSE_ACCOUNT_CHANGE_BACKDATED'), 'BACKDATED', ['effectiveFrom'], false],
+    [apiError(400, 'PETTY_EXPENSE_MAPPING_OVERLAP'), 'OVERLAP', ['effectiveFrom'], false],
+    [apiError(404, 'PETTY_EXPENSE_CATEGORY_NOT_FOUND'), 'NOT_FOUND', [], true],
+    [apiError(409, 'VERSION_CONFLICT'), 'VERSION_CONFLICT', [], true],
+    [apiError(409, 'PETTY_EXPENSE_CATEGORY_INACTIVE'), 'INACTIVE', [], true],
+    [new HttpErrorResponse({ status: 503 }), 'UNKNOWN_OUTCOME', [], false],
+    [apiError(422, 'SOMETHING_NEW'), 'OTHER', [], false],
+  ])('classifies %#', (error, key, fields, reread) => {
     const failure = classifyCategoryError(error, EDIT);
     expect(failure.key).toBe(`ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.ERROR.${key}`);
-    expect(failure.field).toBe(field);
+    expect(failure.fields).toEqual(fields);
     expect(failure.reread).toBe(reread);
   });
 
