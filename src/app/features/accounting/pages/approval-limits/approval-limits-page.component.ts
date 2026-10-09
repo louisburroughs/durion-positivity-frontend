@@ -15,12 +15,14 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
-import { Subscription, map, of, share } from 'rxjs';
+import { Observable, Subscription, catchError, forkJoin, map, of, share, take } from 'rxjs';
 import { canAccess } from '../../../../core/security/route-access';
 import { ACCOUNTING_PAGE, ACCOUNTING_SECTION } from '../../../../core/security/route-permissions';
 import { AuthService } from '../../../../core/services/auth.service';
 import { MoneyPipe } from '../../../../shared/money.pipe';
+import { DrawerCashSettingsComponent } from '../../components/drawer-cash-settings/drawer-cash-settings.component';
 import { HelpDisclosureComponent } from '../../components/help-disclosure/help-disclosure.component';
+import { PettyExpenseCategoriesComponent } from '../../components/petty-expense-categories/petty-expense-categories.component';
 import {
   ApApprovalPolicy,
   ApPolicyHistoryPage,
@@ -29,13 +31,15 @@ import {
   ApPolicySetting,
   POLICY_REASON_MIN,
 } from '../../models/ap-approval-policy.models';
-import { HomePageState } from '../../models/accounting-home.models';
+import { HomePageState, RegionStatus } from '../../models/accounting-home.models';
+import { DrawerPolicy, DrawerPolicyHistoryRow, DrawerPolicyRead, DrawerPolicySetting } from '../../models/drawer-policy.models';
+import { PettyExpenseCategory, PettyExpenseCategoryChange, PettyExpenseChangeType } from '../../models/petty-expense-categories.models';
 import { ApApprovalPolicyService } from '../../services/ap-approval-policy.service';
+import { DrawerPolicyService } from '../../services/drawer-policy.service';
+import { PettyExpenseCategoriesService } from '../../services/petty-expense-categories.service';
+import { DrawerDraft, DrawerField, draftFrom, drawerDirty, drawerValid, parseAmount, toDrawerUpdate } from '../../utils/drawer-draft';
 import { HomeRegion } from '../../utils/home-region';
 import { uuidV7 } from '../../utils/uuid-v7.util';
-
-/** A limit as typed: a non-negative amount with at most two decimals (§9.5). */
-const AMOUNT = /^\d{1,13}(\.\d{1,2})?$/;
 
 /** The Bills fields a refusal can mark. */
 export type PolicyField = 'clerkApprovalLimit' | 'autoApprovalLimit' | 'justification';
@@ -81,17 +85,101 @@ export function classifyPolicyError(error: unknown, currency: string, permission
   return { key: 'ACCOUNTING.APPROVAL_LIMITS.SAVE.ERROR.OTHER', params: {}, fields: named };
 }
 
+/** A classified drawer save refusal (S16 codes). */
+export interface DrawerSaveError {
+  readonly key: string;
+  readonly params: Readonly<Record<string, unknown>>;
+  readonly fields: readonly DrawerField[];
+  /** The policy changed since it was read: the section re-reads, the typed values stay. */
+  readonly reread: boolean;
+}
+
+const DRAWER_FIELDS: readonly DrawerField[] = ['pettyExpense.cashierLimit', 'vendorCod.cashierLimit', 'overShortTolerance', 'justification'];
+
+/**
+ * Classifies a refused `updateSessionPolicy` (S16; story #466 "Service
+ * contracts"). A 422 `AMOUNT_PRECISION_EXCEEDS_CURRENCY` is shown, never
+ * rounded (ADR-0067 PC-6).
+ */
+export function classifyDrawerError(error: unknown, currency: string, permission: string): DrawerSaveError {
+  const view = (key: string, fields: readonly DrawerField[] = [], params: Record<string, unknown> = {}, reread = false): DrawerSaveError => ({
+    key: `ACCOUNTING.APPROVAL_LIMITS.SAVE.ERROR.${key}`,
+    params,
+    fields,
+    reread,
+  });
+  if (!(error instanceof HttpErrorResponse)) return view('UNKNOWN_OUTCOME');
+  const body = (typeof error.error === 'object' && error.error !== null ? error.error : {}) as { code?: unknown; fieldErrors?: unknown };
+  const code = typeof body.code === 'string' ? body.code : null;
+  const named = Array.isArray(body.fieldErrors)
+    ? body.fieldErrors
+        .map(entry => (entry && typeof entry === 'object' ? (entry as { field?: unknown }).field : null))
+        .filter((field): field is DrawerField => typeof field === 'string' && (DRAWER_FIELDS as readonly string[]).includes(field))
+    : [];
+  switch (code) {
+    case 'VALIDATION_ERROR':
+      return view('VALIDATION', named);
+    case 'SESSION_POLICY_CONFLICT':
+      return view('DRAWER_CONFLICT', [], {}, true);
+    case 'AMOUNT_PRECISION_EXCEEDS_CURRENCY':
+      return view('PRECISION', named.length ? named : ['pettyExpense.cashierLimit', 'vendorCod.cashierLimit', 'overShortTolerance'], { currency });
+    case 'CURRENCY_NOT_SUPPORTED':
+      return view('CURRENCY', [], { currency });
+    case 'FORBIDDEN':
+      return view('FORBIDDEN', [], { permission });
+  }
+  if (error.status === 403) return view('FORBIDDEN', [], { permission });
+  if (error.status === 409) return view('DRAWER_CONFLICT', [], {}, true);
+  // A full replacement against the version read: Save again either applies it once or answers 409 (S16).
+  if (error.status === 0 || error.status >= 500) return view('UNKNOWN_OUTCOME');
+  return view('OTHER', named);
+}
+
 /** How a history value renders: an amount through `| money`, a switch as On / Off, anything else as served text. */
 export type HistoryValueKind = 'money' | 'switch' | 'terms' | 'text';
 
-const SETTING_KEYS: Readonly<Record<ApPolicySetting, string>> = {
+const SETTING_KEYS: Readonly<Record<ApPolicySetting | DrawerPolicySetting, string>> = {
   AP_CLERK_APPROVAL_LIMIT: 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.SETTING.AP_CLERK_APPROVAL_LIMIT',
   AP_AUTO_APPROVAL_LIMIT: 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.SETTING.AP_AUTO_APPROVAL_LIMIT',
   AP_ALLOW_CREATOR_APPROVAL: 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.SETTING.AP_ALLOW_CREATOR_APPROVAL',
   AP_ALLOW_APPROVER_PAYMENT: 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.SETTING.AP_ALLOW_APPROVER_PAYMENT',
   AP_DEFAULT_TERMS: 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.SETTING.AP_DEFAULT_TERMS',
+  PETTY_EXPENSE_ALLOWED: 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.SETTING.PETTY_EXPENSE_ALLOWED',
+  PETTY_EXPENSE_LIMIT: 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.SETTING.PETTY_EXPENSE_LIMIT',
+  VENDOR_COD_ALLOWED: 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.SETTING.VENDOR_COD_ALLOWED',
+  VENDOR_COD_LIMIT: 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.SETTING.VENDOR_COD_LIMIT',
+  OVER_SHORT_TOLERANCE: 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.SETTING.OVER_SHORT_TOLERANCE',
   UNKNOWN: 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.SETTING.UNKNOWN',
 };
+
+const CATEGORY_CHANGE_KEYS: Readonly<Record<PettyExpenseChangeType, string>> = {
+  CREATE: 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.CATEGORY_CHANGE.CREATE',
+  RELABEL: 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.CATEGORY_CHANGE.RELABEL',
+  DEACTIVATE: 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.CATEGORY_CHANGE.DEACTIVATE',
+  REMAP: 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.CATEGORY_CHANGE.REMAP',
+  UNKNOWN: 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.CATEGORY_CHANGE.UNKNOWN',
+};
+
+/** A History source: each keeps its own read status (ADR-0064). */
+export type HistorySource = 'BILLS' | 'DRAWER' | 'CATEGORIES';
+
+/** One merged History row, tagged with the source that served it. */
+export type MergedHistoryRow =
+  | { readonly source: 'BILLS'; readonly changedAt: string; readonly row: ApPolicyHistoryRow }
+  | { readonly source: 'DRAWER'; readonly changedAt: string; readonly row: DrawerPolicyHistoryRow }
+  | { readonly source: 'CATEGORIES'; readonly changedAt: string; readonly row: PettyExpenseCategoryChange; readonly category: string };
+
+/** Newest first by the served instant; an unreadable instant sorts last; ties keep the served order. */
+export function mergeHistory(rows: readonly MergedHistoryRow[]): MergedHistoryRow[] {
+  const at = (value: string): number => {
+    const time = Date.parse(value);
+    return Number.isNaN(time) ? Number.NEGATIVE_INFINITY : time;
+  };
+  return rows
+    .map((row, index) => ({ row, index, time: at(row.changedAt) }))
+    .sort((a, b) => (b.time === a.time ? a.index - b.index : b.time > a.time ? 1 : -1))
+    .map(entry => entry.row);
+}
 
 /** Role codes the history names, through translated labels; any other reads "Another role" (review B5, Q4). */
 const ROLE_KEYS: Readonly<Record<string, string>> = {
@@ -127,41 +215,64 @@ export const ACTION_PERMISSIONS: readonly { readonly labelKey: string; readonly 
   { labelKey: 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.SET_LIMITS', code: ACCOUNTING_SECTION.apPolicyManage[0] },
 ];
 
-function valueKind(setting: ApPolicySetting): HistoryValueKind {
-  if (setting === 'AP_CLERK_APPROVAL_LIMIT' || setting === 'AP_AUTO_APPROVAL_LIMIT') return 'money';
-  if (setting === 'AP_ALLOW_CREATOR_APPROVAL' || setting === 'AP_ALLOW_APPROVER_PAYMENT') return 'switch';
-  if (setting === 'AP_DEFAULT_TERMS') return 'terms';
-  return 'text';
+function valueKind(setting: ApPolicySetting | DrawerPolicySetting): HistoryValueKind {
+  switch (setting) {
+    case 'AP_CLERK_APPROVAL_LIMIT':
+    case 'AP_AUTO_APPROVAL_LIMIT':
+    case 'PETTY_EXPENSE_LIMIT':
+    case 'VENDOR_COD_LIMIT':
+    case 'OVER_SHORT_TOLERANCE':
+      return 'money';
+    case 'AP_ALLOW_CREATOR_APPROVAL':
+    case 'AP_ALLOW_APPROVER_PAYMENT':
+    case 'PETTY_EXPENSE_ALLOWED':
+    case 'VENDOR_COD_ALLOWED':
+      return 'switch';
+    case 'AP_DEFAULT_TERMS':
+      return 'terms';
+    default:
+      return 'text';
+  }
 }
 
-/** A typed limit as a number, or null while it is not a valid amount. */
-function parseAmount(text: string): number | null {
-  const value = text.trim();
-  return AMOUNT.test(value) ? Number(value) : null;
-}
+
+/** One save leg's outcome, collected before reporting (§5.5, §9.5). */
+type LegOutcome =
+  | { readonly leg: 'BILLS'; readonly ok: true; readonly read: ApPolicyRead }
+  | { readonly leg: 'BILLS'; readonly ok: false; readonly error: unknown }
+  | { readonly leg: 'DRAWER'; readonly ok: true; readonly read: DrawerPolicyRead }
+  | { readonly leg: 'DRAWER'; readonly ok: false; readonly error: unknown };
 
 /**
- * Approval limits (CAP:550 S14; SPEC-accounting-workspace §5.5, §8.1 row
+ * Approval limits (CAP:550 S14 / S21; SPEC-accounting-workspace §5.5, §8.1 row
  * `settings/approval-limits`): the page shell with in-page links, the
- * **Bills** section, **Save your changes** and **History**. S21 adds the
- * Drawer cash and Petty-expense categories sections, their History sources and
- * the drawer save leg.
+ * **Bills**, **Drawer cash** and **Petty-expense categories** sections, the
+ * **Save your changes** card and the merged **History**.
  *
- * - The policy and its history are separate regions with their own read status
- *   (ADR-0064), so S21 can merge other History sources.
+ * - Each section gates on the code its endpoints enforce (ADR-0040 §6a): Bills
+ *   `apPolicyManage`, Drawer cash `drawerPolicy`, categories `categoryView`
+ *   (writes inside the section). The page admits any of §8.1's codes. A section
+ *   the person cannot read (or that answers 403) is absent, with its link.
+ * - Bills, the drawer policy and the categories are separate regions with
+ *   their own read status and sequence (ADR-0063, ADR-0064); a section re-read
+ *   never discards another section's unsaved edits.
  * - Nothing is computed from the limits: "What this means" quotes the typed
  *   values; the only comparison is the inline automatic ≤ clerk check (§9.5).
- * - Save sends one `updatePolicy` with the reason and a `requestId` made when
- *   the section first changes after its last confirmed save, reused on retry
- *   and rotated after a confirmed success or Undo (§8.2). The switches are shown
- *   read-only and never sent.
- * - Gate: `accounting:ap_approval_policy:manage` on the page, the Save control
- *   and its handler (ADR-0040 §6a).
+ * - Save tracks bill and drawer changes separately and sends only the changed
+ *   legs, each with the shared reason, and collects both outcomes before
+ *   reporting. Bills: one `updatePolicy` with a `requestId` bound to the sent
+ *   payload (§8.2). Drawer cash: one full replacement through pos-order, which
+ *   writes nothing when unchanged and answers 409 on a race. A failed leg stays
+ *   dirty, so Save retries only it.
+ * - History merges the bill history page, the drawer history and the category
+ *   changes, newest first; each source keeps its own read status. Usernames are
+ *   never shown (Accounting ruling Q4 on #464): bill rows show translated
+ *   roles; drawer and category rows serve no role.
  */
 @Component({
   selector: 'app-approval-limits-page',
   standalone: true,
-  imports: [DatePipe, MoneyPipe, RouterLink, TranslatePipe, HelpDisclosureComponent],
+  imports: [DatePipe, MoneyPipe, RouterLink, TranslatePipe, HelpDisclosureComponent, DrawerCashSettingsComponent, PettyExpenseCategoriesComponent],
   templateUrl: './approval-limits-page.component.html',
   styleUrls: [
     '../../bank-reconciliation-shared.css',
@@ -173,23 +284,35 @@ function parseAmount(text: string): number | null {
 export class ApprovalLimitsPageComponent {
   private readonly auth = inject(AuthService);
   private readonly service = inject(ApApprovalPolicyService);
+  private readonly drawerService = inject(DrawerPolicyService);
+  private readonly categoriesService = inject(PettyExpenseCategoriesService);
   private readonly destroyRef = inject(DestroyRef);
 
   private readonly billsHeading = viewChild<ElementRef<HTMLElement>>('billsHeading');
   private readonly historyHeading = viewChild<ElementRef<HTMLElement>>('historyHeading');
+  private readonly drawerSection = viewChild(DrawerCashSettingsComponent);
+  private readonly categoriesSection = viewChild(PettyExpenseCategoriesComponent);
 
   // ── Page state (ADR-0031) ──────────────────────────────────────────────
   readonly state = signal<HomePageState>('idle');
   readonly errorKey = signal<string | null>(null);
 
+  /** §8.1's any-of gate, as on the route. */
+  readonly canSeePage = computed(() => canAccess(this.auth, { permissions: ACCOUNTING_PAGE.approvalLimits }));
   readonly canManage = computed(() => canAccess(this.auth, { permissions: ACCOUNTING_SECTION.apPolicyManage }));
-  readonly manageCode = ACCOUNTING_PAGE.approvalLimits[0];
+  readonly canDrawer = computed(() => canAccess(this.auth, { permissions: ACCOUNTING_SECTION.drawerPolicy }));
+  readonly canCategories = computed(() => canAccess(this.auth, { permissions: ACCOUNTING_SECTION.categoryView }));
+  readonly manageCode = ACCOUNTING_SECTION.apPolicyManage[0];
+  readonly drawerCode = ACCOUNTING_SECTION.drawerPolicy[0];
+  readonly pageCodes = ACCOUNTING_PAGE.approvalLimits.join(', ');
   readonly reasonMin = POLICY_REASON_MIN;
 
   // ── Regions ────────────────────────────────────────────────────────────
   readonly policy = new HomeRegion<ApApprovalPolicy>(ok => this.onPolicySettled(ok));
   readonly history = new HomeRegion<ApPolicyHistoryPage>();
   readonly historyPage = signal(0);
+  readonly drawer = new HomeRegion<DrawerPolicyRead>(ok => this.onDrawerSettled(ok));
+  readonly categories = new HomeRegion<PettyExpenseCategory[]>();
 
   readonly baseline = computed(() => (this.canManage() && !this.policy.denied() ? this.policy.data() : null));
   readonly historyData = computed(() =>
@@ -223,21 +346,50 @@ export class ApprovalLimitsPageComponent {
   readonly billsValid = computed(() => !this.clerkInvalid() && !this.autoInvalid() && !this.autoAboveClerk());
   readonly reasonValid = computed(() => this.reason().trim().length >= POLICY_REASON_MIN);
 
-  // ── Save card (clean → dirty → saving → clean | dirty with error) ─────
+  // ── Drawer cash section ───────────────────────────────────────────────
+  /** The served policy the drawer section shows (kept over a failed re-read, ADR-0064 §2). */
+  readonly drawerPolicy = computed<DrawerPolicy | null>(() =>
+    this.canDrawer() && !this.drawer.denied() ? (this.drawer.data()?.policy ?? null) : null,
+  );
+  readonly drawerDraft = signal<DrawerDraft | null>(null);
+  /** The section renders once a read answered; its fields edit only while the read is current. */
+  readonly drawerShown = computed(() => this.drawerPolicy() !== null && this.drawerDraft() !== null);
+  readonly drawerCurrent = computed(() => this.drawerShown() && this.drawer.status() === 'OK');
+  readonly drawerDirty = computed(() => {
+    const policy = this.drawerPolicy();
+    const draft = this.drawerDraft();
+    return this.drawerCurrent() && !!policy && !!draft && drawerDirty(draft, policy);
+  });
+  readonly drawerValid = computed(() => {
+    const policy = this.drawerPolicy();
+    const draft = this.drawerDraft();
+    return !this.drawerCurrent() || (!!policy && !!draft && drawerValid(draft, policy));
+  });
+  /** The policy the draft was filled from: a re-read refreshes a clean draft, never an edited one. */
+  private drawerDraftSource: DrawerPolicy | null = null;
+
+  readonly categoriesShown = computed(() => this.canCategories() && !this.categories.denied());
+  readonly categoryRows = computed(() => (this.categoriesShown() ? this.categories.data() : null));
+
+  // ── Save card (clean → dirty → saving → clean | partial | dirty with error) ──
   readonly saving = signal(false);
   readonly saveError = signal<PolicySaveError | null>(null);
+  readonly drawerSaveError = signal<DrawerSaveError | null>(null);
+  /** In a mixed outcome, the leg that was saved (the other's message names it). */
+  readonly partialSaved = signal<'BILLS' | 'DRAWER' | null>(null);
   readonly announcement = signal<string | null>(null);
+  readonly saveShown = computed(() => this.baseline() !== null || this.drawerShown());
+  readonly anyDirty = computed(() => this.billsDirty() || this.drawerDirty());
   readonly canSave = computed(
     () =>
-      this.canManage() &&
-      this.policy.status() === 'OK' &&
-      this.billsDirty() &&
-      this.billsValid() &&
+      ((this.canManage() && this.policy.status() === 'OK' && this.billsDirty()) || (this.canDrawer() && this.drawerDirty())) &&
+      (this.baseline() === null || this.billsValid()) &&
+      this.drawerValid() &&
       this.reasonValid() &&
       !this.saving(),
   );
   /**
-   * The key last sent, bound to the payload it was sent with (review A1): a
+   * The bill key last sent, bound to the payload it was sent with (review A1): a
    * retry of the identical payload reuses it (the server never applies it
    * twice); any edit gets a new one, because the server answers a known key
    * with the current policy and ignores the body. Dropped after a confirmed
@@ -248,11 +400,35 @@ export class ApprovalLimitsPageComponent {
   private saveToken = 0;
 
   readonly settingKeys = SETTING_KEYS;
+  readonly categoryChangeKeys = CATEGORY_CHANGE_KEYS;
   readonly valueKind = valueKind;
   readonly roleKey = roleKey;
   readonly termsCopy = termsCopy;
   readonly actionPermissions = ACTION_PERMISSIONS;
-  readonly rowKey = (row: ApPolicyHistoryRow, index: number): string => `${row.changedAt}|${row.setting}|${index}`;
+  readonly rowKey = (row: MergedHistoryRow, index: number): string => `${row.source}|${row.changedAt}|${index}`;
+
+  // ── History ───────────────────────────────────────────────────────────
+  /** The sources this session reads, each with its own status. */
+  readonly historySources = computed(() => {
+    const sources: { readonly source: HistorySource; readonly status: RegionStatus }[] = [];
+    if (this.canManage() && !this.history.denied()) sources.push({ source: 'BILLS', status: this.history.status() });
+    if (this.canDrawer() && !this.drawer.denied()) sources.push({ source: 'DRAWER', status: this.drawer.status() });
+    if (this.categoriesShown()) sources.push({ source: 'CATEGORIES', status: this.categories.status() });
+    return sources;
+  });
+  readonly historyRows = computed(() => {
+    const rows: MergedHistoryRow[] = [];
+    for (const row of this.historyData()?.rows ?? []) rows.push({ source: 'BILLS', changedAt: row.changedAt, row });
+    if (this.canDrawer() && !this.drawer.denied()) {
+      for (const row of this.drawer.data()?.history ?? []) rows.push({ source: 'DRAWER', changedAt: row.changedAt, row });
+    }
+    for (const category of this.categoryRows() ?? []) {
+      for (const row of category.history) rows.push({ source: 'CATEGORIES', changedAt: row.changedAt, row, category: category.label });
+    }
+    return mergeHistory(rows);
+  });
+  readonly historyPending = computed(() => this.historySources().some(source => source.status === 'PENDING'));
+  readonly historyAllOk = computed(() => this.historySources().length > 0 && this.historySources().every(source => source.status === 'OK'));
 
   private trackedIdentity = this.identity();
 
@@ -260,6 +436,8 @@ export class ApprovalLimitsPageComponent {
     this.destroyRef.onDestroy(() => {
       this.policy.dispose();
       this.history.dispose();
+      this.drawer.dispose();
+      this.categories.dispose();
       this.saveToken++;
       this.saveSubscription?.unsubscribe();
     });
@@ -274,8 +452,12 @@ export class ApprovalLimitsPageComponent {
         this.saving.set(false);
         this.policy.reset();
         this.history.reset();
+        this.drawer.reset();
+        this.categories.reset();
         this.historyPage.set(0);
         this.resetBills(null);
+        this.resetDrawer(null);
+        this.partialSaved.set(null);
         this.load();
       });
     });
@@ -294,7 +476,10 @@ export class ApprovalLimitsPageComponent {
 
   // ── Loading ───────────────────────────────────────────────────────────
   private load(): void {
+    if (this.canDrawer()) this.loadDrawer();
+    if (this.canCategories()) this.loadCategories();
     if (!this.canManage()) {
+      // The page-level state names the Bills read only; the other sections carry their own.
       this.state.set('ready');
       this.errorKey.set(null);
       return;
@@ -308,7 +493,23 @@ export class ApprovalLimitsPageComponent {
   }
 
   retry(): void {
-    this.load();
+    if (!this.canManage()) return;
+    this.state.set('loading');
+    this.errorKey.set(null);
+    const read$ = this.service.getPolicy(0).pipe(share());
+    this.policy.load(read$.pipe(map(read => read.policy)), 'policy');
+    this.history.load(read$.pipe(map(read => read.history)), 'history:0');
+    this.historyPage.set(0);
+  }
+
+  loadDrawer(): void {
+    if (!this.canDrawer()) return;
+    this.drawer.load(this.drawerService.getPolicy(), 'drawer');
+  }
+
+  loadCategories(): void {
+    if (!this.canCategories()) return;
+    this.categories.load(this.categoriesService.list(), 'categories');
   }
 
   private onPolicySettled(ok: boolean): void {
@@ -328,17 +529,35 @@ export class ApprovalLimitsPageComponent {
     this.errorKey.set('ACCOUNTING.APPROVAL_LIMITS.LOAD_FAILED');
   }
 
+  /** A drawer read fills a clean (or first) draft; an edited draft is kept over a re-read. */
+  private onDrawerSettled(ok: boolean): void {
+    const served = this.drawer.data()?.policy ?? null;
+    if (!ok || !served) return;
+    const draft = this.drawerDraft();
+    const source = this.drawerDraftSource;
+    if (draft === null || source === null || !drawerDirty(draft, source)) {
+      this.drawerDraft.set(draftFrom(served));
+    }
+    this.drawerDraftSource = served;
+  }
+
   /** True while the fields hold typed text (not yet filled from a read). */
   private billsDirtyAgainstText(): boolean {
     return this.clerkText() !== '' || this.autoText() !== '';
   }
 
-  private resetBills(policy: ApApprovalPolicy | null): void {
+  private resetBills(policy: ApApprovalPolicy | null, keepReason = false): void {
     this.clerkText.set(policy ? String(policy.clerkApprovalLimit) : '');
     this.autoText.set(policy ? String(policy.autoApprovalLimit) : '');
-    this.reason.set('');
+    if (!keepReason) this.reason.set('');
     this.saveError.set(null);
     this.sent = null;
+  }
+
+  private resetDrawer(policy: DrawerPolicy | null): void {
+    this.drawerDraft.set(policy ? draftFrom(policy) : null);
+    this.drawerDraftSource = policy;
+    this.drawerSaveError.set(null);
   }
 
   // ── Editing ───────────────────────────────────────────────────────────
@@ -354,50 +573,122 @@ export class ApprovalLimitsPageComponent {
     this.reason.set(value);
   }
 
-  /** Undo changes: back to the last confirmed values; the key rotates (§8.2). */
+  setDrawerDraft(draft: DrawerDraft): void {
+    if (this.saving() || !this.canDrawer()) return;
+    this.drawerDraft.set(draft);
+  }
+
+  /** Undo changes: both sections back to their last served values; the bill key rotates (§8.2). */
   undo(): void {
     if (this.saving()) return;
     this.resetBills(this.baseline());
+    this.resetDrawer(this.drawerPolicy());
+    this.partialSaved.set(null);
     this.announcement.set('ACCOUNTING.APPROVAL_LIMITS.SAVE.UNDONE');
   }
 
-  /** Save, re-checked here: permission, a read policy, changed and valid values, a reason, nothing in flight. */
+  /**
+   * Save, re-checked here: each leg's permission, a current read, changed and
+   * valid values, a reason, nothing in flight. Only the changed legs are sent;
+   * both outcomes are collected before reporting.
+   */
   save(): void {
+    if (!this.canSave()) return;
+    const justification = this.reason().trim();
+    const legs: Observable<LegOutcome>[] = [];
+
     const base = this.baseline();
     const clerk = this.clerk();
     const auto = this.auto();
-    if (!base || clerk === null || auto === null || !this.canSave()) return;
-    const body = { clerkApprovalLimit: clerk, autoApprovalLimit: auto, currencyCode: base.currencyCode, justification: this.reason().trim() };
-    const payload = JSON.stringify(body);
-    const requestId = this.sent?.payload === payload ? this.sent.requestId : uuidV7();
-    this.sent = { requestId, payload };
+    if (this.canManage() && base && this.billsDirty() && clerk !== null && auto !== null) {
+      const body = { clerkApprovalLimit: clerk, autoApprovalLimit: auto, currencyCode: base.currencyCode, justification };
+      const payload = JSON.stringify(body);
+      const requestId = this.sent?.payload === payload ? this.sent.requestId : uuidV7();
+      this.sent = { requestId, payload };
+      legs.push(
+        this.service.updatePolicy({ ...body, requestId }).pipe(
+          take(1),
+          map((read): LegOutcome => ({ leg: 'BILLS', ok: true, read })),
+          catchError((error: unknown) => of<LegOutcome>({ leg: 'BILLS', ok: false, error })),
+        ),
+      );
+    }
+
+    const drawerPolicy = this.drawerPolicy();
+    const draft = this.drawerDraft();
+    const update = this.canDrawer() && this.drawerDirty() && drawerPolicy && draft ? toDrawerUpdate(draft, drawerPolicy, justification) : null;
+    if (update) {
+      legs.push(
+        this.drawerService.updatePolicy(update).pipe(
+          take(1),
+          map((read): LegOutcome => ({ leg: 'DRAWER', ok: true, read })),
+          catchError((error: unknown) => of<LegOutcome>({ leg: 'DRAWER', ok: false, error })),
+        ),
+      );
+    }
+    if (!legs.length) return;
+
     const token = ++this.saveToken;
     this.saving.set(true);
     this.saveError.set(null);
-    this.saveSubscription = this.service
-      .updatePolicy({ ...body, requestId })
+    this.drawerSaveError.set(null);
+    this.partialSaved.set(null);
+    this.announcement.set(null);
+    this.saveSubscription = forkJoin(legs)
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (read: ApPolicyRead) => {
-          if (token !== this.saveToken) return;
-          this.saving.set(false);
-          // The served answer is the new baseline; the history's first page comes with it.
-          this.policy.load(of(read.policy), 'policy');
-          this.historyPage.set(0);
-          this.history.load(of(read.history), 'history:0');
-          this.resetBills(read.policy);
-          this.announcement.set('ACCOUNTING.APPROVAL_LIMITS.SAVE.SAVED');
-        },
-        error: (error: unknown) => {
-          if (token !== this.saveToken) return;
-          this.saving.set(false);
-          this.saveError.set(classifyPolicyError(error, base.currencyCode, this.manageCode));
-        },
+      .subscribe(outcomes => {
+        if (token !== this.saveToken) return;
+        this.saving.set(false);
+        this.settleSave(outcomes);
       });
+  }
+
+  private settleSave(outcomes: readonly LegOutcome[]): void {
+    const failed = outcomes.some(outcome => !outcome.ok);
+    const saved = outcomes.filter(outcome => outcome.ok).map(outcome => outcome.leg);
+    for (const outcome of outcomes) {
+      if (outcome.leg === 'BILLS') {
+        if (outcome.ok) {
+          // The served answer is the new baseline; the history's first page comes with it.
+          this.policy.load(of(outcome.read.policy), 'policy');
+          this.historyPage.set(0);
+          this.history.load(of(outcome.read.history), 'history:0');
+          this.resetBills(outcome.read.policy, failed);
+        } else {
+          this.saveError.set(classifyPolicyError(outcome.error, this.baseline()?.currencyCode ?? '', this.manageCode));
+        }
+      } else if (outcome.ok) {
+        this.resetDrawer(null);
+        this.drawer.load(of(outcome.read), 'drawer');
+      } else {
+        const error = classifyDrawerError(outcome.error, this.drawerPolicy()?.currencyCode ?? '', this.drawerCode);
+        this.drawerSaveError.set(error);
+        // The policy moved: re-read it; the typed values stay and Save compares them with the new one.
+        if (error.reread) this.loadDrawer();
+      }
+    }
+    if (!failed) {
+      this.reason.set('');
+      this.announcement.set('ACCOUNTING.APPROVAL_LIMITS.SAVE.SAVED');
+      return;
+    }
+    this.partialSaved.set(saved.length === 1 && outcomes.length === 2 ? saved[0] : null);
   }
 
   fieldError(field: PolicyField): boolean {
     return !!this.saveError()?.fields.includes(field);
+  }
+
+  drawerFieldError(field: DrawerField): boolean {
+    return !!this.drawerSaveError()?.fields.includes(field);
+  }
+
+  reasonDescribedBy(): string {
+    return (
+      'limits-reason-hint' +
+      (this.saveError() ? ' limits-save-error' : '') +
+      (this.drawerSaveError() ? ' limits-drawer-save-error' : '')
+    );
   }
 
   // ── History ───────────────────────────────────────────────────────────
@@ -418,16 +709,39 @@ export class ApprovalLimitsPageComponent {
   }
 
   retryHistory(): void {
+    if (!this.canManage()) return;
     this.loadHistory(this.historyPage());
+  }
+
+  /** Retry one History source; drawer and category history come with their section's read. */
+  retrySource(source: HistorySource): void {
+    if (source === 'BILLS') this.retryHistory();
+    else if (source === 'DRAWER') this.loadDrawer();
+    else this.loadCategories();
   }
 
   historyPages(data: ApPolicyHistoryPage): number {
     return Math.max(1, Math.ceil(data.total / Math.max(1, data.size)));
   }
 
+  /** On / Off for a served switch or category status value; an empty or unknown value reads as a dash. */
+  switchLabel(value: string | null): string {
+    if (value === 'true' || value === 'ACTIVE') return 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.ON';
+    if (value === 'false' || value === 'INACTIVE') return 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.OFF';
+    return 'COMMON.EMPTY_VALUE';
+  }
+
   // ── In-page links ─────────────────────────────────────────────────────
   /** The link keeps its `#fragment` href; focus moves to the section heading (the router does not scroll). */
-  jumpTo(target: 'bills' | 'history'): void {
+  jumpTo(target: 'bills' | 'drawer' | 'categories' | 'history'): void {
+    if (target === 'drawer') {
+      this.drawerSection()?.focusHeading();
+      return;
+    }
+    if (target === 'categories') {
+      this.categoriesSection()?.focusHeading();
+      return;
+    }
     const heading = (target === 'bills' ? this.billsHeading() : this.historyHeading())?.nativeElement;
     if (!heading) return;
     if (typeof heading.scrollIntoView === 'function') heading.scrollIntoView({ block: 'start' });

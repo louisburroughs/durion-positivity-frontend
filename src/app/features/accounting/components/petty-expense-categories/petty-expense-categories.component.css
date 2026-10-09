@@ -1,0 +1,99 @@
+/* Approval limits' Petty-expense categories section (CAP:550 S21). The page's own section styles are component-scoped, so this defines its card. */
+
+.limits-section {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--cardBackground);
+  color: var(--currentTextColor);
+}
+
+.categories p,
+.categories h2,
+.categories h3 {
+  margin: 0;
+}
+
+.categories__heading {
+  font-size: 1.125rem;
+}
+
+.categories__heading:focus-visible,
+.categories__scroll:focus-visible {
+  outline: 2px solid var(--input-focus-border);
+  outline-offset: 2px;
+}
+
+.categories__scroll {
+  overflow-x: auto;
+}
+
+.categories caption {
+  text-align: start;
+  font-weight: 600;
+  padding-block-end: var(--space-2);
+}
+
+/* Rows are at least 44px tall (§5.7). */
+.categories tbody tr {
+  height: 2.75rem;
+}
+
+.categories__label {
+  font-weight: 600;
+  text-align: start;
+}
+
+.categories__text {
+  overflow-wrap: anywhere;
+}
+
+.categories__mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.categories__later {
+  display: block;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+}
+
+.categories__actions {
+  white-space: nowrap;
+}
+
+.categories__action {
+  min-height: 1.5rem;
+  min-width: 1.5rem;
+}
+
+.categories__error {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.categories__never {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.categories__never ul {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding-inline-start: 1.25rem;
+}
+
+.confirm-panel input,
+.confirm-panel select {
+  min-height: 2.75rem;
+}
+
+.confirm-panel [aria-invalid='true'] {
+  border-color: var(--status-error-fg);
+}

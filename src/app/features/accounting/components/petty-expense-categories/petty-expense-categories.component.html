@@ -1,0 +1,321 @@
+<section class="limits-section categories" aria-labelledby="approval-limits-categories" data-testid="categories-section">
+  <h2 id="approval-limits-categories" class="categories__heading" tabindex="-1" #heading>
+    {{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.HEADING' | translate }}
+  </h2>
+
+  <!-- Outcomes survive every rebuild below (ADR-0029 §8.8). -->
+  <p class="sr-only" role="status" data-testid="categories-announcement">
+    @if (announcement(); as key) {
+      {{ key | translate }}
+    }
+  </p>
+
+  @if (status() === 'PENDING' && categories() === null) {
+    <p class="pending-note" data-testid="categories-loading">{{ 'ACCOUNTING.APPROVAL_LIMITS.LOADING' | translate }}</p>
+  }
+  @if (status() === 'FAILED') {
+    <div class="categories__error" data-testid="categories-error">
+      <p class="field-error">{{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.LOAD_FAILED' | translate }}</p>
+      <button type="button" class="btn btn--outline" (click)="retry.emit()">{{ 'COMMON.RETRY' | translate }}</button>
+    </div>
+  }
+
+  @if (categories(); as rows) {
+    @if (canCreate()) {
+      <div class="bill-actions">
+        <button
+          type="button"
+          class="btn btn--accent"
+          data-testid="category-add"
+          data-focus-key="CREATE"
+          [disabled]="!actionable()"
+          (click)="open('CREATE')"
+        >
+          {{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.CREATE.OPEN' | translate }}
+        </button>
+      </div>
+    }
+    @if (!canWrite()) {
+      <p class="hint-text" data-testid="categories-read-only">{{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.READ_ONLY' | translate }}</p>
+    }
+
+    @if (rows.length === 0) {
+      <p class="state-panel state-panel--empty" data-testid="categories-empty">{{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.EMPTY' | translate }}</p>
+    } @else {
+      <div class="categories__scroll" tabindex="0" role="region" aria-labelledby="categories-caption">
+        <table class="ledger-table" data-testid="categories-table">
+          <caption id="categories-caption">{{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.CAPTION' | translate }}</caption>
+          <thead>
+            <tr>
+              <th scope="col">{{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.COLUMN.CATEGORY' | translate }}</th>
+              <th scope="col">{{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.COLUMN.EXAMPLES' | translate }}</th>
+              <th scope="col">{{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.COLUMN.RECORDED_IN' | translate }}</th>
+              <th scope="col">{{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.COLUMN.STATUS' | translate }}</th>
+              <!-- S33 (#470): the "GST/HST claimed back" column joins here. -->
+              @if (hasRowActions()) {
+                <th scope="col">{{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.COLUMN.ACTIONS' | translate }}</th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (category of rows; track category.code) {
+              <tr data-testid="category-row" [attr.data-code]="category.code">
+                <th scope="row" class="categories__label">{{ category.label }}</th>
+                <td class="categories__text">{{ category.examples ?? ('COMMON.EMPTY_VALUE' | translate) }}</td>
+                <td data-testid="category-account">
+                  @if (category.currentAccount; as account) {
+                    <span>{{ account.accountName ?? ('COMMON.NOT_AVAILABLE' | translate) }}</span>
+                    @if (account.accountCode) {
+                      <span class="categories__mono"> {{ account.accountCode }}</span>
+                    }
+                  } @else {
+                    {{ 'COMMON.NOT_AVAILABLE' | translate }}
+                  }
+                  @if (category.laterAccount; as later) {
+                    <span class="categories__later" data-testid="category-later-account">
+                      {{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.LATER' | translate: { date: (toDatePipeInput(later.effectiveFrom) | date: 'mediumDate') } }}
+                      <span>{{ later.accountName ?? ('COMMON.NOT_AVAILABLE' | translate) }}</span>
+                      @if (later.accountCode) {
+                        <span class="categories__mono"> {{ later.accountCode }}</span>
+                      }
+                    </span>
+                  }
+                </td>
+                <td data-testid="category-status">
+                  @switch (category.status) {
+                    @case ('ACTIVE') {
+                      <span class="bill-badge bill-badge--success">{{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.STATUS.ON' | translate }}</span>
+                    }
+                    @case ('INACTIVE') {
+                      <span class="bill-badge">{{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.STATUS.OFF' | translate }}</span>
+                    }
+                    @default {
+                      <span class="bill-badge bill-badge--warning">{{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.STATUS.UNKNOWN' | translate }}</span>
+                    }
+                  }
+                </td>
+                @if (hasRowActions()) {
+                  <td class="categories__actions">
+                    @if (canEdit()) {
+                      <button
+                        type="button"
+                        class="link-button categories__action"
+                        data-testid="category-rename"
+                        [attr.data-focus-key]="category.code + '|RELABEL'"
+                        [disabled]="!actionable()"
+                        (click)="open('RELABEL', category)"
+                      >
+                        {{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.RELABEL.OPEN' | translate }}<span class="sr-only"> {{ category.label }}</span>
+                      </button>
+                    }
+                    @if (canDeactivate() && category.status === 'ACTIVE') {
+                      <button
+                        type="button"
+                        class="link-button categories__action"
+                        data-testid="category-deactivate"
+                        [attr.data-focus-key]="category.code + '|DEACTIVATE'"
+                        [disabled]="!actionable()"
+                        (click)="open('DEACTIVATE', category)"
+                      >
+                        {{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.DEACTIVATE.OPEN' | translate }}<span class="sr-only"> {{ category.label }}</span>
+                      </button>
+                    }
+                    @if (canRemap()) {
+                      <button
+                        type="button"
+                        class="link-button categories__action"
+                        data-testid="category-remap"
+                        [attr.data-focus-key]="category.code + '|REMAP'"
+                        [disabled]="!actionable()"
+                        (click)="open('REMAP', category)"
+                      >
+                        {{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.REMAP.OPEN' | translate }}<span class="sr-only"> {{ category.label }}</span>
+                      </button>
+                    }
+                  </td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <div class="alert alert-warning categories__never" data-testid="categories-never">
+      <h3 class="bill-subheading">{{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.NEVER.HEADING' | translate }}</h3>
+      <ul>
+        <li>{{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.NEVER.PARTS' | translate }}</li>
+        <li>{{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.NEVER.WAGES' | translate }}</li>
+        <li>{{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.NEVER.OWNER' | translate }}</li>
+        <li>{{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.NEVER.REFUNDS' | translate }}</li>
+        <li>{{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.NEVER.EQUIPMENT' | translate }}</li>
+        <li>{{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.NEVER.BILLS' | translate }}</li>
+      </ul>
+    </div>
+    <p data-testid="categories-tax">{{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.TAX_INCLUDED' | translate }}</p>
+  }
+</section>
+
+@if (dialog(); as open) {
+  <dialog
+    appModalDialog
+    class="confirm-panel"
+    aria-labelledby="category-dialog-title"
+    (modalCancel)="close()"
+    [attr.data-testid]="'category-dialog-' + open.mode"
+  >
+    <form class="bill-form" (submit)="$event.preventDefault(); submit()">
+      <h2 class="confirm-heading" id="category-dialog-title">{{ dialogKeys[open.mode].title | translate: { category: open.label } }}</h2>
+
+      @if (open.mode === 'CREATE') {
+        <div class="form-field">
+          <label for="category-code">{{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.FIELD.CODE' | translate }}</label>
+          <input
+            id="category-code"
+            type="text"
+            autocomplete="off"
+            maxlength="40"
+            data-testid="category-code"
+            [value]="code()"
+            (input)="code.set(text($event))"
+            [attr.aria-invalid]="(code() && !codeValid()) || fieldMarked('code') ? 'true' : null"
+            [attr.aria-describedby]="describedBy('code', 'category-code-hint')"
+          />
+          <p class="hint-text" id="category-code-hint">{{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.FIELD.CODE_HINT' | translate }}</p>
+        </div>
+      }
+
+      @if (open.mode === 'CREATE' || open.mode === 'RELABEL') {
+        <div class="form-field">
+          <label for="category-label">{{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.FIELD.LABEL' | translate }}</label>
+          <input
+            id="category-label"
+            type="text"
+            autocomplete="off"
+            data-testid="category-label"
+            [attr.maxlength]="labelMax"
+            [value]="label()"
+            (input)="label.set(text($event))"
+            [attr.aria-invalid]="fieldMarked('label') ? 'true' : null"
+            [attr.aria-describedby]="describedBy('label', null)"
+          />
+        </div>
+        <div class="form-field">
+          <label for="category-examples">{{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.FIELD.EXAMPLES' | translate }}</label>
+          <textarea
+            id="category-examples"
+            data-testid="category-examples"
+            [attr.maxlength]="examplesMax"
+            [value]="examples()"
+            (input)="examples.set(text($event))"
+            [attr.aria-invalid]="fieldMarked('examples') ? 'true' : null"
+            [attr.aria-describedby]="describedBy('examples', null)"
+          ></textarea>
+        </div>
+      }
+
+      @if (open.mode === 'CREATE' || open.mode === 'REMAP') {
+        <div class="form-field">
+          <label for="category-account">{{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.FIELD.ACCOUNT' | translate }}</label>
+          <select
+            id="category-account"
+            data-testid="category-account-picker"
+            [disabled]="accountsStatus() !== 'OK'"
+            (change)="accountId.set(text($event))"
+            [attr.aria-invalid]="fieldMarked('glAccountId') ? 'true' : null"
+            [attr.aria-describedby]="describedBy('glAccountId', 'category-account-hint')"
+          >
+            <option value="" [selected]="accountId() === ''">{{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.FIELD.ACCOUNT_CHOOSE' | translate }}</option>
+            @for (option of accounts(); track option.glAccountId) {
+              <option [value]="option.glAccountId" [selected]="option.glAccountId === accountId()">{{ option.accountCode }} · {{ option.accountName }}</option>
+            }
+          </select>
+          <p class="hint-text" id="category-account-hint">
+            @switch (accountsStatus()) {
+              @case ('PENDING') {
+                {{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.FIELD.ACCOUNTS_LOADING' | translate }}
+              }
+              @case ('FAILED') {
+                <span data-testid="category-accounts-failed">{{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.FIELD.ACCOUNTS_FAILED' | translate }}</span>
+              }
+              @default {
+                {{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.FIELD.ACCOUNT_HINT' | translate }}
+              }
+            }
+          </p>
+          @if (accountsStatus() === 'FAILED') {
+            <button type="button" class="btn btn--outline" data-testid="category-accounts-retry" (click)="loadAccounts()">{{ 'COMMON.RETRY' | translate }}</button>
+          }
+        </div>
+      }
+
+      @if (open.mode === 'REMAP') {
+        <div class="form-field">
+          <label for="category-from">{{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.FIELD.FROM' | translate }}</label>
+          <input
+            id="category-from"
+            type="date"
+            data-testid="category-from"
+            [attr.min]="today()"
+            [value]="effectiveFrom()"
+            (input)="effectiveFrom.set(text($event))"
+            [attr.aria-invalid]="fieldMarked('effectiveFrom') ? 'true' : null"
+            [attr.aria-describedby]="describedBy('effectiveFrom', null)"
+          />
+        </div>
+      }
+
+      <div class="form-field">
+        <label for="category-reason">{{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.FIELD.REASON' | translate }}</label>
+        <textarea
+          id="category-reason"
+          data-testid="category-reason"
+          maxlength="1000"
+          [value]="reason()"
+          (input)="reason.set(text($event))"
+          [attr.aria-invalid]="fieldMarked('justification') ? 'true' : null"
+          [attr.aria-describedby]="describedBy('justification', 'category-reason-hint')"
+        ></textarea>
+        <p class="hint-text" id="category-reason-hint">{{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.FIELD.REASON_HINT' | translate: { min: reasonMin } }}</p>
+      </div>
+
+      @if (failure(); as refused) {
+        <p class="bill-error" role="alert" id="category-dialog-error" data-testid="category-dialog-error">
+          {{ refused.key | translate: refused.params }}
+        </p>
+      }
+
+      <p class="bill-consequence" data-testid="category-consequence">
+        @switch (open.mode) {
+          @case ('CREATE') {
+            {{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.CREATE.CONSEQUENCE' | translate }}
+          }
+          @case ('RELABEL') {
+            {{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.RELABEL.CONSEQUENCE' | translate }}
+          }
+          @case ('DEACTIVATE') {
+            {{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.DEACTIVATE.CONSEQUENCE' | translate }}
+          }
+          @case ('REMAP') {
+            @if (chosenAccount(); as account) {
+              {{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.REMAP.CONSEQUENCE' | translate: {
+                date: dateValid() ? (toDatePipeInput(effectiveFrom()) | date: 'mediumDate') : ('COMMON.EMPTY_VALUE' | translate),
+                account: account.accountName + ' ' + account.accountCode
+              } }}
+            } @else {
+              {{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.REMAP.CONSEQUENCE_PENDING' | translate }}
+            }
+          }
+        }
+      </p>
+      <div class="bill-actions">
+        <button type="submit" class="btn btn--accent" data-testid="category-confirm" [disabled]="busy() || !dialogValid()">
+          {{ dialogKeys[open.mode].confirm | translate }}
+        </button>
+        <button type="button" class="btn btn--outline" data-testid="category-cancel" [disabled]="busy()" (click)="close()">
+          {{ 'COMMON.CANCEL' | translate }}
+        </button>
+      </div>
+    </form>
+  </dialog>
+}

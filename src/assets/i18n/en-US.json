@@ -6109,7 +6109,9 @@
       "NAV": {
         "ARIA": "On this page",
         "BILLS": "Bills",
-        "HISTORY": "History"
+        "HISTORY": "History",
+        "DRAWER": "Drawer cash",
+        "CATEGORIES": "Petty-expense categories"
       },
       "LOADING": "Loading…",
       "LOAD_FAILED": "Couldn’t load the approval limits.",
@@ -6162,7 +6164,7 @@
         "HEADING": "Save your changes",
         "REASON_LABEL": "Why are you changing this?",
         "REASON_HINT": "At least {{min}} characters.",
-        "CONSEQUENCE": "New limits apply to the next decision; bills already approved don’t change.",
+        "CONSEQUENCE": "New limits apply from now on. Bills already approved and drawer payments already recorded don’t change.",
         "SAVE": "Save",
         "SAVING": "Saving…",
         "UNDO": "Undo changes",
@@ -6176,7 +6178,13 @@
           "CURRENCY": "The limits must be in your ledger currency, {{currency}}.",
           "FORBIDDEN": "You need the {{permission}} permission to change these limits.",
           "UNKNOWN_OUTCOME": "We couldn’t confirm the save. Press Save again: it won’t be applied twice.",
-          "OTHER": "Couldn’t save your changes."
+          "OTHER": "Couldn’t save your changes.",
+          "DRAWER_CONFLICT": "Someone else changed the drawer cash limits. The latest were loaded and your changes kept; check them and save again."
+        },
+        "DRAWER_FAILED": "Drawer cash limits weren’t saved: {{reason}}",
+        "PARTIAL": {
+          "BILLS_FAILED": "Drawer cash limits were saved. Bill limits weren’t saved: {{reason}} Your bill changes are still here.",
+          "DRAWER_FAILED": "Bill limits were saved. Drawer cash limits weren’t saved: {{reason}} Your drawer changes are still here."
         }
       },
       "HISTORY": {
@@ -6187,7 +6195,6 @@
         "CHANGE": "Change",
         "REASON": "Reason",
         "EMPTY": "No changes yet.",
-        "LOAD_FAILED": "Couldn’t load the history.",
         "FROM_TO": "{{old}} → {{new}}",
         "ON": "On",
         "OFF": "Off",
@@ -6201,7 +6208,12 @@
           "AP_ALLOW_CREATOR_APPROVAL": "Creators may approve their own bills",
           "AP_ALLOW_APPROVER_PAYMENT": "Approvers may pay the bills they approved",
           "AP_DEFAULT_TERMS": "Default payment terms",
-          "UNKNOWN": "Unknown setting"
+          "UNKNOWN": "Unknown setting",
+          "PETTY_EXPENSE_ALLOWED": "Petty expenses allowed",
+          "PETTY_EXPENSE_LIMIT": "Petty expenses: cashier limit",
+          "VENDOR_COD_ALLOWED": "Vendor cash on delivery allowed",
+          "VENDOR_COD_LIMIT": "Vendor cash on delivery: cashier limit",
+          "OVER_SHORT_TOLERANCE": "Drawer count tolerance"
         },
         "ROLE": {
           "ACCOUNTING_CLERK": "Accounting clerk",
@@ -6215,6 +6227,169 @@
           "DUE_ON_RECEIPT": "Due on receipt",
           "NET": "Net {{days}} days",
           "UNKNOWN": "Unknown"
+        },
+        "SOURCE_FAILED": {
+          "BILLS": "Bill limit changes couldn’t be loaded.",
+          "DRAWER": "Drawer cash changes couldn’t be loaded.",
+          "CATEGORIES": "Category changes couldn’t be loaded."
+        },
+        "CATEGORY_CHANGE": {
+          "CREATE": "Category added: {{category}}",
+          "RELABEL": "Category renamed: {{category}}",
+          "DEACTIVATE": "Category turned off: {{category}}",
+          "REMAP": "Category account changed: {{category}}",
+          "UNKNOWN": "Category changed: {{category}}"
+        }
+      },
+      "DENIED_ANY": "You need one of these permissions to see this page: {{permissions}}.",
+      "DRAWER": {
+        "HEADING": "Drawer cash",
+        "CURRENCY": "Amounts in {{currency}}.",
+        "LOAD_FAILED": "Couldn’t load the drawer cash limits.",
+        "ALLOWED": "Allowed",
+        "LIMIT_LABEL": "Cashier can record up to",
+        "LIMIT_HINT": "Per drawer session",
+        "TOLERANCE_LABEL": "Drawer count can be off by",
+        "TOLERANCE_HINT": "Over or short, per closing count",
+        "ERROR": {
+          "REQUIRED": "Enter an amount.",
+          "AMOUNT": "Enter an amount of 0 or more, with at most two decimals."
+        },
+        "TYPE": {
+          "PETTY_EXPENSE": {
+            "TITLE": "Petty expenses",
+            "DESCRIPTION": "Small shop purchases paid from the drawer, like supplies or postage."
+          },
+          "VENDOR_COD": {
+            "TITLE": "Vendor cash on delivery",
+            "DESCRIPTION": "Paying a vendor in cash when they deliver."
+          },
+          "BANK_DROP": {
+            "TITLE": "Bank drops",
+            "DESCRIPTION": "Cash taken out of the drawer for the bank."
+          },
+          "FLOAT_CHANGE": {
+            "TITLE": "Float changes",
+            "DESCRIPTION": "Adding to or taking from the drawer’s starting cash."
+          },
+          "UNKNOWN": {
+            "TITLE": "Unknown",
+            "DESCRIPTION": "A kind of payout this page doesn’t know yet."
+          }
+        },
+        "BADGE": {
+          "BANK_DROP": "Always allowed · deposit bag number required",
+          "FLOAT_CHANGE": "Always needs a manager",
+          "UNKNOWN": "Can’t be changed here",
+          "ON": "Allowed",
+          "OFF": "Not allowed"
+        },
+        "HOW": {
+          "SUMMARY": "How are limits counted?",
+          "RUNNING_TOTAL": "Each limit adds up everything of that kind in one drawer session, so splitting a receipt still needs a manager.",
+          "SWITCH_OFF": "Switching a kind off stops new payouts at once; payouts already recorded stand."
+        },
+        "MEANS": {
+          "HEADING": "What this means at the register",
+          "PETTY_EXPENSE": {
+            "ON": "Petty expenses up to {{limit}} in one drawer session: the cashier records them; beyond that a manager approves at the register with their own sign-in.",
+            "OFF": "Cashiers can’t pay petty expenses from the drawer."
+          },
+          "VENDOR_COD": {
+            "ON": "Vendor cash on delivery up to {{limit}} in one drawer session: the cashier records it; beyond that a manager approves at the register with their own sign-in.",
+            "OFF": "Cashiers can’t pay vendors cash on delivery from the drawer."
+          },
+          "NEEDS_AMOUNT": "Enter an amount to see what it means.",
+          "TOLERANCE": "A closing count off by more than {{tolerance}} needs a manager to approve the close.",
+          "DIFFERENT_PERSON": "The manager who approves must be a different person from the cashier."
+        }
+      },
+      "CATEGORIES": {
+        "HEADING": "Petty-expense categories",
+        "LOAD_FAILED": "Couldn’t load the petty-expense categories.",
+        "READ_ONLY": "Changes to categories are made by someone who manages your chart of accounts. Categories are turned off, never deleted, so old receipts keep their history.",
+        "EMPTY": "No petty-expense categories yet.",
+        "CAPTION": "What cashiers may pay from the drawer, and where each is recorded",
+        "COLUMN": {
+          "CATEGORY": "Category",
+          "EXAMPLES": "Examples",
+          "RECORDED_IN": "Recorded in",
+          "STATUS": "Status",
+          "ACTIONS": "Actions"
+        },
+        "LATER": "From {{date}}:",
+        "STATUS": {
+          "ON": "On",
+          "OFF": "Off",
+          "UNKNOWN": "Unknown"
+        },
+        "NEVER": {
+          "HEADING": "Never pay these from the drawer",
+          "PARTS": "Tires and parts",
+          "WAGES": "Wages, tips or advances",
+          "OWNER": "The owner’s personal spending",
+          "REFUNDS": "Customer refunds",
+          "EQUIPMENT": "Equipment that lasts for years",
+          "BILLS": "Rent, utilities and other vendor bills"
+        },
+        "TAX_INCLUDED": "Cashiers enter the receipt’s total, tax included.",
+        "CREATE": {
+          "OPEN": "Add category",
+          "TITLE": "Add category",
+          "CONFIRM": "Add category",
+          "CONSEQUENCE": "Cashiers can pick it at the register once it’s saved.",
+          "DONE": "The category was added."
+        },
+        "RELABEL": {
+          "OPEN": "Rename",
+          "TITLE": "Rename {{category}}",
+          "CONFIRM": "Rename",
+          "CONSEQUENCE": "Cashiers see the new name at the register straight away; the category’s code doesn’t change.",
+          "DONE": "The category was renamed."
+        },
+        "DEACTIVATE": {
+          "OPEN": "Turn off",
+          "TITLE": "Turn off {{category}}",
+          "CONFIRM": "Turn off",
+          "CONSEQUENCE": "Cashiers stop seeing it at the register straight away; payouts already recorded keep it.",
+          "DONE": "The category was turned off."
+        },
+        "REMAP": {
+          "OPEN": "Change account",
+          "TITLE": "Change account for {{category}}",
+          "CONFIRM": "Change account",
+          "CONSEQUENCE": "Payouts recorded from {{date}} go to {{account}}; earlier ones stay where they are.",
+          "CONSEQUENCE_PENDING": "Choose an account to see where payouts will go.",
+          "DONE": "The category’s account was changed."
+        },
+        "FIELD": {
+          "CODE": "Code",
+          "CODE_HINT": "Capital letters, digits and underscores. This code can’t be changed later.",
+          "LABEL": "Name cashiers see",
+          "EXAMPLES": "Examples",
+          "ACCOUNT": "Expense account",
+          "ACCOUNT_CHOOSE": "Choose an account",
+          "ACCOUNT_HINT": "Active expense accounts only.",
+          "ACCOUNTS_LOADING": "Loading accounts…",
+          "ACCOUNTS_FAILED": "Accounts couldn’t be loaded.",
+          "FROM": "Starting on",
+          "REASON": "Why?",
+          "REASON_HINT": "At least {{min}} characters."
+        },
+        "ERROR": {
+          "VALIDATION": "Check the highlighted fields.",
+          "EXISTS": "A category with this code already exists.",
+          "NOT_ALLOWED": "There is no “Other” category: name what the cash was spent on.",
+          "ACCOUNT_NOT_ELIGIBLE": "Choose an active expense account.",
+          "BACKDATED": "Choose today or a later day: payouts already recorded keep their account.",
+          "OVERLAP": "This category already has an account from that day or later.",
+          "NOT_FOUND": "This category no longer exists. The list was refreshed.",
+          "VERSION_CONFLICT": "Someone else changed this category. The list was refreshed; check it and try again.",
+          "INACTIVE": "This category is already off. The list was refreshed.",
+          "IDEMPOTENCY": "This change couldn’t be matched to your earlier attempt. Try again.",
+          "FORBIDDEN": "You need the {{permission}} permission to make this change.",
+          "UNKNOWN_OUTCOME": "We couldn’t confirm the change. Press again: it won’t be applied twice.",
+          "OTHER": "Couldn’t save this change."
         }
       }
     }

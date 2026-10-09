@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { beforeEach, describe, expect, it } from 'vitest';
+import { ACCOUNTING_PERMISSIONS } from '../../core/security/route-permissions';
 import { ACCOUNTING_ROUTES } from './accounting.routes';
 
 /**
@@ -73,10 +74,18 @@ describe('ACCOUNTING_ROUTES', () => {
     }
   });
 
-  it('gates Approval limits on accounting:ap_approval_policy:manage (S21 widens it)', () => {
+  it('gates Approval limits on §8.1\'s any-of: bill limits, the drawer policy or category edits (S21)', () => {
     const children = ACCOUNTING_ROUTES[0].children ?? [];
     expect(children.find(child => child.path === 'settings/approval-limits')?.data?.['permissions']).toEqual([
       'accounting:ap_approval_policy:manage',
+      'order:session_policy:manage',
+      'accounting:mapping-key:edit',
     ]);
+  });
+
+  it('admits a drawer-only manager at /app/accounting, so the page gate is not a dead end (S21, AC 1)', () => {
+    expect(ACCOUNTING_PERMISSIONS).toContain('order:session_policy:manage');
+    // Only that exact code: the rest of the order domain has no page here.
+    expect(ACCOUNTING_PERMISSIONS.filter(code => code.startsWith('order:'))).toEqual(['order:session_policy:manage']);
   });
 });
