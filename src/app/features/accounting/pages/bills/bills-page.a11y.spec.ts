@@ -11,6 +11,8 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { ApPolicyRead } from '../../models/ap-approval-policy.models';
 import { AccountingPreferencesService } from '../../services/accounting-preferences.service';
 import { ApApprovalPolicyService } from '../../services/ap-approval-policy.service';
+import { DrawerPolicyService } from '../../services/drawer-policy.service';
+import { PettyExpenseCategoriesService } from '../../services/petty-expense-categories.service';
 import { PayablesService } from '../../services/payables.service';
 import { ApprovalLimitsPageComponent } from '../approval-limits/approval-limits-page.component';
 import { BillPanelRouteComponent } from './bill-panel-route/bill-panel-route.component';
@@ -185,6 +187,9 @@ describe('Approval limits a11y (rendered DOM)', () => {
         providers: [
           provideRouter([]),
           { provide: ApApprovalPolicyService, useValue: { getPolicy: vi.fn(() => of(served)), updatePolicy: vi.fn(() => of(served)) } },
+          // CONTROLLER here holds neither the drawer nor the category codes; S21's a11y specs render those sections.
+          { provide: DrawerPolicyService, useValue: { getPolicy: vi.fn(), updatePolicy: vi.fn() } },
+          { provide: PettyExpenseCategoriesService, useValue: { list: vi.fn() } },
           { provide: AuthService, useValue: authMock(CONTROLLER, { tenantId: signal<string | null>(null) }).service },
         ],
       });

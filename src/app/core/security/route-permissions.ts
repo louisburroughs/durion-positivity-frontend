@@ -78,11 +78,14 @@ export const WORKEXEC_PERMISSIONS = permissionsInDomains('workorder:', 'invoice:
 
 /**
  * `/app/accounting` — journal entries, payables, posting rules, credit memos.
- * The trailing code is what the labor-overhead report it hosts is gated on.
+ * The trailing codes are what its own cross-domain pages are gated on: the
+ * labor-overhead report, and Approval limits' Drawer cash section (pos-order's
+ * session policy, CAP:550 S21) so a drawer-only manager is not stopped here.
  */
 export const ACCOUNTING_PERMISSIONS = permissionsInDomains(
   'accounting:',
   'reporting:view:financial-statements',
+  'order:session_policy:manage',
 );
 
 /** `/app/billing` — customer invoices, payment capture, receipts. */
@@ -338,11 +341,12 @@ export const ACCOUNTING_PAGE = {
    */
   bills: ['accounting:ap:view'],
   /**
-   * Approval limits, `settings/approval-limits` (CAP:550 S14, §8.1): `getApApprovalPolicy` and
-   * `setApApprovalPolicy` enforce it. S21 widens this to §8.1's any-of gate
-   * (`order:session_policy:manage`, `accounting:mapping-key:edit`) once its sections exist.
+   * Approval limits, `settings/approval-limits` (CAP:550 S14 / S21, §8.1): any of the codes its
+   * sections are managed with — Bills (`getApApprovalPolicy` / `setApApprovalPolicy`), Drawer cash
+   * (`getSessionPolicy` / `updateSessionPolicy`) and Petty-expense categories (relabel). Each
+   * section and control gates on its own {@link ACCOUNTING_SECTION} code.
    */
-  approvalLimits: ['accounting:ap_approval_policy:manage'],
+  approvalLimits: ['accounting:ap_approval_policy:manage', 'order:session_policy:manage', 'accounting:mapping-key:edit'],
   laborOverheadReport: ['reporting:view:financial-statements'],
   invoicePaymentStatus: ['accounting:ap:view'],
   /** `listAccountingPeriods`. Closing and reopening are gated by {@link ACCOUNTING_SECTION}. */
@@ -478,6 +482,26 @@ export const ACCOUNTING_SECTION = {
   apPolicyManage: ['accounting:ap_approval_policy:manage'],
   /** Review and pay on the Pay step: `executePayment` (the vendor payment page's own gate). */
   apPay: ['accounting:ap:pay'],
+  /*
+   * Approval limits' Drawer cash and Petty-expense categories sections (CAP:550 S21,
+   * SPEC-accounting-workspace §5.5): each gates on the code its endpoint enforces
+   * (pos-order `SessionPolicyController`, pos-accounting `PettyExpenseCategoryController`).
+   */
+  /** Drawer cash, its Save leg and its History rows: `getSessionPolicy` and `updateSessionPolicy`. */
+  drawerPolicy: ['order:session_policy:manage'],
+  /** The Petty-expense categories section and its History rows: `listPettyExpenseCategories`. */
+  categoryView: ['accounting:mapping-key:view'],
+  /**
+   * Add category: `createPettyExpenseCategory` creates the category with its account.
+   * `allPermissions`: it enforces both codes.
+   */
+  categoryCreate: ['accounting:mapping-key:create', 'accounting:gl-mapping:create'],
+  /** Rename: `updatePettyExpenseCategory`. */
+  categoryEdit: ['accounting:mapping-key:edit'],
+  /** Turn off: `deactivatePettyExpenseCategory`. */
+  categoryDeactivate: ['accounting:mapping-key:deactivate'],
+  /** Change account: `remapPettyExpenseCategory`. */
+  categoryRemap: ['accounting:gl-mapping:create'],
 } as const satisfies Record<string, readonly string[]>;
 
 /** `/app/crm/*` — one entry per routed page, keyed by route path. */

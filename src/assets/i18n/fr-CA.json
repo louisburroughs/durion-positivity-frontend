@@ -6110,7 +6110,9 @@
       "NAV": {
         "ARIA": "Sur cette page",
         "BILLS": "Factures",
-        "HISTORY": "Historique"
+        "HISTORY": "Historique",
+        "DRAWER": "Argent du tiroir",
+        "CATEGORIES": "Catégories de petites dépenses"
       },
       "LOADING": "Chargement…",
       "LOAD_FAILED": "Impossible de charger les limites d’approbation.",
@@ -6163,7 +6165,7 @@
         "HEADING": "Enregistrer vos modifications",
         "REASON_LABEL": "Pourquoi faites-vous ce changement?",
         "REASON_HINT": "Au moins {{min}} caractères.",
-        "CONSEQUENCE": "Les nouvelles limites s’appliquent à la prochaine décision; les factures déjà approuvées ne changent pas.",
+        "CONSEQUENCE": "Les nouvelles limites s’appliquent dès maintenant. Les factures déjà approuvées et les paiements du tiroir déjà inscrits ne changent pas.",
         "SAVE": "Enregistrer",
         "SAVING": "Enregistrement…",
         "UNDO": "Annuler les modifications",
@@ -6177,8 +6179,18 @@
           "CURRENCY": "Les limites doivent être dans votre devise comptable, {{currency}}.",
           "FORBIDDEN": "Il vous faut l’autorisation {{permission}} pour modifier ces limites.",
           "UNKNOWN_OUTCOME": "Impossible de confirmer l’enregistrement. Appuyez de nouveau sur Enregistrer : il ne sera pas appliqué deux fois.",
-          "OTHER": "Impossible d’enregistrer vos modifications."
-        }
+          "OTHER": "Impossible d’enregistrer vos modifications.",
+          "DRAWER_CONFLICT": "Quelqu’un d’autre a modifié les limites de l’argent du tiroir. Les plus récentes ont été chargées et vos changements gardés; vérifiez-les et enregistrez de nouveau.",
+          "VALIDATION_UNNAMED": "Ces valeurs n’ont pas été acceptées. Vérifiez chaque montant et la raison, puis réessayez."
+        },
+        "DRAWER_FAILED": "Les limites de l’argent du tiroir n’ont pas été enregistrées : {{reason}}",
+        "PARTIAL": {
+          "BILLS_FAILED": "Les limites de l’argent du tiroir ont été enregistrées. Les limites des factures n’ont pas été enregistrées : {{reason}} Vos changements aux factures sont toujours là.",
+          "DRAWER_FAILED": "Les limites des factures ont été enregistrées. Les limites de l’argent du tiroir n’ont pas été enregistrées : {{reason}} Vos changements au tiroir sont toujours là.",
+          "DRAWER_UNCONFIRMED": "Les limites des factures ont été enregistrées. Impossible de confirmer les limites de l’argent du tiroir : {{reason}} Vos changements au tiroir sont toujours là.",
+          "BILLS_UNCONFIRMED": "Les limites de l’argent du tiroir ont été enregistrées. Impossible de confirmer les limites des factures : {{reason}} Vos changements aux factures sont toujours là."
+        },
+        "DRAWER_UNCONFIRMED": "Impossible de confirmer les limites de l’argent du tiroir : {{reason}}"
       },
       "HISTORY": {
         "HEADING": "Historique",
@@ -6188,7 +6200,6 @@
         "CHANGE": "Modification",
         "REASON": "Motif",
         "EMPTY": "Aucune modification pour l’instant.",
-        "LOAD_FAILED": "Impossible de charger l’historique.",
         "FROM_TO": "{{old}} → {{new}}",
         "ON": "Activé",
         "OFF": "Désactivé",
@@ -6202,7 +6213,12 @@
           "AP_ALLOW_CREATOR_APPROVAL": "Les créateurs peuvent approuver leurs propres factures",
           "AP_ALLOW_APPROVER_PAYMENT": "Les approbateurs peuvent payer les factures qu’ils ont approuvées",
           "AP_DEFAULT_TERMS": "Conditions de paiement par défaut",
-          "UNKNOWN": "Réglage inconnu"
+          "UNKNOWN": "Réglage inconnu",
+          "PETTY_EXPENSE_ALLOWED": "Petites dépenses autorisées",
+          "PETTY_EXPENSE_LIMIT": "Petites dépenses : limite du caissier",
+          "VENDOR_COD_ALLOWED": "Paiement comptant des fournisseurs à la livraison autorisé",
+          "VENDOR_COD_LIMIT": "Paiement comptant des fournisseurs à la livraison : limite du caissier",
+          "OVER_SHORT_TOLERANCE": "Écart permis au comptage du tiroir"
         },
         "ROLE": {
           "ACCOUNTING_CLERK": "Commis comptable",
@@ -6216,7 +6232,173 @@
           "DUE_ON_RECEIPT": "Payable à réception",
           "NET": "Net {{days}} jours",
           "UNKNOWN": "Inconnu"
+        },
+        "SOURCE_FAILED": {
+          "BILLS": "Impossible de charger les changements aux limites des factures.",
+          "DRAWER": "Impossible de charger les changements à l’argent du tiroir.",
+          "CATEGORIES": "Impossible de charger les changements aux catégories."
+        },
+        "CATEGORY_CHANGE": {
+          "CREATE": "Catégorie ajoutée : {{category}}",
+          "RELABEL": "Catégorie renommée : {{category}}",
+          "DEACTIVATE": "Catégorie désactivée : {{category}}",
+          "REMAP": "Compte de la catégorie changé : {{category}}",
+          "UNKNOWN": "Catégorie modifiée : {{category}}"
         }
+      },
+      "DENIED_ANY": "Il vous faut l’une de ces autorisations pour voir cette page : {{permissions}}.",
+      "DRAWER": {
+        "HEADING": "Argent du tiroir",
+        "CURRENCY": "Montants en {{currency}}.",
+        "LOAD_FAILED": "Impossible de charger les limites de l’argent du tiroir.",
+        "ALLOWED": "Autorisé",
+        "LIMIT_LABEL": "Le caissier peut inscrire jusqu’à",
+        "LIMIT_HINT": "Par session de tiroir",
+        "TOLERANCE_LABEL": "Écart permis au comptage du tiroir",
+        "TOLERANCE_HINT": "Surplus ou manque, par comptage de fermeture",
+        "ERROR": {
+          "REQUIRED": "Entrez un montant.",
+          "AMOUNT": "Entrez un montant de 0 ou plus, avec au plus deux décimales."
+        },
+        "TYPE": {
+          "PETTY_EXPENSE": {
+            "TITLE": "Petites dépenses",
+            "DESCRIPTION": "Petits achats de l’atelier payés à même le tiroir, comme des fournitures ou des frais de poste."
+          },
+          "VENDOR_COD": {
+            "TITLE": "Paiement comptant des fournisseurs à la livraison",
+            "DESCRIPTION": "Payer un fournisseur en argent comptant à la livraison."
+          },
+          "BANK_DROP": {
+            "TITLE": "Dépôts bancaires",
+            "DESCRIPTION": "Argent retiré du tiroir pour la banque."
+          },
+          "FLOAT_CHANGE": {
+            "TITLE": "Changements du fonds de caisse",
+            "DESCRIPTION": "Ajouter au fonds de départ du tiroir ou en retirer."
+          },
+          "UNKNOWN": {
+            "TITLE": "Inconnu",
+            "DESCRIPTION": "Un type de sortie d’argent que cette page ne connaît pas encore."
+          }
+        },
+        "BADGE": {
+          "BANK_DROP": "Toujours autorisé · numéro de sac de dépôt requis",
+          "FLOAT_CHANGE": "Toujours avec un gestionnaire",
+          "UNKNOWN": "Ne peut pas être modifié ici",
+          "ON": "Autorisé",
+          "OFF": "Non autorisé"
+        },
+        "HOW": {
+          "SUMMARY": "Comment les limites sont-elles calculées?",
+          "RUNNING_TOTAL": "Chaque limite additionne tout ce qui est de ce type pendant une session de tiroir : diviser un reçu exige donc quand même un gestionnaire.",
+          "SWITCH_OFF": "Désactiver un type bloque aussitôt les nouvelles sorties; celles déjà inscrites restent."
+        },
+        "MEANS": {
+          "HEADING": "Ce que cela signifie à la caisse",
+          "PETTY_EXPENSE": {
+            "ON": "Petites dépenses jusqu’à {{limit}} par session de tiroir : le caissier les inscrit; au-delà, un gestionnaire approuve à la caisse avec sa propre connexion.",
+            "OFF": "Les caissiers ne peuvent pas payer de petites dépenses à même le tiroir."
+          },
+          "VENDOR_COD": {
+            "ON": "Paiement comptant des fournisseurs à la livraison jusqu’à {{limit}} par session de tiroir : le caissier l’inscrit; au-delà, un gestionnaire approuve à la caisse avec sa propre connexion.",
+            "OFF": "Les caissiers ne peuvent pas payer les fournisseurs comptant à la livraison à même le tiroir."
+          },
+          "NEEDS_AMOUNT": "Entrez un montant pour voir ce qu’il signifie.",
+          "TOLERANCE": "Un comptage de fermeture qui s’écarte de plus de {{tolerance}} exige l’approbation d’un gestionnaire.",
+          "DIFFERENT_PERSON": "Le gestionnaire qui approuve doit être une autre personne que le caissier."
+        }
+      },
+      "CATEGORIES": {
+        "HEADING": "Catégories de petites dépenses",
+        "LOAD_FAILED": "Impossible de charger les catégories de petites dépenses.",
+        "READ_ONLY": "Les catégories sont modifiées par la personne qui gère votre plan comptable. Les catégories sont désactivées, jamais supprimées : les anciens reçus gardent leur historique.",
+        "EMPTY": "Aucune catégorie de petites dépenses pour l’instant.",
+        "CAPTION": "Ce que les caissiers peuvent payer à même le tiroir, et où chaque dépense est inscrite",
+        "COLUMN": {
+          "CATEGORY": "Catégorie",
+          "EXAMPLES": "Exemples",
+          "RECORDED_IN": "Inscrite dans",
+          "STATUS": "État",
+          "ACTIONS": "Actions"
+        },
+        "LATER": "À partir du {{date}} :",
+        "STATUS": {
+          "ON": "Activée",
+          "OFF": "Désactivée",
+          "UNKNOWN": "Inconnu"
+        },
+        "NEVER": {
+          "HEADING": "Ne jamais payer ceci à même le tiroir",
+          "PARTS": "Pneus et pièces",
+          "WAGES": "Salaires, pourboires ou avances",
+          "OWNER": "Les dépenses personnelles du propriétaire",
+          "REFUNDS": "Remboursements aux clients",
+          "EQUIPMENT": "Équipement qui dure des années",
+          "BILLS": "Loyer, services publics et autres factures de fournisseurs"
+        },
+        "TAX_INCLUDED": "Les caissiers inscrivent le total du reçu, taxes comprises.",
+        "CREATE": {
+          "OPEN": "Ajouter une catégorie",
+          "TITLE": "Ajouter une catégorie",
+          "CONFIRM": "Ajouter la catégorie",
+          "CONSEQUENCE": "Les caissiers peuvent la choisir à la caisse dès qu’elle est enregistrée.",
+          "DONE": "La catégorie a été ajoutée."
+        },
+        "RELABEL": {
+          "OPEN": "Renommer",
+          "TITLE": "Renommer {{category}}",
+          "CONFIRM": "Renommer",
+          "CONSEQUENCE": "Les caissiers voient le nouveau nom à la caisse aussitôt; le code de la catégorie ne change pas.",
+          "DONE": "La catégorie a été renommée."
+        },
+        "DEACTIVATE": {
+          "OPEN": "Désactiver",
+          "TITLE": "Désactiver {{category}}",
+          "CONFIRM": "Désactiver",
+          "CONSEQUENCE": "Les caissiers ne la voient plus à la caisse aussitôt; les sorties déjà inscrites la gardent.",
+          "DONE": "La catégorie a été désactivée."
+        },
+        "REMAP": {
+          "OPEN": "Changer de compte",
+          "TITLE": "Changer de compte pour {{category}}",
+          "CONFIRM": "Changer de compte",
+          "CONSEQUENCE": "Les sorties inscrites à partir du {{date}} vont dans {{account}}; les précédentes restent où elles sont.",
+          "CONSEQUENCE_PENDING": "Choisissez un compte pour voir où iront les sorties.",
+          "DONE": "Le compte de la catégorie a été changé."
+        },
+        "FIELD": {
+          "CODE": "Code",
+          "CODE_HINT": "Majuscules, chiffres et traits de soulignement. Ce code ne pourra pas être changé plus tard.",
+          "LABEL": "Nom vu par les caissiers",
+          "EXAMPLES": "Exemples",
+          "ACCOUNT": "Compte de dépenses",
+          "ACCOUNT_CHOOSE": "Choisissez un compte",
+          "ACCOUNT_HINT": "Comptes de dépenses actifs seulement.",
+          "ACCOUNTS_LOADING": "Chargement des comptes…",
+          "ACCOUNTS_FAILED": "Impossible de charger les comptes.",
+          "FROM": "À partir du",
+          "REASON": "Pourquoi?",
+          "REASON_HINT": "Au moins {{min}} caractères.",
+          "CODE_FORMAT": "Utilisez seulement des majuscules, des chiffres et des traits de soulignement, jusqu’à 40 caractères."
+        },
+        "ERROR": {
+          "VALIDATION": "Vérifiez les champs en surbrillance.",
+          "EXISTS": "Une catégorie avec ce code existe déjà.",
+          "NOT_ALLOWED": "Il n’y a pas de catégorie « Autre » : nommez ce qui a été payé.",
+          "ACCOUNT_NOT_ELIGIBLE": "Choisissez un compte de dépenses actif.",
+          "BACKDATED": "Choisissez aujourd’hui ou un jour suivant : les sorties déjà inscrites gardent leur compte.",
+          "OVERLAP": "Cette catégorie a déjà un compte à partir de ce jour ou plus tard.",
+          "NOT_FOUND": "Cette catégorie n’existe plus. La liste a été actualisée.",
+          "VERSION_CONFLICT": "Quelqu’un d’autre a modifié cette catégorie. La liste a été actualisée; vérifiez-la et réessayez.",
+          "INACTIVE": "Cette catégorie est déjà désactivée. La liste a été actualisée.",
+          "IDEMPOTENCY": "Ce changement ne correspond pas à votre tentative précédente. Réessayez.",
+          "FORBIDDEN": "Il vous faut l’autorisation {{permission}} pour faire ce changement.",
+          "UNKNOWN_OUTCOME": "Impossible de confirmer le changement. Appuyez de nouveau : il ne sera pas appliqué deux fois.",
+          "OTHER": "Impossible d’enregistrer ce changement.",
+          "VALIDATION_UNNAMED": "Ce changement n’a pas été accepté. Vérifiez chaque champ et la raison, puis réessayez."
+        },
+        "REFRESHING": "Actualisation des catégories… Les changements seront possibles une fois le chargement terminé."
       }
     }
   },

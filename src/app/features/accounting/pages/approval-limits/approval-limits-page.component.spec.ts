@@ -3,11 +3,13 @@ import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
-import { Observable, Subject, of, throwError } from 'rxjs';
+import { NEVER, Observable, Subject, of, throwError } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuthService } from '../../../../core/services/auth.service';
 import { ApApprovalPolicy, ApPolicyBillsUpdate, ApPolicyHistoryRow, ApPolicyRead } from '../../models/ap-approval-policy.models';
 import { ApApprovalPolicyService } from '../../services/ap-approval-policy.service';
+import { DrawerPolicyService } from '../../services/drawer-policy.service';
+import { PettyExpenseCategoriesService } from '../../services/petty-expense-categories.service';
 import { apiError, authMock } from '../bills/bills-page.spec-helper';
 import { ApprovalLimitsPageComponent, classifyPolicyError, roleKey, termsCopy } from './approval-limits-page.component';
 
@@ -61,6 +63,9 @@ describe('ApprovalLimitsPageComponent (§5.5, §9.5)', () => {
       providers: [
         provideRouter([]),
         { provide: ApApprovalPolicyService, useValue: service },
+        // Drawer and category reads are gated off for these sessions; S21's own spec drives them.
+        { provide: DrawerPolicyService, useValue: { getPolicy: vi.fn(() => NEVER), updatePolicy: vi.fn() } },
+        { provide: PettyExpenseCategoriesService, useValue: { list: vi.fn(() => NEVER) } },
         { provide: AuthService, useValue: authMock(held, { tenantId: signal<string | null>(null) }).service },
       ],
     });
@@ -328,7 +333,7 @@ describe('ApprovalLimitsPageComponent (§5.5, §9.5)', () => {
       page.retryHistory();
       fixture.detectChanges();
 
-      expect(q('[data-testid="history-error"]')).not.toBeNull();
+      expect(q('[data-testid="history-error-BILLS"]')?.textContent).toContain('ACCOUNTING.APPROVAL_LIMITS.HISTORY.SOURCE_FAILED.BILLS');
       expect(q('[data-testid="bills-section"]')).not.toBeNull();
     });
   });
@@ -338,6 +343,7 @@ describe('classifyPolicyError', () => {
   it.each([
     [apiError(400, 'JUSTIFICATION_REQUIRED'), 'ACCOUNTING.APPROVAL_LIMITS.SAVE.ERROR.JUSTIFICATION_REQUIRED', ['justification']],
     [apiError(400, 'VALIDATION_ERROR', [{ field: 'clerkApprovalLimit', message: 'x' }]), 'ACCOUNTING.APPROVAL_LIMITS.SAVE.ERROR.VALIDATION', ['clerkApprovalLimit']],
+    [apiError(400, 'VALIDATION_ERROR'), 'ACCOUNTING.APPROVAL_LIMITS.SAVE.ERROR.VALIDATION_UNNAMED', []],
     [apiError(422, 'AMOUNT_PRECISION_EXCEEDS_CURRENCY'), 'ACCOUNTING.APPROVAL_LIMITS.SAVE.ERROR.PRECISION', ['clerkApprovalLimit', 'autoApprovalLimit']],
     [apiError(422, 'CURRENCY_NOT_SUPPORTED'), 'ACCOUNTING.APPROVAL_LIMITS.SAVE.ERROR.CURRENCY', []],
     [apiError(403, 'FORBIDDEN'), 'ACCOUNTING.APPROVAL_LIMITS.SAVE.ERROR.FORBIDDEN', []],
