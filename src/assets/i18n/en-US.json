@@ -8575,8 +8575,25 @@
       "FORM": {
         "ERROR": {
           "LOAD": "Failed to load purchase order for editing.",
-          "CREATE": "Failed to create purchase order.",
-          "REVISE": "Failed to revise purchase order."
+          "VENDOR_INACTIVE": "This vendor is inactive and takes no new purchase orders, so nothing was saved. Choose an active vendor.",
+          "VENDOR_PENDING": "This vendor hasn’t reached purchase orders yet, so nothing was saved. Try again in a moment.",
+          "VENDOR_PENDING_AFTER": "This vendor hasn’t reached purchase orders yet, so nothing was saved. Try again in {{seconds}} seconds.",
+          "VENDOR_LOCKED": "This order is no longer a draft, so its vendor can’t be changed. Nothing was saved. Save again to keep your other changes with its current vendor.",
+          "NOT_FOUND": "This purchase order no longer exists. Nothing was saved.",
+          "VALIDATION": "The order wasn’t saved. Check the highlighted fields.",
+          "VALIDATION_UNNAMED": "The order wasn’t saved because some of its details weren’t accepted. Check the vendor, the delivery date, the notes and every line, then try again.",
+          "LINES_REFUSED": "The order wasn’t saved because a line wasn’t accepted.",
+          "FORBIDDEN": "You don’t have permission to create or change purchase orders ({{permission}}). Nothing was saved.",
+          "UNKNOWN_CREATE": "We couldn’t confirm whether the order was created. Check the purchase orders list before submitting again, so the order isn’t created twice.",
+          "UNKNOWN_REVISE": "We couldn’t confirm whether your changes were saved. Read the order again to check before saving again.",
+          "REFUSED": "The order wasn’t saved (error {{status}}).",
+          "FIELD": {
+            "VENDOR": "Choose an active vendor.",
+            "REASON": "Enter a reason for this change.",
+            "DELIVERY_DATE": "Enter a valid delivery date.",
+            "NOTES": "Check the notes.",
+            "LINES": "Check the order lines: every line needs a SKU, a quantity above zero and a unit price above zero."
+          }
         },
         "TITLE": {
           "NEW": "New Purchase Order",
@@ -8586,8 +8603,6 @@
           "TITLE": "Order Details"
         },
         "FIELD": {
-          "SUPPLIER": "Supplier",
-          "SUPPLIER_PLACEHOLDER": "Enter supplier name",
           "DELIVERY_DATE": "Expected Delivery Date",
           "NOTES": "Notes",
           "NOTES_PLACEHOLDER": "Optional notes…"
@@ -8613,7 +8628,9 @@
           "EMPTY_HINT": "Add at least one line to place this order."
         },
         "ACTION": {
-          "SUBMIT": "Submit Order"
+          "SUBMIT": "Submit Order",
+          "READ_AGAIN": "Read the order again",
+          "GO_TO_LIST": "Go to purchase orders"
         },
         "AVAILABILITY": {
           "TITLE": "Supplier Availability",
@@ -8654,6 +8671,42 @@
           "STALE": "Stale",
           "FRESH": "Fresh",
           "NO_SKU": "Enter a SKU on this line before checking availability."
+        },
+        "VENDOR": {
+          "LABEL": "Vendor",
+          "PLACEHOLDER": "Choose a vendor",
+          "OPTION": "{{number}} — {{name}}",
+          "OPTION_INACTIVE": "{{number}} — {{name}} (inactive)",
+          "CURRENT_MISSING": "Current vendor (not in the vendor list)",
+          "CURRENT_UNREAD": "Current vendor (details unavailable)",
+          "LOADING": "Loading vendors…",
+          "TRUNCATED": "Only the first {{count}} active vendors are listed.",
+          "FORBIDDEN": "You need permission to view vendors (supplier:vendor:read) to choose one for a new purchase order. Ask an administrator for vendor access.",
+          "FORBIDDEN_EDIT": "You need permission to view vendors (supplier:vendor:read) to change the vendor. The order keeps its current vendor.",
+          "LOAD_ERROR": "The vendor list couldn’t be loaded.",
+          "LOAD_ERROR_EDIT": "The vendor list couldn’t be loaded. The order keeps its current vendor unless you load the list again and choose another.",
+          "RETRY": "Load vendors again",
+          "EMPTY": "There are no active vendors to order from. A vendor must be added before a purchase order can be created.",
+          "REQUIRED": "Choose a vendor.",
+          "LOCKED": "The vendor can’t be changed because this order is no longer a draft.",
+          "PROMPT_INACTIVE": "This order’s vendor is inactive, so the order can’t be approved or sent. Choose an active vendor and save the order.",
+          "PROMPT_MISSING": "This order’s vendor isn’t in the vendor list, so the order can’t be approved or sent. Choose an active vendor and save the order."
+        },
+        "REASON": {
+          "LABEL": "Reason for this change",
+          "REQUIRED": "Enter a reason for this change."
+        },
+        "CONSEQUENCE": {
+          "CREATE": "The order is saved as a draft. Nothing is sent to the vendor until the order is approved and sent.",
+          "REVISE": "Saving replaces this order’s details and all of its lines, and records your reason.",
+          "VENDOR_CHANGE": "The order will be placed with {{number}} — {{name}} instead of its current vendor."
+        },
+        "BLOCKED": {
+          "NO_PERMISSION": "You need permission to create and change purchase orders (order:purchase_order:create).",
+          "VENDOR_FORBIDDEN": "You can’t submit a new order without permission to view vendors.",
+          "VENDOR_ERROR": "Load the vendor list again before submitting.",
+          "VENDOR_LOADING": "Wait for the vendor list to load before submitting.",
+          "NO_VENDORS": "There is no active vendor to place this order with."
         }
       }
     },

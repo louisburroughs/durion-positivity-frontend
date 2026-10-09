@@ -111,26 +111,12 @@ export interface VendorProfileRequest {
   retryBackoff?: SupplierRetryBackoff;
 }
 
-/** A vendor as the profile form's vendor picker needs it. */
-export interface SupplierVendorOption {
-  readonly vendorId: string;
-  vendorNumber: string;
-  displayName: string;
-  /** False for an INACTIVE vendor — offered only as a profile's own current vendor. */
-  active: boolean;
-}
-
 /**
- * The ACTIVE vendors a profile may be pointed at.
- *
- * The list endpoint is paged; the roster is read page by page up to a bound.
- * `truncated` is true when the tenant has more active vendors than that bound,
- * so the picker can say so instead of implying the list is complete.
+ * A vendor as the profile form's vendor picker needs it, and the ACTIVE vendors a
+ * profile may be pointed at. The roster is shared with the purchase-order form
+ * (CAP:550, #514), so its shapes live in `shared/supplier-vendors`.
  */
-export interface SupplierVendorRoster {
-  vendors: SupplierVendorOption[];
-  truncated: boolean;
-}
+export type { SupplierVendorOption, SupplierVendorRoster } from '../../../shared/supplier-vendors/models/supplier-vendor-roster.models';
 
 /**
  * An auth configuration attached to a profile, as **read**.

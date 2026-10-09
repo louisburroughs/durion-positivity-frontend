@@ -199,7 +199,7 @@ describe('InventoryPurchaseOrderService', () => {
 
   describe('createPurchaseOrder()', () => {
     const mockRequest: CreatePurchaseOrderRequest = {
-      supplierId: 'sup-01',
+      vendorId: 'sup-01',
       scheduledDeliveryDate: '2026-04-15',
       lines: [{ productSku: 'SKU-001', orderedQty: 100, unitPrice: 9.99 }],
     };
@@ -270,7 +270,23 @@ describe('InventoryPurchaseOrderService', () => {
   // ── revisePurchaseOrder() ─────────────────────────────────────────────
 
   describe('revisePurchaseOrder()', () => {
+    const current: PurchaseOrderDetail = {
+      poId: 'po-001',
+      poNumber: 'PO-2026-001',
+      status: 'DRAFT',
+      supplierId: 'sup-01',
+      lineCount: 1,
+      openBalance: 1498.5,
+      scheduledDeliveryDate: '2026-04-20',
+      lines: [],
+      poDate: '2026-04-01',
+      paymentTermsId: 'NET30',
+      shipToLocationId: 'loc-7',
+      requestedBy: 'buyer.a',
+    };
     const mockRevision: RevisePurchaseOrderRequest = {
+      current,
+      revisionReason: 'More stock for the sale',
       scheduledDeliveryDate: '2026-05-01',
       lines: [{ productSku: 'SKU-001', orderedQty: 150, unitPrice: 9.99 }],
     };
@@ -284,16 +300,19 @@ describe('InventoryPurchaseOrderService', () => {
       lines: [{ lineId: 'pol-01', skuId: 'SKU-001', quantityDecimal: 150, unitCostMinor: 999, lineTotalMinor: 149850 }],
     };
 
-    it('calls poSdk.revisePurchaseOrder with the poId and revision body', () => {
+    it('sends the order\'s own header values back and the reason, without a vendor when it is unchanged', () => {
       poSdkStub.revisePurchaseOrder.mockReturnValueOnce(of(sdkPurchaseOrder));
 
-      service.revisePurchaseOrder('po-001', mockRevision).subscribe();
+      service.revisePurchaseOrder('po-001', { ...mockRevision, vendorId: 'sup-01' }).subscribe();
 
       expect(poSdkStub.revisePurchaseOrder).toHaveBeenCalledWith('po-001', {
-        poDate: '2026-05-01',
+        poDate: '2026-04-01',
+        paymentTermsId: 'NET30',
+        shipToLocationId: 'loc-7',
+        requestedBy: 'buyer.a',
         expectedDeliveryDate: '2026-05-01',
         comment: undefined,
-        revisionReason: '',
+        revisionReason: 'More stock for the sale',
         lines: [
           {
             lineNumber: 1,
@@ -303,6 +322,31 @@ describe('InventoryPurchaseOrderService', () => {
           },
         ],
       });
+      const [, body] = poSdkStub.revisePurchaseOrder.mock.calls[0];
+      expect(Object.prototype.hasOwnProperty.call(body, 'vendorId')).toBe(false);
+    });
+
+    it('keeps the header values a revision must send back when the order is read', () => {
+      poSdkStub.getPurchaseOrder.mockReturnValueOnce(
+        of({ ...sdkPurchaseOrder, poDate: '2026-04-01', paymentTermsId: 'NET30', shipToLocationId: 'loc-7', requestedBy: 'buyer.a' }),
+      );
+
+      let result: PurchaseOrderDetail | undefined;
+      service.getPurchaseOrder('po-001').subscribe(r => (result = r));
+
+      expect(poSdkStub.getPurchaseOrder).toHaveBeenCalledWith('po-001');
+      expect(result).toMatchObject({ poDate: '2026-04-01', paymentTermsId: 'NET30', shipToLocationId: 'loc-7', requestedBy: 'buyer.a' });
+    });
+
+    it('sends vendorId when the revision changes the vendor (S24: DRAFT-only vendor change)', () => {
+      poSdkStub.revisePurchaseOrder.mockReturnValueOnce(of(sdkPurchaseOrder));
+
+      service.revisePurchaseOrder('po-001', { ...mockRevision, vendorId: 'sup-02' }).subscribe();
+
+      expect(poSdkStub.revisePurchaseOrder).toHaveBeenCalledWith(
+        'po-001',
+        expect.objectContaining({ vendorId: 'sup-02', revisionReason: 'More stock for the sale' }),
+      );
     });
 
     it('passes the poId as-is to the SDK', () => {
@@ -312,7 +356,7 @@ describe('InventoryPurchaseOrderService', () => {
 
       expect(poSdkStub.revisePurchaseOrder).toHaveBeenCalledWith(
         'po/001',
-        expect.objectContaining({ poDate: '2026-05-01' }),
+        expect.objectContaining({ poDate: '2026-04-01' }),
       );
     });
 
