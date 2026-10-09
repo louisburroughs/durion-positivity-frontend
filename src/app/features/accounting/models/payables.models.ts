@@ -209,14 +209,14 @@ export interface BillRejection {
   readonly rejectedAt: string | null;
 }
 
-/** S32d: the tax the vendor's document states, by type. Kept for S33, not rendered here. */
+/** S32d: the tax the vendor's document states, by type, copied and never computed (S33 renders it). */
 export interface BillTaxByType {
   readonly taxType: string;
   readonly amount: number;
   readonly source: 'DOCUMENT' | 'APPROVAL' | 'UNKNOWN';
 }
 
-/** S32d: what the posting did with each stated tax amount. Kept for S33, not rendered here. */
+/** S32d: what the posting did with each stated tax amount (S33 renders it as "Claimed back"). */
 export interface BillInputTaxRecovery {
   readonly taxType: string | null;
   readonly regime: string | null;
@@ -263,7 +263,11 @@ export interface BillDetail {
   readonly lines: readonly BillLine[];
   readonly availableActions: readonly BillAction[];
   readonly taxByType: readonly BillTaxByType[];
-  readonly inputTaxRecovery: readonly BillInputTaxRecovery[];
+  /**
+   * Null before the posting and for a tenant without recovery, whose bill books the gross (S32d):
+   * the review shows "Claimed back" only when it is served.
+   */
+  readonly inputTaxRecovery: readonly BillInputTaxRecovery[] | null;
   readonly taxOnResaleOverride: BillTaxOnResaleOverride | null;
   readonly posting: BillPosting | null;
 }

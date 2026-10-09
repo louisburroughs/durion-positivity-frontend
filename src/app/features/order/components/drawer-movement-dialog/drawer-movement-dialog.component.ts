@@ -31,6 +31,7 @@ import {
   DrawerOptions,
   DrawerReason,
   DrawerReasonOption,
+  DrawerStatedTax,
   FLOAT_REASONS,
   PendingAttempt,
   PettyCategory,
@@ -86,7 +87,50 @@ const FIELD_LABEL_KEYS: Readonly<Record<string, string>> = {
   bagNumber: 'ORDER.DRAWER.DIALOG.BAG_NUMBER',
   managerUsername: 'ORDER.DRAWER.APPROVAL.USERNAME',
   managerPassword: 'ORDER.DRAWER.APPROVAL.PASSWORD',
+  supplierName: 'ORDER.DRAWER.TAX.SUPPLIER_NAME',
+  supplierRegistrationNumber: 'ORDER.DRAWER.TAX.SUPPLIER_NUMBER',
+  statedTaxes: 'ORDER.DRAWER.TAX.LEGEND',
 };
+
+/** The field key of one regime's tax input (the request names it `statedTaxes[i]`). */
+const TAX_FIELD = 'tax:';
+
+/** A tax refusal (S32d) and the fields it names, shown at the first of them (story item 9, AC 11). */
+interface TaxFailure {
+  readonly key: string;
+  /** Field keys: `amount`, `supplierName`, `supplierRegistrationNumber`, `statedTaxes` (the sum) or `tax:<regime>`. */
+  readonly fields: readonly string[];
+  /** 503 TAX_CHECK_UNAVAILABLE: the dialog offers "Record without the number". */
+  readonly withoutNumber: boolean;
+}
+
+const TAX_FAILURE_KEYS: Partial<Record<DrawerFailure['kind'], string>> = {
+  TAX_IMPLAUSIBLE: 'ORDER.DRAWER.TAX.ERROR.IMPLAUSIBLE',
+  TAX_REGIME_NOT_OFFERED: 'ORDER.DRAWER.TAX.ERROR.NOT_OFFERED',
+  SUPPLIER_NUMBER_NOT_ACCEPTED: 'ORDER.DRAWER.TAX.ERROR.NUMBER_NOT_ACCEPTED',
+  PRECISION: 'ORDER.DRAWER.TAX.ERROR.PRECISION',
+  TAX_CHECK_UNAVAILABLE: 'ORDER.DRAWER.TAX.ERROR.CHECK_UNAVAILABLE',
+};
+
+/** The field each tax refusal falls back to when the server names none. */
+const TAX_FAILURE_FALLBACK: Partial<Record<DrawerFailure['kind'], string>> = {
+  TAX_IMPLAUSIBLE: 'statedTaxes',
+  TAX_REGIME_NOT_OFFERED: 'statedTaxes',
+  SUPPLIER_NUMBER_NOT_ACCEPTED: 'supplierRegistrationNumber',
+  PRECISION: 'amount',
+  TAX_CHECK_UNAVAILABLE: 'supplierRegistrationNumber',
+};
+
+/**
+ * The dialog's field key for a field a refusal names: `statedTaxes[i].amount` / `.regime` is the
+ * input of the regime sent at index i; anything else is kept as named.
+ */
+function fieldKeyOf(field: string, draft: DrawerDraft | undefined): string {
+  const indexed = /^statedTaxes\[(\d+)\](?:\.(?:amount|regime))?$/.exec(field);
+  if (!indexed) return field;
+  const regime = draft?.statedTaxes?.[Number(indexed[1])]?.regime;
+  return regime ? TAX_FIELD + regime : 'statedTaxes';
+}
 
 const FAILURE_KEYS: Readonly<Record<string, string>> = {
   APPROVAL_INVALID: 'ORDER.DRAWER.ERROR.APPROVAL_INVALID',
@@ -223,6 +267,12 @@ export class DrawerMovementDialogComponent implements OnInit {
   readonly bagNumber = signal('');
   readonly managerUsername = signal('');
   readonly managerPassword = signal('');
+  /** Tax as printed on the receipt, by regime (S32d): text as typed, never computed (P7). */
+  readonly taxTexts = signal<Readonly<Record<string, string>>>({});
+  readonly supplierName = signal('');
+  /** The supplier's number as typed: held in memory only, never stored or logged (ADR-0065). */
+  readonly supplierNumber = signal('');
+  readonly taxFailure = signal<TaxFailure | null>(null);
 
   /** `details` holds the reason step (no reason chosen yet) and its fields; `approval` the manager step. */
   readonly step = signal<'details' | 'approval'>('details');
@@ -279,6 +329,34 @@ export class DrawerMovementDialogComponent implements OnInit {
   readonly selectedCategory = computed(
     () => this.categories().find(category => category.code === this.categoryCode()) ?? null,
   );
+  /**
+   * The regimes the chosen petty-expense category offers here and today (S32d `offeredRegimes`),
+   * plus those a frozen movement stated: one tax field each. A category without any shows none,
+   * and nothing here names a regime (owner direction).
+   */
+  readonly taxRegimes = computed<readonly string[]>(() => {
+    if (this.reason() !== 'PETTY_EXPENSE') return [];
+    const offered = this.selectedCategory()?.offeredRegimes ?? [];
+    const frozen = (this.frozen()?.statedTaxes ?? []).map(tax => tax.regime).filter(regime => !offered.includes(regime));
+    return [...offered, ...frozen];
+  });
+  readonly taxFieldsShown = computed(() => this.taxRegimes().length > 0);
+  /** The served evidence rule, for the supplier number's hint (`| money`, never a literal). */
+  readonly evidenceRule = computed(() => this.options().evidenceRule);
+  /** The figures typed, by regime: a number when it reads as an amount, null when malformed. */
+  private readonly typedTaxes = computed(() => {
+    const currency = this.currencyCode();
+    const texts = this.taxTexts();
+    return this.taxRegimes()
+      .map(regime => ({ regime, text: (texts[regime] ?? '').trim() }))
+      .filter(entry => entry.text !== '')
+      .map(entry => ({ regime: entry.regime, amount: parseAmount(entry.text, currency) }));
+  });
+  /** Any figure typed: the supplier's name is then required (S32d). */
+  readonly taxTyped = computed(() => this.typedTaxes().length > 0);
+  taxMalformed(regime: string): boolean {
+    return this.typedTaxes().some(entry => entry.regime === regime && entry.amount === null);
+  }
   readonly amount = computed(() => parseAmount(this.amountText(), this.currencyCode()));
   readonly rendered = computed<ReadonlySet<DrawerField>>(() => {
     const reason = this.reason();
@@ -394,6 +472,7 @@ export class DrawerMovementDialogComponent implements OnInit {
     }
     this.reason.set(reason);
     this.invalidFields.set(new Set());
+    this.taxFailure.set(null);
   }
 
   onAmount(event: Event): void {
@@ -402,6 +481,7 @@ export class DrawerMovementDialogComponent implements OnInit {
 
   onCategory(event: Event): void {
     this.categoryCode.set(inputValue(event));
+    this.taxFailure.set(null);
   }
 
   onNote(event: Event): void {
@@ -414,6 +494,49 @@ export class DrawerMovementDialogComponent implements OnInit {
 
   onBagNumber(event: Event): void {
     this.bagNumber.set(inputValue(event));
+  }
+
+  onTax(regime: string, event: Event): void {
+    const value = inputValue(event);
+    this.taxTexts.update(texts => ({ ...texts, [regime]: value }));
+  }
+
+  taxText(regime: string): string {
+    return this.taxTexts()[regime] ?? '';
+  }
+
+  onSupplierName(event: Event): void {
+    this.supplierName.set(inputValue(event));
+  }
+
+  onSupplierNumber(event: Event): void {
+    this.supplierNumber.set(inputValue(event));
+  }
+
+  /** The field a tax refusal names (or the first of several): its message sits there. */
+  readonly taxErrorAnchor = computed(() => this.taxFailure()?.fields[0] ?? null);
+
+  taxFieldMarked(field: string): boolean {
+    return !!this.taxFailure()?.fields.includes(field);
+  }
+
+  /** `aria-describedby` for a tax-section field: its hints, plus the refusal when it names the field. */
+  describedBy(field: string, ...hints: (string | null)[]): string | null {
+    const ids = [...hints, this.taxFieldMarked(field) ? 'drawer-tax-error' : null].filter(Boolean);
+    return ids.length ? ids.join(' ') : null;
+  }
+
+  /**
+   * 503 TAX_CHECK_UNAVAILABLE (S32d A4): nothing was recorded; the cashier may record the movement
+   * without the supplier's number (the tax figures stay, so nothing is claimed for want of it).
+   */
+  recordWithoutNumber(): void {
+    if (this.busy() || !this.taxFailure()?.withoutNumber) {
+      return;
+    }
+    this.supplierNumber.set('');
+    this.taxFailure.set(null);
+    this.submitDetails();
   }
 
   onUsername(event: Event): void {
@@ -582,6 +705,9 @@ export class DrawerMovementDialogComponent implements OnInit {
       ...(draft.note ? { note: draft.note } : {}),
       ...(draft.receiptReference ? { receiptReference: draft.receiptReference } : {}),
       ...(draft.bagNumber ? { bagNumber: draft.bagNumber } : {}),
+      ...(draft.statedTaxes?.length ? { statedTaxes: draft.statedTaxes.map(tax => ({ regime: tax.regime, amount: tax.amount })) } : {}),
+      ...(draft.supplierName ? { supplierName: draft.supplierName } : {}),
+      ...(draft.supplierRegistrationNumber ? { supplierRegistrationNumber: draft.supplierRegistrationNumber } : {}),
       ...(token ? { approvalToken: token } : {}),
     };
     const sending: PendingAttempt = {
@@ -595,6 +721,7 @@ export class DrawerMovementDialogComponent implements OnInit {
     this.sending = sending;
     this.phase.set('submitting');
     this.failure.set(null);
+    this.taxFailure.set(null);
     this.invalidFields.set(new Set());
     this.inFlight = this.service
       .recordMovement(this.sessionId(), request)
@@ -711,10 +838,24 @@ export class DrawerMovementDialogComponent implements OnInit {
       case 'CONFLICT':
         this.sessionChanged.emit('CONFLICT');
         return;
-      case 'INVALID':
+      case 'INVALID': {
         this.setApproval(null); // a definitive refusal: the token goes with it
-        this.invalidFields.set(new Set(failure.fields));
-        this.showFailure({ key: FAILURE_KEYS['INVALID'], fieldKeys: this.fieldLabelKeys(failure.fields) });
+        const fields = failure.fields.map(field => fieldKeyOf(field, draft));
+        this.invalidFields.set(new Set(fields));
+        this.showFailure({ key: FAILURE_KEYS['INVALID'], fieldKeys: this.fieldLabelKeys(fields) });
+        return;
+      }
+      case 'TAX_IMPLAUSIBLE':
+      case 'TAX_REGIME_NOT_OFFERED':
+      case 'SUPPLIER_NUMBER_NOT_ACCEPTED':
+      case 'PRECISION':
+      case 'TAX_CHECK_UNAVAILABLE':
+        // Nothing was recorded and the approval token stays unspent (S32d): the cashier corrects the
+        // named field, the input kept, and records again; the dialog never checked the figure itself (P7).
+        this.showTaxFailure(failure, draft);
+        if (failure.kind === 'TAX_REGIME_NOT_OFFERED') {
+          this.optionsStale.emit();
+        }
         return;
       case 'FORBIDDEN':
       case 'SCOPE_DENIED':
@@ -733,6 +874,37 @@ export class DrawerMovementDialogComponent implements OnInit {
     }
   }
 
+  /** A tax refusal at the field it names (AC 11): message there, `aria-describedby`, focus on the field. */
+  private showTaxFailure(failure: DrawerFailure, draft?: Draft): void {
+    const named = [...new Set(failure.fields.map(field => fieldKeyOf(field, draft)))];
+    const fallback = TAX_FAILURE_FALLBACK[failure.kind] ?? 'statedTaxes';
+    const fields = named.length ? named : [fallback];
+    this.clearCredentials();
+    this.step.set('details');
+    this.failure.set(null);
+    this.invalidFields.set(new Set(fields));
+    this.taxFailure.set({
+      key: TAX_FAILURE_KEYS[failure.kind] ?? FAILURE_KEYS['REFUSED'],
+      fields,
+      withoutNumber: failure.kind === 'TAX_CHECK_UNAVAILABLE',
+    });
+    setTimeout(() => this.focusField(fields[0]));
+  }
+
+  private focusField(field: string): void {
+    const id = field.startsWith(TAX_FIELD)
+      ? `drawer-tax-${field.slice(TAX_FIELD.length)}`
+      : field === 'statedTaxes'
+        ? 'drawer-tax-legend'
+        : field === 'amount'
+          ? 'drawer-amount'
+          : field === 'supplierName'
+            ? 'drawer-supplier-name'
+            : 'drawer-supplier-number';
+    const element = typeof document !== 'undefined' ? document.getElementById(id) : null;
+    (element ?? this.alert()?.nativeElement)?.focus();
+  }
+
   /** Opens on a record whose outcome is still unknown: its fields, frozen, and its `requestId`. */
   private restore(attempt: PendingAttempt): void {
     const draft = attempt.draft;
@@ -743,6 +915,9 @@ export class DrawerMovementDialogComponent implements OnInit {
     this.note.set(draft.note ?? '');
     this.receiptReference.set(draft.receiptReference ?? '');
     this.bagNumber.set(draft.bagNumber ?? '');
+    this.taxTexts.set(Object.fromEntries((draft.statedTaxes ?? []).map(tax => [tax.regime, String(tax.amount)])));
+    this.supplierName.set(draft.supplierName ?? '');
+    this.supplierNumber.set(draft.supplierRegistrationNumber ?? '');
     this.frozen.set(draft);
     this.outcomeUnknown.set(true);
     this.failure.set({ key: FAILURE_KEYS['UNKNOWN_OUTCOME'] });
@@ -774,7 +949,10 @@ export class DrawerMovementDialogComponent implements OnInit {
   }
 
   private fieldLabelKeys(fields: readonly string[]): string[] {
-    return fields.map(field => FIELD_LABEL_KEYS[field]).filter((key): key is string => !!key);
+    const keys = fields
+      .map(field => (field.startsWith(TAX_FIELD) ? FIELD_LABEL_KEYS['statedTaxes'] : FIELD_LABEL_KEYS[field]))
+      .filter((key): key is string => !!key);
+    return [...new Set(keys)];
   }
 
   /** The manager step, with the refusal that sent the dialog back to it, if any. */
@@ -866,6 +1044,26 @@ export class DrawerMovementDialogComponent implements OnInit {
         return null;
       }
     }
-    return draft;
+    if (!this.taxFieldsShown()) {
+      return draft;
+    }
+    // Tax as printed (S32d): a blank figure is omitted, a figure that is not an amount blocks Record;
+    // the figure is never compared with the total or a rate here — the server decides (P7, AC 11).
+    const typed = this.typedTaxes();
+    if (typed.some(entry => entry.amount === null)) {
+      return null;
+    }
+    const statedTaxes: DrawerStatedTax[] = typed.map(entry => ({ regime: entry.regime, amount: entry.amount as number }));
+    const supplierName = this.supplierName().trim();
+    if (statedTaxes.length && !supplierName) {
+      return null;
+    }
+    const supplierRegistrationNumber = this.supplierNumber().trim();
+    return {
+      ...draft,
+      ...(statedTaxes.length ? { statedTaxes } : {}),
+      ...(supplierName ? { supplierName } : {}),
+      ...(supplierRegistrationNumber ? { supplierRegistrationNumber } : {}),
+    };
   }
 }

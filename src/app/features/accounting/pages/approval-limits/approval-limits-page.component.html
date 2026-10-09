@@ -267,8 +267,11 @@
       <app-petty-expense-categories
         [categories]="categoryRows()"
         [status]="categories.status()"
-        (changed)="loadCategories()"
+        [recovery]="recoveryRead()"
+        [recoveryStatus]="recoveryShown() ? recovery.status() : 'OK'"
+        (changed)="onCategoriesChanged()"
         (retry)="loadCategories()"
+        (recoveryRetry)="loadRecovery()"
       />
     }
 
@@ -315,6 +318,8 @@
                           <li>{{ roleKey(role) | translate }}</li>
                         }
                       </ul>
+                    } @else if (entry.source === 'TAX_RECOVERY' && entry.row.actorRole) {
+                      {{ roleKey(entry.row.actorRole) | translate }}
                     } @else {
                       {{ 'COMMON.NOT_AVAILABLE' | translate }}
                     }
@@ -373,6 +378,15 @@
                           }
                         }
                       }
+                      @case ('TAX_RECOVERY') {
+                        <span class="limits__setting">{{ 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.TAX_SHARE' | translate: { category: entry.category || ('ACCOUNTING.APPROVAL_LIMITS.TAX_RECOVERY.SHARE.UNKNOWN' | translate) } }}</span>
+                        {{ 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.FROM_TO' | translate: {
+                          old: entry.row.oldTaxRecoverable === null
+                            ? ('COMMON.EMPTY_VALUE' | translate)
+                            : (shareCopy({ taxRecoverable: entry.row.oldTaxRecoverable, recoverablePercent: entry.row.oldRecoverablePercent }).key | translate: { percent: (entry.row.oldRecoverablePercent | number: '1.0-2') ?? '' }),
+                          new: (shareCopy({ taxRecoverable: entry.row.newTaxRecoverable, recoverablePercent: entry.row.newRecoverablePercent }).key | translate: { percent: (entry.row.newRecoverablePercent | number: '1.0-2') ?? '' })
+                        } }}
+                      }
                       @case ('CATEGORIES') {
                         <span class="limits__setting">{{ categoryChangeKeys[entry.row.changeType] | translate: { category: entry.category } }}</span>
                         @if (entry.row.changeType === 'DEACTIVATE') {
@@ -389,7 +403,7 @@
                       }
                     }
                   </td>
-                  <td class="limits__reason" data-testid="history-reason">{{ entry.row.justification }}</td>
+                  <td class="limits__reason" data-testid="history-reason">{{ reasonOf(entry) }}</td>
                 </tr>
               }
             </tbody>

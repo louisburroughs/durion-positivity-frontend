@@ -6101,6 +6101,25 @@
         },
         "OVERRIDE_LABEL": "Motif de dérogation",
         "OVERRIDE_HINT": "Pourquoi comptabiliser dans un mois fermé : au moins {{min}} caractères."
+      },
+      "TAX_SPLIT": {
+        "TYPE": "Taxe sur la facture : {{type}}",
+        "CLAIMED_HEADING": "Récupéré",
+        "CLAIMED": "{{type}} : {{amount}} récupéré sur {{stated}}",
+        "ACCOUNT": "Inscrit dans {{account}}",
+        "WITHHELD": "{{type}} : rien de récupéré sur {{stated}} — {{reason}}",
+        "UNTYPED": "Taxe sans type",
+        "NONE": "La facture n’indique aucune taxe à récupérer.",
+        "REASON": {
+          "NOT_REGISTERED": "l’atelier n’est pas inscrit à cette taxe à la date de la facture",
+          "NOT_RECOVERABLE": "cette taxe ne peut pas être récupérée",
+          "CATEGORY_NOT_RECOVERABLE": "ce type d’achat ne permet aucune récupération",
+          "RATE_UNAVAILABLE": "la taxe n’a pas pu être vérifiée",
+          "EVIDENCE_MISSING": "il manque au document ce qui est requis pour la récupérer",
+          "TAX_SPLIT_MISSING": "la facture ne ventile pas ses taxes",
+          "SUPPLIER_REGISTRATION_MISSING": "le numéro d’inscription aux taxes du fournisseur n’est pas au dossier",
+          "UNKNOWN": "Inconnu"
+        }
       }
     },
     "APPROVAL_LIMITS": {
@@ -6236,7 +6255,8 @@
         "SOURCE_FAILED": {
           "BILLS": "Impossible de charger les changements aux limites des factures.",
           "DRAWER": "Impossible de charger les changements à l’argent du tiroir.",
-          "CATEGORIES": "Impossible de charger les changements aux catégories."
+          "CATEGORIES": "Impossible de charger les changements aux catégories.",
+          "TAX_RECOVERY": "Impossible de charger les changements des taxes récupérées."
         },
         "CATEGORY_CHANGE": {
           "CREATE": "Catégorie ajoutée : {{category}}",
@@ -6244,7 +6264,8 @@
           "DEACTIVATE": "Catégorie désactivée : {{category}}",
           "REMAP": "Compte de la catégorie changé : {{category}}",
           "UNKNOWN": "Catégorie modifiée : {{category}}"
-        }
+        },
+        "TAX_SHARE": "Taxes récupérées : {{category}}"
       },
       "DENIED_ANY": "Il vous faut l’une de ces autorisations pour voir cette page : {{permissions}}.",
       "DRAWER": {
@@ -6399,6 +6420,66 @@
           "VALIDATION_UNNAMED": "Ce changement n’a pas été accepté. Vérifiez chaque champ et la raison, puis réessayez."
         },
         "REFRESHING": "Actualisation des catégories… Les changements seront possibles une fois le chargement terminé."
+      },
+      "TAX_RECOVERY": {
+        "LOAD_FAILED": "Impossible de vérifier si votre atelier récupère des taxes. Les catégories s’affichent sans cette information.",
+        "UNKNOWN": "Nous ne pouvons pas savoir pour le moment si votre atelier récupère des taxes; les détails fiscaux sont donc masqués.",
+        "REFRESHING": "Actualisation des détails fiscaux…",
+        "COLUMN": "Taxes récupérées",
+        "COLUMN_TERM": "(crédit de taxe sur les intrants)",
+        "WHY_SHARE": {
+          "SUMMARY": "Pourquoi seulement une partie pour certaines catégories?",
+          "TEXT": "Certains achats, comme les repas du personnel, ne permettent de récupérer qu’une partie des taxes payées. Votre comptable fixe la part de chaque catégorie, et un reçu garde la part en vigueur au moment de son enregistrement."
+        },
+        "PANEL": {
+          "HEADING": "Vos inscriptions aux taxes",
+          "NUMBER": "Numéro",
+          "SINCE": "En vigueur depuis le {{date}}",
+          "ACCOUNT": "Les taxes récupérées sont inscrites dans {{account}}",
+          "WHERE": {
+            "SUMMARY": "D’où viennent ces renseignements?",
+            "TEXT": "Les inscriptions sont enregistrées lors de la configuration de l’atelier pour chaque pays où il est inscrit. Cette page les affiche; elle ne les modifie pas."
+          }
+        },
+        "STEPS": {
+          "HEADING": "Ce que fait le caissier à la caisse",
+          "ONE": "Saisir le total du reçu et choisir la catégorie.",
+          "TWO": "Saisir le nom du fournisseur et le numéro du reçu. À partir de {{amount}}, saisir aussi le numéro d’inscription aux taxes du fournisseur.",
+          "TWO_NO_AMOUNT": "Saisir le nom du fournisseur et le numéro du reçu, ainsi que le numéro d’inscription aux taxes du fournisseur lorsqu’il figure sur le reçu.",
+          "THREE": "Recopier chaque taxe demandée par la caisse, telle qu’imprimée sur le reçu. En cas de doute, laisser vide : rien n’est récupéré, ce qui est toujours sans risque."
+        },
+        "SHARE": {
+          "NONE": "Non récupérée",
+          "HALF": "La moitié (50 %)",
+          "ALL": "En totalité",
+          "PERCENT": "{{percent}} %",
+          "UNKNOWN": "Inconnu",
+          "OPEN": "Modifier la part",
+          "TITLE": "Modifier les taxes récupérées : {{category}}",
+          "LEGEND": "Taxes récupérées pour {{category}}",
+          "REASON": "Pourquoi faites-vous ce changement?",
+          "REASON_HINT": "Au moins {{min}} caractères. Conservé dans l’historique.",
+          "SAVE": "Enregistrer",
+          "DONE": "Les taxes récupérées ont été modifiées.",
+          "CONSEQUENCE": {
+            "NONE": "Dorénavant, {{category}} ne récupère aucune des taxes figurant sur ses reçus. Les reçus déjà enregistrés ne changent pas.",
+            "HALF": "Dorénavant, {{category}} récupère la moitié (50 %) des taxes figurant sur ses reçus. Les reçus déjà enregistrés ne changent pas.",
+            "ALL": "Dorénavant, {{category}} récupère la totalité des taxes figurant sur ses reçus. Les reçus déjà enregistrés ne changent pas.",
+            "PENDING": "Choisissez une part pour voir ce qui change."
+          },
+          "ERROR": {
+            "VALIDATION": "Vérifiez les champs en surbrillance.",
+            "VALIDATION_UNNAMED": "Ce changement n’a pas été accepté. Vérifiez la part et la raison, puis réessayez.",
+            "CHANGED": "Quelqu’un d’autre a modifié cette part. Elle a été relue; votre raison est conservée. Vérifiez-la et enregistrez de nouveau.",
+            "NOT_FOUND": "Cette catégorie n’existe plus. La liste a été actualisée.",
+            "IDEMPOTENCY": "Ce changement n’a pas pu être associé à votre tentative précédente. Réessayez.",
+            "NOT_ENABLED": "Votre atelier ne récupère plus de taxes; la part n’a donc pas été modifiée. La section a été actualisée.",
+            "UNAVAILABLE": "Nous n’avons pas pu vérifier les inscriptions aux taxes de votre atelier pour le moment; rien n’a été modifié. Réessayez dans un instant.",
+            "FORBIDDEN": "Vous avez besoin de l’autorisation {{permission}} pour faire ce changement.",
+            "UNKNOWN_OUTCOME": "Nous n’avons pas pu confirmer le changement. Enregistrez de nouveau : il ne sera pas appliqué deux fois.",
+            "OTHER": "Impossible d’enregistrer ce changement."
+          }
+        }
       }
     }
   },
@@ -9611,7 +9692,26 @@
         "BACK": "Retour",
         "CHECKING": "Vérification de l'approbation du gestionnaire…"
       },
-      "PENDING": "{{reason}}, {{amount}} : pas encore confirmé. Ouvrez Sortie de caisse ou Modifier le fonds de caisse pour réessayer; cela ne peut pas être enregistré deux fois."
+      "PENDING": "{{reason}}, {{amount}} : pas encore confirmé. Ouvrez Sortie de caisse ou Modifier le fonds de caisse pour réessayer; cela ne peut pas être enregistré deux fois.",
+      "TAX": {
+        "LEGEND": "Taxes sur le reçu",
+        "SUPPLIER_NAME": "Nom du fournisseur",
+        "SUPPLIER_NAME_HINT": "Requis dès que vous saisissez un montant de taxe.",
+        "AMOUNT": "{{regime}} indiquée sur le reçu",
+        "AMOUNT_HINT": "Recopiez le montant imprimé sur le reçu. En cas de doute, laissez vide.",
+        "FORMAT": "Saisissez le montant tel qu’imprimé, sans plus de décimales que n’en utilise {{currency}}.",
+        "SUPPLIER_NUMBER": "Numéro d’inscription aux taxes du fournisseur",
+        "SUPPLIER_NUMBER_HINT": "Requis à partir de {{amount}} pour récupérer la taxe.",
+        "SUPPLIER_NUMBER_HINT_NO_AMOUNT": "Requis pour récupérer la taxe.",
+        "RECORD_WITHOUT_NUMBER": "Enregistrer sans le numéro",
+        "ERROR": {
+          "IMPLAUSIBLE": "C’est plus de taxe qu’un reçu de ce total peut en comporter. Vérifiez le montant.",
+          "NOT_OFFERED": "Cette taxe ne peut pas être indiquée pour cette catégorie ici aujourd’hui. Les options ont été relues; vérifiez les montants.",
+          "NUMBER_NOT_ACCEPTED": "Le numéro du fournisseur ne peut pas être enregistré ici. Effacez-le et enregistrez de nouveau.",
+          "PRECISION": "N’utilisez pas plus de décimales que {{currency}} n’en comporte. Rien n’a été enregistré.",
+          "CHECK_UNAVAILABLE": "Le numéro du fournisseur n’a pas pu être vérifié pour le moment; rien n’a été enregistré. Enregistrez de nouveau, ou enregistrez sans le numéro."
+        }
+      }
     }
   },
   "COMMON": {

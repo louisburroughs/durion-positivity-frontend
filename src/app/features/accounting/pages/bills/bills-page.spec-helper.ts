@@ -99,7 +99,7 @@ export const bill = (overrides: Partial<BillDetail> = {}): BillDetail => ({
   lines: [],
   availableActions: [action('SUBMIT_FOR_APPROVAL'), action('SET_DUE_DATE')],
   taxByType: [],
-  inputTaxRecovery: [],
+  inputTaxRecovery: null,
   taxOnResaleOverride: null,
   posting: null,
   ...overrides,

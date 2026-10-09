@@ -189,7 +189,7 @@ describe('Approval limits a11y (rendered DOM)', () => {
           { provide: ApApprovalPolicyService, useValue: { getPolicy: vi.fn(() => of(served)), updatePolicy: vi.fn(() => of(served)) } },
           // CONTROLLER here holds neither the drawer nor the category codes; S21's a11y specs render those sections.
           { provide: DrawerPolicyService, useValue: { getPolicy: vi.fn(), updatePolicy: vi.fn() } },
-          { provide: PettyExpenseCategoriesService, useValue: { list: vi.fn() } },
+          { provide: PettyExpenseCategoriesService, useValue: { list: vi.fn(), recovery: vi.fn() } },
           { provide: AuthService, useValue: authMock(CONTROLLER, { tenantId: signal<string | null>(null) }).service },
         ],
       });

@@ -1,4 +1,4 @@
-import { DatePipe } from '@angular/common';
+import { DatePipe, DecimalPipe } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -21,7 +21,19 @@ import { canAccess } from '../../../../core/security/route-access';
 import { ACCOUNTING_SECTION } from '../../../../core/security/route-permissions';
 import { AuthService } from '../../../../core/services/auth.service';
 import { ModalDialogDirective } from '../../../../shared/modal-dialog.directive';
+import { MoneyPipe } from '../../../../shared/money.pipe';
 import { RegionStatus } from '../../models/accounting-home.models';
+import {
+  InputTaxRecovery,
+  RecoveryCategory,
+  SHARE_CHOICES,
+  SHARE_REASON_MIN,
+  ShareChoice,
+  TaxShareCommand,
+  choiceOf,
+  drawerEvidenceThreshold,
+  recoveryState,
+} from '../../models/input-tax-recovery.models';
 import {
   CATEGORY_CODE_PATTERN,
   CATEGORY_EXAMPLES_MAX,
@@ -31,10 +43,49 @@ import {
   PettyExpenseAccount,
   PettyExpenseCategory,
 } from '../../models/petty-expense-categories.models';
+import { AccountingPreferencesService } from '../../services/accounting-preferences.service';
 import { PettyExpenseCategoriesService } from '../../services/petty-expense-categories.service';
 import { toDatePipeInput } from '../../utils/date-only.util';
 import { uuidV7 } from '../../utils/uuid-v7.util';
 import { CategoryDialogMode, CategoryFailure, CategoryField, classifyCategoryError } from './category-errors';
+import { HelpDisclosureComponent } from '../help-disclosure/help-disclosure.component';
+import { TaxRegistrationsPanelComponent } from '../tax-registrations-panel/tax-registrations-panel.component';
+import { ShareFailure, ShareField, classifyShareError } from './tax-share-errors';
+
+/** The Change share dialog (CAP:550 S33): the category it acts on and the setting version read. */
+interface ShareDialog {
+  readonly code: string;
+  readonly label: string;
+  /** The setting version read when the dialog opened, refreshed by a re-read after a refusal; sent with the change. */
+  readonly version: number;
+}
+
+/** Where focus returns after a success: a category dialog's row action, or the row's Change share. */
+type FocusMode = CategoryDialogMode | 'TAX_SHARE';
+
+/** How a category's share reads in the column (§5.5, §8.2): a fixed phrase, a served percentage, or Unknown. */
+export interface ShareCopy {
+  readonly key: string;
+  /** The served percentage, formatted in the user's locale by the template; null for the fixed phrases. */
+  readonly percent: number | null;
+}
+
+const SHARE_KEY = 'ACCOUNTING.APPROVAL_LIMITS.TAX_RECOVERY.SHARE.';
+
+/** The served setting as the column says it; a code the read does not know reads "Unknown" (§8.2). */
+export function shareCopy(row: Pick<RecoveryCategory, 'taxRecoverable' | 'recoverablePercent'> | null | undefined): ShareCopy {
+  if (!row) return { key: SHARE_KEY + 'UNKNOWN', percent: null };
+  const choice = choiceOf(row);
+  if (choice) return { key: SHARE_KEY + choice, percent: null };
+  return row.recoverablePercent === null ? { key: SHARE_KEY + 'UNKNOWN', percent: null } : { key: SHARE_KEY + 'PERCENT', percent: row.recoverablePercent };
+}
+
+/** The command each offered share sends (§5.5): Not claimed, Half (50%), All of it. */
+const SHARE_COMMANDS: Readonly<Record<ShareChoice, { readonly taxRecoverable: boolean; readonly recoverablePercent: number | null }>> = {
+  NONE: { taxRecoverable: false, recoverablePercent: null },
+  HALF: { taxRecoverable: true, recoverablePercent: 50 },
+  ALL: { taxRecoverable: true, recoverablePercent: 100 },
+};
 
 /** An open dialog: its mode and the category it acts on (none for Add). */
 interface CategoryDialog {
@@ -97,13 +148,20 @@ const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
  *   or to the section heading when that control is gone.
  * - Codes are permanent; categories are turned off, never deleted (§4.6).
  *
- * S33 (#470) adds the recovery columns and the registration panel to this
- * section; the table's columns are the place they join.
+ * **Tax recovery** (CAP:550 S33, §4.7, §5.5): the page's recovery read
+ * (`recovery`, its own status, ADR-0064) decides alone whether the shop claims
+ * tax back — never a currency, locale or country. With recovery on, the
+ * section adds the registrations panel, the **Tax claimed back** column, the
+ * cashier's three steps and, for `accounting:mapping-key:edit`, a **Change
+ * share** action per row (hidden otherwise, P5; the handler refuses too). With
+ * recovery off none of their nodes exist; a failed or undecidable read says so
+ * with Try again and offers no change. Regimes and tax types are served codes,
+ * shown as served (owner direction: configuration-driven, multi-national).
  */
 @Component({
   selector: 'app-petty-expense-categories',
   standalone: true,
-  imports: [DatePipe, TranslatePipe, ModalDialogDirective],
+  imports: [DatePipe, DecimalPipe, MoneyPipe, TranslatePipe, ModalDialogDirective, HelpDisclosureComponent, TaxRegistrationsPanelComponent],
   templateUrl: './petty-expense-categories.component.html',
   styleUrls: ['../../bank-reconciliation-shared.css', '../bills/bills-shared.css', './petty-expense-categories.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -113,6 +171,7 @@ export class PettyExpenseCategoriesComponent {
   private readonly service = inject(PettyExpenseCategoriesService);
   private readonly injector = inject(Injector);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly preferences = inject(AccountingPreferencesService);
 
   /** The page's category read: null until one answers. */
   readonly categories = input<readonly PettyExpenseCategory[] | null>(null);
@@ -120,6 +179,11 @@ export class PettyExpenseCategoriesComponent {
   /** A command succeeded or found the category moved: the page re-reads categories and History. */
   readonly changed = output<void>();
   readonly retry = output<void>();
+  /** The page's input-tax recovery read (S33): null until one answers. */
+  readonly recovery = input<InputTaxRecovery | null>(null);
+  readonly recoveryStatus = input<RegionStatus>('PENDING');
+  /** Try again on the recovery read. */
+  readonly recoveryRetry = output<void>();
 
   private readonly heading = viewChild<ElementRef<HTMLElement>>('heading');
 
@@ -164,7 +228,7 @@ export class PettyExpenseCategoriesComponent {
   private accountsToken = 0;
   private accountsSubscription: Subscription | null = null;
   /** Where focus goes once the re-read after a success lands. */
-  private pendingFocus: { readonly code: string | null; readonly mode: CategoryDialogMode } | null = null;
+  private pendingFocus: { readonly code: string | null; readonly mode: FocusMode } | null = null;
   /** A refusal said the category moved: the next re-read refreshes the open dialog's untouched fields. */
   private refreshOnReread = false;
   private trackedIdentity = this.identity();
@@ -187,6 +251,56 @@ export class PettyExpenseCategoriesComponent {
   /** A stale read blocks every write; the controls stay focusable and say why (ADR-0029 §8). */
   readonly blockedReasonId = computed(() => (this.actionable() ? null : this.status() === 'FAILED' ? 'categories-error-text' : 'categories-stale-text'));
 
+  // ── Tax recovery (S33) ─────────────────────────────────────────────────
+  readonly showTerms = this.preferences.showTerms;
+  readonly shareChoices = SHARE_CHOICES;
+  readonly shareReasonMin = SHARE_REASON_MIN;
+  /** Whether the shop claims tax back, from the read alone; null without a read, or while a failed read stands. */
+  readonly recoveryShownState = computed(() => {
+    const read = this.recovery();
+    return read && this.recoveryStatus() !== 'FAILED' ? recoveryState(read) : null;
+  });
+  /** The panel, the column, the steps and Change share exist only with recovery on (§9.5, AC 1–2). */
+  readonly recoveryOn = computed(() => this.recoveryShownState() === 'ON');
+  /** The read failed: no tax element, a notice with Try again (story item 1). */
+  readonly recoveryFailed = computed(() => this.recoveryStatus() === 'FAILED');
+  /** The read answered that recovery cannot be determined now (`enabled: null`): never read as on or off. */
+  readonly recoveryUnknown = computed(() => this.recoveryShownState() === 'UNKNOWN');
+  /** The served shares by category code. */
+  private readonly sharesByCode = computed(() => new Map((this.recovery()?.categories ?? []).map(row => [row.code, row] as const)));
+  /** The drawer receipt's evidence threshold, when the served rules name exactly one. */
+  readonly evidenceThreshold = computed(() => {
+    const read = this.recovery();
+    return read ? drawerEvidenceThreshold(read) : null;
+  });
+  /** A share change needs both current reads (ADR-0064: actionability gates on OK). */
+  readonly shareActionable = computed(() => this.actionable() && this.recoveryStatus() === 'OK' && this.recoveryOn());
+  readonly shareBlockedReasonId = computed(() =>
+    this.shareActionable() ? null : (this.blockedReasonId() ?? 'tax-recovery-stale-text'),
+  );
+
+  readonly shareDialog = signal<ShareDialog | null>(null);
+  readonly shareChoice = signal<ShareChoice | null>(null);
+  readonly shareReason = signal('');
+  readonly shareBusy = signal(false);
+  readonly shareFailure = signal<ShareFailure | null>(null);
+  /** Set when a refusal closed the dialog (recovery switched off meanwhile); shown above the table. */
+  readonly shareNotice = signal<string | null>(null);
+  private shareRequestId: string | null = null;
+  private shareSent: string | null = null;
+  private shareToken = 0;
+  private shareSubscription: Subscription | null = null;
+  /** A refusal said the row moved: the next recovery re-read refreshes the open dialog's version. */
+  private shareRefreshOnReread = false;
+
+  /** The open dialog's category as the recovery read last served it. */
+  readonly shareRow = computed(() => {
+    const open = this.shareDialog();
+    return open ? (this.sharesByCode().get(open.code) ?? null) : null;
+  });
+  readonly shareReasonValid = computed(() => this.shareReason().trim().length >= SHARE_REASON_MIN);
+  readonly shareValid = computed(() => this.shareDialog() !== null && this.shareChoice() !== null && this.shareReasonValid() && this.shareRow() !== null);
+
   readonly dialogValid = computed(() => {
     const open = this.dialog();
     if (!open || !this.reasonValid()) return false;
@@ -207,8 +321,10 @@ export class PettyExpenseCategoriesComponent {
     inject(DestroyRef).onDestroy(() => {
       this.writeToken++;
       this.accountsToken++;
+      this.shareToken++;
       this.writeSubscription?.unsubscribe();
       this.accountsSubscription?.unsubscribe();
+      this.shareSubscription?.unsubscribe();
     });
     // ADR-0063 §7: another tenant or person drops any dialog and write in flight.
     effect(() => {
@@ -218,16 +334,23 @@ export class PettyExpenseCategoriesComponent {
       untracked(() => {
         this.writeToken++;
         this.writeSubscription?.unsubscribe();
+        this.shareToken++;
+        this.shareSubscription?.unsubscribe();
         this.pendingFocus = null;
         this.announcement.set(null);
+        this.shareNotice.set(null);
         this.resetDialog();
+        this.resetShare();
       });
     });
     // After a success, the re-read that answers it settles focus (ADR-0029 §8.7, ADR-0063 §4).
     effect(() => {
       const categories = this.categories();
       const status = this.status();
+      const recoveryStatus = this.recoveryStatus();
       if (!this.pendingFocus || status === 'PENDING' || categories === null) return;
+      // Change share's control comes with the recovery read: wait for its re-read too.
+      if (this.pendingFocus.mode === 'TAX_SHARE' && recoveryStatus === 'PENDING') return;
       const target = this.pendingFocus;
       this.pendingFocus = null;
       afterNextRender({ write: () => this.settleFocus(target) }, { injector: this.injector });
@@ -247,6 +370,17 @@ export class PettyExpenseCategoriesComponent {
         this.dialog.set({ ...open, label: row.label, version: row.version, baseLabel: row.label, baseExamples: examples });
       });
     });
+    // After a refusal that re-reads, the open Change share takes the re-read setting's version (ADR-0063 §1–2).
+    effect(() => {
+      const shares = this.sharesByCode();
+      if (!this.shareRefreshOnReread || this.recoveryStatus() !== 'OK') return;
+      untracked(() => {
+        this.shareRefreshOnReread = false;
+        const open = this.shareDialog();
+        const row = open ? shares.get(open.code) : undefined;
+        if (open && row) this.shareDialog.set({ ...open, label: row.label, version: row.version });
+      });
+    });
   }
 
   private identity(): string {
@@ -254,9 +388,15 @@ export class PettyExpenseCategoriesComponent {
     return `${part(this.auth.tenantId())}|${part(this.auth.currentUserClaims()?.sub)}`;
   }
 
-  private settleFocus(target: { readonly code: string | null; readonly mode: CategoryDialogMode }): void {
-    const selector = target.code === null ? '[data-focus-key="CREATE"]' : `[data-focus-key="${CSS.escape(`${target.code}|${target.mode}`)}"]`;
-    const control = this.host.nativeElement.querySelector<HTMLElement>(selector);
+  private settleFocus(target: { readonly code: string | null; readonly mode: FocusMode }): void {
+    // A Change share closed by a refusal has no row action left to return to: the heading is.
+    const selector =
+      target.code === null
+        ? target.mode === 'CREATE'
+          ? '[data-focus-key="CREATE"]'
+          : null
+        : `[data-focus-key="${CSS.escape(`${target.code}|${target.mode}`)}"]`;
+    const control = selector ? this.host.nativeElement.querySelector<HTMLElement>(selector) : null;
     // A control that is gone, disabled or blocked by a stale read is no place for focus: the heading is.
     const usable = control && !(control as HTMLButtonElement).disabled && control.getAttribute('aria-disabled') !== 'true';
     (usable ? control : this.heading()?.nativeElement)?.focus();
@@ -294,7 +434,7 @@ export class PettyExpenseCategoriesComponent {
 
   /** Opens a dialog, re-checked here: permission, a current read, the row's state. */
   open(mode: CategoryDialogMode, category: PettyExpenseCategory | null = null): void {
-    if (!this.allowed(mode) || !this.actionable() || this.dialog()) return;
+    if (!this.allowed(mode) || !this.actionable() || this.dialog() || this.shareDialog()) return;
     if (mode !== 'CREATE' && !category) return;
     if (mode === 'DEACTIVATE' && category?.status !== 'ACTIVE') return;
     this.resetDialog();
@@ -460,6 +600,118 @@ export class PettyExpenseCategoriesComponent {
         return ACCOUNTING_SECTION.categoryRemap[0];
     }
   }
+
+  // ── Change share (S33) ────────────────────────────────────────────────
+  /** The column's copy for a category row. */
+  shareCell(code: string): ShareCopy {
+    return shareCopy(this.sharesByCode().get(code));
+  }
+
+  /**
+   * Opens Change share, re-checked here (ADR-0040 §6a): `accounting:mapping-key:edit`, recovery on,
+   * both reads current, a row the recovery read knows. The `requestId` is made now (§8.2).
+   */
+  openShare(category: PettyExpenseCategory): void {
+    if (!this.canEdit() || !this.shareActionable() || this.dialog() || this.shareDialog()) return;
+    const row = this.sharesByCode().get(category.code);
+    if (!row) return;
+    this.resetShare();
+    this.shareNotice.set(null);
+    this.shareChoice.set(choiceOf(row));
+    this.shareRequestId = uuidV7();
+    this.shareDialog.set({ code: row.code, label: category.label, version: row.version });
+  }
+
+  closeShare(): void {
+    if (this.shareBusy()) return;
+    this.resetShare();
+  }
+
+  private resetShare(): void {
+    this.shareDialog.set(null);
+    this.shareChoice.set(null);
+    this.shareReason.set('');
+    this.shareBusy.set(false);
+    this.shareFailure.set(null);
+    this.shareRequestId = null;
+    this.shareSent = null;
+    this.shareRefreshOnReread = false;
+  }
+
+  /** The key the open Change share would send next, for tests; never shown. */
+  currentShareRequestId(): string | null {
+    return this.shareRequestId;
+  }
+
+  chooseShare(choice: ShareChoice): void {
+    if (this.shareBusy()) return;
+    this.shareChoice.set(choice);
+  }
+
+  /**
+   * Saves the share, re-checked here: permission, recovery on, current reads, a choice and a
+   * reason of at least 10 characters, nothing in flight. The `requestId` is reused while the
+   * identical payload is resent (a retry, a double click, a timeout) and rotated when it changes.
+   */
+  submitShare(): void {
+    const open = this.shareDialog();
+    const choice = this.shareChoice();
+    if (!open || !choice || this.shareBusy() || !this.canEdit() || !this.shareActionable() || !this.shareValid()) return;
+    const command = SHARE_COMMANDS[choice];
+    const justification = this.shareReason().trim();
+    const body = JSON.stringify([open.code, command.taxRecoverable, command.recoverablePercent, open.version, justification]);
+    if (this.shareSent !== null && this.shareSent !== body) this.shareRequestId = uuidV7();
+    const requestId = this.shareRequestId ?? uuidV7();
+    this.shareRequestId = requestId;
+    this.shareSent = body;
+    const sent: TaxShareCommand = { ...command, version: open.version, justification, requestId };
+    const token = ++this.shareToken;
+    this.shareBusy.set(true);
+    this.shareFailure.set(null);
+    this.shareSubscription = this.service.setTaxShare(open.code, sent).subscribe({
+      next: () => {
+        if (token !== this.shareToken) return;
+        this.pendingFocus = { code: open.code, mode: 'TAX_SHARE' };
+        this.announcement.set('ACCOUNTING.APPROVAL_LIMITS.TAX_RECOVERY.SHARE.DONE');
+        this.shareBusy.set(false);
+        this.resetShare();
+        this.changed.emit();
+      },
+      error: (error: unknown) => {
+        if (token !== this.shareToken) return;
+        this.shareBusy.set(false);
+        const failure = classifyShareError(error, ACCOUNTING_SECTION.categoryEdit[0]);
+        if (failure.rotate) {
+          this.shareRequestId = uuidV7();
+          this.shareSent = null;
+        }
+        if (failure.followUp === 'CLOSE_AND_REREAD') {
+          // Recovery was switched off meanwhile: nothing changed; the section re-reads and says why.
+          this.resetShare();
+          this.shareNotice.set(failure.key);
+          this.announcement.set(failure.key);
+          this.pendingFocus = { code: null, mode: 'TAX_SHARE' };
+          this.changed.emit();
+          return;
+        }
+        this.shareFailure.set(failure);
+        if (failure.followUp === 'REREAD') {
+          this.shareRefreshOnReread = true;
+          this.changed.emit();
+        }
+      },
+    });
+  }
+
+  shareFieldMarked(field: ShareField): boolean {
+    return !!this.shareFailure()?.fields.includes(field);
+  }
+
+  /** The consequence sentence for the chosen share (P4), before Save. */
+  readonly shareConsequenceKey = computed(() => {
+    const choice = this.shareChoice();
+    return choice ? `ACCOUNTING.APPROVAL_LIMITS.TAX_RECOVERY.SHARE.CONSEQUENCE.${choice}` : 'ACCOUNTING.APPROVAL_LIMITS.TAX_RECOVERY.SHARE.CONSEQUENCE.PENDING';
+  });
 
   fieldMarked(field: CategoryField): boolean {
     return !!this.failure()?.fields.includes(field);

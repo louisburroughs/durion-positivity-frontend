@@ -232,11 +232,41 @@ describe('RegisterSessionService', () => {
           },
         ],
         categories: [
-          { code: 'OFFICE', label: 'Office supplies', examples: 'Pens, paper' },
-          { code: 'CLEANING', label: 'CLEANING', examples: null },
+          { code: 'OFFICE', label: 'Office supplies', examples: 'Pens, paper', offeredRegimes: [] },
+          { code: 'CLEANING', label: 'CLEANING', examples: null, offeredRegimes: [] },
         ],
+        evidenceRule: null,
       };
       expect(options).toEqual(expected);
+    });
+  });
+
+  describe('options() — stated tax (CAP:550 S33)', () => {
+    it('keeps each category’s offered regimes in served order, without blanks or repeats, and the evidence rule', async () => {
+      const served: CashMovementOptionsResponse = {
+        sessionId: SESSION_ID,
+        currencyCode: 'CAD',
+        reasons: [],
+        categories: [
+          { code: 'MEALS', label: 'Staff meals', offeredRegimes: ['ZZ_FED', '', 'ZZ_REG', 'ZZ_FED'] },
+          { code: 'POSTAGE', label: 'Postage' },
+        ],
+        evidenceRule: { threshold: 100, currencyCode: 'CAD' },
+      };
+      api.getCashMovementOptions.mockReturnValue(of(served));
+
+      const options = await firstValueFrom(service.options(SESSION_ID));
+
+      expect(options.categories.map(category => category.offeredRegimes)).toEqual([['ZZ_FED', 'ZZ_REG'], []]);
+      expect(options.evidenceRule).toEqual({ threshold: 100, currencyCode: 'CAD' });
+    });
+
+    it('reads a missing or partial evidence rule as none', async () => {
+      api.getCashMovementOptions.mockReturnValue(of({ sessionId: SESSION_ID, evidenceRule: { threshold: 100 } } satisfies CashMovementOptionsResponse));
+
+      const options = await firstValueFrom(service.options(SESSION_ID));
+
+      expect(options.evidenceRule).toBeNull();
     });
   });
 
@@ -324,10 +354,28 @@ describe('classifyDrawerError', () => {
     [refusal(500), 'UNKNOWN_OUTCOME'],
     [refusal(0), 'UNKNOWN_OUTCOME'],
     [refusal(504), 'UNKNOWN_OUTCOME'],
+    // S32d stated tax (CAP:550 S33): definite refusals, nothing recorded.
+    [refusal(422, 'TAX_AMOUNT_IMPLAUSIBLE'), 'TAX_IMPLAUSIBLE'],
+    [refusal(422, 'TAX_REGIME_NOT_OFFERED'), 'TAX_REGIME_NOT_OFFERED'],
+    [refusal(422, 'SUPPLIER_REGISTRATION_NOT_ACCEPTED'), 'SUPPLIER_NUMBER_NOT_ACCEPTED'],
+    [refusal(422, 'AMOUNT_PRECISION_EXCEEDS_CURRENCY'), 'PRECISION'],
+    [refusal(503, 'TAX_CHECK_UNAVAILABLE'), 'TAX_CHECK_UNAVAILABLE'],
+    // A 503 without that code may be a gateway's: the outcome stays unknown.
+    [refusal(503), 'UNKNOWN_OUTCOME'],
   ];
 
   it.each(recordCases)('classifies a record refusal %# by code, then by status', (error, kind) => {
     expect(classifyDrawerError(error, 'RECORD').kind).toBe(kind);
+  });
+
+  it('keeps the fields a stated-tax refusal names (S32d fieldErrors), and only for those that name fields', () => {
+    expect(classifyDrawerError(refusal(422, 'TAX_AMOUNT_IMPLAUSIBLE', ['statedTaxes[1].amount', 'statedTaxes']), 'RECORD')).toEqual({
+      kind: 'TAX_IMPLAUSIBLE',
+      fields: ['statedTaxes[1].amount', 'statedTaxes'],
+      status: 422,
+    });
+    expect(classifyDrawerError(refusal(422, 'AMOUNT_PRECISION_EXCEEDS_CURRENCY', ['amount']), 'RECORD').fields).toEqual(['amount']);
+    expect(classifyDrawerError(refusal(422, 'CASH_MOVEMENT_TYPE_NOT_ALLOWED', ['reason']), 'RECORD').fields).toEqual([]);
   });
 
   it('keeps the fields a 400 names', () => {
@@ -375,6 +423,12 @@ describe('settlesUnknownAttempt (item 6 amendment)', () => {
     ['SESSION_GONE', 404],
     ['CURRENCY_NOT_SUPPORTED', 422],
     ['REFUSED', 422],
+    // S32d: precision is a same-payload refusal; the other stated-tax answers come after the replay check.
+    ['PRECISION', 422],
+    ['TAX_IMPLAUSIBLE', 422],
+    ['TAX_REGIME_NOT_OFFERED', 422],
+    ['SUPPLIER_NUMBER_NOT_ACCEPTED', 422],
+    ['TAX_CHECK_UNAVAILABLE', 503],
   ] as const)('%s (%i), evaluated after the replay check or same-payload, settles it', (kind, status) => {
     expect(settlesUnknownAttempt(failure(kind, status))).toBe(true);
   });

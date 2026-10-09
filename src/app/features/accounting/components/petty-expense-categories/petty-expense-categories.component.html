@@ -43,6 +43,28 @@
       <p class="hint-text" data-testid="categories-read-only">{{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.READ_ONLY' | translate }}</p>
     }
 
+    <!-- Tax recovery (S33): only the recovery read decides; failed or undecidable reads show no tax element (§4.7). -->
+    @if (recoveryFailed()) {
+      <div class="categories__error" data-testid="tax-recovery-error">
+        <p class="field-error" id="tax-recovery-error-text">{{ 'ACCOUNTING.APPROVAL_LIMITS.TAX_RECOVERY.LOAD_FAILED' | translate }}</p>
+        <button type="button" class="btn btn--outline" data-testid="tax-recovery-retry" (click)="recoveryRetry.emit()">{{ 'COMMON.RETRY' | translate }}</button>
+      </div>
+    } @else if (recoveryUnknown()) {
+      <div class="categories__error" data-testid="tax-recovery-unknown">
+        <p class="hint-text">{{ 'ACCOUNTING.APPROVAL_LIMITS.TAX_RECOVERY.UNKNOWN' | translate }}</p>
+        <button type="button" class="btn btn--outline" data-testid="tax-recovery-retry" (click)="recoveryRetry.emit()">{{ 'COMMON.RETRY' | translate }}</button>
+      </div>
+    }
+    @if (shareNotice(); as notice) {
+      <p class="hint-text" data-testid="tax-share-notice">{{ notice | translate }}</p>
+    }
+    @if (recoveryOn()) {
+      @if (recoveryStatus() === 'PENDING') {
+        <p class="pending-note" id="tax-recovery-stale-text" data-testid="tax-recovery-refreshing">{{ 'ACCOUNTING.APPROVAL_LIMITS.TAX_RECOVERY.REFRESHING' | translate }}</p>
+      }
+      <app-tax-registrations-panel [regimes]="recovery()?.regimes ?? []" [showTerms]="showTerms()" />
+    }
+
     @if (rows.length === 0) {
       <p class="state-panel state-panel--empty" data-testid="categories-empty">{{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.EMPTY' | translate }}</p>
     } @else {
@@ -55,7 +77,14 @@
               <th scope="col">{{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.COLUMN.EXAMPLES' | translate }}</th>
               <th scope="col">{{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.COLUMN.RECORDED_IN' | translate }}</th>
               <th scope="col">{{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.COLUMN.STATUS' | translate }}</th>
-              <!-- S33 (#470): the "GST/HST claimed back" column joins here. -->
+              @if (recoveryOn()) {
+                <th scope="col" data-testid="tax-share-column">
+                  {{ 'ACCOUNTING.APPROVAL_LIMITS.TAX_RECOVERY.COLUMN' | translate }}
+                  @if (showTerms()) {
+                    <span class="categories__term" data-testid="tax-share-column-term">{{ 'ACCOUNTING.APPROVAL_LIMITS.TAX_RECOVERY.COLUMN_TERM' | translate }}</span>
+                  }
+                </th>
+              }
               @if (hasRowActions()) {
                 <th scope="col">{{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.COLUMN.ACTIONS' | translate }}</th>
               }
@@ -98,6 +127,13 @@
                     }
                   }
                 </td>
+                @if (recoveryOn()) {
+                  <td data-testid="tax-share-cell">
+                    @if (shareCell(category.code); as share) {
+                      {{ share.key | translate: { percent: share.percent !== null ? (share.percent | number: '1.0-2') : '' } }}
+                    }
+                  </td>
+                }
                 @if (hasRowActions()) {
                   <td class="categories__actions">
                     @if (canEdit()) {
@@ -139,6 +175,19 @@
                         {{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.REMAP.OPEN' | translate }}<span class="sr-only"> {{ category.label }}</span>
                       </button>
                     }
+                    @if (canEdit() && recoveryOn()) {
+                      <button
+                        type="button"
+                        class="link-button categories__action"
+                        data-testid="tax-share-open"
+                        [attr.data-focus-key]="category.code + '|TAX_SHARE'"
+                        [attr.aria-disabled]="shareActionable() ? null : 'true'"
+                        [attr.aria-describedby]="shareBlockedReasonId()"
+                        (click)="openShare(category)"
+                      >
+                        {{ 'ACCOUNTING.APPROVAL_LIMITS.TAX_RECOVERY.SHARE.OPEN' | translate }}<span class="sr-only"> {{ category.label }}</span>
+                      </button>
+                    }
                   </td>
                 }
               </tr>
@@ -160,6 +209,29 @@
       </ul>
     </div>
     <p data-testid="categories-tax">{{ 'ACCOUNTING.APPROVAL_LIMITS.CATEGORIES.TAX_INCLUDED' | translate }}</p>
+
+    @if (recoveryOn()) {
+      <app-help-disclosure
+        summaryKey="ACCOUNTING.APPROVAL_LIMITS.TAX_RECOVERY.WHY_SHARE.SUMMARY"
+        contextKey="ACCOUNTING.APPROVAL_LIMITS.TAX_RECOVERY.COLUMN"
+        textKey="ACCOUNTING.APPROVAL_LIMITS.TAX_RECOVERY.WHY_SHARE.TEXT"
+      />
+      <!-- The cashier's three steps (§5.5): the amount is the served evidence threshold, never a literal (P7). -->
+      <div class="categories__steps" data-testid="tax-steps">
+        <h3 class="bill-subheading" id="tax-steps-heading">{{ 'ACCOUNTING.APPROVAL_LIMITS.TAX_RECOVERY.STEPS.HEADING' | translate }}</h3>
+        <ol aria-labelledby="tax-steps-heading">
+          <li data-testid="tax-step">{{ 'ACCOUNTING.APPROVAL_LIMITS.TAX_RECOVERY.STEPS.ONE' | translate }}</li>
+          <li data-testid="tax-step">
+            @if (evidenceThreshold(); as threshold) {
+              {{ 'ACCOUNTING.APPROVAL_LIMITS.TAX_RECOVERY.STEPS.TWO' | translate: { amount: (threshold.amount | money: threshold.currencyCode) } }}
+            } @else {
+              {{ 'ACCOUNTING.APPROVAL_LIMITS.TAX_RECOVERY.STEPS.TWO_NO_AMOUNT' | translate }}
+            }
+          </li>
+          <li data-testid="tax-step">{{ 'ACCOUNTING.APPROVAL_LIMITS.TAX_RECOVERY.STEPS.THREE' | translate }}</li>
+        </ol>
+      </div>
+    }
   }
 </section>
 
@@ -323,6 +395,64 @@
           {{ dialogKeys[open.mode].confirm | translate }}
         </button>
         <button type="button" class="btn btn--outline" data-testid="category-cancel" [disabled]="busy()" (click)="close()">
+          {{ 'COMMON.CANCEL' | translate }}
+        </button>
+      </div>
+    </form>
+  </dialog>
+}
+
+@if (shareDialog(); as open) {
+  <dialog appModalDialog class="confirm-panel" aria-labelledby="tax-share-title" (modalCancel)="closeShare()" data-testid="tax-share-dialog">
+    <form class="bill-form" (submit)="$event.preventDefault(); submitShare()">
+      <h2 class="confirm-heading" id="tax-share-title">{{ 'ACCOUNTING.APPROVAL_LIMITS.TAX_RECOVERY.SHARE.TITLE' | translate: { category: open.label } }}</h2>
+
+      <fieldset
+        class="categories__choices"
+        data-testid="tax-share-choices"
+        [attr.aria-describedby]="shareFieldMarked('taxRecoverable') || shareFieldMarked('recoverablePercent') ? 'tax-share-error' : null"
+      >
+        <legend>{{ 'ACCOUNTING.APPROVAL_LIMITS.TAX_RECOVERY.SHARE.LEGEND' | translate: { category: open.label } }}</legend>
+        @for (choice of shareChoices; track choice) {
+          <div class="categories__choice">
+            <input
+              type="radio"
+              name="tax-share"
+              [id]="'tax-share-' + choice"
+              [value]="choice"
+              [checked]="shareChoice() === choice"
+              [attr.data-testid]="'tax-share-' + choice"
+              (change)="chooseShare(choice)"
+            />
+            <label [for]="'tax-share-' + choice">{{ 'ACCOUNTING.APPROVAL_LIMITS.TAX_RECOVERY.SHARE.' + choice | translate }}</label>
+          </div>
+        }
+      </fieldset>
+
+      <div class="form-field">
+        <label for="tax-share-reason">{{ 'ACCOUNTING.APPROVAL_LIMITS.TAX_RECOVERY.SHARE.REASON' | translate }}</label>
+        <textarea
+          id="tax-share-reason"
+          data-testid="tax-share-reason"
+          maxlength="1000"
+          [value]="shareReason()"
+          (input)="shareReason.set(text($event))"
+          [attr.aria-invalid]="shareFieldMarked('justification') ? 'true' : null"
+          [attr.aria-describedby]="'tax-share-reason-hint' + (shareFieldMarked('justification') ? ' tax-share-error' : '')"
+        ></textarea>
+        <p class="hint-text" id="tax-share-reason-hint">{{ 'ACCOUNTING.APPROVAL_LIMITS.TAX_RECOVERY.SHARE.REASON_HINT' | translate: { min: shareReasonMin } }}</p>
+      </div>
+
+      @if (shareFailure(); as refused) {
+        <p class="bill-error" role="alert" id="tax-share-error" data-testid="tax-share-error">{{ refused.key | translate: refused.params }}</p>
+      }
+
+      <p class="bill-consequence" data-testid="tax-share-consequence">{{ shareConsequenceKey() | translate: { category: open.label } }}</p>
+      <div class="bill-actions">
+        <button type="submit" class="btn btn--accent" data-testid="tax-share-save" [disabled]="shareBusy() || !shareValid()">
+          {{ 'ACCOUNTING.APPROVAL_LIMITS.TAX_RECOVERY.SHARE.SAVE' | translate }}
+        </button>
+        <button type="button" class="btn btn--outline" data-testid="tax-share-cancel" [disabled]="shareBusy()" (click)="closeShare()">
           {{ 'COMMON.CANCEL' | translate }}
         </button>
       </div>

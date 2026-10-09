@@ -1,14 +1,30 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, forkJoin, map, of, switchMap } from 'rxjs';
 import {
+  AccountingInputTaxRecoveryService,
   AccountingPettyExpenseCategoriesService,
   GLAccountResponse,
   GLAccountResponseAccountTypeEnum,
   GLAccountsService,
+  InputTaxRecoveryCategory,
+  InputTaxRecoveryCountryEvidenceRules,
+  InputTaxRecoveryHistoryItem,
+  InputTaxRecoveryRegime,
+  InputTaxRecoveryResponse,
   PettyExpenseCategoryAccount,
   PettyExpenseCategoryHistoryItem,
   PettyExpenseCategoryResponse,
+  PettyExpenseCategoryTaxRecoveryResponse,
 } from '@durion-sdk/accounting';
+import {
+  InputTaxRecovery,
+  RecoveryCategory,
+  RecoveryChange,
+  RecoveryCountryEvidence,
+  RecoveryRegime,
+  TaxShareCommand,
+  TaxShareResult,
+} from '../models/input-tax-recovery.models';
 import {
   ExpenseAccountOption,
   PettyExpenseAccount,
@@ -42,13 +58,15 @@ const text = (value: string | null | undefined): string | null => value?.trim() 
  * `deactivate` `accounting:mapping-key:deactivate`; `remap`
  * `accounting:gl-mapping:create`; `listExpenseAccounts` `accounting:coa:view`.
  *
- * S33 (#470) adds the input-tax recovery read and `setPettyExpenseCategoryTaxRecovery`
- * here; S21 calls neither.
+ * S33 (#470): `recovery` reads `AccountingInputTaxRecoveryService.getInputTaxRecovery`
+ * (`accounting:mapping-key:view`) and `setTaxShare` writes
+ * `setPettyExpenseCategoryTaxRecovery` (`accounting:mapping-key:edit`).
  */
 @Injectable({ providedIn: 'root' })
 export class PettyExpenseCategoriesService {
   private readonly sdk = inject(AccountingPettyExpenseCategoriesService);
   private readonly accountsSdk = inject(GLAccountsService);
+  private readonly recoverySdk = inject(AccountingInputTaxRecoveryService);
 
   /** Every category, active and inactive, in the served (code) order, with its accounts and history. */
   list(): Observable<PettyExpenseCategory[]> {
@@ -95,6 +113,35 @@ export class PettyExpenseCategoriesService {
         requestId: command.requestId,
       })
       .pipe(map(toCategory));
+  }
+
+  /**
+   * The shop's input-tax recovery (S32d): registered regimes and whether each recovers today, the
+   * evidence rules, every category's share and the change history. A missing list is read as
+   * empty only where the contract says so (`categories`, `history`, `regimes`); `evidenceRules`
+   * stays null when the tax service did not answer.
+   */
+  recovery(): Observable<InputTaxRecovery> {
+    return this.recoverySdk.getInputTaxRecovery().pipe(map(toRecovery));
+  }
+
+  /**
+   * Sets a category's share of stated tax claimed back, from now on (S32d item 4). The share is
+   * sent only when recoverable; the version is the one read (0 for a category never set).
+   */
+  setTaxShare(code: string, command: TaxShareCommand): Observable<TaxShareResult> {
+    const body = {
+      taxRecoverable: command.taxRecoverable,
+      version: command.version,
+      justification: command.justification,
+      requestId: command.requestId,
+    };
+    return this.sdk
+      .setPettyExpenseCategoryTaxRecovery(
+        code,
+        command.taxRecoverable && command.recoverablePercent !== null ? { ...body, recoverablePercent: command.recoverablePercent } : body,
+      )
+      .pipe(map(toShareResult));
   }
 
   /**
@@ -163,5 +210,70 @@ function toCategory(view: PettyExpenseCategoryResponse): PettyExpenseCategory {
     laterAccount: toAccount(view.laterAccount),
     version: view.version ?? null,
     history: (view.history ?? []).map(toChange),
+  };
+}
+
+function toRegime(regime: InputTaxRecoveryRegime): RecoveryRegime {
+  return {
+    countryCode: regime.countryCode,
+    regime: regime.regime,
+    enabled: typeof regime.enabled === 'boolean' ? regime.enabled : null,
+    registrationNumber: text(regime.registration?.number),
+    since: text(regime.registration?.since),
+    accountName: text(regime.account?.name),
+    accountCode: text(regime.account?.code),
+  };
+}
+
+function toEvidence(country: InputTaxRecoveryCountryEvidenceRules): RecoveryCountryEvidence {
+  return {
+    countryCode: country.countryCode,
+    currencyCode: text(country.currencyCode),
+    rules: (country.rules ?? [])
+      .filter(rule => typeof rule.threshold === 'number')
+      .map(rule => ({ appliesTo: rule.appliesTo ?? [], rule: rule.rule, threshold: rule.threshold })),
+  };
+}
+
+function toRecoveryCategory(category: InputTaxRecoveryCategory): RecoveryCategory {
+  return {
+    code: category.code,
+    label: category.label,
+    taxRecoverable: category.taxRecoverable === true,
+    recoverablePercent: typeof category.recoverablePercent === 'number' ? category.recoverablePercent : null,
+    version: category.version,
+  };
+}
+
+function toRecoveryChange(item: InputTaxRecoveryHistoryItem): RecoveryChange {
+  return {
+    code: item.code,
+    effectiveFrom: item.effectiveFrom,
+    actorRole: text(item.actorRole),
+    oldTaxRecoverable: typeof item.oldTaxRecoverable === 'boolean' ? item.oldTaxRecoverable : null,
+    oldRecoverablePercent: typeof item.oldRecoverablePercent === 'number' ? item.oldRecoverablePercent : null,
+    newTaxRecoverable: item.newTaxRecoverable === true,
+    newRecoverablePercent: typeof item.newRecoverablePercent === 'number' ? item.newRecoverablePercent : null,
+    reason: item.reason ?? '',
+  };
+}
+
+function toRecovery(view: InputTaxRecoveryResponse): InputTaxRecovery {
+  return {
+    asOf: view.asOf,
+    regimes: (view.regimes ?? []).map(toRegime),
+    evidence: Array.isArray(view.evidenceRules) ? view.evidenceRules.map(toEvidence) : null,
+    categories: (view.categories ?? []).map(toRecoveryCategory),
+    history: (view.history ?? []).map(toRecoveryChange),
+  };
+}
+
+function toShareResult(view: PettyExpenseCategoryTaxRecoveryResponse): TaxShareResult {
+  return {
+    code: view.code,
+    taxRecoverable: view.taxRecoverable === true,
+    recoverablePercent: typeof view.recoverablePercent === 'number' ? view.recoverablePercent : null,
+    version: view.version,
+    replayed: view.replayed === true,
   };
 }

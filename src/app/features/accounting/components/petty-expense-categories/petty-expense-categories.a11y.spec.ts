@@ -6,7 +6,9 @@ import { of } from 'rxjs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import enUS from '../../../../../assets/i18n/en-US.json';
 import { AuthService } from '../../../../core/services/auth.service';
+import { InputTaxRecovery } from '../../models/input-tax-recovery.models';
 import { PettyExpenseCategory } from '../../models/petty-expense-categories.models';
+import { AccountingPreferencesService } from '../../services/accounting-preferences.service';
 import { PettyExpenseCategoriesService } from '../../services/petty-expense-categories.service';
 import { authMock } from '../../pages/bills/bills-page.spec-helper';
 import { PettyExpenseCategoriesComponent } from './petty-expense-categories.component';
@@ -54,6 +56,17 @@ const rows: PettyExpenseCategory[] = [
   },
 ];
 
+/** Recovery on (CAP:550 S33): placeholder regime, served shares and threshold. */
+const recovery: InputTaxRecovery = {
+  asOf: '2026-10-09T12:00:00Z',
+  regimes: [
+    { countryCode: 'ZZ', regime: 'ZZ_FED', enabled: true, registrationNumber: '123456789RT0001', since: '2026-01-01', accountName: 'Tax Recoverable', accountCode: '1250' },
+  ],
+  evidence: [{ countryCode: 'ZZ', currencyCode: 'CAD', rules: [{ appliesTo: ['DRAWER_RECEIPT'], rule: 'SUPPLIER_REGISTRATION', threshold: 100 }] }],
+  categories: [{ code: 'SHOP_SUPPLIES', label: 'Shop supplies', taxRecoverable: true, recoverablePercent: 100, version: 1 }],
+  history: [],
+};
+
 describe('Petty-expense categories a11y (rendered DOM)', () => {
   let fixture: ComponentFixture<PettyExpenseCategoriesComponent>;
 
@@ -62,7 +75,7 @@ describe('Petty-expense categories a11y (rendered DOM)', () => {
     (fixture?.nativeElement as HTMLElement | undefined)?.remove();
   });
 
-  function render(): HTMLElement {
+  function render(withRecovery: InputTaxRecovery | null = null): HTMLElement {
     TestBed.configureTestingModule({
       imports: [PettyExpenseCategoriesComponent, TranslateModule.forRoot()],
       providers: [
@@ -77,6 +90,7 @@ describe('Petty-expense categories a11y (rendered DOM)', () => {
           },
         },
         { provide: AuthService, useValue: authMock(ALL, { tenantId: signal<string | null>('tenant-a') }).service },
+        { provide: AccountingPreferencesService, useValue: { showTerms: signal(true) } },
       ],
     });
     const translate = TestBed.inject(TranslateService);
@@ -85,6 +99,8 @@ describe('Petty-expense categories a11y (rendered DOM)', () => {
     fixture = TestBed.createComponent(PettyExpenseCategoriesComponent);
     fixture.componentRef.setInput('categories', rows);
     fixture.componentRef.setInput('status', 'OK');
+    fixture.componentRef.setInput('recovery', withRecovery);
+    fixture.componentRef.setInput('recoveryStatus', 'OK');
     document.body.appendChild(fixture.nativeElement as HTMLElement);
     fixture.detectChanges();
     return fixture.nativeElement as HTMLElement;
@@ -103,6 +119,47 @@ describe('Petty-expense categories a11y (rendered DOM)', () => {
       expect(await seriousViolations(host)).toEqual([]);
     });
   }
+
+  for (const theme of ['light', 'dark'] as const) {
+    it(`with tax recovery on, reports no serious violation over the panel, the column, the steps and Change share (${theme} theme, S33 AC 12)`, async () => {
+      document.documentElement.setAttribute('data-theme', theme);
+      const host = render(recovery);
+      await fixture.whenStable();
+      expect(host.querySelector('[data-testid="tax-registrations"]')).not.toBeNull();
+      expect(await seriousViolations(host)).toEqual([]);
+
+      host.querySelector<HTMLButtonElement>('[data-testid="tax-share-open"]')!.click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      expect(await seriousViolations(host)).toEqual([]);
+    });
+  }
+
+  it('Change share is :modal, its radios are named by a visible legend, and focus returns to its trigger on close (S33)', async () => {
+    const host = render(recovery);
+    const button = host.querySelector<HTMLButtonElement>('[data-testid="tax-share-open"]')!;
+    expect(button.textContent?.replace(/\s+/g, ' ').trim()).toBe('Change share Shop supplies');
+    button.focus();
+    button.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const element = host.querySelector<HTMLDialogElement>('[data-testid="tax-share-dialog"]')!;
+    expect(element.matches(':modal')).toBe(true);
+    expect(element.getAttribute('aria-labelledby')).toBe('tax-share-title');
+    const group = element.querySelector('fieldset')!;
+    expect(group.querySelector('legend')?.textContent?.trim()).toBe('Tax claimed back for Shop supplies');
+    for (const radio of Array.from(group.querySelectorAll<HTMLInputElement>('input[type="radio"]'))) {
+      expect(element.querySelector(`label[for="${radio.id}"]`)).not.toBeNull();
+      expect(radio.getBoundingClientRect().height).toBeGreaterThanOrEqual(24);
+    }
+
+    host.querySelector<HTMLButtonElement>('[data-testid="tax-share-cancel"]')!.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(host.querySelector('[data-testid="tax-share-dialog"]')).toBeNull();
+    expect(document.activeElement).toBe(button);
+  });
 
   for (const [trigger, dialog] of [
     ['category-add', 'category-dialog-CREATE'],

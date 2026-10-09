@@ -304,7 +304,7 @@ function toBillDetail(view: VendorBillResponse): BillDetail {
     lines: (view.lines ?? []).map(toLine),
     availableActions: (view.availableActions ?? []).map(toAction),
     taxByType: (view.taxByType ?? []).map(toTaxByType),
-    inputTaxRecovery: (view.inputTaxRecovery ?? []).map(toInputTaxRecovery),
+    inputTaxRecovery: Array.isArray(view.inputTaxRecovery) ? view.inputTaxRecovery.map(toInputTaxRecovery) : null,
     taxOnResaleOverride: view.taxOnResaleOverride
       ? {
           source: known(['BILL', 'VENDOR_SETTING'] as const, view.taxOnResaleOverride.source),

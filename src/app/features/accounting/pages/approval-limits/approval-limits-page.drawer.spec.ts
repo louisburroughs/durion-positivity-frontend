@@ -74,7 +74,11 @@ describe('ApprovalLimitsPageComponent — Drawer cash, categories and the merged
     getPolicy: ReturnType<typeof vi.fn<() => Observable<DrawerPolicyRead>>>;
     updatePolicy: ReturnType<typeof vi.fn<(update: DrawerPolicyUpdate) => Observable<DrawerPolicyRead>>>;
   };
-  let categories: { list: ReturnType<typeof vi.fn<() => Observable<PettyExpenseCategory[]>>>; listExpenseAccounts: ReturnType<typeof vi.fn> };
+  let categories: {
+    list: ReturnType<typeof vi.fn<() => Observable<PettyExpenseCategory[]>>>;
+    listExpenseAccounts: ReturnType<typeof vi.fn>;
+    recovery: ReturnType<typeof vi.fn>;
+  };
   let auth: ReturnType<typeof authMock>;
   let tenant: ReturnType<typeof signal<string | null>>;
 
@@ -120,7 +124,12 @@ describe('ApprovalLimitsPageComponent — Drawer cash, categories and the merged
   beforeEach(() => {
     bills = { getPolicy: vi.fn(() => of(billsRead())), updatePolicy: vi.fn(() => of(billsRead())) };
     drawer = { getPolicy: vi.fn(() => of(drawerRead())), updatePolicy: vi.fn(() => of(drawerRead({ version: 4 }))) };
-    categories = { list: vi.fn(() => of([category()])), listExpenseAccounts: vi.fn(() => NEVER) };
+    // A shop without a tax registration (S33): recovery off, so no tax element joins these sections.
+    categories = {
+      list: vi.fn(() => of([category()])),
+      listExpenseAccounts: vi.fn(() => NEVER),
+      recovery: vi.fn(() => of({ asOf: '2026-10-09T12:00:00Z', regimes: [], evidence: [], categories: [], history: [] })),
+    };
   });
 
   describe('gates (AC 1, §8.1, P5, ADR-0040 §6a)', () => {
@@ -610,7 +619,7 @@ describe('ApprovalLimitsPageComponent — Drawer cash, categories and the merged
         drawerRow('2026-10-02T00:00:00Z', 'tie-b'),
       ]);
 
-      expect(merged.map(entry => entry.row.justification)).toEqual(['tie-a', 'tie-b', 'older', 'none']);
+      expect(merged.map(entry => (entry.source === 'TAX_RECOVERY' ? entry.row.reason : entry.row.justification))).toEqual(['tie-a', 'tie-b', 'older', 'none']);
     });
   });
 });

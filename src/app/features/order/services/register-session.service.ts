@@ -97,12 +97,20 @@ function toOptions(response: CashMovementOptionsResponse): DrawerOptions {
       code: category.code!,
       label: category.label?.trim() || category.code!,
       examples: category.examples?.trim() || null,
+      offeredRegimes: (category.offeredRegimes ?? []).filter(
+        (regime, index, all): regime is string => typeof regime === 'string' && regime.trim() !== '' && all.indexOf(regime) === index,
+      ),
     }));
+  const rule = response.evidenceRule;
   return {
     sessionId: response.sessionId ?? null,
     currencyCode: response.currencyCode ?? null,
     reasons,
     categories,
+    evidenceRule:
+      rule && typeof rule.threshold === 'number' && typeof rule.currencyCode === 'string' && rule.currencyCode
+        ? { threshold: rule.threshold, currencyCode: rule.currencyCode }
+        : null,
   };
 }
 
@@ -205,7 +213,17 @@ export type DrawerFailureKind =
   /** A record whose outcome is unknown (network, timeout, 5xx): Retry resends the same requestId. */
   | 'UNKNOWN_OUTCOME'
   /** A step-up that could not be checked (network, 5xx): nothing was approved. */
-  | 'APPROVAL_UNAVAILABLE';
+  | 'APPROVAL_UNAVAILABLE'
+  /** 422 TAX_AMOUNT_IMPLAUSIBLE: a stated tax is more than the receipt can carry (S32d); fields named. */
+  | 'TAX_IMPLAUSIBLE'
+  /** 422 TAX_REGIME_NOT_OFFERED: a regime the category no longer offers here today; fields named. */
+  | 'TAX_REGIME_NOT_OFFERED'
+  /** 422 SUPPLIER_REGISTRATION_NOT_ACCEPTED: the supplier's number cannot be recorded here. */
+  | 'SUPPLIER_NUMBER_NOT_ACCEPTED'
+  /** 422 AMOUNT_PRECISION_EXCEEDS_CURRENCY: more decimals than the currency has; fields named. */
+  | 'PRECISION'
+  /** 503 TAX_CHECK_UNAVAILABLE: the supplier's number could not be checked; nothing was recorded. */
+  | 'TAX_CHECK_UNAVAILABLE';
 
 export interface DrawerFailure {
   readonly kind: DrawerFailureKind;
@@ -234,7 +252,15 @@ const RECORD_CODES: Readonly<Record<string, DrawerFailureKind>> = {
   FLOAT_CHANGE_NOT_RECORDED: 'FLOAT_NOT_RECORDED',
   REGISTER_SESSION_CONFLICT: 'SESSION_NOT_OPEN',
   IDEMPOTENCY_CONFLICT: 'IDEMPOTENCY_CONFLICT',
+  TAX_AMOUNT_IMPLAUSIBLE: 'TAX_IMPLAUSIBLE',
+  TAX_REGIME_NOT_OFFERED: 'TAX_REGIME_NOT_OFFERED',
+  SUPPLIER_REGISTRATION_NOT_ACCEPTED: 'SUPPLIER_NUMBER_NOT_ACCEPTED',
+  AMOUNT_PRECISION_EXCEEDS_CURRENCY: 'PRECISION',
+  TAX_CHECK_UNAVAILABLE: 'TAX_CHECK_UNAVAILABLE',
 };
+
+/** Refusals that name the request fields they are about (S32d `fieldErrors`). */
+const FIELD_NAMING: ReadonlySet<DrawerFailureKind> = new Set(['TAX_IMPLAUSIBLE', 'TAX_REGIME_NOT_OFFERED', 'PRECISION']);
 
 const APPROVAL_CODES: Readonly<Record<string, DrawerFailureKind>> = {
   CASH_MOVEMENT_APPROVAL_DENIED: 'APPROVAL_DENIED',
@@ -260,7 +286,7 @@ export function classifyDrawerError(error: unknown, operation: 'RECORD' | 'APPRO
   const code = body.code ?? '';
   const byCode = (operation === 'RECORD' ? RECORD_CODES : APPROVAL_CODES)[code] ?? SHARED_CODES[code];
   if (byCode) {
-    return { kind: byCode, fields: [], status };
+    return { kind: byCode, fields: FIELD_NAMING.has(byCode) ? fields : [], status };
   }
   switch (status) {
     case 400:

@@ -122,9 +122,10 @@ export const drawerOptions: DrawerOptions = {
     },
   ],
   categories: [
-    { code: 'OFFICE', label: 'Office supplies', examples: 'Pens, paper, printer ink' },
-    { code: 'CLEANING', label: 'Cleaning', examples: null },
+    { code: 'OFFICE', label: 'Office supplies', examples: 'Pens, paper, printer ink', offeredRegimes: [] },
+    { code: 'CLEANING', label: 'Cleaning', examples: null, offeredRegimes: [] },
   ],
+  evidenceRule: null,
 };
 
 /** The same options with one reason's `allowedNow` replaced. */
