@@ -201,7 +201,6 @@ describe('VendorPaymentNewPageComponent', () => {
   it.each([
     [422, 'AP_PAYMENT_METHOD_NOT_SUPPORTED', [], {}, 'ACCOUNTING.VENDOR_PAYMENT_NEW.REFUSAL.METHOD', {}],
     [422, 'VENDOR_INACTIVE', [], {}, 'ACCOUNTING.VENDOR_PAYMENT_NEW.REFUSAL.VENDOR_INACTIVE', {}],
-    [409, 'VENDOR_PAYMENT_DETAILS_CHANGED', [{ field: 'bills', message: 'INV-1' }, { field: 'bills', message: 'INV-2' }], {}, 'ACCOUNTING.VENDOR_PAYMENT_NEW.REFUSAL.DETAILS_CHANGED', { bills: 'INV-1, INV-2' }],
     [503, 'VENDOR_REPLICATION_PENDING', [], { 'Retry-After': '15' }, 'ACCOUNTING.VENDOR_PAYMENT_NEW.REFUSAL.REPLICATION_PENDING_AFTER', { seconds: 15 }],
     [409, 'LOCK_TIMEOUT', [], {}, 'ACCOUNTING.VENDOR_PAYMENT_NEW.REFUSAL.LOCK_TIMEOUT', {}],
     [400, 'VALIDATION_ERROR', [{ field: 'bankAccountId', message: 'required' }], {}, 'ACCOUNTING.VENDOR_PAYMENT_NEW.REFUSAL.PAY_FROM', {}],
@@ -216,6 +215,37 @@ describe('VendorPaymentNewPageComponent', () => {
     expect(component.state()).toBe('refused');
     expect(component.refusal()).toEqual({ key, params });
     expect((fixture.nativeElement as HTMLElement).querySelector('[data-testid="payment-refusal"]')?.getAttribute('role')).toBe('alert');
+  });
+
+  it('names the bills of a 409 VENDOR_PAYMENT_DETAILS_CHANGED from the fieldError fields, as the backend builds them (row 13)', () => {
+    const translate = TestBed.inject(TranslateService);
+    translate.setTranslation('en-US', enUS as TranslationObject);
+    translate.use('en-US');
+    accountingServiceStub.executePayment.mockReturnValueOnce(
+      throwError(
+        () =>
+          new HttpErrorResponse({
+            status: 409,
+            error: {
+              code: 'VENDOR_PAYMENT_DETAILS_CHANGED',
+              fieldErrors: [
+                { field: 'INV-1', message: 'approved at remit-to version 1; vendor V-100 is now at version 2' },
+                { field: 'INV-2', message: 'approved at remit-to version none; vendor V-100 is now at version 2' },
+              ],
+            },
+          }),
+      ),
+    );
+    component.form.patchValue({ vendorId: 'vendor-1', grossAmount: 100, currency: 'USD', paymentMethod: 'ACH', paymentRef: 'ref-001' });
+    component.submit();
+    fixture.detectChanges();
+
+    expect(component.refusal()).toEqual({ key: 'ACCOUNTING.VENDOR_PAYMENT_NEW.REFUSAL.DETAILS_CHANGED', params: { bills: 'INV-1, INV-2' } });
+    const alert = (fixture.nativeElement as HTMLElement).querySelector('[data-testid="payment-refusal"]')!;
+    expect(alert.textContent?.trim()).toBe(
+      'The vendor’s payment details changed after INV-1, INV-2 were approved. Someone who approves bills must confirm the new details before they’re paid.',
+    );
+    expect(alert.textContent).not.toContain('remit-to version');
   });
 
   it('never classifies VENDOR_REPLICATION_PENDING as an outcome that may have landed', () => {

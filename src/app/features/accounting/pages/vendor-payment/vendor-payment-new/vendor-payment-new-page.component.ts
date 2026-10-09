@@ -76,7 +76,8 @@ export function paymentRefusal(error: unknown): PaymentRefusal | null {
     case 'VENDOR_ON_AP_HOLD':
       return { key: 'ACCOUNTING.VENDOR_PAYMENT_NEW.REFUSAL.VENDOR_ON_AP_HOLD', params: {} };
     case 'VENDOR_PAYMENT_DETAILS_CHANGED': {
-      const bills = fieldErrors.map(entry => String(entry.message ?? '').trim()).filter(Boolean).join(', ');
+      // Each fieldError names a bill by its field (`FieldError(billNumber, "approved at remit-to version …")`).
+      const bills = fieldErrors.map(entry => (typeof entry.field === 'string' ? entry.field.trim() : '')).filter(Boolean).join(', ');
       return bills
         ? { key: 'ACCOUNTING.VENDOR_PAYMENT_NEW.REFUSAL.DETAILS_CHANGED', params: { bills } }
         : { key: 'ACCOUNTING.VENDOR_PAYMENT_NEW.REFUSAL.DETAILS_CHANGED_UNNAMED', params: {} };
