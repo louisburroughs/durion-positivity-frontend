@@ -129,6 +129,7 @@ export class BillsPageComponent implements BillsPageLink {
       untracked(() => {
         this.counts.reset();
         this.list.reset();
+        this.announcement.set(null);
         this.stage.set(null);
         this.page.set(0);
         this.state.set('idle');
@@ -260,7 +261,10 @@ export class BillsPageComponent implements BillsPageLink {
   /** Q5: the selection matched another bill; the step stays as chosen. */
   openMatched(selection: BillSelection): void {
     if (!this.canSee()) return;
-    this.announcement.set(copy('ACCOUNTING.BILLS.DONE.MATCHED_OTHER', { number: selection.billNumber }));
+    // Clear, then set after the next render, so an identical sentence is announced again (R2 item 4).
+    const message = copy('ACCOUNTING.BILLS.DONE.MATCHED_OTHER', { number: selection.billNumber });
+    this.announcement.set(null);
+    this.focusAfterRender(() => this.announcement.set(message));
     void this.router.navigate(['/app/accounting/bills', selection.billId]);
   }
 

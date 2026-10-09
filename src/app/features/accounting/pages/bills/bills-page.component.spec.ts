@@ -265,6 +265,9 @@ describe('BillsPageComponent (§5.2, §8.1)', () => {
       q<HTMLButtonElement>('[data-testid="candidate-pick"]')!.click();
       await harness.fixture.whenStable();
       harness.detectChanges();
+      // The announcement is set after the render that cleared it (clear-then-set).
+      await harness.fixture.whenStable();
+      harness.detectChanges();
 
       expect(TestBed.inject(Router).url).toBe('/app/accounting/bills/bill-9');
       expect(q('[data-testid="page-announcement"]')?.textContent).toContain('ACCOUNTING.BILLS.DONE.MATCHED_OTHER');
@@ -273,6 +276,40 @@ describe('BillsPageComponent (§5.2, §8.1)', () => {
       expect(mock.listByStage.mock.calls.length).toBe(before.list + 1);
       expect(step('PAY').getAttribute('aria-pressed')).toBe('true');
       expect(mock.getBill).toHaveBeenLastCalledWith('bill-9');
+    });
+
+    it('clears the Q5 announcement on a tid|sub change, and re-announces an identical message (R2 item 4)', async () => {
+      const tenant = signal<string | null>(null);
+      payables = payablesMock();
+      TestBed.configureTestingModule({
+        imports: [TranslateModule.forRoot()],
+        providers: [
+          provideRouter(ROUTES),
+          { provide: PayablesService, useValue: payables },
+          { provide: AuthService, useValue: authMock(CLERK, { tenantId: tenant }).service },
+          { provide: AccountingPreferencesService, useValue: { showTerms: signal(false) } },
+        ],
+      });
+      harness = await RouterTestingHarness.create();
+      const page = await harness.navigateByUrl('/app/accounting/bills', BillsPageComponent);
+      harness.detectChanges();
+
+      page.openMatched({ billId: 'bill-9', billNumber: 'REC-9' });
+      expect(page.announcement()).toBeNull();
+      await harness.fixture.whenStable();
+      harness.detectChanges();
+      expect(page.announcement()?.key).toBe('ACCOUNTING.BILLS.DONE.MATCHED_OTHER');
+
+      page.openMatched({ billId: 'bill-9', billNumber: 'REC-9' });
+      expect(page.announcement()).toBeNull();
+      await harness.fixture.whenStable();
+      harness.detectChanges();
+      expect(page.announcement()?.params).toEqual({ number: 'REC-9' });
+
+      tenant.set('tenant-b');
+      harness.detectChanges();
+      expect(page.announcement()).toBeNull();
+      expect(q('[data-testid="page-announcement"]')?.textContent?.trim()).toBe('');
     });
 
     it('a list re-read that lands after another step was chosen is ignored (ADR-0063)', async () => {
