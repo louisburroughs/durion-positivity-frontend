@@ -331,9 +331,18 @@ export const ACCOUNTING_PAGE = {
   vendorPaymentView: ['accounting:ap:view'],
   /** `executePayment` — the page exists to pay, not to browse bills. */
   vendorPaymentExecute: ['accounting:ap:pay'],
-  /** `listVendorBills` is gated on the analytics read, not `ap:view`. */
-  vendorInvoices: ['accounting:analytics:view'],
-  vendorInvoiceDetail: ['accounting:ap:view'],
+  /**
+   * Bills to pay, `bills` and `bills/:billId` (CAP:550 S14, SPEC-accounting-workspace §8.1):
+   * `getVendorBillStageCounts`, `listVendorBillsByStage` and `getVendorBillById` all enforce it.
+   * Every decision inside is gated by its own {@link ACCOUNTING_SECTION} code.
+   */
+  bills: ['accounting:ap:view'],
+  /**
+   * Approval limits, `settings/approval-limits` (CAP:550 S14, §8.1): `getApApprovalPolicy` and
+   * `setApApprovalPolicy` enforce it. S21 widens this to §8.1's any-of gate
+   * (`order:session_policy:manage`, `accounting:mapping-key:edit`) once its sections exist.
+   */
+  approvalLimits: ['accounting:ap_approval_policy:manage'],
   laborOverheadReport: ['reporting:view:financial-statements'],
   invoicePaymentStatus: ['accounting:ap:view'],
   /** `listAccountingPeriods`. Closing and reopening are gated by {@link ACCOUNTING_SECTION}. */
@@ -449,6 +458,26 @@ export const ACCOUNTING_SECTION = {
   paymentReverse: ['accounting:payment:reverse'],
   /** Refund a left-over amount: `refundCustomerCredit`. */
   customerCreditRefund: ['accounting:customer-credit:refund'],
+  /*
+   * Bills to pay (CAP:550 S14, SPEC-accounting-workspace §4.3, §5.2). The page admits
+   * `accounting:ap:view`; each decision gates on the code its endpoint enforces
+   * (`VendorBillController`, `ApApprovalPolicyController`).
+   */
+  /**
+   * Send for approval, Approve bill, Accept as billed, Correct the bill and Pick a match:
+   * `submitVendorBillForApproval`, `approveVendorBill`, `resolveVendorBillMatchException`
+   * (`ACCEPT`, `CORRECT`) and `selectVendorBillMatchCandidate` take either code; the tier is
+   * the server's (`availableActions[].blockedReason`).
+   */
+  apApprove: ['accounting:ap:approve', 'accounting:ap:approve_over_limit'],
+  /** Reject bill and Void the bill: `rejectVendorBill`, `resolveVendorBillMatchException` (`VOID`). */
+  apReject: ['accounting:ap:reject'],
+  /** Add the vendor's due date: `setVendorBillDueDate` enforces `accounting:ap:approve` alone. */
+  apSetDueDate: ['accounting:ap:approve'],
+  /** The Approval limits header link on Bills to pay, and the policy save: `setApApprovalPolicy`. */
+  apPolicyManage: ['accounting:ap_approval_policy:manage'],
+  /** Review and pay on the Pay step: `executePayment` (the vendor payment page's own gate). */
+  apPay: ['accounting:ap:pay'],
 } as const satisfies Record<string, readonly string[]>;
 
 /** `/app/crm/*` — one entry per routed page, keyed by route path. */

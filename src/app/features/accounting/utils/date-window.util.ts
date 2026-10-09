@@ -1,5 +1,5 @@
 /**
- * Calendar-day date-window helpers for default due-date filters (#212/#214).
+ * Calendar-day date helpers (#212/#214).
  *
  * `Date.now() ± n * 24 * 60 * 60 * 1000` drifts across a DST transition: the
  * day a browser's local zone changes clocks is only 23 or 25 hours long, so a
@@ -9,10 +9,6 @@
  * always adds/subtracts whole calendar days and lets the runtime resolve the
  * resulting wall-clock time — so a window built from it spans exactly the
  * intended number of calendar days regardless of DST.
- *
- * Shared here (rather than duplicated per page) because both
- * `vendor-invoices-list-page` and `vendor-invoices-exceptions-page` build
- * their default due-date window the same way.
  */
 
 /** Add (or, for a negative `days`, subtract) whole calendar days to a local `Date`. */

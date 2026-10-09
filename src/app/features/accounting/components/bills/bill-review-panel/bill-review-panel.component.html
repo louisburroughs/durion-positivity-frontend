@@ -1,0 +1,259 @@
+@let notAvailable = 'COMMON.NOT_AVAILABLE' | translate;
+<section class="bill-panel" [attr.aria-labelledby]="id + '-heading'" data-testid="bill-panel" [attr.aria-busy]="state() === 'loading' || state() === 'refreshing'">
+  <!-- Polite announcements survive every rebuild below (ADR-0029 §8.8). -->
+  <p class="sr-only" role="status" data-testid="panel-announcement">
+    @if (announcement(); as message) {
+      {{ message.key | translate: message.params }}
+    }
+  </p>
+
+  @switch (state()) {
+    @case ('loading') {
+      <h2 [id]="id + '-heading'" class="bill-panel__heading bill-focus" tabindex="-1" #panelHeading>
+        {{ 'ACCOUNTING.BILLS.PANEL.LOADING_HEADING' | translate }}
+      </h2>
+      <p class="pending-note" data-testid="panel-loading">{{ 'ACCOUNTING.BILLS.PANEL.LOADING' | translate }}</p>
+    }
+    @case ('error') {
+      <h2 [id]="id + '-heading'" class="bill-panel__heading bill-focus" tabindex="-1" #panelHeading>
+        {{ 'ACCOUNTING.BILLS.PANEL.LOADING_HEADING' | translate }}
+      </h2>
+      @if (readFailure() === 'NOT_FOUND') {
+        <div class="state-panel state-panel--empty" data-testid="panel-not-found">
+          <p>{{ 'ACCOUNTING.BILLS.ERROR.NOT_FOUND' | translate }}</p>
+          <a class="btn btn--outline" routerLink="/app/accounting/bills">{{ 'ACCOUNTING.BILLS.PANEL.BACK_TO_LIST' | translate }}</a>
+        </div>
+      } @else if (readFailure() === 'FORBIDDEN') {
+        <p class="state-panel state-panel--error" role="alert" data-testid="panel-denied">
+          {{ 'ACCOUNTING.BILLS.REGION.DENIED' | translate: { permission: readCode } }}
+        </p>
+      } @else {
+        <div class="state-panel state-panel--error" role="alert" data-testid="panel-error">
+          <p>{{ 'ACCOUNTING.BILLS.PANEL.LOAD_FAILED' | translate }}</p>
+          <button type="button" class="btn btn--outline" (click)="retry()">{{ 'COMMON.RETRY' | translate }}</button>
+        </div>
+      }
+    }
+    @default {
+      @if (bill(); as b) {
+        <!-- Header (§5.2 item 4) -->
+        <header class="bill-panel__header">
+          <h2 [id]="id + '-heading'" class="bill-panel__heading bill-focus" tabindex="-1" #panelHeading>
+            {{ 'ACCOUNTING.BILLS.PANEL.HEADING' | translate: { number: b.billNumber } }}
+          </h2>
+          <p class="bill-panel__status">
+            <span class="bill-badge bill-badge--{{ tone() }}" data-testid="panel-status">{{ (statusKey() ?? '') | translate }}</span>
+            @if (showTerms() && termKey(); as term) {
+              <span class="bill-term" data-testid="panel-status-term">{{ term | translate }}</span>
+            }
+          </p>
+          @if (state() === 'refreshing') {
+            <p class="pending-note" data-testid="panel-refreshing">{{ 'ACCOUNTING.BILLS.PANEL.REFRESHING' | translate }}</p>
+          }
+          @if (readStatus() === 'FAILED' && readFailure() === 'FAILED') {
+            <div class="bill-panel__refresh-failed" data-testid="panel-refresh-failed">
+              <p class="field-error">{{ 'ACCOUNTING.BILLS.REGION.REFRESH_FAILED' | translate }}</p>
+              <button type="button" class="btn btn--outline" (click)="retry()">{{ 'COMMON.RETRY' | translate }}</button>
+            </div>
+          }
+          @if (b.statusExplanation) {
+            <p class="bill-panel__explanation" data-testid="panel-explanation">
+              {{ 'ACCOUNTING.BILLS.PANEL.WHY_HELD' | translate: { explanation: b.statusExplanation } }}
+            </p>
+          }
+          @if (b.rejection) {
+            <p class="bill-panel__explanation" data-testid="panel-rejection">
+              {{ 'ACCOUNTING.BILLS.PANEL.REJECTION' | translate: { reason: b.rejection.reason } }}
+            </p>
+          }
+        </header>
+
+        <!-- Details -->
+        <dl class="bill-panel__details" data-testid="panel-details">
+          <div>
+            <dt>{{ 'ACCOUNTING.BILLS.PANEL.CHANNEL' | translate }}</dt>
+            <dd>
+              <span class="bill-icon material-symbols-rounded" aria-hidden="true">{{ channelIcons[b.channel] | msIcon }}</span>
+              {{ channelKeys[b.channel] | translate }}
+            </dd>
+          </div>
+          <div>
+            <dt>{{ 'ACCOUNTING.BILLS.PANEL.VENDOR' | translate }}</dt>
+            <dd data-testid="panel-vendor">{{ b.vendorName ?? ('COMMON.EMPTY_VALUE' | translate) }}</dd>
+          </div>
+          <div>
+            <dt>{{ 'ACCOUNTING.BILLS.PANEL.INVOICE_NUMBER' | translate }}</dt>
+            <dd class="reference">{{ b.billNumber }}</dd>
+          </div>
+          <div>
+            <dt>{{ 'ACCOUNTING.BILLS.PANEL.BILL_DATE' | translate }}</dt>
+            <dd>{{ b.billDate ? (toDate(b.billDate) | date: 'mediumDate') : notAvailable }}</dd>
+          </div>
+          <div>
+            <dt>{{ 'ACCOUNTING.BILLS.PANEL.TOTAL' | translate }}</dt>
+            <dd class="bill-panel__total" data-testid="panel-total">{{ b.totalAmount | money: currency() }}</dd>
+          </div>
+          <div>
+            <dt>{{ 'ACCOUNTING.BILLS.PANEL.DUE_DATE' | translate }}</dt>
+            <dd>
+              <app-bill-due-date
+                [bill]="b"
+                [permissions]="permissions()"
+                [busy]="busy()"
+                [failure]="failure()"
+                [done]="done()"
+                (decide)="run($event)"
+              />
+            </dd>
+          </div>
+        </dl>
+
+        @if (b.taxOnResaleOverride; as override) {
+          <p class="bill-panel__explanation" data-testid="panel-resale-override">
+            @if (override.source === 'BILL') {
+              {{ 'ACCOUNTING.BILLS.PANEL.RESALE_OVERRIDE_BILL' | translate: { reason: override.justification ?? '' } }}
+            } @else if (override.source === 'VENDOR_SETTING') {
+              {{ 'ACCOUNTING.BILLS.PANEL.RESALE_OVERRIDE_VENDOR' | translate }}
+            }
+          </p>
+        }
+
+        <!-- Checks -->
+        <section class="bill-panel__section" [attr.aria-labelledby]="id + '-checks'">
+          <h3 [id]="id + '-checks'" class="bill-subheading">{{ 'ACCOUNTING.BILLS.CHECKS.HEADING' | translate }}</h3>
+          @if (checks().length) {
+            <ul class="bill-panel__checks">
+              @for (entry of checks(); track $index) {
+                <li class="bill-check bill-check--{{ entry.check.outcome }}" data-testid="panel-check" [attr.data-code]="entry.check.code">
+                  <span class="bill-icon material-symbols-rounded" aria-hidden="true">{{ outcomeIcons[entry.check.outcome] | msIcon }}</span>
+                  <span class="bill-check__outcome">{{ outcomeKeys[entry.check.outcome] | translate }}</span>
+                  <span class="bill-check__text">
+                    @if (entry.sentence.money; as m) {
+                      {{ entry.sentence.key | translate: withParam(entry.sentence.params, m.param, (m.value | money: m.currency)) }}
+                    } @else {
+                      {{ entry.sentence.key | translate: entry.sentence.params }}
+                    }
+                  </span>
+                </li>
+              }
+            </ul>
+          } @else {
+            <p class="hint-text">{{ 'ACCOUNTING.BILLS.CHECKS.NONE' | translate }}</p>
+          }
+        </section>
+
+        <!-- Lines (no Ordered column, OI-7) -->
+        <section class="bill-panel__section" [attr.aria-labelledby]="id + '-lines'">
+          <h3 [id]="id + '-lines'" class="bill-subheading">{{ 'ACCOUNTING.BILLS.LINES.HEADING' | translate }}</h3>
+          @if (b.lines.length) {
+            <div class="bill-panel__scroll bill-focus" tabindex="0" role="region" [attr.aria-labelledby]="id + '-lines-caption'">
+              <table class="ledger-table" data-testid="panel-lines">
+                <caption [id]="id + '-lines-caption'">{{ 'ACCOUNTING.BILLS.LINES.CAPTION' | translate }}</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">{{ 'ACCOUNTING.BILLS.LINES.ITEM' | translate }}</th>
+                    <th scope="col" class="bill-numeric">{{ 'ACCOUNTING.BILLS.LINES.RECEIVED' | translate }}</th>
+                    <th scope="col" class="bill-numeric">{{ 'ACCOUNTING.BILLS.LINES.BILLED' | translate }}</th>
+                    <th scope="col" class="bill-numeric">{{ 'ACCOUNTING.BILLS.LINES.PRICE_EACH' | translate }}</th>
+                    <th scope="col" class="bill-numeric">{{ 'ACCOUNTING.BILLS.LINES.AMOUNT' | translate }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (line of b.lines; track line.lineNumber) {
+                    <tr data-testid="panel-line">
+                      <td>{{ line.description ?? ('ACCOUNTING.BILLS.LINES.NO_DESCRIPTION' | translate: { number: line.lineNumber }) }}</td>
+                      <td class="bill-numeric">{{ line.receivedQuantity | number }}</td>
+                      <td class="bill-numeric">{{ line.billedQuantity !== null ? (line.billedQuantity | number) : notAvailable }}</td>
+                      <td class="bill-numeric">
+                        {{ (line.billedUnitPrice ?? line.receivedUnitPrice) | money: (line.currencyCode ?? currency()) }}
+                      </td>
+                      <!-- A line amount is not served; the client never multiplies (P7). -->
+                      <td class="bill-numeric">{{ notAvailable }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @else {
+            <p data-testid="panel-no-lines">{{ 'ACCOUNTING.BILLS.LINES.NONE' | translate }}</p>
+          }
+          <dl class="bill-panel__totals" data-testid="panel-totals">
+            @if (b.netAmount !== null) {
+              <div>
+                <dt>{{ 'ACCOUNTING.BILLS.LINES.SUBTOTAL' | translate }}</dt>
+                <dd class="bill-numeric">{{ b.netAmount | money: currency() }}</dd>
+              </div>
+            }
+            @if (b.taxAmount !== null) {
+              <div>
+                <dt>{{ 'ACCOUNTING.BILLS.LINES.TAX' | translate }}</dt>
+                <dd class="bill-numeric">{{ b.taxAmount | money: currency() }}</dd>
+              </div>
+            }
+            <div>
+              <dt>{{ 'ACCOUNTING.BILLS.LINES.TOTAL' | translate }}</dt>
+              <dd class="bill-numeric bill-panel__total">{{ b.totalAmount | money: currency() }}</dd>
+            </div>
+          </dl>
+        </section>
+
+        <!-- Match score (P3) -->
+        <section class="bill-panel__section" [attr.aria-labelledby]="id + '-match'">
+          <h3 [id]="id + '-match'" class="sr-only">{{ 'ACCOUNTING.BILLS.MATCH.HEADING' | translate }}</h3>
+          <app-match-score [score]="b.match?.score ?? null" [points]="b.match?.points ?? null" />
+        </section>
+
+        <!-- Routing note (AW6) -->
+        @if (routing(); as note) {
+          <section class="bill-panel__section" [attr.aria-labelledby]="id + '-routing'" data-testid="panel-routing">
+            <h3 [id]="id + '-routing'" class="bill-subheading">{{ 'ACCOUNTING.BILLS.ROUTING.HEADING' | translate }}</h3>
+            <p>
+              @if (note.money; as m) {
+                {{ note.key | translate: withParam(note.params, m.param, (m.value | money: m.currency)) }}
+              } @else {
+                {{ note.key | translate: note.params }}
+              }
+              @if (showTerms() && routingTermKey(); as term) {
+                <span class="bill-term">({{ term | translate }})</span>
+              }
+            </p>
+            <app-help-disclosure
+              summaryKey="ACCOUNTING.BILLS.ROUTING.HELP.SUMMARY"
+              contextKey="ACCOUNTING.BILLS.ROUTING.HEADING"
+              textKey="ACCOUNTING.BILLS.ROUTING.HELP.TEXT"
+              exampleKey="ACCOUNTING.BILLS.ROUTING.HELP.EXAMPLE"
+            />
+          </section>
+        }
+
+        <!-- Decisions (story item 6) -->
+        <section class="bill-panel__section bill-panel__decisions" [attr.aria-labelledby]="id + '-decide'">
+          <h3 [id]="id + '-decide'" class="sr-only">{{ 'ACCOUNTING.BILLS.DECISION.HEADING' | translate }}</h3>
+          <app-bill-candidate-picker
+            [bill]="b"
+            [permissions]="permissions()"
+            [busy]="busy()"
+            [failure]="failure()"
+            (decide)="run($event)"
+          />
+          <app-bill-exception-resolution
+            [bill]="b"
+            [permissions]="permissions()"
+            [busy]="busy()"
+            [failure]="failure()"
+            [done]="done()"
+            (decide)="run($event)"
+          />
+          <app-bill-decision
+            [bill]="b"
+            [permissions]="permissions()"
+            [busy]="busy()"
+            [failure]="failure()"
+            [done]="done()"
+            (decide)="run($event)"
+          />
+        </section>
+      }
+    }
+  }
+</section>

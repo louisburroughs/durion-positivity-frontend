@@ -1,0 +1,322 @@
+<div class="accounting-page limits">
+  <header class="page-header">
+    <p class="section-overline">{{ 'ACCOUNTING.APPROVAL_LIMITS.OVERLINE' | translate }}</p>
+    <h1>{{ 'ACCOUNTING.APPROVAL_LIMITS.TITLE' | translate }}</h1>
+    <p class="page-subtitle">{{ 'ACCOUNTING.APPROVAL_LIMITS.STANDFIRST' | translate }}</p>
+  </header>
+
+  <!-- Polite announcements survive every rebuild below (ADR-0029 §8.8). -->
+  <p class="sr-only" role="status" data-testid="announcement">
+    @if (announcement(); as key) {
+      {{ key | translate }}
+    }
+  </p>
+
+  @if (!canManage()) {
+    <p class="state-panel state-panel--error" role="alert" data-testid="page-denied">
+      {{ 'ACCOUNTING.APPROVAL_LIMITS.DENIED' | translate: { permission: manageCode } }}
+    </p>
+  } @else {
+    <nav class="limits__jump" [attr.aria-label]="'ACCOUNTING.APPROVAL_LIMITS.NAV.ARIA' | translate">
+      <ul>
+        <li>
+          <a [routerLink]="[]" fragment="approval-limits-bills" (click)="jumpTo('bills')" data-testid="jump-bills">
+            {{ 'ACCOUNTING.APPROVAL_LIMITS.NAV.BILLS' | translate }}
+          </a>
+        </li>
+        <li>
+          <a [routerLink]="[]" fragment="approval-limits-history" (click)="jumpTo('history')" data-testid="jump-history">
+            {{ 'ACCOUNTING.APPROVAL_LIMITS.NAV.HISTORY' | translate }}
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    @if (state() === 'error') {
+      <div class="state-panel state-panel--error" role="alert" data-testid="page-error">
+        <p>{{ (errorKey() ?? '') | translate }}</p>
+        <button type="button" class="btn btn--outline" (click)="retry()">{{ 'COMMON.RETRY' | translate }}</button>
+      </div>
+    }
+    @if (policy.denied()) {
+      <p class="state-panel state-panel--error" role="alert" data-testid="policy-denied">
+        {{ 'ACCOUNTING.APPROVAL_LIMITS.DENIED' | translate: { permission: manageCode } }}
+      </p>
+    }
+    @if (policy.status() === 'PENDING' && !baseline()) {
+      <p class="pending-note" data-testid="policy-loading">{{ 'ACCOUNTING.APPROVAL_LIMITS.LOADING' | translate }}</p>
+    }
+
+    @if (baseline(); as base) {
+      <!-- Bills (§5.5) -->
+      <section class="limits__section" aria-labelledby="approval-limits-bills" data-testid="bills-section">
+        <h2 id="approval-limits-bills" class="limits__heading" tabindex="-1" #billsHeading>
+          {{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.HEADING' | translate }}
+        </h2>
+        <p class="hint-text">{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.CURRENCY' | translate: { currency: base.currencyCode } }}</p>
+        <app-help-disclosure
+          contextKey="ACCOUNTING.APPROVAL_LIMITS.BILLS.HEADING"
+          textKey="ACCOUNTING.APPROVAL_LIMITS.BILLS.HELP.TEXT"
+          exampleKey="ACCOUNTING.APPROVAL_LIMITS.BILLS.HELP.EXAMPLE"
+        />
+        <div class="limits__fields">
+          <div class="form-field">
+            <label for="limits-clerk">{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.CLERK_LABEL' | translate }}</label>
+            <input
+              id="limits-clerk"
+              type="text"
+              inputmode="decimal"
+              autocomplete="off"
+              data-testid="clerk-limit"
+              [value]="clerkText()"
+              (input)="setClerk(text($event))"
+              [attr.aria-invalid]="clerkInvalid() || fieldError('clerkApprovalLimit') ? 'true' : null"
+              [attr.aria-describedby]="'limits-clerk-hint' + (clerkInvalid() ? ' limits-clerk-error' : '')"
+            />
+            <p class="hint-text" id="limits-clerk-hint">{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.CLERK_HINT' | translate }}</p>
+            @if (clerkInvalid()) {
+              <p class="field-error" id="limits-clerk-error" data-testid="clerk-error">{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.ERROR.AMOUNT' | translate }}</p>
+            }
+          </div>
+          <div class="form-field">
+            <label for="limits-auto">{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.AUTO_LABEL' | translate }}</label>
+            <input
+              id="limits-auto"
+              type="text"
+              inputmode="decimal"
+              autocomplete="off"
+              data-testid="auto-limit"
+              [value]="autoText()"
+              (input)="setAuto(text($event))"
+              [attr.aria-invalid]="autoInvalid() || autoAboveClerk() || fieldError('autoApprovalLimit') ? 'true' : null"
+              [attr.aria-describedby]="'limits-auto-hint' + (autoInvalid() || autoAboveClerk() ? ' limits-auto-error' : '')"
+            />
+            <p class="hint-text" id="limits-auto-hint">{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.AUTO_HINT' | translate }}</p>
+            @if (autoInvalid()) {
+              <p class="field-error" id="limits-auto-error" data-testid="auto-error">{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.ERROR.AMOUNT' | translate }}</p>
+            } @else if (autoAboveClerk()) {
+              <p class="field-error" id="limits-auto-error" data-testid="auto-above-clerk">{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.ERROR.AUTO_ABOVE_CLERK' | translate }}</p>
+            }
+          </div>
+        </div>
+
+        <!-- What this means: the typed values, quoted without arithmetic -->
+        @if (billsValid()) {
+          <div class="limits__means" data-testid="what-this-means">
+            <h3 class="bill-subheading">{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.MEANS.HEADING' | translate }}</h3>
+            <ul>
+              <li data-testid="means-clerk">
+                @if (clerk() === 0) {
+                  {{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.MEANS.NO_CLERK' | translate }}
+                } @else {
+                  {{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.MEANS.CLERK' | translate: { clerk: (clerk() | money: base.currencyCode) } }}
+                }
+              </li>
+              <li data-testid="means-auto">
+                @if (auto() === 0) {
+                  {{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.MEANS.NO_AUTO' | translate }}
+                } @else {
+                  {{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.MEANS.AUTO' | translate: { auto: (auto() | money: base.currencyCode) } }}
+                }
+              </li>
+            </ul>
+          </div>
+        }
+
+        <!-- Who can do what, and the always-on rules -->
+        <details class="limits__who" data-testid="who-can-do-what">
+          <summary class="limits__who-summary">{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.SUMMARY' | translate }}</summary>
+          <div class="limits__who-body">
+            <div class="limits__scroll" tabindex="0" role="region" aria-labelledby="limits-who-caption">
+              <table class="ledger-table">
+                <caption id="limits-who-caption">{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.CAPTION' | translate }}</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.ROLE' | translate }}</th>
+                    <th scope="col">{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.APPROVE_UP_TO' | translate }}</th>
+                    <th scope="col">{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.APPROVE_ANY' | translate }}</th>
+                    <th scope="col">{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.REJECT' | translate }}</th>
+                    <th scope="col">{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.PAY' | translate }}</th>
+                    <th scope="col">{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.SET_LIMITS' | translate }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th scope="row">{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.CLERK' | translate }}</th>
+                    <td>{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.YES' | translate }}</td>
+                    <td>{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.NO' | translate }}</td>
+                    <td>{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.YES' | translate }}</td>
+                    <td>{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.NO' | translate }}</td>
+                    <td>{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.NO' | translate }}</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.CONTROLLER' | translate }}</th>
+                    <td>{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.YES' | translate }}</td>
+                    <td>{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.YES' | translate }}</td>
+                    <td>{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.YES' | translate }}</td>
+                    <td>{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.YES' | translate }}</td>
+                    <td>{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.YES' | translate }}</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.GENERAL_MANAGER' | translate }}</th>
+                    <td>{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.YES' | translate }}</td>
+                    <td>{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.YES' | translate }}</td>
+                    <td>{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.YES' | translate }}</td>
+                    <td>{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.YES' | translate }}</td>
+                    <td>{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.YES' | translate }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <h3 class="bill-subheading">{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.RULES.HEADING' | translate }}</h3>
+            <ul class="limits__rules" data-testid="always-on-rules">
+              <li data-testid="rule-own-bill">
+                {{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.RULES.OWN_BILL' | translate }}
+                @if (base.allowCreatorApproval) {
+                  <strong data-testid="rule-own-bill-off">{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.RULES.SWITCHED_OFF' | translate }}</strong>
+                }
+              </li>
+              <li data-testid="rule-own-payment">
+                {{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.RULES.OWN_PAYMENT' | translate }}
+                @if (base.allowApproverPayment) {
+                  <strong data-testid="rule-own-payment-off">{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.RULES.SWITCHED_OFF' | translate }}</strong>
+                }
+              </li>
+              <li>{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.RULES.FOREIGN' | translate }}</li>
+              <li>{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.RULES.LOCKED' | translate }}</li>
+            </ul>
+            <p class="hint-text">{{ 'ACCOUNTING.APPROVAL_LIMITS.BILLS.RULES.READ_ONLY' | translate }}</p>
+          </div>
+        </details>
+      </section>
+
+      <!-- Save your changes (§5.5): the bill path; S21 adds the drawer leg -->
+      <section class="limits__section limits__save" aria-labelledby="approval-limits-save" data-testid="save-card">
+        <h2 id="approval-limits-save" class="limits__heading">{{ 'ACCOUNTING.APPROVAL_LIMITS.SAVE.HEADING' | translate }}</h2>
+        <form class="bill-form" (submit)="$event.preventDefault(); save()">
+          <div class="form-field">
+            <label for="limits-reason">{{ 'ACCOUNTING.APPROVAL_LIMITS.SAVE.REASON_LABEL' | translate }}</label>
+            <textarea
+              id="limits-reason"
+              data-testid="save-reason"
+              maxlength="1000"
+              [value]="reason()"
+              (input)="setReason(text($event))"
+              [attr.aria-invalid]="fieldError('justification') ? 'true' : null"
+              [attr.aria-describedby]="'limits-reason-hint' + (saveError() ? ' limits-save-error' : '')"
+            ></textarea>
+            <p class="hint-text" id="limits-reason-hint">{{ 'ACCOUNTING.APPROVAL_LIMITS.SAVE.REASON_HINT' | translate: { min: reasonMin } }}</p>
+          </div>
+          @if (saveError(); as failure) {
+            <p class="bill-error" role="alert" id="limits-save-error" data-testid="save-error">{{ failure.key | translate: failure.params }}</p>
+          }
+          @if (!billsDirty()) {
+            <p class="hint-text" data-testid="save-clean">{{ 'ACCOUNTING.APPROVAL_LIMITS.SAVE.NO_CHANGES' | translate }}</p>
+          }
+          <p class="bill-consequence">{{ 'ACCOUNTING.APPROVAL_LIMITS.SAVE.CONSEQUENCE' | translate }}</p>
+          <div class="bill-actions">
+            <button type="submit" class="btn btn--accent" data-testid="save" [disabled]="!canSave()">
+              {{ (saving() ? 'ACCOUNTING.APPROVAL_LIMITS.SAVE.SAVING' : 'ACCOUNTING.APPROVAL_LIMITS.SAVE.SAVE') | translate }}
+            </button>
+            <button type="button" class="btn btn--outline" data-testid="undo" [disabled]="saving() || (!billsDirty() && !reason())" (click)="undo()">
+              {{ 'ACCOUNTING.APPROVAL_LIMITS.SAVE.UNDO' | translate }}
+            </button>
+          </div>
+        </form>
+      </section>
+    }
+
+    <!-- History (§5.5): its own read status, so S21 can merge other sources -->
+    <section class="limits__section" aria-labelledby="approval-limits-history" data-testid="history-section">
+      <h2 id="approval-limits-history" class="limits__heading" tabindex="-1" #historyHeading>
+        {{ 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.HEADING' | translate }}
+      </h2>
+      @if (history.denied()) {
+        <p class="field-error" data-testid="history-denied">{{ 'ACCOUNTING.APPROVAL_LIMITS.DENIED' | translate: { permission: manageCode } }}</p>
+      } @else {
+        @if (history.status() === 'PENDING' && !historyData()) {
+          <p class="pending-note" data-testid="history-loading">{{ 'ACCOUNTING.APPROVAL_LIMITS.LOADING' | translate }}</p>
+        }
+        @if (history.status() === 'FAILED') {
+          <div class="limits__error" data-testid="history-error">
+            <p class="field-error">{{ 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.LOAD_FAILED' | translate }}</p>
+            <button type="button" class="btn btn--outline" (click)="retryHistory()">{{ 'COMMON.RETRY' | translate }}</button>
+          </div>
+        }
+        @if (historyData(); as data) {
+          @if (data.rows.length === 0) {
+            <p class="state-panel state-panel--empty" data-testid="history-empty">{{ 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.EMPTY' | translate }}</p>
+          } @else {
+            <div class="limits__scroll" tabindex="0" role="region" aria-labelledby="limits-history-caption">
+              <table class="ledger-table" data-testid="history-table">
+                <caption id="limits-history-caption">{{ 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.CAPTION' | translate }}</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">{{ 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.DATE' | translate }}</th>
+                    <th scope="col">{{ 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.CHANGED_BY' | translate }}</th>
+                    <th scope="col">{{ 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.CHANGE' | translate }}</th>
+                    <th scope="col">{{ 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.REASON' | translate }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (row of data.rows; track rowKey(row, $index)) {
+                    <tr data-testid="history-row">
+                      <td>{{ row.changedAt | date: 'medium' }}</td>
+                      <td data-testid="history-who">
+                        {{ row.changedBy }}
+                        @if (row.changedByRoles.length) {
+                          <span class="bill-term">{{ row.changedByRoles.join(', ') }}</span>
+                        }
+                      </td>
+                      <td data-testid="history-change">
+                        <span class="limits__setting">{{ settingKeys[row.setting] | translate }}</span>
+                        @switch (valueKind(row.setting)) {
+                          @case ('money') {
+                            {{ 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.FROM_TO' | translate: {
+                              old: row.oldValue !== null ? (row.oldValue | money: baseline()?.currencyCode) : ('COMMON.EMPTY_VALUE' | translate),
+                              new: (row.newValue | money: baseline()?.currencyCode)
+                            } }}
+                          }
+                          @case ('switch') {
+                            {{ 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.FROM_TO' | translate: {
+                              old: row.oldValue === null ? ('COMMON.EMPTY_VALUE' | translate) : ((row.oldValue === 'true' ? 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.ON' : 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.OFF') | translate),
+                              new: ((row.newValue === 'true' ? 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.ON' : 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.OFF') | translate)
+                            } }}
+                          }
+                          @default {
+                            {{ 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.FROM_TO' | translate: {
+                              old: row.oldValue ?? ('COMMON.EMPTY_VALUE' | translate),
+                              new: row.newValue
+                            } }}
+                          }
+                        }
+                      </td>
+                      <td class="limits__reason" data-testid="history-reason">{{ row.justification }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            @if (historyPages(data) > 1) {
+              <nav class="limits__paging" [attr.aria-label]="'ACCOUNTING.APPROVAL_LIMITS.HISTORY.PAGING' | translate">
+                <button type="button" class="btn btn--outline" data-testid="history-previous" [disabled]="historyPage() === 0" (click)="previousHistory()">
+                  {{ 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.PREVIOUS' | translate }}
+                </button>
+                <span>{{ 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.PAGE' | translate: { page: historyPage() + 1, pages: historyPages(data) } }}</span>
+                <button
+                  type="button"
+                  class="btn btn--outline"
+                  data-testid="history-next"
+                  [disabled]="historyPage() + 1 >= historyPages(data)"
+                  (click)="nextHistory()"
+                >
+                  {{ 'ACCOUNTING.APPROVAL_LIMITS.HISTORY.NEXT' | translate }}
+                </button>
+              </nav>
+            }
+          }
+        }
+      }
+    </section>
+  }
+</div>

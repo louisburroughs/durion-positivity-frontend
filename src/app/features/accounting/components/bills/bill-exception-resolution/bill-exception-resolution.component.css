@@ -1,0 +1,41 @@
+.bill-exception {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.bill-exception__choices {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-3);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+}
+
+.bill-exception__choices legend {
+  padding-inline: var(--space-1);
+  font-weight: 600;
+}
+
+.bill-exception__choice {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0 var(--space-2);
+  align-items: center;
+  min-height: 2.75rem;
+}
+
+.bill-exception__choice input {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.bill-exception__choice input:focus-visible {
+  outline: 2px solid var(--input-focus-border);
+  outline-offset: 2px;
+}
+
+.bill-exception__choice .hint-text {
+  grid-column: 2;
+  margin: 0;
+}

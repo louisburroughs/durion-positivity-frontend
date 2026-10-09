@@ -153,7 +153,16 @@ const UNGATED_BY_DESIGN: Readonly<Record<string, string>> = {
 function pagesOf(routes: Routes): readonly Route[] {
   const shell = routes.find(route => route.path === '' && route.children?.length);
   const pages = shell ? (shell.children ?? []) : routes;
-  return pages.filter(page => page.path !== '**');
+  // A page whose child routes keep it alive (Bills to pay's `bills/:billId` panel) contributes
+  // each non-empty child as a page of its own, at the joined path.
+  return pages
+    .filter(page => page.path !== '**')
+    .flatMap(page => [
+      page,
+      ...(page.children ?? [])
+        .filter(child => !!child.path && child.path !== '**')
+        .map(child => ({ ...child, path: `${page.path}/${child.path}` })),
+    ]);
 }
 
 function fullPath(base: string, page: Route): string {

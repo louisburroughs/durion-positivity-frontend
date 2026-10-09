@@ -25,7 +25,7 @@ describe('ACCOUNTING_SUBNAV', () => {
   it('lists the phase-1 entries in §5.0 order', () => {
     expect(ACCOUNTING_SUBNAV.map(entry => entry.route)).toEqual([
       '',
-      'payables/vendor-invoices',
+      'bills',
       'payments',
       'bank-accounts',
       'books',

@@ -1,0 +1,46 @@
+.match-score {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.match-score p {
+  margin: 0;
+}
+
+.match-score__total {
+  font-weight: 600;
+}
+
+.match-score__criteria {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.match-score__criterion {
+  display: grid;
+  grid-template-columns: minmax(7rem, auto) minmax(4rem, 1fr) auto;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.match-score__label {
+  font-size: 0.875rem;
+}
+
+.match-score__meter {
+  width: 100%;
+  min-width: 0;
+}
+
+.match-score__points {
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+
+.match-score--compact .match-score__criterion {
+  grid-template-columns: minmax(6rem, auto) minmax(3rem, 1fr) auto;
+}

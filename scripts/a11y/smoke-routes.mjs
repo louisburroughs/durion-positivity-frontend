@@ -28,6 +28,11 @@ const ROUTES = [
   // UUID; this harness never runs the bundle (see the NOTE below), so no fixture entry can be served
   // and axe sees the shell only. Rendered-DOM axe coverage of both pages, including a real entry and
   // the reverse dialog, lives in src/app/features/accounting/pages/books/books-page.a11y.spec.ts.
+  // Bills to pay and Approval limits (CAP:550 S14). Rendered-DOM axe coverage, both themes, with a
+  // bill's review panel, the reject dialog and the save card, lives in
+  // src/app/features/accounting/pages/bills/bills-page.a11y.spec.ts.
+  '/app/accounting/bills',
+  '/app/accounting/settings/approval-limits',
   '/app/accounting/books',
   '/app/accounting/books/entries/018f2a6e-0000-7000-8000-000000000131',
   '/app/accounting/events',

@@ -69,6 +69,15 @@
     @if (state() === 'error' || state() === 'conflict') {
     <p class="error-text" role="alert">{{ 'ACCOUNTING.VENDOR_PAYMENT_NEW.ERROR' | translate }}</p>
     }
+    @if (state() === 'self-approved') {
+    <p class="error-text" role="alert" data-testid="self-approved-alert">
+      @if (selfApproved(); as bills) {
+      {{ 'ACCOUNTING.VENDOR_PAYMENT_NEW.SELF_APPROVED' | translate: { bills: bills } }}
+      } @else {
+      {{ 'ACCOUNTING.VENDOR_PAYMENT_NEW.SELF_APPROVED_UNNAMED' | translate }}
+      }
+    </p>
+    }
 
     <button type="submit" [disabled]="form.invalid || state() === 'submitting'">{{
       'ACCOUNTING.VENDOR_PAYMENT_NEW.SUBMIT' | translate }}</button>

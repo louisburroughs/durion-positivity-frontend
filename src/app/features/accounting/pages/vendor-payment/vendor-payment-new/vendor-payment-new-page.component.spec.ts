@@ -1,9 +1,10 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 import { AccountingService } from '../../../services/accounting.service';
-import { VendorPaymentNewPageComponent } from './vendor-payment-new-page.component';
+import { VendorPaymentNewPageComponent, selfApprovedBills } from './vendor-payment-new-page.component';
 
 describe('VendorPaymentNewPageComponent', () => {
   let fixture: ComponentFixture<VendorPaymentNewPageComponent>;
@@ -160,6 +161,46 @@ describe('VendorPaymentNewPageComponent', () => {
     component.submit();
     fixture.detectChanges();
     expect(component.state()).toBe('forbidden');
+  });
+
+  it('announces the bills a 403 AP_PAYMENT_SELF_APPROVED_BILL names in a role="alert" (CAP:550 S14, AC 9)', () => {
+    accountingServiceStub.executePayment.mockReturnValueOnce(
+      throwError(
+        () =>
+          new HttpErrorResponse({
+            status: 403,
+            error: {
+              code: 'AP_PAYMENT_SELF_APPROVED_BILL',
+              fieldErrors: [
+                { field: 'selfApprovedBillNumbers', message: 'INV-4471' },
+                { field: 'selfApprovedBillNumbers', message: 'INV-5520' },
+              ],
+            },
+          }),
+      ),
+    );
+    component.form.patchValue({ vendorId: 'vendor-1', grossAmount: 100, currency: 'USD', paymentMethod: 'ACH', paymentRef: 'ref-001' });
+    component.submit();
+    fixture.detectChanges();
+
+    expect(component.state()).toBe('self-approved');
+    const alert = (fixture.nativeElement as HTMLElement).querySelector('[data-testid="self-approved-alert"]')!;
+    expect(alert.getAttribute('role')).toBe('alert');
+    expect(component.selfApproved()).toBe('INV-4471, INV-5520');
+    expect(alert.textContent).toContain('ACCOUNTING.VENDOR_PAYMENT_NEW.SELF_APPROVED');
+    // The form stays, so the payment can leave those bills out.
+    expect((fixture.nativeElement as HTMLElement).querySelector('form')).not.toBeNull();
+  });
+
+  it('keeps today’s handling for any other 403 (classified by code, not status)', () => {
+    accountingServiceStub.executePayment.mockReturnValueOnce(
+      throwError(() => new HttpErrorResponse({ status: 403, error: { code: 'FORBIDDEN' } })),
+    );
+    component.form.patchValue({ vendorId: 'vendor-1', grossAmount: 100, currency: 'USD', paymentMethod: 'ACH', paymentRef: 'ref-001' });
+    component.submit();
+
+    expect(component.state()).toBe('forbidden');
+    expect(selfApprovedBills({ error: { code: 'FORBIDDEN' } })).toBeNull();
   });
 
   it('sets state to conflict when executePayment errors with 409', () => {

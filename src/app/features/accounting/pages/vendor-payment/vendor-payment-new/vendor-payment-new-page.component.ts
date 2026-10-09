@@ -26,6 +26,28 @@ function generatePaymentRef(): string {
   return `PAY-${stamp}-${suffix}`;
 }
 
+/** The field each bill number rides on in a 403 `AP_PAYMENT_SELF_APPROVED_BILL` (CAP:550 S13). */
+const SELF_APPROVED_FIELD = 'selfApprovedBillNumbers';
+
+/**
+ * The bill numbers of a 403 `AP_PAYMENT_SELF_APPROVED_BILL` — the payer
+ * approved them, so another person must pay them (AW6.2) — or null for any
+ * other refusal. Classified by code, never by status alone (ADR-0017).
+ */
+export function selfApprovedBills(error: unknown): readonly string[] | null {
+  const body = (error as { error?: unknown } | null)?.error;
+  if (!body || typeof body !== 'object') return null;
+  const { code, fieldErrors } = body as { code?: unknown; fieldErrors?: unknown };
+  if (code !== 'AP_PAYMENT_SELF_APPROVED_BILL') return null;
+  const numbers = Array.isArray(fieldErrors)
+    ? fieldErrors
+        .filter(entry => entry && typeof entry === 'object' && (entry as { field?: unknown }).field === SELF_APPROVED_FIELD)
+        .map(entry => String((entry as { message?: unknown }).message ?? '').trim())
+        .filter(number => number.length > 0)
+    : [];
+  return numbers;
+}
+
 type VendorPaymentState =
   | 'idle'
   | 'loading-bills'
@@ -34,7 +56,8 @@ type VendorPaymentState =
   | 'replayed'
   | 'conflict'
   | 'error'
-  | 'forbidden';
+  | 'forbidden'
+  | 'self-approved';
 
 @Component({
   selector: 'app-vendor-payment-new-page',
@@ -52,6 +75,8 @@ export class VendorPaymentNewPageComponent implements OnInit {
   readonly state = signal<VendorPaymentState>('idle');
   readonly bills = signal<VendorBill[]>([]);
   readonly result = signal<VendorPaymentResult | null>(null);
+  /** The bills a 403 `AP_PAYMENT_SELF_APPROVED_BILL` named, joined for the alert. */
+  readonly selfApproved = signal<string | null>(null);
 
   readonly form = this.fb.group({
     vendorId: ['', [Validators.required]],
@@ -117,6 +142,7 @@ export class VendorPaymentNewPageComponent implements OnInit {
     }
 
     this.state.set('submitting');
+    this.selfApproved.set(null);
     this.accountingService
       .executePayment({
         vendorId,
@@ -138,6 +164,13 @@ export class VendorPaymentNewPageComponent implements OnInit {
           const status = err?.status ?? 0;
           if (status === 409) {
             this.state.set('conflict');
+            return;
+          }
+          const bills = status === 403 ? selfApprovedBills(err) : null;
+          if (bills) {
+            // Nothing was paid; the form stays so the payment can leave these bills out.
+            this.selfApproved.set(bills.length ? bills.join(', ') : null);
+            this.state.set('self-approved');
             return;
           }
           this.state.set(status === 403 ? 'forbidden' : 'error');

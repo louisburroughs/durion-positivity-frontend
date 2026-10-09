@@ -15,8 +15,8 @@ describe('route seeds', () => {
   it('seeds the screens added since the last seed refresh', () => {
     for (const seed of [
       '/app/sitemap',
-      '/app/accounting/payables/vendor-invoices',
-      '/app/accounting/payables/vendor-invoices/exceptions',
+      '/app/accounting/bills',
+      '/app/accounting/settings/approval-limits',
       '/app/product/catalog/enrichment/unmatched',
       '/app/shopmgmt/shop-dashboard',
       '/app/positivity',
@@ -28,7 +28,7 @@ describe('route seeds', () => {
       expect(APP_SEEDS).toContain(seed);
     }
     const templates = PARAM_TEMPLATES.map(t => t.template);
-    expect(templates).toContain('/app/accounting/payables/vendor-invoices/:billId');
+    expect(templates).toContain('/app/accounting/bills/:billId');
     expect(templates).toContain('/app/workexec/workorders/:workorderId/change-requests');
   });
 

@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { ACCOUNTING_ROUTES } from './accounting.routes';
 
 /**
@@ -45,6 +46,37 @@ describe('ACCOUNTING_ROUTES', () => {
     expect(old?.loadComponent).toBeUndefined();
     expect(children.find(child => child.path === 'payments')?.data?.['permissions']).toEqual([
       'accounting:payment:apply',
+    ]);
+  });
+
+  it.each([
+    ['/app/accounting/payables/vendor-invoices', '/app/accounting/bills'],
+    ['/app/accounting/payables/vendor-invoices/exceptions', '/app/accounting/bills'],
+    ['/app/accounting/payables/vendor-invoices/bill-42', '/app/accounting/bills/bill-42'],
+  ])('redirects the retired %s to %s (CAP:550 S14, AC 5)', async (from, to) => {
+    await router.navigateByUrl(from);
+
+    expect(router.url).toBe(to);
+  });
+
+  it('routes bills and bills/:billId to one page whose child route is the review panel (§8.1)', () => {
+    const children = ACCOUNTING_ROUTES[0].children ?? [];
+    const bills = children.find(child => child.path === 'bills');
+    expect(bills?.data?.['permissions']).toEqual(['accounting:ap:view']);
+    expect(bills?.children?.map(child => child.path)).toEqual(['', ':billId']);
+    for (const child of bills?.children ?? []) expect(child.data?.['permissions']).toEqual(['accounting:ap:view']);
+    // The old pages are gone: only redirects remain at their paths.
+    for (const old of ['payables/vendor-invoices', 'payables/vendor-invoices/exceptions', 'payables/vendor-invoices/:billId']) {
+      const route = children.find(child => child.path === old);
+      expect(route?.redirectTo).toBeDefined();
+      expect(route?.loadComponent).toBeUndefined();
+    }
+  });
+
+  it('gates Approval limits on accounting:ap_approval_policy:manage (S21 widens it)', () => {
+    const children = ACCOUNTING_ROUTES[0].children ?? [];
+    expect(children.find(child => child.path === 'settings/approval-limits')?.data?.['permissions']).toEqual([
+      'accounting:ap_approval_policy:manage',
     ]);
   });
 });

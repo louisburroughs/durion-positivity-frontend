@@ -20,7 +20,7 @@
  */
 
 /** Backend `PermissionCode.CATALOG_VERSION` this file was generated from. */
-export const PERMISSION_CATALOG_VERSION = 100;
+export const PERMISSION_CATALOG_VERSION = 105;
 
 /**
  * Permission code by `perm_bits` bit index. The array index IS the bit index.
@@ -582,4 +582,11 @@ export const PERMISSION_BY_BIT: readonly string[] = [
   'accounting:float:manage',
   'order:session_policy:manage',
   'order:session:approve_cash_movement',
+  'accounting:deposit:create',
+  'accounting:deposit:reverse',
+  'accounting:ap:approve_over_limit',
+  'accounting:ap_approval_policy:manage',
+  'supplier:vendor_tax_id:reveal',
+  'accounting:tax_registration:manage',
+  'accounting:tax_registration:view',
 ];

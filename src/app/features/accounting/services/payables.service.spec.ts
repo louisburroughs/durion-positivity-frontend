@@ -1,255 +1,334 @@
 import { TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { firstValueFrom, of } from 'rxjs';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  PageVendorBillStageRow,
   VendorBillAPIService,
   VendorBillApprovalRequiredTierEnum,
+  VendorBillAvailableActionActionEnum,
+  VendorBillCheckOutcomeEnum,
+  VendorBillMatchConfidenceEnum,
   VendorBillResponse,
+  VendorBillResponseChannelEnum,
   VendorBillResponseStatusEnum,
+  VendorBillStageCounts,
+  VendorBillStageRowChannelEnum,
+  VendorBillStageRowRequiredTierEnum,
+  VendorBillStageRowStatusEnum,
+  VendorBillTaxByTypeSourceEnum,
+  VendorBillTaxOnResaleOverrideSourceEnum,
 } from '@durion-sdk/accounting';
-import { PayablesService } from './payables.service';
+import { BILL_PAGE_SIZE, PayablesService } from './payables.service';
 
-/**
- * A complete SDK `VendorBillResponse`, typed against the generated interface
- * (ADR-0032) so a removed or misspelled field fails to compile.
- */
-const vendorBillResponse = (overrides: Partial<VendorBillResponse> = {}): VendorBillResponse => ({
-  vendorBillId: 'b1',
-  vendorId: 'v1',
-  billNumber: 'BN-1',
-  totalAmount: 100,
-  openAmount: 100,
-  status: VendorBillResponseStatusEnum.Approved,
-  createdAt: '2026-01-15T00:00:00Z',
-  availableActions: [],
-  checks: [],
-  lines: [],
-  openCandidates: [],
+/** A complete SDK `VendorBillResponse`, typed against the generated interface (ADR-0032). */
+const response = (overrides: Partial<VendorBillResponse> = {}): VendorBillResponse => ({
+  vendorBillId: 'bill-1',
+  vendorId: 'vendor-1',
+  vendorName: ' Northside Parts ',
+  billNumber: 'INV-4471',
+  billDate: '2026-10-01',
+  channel: VendorBillResponseChannelEnum.SupplierConnection,
+  totalAmount: 1840.5,
+  netAmount: 1700,
+  taxAmount: 140.5,
+  openAmount: 1840.5,
+  currency: 'USD',
+  status: VendorBillResponseStatusEnum.AwaitingApproval,
+  createdAt: '2026-10-01T09:00:00Z',
+  approval: {
+    requiredTier: VendorBillApprovalRequiredTierEnum.OverLimit,
+    clerkLimit: 1000,
+    currencyCode: 'USD',
+    submittedAt: '2026-10-02T09:00:00Z',
+    submittedBy: 'clerk-uuid',
+  },
+  availableActions: [
+    { action: VendorBillAvailableActionActionEnum.Approve, allowed: false, blockedReason: 'AP_APPROVAL_LIMIT_EXCEEDED', justificationRequired: false },
+    { action: VendorBillAvailableActionActionEnum.Reject, allowed: true, justificationRequired: true },
+  ],
+  checks: [{ code: 'WITHIN_CLERK_LIMIT', outcome: VendorBillCheckOutcomeEnum.Fail, args: { clerkLimit: '1000.00' } }],
+  lines: [
+    {
+      lineNumber: 1,
+      productId: 'product-uuid',
+      description: 'Brake pads',
+      inventoryItem: true,
+      receivedQuantity: 4,
+      receivedUnitPrice: 20,
+      billedQuantity: 4,
+      billedUnitPrice: 21,
+      currencyCode: 'USD',
+    },
+  ],
+  match: {
+    evidenceId: 'evidence-uuid',
+    score: 82,
+    confidence: VendorBillMatchConfidenceEnum.HighConfidence,
+    points: { amount: 40, products: 30, date: 10, purchaseOrder: 2 },
+    invoiceReference: 'INV-4471',
+    invoiceDate: '2026-10-01',
+    receivedDate: '2026-09-30',
+    billedTotal: 1840.5,
+    receivedTotal: 1800,
+    currencyCode: 'USD',
+    recordedAt: '2026-10-01T09:00:00Z',
+    source: 'MATCH',
+    withinTolerance: true,
+  },
+  openCandidates: [
+    { candidateId: 'cand-1', invoiceEventId: 'event-uuid', vendorBillId: 'bill-9', billNumber: 'REC-9', billTotal: 1800, currencyCode: 'USD', score: 74 },
+  ],
   reissues: [],
-  taxByType: [],
+  taxByType: [{ taxType: 'GST', amount: 140.5, source: VendorBillTaxByTypeSourceEnum.Document }],
+  inputTaxRecovery: [{ taxType: 'GST', statedAmount: 140.5, recoveredAmount: 0, recoveryWithheldReason: 'NOT_REGISTERED' }],
+  taxOnResaleOverride: { source: VendorBillTaxOnResaleOverrideSourceEnum.Bill, justification: 'Resold at cost to fleet' },
   ...overrides,
 });
 
 describe('PayablesService', () => {
   let service: PayablesService;
-
-  const vendorBillSdkStub = {
-    listVendorBills: vi.fn(),
+  const sdk = {
+    getVendorBillStageCounts: vi.fn(),
+    listVendorBillsByStage: vi.fn(),
     getVendorBillById: vi.fn(),
-    listVendorBillMatchCandidates: vi.fn(),
+    submitVendorBillForApproval: vi.fn(),
+    approveVendorBill: vi.fn(),
+    rejectVendorBill: vi.fn(),
     resolveVendorBillMatchException: vi.fn(),
     selectVendorBillMatchCandidate: vi.fn(),
+    setVendorBillDueDate: vi.fn(),
   };
 
   beforeEach(() => {
-    TestBed.configureTestingModule({
-      providers: [
-        PayablesService,
-        { provide: VendorBillAPIService, useValue: vendorBillSdkStub },
-      ],
-    });
+    TestBed.configureTestingModule({ providers: [PayablesService, { provide: VendorBillAPIService, useValue: sdk }] });
     service = TestBed.inject(PayablesService);
   });
 
-  afterEach(() => {
-    vi.clearAllMocks();
-  });
+  afterEach(() => vi.clearAllMocks());
 
-  describe('listBills()', () => {
-    it('calls the SDK with dueFrom, dueTo, status, page and size', () => {
-      vendorBillSdkStub.listVendorBills.mockReturnValueOnce(
-        of({ content: [], number: 0, size: 25, totalElements: 0, totalPages: 0 }),
-      );
+  describe('getStageCounts()', () => {
+    it('calls getVendorBillStageCounts with no arguments and emits the served figures', async () => {
+      const served: VendorBillStageCounts = { check: 3, approve: 2, pay: 4, done: 1, asOf: '2026-10-06T10:00:00Z' };
+      sdk.getVendorBillStageCounts.mockReturnValue(of(served));
 
-      service.listBills('2026-01-01', '2026-02-01', 'MATCH_EXCEPTION', 1, 10).subscribe();
+      const counts = await firstValueFrom(service.getStageCounts());
 
-      expect(vendorBillSdkStub.listVendorBills).toHaveBeenCalledWith(
-        '2026-01-01',
-        '2026-02-01',
-        'MATCH_EXCEPTION',
-        1,
-        10,
-      );
-    });
-
-    it('maps a page of rows into the domain shape', () => {
-      vendorBillSdkStub.listVendorBills.mockReturnValueOnce(
-        of({
-          content: [
-            { billId: 'b1', vendorId: 'v1', amount: 100, dueDate: '2026-02-01', status: 'MATCH_EXCEPTION' },
-          ],
-          number: 0,
-          size: 25,
-          totalElements: 1,
-          totalPages: 1,
-        }),
-      );
-
-      let result: unknown;
-      service.listBills('2026-01-01', '2026-02-01').subscribe(value => (result = value));
-
-      expect(result).toEqual({
-        items: [{ billId: 'b1', vendorId: 'v1', amount: 100, dueDate: '2026-02-01', status: 'MATCH_EXCEPTION' }],
-        page: 0,
-        size: 25,
-        totalElements: 1,
-        totalPages: 1,
-      });
+      expect(sdk.getVendorBillStageCounts).toHaveBeenCalledWith();
+      expect(counts).toEqual({ check: 3, approve: 2, pay: 4, done: 1, asOf: '2026-10-06T10:00:00Z' });
     });
   });
 
-  describe('getBillById()', () => {
-    it('maps a full vendor bill response into the domain shape', () => {
-      vendorBillSdkStub.getVendorBillById.mockReturnValueOnce(
-        of(vendorBillResponse({
-          vendorName: 'Acme',
-          billDate: '2026-01-15',
-          dueDate: '2026-02-01',
-          status: VendorBillResponseStatusEnum.Approved,
-        })),
-      );
-
-      let result: unknown;
-      service.getBillById('b1').subscribe(value => (result = value));
-
-      expect(vendorBillSdkStub.getVendorBillById).toHaveBeenCalledWith('b1');
-      expect(result).toEqual({
-        billId: 'b1',
-        vendorId: 'v1',
-        vendorName: 'Acme',
-        billNumber: 'BN-1',
-        billDate: '2026-01-15',
-        dueDate: '2026-02-01',
-        totalAmount: 100,
-        status: 'APPROVED',
-        approvalJustification: null,
-        rejectionReason: null,
-        journalEntryId: null,
-        paymentTransactionId: null,
-        originEventId: null,
-        originEventType: null,
-        createdAt: '2026-01-15T00:00:00Z',
-        createdBy: null,
-      });
-    });
-
-    it('reads the approval justification from the nested approval block (S12)', () => {
-      vendorBillSdkStub.getVendorBillById.mockReturnValueOnce(
-        of(vendorBillResponse({
-          status: VendorBillResponseStatusEnum.Approved,
-          approval: {
-            approvalJustification: 'Freight agreed by phone',
-            requiredTier: VendorBillApprovalRequiredTierEnum.Clerk,
-            clerkLimit: 2500,
-            currencyCode: 'USD',
-          },
-        })),
-      );
-
-      let result: { approvalJustification: string | null; rejectionReason: string | null } | undefined;
-      service.getBillById('b1').subscribe(value => (result = value));
-
-      expect(result?.approvalJustification).toBe('Freight agreed by phone');
-      expect(result?.rejectionReason).toBeNull();
-    });
-
-    it('prefers rejection.reason over statusExplanation for the rejection reason (S12)', () => {
-      vendorBillSdkStub.getVendorBillById.mockReturnValueOnce(
-        of(vendorBillResponse({
-          status: VendorBillResponseStatusEnum.Rejected,
-          rejection: { reason: 'Not our order', rejectedAt: '2026-01-16T00:00:00Z', rejectedBy: 'clerk-1' },
-          statusExplanation: 'ignored when a rejection is present',
-        })),
-      );
-
-      let result: { rejectionReason: string | null } | undefined;
-      service.getBillById('b1').subscribe(value => (result = value));
-
-      expect(result?.rejectionReason).toBe('Not our order');
-    });
-
-    it('falls back to statusExplanation when there is no rejection block (S12)', () => {
-      vendorBillSdkStub.getVendorBillById.mockReturnValueOnce(
-        of(vendorBillResponse({
-          status: VendorBillResponseStatusEnum.CurrencyHold,
-          statusExplanation: 'Bill currency EUR differs from the books currency',
-        })),
-      );
-
-      let result: { status: string; rejectionReason: string | null } | undefined;
-      service.getBillById('b1').subscribe(value => (result = value));
-
-      expect(result?.status).toBe('CURRENCY_HOLD');
-      expect(result?.rejectionReason).toBe('Bill currency EUR differs from the books currency');
-    });
-  });
-
-  describe('listMatchCandidates()', () => {
-    it('calls the SDK with invoiceEventId and maps the response', () => {
-      vendorBillSdkStub.listVendorBillMatchCandidates.mockReturnValueOnce(
-        of([
+  describe('listByStage()', () => {
+    it('calls listVendorBillsByStage(stage, page, size) and maps each row, unknown values to UNKNOWN', async () => {
+      const page: PageVendorBillStageRow = {
+        content: [
           {
-            candidateId: 'c1',
-            invoiceEventId: 'ev1',
-            vendorBillId: 'b1',
-            matchScore: 88,
-            resolved: false,
-            selected: false,
+            vendorBillId: 'bill-1',
+            billNumber: 'INV-4471',
+            vendorName: 'Northside Parts',
+            totalAmount: 1840.5,
+            openAmount: 1840.5,
+            currencyCode: 'USD',
+            billDate: '2026-10-01',
+            status: VendorBillStageRowStatusEnum.PendingReceiptMatch,
+            channel: VendorBillStageRowChannelEnum.SupplierConnection,
+            requiredTier: VendorBillStageRowRequiredTierEnum.Clerk,
+            vendorApHold: false,
           },
-        ]),
+          {
+            vendorBillId: 'bill-2',
+            billNumber: 'INV-5520',
+            totalAmount: 90,
+            openAmount: 90,
+            currencyCode: 'USD',
+            billDate: '2026-10-02',
+            status: 'SOMETHING_NEW' as VendorBillStageRowStatusEnum,
+            vendorApHold: true,
+          },
+        ],
+        number: 1,
+        size: 25,
+        totalElements: 27,
+        totalPages: 2,
+      };
+      sdk.listVendorBillsByStage.mockReturnValue(of(page));
+
+      const result = await firstValueFrom(service.listByStage('CHECK', 1));
+
+      expect(sdk.listVendorBillsByStage).toHaveBeenCalledWith('CHECK', 1, BILL_PAGE_SIZE);
+      expect(result.page).toBe(1);
+      expect(result.totalPages).toBe(2);
+      expect(result.items[0]).toEqual({
+        billId: 'bill-1',
+        billNumber: 'INV-4471',
+        vendorName: 'Northside Parts',
+        totalAmount: 1840.5,
+        openAmount: 1840.5,
+        currencyCode: 'USD',
+        billDate: '2026-10-01',
+        dueDate: null,
+        status: 'PENDING_RECEIPT_MATCH',
+        channel: 'SUPPLIER_CONNECTION',
+        requiredTier: 'CLERK',
+        submittedAt: null,
+        vendorApHold: false,
+      });
+      expect(result.items[1].status).toBe('UNKNOWN');
+      expect(result.items[1].channel).toBe('UNKNOWN');
+      expect(result.items[1].vendorName).toBeNull();
+      expect(result.items[1].requiredTier).toBeNull();
+    });
+  });
+
+  describe('getBill()', () => {
+    it('calls getVendorBillById(billId) and maps the review read, keeping S32d and S43 fields', async () => {
+      sdk.getVendorBillById.mockReturnValue(of(response()));
+
+      const detail = await firstValueFrom(service.getBill('bill-1'));
+
+      expect(sdk.getVendorBillById).toHaveBeenCalledWith('bill-1');
+      expect(detail.vendorName).toBe('Northside Parts');
+      expect(detail.channel).toBe('SUPPLIER_CONNECTION');
+      expect(detail.status).toBe('AWAITING_APPROVAL');
+      expect(detail.approval).toEqual({
+        requiredTier: 'OVER_LIMIT',
+        clerkLimit: 1000,
+        currencyCode: 'USD',
+        submittedAt: '2026-10-02T09:00:00Z',
+        submissionJustification: null,
+        approvedAt: null,
+        approvalJustification: null,
+      });
+      expect(detail.availableActions).toEqual([
+        { action: 'APPROVE', allowed: false, blockedReason: 'AP_APPROVAL_LIMIT_EXCEEDED', justificationRequired: false },
+        { action: 'REJECT', allowed: true, blockedReason: null, justificationRequired: true },
+      ]);
+      expect(detail.checks).toEqual([{ code: 'WITHIN_CLERK_LIMIT', outcome: 'FAIL', args: { clerkLimit: '1000.00' } }]);
+      expect(detail.match).toEqual({
+        score: 82,
+        confidence: 'HIGH_CONFIDENCE',
+        points: { amount: 40, products: 30, date: 10, purchaseOrder: 2 },
+        invoiceReference: 'INV-4471',
+        invoiceDate: '2026-10-01',
+        withinTolerance: true,
+      });
+      expect(detail.openCandidates).toEqual([
+        { candidateId: 'cand-1', billNumber: 'REC-9', billTotal: 1800, currencyCode: 'USD', score: 74, points: null },
+      ]);
+      expect(detail.lines[0]).toEqual({
+        lineNumber: 1,
+        description: 'Brake pads',
+        inventoryItem: true,
+        receivedQuantity: 4,
+        receivedUnitPrice: 20,
+        billedQuantity: 4,
+        billedUnitPrice: 21,
+        currencyCode: 'USD',
+      });
+      expect(detail.taxByType).toEqual([{ taxType: 'GST', amount: 140.5, source: 'DOCUMENT' }]);
+      expect(detail.inputTaxRecovery[0].recoveryWithheldReason).toBe('NOT_REGISTERED');
+      expect(detail.taxOnResaleOverride).toEqual({ source: 'BILL', justification: 'Resold at cost to fleet' });
+    });
+
+    it('maps an action this build does not know to UNKNOWN rather than dropping it (§8.2)', async () => {
+      sdk.getVendorBillById.mockReturnValue(
+        of(response({ availableActions: [{ action: 'ESCALATE' as VendorBillAvailableActionActionEnum, allowed: true, justificationRequired: false }] })),
       );
 
-      let result: unknown;
-      service.listMatchCandidates('ev1').subscribe(value => (result = value));
+      const detail = await firstValueFrom(service.getBill('bill-1'));
 
-      expect(vendorBillSdkStub.listVendorBillMatchCandidates).toHaveBeenCalledWith('ev1');
-      expect(result).toEqual([
-        {
-          candidateId: 'c1',
-          invoiceEventId: 'ev1',
-          vendorBillId: 'b1',
-          vendorId: null,
-          billNumber: null,
-          billTotalAmount: null,
-          matchScore: 88,
-          scoreBreakdown: null,
-          resolved: false,
-          selected: false,
-          createdAt: null,
-        },
-      ]);
+      expect(detail.availableActions[0].action).toBe('UNKNOWN');
+    });
+  });
+
+  describe('submitForApproval()', () => {
+    it('calls submitVendorBillForApproval(billId, { justification }) with no operatorId', async () => {
+      sdk.submitVendorBillForApproval.mockReturnValue(of(response()));
+
+      await firstValueFrom(service.submitForApproval('bill-1', 'Shop supplies, no delivery'));
+
+      expect(sdk.submitVendorBillForApproval).toHaveBeenCalledWith('bill-1', { justification: 'Shop supplies, no delivery' });
+    });
+  });
+
+  describe('approve()', () => {
+    it('calls approveVendorBill(billId, {}) when no reason is given — taxByType is never sent', async () => {
+      sdk.approveVendorBill.mockReturnValue(of(response()));
+
+      await firstValueFrom(service.approve('bill-1', { justification: null, taxOnResaleOverrideJustification: null }));
+
+      expect(sdk.approveVendorBill).toHaveBeenCalledWith('bill-1', {});
+    });
+
+    it('sends the justification and the S43 override reason when given', async () => {
+      sdk.approveVendorBill.mockReturnValue(of(response()));
+
+      await firstValueFrom(
+        service.approve('bill-1', { justification: 'Checked against PO', taxOnResaleOverrideJustification: 'Resold at cost to fleet' }),
+      );
+
+      expect(sdk.approveVendorBill).toHaveBeenCalledWith('bill-1', {
+        justification: 'Checked against PO',
+        taxOnResaleOverrideJustification: 'Resold at cost to fleet',
+      });
+    });
+  });
+
+  describe('reject()', () => {
+    it('calls rejectVendorBill(billId, { reason })', async () => {
+      sdk.rejectVendorBill.mockReturnValue(of(response()));
+
+      await firstValueFrom(service.reject('bill-1', 'Not our order at all'));
+
+      expect(sdk.rejectVendorBill).toHaveBeenCalledWith('bill-1', { reason: 'Not our order at all' });
     });
   });
 
   describe('resolveException()', () => {
-    it('calls the SDK with the action and reason, and no operatorId (S12)', () => {
-      vendorBillSdkStub.resolveVendorBillMatchException.mockReturnValueOnce(
-        of(vendorBillResponse({
-          status: VendorBillResponseStatusEnum.Approved,
-        })),
+    it('calls resolveVendorBillMatchException(billId, request) with the override on ACCEPT only', async () => {
+      sdk.resolveVendorBillMatchException.mockReturnValue(of(response()));
+
+      await firstValueFrom(
+        service.resolveException('bill-2', { resolutionAction: 'ACCEPT', reason: 'Price rise agreed', taxOnResaleOverrideJustification: 'Resold at cost' }),
+      );
+      await firstValueFrom(
+        service.resolveException('bill-2', { resolutionAction: 'VOID', reason: 'Duplicate of INV-1', taxOnResaleOverrideJustification: 'ignored here' }),
       );
 
-      service.resolveException('b1', { resolutionAction: 'ACCEPT', reason: 'Confirmed with vendor' }).subscribe();
-
-      expect(vendorBillSdkStub.resolveVendorBillMatchException).toHaveBeenCalledWith('b1', {
+      expect(sdk.resolveVendorBillMatchException).toHaveBeenNthCalledWith(1, 'bill-2', {
         resolutionAction: 'ACCEPT',
-        reason: 'Confirmed with vendor',
+        reason: 'Price rise agreed',
+        taxOnResaleOverrideJustification: 'Resold at cost',
+      });
+      expect(sdk.resolveVendorBillMatchException).toHaveBeenNthCalledWith(2, 'bill-2', {
+        resolutionAction: 'VOID',
+        reason: 'Duplicate of INV-1',
       });
     });
   });
 
   describe('selectMatchCandidate()', () => {
-    it('calls the SDK with the candidate id only, sending no request body (S12)', () => {
-      vendorBillSdkStub.selectVendorBillMatchCandidate.mockReturnValueOnce(
-        of(vendorBillResponse({
-          status: VendorBillResponseStatusEnum.AwaitingApproval,
-        })),
-      );
+    it('calls selectVendorBillMatchCandidate(candidateId) with no body', async () => {
+      sdk.selectVendorBillMatchCandidate.mockReturnValue(of(response()));
 
-      let result: { status: string } | undefined;
-      service.selectMatchCandidate('c1').subscribe(value => (result = value));
+      await firstValueFrom(service.selectMatchCandidate('cand-1'));
 
-      expect(vendorBillSdkStub.selectVendorBillMatchCandidate).toHaveBeenCalledWith('c1');
-      expect(result?.status).toBe('AWAITING_APPROVAL');
+      expect(sdk.selectVendorBillMatchCandidate).toHaveBeenCalledWith('cand-1');
+    });
+  });
+
+  describe('setDueDate()', () => {
+    it('calls setVendorBillDueDate(billId, { dueDate }) and adds the reason when given', async () => {
+      sdk.setVendorBillDueDate.mockReturnValue(of(response()));
+
+      await firstValueFrom(service.setDueDate('bill-1', { dueDate: '2026-11-01', justification: null }));
+      await firstValueFrom(service.setDueDate('bill-1', { dueDate: '2026-11-05', justification: 'Vendor reissued terms' }));
+
+      expect(sdk.setVendorBillDueDate).toHaveBeenNthCalledWith(1, 'bill-1', { dueDate: '2026-11-01' });
+      expect(sdk.setVendorBillDueDate).toHaveBeenNthCalledWith(2, 'bill-1', {
+        dueDate: '2026-11-05',
+        justification: 'Vendor reissued terms',
+      });
     });
   });
 });

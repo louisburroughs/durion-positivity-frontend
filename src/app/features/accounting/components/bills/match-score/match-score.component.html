@@ -1,0 +1,36 @@
+<div class="match-score" [class.match-score--compact]="compact()" data-testid="match-score">
+  @if (!compact()) {
+    <h3 class="bill-subheading" [id]="id + '-heading'">{{ 'ACCOUNTING.BILLS.MATCH.HEADING' | translate }}</h3>
+  }
+  @if (score() !== null) {
+    <p class="match-score__total" data-testid="match-total">
+      {{ 'ACCOUNTING.BILLS.MATCH.SCORE' | translate: { score: (score() | number) } }}
+    </p>
+    @if (!compact()) {
+      <p class="hint-text">{{ 'ACCOUNTING.BILLS.MATCH.STRONG' | translate }}</p>
+    }
+    @if (rows().length) {
+      <ul class="match-score__criteria">
+        @for (row of rows(); track row.key) {
+          <li class="match-score__criterion" data-testid="match-criterion" [attr.data-criterion]="row.key">
+            <label class="match-score__label" [for]="id + '-' + row.key">{{ row.labelKey | translate }}</label>
+            <meter class="match-score__meter" [id]="id + '-' + row.key" min="0" [max]="row.max" [value]="row.points"></meter>
+            <span class="match-score__points" data-testid="match-points">
+              {{ 'ACCOUNTING.BILLS.MATCH.POINTS' | translate: { points: (row.points | number), max: (row.max | number) } }}
+            </span>
+          </li>
+        }
+      </ul>
+    }
+  } @else {
+    <p data-testid="match-none">{{ 'ACCOUNTING.BILLS.MATCH.NONE' | translate }}</p>
+  }
+  @if (!compact()) {
+    <app-help-disclosure
+      summaryKey="ACCOUNTING.BILLS.MATCH.HELP.SUMMARY"
+      contextKey="ACCOUNTING.BILLS.MATCH.HEADING"
+      textKey="ACCOUNTING.BILLS.MATCH.HELP.TEXT"
+      exampleKey="ACCOUNTING.BILLS.MATCH.HELP.EXAMPLE"
+    />
+  }
+</div>

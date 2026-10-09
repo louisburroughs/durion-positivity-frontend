@@ -1,0 +1,9 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.bill-panel-route__empty {
+  margin: 0;
+  color: var(--text-muted);
+}

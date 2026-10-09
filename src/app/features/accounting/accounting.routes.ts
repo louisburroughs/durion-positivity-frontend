@@ -153,28 +153,53 @@ export const ACCOUNTING_ROUTES: Routes = [
           ),
       },
       {
+        // Bills to pay (CAP:550 S14, §8.1): the page keeps its steps and list while the
+        // review panel, its child route, follows `bills/:billId` (a reload or shared link
+        // opens that bill). The id is never shown.
+        path: 'bills',
+        data: { permissions: ACCOUNTING_PAGE.bills },
+        loadComponent: () => import('./pages/bills/bills-page.component').then(m => m.BillsPageComponent),
+        children: [
+          {
+            path: '',
+            pathMatch: 'full',
+            data: { permissions: ACCOUNTING_PAGE.bills },
+            loadComponent: () =>
+              import('./pages/bills/bill-panel-route/bill-panel-route.component').then(m => m.BillPanelRouteComponent),
+          },
+          {
+            path: ':billId',
+            data: { permissions: ACCOUNTING_PAGE.bills },
+            loadComponent: () =>
+              import('./pages/bills/bill-panel-route/bill-panel-route.component').then(m => m.BillPanelRouteComponent),
+          },
+        ],
+      },
+      {
+        // The old payables pages are gone; bookmarks land on Bills to pay (§8.1, redirects only).
         path: 'payables/vendor-invoices',
-        data: { permissions: ACCOUNTING_PAGE.vendorInvoices },
-        loadComponent: () =>
-          import('./pages/payables/vendor-invoices-list/vendor-invoices-list-page.component').then(
-            m => m.VendorInvoicesListPageComponent,
-          ),
+        data: { permissions: ACCOUNTING_PAGE.bills },
+        redirectTo: 'bills',
+        pathMatch: 'full',
       },
       {
         path: 'payables/vendor-invoices/exceptions',
-        data: { permissions: ACCOUNTING_PAGE.vendorInvoices },
-        loadComponent: () =>
-          import(
-            './pages/payables/vendor-invoices-exceptions/vendor-invoices-exceptions-page.component'
-          ).then(m => m.VendorInvoicesExceptionsPageComponent),
+        data: { permissions: ACCOUNTING_PAGE.bills },
+        redirectTo: 'bills',
+        pathMatch: 'full',
       },
       {
         path: 'payables/vendor-invoices/:billId',
-        data: { permissions: ACCOUNTING_PAGE.vendorInvoiceDetail },
+        data: { permissions: ACCOUNTING_PAGE.bills },
+        redirectTo: 'bills/:billId',
+        pathMatch: 'full',
+      },
+      {
+        // Approval limits (CAP:550 S14, §5.5): the Bills section and History. S21 adds its sections.
+        path: 'settings/approval-limits',
+        data: { permissions: ACCOUNTING_PAGE.approvalLimits },
         loadComponent: () =>
-          import('./pages/payables/vendor-invoice-detail/vendor-invoice-detail-page.component').then(
-            m => m.VendorInvoiceDetailPageComponent,
-          ),
+          import('./pages/approval-limits/approval-limits-page.component').then(m => m.ApprovalLimitsPageComponent),
       },
       {
         path: 'reports/labor-overhead',

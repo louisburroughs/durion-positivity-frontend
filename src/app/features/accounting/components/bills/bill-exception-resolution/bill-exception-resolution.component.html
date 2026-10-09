@@ -1,0 +1,107 @@
+@if (choices().length || resolveAndSend()) {
+  <section class="bill-exception" [attr.aria-labelledby]="id + '-heading'" data-testid="exception-resolution">
+    <h3 class="bill-subheading" [id]="id + '-heading'">{{ 'ACCOUNTING.BILLS.EXCEPTION.HEADING' | translate }}</h3>
+    <form class="bill-form" (submit)="$event.preventDefault(); resolve()">
+      @if (choices().length) {
+        <fieldset class="bill-exception__choices">
+          <legend>{{ 'ACCOUNTING.BILLS.EXCEPTION.LEGEND' | translate }}</legend>
+          @for (entry of choices(); track entry.value) {
+            <div class="bill-exception__choice" [attr.data-choice]="entry.value">
+              <input
+                type="radio"
+                [id]="id + '-' + entry.value"
+                [name]="id + '-choice'"
+                [value]="entry.value"
+                [checked]="choice() === entry.value"
+                [disabled]="!entry.action.allowed"
+                [attr.aria-describedby]="id + '-' + entry.value + '-hint'"
+                (change)="pick(entry.value)"
+                data-testid="exception-choice"
+              />
+              <label [for]="id + '-' + entry.value">{{ entry.labelKey | translate }}</label>
+              <p class="hint-text" [id]="id + '-' + entry.value + '-hint'">
+                @if (entry.action.allowed) {
+                  {{ entry.hintKey | translate }}
+                } @else {
+                  @if (blocked(entry.action); as reason) {
+                    @if (reason.money; as m) {
+                      {{ reason.key | translate: withParam(reason.params, m.param, (m.value | money: m.currency)) }}
+                    } @else {
+                      {{ reason.key | translate: reason.params }}
+                    }
+                  }
+                }
+              </p>
+            </div>
+          }
+        </fieldset>
+      }
+
+      <div class="form-field">
+        <label [for]="id + '-why'">{{ 'ACCOUNTING.BILLS.EXCEPTION.WHY' | translate }}</label>
+        <textarea
+          [id]="id + '-why'"
+          data-testid="exception-why"
+          [value]="reason()"
+          (input)="reason.set(text($event))"
+          [attr.maxlength]="max"
+          [attr.aria-invalid]="ownFailure()?.view?.field === 'reason' ? 'true' : null"
+          [attr.aria-describedby]="id + '-why-hint' + (ownFailure()?.view?.field === 'reason' ? ' ' + id + '-error' : '')"
+        ></textarea>
+        <p class="hint-text" [id]="id + '-why-hint'">{{ 'ACCOUNTING.BILLS.DECISION.REASON_HINT' | translate: { min: min } }}</p>
+      </div>
+
+      @if (asksTaxOnResale()) {
+        <div class="form-field" data-testid="exception-resale">
+          <label [for]="id + '-resale'">{{ 'ACCOUNTING.BILLS.DECISION.RESALE_LABEL' | translate }}</label>
+          <textarea
+            [id]="id + '-resale'"
+            data-testid="exception-resale-reason"
+            [value]="taxOnResale()"
+            (input)="taxOnResale.set(text($event))"
+            [attr.maxlength]="max"
+            [attr.aria-invalid]="ownFailure()?.view?.field === 'taxOnResale' ? 'true' : null"
+            [attr.aria-describedby]="id + '-resale-hint' + (ownFailure()?.view?.field === 'taxOnResale' ? ' ' + id + '-error' : '')"
+          ></textarea>
+          <p class="hint-text" [id]="id + '-resale-hint'">{{ 'ACCOUNTING.BILLS.DECISION.RESALE_HINT' | translate: { min: min, max: max } }}</p>
+        </div>
+      }
+
+      @if (ownFailure(); as failure) {
+        <p class="bill-error" role="alert" [id]="id + '-error'" data-testid="exception-error">
+          @if (failure.view.message.money; as m) {
+            {{ failure.view.message.key | translate: withParam(failure.view.message.params, m.param, (m.value | money: m.currency)) }}
+          } @else {
+            {{ failure.view.message.key | translate: failure.view.message.params }}
+          }
+        </p>
+      }
+
+      @if (choices().length) {
+        @if (selected(); as current) {
+          <p class="bill-consequence" data-testid="exception-consequence">{{ current.consequenceKey | translate }}</p>
+        }
+        <div class="bill-actions">
+          <button type="submit" class="btn btn--accent" data-testid="resolve" [disabled]="!canResolve()">
+            {{ 'ACCOUNTING.BILLS.EXCEPTION.RESOLVE' | translate }}
+          </button>
+        </div>
+      }
+
+      @if (resolveAndSend()) {
+        <p class="bill-consequence">{{ 'ACCOUNTING.BILLS.DECISION.SEND_CONSEQUENCE' | translate }}</p>
+        <div class="bill-actions">
+          <button
+            type="button"
+            class="btn btn--outline"
+            data-testid="resolve-and-send"
+            [disabled]="busy() || !reasonOk()"
+            (click)="sendForApproval()"
+          >
+            {{ 'ACCOUNTING.BILLS.EXCEPTION.RESOLVE_AND_SEND' | translate }}
+          </button>
+        </div>
+      }
+    </form>
+  </section>
+}

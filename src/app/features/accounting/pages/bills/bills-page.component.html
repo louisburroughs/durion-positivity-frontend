@@ -1,0 +1,174 @@
+<div class="accounting-page bills">
+  <!-- Header (§5.0, §5.2 item 1) -->
+  <header class="page-header bills__header">
+    <div class="bills__title-block">
+      <p class="section-overline">{{ 'ACCOUNTING.BILLS.OVERLINE' | translate }}</p>
+      <h1>{{ 'ACCOUNTING.BILLS.TITLE' | translate }}</h1>
+      <p class="page-subtitle">{{ 'ACCOUNTING.BILLS.STANDFIRST' | translate }}</p>
+    </div>
+    @if (canManagePolicy()) {
+      <div class="bills__header-actions">
+        <a class="btn btn--outline" routerLink="/app/accounting/settings/approval-limits" data-testid="approval-limits-link">
+          {{ 'ACCOUNTING.BILLS.APPROVAL_LIMITS' | translate }}
+        </a>
+      </div>
+    }
+  </header>
+
+  @if (!canSee()) {
+    <p class="state-panel state-panel--error" role="alert" data-testid="page-denied">
+      {{ 'ACCOUNTING.BILLS.REGION.DENIED' | translate: { permission: viewCode } }}
+    </p>
+  } @else {
+    <!-- How a bill moves (§5.2 item 3): served figures, never summed (P7) -->
+    <section class="bills__steps-section" aria-labelledby="bills-steps-heading" data-testid="stage-steps">
+      <h2 id="bills-steps-heading" class="bills__section-heading">{{ 'ACCOUNTING.BILLS.STEPS.HEADING' | translate }}</h2>
+      <ol class="bills__steps">
+        @for (step of stages; track step) {
+          <li>
+            <button
+              type="button"
+              class="bills__step"
+              data-testid="stage-step"
+              [attr.data-stage]="step"
+              [attr.aria-pressed]="stage() === step"
+              (click)="selectStage(step)"
+            >
+              <span class="bills__step-label">{{ stageKeys[step].label | translate }}</span>
+              <span class="bills__step-hint">{{ stageKeys[step].hint | translate }}</span>
+              <span class="bills__step-count" data-testid="stage-count">
+                @if (countsData(); as figures) {
+                  {{ countFor(step, figures) }}
+                } @else {
+                  {{ 'COMMON.EMPTY_VALUE' | translate }}
+                }
+              </span>
+            </button>
+          </li>
+        }
+      </ol>
+      @if (counts.denied()) {
+        <p class="field-error" data-testid="counts-denied">{{ 'ACCOUNTING.BILLS.REGION.DENIED' | translate: { permission: viewCode } }}</p>
+      } @else {
+        @if (countsData()?.asOf; as asOf) {
+          <p class="hint-text" data-testid="counts-as-of">{{ 'ACCOUNTING.BILLS.STEPS.AS_OF' | translate: { time: (asOf | date: 'short') } }}</p>
+        }
+        @if (counts.status() === 'FAILED') {
+          <div class="bills__error" data-testid="counts-error">
+            <p class="field-error">
+              {{ (countsData() ? 'ACCOUNTING.BILLS.REGION.REFRESH_FAILED' : 'ACCOUNTING.BILLS.STEPS.FAILED') | translate }}
+            </p>
+            <button type="button" class="btn btn--outline" (click)="retryCounts()">{{ 'COMMON.RETRY' | translate }}</button>
+          </div>
+        }
+      }
+      <app-help-disclosure
+        contextKey="ACCOUNTING.BILLS.STEPS.HEADING"
+        textKey="ACCOUNTING.BILLS.HELP.STEPS.TEXT"
+        exampleKey="ACCOUNTING.BILLS.HELP.STEPS.EXAMPLE"
+      />
+    </section>
+
+    @if (state() === 'error') {
+      <div class="state-panel state-panel--error" role="alert" data-testid="page-error">
+        <p>{{ (errorKey() ?? '') | translate }}</p>
+        <button type="button" class="btn btn--outline" (click)="retryList()">{{ 'COMMON.RETRY' | translate }}</button>
+      </div>
+    }
+
+    <div class="bills__layout">
+      <!-- One step's bills (§5.2 item 4) -->
+      <section class="bills__list-column" aria-labelledby="bills-list-heading" data-testid="bill-list">
+        <h2 id="bills-list-heading" class="bills__section-heading" tabindex="-1" #listHeading>
+          {{ (stage() ? stageKeys[stage()!].heading : 'ACCOUNTING.BILLS.LIST.HEADING_LOADING') | translate }}
+        </h2>
+        @if (list.denied()) {
+          <p class="field-error" data-testid="list-denied">{{ 'ACCOUNTING.BILLS.REGION.DENIED' | translate: { permission: viewCode } }}</p>
+        } @else {
+          @if (list.status() === 'PENDING' && !listData()) {
+            <p class="pending-note" data-testid="list-loading">{{ 'ACCOUNTING.BILLS.REGION.LOADING' | translate }}</p>
+          }
+          @if (list.status() === 'FAILED' && listData()) {
+            <div class="bills__error" data-testid="list-refresh-failed">
+              <p class="field-error">{{ 'ACCOUNTING.BILLS.REGION.REFRESH_FAILED' | translate }}</p>
+              <button type="button" class="btn btn--outline" (click)="retryList()">{{ 'COMMON.RETRY' | translate }}</button>
+            </div>
+          }
+          @if (listData(); as data) {
+            @if (data.items.length === 0) {
+              <p class="state-panel state-panel--empty" data-testid="list-empty">{{ stageKeys[stage()!].empty | translate }}</p>
+            } @else {
+              @if (stage() === 'PAY' && canPay()) {
+                <p class="hint-text" id="bills-pay-note" data-testid="pay-note">{{ 'ACCOUNTING.BILLS.PAY.NOTE' | translate }}</p>
+              }
+              <ul class="bills__list">
+                @for (row of data.items; track row.billId) {
+                  <li class="bills__row">
+                    <button
+                      type="button"
+                      class="bill-item"
+                      data-testid="bill-item"
+                      [attr.aria-pressed]="selectedBillId() === row.billId"
+                      (click)="pick(row)"
+                    >
+                      <span class="bill-item__text">
+                        <span class="bill-item__vendor">{{ row.vendorName ?? ('COMMON.EMPTY_VALUE' | translate) }}</span>
+                        <span class="bill-item__meta">
+                          <span class="reference">{{ row.billNumber }}</span>
+                          <span class="bill-item__channel">
+                            <span class="bill-icon material-symbols-rounded" aria-hidden="true">{{ channelIcons[row.channel] | msIcon }}</span>
+                            {{ channelKeys[row.channel] | translate }}
+                          </span>
+                        </span>
+                      </span>
+                      <span class="bill-item__amount">{{ row.totalAmount | money: row.currencyCode }}</span>
+                      <span class="bill-item__status">
+                        <span class="bill-badge bill-badge--{{ tone(row.status) }}" data-testid="bill-status">{{ statusKey(row) | translate }}</span>
+                        @if (showTerms() && termKey(row); as term) {
+                          <span class="bill-term" data-testid="bill-term">{{ term | translate }}</span>
+                        }
+                      </span>
+                    </button>
+                    @if (stage() === 'PAY' && canPay()) {
+                      <a
+                        class="btn btn--outline bills__pay"
+                        routerLink="/app/accounting/vendor-payments/new"
+                        data-testid="review-and-pay"
+                        aria-describedby="bills-pay-note"
+                      >
+                        {{ 'ACCOUNTING.BILLS.PAY.REVIEW_AND_PAY' | translate }}
+                        <span class="sr-only">{{ 'ACCOUNTING.BILLS.PAY.FOR_BILL' | translate: { number: row.billNumber } }}</span>
+                      </a>
+                    }
+                  </li>
+                }
+              </ul>
+              @if (data.totalPages > 1) {
+                <nav class="bills__paging" [attr.aria-label]="'ACCOUNTING.BILLS.LIST.PAGING' | translate">
+                  <button type="button" class="btn btn--outline" data-testid="page-previous" [disabled]="page() === 0" (click)="previousPage()">
+                    {{ 'ACCOUNTING.BILLS.LIST.PREVIOUS' | translate }}
+                  </button>
+                  <span>{{ 'ACCOUNTING.BILLS.LIST.PAGE' | translate: { page: page() + 1, pages: data.totalPages } }}</span>
+                  <button
+                    type="button"
+                    class="btn btn--outline"
+                    data-testid="page-next"
+                    [disabled]="page() + 1 >= data.totalPages"
+                    (click)="nextPage()"
+                  >
+                    {{ 'ACCOUNTING.BILLS.LIST.NEXT' | translate }}
+                  </button>
+                </nav>
+              }
+            }
+          }
+        }
+      </section>
+
+      <!-- The review panel: the child route `bills` / `bills/:billId` -->
+      <div class="bills__panel-column" data-testid="panel-column">
+        <router-outlet />
+      </div>
+    </div>
+  }
+</div>

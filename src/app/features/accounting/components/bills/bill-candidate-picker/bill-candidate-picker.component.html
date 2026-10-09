@@ -1,0 +1,59 @@
+@if (candidates().length) {
+  <section class="bill-candidates" [attr.aria-labelledby]="id + '-heading'" data-testid="candidate-picker">
+    <h3 class="bill-subheading" [id]="id + '-heading'">{{ 'ACCOUNTING.BILLS.CANDIDATES.HEADING' | translate }}</h3>
+    <p class="hint-text">{{ 'ACCOUNTING.BILLS.CANDIDATES.INTRO' | translate }}</p>
+    <div class="bill-candidates__scroll bill-focus" tabindex="0" role="region" [attr.aria-labelledby]="id + '-caption'">
+      <table class="ledger-table">
+        <caption [id]="id + '-caption'">{{ 'ACCOUNTING.BILLS.CANDIDATES.CAPTION' | translate }}</caption>
+        <thead>
+          <tr>
+            <th scope="col">{{ 'ACCOUNTING.BILLS.CANDIDATES.BILL' | translate }}</th>
+            <th scope="col" class="bill-numeric">{{ 'ACCOUNTING.BILLS.CANDIDATES.TOTAL' | translate }}</th>
+            <th scope="col">{{ 'ACCOUNTING.BILLS.CANDIDATES.SCORE' | translate }}</th>
+            @if (selectAction()) {
+              <th scope="col"><span class="sr-only">{{ 'COMMON.ACTIONS' | translate }}</span></th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (candidate of candidates(); track candidate.candidateId) {
+            <tr data-testid="candidate-row">
+              <th scope="row" class="reference">{{ candidate.billNumber ?? ('ACCOUNTING.BILLS.CANDIDATES.NO_NUMBER' | translate) }}</th>
+              <td class="bill-numeric">
+                @if (candidate.billTotal !== null) {
+                  {{ candidate.billTotal | money: candidate.currencyCode }}
+                } @else {
+                  {{ 'COMMON.NOT_AVAILABLE' | translate }}
+                }
+              </td>
+              <td>
+                <app-match-score [score]="candidate.score" [points]="candidate.points" [compact]="true" />
+              </td>
+              @if (selectAction(); as action) {
+                <td>
+                  <button
+                    type="button"
+                    class="btn btn--outline"
+                    data-testid="candidate-pick"
+                    [disabled]="action.allowed && busy()"
+                    [attr.aria-disabled]="action.allowed ? null : 'true'"
+                    [attr.aria-describedby]="id + '-note'"
+                    (click)="pick(candidate)"
+                  >
+                    {{ 'ACCOUNTING.BILLS.CANDIDATES.PICK' | translate: { number: candidate.billNumber ?? ('ACCOUNTING.BILLS.CANDIDATES.NO_NUMBER' | translate) } }}
+                  </button>
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <p class="hint-text" [id]="id + '-note'">{{ 'ACCOUNTING.BILLS.CANDIDATES.NOTE' | translate }}</p>
+    @if (ownFailure(); as failure) {
+      <p class="bill-error" role="alert" data-testid="candidate-error">
+        {{ failure.view.message.key | translate: failure.view.message.params }}
+      </p>
+    }
+  </section>
+}
