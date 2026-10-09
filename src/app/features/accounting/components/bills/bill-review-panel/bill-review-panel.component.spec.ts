@@ -714,4 +714,111 @@ describe('BillReviewPanelComponent (§5.2 item 4, story items 5–6, 12)', () =>
       expect(host().textContent).not.toContain('je-uuid-7');
     });
   });
+
+  /** Re-review R3: the panel → child bindings that keep a revealed field across a retry, driven through the DOM. */
+  describe('re-review R3', () => {
+    const typeInto = (selector: string, value: string): void => {
+      const field = q<HTMLTextAreaElement>(selector)!;
+      field.value = value;
+      field.dispatchEvent(new Event('input'));
+      fixture.detectChanges();
+    };
+    const click = (selector: string): void => {
+      q<HTMLElement>(selector)!.click();
+      fixture.detectChanges();
+    };
+
+    it('(a) Approve: 422 AP_BILL_TAX_ON_RESALE_GOODS without a served hold, then a 503 — the field stays and the retry resends it', () => {
+      render(CLERK, awaitingBill());
+      expect(q('[data-testid="approve-resale"]')).toBeNull();
+      payables.approve.mockReturnValueOnce(throwError(() => apiError(422, 'AP_BILL_TAX_ON_RESALE_GOODS')));
+      click('[data-testid="approve"]');
+
+      expect(q('[data-testid="approve-resale"]')).not.toBeNull();
+      typeInto('[data-testid="approve-resale-reason"]', 'Resold at cost to a fleet customer');
+      payables.approve.mockReturnValueOnce(throwError(() => apiError(503, 'SERVICE_UNAVAILABLE')));
+      click('[data-testid="approve"]');
+
+      expect(q('[data-testid="approve-resale"]')).not.toBeNull();
+      click('[data-testid="approve"]');
+      expect(payables.approve).toHaveBeenCalledTimes(3);
+      expect(payables.approve.mock.calls[1][1].taxOnResaleOverrideJustification).toBe('Resold at cost to a fleet customer');
+      expect(payables.approve.mock.calls[2][1].taxOnResaleOverrideJustification).toBe('Resold at cost to a fleet customer');
+    });
+
+    it('(b) VOID_APPROVED: PERIOD_CLOSED, then LOCK_TIMEOUT — the dialog’s override input stays and the retry carries it', () => {
+      render([...CLERK, 'accounting:period:override'], bill({ status: 'APPROVED', availableActions: [action('VOID_APPROVED')] }));
+      document.body.appendChild(host());
+      click('[data-testid="void-approved"]');
+      typeInto('[data-testid="void-reason"]', 'Billed twice by mistake');
+      payables.voidBill.mockReturnValueOnce(throwError(() => apiError(422, 'PERIOD_CLOSED')));
+      click('[data-testid="void-confirm"]');
+
+      expect(q('[data-testid="void-override-reason"]')).not.toBeNull();
+      typeInto('[data-testid="void-override-reason"]', 'September closed before the vendor credit');
+      payables.voidBill.mockReturnValueOnce(throwError(() => apiError(409, 'LOCK_TIMEOUT')));
+      click('[data-testid="void-confirm"]');
+
+      expect(q('[data-testid="void-override-reason"]')).not.toBeNull();
+      click('[data-testid="void-confirm"]');
+      expect(payables.voidBill).toHaveBeenCalledTimes(3);
+      expect(payables.voidBill.mock.calls[1][1]).toEqual({ reason: 'Billed twice by mistake', overrideJustification: 'September closed before the vendor credit' });
+      expect(payables.voidBill.mock.calls[2][1]).toEqual(payables.voidBill.mock.calls[1][1]);
+      host().remove();
+    });
+
+    it('(c) Accept as billed: 422 AP_BILL_TAX_ON_RESALE_GOODS without a served hold, then a 503 — the field stays and the retry resends it', () => {
+      render(CLERK, exceptionBill());
+      q<HTMLInputElement>('[data-choice="ACCEPT"] input')!.click();
+      fixture.detectChanges();
+      typeInto('[data-testid="exception-why"]', 'Price rise agreed with vendor');
+      expect(q('[data-testid="exception-resale"]')).toBeNull();
+      payables.resolveException.mockReturnValueOnce(throwError(() => apiError(422, 'AP_BILL_TAX_ON_RESALE_GOODS')));
+      click('[data-testid="resolve"]');
+
+      expect(q('[data-testid="exception-resale"]')).not.toBeNull();
+      typeInto('[data-testid="exception-resale-reason"]', 'Resold at cost to a fleet customer');
+      payables.resolveException.mockReturnValueOnce(throwError(() => apiError(503, 'SERVICE_UNAVAILABLE')));
+      click('[data-testid="resolve"]');
+
+      expect(q('[data-testid="exception-resale"]')).not.toBeNull();
+      click('[data-testid="resolve"]');
+      expect(payables.resolveException).toHaveBeenCalledTimes(3);
+      expect(payables.resolveException.mock.calls[1][1].taxOnResaleOverrideJustification).toBe('Resold at cost to a fleet customer');
+      expect(payables.resolveException.mock.calls[2][1].taxOnResaleOverrideJustification).toBe('Resold at cost to a fleet customer');
+    });
+
+    it('a revealed classification on a goods-receipt bill keeps its interim note through a retry (unclassifiedRevealed)', () => {
+      render(CLERK, awaitingBill());
+      payables.approve.mockReturnValueOnce(throwError(() => apiError(422, 'AP_BILL_UNCLASSIFIED')));
+      click('[data-testid="approve"]');
+      click('[data-testid="classification-goods"]');
+      payables.approve.mockReturnValueOnce(throwError(() => apiError(409, 'LOCK_TIMEOUT')));
+      click('[data-testid="approve"]');
+
+      expect(payables.approve).toHaveBeenCalledTimes(2);
+      expect(payables.approve.mock.calls[1][1].posting.classification).toBe('GOODS');
+      expect(q('[data-testid="classification-note"]')?.textContent).toContain('ACCOUNTING.BILLS.POSTING.CLASSIFICATION.EXPENSE_LATER');
+    });
+
+    it('a re-serve of the proposed FREIGHT after a reread:true refusal keeps the person’s own class and reason (item 2)', () => {
+      const served = awaitingBill({
+        checks: [check('TOTALS_ADD_UP', 'FAIL', { difference: '2.00' })],
+        approval: approval({ proposedDifference: { differenceClass: 'FREIGHT', justification: 'Delivery charge on the invoice' } }),
+      });
+      const panel = render(CLERK, served);
+      expect(panel.diffClass()).toBe('FREIGHT');
+      panel.diffClass.set('PRICE_DIFFERENCE');
+      panel.diffReason.set('Price rise agreed with vendor');
+      fixture.detectChanges();
+      payables.approve.mockReturnValueOnce(throwError(() => apiError(409, 'AP_BILL_NOT_APPROVABLE')));
+
+      panel.run({ kind: 'APPROVE', justification: null, taxOnResale: null });
+      fixture.detectChanges();
+
+      expect(payables.getBill).toHaveBeenCalledTimes(2);
+      expect(panel.diffClass()).toBe('PRICE_DIFFERENCE');
+      expect(panel.diffReason()).toBe('Price rise agreed with vendor');
+    });
+  });
 });
