@@ -104,3 +104,43 @@
 .confirm-panel [aria-invalid='true'] {
   border-color: var(--status-error-fg);
 }
+
+/* Tax recovery (CAP:550 S33). */
+.categories__term {
+  display: block;
+  font-weight: 400;
+  font-size: 0.8125rem;
+}
+
+.categories__steps {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.categories__steps ol {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding-inline-start: 1.25rem;
+}
+
+.categories__choices {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+}
+
+.categories__choice {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  min-height: 2.75rem;
+}
+
+.categories__choice input {
+  min-width: 1.5rem;
+  min-height: 1.5rem;
+}

@@ -90,6 +90,24 @@ export interface PettyCategory {
   readonly code: string;
   readonly label: string;
   readonly examples: string | null;
+  /**
+   * Regimes whose tax a receipt of this category may state here and today (S32d), as served codes
+   * in served order; empty when none. The register shows one tax field per regime and names none
+   * itself (owner direction: configuration-driven, multi-national).
+   */
+  readonly offeredRegimes: readonly string[];
+}
+
+/** From which receipt total (tax included) the supplier's number is asked for (S32d `evidenceRule`). */
+export interface DrawerEvidenceRule {
+  readonly threshold: number;
+  readonly currencyCode: string;
+}
+
+/** One regime's tax as printed on a receipt (`CashMovementStatedTax`): copied, never computed (P7). */
+export interface DrawerStatedTax {
+  readonly regime: string;
+  readonly amount: number;
 }
 
 /**
@@ -102,6 +120,8 @@ export interface DrawerOptions {
   readonly currencyCode: string | null;
   readonly reasons: readonly DrawerReasonOption[];
   readonly categories: readonly PettyCategory[];
+  /** Null when pos-tax did not answer, or none is served: the hint then names no amount. */
+  readonly evidenceRule: DrawerEvidenceRule | null;
 }
 
 /** The step-up's single-use approval (`CashMovementApprovalResponse`). Held only by the dialog. */
@@ -127,6 +147,15 @@ export interface DrawerDraft {
   readonly note?: string;
   readonly receiptReference?: string;
   readonly bagNumber?: string;
+  /** Petty expenses with tax fields only (S32d): one entry per regime with a figure typed. */
+  readonly statedTaxes?: readonly DrawerStatedTax[];
+  /** The supplier on the receipt; required once a tax figure is typed. Untrusted text. */
+  readonly supplierName?: string;
+  /**
+   * The supplier's tax registration number as printed. Sent, never returned (S32d); held only in
+   * memory with the movement (ADR-0065), never in browser storage or a log.
+   */
+  readonly supplierRegistrationNumber?: string;
 }
 
 /**

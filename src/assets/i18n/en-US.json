@@ -6101,6 +6101,25 @@
         },
         "OVERRIDE_LABEL": "Override reason",
         "OVERRIDE_HINT": "Why it posts into a closed month: at least {{min}} characters."
+      },
+      "TAX_SPLIT": {
+        "TYPE": "Tax on the invoice: {{type}}",
+        "CLAIMED_HEADING": "Claimed back",
+        "CLAIMED": "{{type}}: {{amount}} claimed back of {{stated}}",
+        "ACCOUNT": "Recorded in {{account}}",
+        "WITHHELD": "{{type}}: nothing claimed back of {{stated}} — {{reason}}",
+        "UNTYPED": "Tax without a type",
+        "NONE": "The invoice states no tax to claim back.",
+        "REASON": {
+          "NOT_REGISTERED": "the shop isn’t registered for this tax on the bill date",
+          "NOT_RECOVERABLE": "this tax can’t be claimed back",
+          "CATEGORY_NOT_RECOVERABLE": "this kind of purchase claims no tax back",
+          "RATE_UNAVAILABLE": "the tax couldn’t be checked",
+          "EVIDENCE_MISSING": "the document lacks what is needed to claim it",
+          "TAX_SPLIT_MISSING": "the invoice doesn’t split its tax",
+          "SUPPLIER_REGISTRATION_MISSING": "the vendor’s tax registration number isn’t on file",
+          "UNKNOWN": "Unknown"
+        }
       }
     },
     "APPROVAL_LIMITS": {
@@ -6236,7 +6255,8 @@
         "SOURCE_FAILED": {
           "BILLS": "Bill limit changes couldn’t be loaded.",
           "DRAWER": "Drawer cash changes couldn’t be loaded.",
-          "CATEGORIES": "Category changes couldn’t be loaded."
+          "CATEGORIES": "Category changes couldn’t be loaded.",
+          "TAX_RECOVERY": "Tax claimed back changes couldn’t be loaded."
         },
         "CATEGORY_CHANGE": {
           "CREATE": "Category added: {{category}}",
@@ -6244,7 +6264,8 @@
           "DEACTIVATE": "Category turned off: {{category}}",
           "REMAP": "Category account changed: {{category}}",
           "UNKNOWN": "Category changed: {{category}}"
-        }
+        },
+        "TAX_SHARE": "Tax claimed back: {{category}}"
       },
       "DENIED_ANY": "You need one of these permissions to see this page: {{permissions}}.",
       "DRAWER": {
@@ -6399,6 +6420,67 @@
           "VALIDATION_UNNAMED": "This change wasn’t accepted. Check each field and the reason, then try again."
         },
         "REFRESHING": "Refreshing the categories… Changes can be made once they’re loaded."
+      },
+      "TAX_RECOVERY": {
+        "LOAD_FAILED": "Couldn’t check whether your shop claims tax back. The categories show without it.",
+        "UNKNOWN": "We can’t tell right now whether your shop claims tax back, so the tax details are hidden.",
+        "REFRESHING": "Refreshing the tax details…",
+        "COLUMN": "Tax claimed back",
+        "COLUMN_TERM": "(input tax credit)",
+        "WHY_SHARE": {
+          "SUMMARY": "Why only part for some categories?",
+          "TEXT": "Some purchases let a shop claim back only part of the tax it paid. Your accountant sets each category’s share, and a receipt keeps the share in force when it was recorded."
+        },
+        "PANEL": {
+          "HEADING": "Your tax registrations",
+          "NUMBER": "Number",
+          "SINCE": "Applies from {{date}}",
+          "ACCOUNT": "Tax claimed back is recorded in {{account}}",
+          "WHERE": {
+            "SUMMARY": "Where does this come from?",
+            "TEXT": "Your registrations decide what can be claimed back. Someone who manages your tax settings records them."
+          }
+        },
+        "STEPS": {
+          "HEADING": "What the cashier does at the drawer",
+          "ONE": "Enter the receipt total and pick the category.",
+          "TWO": "Type the supplier’s name and the receipt reference. From {{amount}}, also type the supplier’s tax registration number.",
+          "TWO_NO_AMOUNT": "Type the supplier’s name and the receipt reference, and the supplier’s tax registration number when the receipt shows it.",
+          "THREE": "Copy each tax the register asks for, as printed on the receipt. Not sure? Leave it blank: nothing is claimed back, which is always safe."
+        },
+        "SHARE": {
+          "NONE": "Not claimed",
+          "HALF": "Half (50%)",
+          "ALL": "All of it",
+          "PERCENT": "{{percent}}%",
+          "UNKNOWN": "Unknown",
+          "OPEN": "Change share",
+          "TITLE": "Change the tax claimed back: {{category}}",
+          "LEGEND": "Tax claimed back for {{category}}",
+          "REASON": "Why are you changing this?",
+          "REASON_HINT": "At least {{min}} characters. Kept in the history.",
+          "SAVE": "Save",
+          "DONE": "The tax claimed back was changed.",
+          "CONSEQUENCE": {
+            "NONE": "From now on, {{category}} claims back none of the tax on its receipts. Receipts already recorded don’t change.",
+            "HALF": "From now on, {{category}} claims back half (50%) of the tax on its receipts. Receipts already recorded don’t change.",
+            "ALL": "From now on, {{category}} claims back all of the tax on its receipts. Receipts already recorded don’t change.",
+            "PENDING": "Choose a share to see what changes."
+          },
+          "ERROR": {
+            "VALIDATION": "Check the highlighted fields.",
+            "VALIDATION_UNNAMED": "This change wasn’t accepted. Check the share and the reason, then try again.",
+            "CHANGED": "Someone else changed this share. It was read again; your reason is kept. Check it and save again.",
+            "NOT_FOUND": "This category no longer exists. The list was refreshed.",
+            "IDEMPOTENCY": "This change couldn’t be matched to your earlier attempt. Try again.",
+            "NOT_ENABLED": "Your shop no longer claims tax back, so the share wasn’t changed. The section was refreshed.",
+            "UNAVAILABLE": "We couldn’t check your shop’s tax registrations just now, so nothing was changed. Try again in a moment.",
+            "FORBIDDEN": "You need the {{permission}} permission to make this change.",
+            "UNKNOWN_OUTCOME": "We couldn’t confirm the change. Save again: it won’t be applied twice.",
+            "OTHER": "Couldn’t save this change."
+          },
+          "STALE": "This share couldn’t be read again. Cancel and try again."
+        }
       }
     }
   },
@@ -9611,7 +9693,31 @@
         "BACK": "Back",
         "CHECKING": "Checking the manager's approval…"
       },
-      "PENDING": "{{reason}}, {{amount}}: not confirmed yet. Open Pay out or Change the float to retry it; it can't be recorded twice."
+      "PENDING": "{{reason}}, {{amount}}: not confirmed yet. Open Pay out or Change the float to retry it; it can't be recorded twice.",
+      "TAX": {
+        "LEGEND": "Tax on the receipt",
+        "SUPPLIER_NAME": "Supplier’s name",
+        "SUPPLIER_NAME_HINT": "Needed once you type a tax figure.",
+        "AMOUNT": "{{regime}} shown on the receipt",
+        "AMOUNT_HINT": "Copy the figure printed on the receipt. Not sure? Leave it blank.",
+        "FORMAT": "Type the figure as printed, with no more decimals than {{currency}} uses.",
+        "SUPPLIER_NUMBER": "Supplier’s tax registration number",
+        "SUPPLIER_NUMBER_HINT": "Needed from {{amount}} to claim the tax back.",
+        "SUPPLIER_NUMBER_HINT_NO_AMOUNT": "Needed to claim the tax back.",
+        "RECORD_WITHOUT_NUMBER": "Record without the number",
+        "ERROR": {
+          "IMPLAUSIBLE": "That’s more tax than a receipt of this total can carry. Check the figure.",
+          "NOT_OFFERED": "This tax can’t be stated for this category here today. The options were read again; check the figures.",
+          "NUMBER_NOT_ACCEPTED": "The supplier’s number can’t be recorded here. Clear it and record again.",
+          "PRECISION": "Use no more decimals than {{currency}} has. Nothing was recorded.",
+          "CHECK_UNAVAILABLE": "The supplier’s number couldn’t be checked just now, so nothing was recorded. Record again, or record without the number.",
+          "NUMBER_MALFORMED": "The supplier’s number isn’t in a form that can be recorded. Check it against the receipt, or clear it.",
+          "INVALID": "This tax detail can’t be recorded as typed. Check it against the receipt."
+        },
+        "NUMBER_NEEDS_TAX": "Type the tax shown on the receipt to record the supplier’s number, or clear the number.",
+        "WITHOUT_NUMBER_CONSEQUENCE": "Without the number, the tax figures are kept but none of this receipt’s tax is claimed back. From {{amount}}, the number is needed to claim it.",
+        "WITHOUT_NUMBER_CONSEQUENCE_NO_AMOUNT": "Without the number, the tax figures are kept but none of this receipt’s tax is claimed back."
+      }
     }
   },
   "COMMON": {

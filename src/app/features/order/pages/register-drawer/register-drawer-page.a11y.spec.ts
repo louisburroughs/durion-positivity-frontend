@@ -12,6 +12,7 @@ import { DrawerOptions } from '../../models/register-drawer.models';
 import {
   approval,
   click,
+  drawerOptions,
   fillPettyExpense,
   flush,
   pettyMovement,
@@ -93,6 +94,29 @@ describe('Register drawer a11y (rendered DOM)', () => {
       fillPettyExpense(h);
       await flush(h);
 
+      expect(await seriousViolations(h.root)).toEqual([]);
+    });
+
+    it(`reports no serious violation with the tax fields and a refusal at a tax field (${theme}, S33 AC 12)`, async () => {
+      document.documentElement.setAttribute('data-theme', theme);
+      // Placeholder regime codes only (owner direction): the register names none itself.
+      const options: DrawerOptions = {
+        ...drawerOptions,
+        categories: drawerOptions.categories.map(category => ({ ...category, offeredRegimes: ['ZZ_FED', 'ZZ_REG'] })),
+        evidenceRule: { threshold: 100, currencyCode: 'CAD' },
+      };
+      const h = renderDrawer({ options });
+      h.mocks.recordMovement.mockReturnValue(throwError(() => refusal(422, 'TAX_AMOUNT_IMPLAUSIBLE', ['statedTaxes[0].amount'])));
+      fillPettyExpense(h);
+      type(h, 'drawer-tax-ZZ_FED', '20.00');
+      type(h, 'drawer-supplier-name', 'Corner Deli');
+      await flush(h);
+      expect(h.q('drawer-tax')).not.toBeNull();
+      expect(await seriousViolations(h.root)).toEqual([]);
+
+      click(h, 'drawer-record');
+      await flush(h);
+      expect(h.q('drawer-tax-error')).not.toBeNull();
       expect(await seriousViolations(h.root)).toEqual([]);
     });
 

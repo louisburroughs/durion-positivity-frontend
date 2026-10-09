@@ -31,6 +31,7 @@ import {
   BillDecisionKind,
   BillDecisionRequest,
   BillDetail,
+  BillInputTaxRecovery,
   BillPermissions,
   BillPostingInput,
   BillRevealed,
@@ -77,6 +78,17 @@ export type BillPanelState = 'none' | 'loading' | 'ready' | 'refreshing' | 'erro
 
 /** The read outcome (ADR-0064): actions are enabled only on `OK`. */
 export type BillReadStatus = 'PENDING' | 'OK' | 'FAILED';
+
+/** Why a stated tax amount was not claimed back, as S32d serves them; any other code reads "Unknown" (§8.2). */
+const WITHHELD_REASONS: readonly string[] = [
+  'NOT_REGISTERED',
+  'NOT_RECOVERABLE',
+  'CATEGORY_NOT_RECOVERABLE',
+  'RATE_UNAVAILABLE',
+  'EVIDENCE_MISSING',
+  'TAX_SPLIT_MISSING',
+  'SUPPLIER_REGISTRATION_MISSING',
+];
 
 /** Statuses in review: the routing note applies (§4.3). */
 const IN_REVIEW = new Set(['PENDING_RECEIPT_MATCH', 'MATCH_EXCEPTION', 'AWAITING_APPROVAL']);
@@ -182,6 +194,16 @@ export class BillReviewPanelComponent {
   readonly vendorDefault = signal<VendorDefaultClass>(null);
 
   readonly showTerms = this.preferences.showTerms;
+
+  /** Why a stated tax amount was not claimed back (S32d), translated; an unknown code reads "Unknown" (§8.2). */
+  withheldKey(reason: string): string {
+    return WITHHELD_REASONS.includes(reason) ? `ACCOUNTING.BILLS.TAX_SPLIT.REASON.${reason}` : 'ACCOUNTING.BILLS.TAX_SPLIT.REASON.UNKNOWN';
+  }
+
+  /** Where a claimed-back amount was recorded (accounting terms on): served name and number. */
+  claimedAccount(row: BillInputTaxRecovery): string {
+    return [row.accountName, row.accountCode].filter(Boolean).join(' · ');
+  }
   readonly withParam = withParam;
   readonly toDate = toDatePipeInput;
   readonly channelKeys = CHANNEL_KEYS;

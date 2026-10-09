@@ -1,0 +1,46 @@
+/* Your tax registrations (CAP:550 S33): a read-only panel inside the Petty-expense categories card. */
+
+:host {
+  display: block;
+}
+
+.tax-panel {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--status-neutral-bg);
+  color: var(--currentTextColor);
+}
+
+.tax-panel__heading {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.tax-panel__list {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tax-panel__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  min-height: 2.75rem;
+  align-items: center;
+}
+
+.tax-panel__regime {
+  font-weight: 600;
+}
+
+.tax-panel__mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}

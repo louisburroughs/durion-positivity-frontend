@@ -1,0 +1,29 @@
+<section class="tax-panel" aria-labelledby="tax-registrations-heading" data-testid="tax-registrations">
+  <h3 id="tax-registrations-heading" class="tax-panel__heading">{{ 'ACCOUNTING.APPROVAL_LIMITS.TAX_RECOVERY.PANEL.HEADING' | translate }}</h3>
+  <ul class="tax-panel__list">
+    @for (regime of shown(); track regime.countryCode + '|' + regime.regime) {
+      <li class="tax-panel__row" data-testid="tax-registration" [attr.data-regime]="regime.regime">
+        <span class="tax-panel__regime" data-testid="tax-registration-regime">{{ regime.regime }}</span>
+        <span data-testid="tax-registration-number">
+          {{ 'ACCOUNTING.APPROVAL_LIMITS.TAX_RECOVERY.PANEL.NUMBER' | translate }}
+          <span class="tax-panel__mono">{{ regime.registrationNumber ?? ('COMMON.EMPTY_VALUE' | translate) }}</span>
+        </span>
+        <span data-testid="tax-registration-since">
+          {{ 'ACCOUNTING.APPROVAL_LIMITS.TAX_RECOVERY.PANEL.SINCE' | translate: {
+            date: regime.since ? (toDatePipeInput(regime.since) | date: 'mediumDate' : undefined : locale()) : ('COMMON.EMPTY_VALUE' | translate)
+          } }}
+        </span>
+        @if (showTerms()) {
+          <span data-testid="tax-registration-account">
+            {{ 'ACCOUNTING.APPROVAL_LIMITS.TAX_RECOVERY.PANEL.ACCOUNT' | translate: { account: accountText(regime) ?? ('COMMON.NOT_AVAILABLE' | translate) } }}
+          </span>
+        }
+      </li>
+    }
+  </ul>
+  <app-help-disclosure
+    summaryKey="ACCOUNTING.APPROVAL_LIMITS.TAX_RECOVERY.PANEL.WHERE.SUMMARY"
+    contextKey="ACCOUNTING.APPROVAL_LIMITS.TAX_RECOVERY.PANEL.HEADING"
+    textKey="ACCOUNTING.APPROVAL_LIMITS.TAX_RECOVERY.PANEL.WHERE.TEXT"
+  />
+</section>

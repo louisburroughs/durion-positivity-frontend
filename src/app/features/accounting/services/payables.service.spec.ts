@@ -269,8 +269,16 @@ describe('PayablesService', () => {
         currencyCode: 'USD',
       });
       expect(detail.taxByType).toEqual([{ taxType: 'GST', amount: 140.5, source: 'DOCUMENT' }]);
-      expect(detail.inputTaxRecovery[0].recoveryWithheldReason).toBe('NOT_REGISTERED');
+      expect(detail.inputTaxRecovery?.[0].recoveryWithheldReason).toBe('NOT_REGISTERED');
       expect(detail.taxOnResaleOverride).toEqual({ source: 'BILL', justification: 'Resold at cost to fleet' });
+    });
+
+    it('keeps inputTaxRecovery null when not served (before the posting, or a tenant without recovery: S33)', async () => {
+      sdk.getVendorBillById.mockReturnValue(of(response({ inputTaxRecovery: undefined })));
+
+      const detail = await firstValueFrom(service.getBill('bill-1'));
+
+      expect(detail.inputTaxRecovery).toBeNull();
     });
 
     it('maps an action this build does not know to UNKNOWN rather than dropping it (§8.2)', async () => {

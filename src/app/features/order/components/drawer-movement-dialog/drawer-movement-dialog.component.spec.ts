@@ -40,7 +40,8 @@ const options: DrawerOptions = {
       requiredFields: ['bagNumber'],
     },
   ],
-  categories: [{ code: 'OFFICE', label: 'Office supplies', examples: null }],
+  categories: [{ code: 'OFFICE', label: 'Office supplies', examples: null, offeredRegimes: [] }],
+  evidenceRule: null,
 };
 
 const recorded: DrawerMovement = { movementId: 'mv-1', reason: 'BANK_DROP', amount: 300, currencyCode: 'CAD' };

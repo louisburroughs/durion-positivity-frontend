@@ -2,17 +2,21 @@ import { TestBed } from '@angular/core/testing';
 import { firstValueFrom, of } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  AccountingInputTaxRecoveryService,
   AccountingPettyExpenseCategoriesService,
   GLAccountListResponse,
   GLAccountResponse,
   GLAccountResponseAccountTypeEnum,
   GLAccountResponseStatusEnum,
   GLAccountsService,
+  InputTaxRecoveryResponse,
   PettyExpenseCategoryHistoryItemChangeTypeEnum,
   PettyExpenseCategoryListResponse,
   PettyExpenseCategoryResponse,
   PettyExpenseCategoryResponseStatusEnum,
+  PettyExpenseCategoryTaxRecoveryResponse,
 } from '@durion-sdk/accounting';
+import { InputTaxRecovery } from '../models/input-tax-recovery.models';
 import { PettyExpenseCategory } from '../models/petty-expense-categories.models';
 import { PettyExpenseCategoriesService } from './petty-expense-categories.service';
 
@@ -80,8 +84,10 @@ describe('PettyExpenseCategoriesService', () => {
     updatePettyExpenseCategory: vi.fn(),
     deactivatePettyExpenseCategory: vi.fn(),
     remapPettyExpenseCategory: vi.fn(),
+    setPettyExpenseCategoryTaxRecovery: vi.fn(),
   };
   const accountsSdk = { listGLAccounts: vi.fn() };
+  const recoverySdk = { getInputTaxRecovery: vi.fn() };
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -89,6 +95,7 @@ describe('PettyExpenseCategoriesService', () => {
         PettyExpenseCategoriesService,
         { provide: AccountingPettyExpenseCategoriesService, useValue: sdk },
         { provide: GLAccountsService, useValue: accountsSdk },
+        { provide: AccountingInputTaxRecoveryService, useValue: recoverySdk },
       ],
     });
     service = TestBed.inject(PettyExpenseCategoriesService);
@@ -226,6 +233,140 @@ describe('PettyExpenseCategoriesService', () => {
       expect(accountsSdk.listGLAccounts).toHaveBeenCalledTimes(2);
       expect(accountsSdk.listGLAccounts).toHaveBeenLastCalledWith('accountCode,asc', 1, 200, 'ACTIVE');
       expect(options.map(option => option.glAccountId)).toEqual(['gl-0', 'gl-1']);
+    });
+  });
+  describe('input-tax recovery (S33)', () => {
+    /** Placeholder codes only: the client names no country, regime or tax type (owner direction). */
+    const view: InputTaxRecoveryResponse = {
+      asOf: '2026-10-09T12:00:00Z',
+      regimes: [
+        {
+          countryCode: 'ZZ',
+          regime: 'ZZ_FED',
+          enabled: true,
+          registration: { number: '123456789RT0001', since: '2026-01-01' },
+          account: { code: '1250', name: 'Tax Recoverable' },
+        },
+        { countryCode: 'ZZ', regime: 'ZZ_REG', enabled: null, registration: { number: '1234567890TQ0001', since: '2026-03-01' }, account: { code: '1260', name: 'Regional Tax Recoverable' } },
+      ],
+      evidenceRules: [{ countryCode: 'ZZ', currencyCode: 'ZZD', rules: [{ appliesTo: ['DRAWER_RECEIPT', 'VENDOR_BILL'], rule: 'SUPPLIER_REGISTRATION', threshold: 100.0 }] }],
+      categories: [
+        { code: 'STAFF_MEALS', label: 'Staff meals', taxRecoverable: true, recoverablePercent: 50, version: 3 },
+        { code: 'POSTAGE', label: 'Postage', taxRecoverable: false, recoverablePercent: null, version: 0 },
+      ],
+      history: [
+        {
+          code: 'STAFF_MEALS',
+          actor: 'controller.cfo',
+          actorRole: 'CONTROLLER',
+          effectiveFrom: '2026-10-01T10:00:00Z',
+          oldTaxRecoverable: null,
+          newTaxRecoverable: true,
+          newRecoverablePercent: 50,
+          reason: 'Meals are half deductible',
+        },
+      ],
+    };
+
+    it('recovery() calls getInputTaxRecovery() and maps regimes, evidence, shares and history, never keeping the username', async () => {
+      recoverySdk.getInputTaxRecovery.mockReturnValue(of(view));
+
+      const read = await firstValueFrom(service.recovery());
+
+      expect(recoverySdk.getInputTaxRecovery).toHaveBeenCalledWith();
+      const expected: InputTaxRecovery = {
+        asOf: '2026-10-09T12:00:00Z',
+        regimes: [
+          {
+            countryCode: 'ZZ',
+            regime: 'ZZ_FED',
+            enabled: true,
+            registrationNumber: '123456789RT0001',
+            since: '2026-01-01',
+            accountName: 'Tax Recoverable',
+            accountCode: '1250',
+          },
+          {
+            countryCode: 'ZZ',
+            regime: 'ZZ_REG',
+            enabled: null,
+            registrationNumber: '1234567890TQ0001',
+            since: '2026-03-01',
+            accountName: 'Regional Tax Recoverable',
+            accountCode: '1260',
+          },
+        ],
+        evidence: [{ countryCode: 'ZZ', currencyCode: 'ZZD', rules: [{ appliesTo: ['DRAWER_RECEIPT', 'VENDOR_BILL'], rule: 'SUPPLIER_REGISTRATION', threshold: 100 }] }],
+        categories: [
+          { code: 'STAFF_MEALS', label: 'Staff meals', taxRecoverable: true, recoverablePercent: 50, version: 3 },
+          { code: 'POSTAGE', label: 'Postage', taxRecoverable: false, recoverablePercent: null, version: 0 },
+        ],
+        history: [
+          {
+            code: 'STAFF_MEALS',
+            effectiveFrom: '2026-10-01T10:00:00Z',
+            actorRole: 'CONTROLLER',
+            oldTaxRecoverable: null,
+            oldRecoverablePercent: null,
+            newTaxRecoverable: true,
+            newRecoverablePercent: 50,
+            reason: 'Meals are half deductible',
+          },
+        ],
+      };
+      expect(read).toEqual(expected);
+      expect(JSON.stringify(read)).not.toContain('controller.cfo');
+    });
+
+    it('recovery() keeps evidence null when the tax service did not answer, and reads absent lists as empty', async () => {
+      recoverySdk.getInputTaxRecovery.mockReturnValue(of({ asOf: '2026-10-09T12:00:00Z' } satisfies InputTaxRecoveryResponse));
+
+      const read = await firstValueFrom(service.recovery());
+
+      expect(read).toEqual({ asOf: '2026-10-09T12:00:00Z', regimes: [], evidence: null, categories: [], history: [] });
+    });
+
+    it('setTaxShare() sends taxRecoverable, the share, version, reason and requestId, and maps the answer', async () => {
+      const answer: PettyExpenseCategoryTaxRecoveryResponse = {
+        code: 'STAFF_MEALS',
+        effectiveFrom: '2026-10-09T12:00:00Z',
+        taxRecoverable: true,
+        recoverablePercent: 100,
+        version: 4,
+        replayed: false,
+      };
+      sdk.setPettyExpenseCategoryTaxRecovery.mockReturnValue(of(answer));
+
+      const result = await firstValueFrom(
+        service.setTaxShare('STAFF_MEALS', { taxRecoverable: true, recoverablePercent: 100, version: 3, justification: 'All of it is claimable', requestId: REQUEST_ID }),
+      );
+
+      expect(sdk.setPettyExpenseCategoryTaxRecovery).toHaveBeenCalledWith('STAFF_MEALS', {
+        taxRecoverable: true,
+        recoverablePercent: 100,
+        version: 3,
+        justification: 'All of it is claimable',
+        requestId: REQUEST_ID,
+      });
+      expect(result).toEqual({ code: 'STAFF_MEALS', taxRecoverable: true, recoverablePercent: 100, version: 4, replayed: false });
+    });
+
+    it('setTaxShare() leaves the share out when the category claims nothing back', async () => {
+      sdk.setPettyExpenseCategoryTaxRecovery.mockReturnValue(
+        of({ code: 'POSTAGE', effectiveFrom: '2026-10-09T12:00:00Z', taxRecoverable: false, recoverablePercent: null, version: 1, replayed: true }),
+      );
+
+      const result = await firstValueFrom(
+        service.setTaxShare('POSTAGE', { taxRecoverable: false, recoverablePercent: 50, version: 0, justification: 'Postage carries no tax', requestId: REQUEST_ID }),
+      );
+
+      expect(sdk.setPettyExpenseCategoryTaxRecovery).toHaveBeenCalledWith('POSTAGE', {
+        taxRecoverable: false,
+        version: 0,
+        justification: 'Postage carries no tax',
+        requestId: REQUEST_ID,
+      });
+      expect(result.replayed).toBe(true);
     });
   });
 });

@@ -6101,6 +6101,25 @@
         },
         "OVERRIDE_LABEL": "Motivo de la excepción",
         "OVERRIDE_HINT": "Por qué se registra en un mes cerrado: al menos {{min}} caracteres."
+      },
+      "TAX_SPLIT": {
+        "TYPE": "Impuesto en la factura: {{type}}",
+        "CLAIMED_HEADING": "Recuperado",
+        "CLAIMED": "{{type}}: {{amount}} recuperado de {{stated}}",
+        "ACCOUNT": "Registrado en {{account}}",
+        "WITHHELD": "{{type}}: no se recuperó nada de {{stated}} — {{reason}}",
+        "UNTYPED": "Impuesto sin tipo",
+        "NONE": "La factura no indica impuestos que recuperar.",
+        "REASON": {
+          "NOT_REGISTERED": "el taller no está registrado para este impuesto en la fecha de la factura",
+          "NOT_RECOVERABLE": "este impuesto no se puede recuperar",
+          "CATEGORY_NOT_RECOVERABLE": "este tipo de compra no recupera impuestos",
+          "RATE_UNAVAILABLE": "no se pudo verificar el impuesto",
+          "EVIDENCE_MISSING": "al documento le falta lo necesario para recuperarlo",
+          "TAX_SPLIT_MISSING": "la factura no desglosa sus impuestos",
+          "SUPPLIER_REGISTRATION_MISSING": "el número de registro fiscal del proveedor no está en el expediente",
+          "UNKNOWN": "Desconocido"
+        }
       }
     },
     "APPROVAL_LIMITS": {
@@ -6236,7 +6255,8 @@
         "SOURCE_FAILED": {
           "BILLS": "No se pudieron cargar los cambios a los límites de facturas.",
           "DRAWER": "No se pudieron cargar los cambios al efectivo de la caja.",
-          "CATEGORIES": "No se pudieron cargar los cambios a las categorías."
+          "CATEGORIES": "No se pudieron cargar los cambios a las categorías.",
+          "TAX_RECOVERY": "No se pudieron cargar los cambios al impuesto recuperado."
         },
         "CATEGORY_CHANGE": {
           "CREATE": "Categoría agregada: {{category}}",
@@ -6244,7 +6264,8 @@
           "DEACTIVATE": "Categoría desactivada: {{category}}",
           "REMAP": "Cuenta de la categoría cambiada: {{category}}",
           "UNKNOWN": "Categoría modificada: {{category}}"
-        }
+        },
+        "TAX_SHARE": "Impuesto recuperado: {{category}}"
       },
       "DENIED_ANY": "Necesita uno de estos permisos para ver esta página: {{permissions}}.",
       "DRAWER": {
@@ -6399,6 +6420,67 @@
           "VALIDATION_UNNAMED": "Este cambio no se aceptó. Revise cada campo y el motivo, e intente de nuevo."
         },
         "REFRESHING": "Actualizando las categorías… Podrá hacer cambios cuando terminen de cargarse."
+      },
+      "TAX_RECOVERY": {
+        "LOAD_FAILED": "No se pudo verificar si su taller recupera impuestos. Las categorías se muestran sin esa información.",
+        "UNKNOWN": "En este momento no podemos saber si su taller recupera impuestos, por eso los detalles fiscales están ocultos.",
+        "REFRESHING": "Actualizando los detalles fiscales…",
+        "COLUMN": "Impuesto recuperado",
+        "COLUMN_TERM": "(crédito fiscal por compras)",
+        "WHY_SHARE": {
+          "SUMMARY": "¿Por qué solo una parte en algunas categorías?",
+          "TEXT": "Algunas compras permiten recuperar solo una parte del impuesto pagado. Su contador fija la parte de cada categoría, y un recibo conserva la parte vigente cuando se registró."
+        },
+        "PANEL": {
+          "HEADING": "Sus registros fiscales",
+          "NUMBER": "Número",
+          "SINCE": "Vigente desde el {{date}}",
+          "ACCOUNT": "El impuesto recuperado se registra en {{account}}",
+          "WHERE": {
+            "SUMMARY": "¿De dónde viene esto?",
+            "TEXT": "Sus registros deciden qué se puede recuperar. Una persona que administra su configuración fiscal los registra."
+          }
+        },
+        "STEPS": {
+          "HEADING": "Lo que hace el cajero en la caja",
+          "ONE": "Ingresar el total del recibo y elegir la categoría.",
+          "TWO": "Escribir el nombre del proveedor y la referencia del recibo. A partir de {{amount}}, escribir también el número de registro fiscal del proveedor.",
+          "TWO_NO_AMOUNT": "Escribir el nombre del proveedor y la referencia del recibo, y el número de registro fiscal del proveedor cuando aparezca en el recibo.",
+          "THREE": "Copiar cada impuesto que pida la caja, tal como aparece impreso en el recibo. ¿Tiene dudas? Déjelo en blanco: no se recupera nada, lo cual siempre es seguro."
+        },
+        "SHARE": {
+          "NONE": "No se recupera",
+          "HALF": "La mitad (50 %)",
+          "ALL": "Todo",
+          "PERCENT": "{{percent}} %",
+          "UNKNOWN": "Desconocido",
+          "OPEN": "Cambiar la parte",
+          "TITLE": "Cambiar el impuesto recuperado: {{category}}",
+          "LEGEND": "Impuesto recuperado para {{category}}",
+          "REASON": "¿Por qué hace este cambio?",
+          "REASON_HINT": "Al menos {{min}} caracteres. Se guarda en el historial.",
+          "SAVE": "Guardar",
+          "DONE": "Se cambió el impuesto recuperado.",
+          "CONSEQUENCE": {
+            "NONE": "A partir de ahora, {{category}} no recupera nada del impuesto de sus recibos. Los recibos ya registrados no cambian.",
+            "HALF": "A partir de ahora, {{category}} recupera la mitad (50 %) del impuesto de sus recibos. Los recibos ya registrados no cambian.",
+            "ALL": "A partir de ahora, {{category}} recupera todo el impuesto de sus recibos. Los recibos ya registrados no cambian.",
+            "PENDING": "Elija una parte para ver qué cambia."
+          },
+          "ERROR": {
+            "VALIDATION": "Revise los campos resaltados.",
+            "VALIDATION_UNNAMED": "Este cambio no se aceptó. Revise la parte y el motivo, y vuelva a intentarlo.",
+            "CHANGED": "Otra persona cambió esta parte. Se volvió a leer; su motivo se conserva. Revísela y guarde de nuevo.",
+            "NOT_FOUND": "Esta categoría ya no existe. Se actualizó la lista.",
+            "IDEMPOTENCY": "Este cambio no se pudo asociar con su intento anterior. Vuelva a intentarlo.",
+            "NOT_ENABLED": "Su taller ya no recupera impuestos, así que la parte no se cambió. Se actualizó la sección.",
+            "UNAVAILABLE": "No pudimos verificar los registros fiscales de su taller en este momento; no se cambió nada. Vuelva a intentarlo en un momento.",
+            "FORBIDDEN": "Necesita el permiso {{permission}} para hacer este cambio.",
+            "UNKNOWN_OUTCOME": "No pudimos confirmar el cambio. Guarde de nuevo: no se aplicará dos veces.",
+            "OTHER": "No se pudo guardar este cambio."
+          },
+          "STALE": "No se pudo volver a leer esta parte. Cancele y vuelva a intentarlo."
+        }
       }
     }
   },
@@ -9611,7 +9693,31 @@
         "BACK": "Atrás",
         "CHECKING": "Comprobando la aprobación del gerente…"
       },
-      "PENDING": "{{reason}}, {{amount}}: aún sin confirmar. Abra Pagar desde la caja o Cambiar el fondo para reintentarlo; no se puede registrar dos veces."
+      "PENDING": "{{reason}}, {{amount}}: aún sin confirmar. Abra Pagar desde la caja o Cambiar el fondo para reintentarlo; no se puede registrar dos veces.",
+      "TAX": {
+        "LEGEND": "Impuestos del recibo",
+        "SUPPLIER_NAME": "Nombre del proveedor",
+        "SUPPLIER_NAME_HINT": "Obligatorio en cuanto escriba un importe de impuesto.",
+        "AMOUNT": "{{regime}} indicado en el recibo",
+        "AMOUNT_HINT": "Copie la cifra impresa en el recibo. ¿Tiene dudas? Déjela en blanco.",
+        "FORMAT": "Escriba la cifra tal como aparece, sin más decimales de los que usa {{currency}}.",
+        "SUPPLIER_NUMBER": "Número de registro fiscal del proveedor",
+        "SUPPLIER_NUMBER_HINT": "Necesario a partir de {{amount}} para recuperar el impuesto.",
+        "SUPPLIER_NUMBER_HINT_NO_AMOUNT": "Necesario para recuperar el impuesto.",
+        "RECORD_WITHOUT_NUMBER": "Registrar sin el número",
+        "ERROR": {
+          "IMPLAUSIBLE": "Es más impuesto del que puede llevar un recibo con este total. Revise la cifra.",
+          "NOT_OFFERED": "Este impuesto no se puede indicar para esta categoría aquí hoy. Se volvieron a leer las opciones; revise las cifras.",
+          "NUMBER_NOT_ACCEPTED": "El número del proveedor no se puede registrar aquí. Bórrelo y registre de nuevo.",
+          "PRECISION": "No use más decimales de los que tiene {{currency}}. No se registró nada.",
+          "CHECK_UNAVAILABLE": "No se pudo verificar el número del proveedor en este momento, así que no se registró nada. Registre de nuevo, o registre sin el número.",
+          "NUMBER_MALFORMED": "El número del proveedor no tiene una forma que se pueda registrar. Compárelo con el recibo, o bórrelo.",
+          "INVALID": "Este dato fiscal no se puede registrar tal como se escribió. Compárelo con el recibo."
+        },
+        "NUMBER_NEEDS_TAX": "Escriba el impuesto que aparece en el recibo para registrar el número del proveedor, o borre el número.",
+        "WITHOUT_NUMBER_CONSEQUENCE": "Sin el número, se conservan las cifras de impuesto, pero no se recupera nada del impuesto de este recibo. A partir de {{amount}}, el número es necesario para recuperarlo.",
+        "WITHOUT_NUMBER_CONSEQUENCE_NO_AMOUNT": "Sin el número, se conservan las cifras de impuesto, pero no se recupera nada del impuesto de este recibo."
+      }
     }
   },
   "COMMON": {

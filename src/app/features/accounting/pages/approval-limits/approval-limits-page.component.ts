@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { DatePipe } from '@angular/common';
+import { DatePipe, DecimalPipe } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -19,6 +19,7 @@ import { Observable, Subscription, catchError, forkJoin, map, of, share, take } 
 import { canAccess } from '../../../../core/security/route-access';
 import { ACCOUNTING_PAGE, ACCOUNTING_SECTION } from '../../../../core/security/route-permissions';
 import { AuthService } from '../../../../core/services/auth.service';
+import { LocaleService } from '../../../../core/services/locale.service';
 import { MoneyPipe } from '../../../../shared/money.pipe';
 import { DrawerCashSettingsComponent } from '../../components/drawer-cash-settings/drawer-cash-settings.component';
 import { HelpDisclosureComponent } from '../../components/help-disclosure/help-disclosure.component';
@@ -33,6 +34,8 @@ import {
 } from '../../models/ap-approval-policy.models';
 import { HomePageState, RegionStatus } from '../../models/accounting-home.models';
 import { DrawerPolicy, DrawerPolicyHistoryRow, DrawerPolicyRead, DrawerPolicySetting } from '../../models/drawer-policy.models';
+import { InputTaxRecovery, RecoveryChange } from '../../models/input-tax-recovery.models';
+import { shareCopy } from '../../components/petty-expense-categories/petty-expense-categories.component';
 import { PettyExpenseCategory, PettyExpenseCategoryChange, PettyExpenseChangeType } from '../../models/petty-expense-categories.models';
 import { ApApprovalPolicyService } from '../../services/ap-approval-policy.service';
 import { DrawerPolicyService } from '../../services/drawer-policy.service';
@@ -162,13 +165,14 @@ const CATEGORY_CHANGE_KEYS: Readonly<Record<PettyExpenseChangeType, string>> = {
 };
 
 /** A History source: each keeps its own read status (ADR-0064). */
-export type HistorySource = 'BILLS' | 'DRAWER' | 'CATEGORIES';
+export type HistorySource = 'BILLS' | 'DRAWER' | 'CATEGORIES' | 'TAX_RECOVERY';
 
 /** One merged History row, tagged with the source that served it. */
 export type MergedHistoryRow =
   | { readonly source: 'BILLS'; readonly changedAt: string; readonly row: ApPolicyHistoryRow }
   | { readonly source: 'DRAWER'; readonly changedAt: string; readonly row: DrawerPolicyHistoryRow }
-  | { readonly source: 'CATEGORIES'; readonly changedAt: string; readonly row: PettyExpenseCategoryChange; readonly category: string };
+  | { readonly source: 'CATEGORIES'; readonly changedAt: string; readonly row: PettyExpenseCategoryChange; readonly category: string }
+  | { readonly source: 'TAX_RECOVERY'; readonly changedAt: string; readonly row: RecoveryChange; readonly category: string };
 
 /** Newest first by the served instant; an unreadable instant sorts last; ties keep the served order. */
 export function mergeHistory(rows: readonly MergedHistoryRow[]): MergedHistoryRow[] {
@@ -304,7 +308,7 @@ type LegOutcome =
 @Component({
   selector: 'app-approval-limits-page',
   standalone: true,
-  imports: [DatePipe, MoneyPipe, RouterLink, TranslatePipe, HelpDisclosureComponent, DrawerCashSettingsComponent, PettyExpenseCategoriesComponent],
+  imports: [DatePipe, DecimalPipe, MoneyPipe, RouterLink, TranslatePipe, HelpDisclosureComponent, DrawerCashSettingsComponent, PettyExpenseCategoriesComponent],
   templateUrl: './approval-limits-page.component.html',
   styleUrls: [
     '../../bank-reconciliation-shared.css',
@@ -319,6 +323,8 @@ export class ApprovalLimitsPageComponent {
   private readonly drawerService = inject(DrawerPolicyService);
   private readonly categoriesService = inject(PettyExpenseCategoriesService);
   private readonly destroyRef = inject(DestroyRef);
+  /** The runtime locale for History's share percentages (review B6). */
+  readonly locale = inject(LocaleService).currentLocale;
 
   private readonly billsHeading = viewChild<ElementRef<HTMLElement>>('billsHeading');
   private readonly historyHeading = viewChild<ElementRef<HTMLElement>>('historyHeading');
@@ -353,6 +359,8 @@ export class ApprovalLimitsPageComponent {
   readonly historyPage = signal(0);
   readonly drawer = new HomeRegion<DrawerPolicyRead>(ok => this.onDrawerSettled(ok));
   readonly categories = new HomeRegion<PettyExpenseCategory[]>();
+  /** The input-tax recovery read (S33): its own status, beside the category read (ADR-0064). */
+  readonly recovery = new HomeRegion<InputTaxRecovery>();
 
   readonly baseline = computed(() => (this.canManage() && !this.policy.denied() ? this.policy.data() : null));
   readonly historyData = computed(() =>
@@ -410,6 +418,9 @@ export class ApprovalLimitsPageComponent {
 
   readonly categoriesShown = computed(() => this.canCategories() && !this.categories.denied());
   readonly categoryRows = computed(() => (this.categoriesShown() ? this.categories.data() : null));
+  /** A 403 on the recovery read removes its elements and its History rows; the categories stay. */
+  readonly recoveryShown = computed(() => this.categoriesShown() && !this.recovery.denied());
+  readonly recoveryRead = computed(() => (this.recoveryShown() ? this.recovery.data() : null));
 
   // ── Save card (clean → dirty → saving → clean | partial | dirty with error) ──
   readonly saving = signal(false);
@@ -444,6 +455,7 @@ export class ApprovalLimitsPageComponent {
   readonly valueKind = valueKind;
   readonly roleKey = roleKey;
   readonly termsCopy = termsCopy;
+  readonly shareCopy = shareCopy;
   readonly actionPermissions = ACTION_PERMISSIONS;
   readonly rowKey = (row: MergedHistoryRow, index: number): string => `${row.source}|${row.changedAt}|${index}`;
 
@@ -454,6 +466,7 @@ export class ApprovalLimitsPageComponent {
     if (this.canManage() && !this.history.denied()) sources.push({ source: 'BILLS', status: this.history.status() });
     if (this.canDrawer() && !this.drawer.denied()) sources.push({ source: 'DRAWER', status: this.drawer.status() });
     if (this.categoriesShown()) sources.push({ source: 'CATEGORIES', status: this.categories.status() });
+    if (this.recoveryShown()) sources.push({ source: 'TAX_RECOVERY', status: this.recovery.status() });
     return sources;
   });
   /** The oldest bill row's instant of each bill page, remembered as each page arrives (Accounting ruling Q1 on #466). */
@@ -466,6 +479,14 @@ export class ApprovalLimitsPageComponent {
     }
     for (const category of this.categoryRows() ?? []) {
       for (const row of category.history) others.push({ source: 'CATEGORIES', changedAt: row.changedAt, row, category: category.label });
+    }
+    const recovery = this.recoveryRead();
+    if (recovery) {
+      const labels = new Map(recovery.categories.map(category => [category.code, category.label] as const));
+      for (const row of recovery.history) {
+        // Category names, never codes (P8): an unknown code reads as "Unknown" in the template.
+        others.push({ source: 'TAX_RECOVERY', changedAt: row.effectiveFrom, row, category: labels.get(row.code) ?? '' });
+      }
     }
     const billRows: MergedHistoryRow[] = (bills?.rows ?? []).map(row => ({ source: 'BILLS', changedAt: row.changedAt, row }));
     return mergeHistory([...billRows, ...historyWindow(others, bills, this.historyPage(), this.oldestByPage())]);
@@ -481,6 +502,7 @@ export class ApprovalLimitsPageComponent {
       this.history.dispose();
       this.drawer.dispose();
       this.categories.dispose();
+      this.recovery.dispose();
       this.saveToken++;
       this.saveSubscription?.unsubscribe();
     });
@@ -505,6 +527,7 @@ export class ApprovalLimitsPageComponent {
         this.history.reset();
         this.drawer.reset();
         this.categories.reset();
+        this.recovery.reset();
         this.historyPage.set(0);
         this.oldestByPage.set({});
         this.resetBills(null);
@@ -529,7 +552,10 @@ export class ApprovalLimitsPageComponent {
   // ── Loading ───────────────────────────────────────────────────────────
   private load(): void {
     if (this.canDrawer()) this.loadDrawer();
-    if (this.canCategories()) this.loadCategories();
+    if (this.canCategories()) {
+      this.loadCategories();
+      this.loadRecovery();
+    }
     if (!this.canManage()) {
       // The page-level state names the Bills read only; the other sections carry their own.
       this.state.set('ready');
@@ -562,6 +588,18 @@ export class ApprovalLimitsPageComponent {
   loadCategories(): void {
     if (!this.canCategories()) return;
     this.categories.load(this.categoriesService.list(), 'categories');
+  }
+
+  /** The recovery read, once beside the category read (story item 1); sequence-guarded by its region (ADR-0063). */
+  loadRecovery(): void {
+    if (!this.canCategories()) return;
+    this.recovery.load(this.categoriesService.recovery(), 'recovery');
+  }
+
+  /** A category write (or Change share) landed or found the row moved: both reads and their History re-read. */
+  onCategoriesChanged(): void {
+    this.loadCategories();
+    this.loadRecovery();
   }
 
   private onPolicySettled(ok: boolean): void {
@@ -785,11 +823,17 @@ export class ApprovalLimitsPageComponent {
   retrySource(source: HistorySource): void {
     if (source === 'BILLS') this.retryHistory();
     else if (source === 'DRAWER') this.loadDrawer();
+    else if (source === 'TAX_RECOVERY') this.loadRecovery();
     else this.loadCategories();
   }
 
   historyPages(data: ApPolicyHistoryPage): number {
     return Math.max(1, Math.ceil(data.total / Math.max(1, data.size)));
+  }
+
+  /** A History row's served reason (untrusted text, rendered by interpolation). */
+  reasonOf(entry: MergedHistoryRow): string {
+    return entry.source === 'TAX_RECOVERY' ? entry.row.reason : entry.row.justification;
   }
 
   /** On / Off for a served switch or category status value; an empty or unknown value reads as a dash. */

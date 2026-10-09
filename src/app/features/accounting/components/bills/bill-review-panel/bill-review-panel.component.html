@@ -222,8 +222,16 @@
                 <dd class="bill-numeric">{{ b.netAmount | money: currency() }}</dd>
               </div>
             }
-            @if (b.taxAmount !== null) {
-              <div>
+            <!-- S33: the tax the vendor's document states, one row per served type, copied and never computed (P7). -->
+            @if (b.taxByType.length) {
+              @for (tax of b.taxByType; track $index) {
+                <div data-testid="panel-tax-type">
+                  <dt>{{ 'ACCOUNTING.BILLS.TAX_SPLIT.TYPE' | translate: { type: tax.taxType } }}</dt>
+                  <dd class="bill-numeric">{{ tax.amount | money: currency() }}</dd>
+                </div>
+              }
+            } @else if (b.taxAmount !== null) {
+              <div data-testid="panel-tax">
                 <dt>{{ 'ACCOUNTING.BILLS.LINES.TAX' | translate }}</dt>
                 <dd class="bill-numeric">{{ b.taxAmount | money: currency() }}</dd>
               </div>
@@ -233,6 +241,38 @@
               <dd class="bill-numeric bill-panel__total">{{ b.totalAmount | money: currency() }}</dd>
             </div>
           </dl>
+          <!-- S33: what the posting claimed back, only when the server serves it (a recovering tenant, after posting). -->
+          @if (b.inputTaxRecovery; as recovered) {
+            <div class="bill-panel__claimed" data-testid="panel-claimed-back">
+              <h4 class="bill-panel__claimed-heading" [id]="id + '-claimed'">{{ 'ACCOUNTING.BILLS.TAX_SPLIT.CLAIMED_HEADING' | translate }}</h4>
+              <ul [attr.aria-labelledby]="id + '-claimed'">
+                @for (row of recovered; track $index) {
+                  <li data-testid="panel-claimed-row">
+                    @if (row.recoveryWithheldReason === null) {
+                      {{ 'ACCOUNTING.BILLS.TAX_SPLIT.CLAIMED' | translate: {
+                        type: row.taxType ?? ('ACCOUNTING.BILLS.TAX_SPLIT.UNTYPED' | translate),
+                        amount: (row.recoveredAmount | money: currency()),
+                        stated: (row.statedAmount | money: currency())
+                      } }}
+                      @if (showTerms() && (row.accountName || row.accountCode)) {
+                        <span class="bill-panel__claimed-account" data-testid="panel-claimed-account">
+                          {{ 'ACCOUNTING.BILLS.TAX_SPLIT.ACCOUNT' | translate: { account: claimedAccount(row) } }}
+                        </span>
+                      }
+                    } @else {
+                      {{ 'ACCOUNTING.BILLS.TAX_SPLIT.WITHHELD' | translate: {
+                        type: row.taxType ?? ('ACCOUNTING.BILLS.TAX_SPLIT.UNTYPED' | translate),
+                        stated: (row.statedAmount | money: currency()),
+                        reason: (withheldKey(row.recoveryWithheldReason) | translate)
+                      } }}
+                    }
+                  </li>
+                } @empty {
+                  <li data-testid="panel-claimed-none">{{ 'ACCOUNTING.BILLS.TAX_SPLIT.NONE' | translate }}</li>
+                }
+              </ul>
+            </div>
+          }
         </section>
 
         <!-- Match score (P3): the component carries its own heading -->

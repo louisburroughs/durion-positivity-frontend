@@ -65,7 +65,7 @@ describe('ApprovalLimitsPageComponent (§5.5, §9.5)', () => {
         { provide: ApApprovalPolicyService, useValue: service },
         // Drawer and category reads are gated off for these sessions; S21's own spec drives them.
         { provide: DrawerPolicyService, useValue: { getPolicy: vi.fn(() => NEVER), updatePolicy: vi.fn() } },
-        { provide: PettyExpenseCategoriesService, useValue: { list: vi.fn(() => NEVER) } },
+        { provide: PettyExpenseCategoriesService, useValue: { list: vi.fn(() => NEVER), recovery: vi.fn(() => NEVER) } },
         { provide: AuthService, useValue: authMock(held, { tenantId: signal<string | null>(null) }).service },
       ],
     });

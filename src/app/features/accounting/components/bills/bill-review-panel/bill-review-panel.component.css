@@ -131,3 +131,28 @@
   font-family: var(--font-mono);
   font-size: 0.8125rem;
 }
+
+/* Claimed back (CAP:550 S33): what the posting recovered of each stated tax amount, as served. */
+.bill-panel__claimed {
+  display: grid;
+  gap: var(--space-1);
+  margin-block-start: var(--space-2);
+}
+
+.bill-panel__claimed-heading {
+  margin: 0;
+  font-size: 0.9375rem;
+}
+
+.bill-panel__claimed ul {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding-inline-start: 1.25rem;
+}
+
+.bill-panel__claimed-account {
+  display: block;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+}
