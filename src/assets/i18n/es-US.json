@@ -3806,7 +3806,18 @@
       "RESULT_PAYMENT_ID": "ID de pago",
       "RESULT_STATUS": "Status",
       "SELF_APPROVED": "Usted aprobó {{bills}}; otra persona debe pagarlas.",
-      "SELF_APPROVED_UNNAMED": "Usted aprobó facturas que este pago cubriría; otra persona debe pagarlas."
+      "SELF_APPROVED_UNNAMED": "Usted aprobó facturas que este pago cubriría; otra persona debe pagarlas.",
+      "REFUSAL": {
+        "METHOD": "Este método de pago no se acepta. Pague por ACH, cheque o transferencia.",
+        "VENDOR_INACTIVE": "Este proveedor está inactivo, así que sus facturas no se pueden pagar.",
+        "VENDOR_ON_AP_HOLD": "Este proveedor está retenido para pago; sus facturas siguen aprobadas hasta que se libere la retención.",
+        "DETAILS_CHANGED": "Los datos de pago del proveedor cambiaron después de aprobarse {{bills}}. Alguien que aprueba facturas debe confirmar los nuevos datos antes de pagarlas.",
+        "DETAILS_CHANGED_UNNAMED": "Los datos de pago del proveedor cambiaron después de aprobarse sus facturas. Alguien que aprueba facturas debe confirmar los nuevos datos antes de pagarlas.",
+        "REPLICATION_PENDING": "Este proveedor todavía se está configurando. Inténtelo de nuevo en un momento.",
+        "REPLICATION_PENDING_AFTER": "Este proveedor todavía se está configurando. Inténtelo de nuevo en {{seconds}} segundos.",
+        "LOCK_TIMEOUT": "Otra persona está trabajando en estas facturas ahora mismo. Inténtelo de nuevo.",
+        "PAY_FROM": "Este taller tiene más de una cuenta para pagar. Aún no se puede elegir una en esta página, así que este pago no se puede hacer aquí."
+      }
     },
     "VENDOR_PAYMENT_LIST": {
       "OVERLINE": "Cuentas por Pagar",
@@ -5846,7 +5857,13 @@
         "DUE_DATE": "Fecha de vencimiento",
         "NO_DUE_DATE": "Aún sin fecha de vencimiento",
         "RESALE_OVERRIDE_BILL": "El impuesto sobre bienes para reventa se aceptó para esta factura: {{reason}}",
-        "RESALE_OVERRIDE_VENDOR": "El impuesto sobre bienes para reventa se acepta por la configuración de este proveedor."
+        "RESALE_OVERRIDE_VENDOR": "El impuesto sobre bienes para reventa se acepta por la configuración de este proveedor.",
+        "ON_THE_BOOKS": "En los libros: {{reference}} el {{date}}",
+        "MONTH_WAS_CLOSED": "(el mes de la factura estaba cerrado)",
+        "POSTED_DIFFERENCE": "Diferencia registrada como {{cls}}: {{amount}}.",
+        "ROUNDING": "Ajuste de redondeo: {{amount}}.",
+        "APPROVED_AUTOMATICALLY": "Aprobada: Automática",
+        "SENT_AUTOMATICALLY": "Enviada para aprobación: Automática"
       },
       "CHECKS": {
         "HEADING": "Comprobaciones",
@@ -5954,7 +5971,7 @@
         "APPROVE": "Aprobar factura",
         "APPROVE_REASON_OPTIONAL": "¿Por qué aprobarla? (opcional)",
         "APPROVE_REASON_REQUIRED": "¿Por qué aprobarla?",
-        "APPROVE_CONSEQUENCE": "Las facturas aprobadas no se pueden editar; un error se corrige con una nota de crédito. Otra persona la paga.",
+        "APPROVE_CONSEQUENCE": "Al aprobar, se registran {{amount}} adeudados a {{vendor}} en los libros. Las facturas aprobadas no se pueden editar; un error se corrige con una nota de crédito. Otra persona la paga.",
         "REJECT": "Rechazar factura",
         "REJECT_TITLE": "¿Rechazar la factura {{number}}?",
         "REJECT_REASON_LABEL": "¿Por qué rechazarla?",
@@ -5967,7 +5984,12 @@
           "AP_APPROVAL_LIMIT_EXCEEDED_NO_LIMIT": "Por encima del límite de auxiliar: aprueba un contralor o un gerente general.",
           "AP_BILL_SELF_APPROVAL": "No puede aprobar una factura que usted creó.",
           "UNKNOWN": "No puede tomar esta decisión sobre esta factura."
-        }
+        },
+        "VOID": "Anular la factura",
+        "VOID_TITLE": "¿Anular la factura {{number}}?",
+        "VOID_REASON_LABEL": "¿Por qué anularla?",
+        "VOID_APPROVED_CONSEQUENCE": "La anulación quita esta factura de los libros hoy. Solo se pueden anular facturas sin pagos.",
+        "VOID_UNMATCHED_CONSEQUENCE": "La anulación elimina este marcador. No se registró nada, así que nada se revierte."
       },
       "EXCEPTION": {
         "HEADING": "No coincide con la entrega",
@@ -6001,7 +6023,8 @@
         "LABEL": "Fecha de vencimiento en la factura del proveedor",
         "REASON_LABEL": "¿Por qué? (opcional)",
         "REASON_HINT": "Si indica un motivo, al menos {{min}} caracteres.",
-        "SAVE": "Guardar fecha de vencimiento"
+        "SAVE": "Guardar fecha de vencimiento",
+        "CONSEQUENCE": "La fecha de vencimiento se registra con su nombre y reemplaza cualquier estimación; decide cuándo se paga esta factura."
       },
       "PAY": {
         "REVIEW_AND_PAY": "Revisar y pagar",
@@ -6014,7 +6037,9 @@
         "REJECTED": "La factura {{number}} se rechazó.",
         "RESOLVED": "La factura {{number}} se resolvió.",
         "MATCHED": "La factura {{number}} se concilió. Aún necesita aprobación.",
-        "DUE_DATE": "Se guardó la fecha de vencimiento de la factura {{number}}."
+        "DUE_DATE": "Se guardó la fecha de vencimiento de la factura {{number}}.",
+        "VOIDED": "La factura {{number}} se anuló.",
+        "MATCHED_OTHER": "La factura {{number}} está conciliada con la factura del proveedor y ahora espera aprobación."
       },
       "ERROR": {
         "LIST_LOAD": "No se pudieron cargar las facturas.",
@@ -6035,7 +6060,46 @@
         "SERVICE_UNAVAILABLE": "El servicio de impuestos no respondió, así que no se guardó nada. Inténtelo de nuevo en un momento.",
         "SERVICE_UNAVAILABLE_AFTER": "El servicio de impuestos no respondió, así que no se guardó nada. Inténtelo de nuevo en {{seconds}} segundos.",
         "UNKNOWN_OUTCOME": "No pudimos confirmar esta decisión. Se muestra el estado actual de la factura.",
-        "OTHER": "No se pudo guardar esta decisión."
+        "OTHER": "No se pudo guardar esta decisión.",
+        "AWAITING_INVOICE": "Esta entrega todavía espera la factura del proveedor.",
+        "NOT_VOIDABLE": "Parte de esta factura está pagada; pida al proveedor una nota de crédito.",
+        "LOCK_TIMEOUT": "Otra persona está trabajando en esta factura ahora mismo. Inténtelo de nuevo.",
+        "UNCLASSIFIED": "Elija para qué es esta factura.",
+        "TOTALS_UNRECONCILED": "Indique a dónde va la diferencia.",
+        "PERIOD_CLOSED": "El mes en que se registra esta factura está cerrado. Alguien que pueda registrar en un mes cerrado debe aprobar esta factura.",
+        "PERIOD_CLOSED_OVERRIDE": "El mes en que se registra esta factura está cerrado. Para registrarla de todos modos, indique un motivo de excepción e inténtelo de nuevo.",
+        "PERIOD_HARD_LOCKED": "El mes en que se registra esta factura está bloqueado definitivamente. No se puede registrar nada en él.",
+        "GL_MAPPING_NOT_CONFIGURED": "Esta factura no se puede registrar hasta que sus cuentas estén configuradas para ella. Pregunte a quien gestiona su catálogo de cuentas.",
+        "ZERO_TOTAL": "Una factura de 0.00 no se puede aprobar.",
+        "FIGURES_DONT_ADD_UP": "Las cifras del proveedor no cuadran con lo facturado. Corrija la factura o recházela.",
+        "VENDOR_INACTIVE": "Este proveedor está inactivo, así que sus facturas no se pueden pagar.",
+        "VENDOR_REPLICATION_PENDING": "Este proveedor todavía se está configurando. Inténtelo de nuevo en un momento.",
+        "VENDOR_REPLICATION_PENDING_AFTER": "Este proveedor todavía se está configurando. Inténtelo de nuevo en {{seconds}} segundos."
+      },
+      "POSTING": {
+        "CLASSIFICATION": {
+          "LEGEND": "¿Para qué es esta factura?",
+          "GOODS": "Inventario para los estantes",
+          "EXPENSE_PROPOSAL": "Un gasto, según la propuesta del auxiliar",
+          "EXPENSE_VENDOR": "Un gasto, según el valor predeterminado de este proveedor",
+          "FROM_PROPOSAL": "Según la propuesta del auxiliar",
+          "FROM_VENDOR": "Valor predeterminado de este proveedor",
+          "EXPENSE_LATER": "Si esta factura es de inventario, elija Inventario para los estantes. Las categorías de gasto aún no se pueden elegir en esta página, así que una factura de gasto se queda en Aprobar por ahora.",
+          "HINT": "Obligatorio para aprobar una factura que llegó sin detalle de líneas."
+        },
+        "DIFFERENCE": {
+          "LEGEND": "Los totales del proveedor no cuadran",
+          "FIGURES": "Neto {{net}} + impuestos {{tax}} no es igual al total {{total}}. Diferencia: {{difference}}.",
+          "WHERE": "¿A dónde va la diferencia?",
+          "FREIGHT": "Flete",
+          "GOODS": "Inventario",
+          "PRICE_DIFFERENCE": "Diferencia de precio",
+          "WHY": "¿Por qué va ahí?",
+          "SAY_WHERE": "Indique a dónde van los {{difference}}.",
+          "EXPENSE_PROPOSAL": "Un gasto, según la propuesta del auxiliar."
+        },
+        "OVERRIDE_LABEL": "Motivo de la excepción",
+        "OVERRIDE_HINT": "Por qué se registra en un mes cerrado: al menos {{min}} caracteres."
       }
     },
     "APPROVAL_LIMITS": {
@@ -6070,18 +6134,15 @@
         },
         "WHO": {
           "SUMMARY": "Quién puede hacer qué",
-          "CAPTION": "Lo que cada rol puede hacer con las facturas",
-          "ROLE": "Rol",
-          "APPROVE_UP_TO": "Aprobar hasta el límite del auxiliar",
+          "CAPTION": "Cada acción y el permiso que necesita",
           "APPROVE_ANY": "Aprobar cualquier importe",
           "REJECT": "Rechazar o anular",
           "PAY": "Pagar",
-          "SET_LIMITS": "Fijar estos límites",
-          "CLERK": "Auxiliar contable",
-          "CONTROLLER": "Contralor",
-          "GENERAL_MANAGER": "Gerente general",
-          "YES": "Sí",
-          "NO": "No"
+          "SET_LIMITS": "Cambiar estos límites",
+          "ACTION": "Acción",
+          "PERMISSION": "Permiso",
+          "SEND_AND_APPROVE": "Enviar para aprobación y aprobar hasta el límite del auxiliar",
+          "NOTE": "Su administrador decide qué roles tienen cada permiso."
         },
         "RULES": {
           "HEADING": "Siempre activas",
@@ -6141,6 +6202,19 @@
           "AP_ALLOW_APPROVER_PAYMENT": "Los aprobadores pueden pagar las facturas que aprobaron",
           "AP_DEFAULT_TERMS": "Condiciones de pago predeterminadas",
           "UNKNOWN": "Configuración desconocida"
+        },
+        "ROLE": {
+          "ACCOUNTING_CLERK": "Auxiliar contable",
+          "CONTROLLER": "Contralor",
+          "GENERAL_MANAGER": "Gerente general",
+          "ADMIN": "Administrador",
+          "SYSTEM_ADMINISTRATOR": "Administrador del sistema",
+          "UNKNOWN": "Otro rol"
+        },
+        "TERMS": {
+          "DUE_ON_RECEIPT": "Pagadero al recibir",
+          "NET": "Neto {{days}} días",
+          "UNKNOWN": "Desconocido"
         }
       }
     }
