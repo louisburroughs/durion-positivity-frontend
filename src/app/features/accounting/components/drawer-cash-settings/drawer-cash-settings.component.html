@@ -1,0 +1,135 @@
+<section class="limits-section drawer" aria-labelledby="approval-limits-drawer" data-testid="drawer-section">
+  <h2 id="approval-limits-drawer" class="drawer__heading" tabindex="-1" #heading>
+    {{ 'ACCOUNTING.APPROVAL_LIMITS.DRAWER.HEADING' | translate }}
+  </h2>
+  <p class="hint-text">{{ 'ACCOUNTING.APPROVAL_LIMITS.DRAWER.CURRENCY' | translate: { currency: policy().currencyCode } }}</p>
+
+  <ul class="drawer__rows">
+    @for (view of rows(); track view.slug) {
+      <li class="drawer__row" [attr.data-testid]="'drawer-row-' + view.row.type">
+        <div class="drawer__row-head">
+          <h3 class="drawer__title" [id]="'drawer-' + view.slug + '-title'">{{ typeKeys[view.row.type] + '.TITLE' | translate }}</h3>
+          <p class="hint-text">{{ typeKeys[view.row.type] + '.DESCRIPTION' | translate }}</p>
+        </div>
+
+        @if (view.field; as field) {
+          <div class="drawer__controls">
+            <div class="drawer__switch">
+              <input
+                type="checkbox"
+                role="switch"
+                class="drawer__switch-input"
+                [id]="'drawer-' + view.slug + '-allowed'"
+                [attr.data-testid]="'drawer-allowed-' + view.row.type"
+                [checked]="typeDraft(field).allowed"
+                [disabled]="locked()"
+                (change)="setAllowed(field, checked($event))"
+                [attr.aria-labelledby]="'drawer-' + view.slug + '-title drawer-' + view.slug + '-allowed-label'"
+              />
+              <label [for]="'drawer-' + view.slug + '-allowed'" [id]="'drawer-' + view.slug + '-allowed-label'">
+                {{ 'ACCOUNTING.APPROVAL_LIMITS.DRAWER.ALLOWED' | translate }}
+              </label>
+            </div>
+            <div class="form-field">
+              <label [for]="'drawer-' + view.slug + '-limit'" [id]="'drawer-' + view.slug + '-limit-label'">
+                {{ 'ACCOUNTING.APPROVAL_LIMITS.DRAWER.LIMIT_LABEL' | translate }}
+              </label>
+              <input
+                type="text"
+                inputmode="decimal"
+                autocomplete="off"
+                [id]="'drawer-' + view.slug + '-limit'"
+                [attr.data-testid]="'drawer-limit-' + view.row.type"
+                [attr.aria-labelledby]="'drawer-' + view.slug + '-limit-label drawer-' + view.slug + '-title'"
+                [value]="typeDraft(field).limitText"
+                [disabled]="locked() || !typeDraft(field).allowed"
+                (input)="setLimit(field, text($event))"
+                [attr.aria-invalid]="limitProblem(field) || limitMarked(field) ? 'true' : null"
+                [attr.aria-describedby]="limitDescribedBy(view, field)"
+              />
+              <p class="hint-text" [id]="'drawer-' + view.slug + '-hint'">{{ 'ACCOUNTING.APPROVAL_LIMITS.DRAWER.LIMIT_HINT' | translate }}</p>
+              @if (limitProblem(field); as problem) {
+                <p class="field-error" [id]="'drawer-' + view.slug + '-error'" [attr.data-testid]="'drawer-limit-error-' + view.row.type">
+                  {{ problemKeys[problem] | translate }}
+                </p>
+              }
+            </div>
+          </div>
+        } @else {
+          <p class="drawer__fixed" [attr.data-testid]="'drawer-badge-' + view.row.type">
+            @switch (view.row.type) {
+              @case ('BANK_DROP') {
+                <span class="bill-badge bill-badge--info">{{ 'ACCOUNTING.APPROVAL_LIMITS.DRAWER.BADGE.BANK_DROP' | translate }}</span>
+              }
+              @case ('FLOAT_CHANGE') {
+                <span class="bill-badge bill-badge--warning">{{ 'ACCOUNTING.APPROVAL_LIMITS.DRAWER.BADGE.FLOAT_CHANGE' | translate }}</span>
+              }
+              @case ('UNKNOWN') {
+                <span class="bill-badge">{{ 'ACCOUNTING.APPROVAL_LIMITS.DRAWER.BADGE.UNKNOWN' | translate }}</span>
+              }
+              @default {
+                <span class="bill-badge">
+                  {{ (view.row.allowed ? 'ACCOUNTING.APPROVAL_LIMITS.DRAWER.BADGE.ON' : 'ACCOUNTING.APPROVAL_LIMITS.DRAWER.BADGE.OFF') | translate }}
+                </span>
+              }
+            }
+          </p>
+        }
+      </li>
+    }
+  </ul>
+
+  <div class="form-field drawer__tolerance">
+    <label for="drawer-tolerance">{{ 'ACCOUNTING.APPROVAL_LIMITS.DRAWER.TOLERANCE_LABEL' | translate }}</label>
+    <input
+      id="drawer-tolerance"
+      type="text"
+      inputmode="decimal"
+      autocomplete="off"
+      data-testid="drawer-tolerance"
+      [value]="draft().toleranceText"
+      [disabled]="locked()"
+      (input)="setTolerance(text($event))"
+      [attr.aria-invalid]="toleranceProblem() || serverMarked('overShortTolerance') ? 'true' : null"
+      [attr.aria-describedby]="toleranceDescribedBy()"
+    />
+    <p class="hint-text" id="drawer-tolerance-hint">{{ 'ACCOUNTING.APPROVAL_LIMITS.DRAWER.TOLERANCE_HINT' | translate }}</p>
+    @if (toleranceProblem(); as problem) {
+      <p class="field-error" id="drawer-tolerance-error" data-testid="drawer-tolerance-error">{{ problemKeys[problem] | translate }}</p>
+    }
+  </div>
+
+  <details class="drawer__help" data-testid="drawer-how-counted">
+    <summary class="drawer__help-summary">{{ 'ACCOUNTING.APPROVAL_LIMITS.DRAWER.HOW.SUMMARY' | translate }}</summary>
+    <div class="drawer__help-body">
+      <p>{{ 'ACCOUNTING.APPROVAL_LIMITS.DRAWER.HOW.RUNNING_TOTAL' | translate }}</p>
+      <p>{{ 'ACCOUNTING.APPROVAL_LIMITS.DRAWER.HOW.SWITCH_OFF' | translate }}</p>
+    </div>
+  </details>
+
+  <!-- What this means at the register: the typed values, quoted without arithmetic (P7) -->
+  <div class="drawer__means" data-testid="drawer-means">
+    <h3 class="bill-subheading">{{ 'ACCOUNTING.APPROVAL_LIMITS.DRAWER.MEANS.HEADING' | translate }}</h3>
+    <ul>
+      @for (entry of meansTypes(); track entry.type) {
+        <li [attr.data-testid]="'drawer-means-' + entry.type">
+          @if (!typeDraft(entry.field).allowed) {
+            {{ 'ACCOUNTING.APPROVAL_LIMITS.DRAWER.MEANS.' + entry.type + '.OFF' | translate }}
+          } @else if (limit(entry.field) !== null) {
+            {{ 'ACCOUNTING.APPROVAL_LIMITS.DRAWER.MEANS.' + entry.type + '.ON' | translate: { limit: (limit(entry.field) | money: policy().currencyCode) } }}
+          } @else {
+            {{ 'ACCOUNTING.APPROVAL_LIMITS.DRAWER.MEANS.NEEDS_AMOUNT' | translate }}
+          }
+        </li>
+      }
+      <li data-testid="drawer-means-tolerance">
+        @if (tolerance() !== null) {
+          {{ 'ACCOUNTING.APPROVAL_LIMITS.DRAWER.MEANS.TOLERANCE' | translate: { tolerance: (tolerance() | money: policy().currencyCode) } }}
+        } @else {
+          {{ 'ACCOUNTING.APPROVAL_LIMITS.DRAWER.MEANS.NEEDS_AMOUNT' | translate }}
+        }
+      </li>
+      <li>{{ 'ACCOUNTING.APPROVAL_LIMITS.DRAWER.MEANS.DIFFERENT_PERSON' | translate }}</li>
+    </ul>
+  </div>
+</section>

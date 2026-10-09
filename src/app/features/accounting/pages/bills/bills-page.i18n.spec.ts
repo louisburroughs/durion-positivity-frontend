@@ -86,7 +86,7 @@ describe('Bills to pay and Approval limits copy (en-US)', () => {
     ['ACCOUNTING.APPROVAL_LIMITS.BILLS.WHO.SUMMARY', 'Who can do what'],
     ['ACCOUNTING.APPROVAL_LIMITS.SAVE.HEADING', 'Save your changes'],
     ['ACCOUNTING.APPROVAL_LIMITS.SAVE.REASON_LABEL', 'Why are you changing this?'],
-    ['ACCOUNTING.APPROVAL_LIMITS.SAVE.CONSEQUENCE', 'New limits apply to the next decision; bills already approved don’t change.'],
+    ['ACCOUNTING.APPROVAL_LIMITS.SAVE.CONSEQUENCE', 'New limits apply from now on. Bills already approved and drawer payments already recorded don’t change.'],
     ['ACCOUNTING.APPROVAL_LIMITS.SAVE.UNDO', 'Undo changes'],
   ])('%s reads "%s"', (key, text) => {
     expect(at(enUS, key)).toBe(text);

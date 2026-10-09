@@ -6109,7 +6109,9 @@
       "NAV": {
         "ARIA": "En esta página",
         "BILLS": "Facturas",
-        "HISTORY": "Historial"
+        "HISTORY": "Historial",
+        "DRAWER": "Efectivo de la caja",
+        "CATEGORIES": "Categorías de gastos menores"
       },
       "LOADING": "Cargando…",
       "LOAD_FAILED": "No se pudieron cargar los límites de aprobación.",
@@ -6162,7 +6164,7 @@
         "HEADING": "Guardar sus cambios",
         "REASON_LABEL": "¿Por qué hace este cambio?",
         "REASON_HINT": "Al menos {{min}} caracteres.",
-        "CONSEQUENCE": "Los nuevos límites se aplican a la próxima decisión; las facturas ya aprobadas no cambian.",
+        "CONSEQUENCE": "Los nuevos límites se aplican desde ahora. Las facturas ya aprobadas y los pagos de la caja ya registrados no cambian.",
         "SAVE": "Guardar",
         "SAVING": "Guardando…",
         "UNDO": "Deshacer cambios",
@@ -6176,8 +6178,18 @@
           "CURRENCY": "Los límites deben estar en su moneda contable, {{currency}}.",
           "FORBIDDEN": "Necesita el permiso {{permission}} para cambiar estos límites.",
           "UNKNOWN_OUTCOME": "No pudimos confirmar el guardado. Pulse Guardar de nuevo: no se aplicará dos veces.",
-          "OTHER": "No se pudieron guardar sus cambios."
-        }
+          "OTHER": "No se pudieron guardar sus cambios.",
+          "DRAWER_CONFLICT": "Otra persona cambió los límites del efectivo de la caja. Se cargaron los más recientes y se conservaron sus cambios; revíselos y guarde de nuevo.",
+          "VALIDATION_UNNAMED": "Estos valores no se aceptaron. Revise cada monto y el motivo, e intente de nuevo."
+        },
+        "DRAWER_FAILED": "No se guardaron los límites del efectivo de la caja: {{reason}}",
+        "PARTIAL": {
+          "BILLS_FAILED": "Se guardaron los límites del efectivo de la caja. No se guardaron los límites de facturas: {{reason}} Sus cambios a las facturas siguen aquí.",
+          "DRAWER_FAILED": "Se guardaron los límites de facturas. No se guardaron los límites del efectivo de la caja: {{reason}} Sus cambios a la caja siguen aquí.",
+          "DRAWER_UNCONFIRMED": "Se guardaron los límites de facturas. No se pudieron confirmar los límites del efectivo de la caja: {{reason}} Sus cambios a la caja siguen aquí.",
+          "BILLS_UNCONFIRMED": "Se guardaron los límites del efectivo de la caja. No se pudieron confirmar los límites de facturas: {{reason}} Sus cambios a las facturas siguen aquí."
+        },
+        "DRAWER_UNCONFIRMED": "No se pudieron confirmar los límites del efectivo de la caja: {{reason}}"
       },
       "HISTORY": {
         "HEADING": "Historial",
@@ -6187,7 +6199,6 @@
         "CHANGE": "Cambio",
         "REASON": "Motivo",
         "EMPTY": "Aún no hay cambios.",
-        "LOAD_FAILED": "No se pudo cargar el historial.",
         "FROM_TO": "{{old}} → {{new}}",
         "ON": "Activado",
         "OFF": "Desactivado",
@@ -6201,7 +6212,12 @@
           "AP_ALLOW_CREATOR_APPROVAL": "Los creadores pueden aprobar sus propias facturas",
           "AP_ALLOW_APPROVER_PAYMENT": "Los aprobadores pueden pagar las facturas que aprobaron",
           "AP_DEFAULT_TERMS": "Condiciones de pago predeterminadas",
-          "UNKNOWN": "Configuración desconocida"
+          "UNKNOWN": "Configuración desconocida",
+          "PETTY_EXPENSE_ALLOWED": "Gastos menores permitidos",
+          "PETTY_EXPENSE_LIMIT": "Gastos menores: límite del cajero",
+          "VENDOR_COD_ALLOWED": "Pago en efectivo a proveedores contra entrega permitido",
+          "VENDOR_COD_LIMIT": "Pago en efectivo a proveedores contra entrega: límite del cajero",
+          "OVER_SHORT_TOLERANCE": "Diferencia permitida en el conteo de la caja"
         },
         "ROLE": {
           "ACCOUNTING_CLERK": "Auxiliar contable",
@@ -6215,7 +6231,173 @@
           "DUE_ON_RECEIPT": "Pagadero al recibir",
           "NET": "Neto {{days}} días",
           "UNKNOWN": "Desconocido"
+        },
+        "SOURCE_FAILED": {
+          "BILLS": "No se pudieron cargar los cambios a los límites de facturas.",
+          "DRAWER": "No se pudieron cargar los cambios al efectivo de la caja.",
+          "CATEGORIES": "No se pudieron cargar los cambios a las categorías."
+        },
+        "CATEGORY_CHANGE": {
+          "CREATE": "Categoría agregada: {{category}}",
+          "RELABEL": "Categoría renombrada: {{category}}",
+          "DEACTIVATE": "Categoría desactivada: {{category}}",
+          "REMAP": "Cuenta de la categoría cambiada: {{category}}",
+          "UNKNOWN": "Categoría modificada: {{category}}"
         }
+      },
+      "DENIED_ANY": "Necesita uno de estos permisos para ver esta página: {{permissions}}.",
+      "DRAWER": {
+        "HEADING": "Efectivo de la caja",
+        "CURRENCY": "Montos en {{currency}}.",
+        "LOAD_FAILED": "No se pudieron cargar los límites del efectivo de la caja.",
+        "ALLOWED": "Permitido",
+        "LIMIT_LABEL": "El cajero puede registrar hasta",
+        "LIMIT_HINT": "Por sesión de caja",
+        "TOLERANCE_LABEL": "El conteo de la caja puede diferir en",
+        "TOLERANCE_HINT": "Sobrante o faltante, por conteo de cierre",
+        "ERROR": {
+          "REQUIRED": "Ingrese un monto.",
+          "AMOUNT": "Ingrese un monto de 0 o más, con dos decimales como máximo."
+        },
+        "TYPE": {
+          "PETTY_EXPENSE": {
+            "TITLE": "Gastos menores",
+            "DESCRIPTION": "Compras pequeñas del taller pagadas con la caja, como suministros o envíos."
+          },
+          "VENDOR_COD": {
+            "TITLE": "Pago en efectivo a proveedores contra entrega",
+            "DESCRIPTION": "Pagar a un proveedor en efectivo cuando entrega."
+          },
+          "BANK_DROP": {
+            "TITLE": "Depósitos bancarios",
+            "DESCRIPTION": "Efectivo que se saca de la caja para el banco."
+          },
+          "FLOAT_CHANGE": {
+            "TITLE": "Cambios del fondo de caja",
+            "DESCRIPTION": "Agregar al efectivo inicial de la caja o retirar de él."
+          },
+          "UNKNOWN": {
+            "TITLE": "Desconocido",
+            "DESCRIPTION": "Un tipo de salida de efectivo que esta página aún no conoce."
+          }
+        },
+        "BADGE": {
+          "BANK_DROP": "Siempre permitido · número de bolsa de depósito obligatorio",
+          "FLOAT_CHANGE": "Siempre necesita un gerente",
+          "UNKNOWN": "No se puede cambiar aquí",
+          "ON": "Permitido",
+          "OFF": "No permitido"
+        },
+        "HOW": {
+          "SUMMARY": "¿Cómo se cuentan los límites?",
+          "RUNNING_TOTAL": "Cada límite suma todo lo de ese tipo en una sesión de caja, así que dividir un recibo igual necesita un gerente.",
+          "SWITCH_OFF": "Desactivar un tipo detiene de inmediato las nuevas salidas; las ya registradas se mantienen."
+        },
+        "MEANS": {
+          "HEADING": "Qué significa esto en la caja",
+          "PETTY_EXPENSE": {
+            "ON": "Gastos menores hasta {{limit}} en una sesión de caja: el cajero los registra; por encima, un gerente aprueba en la caja con su propio inicio de sesión.",
+            "OFF": "Los cajeros no pueden pagar gastos menores con la caja."
+          },
+          "VENDOR_COD": {
+            "ON": "Pago en efectivo a proveedores contra entrega hasta {{limit}} en una sesión de caja: el cajero lo registra; por encima, un gerente aprueba en la caja con su propio inicio de sesión.",
+            "OFF": "Los cajeros no pueden pagar a proveedores en efectivo contra entrega con la caja."
+          },
+          "NEEDS_AMOUNT": "Ingrese un monto para ver qué significa.",
+          "TOLERANCE": "Un conteo de cierre que difiere en más de {{tolerance}} necesita que un gerente apruebe el cierre.",
+          "DIFFERENT_PERSON": "El gerente que aprueba debe ser una persona distinta del cajero."
+        }
+      },
+      "CATEGORIES": {
+        "HEADING": "Categorías de gastos menores",
+        "LOAD_FAILED": "No se pudieron cargar las categorías de gastos menores.",
+        "READ_ONLY": "Los cambios a las categorías los hace quien administra su catálogo de cuentas. Las categorías se desactivan, nunca se eliminan, así que los recibos antiguos conservan su historial.",
+        "EMPTY": "Aún no hay categorías de gastos menores.",
+        "CAPTION": "Lo que los cajeros pueden pagar con la caja y dónde se registra cada gasto",
+        "COLUMN": {
+          "CATEGORY": "Categoría",
+          "EXAMPLES": "Ejemplos",
+          "RECORDED_IN": "Se registra en",
+          "STATUS": "Estado",
+          "ACTIONS": "Acciones"
+        },
+        "LATER": "Desde el {{date}}:",
+        "STATUS": {
+          "ON": "Activada",
+          "OFF": "Desactivada",
+          "UNKNOWN": "Desconocido"
+        },
+        "NEVER": {
+          "HEADING": "Nunca pague esto con la caja",
+          "PARTS": "Llantas y piezas",
+          "WAGES": "Sueldos, propinas o adelantos",
+          "OWNER": "Gastos personales del dueño",
+          "REFUNDS": "Reembolsos a clientes",
+          "EQUIPMENT": "Equipo que dura años",
+          "BILLS": "Renta, servicios públicos y otras facturas de proveedores"
+        },
+        "TAX_INCLUDED": "Los cajeros ingresan el total del recibo, con impuestos incluidos.",
+        "CREATE": {
+          "OPEN": "Agregar categoría",
+          "TITLE": "Agregar categoría",
+          "CONFIRM": "Agregar categoría",
+          "CONSEQUENCE": "Los cajeros pueden elegirla en la caja en cuanto se guarde.",
+          "DONE": "Se agregó la categoría."
+        },
+        "RELABEL": {
+          "OPEN": "Cambiar nombre",
+          "TITLE": "Cambiar nombre de {{category}}",
+          "CONFIRM": "Cambiar nombre",
+          "CONSEQUENCE": "Los cajeros ven el nuevo nombre en la caja de inmediato; el código de la categoría no cambia.",
+          "DONE": "Se cambió el nombre de la categoría."
+        },
+        "DEACTIVATE": {
+          "OPEN": "Desactivar",
+          "TITLE": "Desactivar {{category}}",
+          "CONFIRM": "Desactivar",
+          "CONSEQUENCE": "Los cajeros dejan de verla en la caja de inmediato; las salidas ya registradas la conservan.",
+          "DONE": "Se desactivó la categoría."
+        },
+        "REMAP": {
+          "OPEN": "Cambiar cuenta",
+          "TITLE": "Cambiar cuenta de {{category}}",
+          "CONFIRM": "Cambiar cuenta",
+          "CONSEQUENCE": "Las salidas registradas desde el {{date}} van a {{account}}; las anteriores se quedan donde están.",
+          "CONSEQUENCE_PENDING": "Elija una cuenta para ver adónde irán las salidas.",
+          "DONE": "Se cambió la cuenta de la categoría."
+        },
+        "FIELD": {
+          "CODE": "Código",
+          "CODE_HINT": "Mayúsculas, dígitos y guiones bajos. Este código no se puede cambiar después.",
+          "LABEL": "Nombre que ven los cajeros",
+          "EXAMPLES": "Ejemplos",
+          "ACCOUNT": "Cuenta de gastos",
+          "ACCOUNT_CHOOSE": "Elija una cuenta",
+          "ACCOUNT_HINT": "Solo cuentas de gastos activas.",
+          "ACCOUNTS_LOADING": "Cargando cuentas…",
+          "ACCOUNTS_FAILED": "No se pudieron cargar las cuentas.",
+          "FROM": "A partir del",
+          "REASON": "¿Por qué?",
+          "REASON_HINT": "Al menos {{min}} caracteres.",
+          "CODE_FORMAT": "Use solo mayúsculas, dígitos y guiones bajos, hasta 40 caracteres."
+        },
+        "ERROR": {
+          "VALIDATION": "Revise los campos marcados.",
+          "EXISTS": "Ya existe una categoría con este código.",
+          "NOT_ALLOWED": "No hay categoría “Otro”: indique en qué se gastó el efectivo.",
+          "ACCOUNT_NOT_ELIGIBLE": "Elija una cuenta de gastos activa.",
+          "BACKDATED": "Elija hoy o un día posterior: las salidas ya registradas conservan su cuenta.",
+          "OVERLAP": "Esta categoría ya tiene una cuenta desde ese día o uno posterior.",
+          "NOT_FOUND": "Esta categoría ya no existe. Se actualizó la lista.",
+          "VERSION_CONFLICT": "Otra persona cambió esta categoría. Se actualizó la lista; revísela e intente de nuevo.",
+          "INACTIVE": "Esta categoría ya está desactivada. Se actualizó la lista.",
+          "IDEMPOTENCY": "Este cambio no coincide con su intento anterior. Intente de nuevo.",
+          "FORBIDDEN": "Necesita el permiso {{permission}} para hacer este cambio.",
+          "UNKNOWN_OUTCOME": "No pudimos confirmar el cambio. Pulse de nuevo: no se aplicará dos veces.",
+          "OTHER": "No se pudo guardar este cambio.",
+          "VALIDATION_UNNAMED": "Este cambio no se aceptó. Revise cada campo y el motivo, e intente de nuevo."
+        },
+        "REFRESHING": "Actualizando las categorías… Podrá hacer cambios cuando terminen de cargarse."
       }
     }
   },
