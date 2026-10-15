@@ -41,6 +41,7 @@ const unappliedPage = (page: number, totalPages: number): UnappliedPaymentsPage 
       receivedAt: '2026-10-05T14:00:00Z',
       sourceInvoiceId: 'inv-9',
       sourceInvoiceNumber: 'INV-2026-01702',
+      possibleDuplicate: false,
       totalAmount: 4615,
       unappliedAmount: 4615,
       currency: 'USD',
